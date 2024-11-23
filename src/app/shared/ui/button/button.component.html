@@ -1,0 +1,8 @@
+<button
+  class="flex w-full items-center justify-center gap-2 rounded-lg border focus:outline-none focus:ring-offset-4 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-black md:focus:ring-2"
+  [type]="type()"
+  [ngClass]="classes()"
+  [disabled]="loading() || disabled()"
+>
+  <ng-content />
+</button>
