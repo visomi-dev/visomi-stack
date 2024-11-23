@@ -1,0 +1,13 @@
+.page-loader-indicator {
+  animation: page-loader-indicator 1000ms linear infinite;
+}
+
+@keyframes page-loader-indicator {
+  from {
+    left: -100%;
+  }
+
+  to {
+    left: 100%;
+  }
+}

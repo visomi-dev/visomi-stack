@@ -1,0 +1,68 @@
+<div
+  class="flex max-h-full w-full flex-col gap-6 overflow-auto p-6 md:items-center"
+>
+  <div class="flex w-full max-w-xs flex-col gap-2">
+    <h1 class="text-4xl font-bold" i18n="@@signInTitle">Iniciar Sesión</h1>
+
+    <p class="text-slate-600 dark:text-slate-400" i18n="@@signInDescription">
+      Ingresa tu usuario y contraseña para comenzar.
+    </p>
+  </div>
+
+  <form
+    class="flex w-full max-w-xs flex-col gap-2"
+    method="post"
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    ngNativeValidate
+  >
+    <app-text-input
+      [id]="'username'"
+      [form]="form"
+      name="username"
+      type="email"
+      label="Correo Electrónico"
+      i18n-label="@@usernameLabel"
+      placeholder="Ingresa tu correo electrónico"
+      i18n-placeholder="@@usernamePlaceholder"
+      error="Ingresa un correo electrónico válido, ejemplo: user@domain.com"
+      i18n-error="@@usernameError"
+      [disabled]="loading()"
+      required
+    />
+
+    <app-password-input
+      [id]="'password'"
+      [form]="form"
+      name="password"
+      label="Contraseña"
+      i18n-label="@@passwordLabel"
+      placeholder="Ingresa tu contraseña"
+      i18n-placeholder="@@passwordPlaceholder"
+      error="Ingresa una contraseña válida, ejemplo: Contraseña123!"
+      i18n-error="@@passwordError"
+      autocomplete="current-password"
+      [disabled]="loading()"
+    />
+
+    <p
+      class="overflow-hidden text-center text-red-400 transition-all"
+      [ngClass]="{
+        '-mt-4 min-h-0': !error(),
+      }"
+    >
+      {{ error() }}
+    </p>
+
+    <app-button
+      type="submit"
+      class="mt-8 w-full"
+      color="primary"
+      [loading]="signing()"
+      [disabled]="loading()"
+      i18n="@@signInButton"
+    >
+      Iniciar Sesión
+    </app-button>
+  </form>
+</div>
