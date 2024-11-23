@@ -1,1 +1,175 @@
 /* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .control.autocomplete input {
+    background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/></svg>");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .control.autocomplete.open input {
+    background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M 14,11.999969 10,7.9999689 6,11.999969'/></svg>");
+  }
+
+  .control input:not(:placeholder-shown):not(:autofill):not(:focus):invalid {
+    @apply border-red-400;
+  }
+
+  .control input ~ p.error,
+  *:not(.control) p.error.hidden {
+    @apply max-h-0;
+  }
+
+  .control input ~ p.error {
+    @apply -mt-1;
+  }
+
+  .control
+    input:not(:placeholder-shown):not(:autofill):not(:focus):invalid
+    ~ p.error {
+    @apply mt-0 max-h-96;
+  }
+
+  .control input[type='checkbox']:checked {
+    background-image: url("data:image/svg+xml,<svg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg>");
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .control select:invalid {
+    @apply text-slate-400;
+  }
+
+  .dark .control input[type='checkbox']:checked {
+    background-image: url("data:image/svg+xml,<svg viewBox='0 0 16 16' fill='black' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg>");
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .control input[type='checkbox'].toggle {
+    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" /></svg>');
+  }
+
+  .control select:focus {
+    background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M 14,11.999969 10,7.9999689 6,11.999969'/></svg>");
+  }
+
+  progress {
+    appearance: none;
+    border: none;
+    border-radius: 9999px;
+    display: block;
+    height: 1rem;
+    overflow: hidden;
+    padding: 0;
+    width: 100%;
+  }
+
+  progress::-webkit-progress-bar {
+    background-color: #ededed;
+  }
+
+  progress::-webkit-progress-value {
+    background-color: 'currentColor';
+  }
+
+  progress::-moz-progress-bar {
+    background-color: 'currentColor';
+  }
+
+  progress::-ms-fill {
+    background-color: 'currentColor';
+    border: none;
+  }
+
+  .accordion input[type='checkbox']:not(:checked) ~ .accordion-content {
+    max-height: 0;
+    border: none;
+  }
+
+  .accordion input[type='checkbox']:not(:checked) ~ .accordion-control {
+    @apply rounded-b-md;
+  }
+
+  .accordion
+    input[type='checkbox']:not(:checked)
+    ~ .accordion-control
+    .accordion-icon {
+    transform: rotate(180deg);
+  }
+}
+
+@layer utilities {
+  .bg-rainbow {
+    background: linear-gradient(
+      var(--bg-gradient-direction, 90deg),
+      #ef4444,
+      #f97316,
+      #eab308,
+      #22c55e,
+      #3b82f6,
+      #6366f1,
+      #8b5cf6
+    );
+  }
+
+  .transform-origin-center {
+    transform-origin: center;
+  }
+
+  .transform-box-fill {
+    transform-box: fill-box;
+  }
+
+  .animation-float {
+    animation: float var(--animation-duration, 4000ms) ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(var(--animation-float-y, -2em));
+    }
+
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  .animation-twinkling {
+    animation: twinkling var(--animation-duration, 8000ms) ease-in-out infinite;
+  }
+
+  @keyframes twinkling {
+    0%,
+    12%,
+    31.999%,
+    58.999%,
+    85.999%,
+    100% {
+      opacity: 0.99;
+      transform: scale(0.99);
+    }
+
+    22.99%,
+    45%,
+    70.999%,
+    95.999% {
+      opacity: 0.4;
+      transform: scale(0.1);
+    }
+  }
+}
+
+.grecaptcha-badge {
+  @apply !h-0 !w-0 !opacity-0;
+}

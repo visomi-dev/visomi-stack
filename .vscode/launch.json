@@ -6,8 +6,17 @@
       "name": "ng serve",
       "type": "chrome",
       "request": "launch",
-      "preLaunchTask": "npm: start",
-      "url": "http://localhost:4200/"
+      "preLaunchTask": "npm: serve",
+      "url": "http://localhost:4200/",
+      "runtimeArgs": ["--auto-open-devtools-for-tabs"]
+    },
+    {
+      "name": "launch server",
+      "program": "${workspaceFolder}/dist/visomi-stack/server/server.mjs",
+      "preLaunchTask": "npm: build",
+      "request": "launch",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
     },
     {
       "name": "ng test",

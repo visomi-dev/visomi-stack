@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "entryFile": "api/main",
+  "language": "ts",
+  "generateOptions": {
+    "baseDir": "./src/api"
+  },
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "tsConfigPath": "tsconfig.server.json",
+    "builder": "swc",
+    "typeCheck": true
+  }
+}
