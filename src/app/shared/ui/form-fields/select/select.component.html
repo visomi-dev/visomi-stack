@@ -1,0 +1,43 @@
+<div [formGroup]="form()" class="control flex flex-col gap-1">
+  @if (label()) {
+    <label [for]="id()">
+      {{ label() }}
+    </label>
+  }
+
+  <select
+    [id]="id()"
+    [name]="name()"
+    [formControlName]="name()"
+    class="w-full appearance-none rounded-md border-2 border-slate-300 bg-transparent px-3 py-2 focus:border-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+    [ngClass]="{
+      'pointer-events-none relative flex items-center justify-center bg-opacity-90 !text-transparent after:absolute after:block after:h-[1em] after:w-[1em] after:animate-spin after:rounded-full after:border-2 after:border-r-transparent after:border-t-transparent':
+        loading,
+    }"
+    [attr.required]="requiredAttr()"
+    [attr.readonly]="readonlyAttr()"
+  >
+    <option value="" hidden disabled selected>
+      {{ placeholder() }}
+    </option>
+
+    @for (option of options(); track option.value) {
+      <option [value]="option.value">
+        {{ option.label }}
+      </option>
+    }
+  </select>
+
+  @if (error()) {
+    <p class="text-red-400">
+      {{ error() }}
+    </p>
+  }
+  @if (help()) {
+    <p class="text-xs text-slate-500">
+      {{ help() }}
+    </p>
+  }
+
+  <ng-content />
+</div>

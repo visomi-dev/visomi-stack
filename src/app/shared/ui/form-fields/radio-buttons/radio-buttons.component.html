@@ -1,0 +1,49 @@
+<div class="control flex flex-col gap-1" [formGroup]="form()">
+  @if (label()) {
+    <p>
+      {{ label() }}
+    </p>
+  }
+
+  <fieldset>
+    <div class="grid" [ngClass]="gridClass">
+      @for (option of options(); track option.value; let index = $index) {
+        <label
+          [for]="getId(option.value)"
+          class="relative flex w-full items-center justify-center gap-2 border focus:outline-none focus:ring-offset-4 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-black md:focus:ring-2"
+          [ngClass]="[
+            value() === option.value
+              ? solidColors[color()]
+              : outlineColors[color()],
+            sizes[size()],
+            index === 0 ? 'rounded-l-lg' : '',
+            index === options.length - 1 ? 'rounded-r-lg' : '',
+          ]"
+        >
+          <input
+            type="radio"
+            [id]="getId(option.value)"
+            [name]="name()"
+            [value]="option.value"
+            [formControlName]="name()"
+            class="sr-only"
+          />
+
+          <span> {{ option.label }} </span>
+        </label>
+      }
+    </div>
+  </fieldset>
+
+  @if (error()) {
+    <p class="error overflow-hidden text-red-400 transition-all">
+      {{ error() }}
+    </p>
+  }
+
+  @if (help()) {
+    <p class="text-xs text-slate-500">
+      {{ help() }}
+    </p>
+  }
+</div>

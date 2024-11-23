@@ -1,7 +1,9 @@
 import {
   Component,
-  Input,
   booleanAttribute,
+  computed,
+  effect,
+  input,
   numberAttribute,
 } from '@angular/core';
 import { NgClass } from '@angular/common';
@@ -11,175 +13,69 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
   selector: 'app-text-area',
   standalone: true,
   imports: [NgClass, ReactiveFormsModule],
-  template: `
-    <div [formGroup]="form" class="control flex h-full flex-col gap-1">
-      @if (label) {
-        <label [for]="id">
-          {{ label }}
-        </label>
-      }
-
-      <textarea
-        [id]="id"
-        [name]="name"
-        [formControlName]="name"
-        [placeholder]="placeholder"
-        class="w-full flex-1 appearance-none rounded-md border-2 border-slate-300 bg-transparent px-3 py-2 text-justify placeholder:text-slate-400 focus:border-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        [ngClass]="$inputClass"
-        [attr.pattern]="pattern"
-        [attr.autocomplete]="autocomplete"
-        [attr.maxlength]="maxLength"
-        [attr.minlength]="minLength"
-        [rows]="rows"
-        [cols]="cols"
-        [attr.required]="$required"
-        [attr.readonly]="$readonly"
-      ></textarea>
-
-      @if (error) {
-        <p class="error overflow-hidden text-red-400 transition-all">
-          {{ error }}
-        </p>
-      }
-      @if (help) {
-        <p class="text-xs text-slate-500">
-          {{ help }}
-        </p>
-      }
-
-      <ng-content />
-    </div>
-  `,
-  styles: ``,
+  templateUrl: './text-area.component.html',
 })
 export class TextAreaComponent {
-  @Input({
-    required: true,
-  })
-  form!: FormGroup;
-
-  @Input({
-    required: true,
-  })
-  id!: string;
-
-  @Input({
-    required: true,
-  })
-  name!: string;
-
-  @Input({
-    required: false,
-  })
-  label?: string;
-
-  @Input({
-    required: true,
-  })
-  placeholder!: string;
-
-  @Input({
-    required: false,
-  })
-  pattern?: string;
-
-  @Input({
-    required: false,
+  readonly form = input.required<FormGroup>();
+  readonly id = input.required<string>();
+  readonly name = input.required<string>();
+  readonly label = input<string>();
+  readonly type = input<(string | 'text' | 'email') | undefined>('text');
+  readonly placeholder = input.required<string>();
+  readonly pattern = input<string>();
+  readonly autocomplete = input<string>();
+  readonly minLength = input<string | number, unknown>(undefined, {
     transform: numberAttribute,
-  })
-  rows?: string | number;
-
-  @Input({
-    required: false,
+  });
+  readonly maxLength = input<string | number, unknown>(undefined, {
     transform: numberAttribute,
-  })
-  cols?: string | number;
-
-  @Input({
-    required: false,
-  })
-  autocomplete?: string;
-
-  @Input({
-    required: false,
-    transform: numberAttribute,
-  })
-  minLength?: string | number;
-
-  @Input({
-    required: false,
-    transform: numberAttribute,
-  })
-  maxLength?: string | number;
-
-  @Input({
-    required: false,
+  });
+  readonly min = input<string | number>();
+  readonly max = input<string | number>();
+  readonly rows = input<string | number>();
+  readonly cols = input<string | number>();
+  readonly required = input(false, { transform: booleanAttribute });
+  readonly readonly = input<boolean, unknown>(undefined, {
     transform: booleanAttribute,
-  })
-  required = false;
+  });
+  readonly loading = input(false, { transform: booleanAttribute });
+  readonly error = input<string>();
+  readonly help = input<string>();
+  readonly step = input<string | number>();
+  readonly inputClass = input<string>();
+  readonly disabled = input(false, { transform: booleanAttribute });
 
-  @Input({
-    required: false,
-    transform: booleanAttribute,
-  })
-  readonly?: boolean;
-
-  @Input({
-    required: false,
-    transform: booleanAttribute,
-  })
-  loading = false;
-
-  @Input({
-    required: false,
-  })
-  error?: string;
-
-  @Input({
-    required: false,
-  })
-  help?: string;
-
-  @Input({
-    required: false,
-  })
-  inputClass?: string;
-
-  get $required() {
-    return this.required ? true : undefined;
-  }
-
-  get $readonly() {
-    return this.readonly ? true : undefined;
-  }
-
-  get $inputClass() {
+  readonly requiredAttr = computed(() => (this.required() ? true : undefined));
+  readonly readonlyAttr = computed(() => (this.readonly() ? true : undefined));
+  readonly $inputClass = computed(() => {
     const classes = [];
 
-    if (this.inputClass) {
-      classes.push(this.inputClass);
+    const inputClass = this.inputClass();
+
+    if (inputClass) {
+      classes.push(inputClass);
     }
 
-    if (this.loading) {
+    if (this.loading()) {
       classes.push(
-        'pointer-events-none relative flex items-center justify-center bg-opacity-90 !text-transparent after:absolute after:block after:h-[1em] after:w-[1em] after:animate-spin after:rounded-full after:border-2 after:border-r-transparent after:border-t-transparent',
+        /* tw */ 'pointer-events-none relative flex items-center justify-center bg-opacity-90 !text-transparent after:absolute after:block after:h-[1em] after:w-[1em] after:animate-spin after:rounded-full after:border-2 after:border-r-transparent after:border-t-transparent',
       );
     }
 
     return classes.join(' ');
-  }
+  });
 
-  @Input() set disabled(value: boolean) {
-    const control = this.form.get(this.name);
+  readonly disabledEffect = effect(() => {
+    const control = this.form().get(this.name());
 
     if (!control) {
       return;
     }
 
-    if (value) {
+    if (this.disabled()) {
       control.disable({ emitEvent: false });
     } else {
       control.enable({ emitEvent: false });
     }
-  }
+  });
 }

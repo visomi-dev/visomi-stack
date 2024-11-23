@@ -1,5 +1,12 @@
 import { NgClass } from '@angular/common';
-import { Component, Input, booleanAttribute, signal } from '@angular/core';
+import {
+  Component,
+  booleanAttribute,
+  computed,
+  effect,
+  input,
+  signal,
+} from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 
 import { ColorName } from '../../ui';
@@ -14,115 +21,10 @@ type Option = {
   selector: 'app-color-picker',
   standalone: true,
   imports: [NgClass, ReactiveFormsModule],
-  template: `
-    <fieldset [formGroup]="form" class="control flex flex-col gap-1">
-      @if (label) {
-        <legend>
-          {{ label }}
-        </legend>
-      }
-
-      <div
-        class="ml-1 mt-1 flex items-center gap-2 md:mb-1 md:mt-2"
-        [ngClass]="{
-          'opacity-50': disabled$(),
-        }"
-      >
-        @for (option of options; track option.name) {
-          <div
-            class="relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-1 focus:outline-none focus:ring-0"
-          >
-            <label [for]="getId(option.name)" class="sr-only">
-              {{ option.name }}
-            </label>
-
-            <div
-              class="relative h-6 w-6 rounded-full border-2 border-black border-opacity-10"
-              [ngClass]="[
-                option.classes,
-                value === option.name ? option.selected : '',
-              ]"
-            >
-              <input
-                [id]="getId(option.name)"
-                [name]="name"
-                [formControlName]="name"
-                [value]="option.name"
-                type="radio"
-                class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                [attr.required]="$required"
-              />
-            </div>
-          </div>
-        }
-      </div>
-
-      @if (error) {
-        <p class="mt-1 text-red-400">
-          {{ error }}
-        </p>
-      }
-      @if (help) {
-        <p class="mt-1 text-xs text-slate-500">
-          {{ help }}
-        </p>
-      }
-
-      <ng-content />
-    </fieldset>
-  `,
-  styles: [],
+  templateUrl: './color-picker.component.html',
 })
 export class ColorPickerComponent {
-  @Input({
-    required: true,
-  })
-  form!: FormGroup;
-
-  @Input({
-    required: true,
-  })
-  id!: string;
-
-  @Input({
-    required: true,
-  })
-  name!: string;
-
-  @Input({
-    required: false,
-  })
-  label?: string;
-
-  @Input({
-    required: false,
-    transform: booleanAttribute,
-  })
-  required = false;
-
-  @Input({
-    required: false,
-    transform: booleanAttribute,
-  })
-  readonly?: boolean;
-
-  @Input({
-    required: false,
-    transform: booleanAttribute,
-  })
-  loading = false;
-
-  @Input({
-    required: false,
-  })
-  error?: string;
-
-  @Input({
-    required: false,
-  })
-  help?: string;
-
-  options: Option[] = [
+  readonly options: Option[] = [
     {
       name: 'BLUE',
       classes: /* tw */ 'bg-blue-500 md:focus:ring-blue-200',
@@ -155,35 +57,44 @@ export class ColorPickerComponent {
     },
   ];
 
-  readonly disabled$ = signal(false);
+  readonly form = input.required<FormGroup>();
+  readonly id = input.required<string>();
+  readonly name = input.required<string>();
+  readonly label = input<string>();
+  readonly required = input(false, { transform: booleanAttribute });
+  readonly readonly = input<boolean, unknown>(undefined, {
+    transform: booleanAttribute,
+  });
+  readonly loading = input(false, { transform: booleanAttribute });
+  readonly error = input<string>();
+  readonly help = input<string>();
+  readonly step = input<string | number>();
+  readonly inputClass = input<string>();
+  readonly disabled = input(false, { transform: booleanAttribute });
 
-  get value() {
-    return this.form.get(this.name)?.value;
-  }
+  readonly $disabled = signal(false);
 
-  get $required() {
-    return this.required ? true : undefined;
-  }
+  readonly requiredAttr = computed(() => (this.required() ? true : undefined));
+  readonly readonlyAttr = computed(() => (this.readonly() ? true : undefined));
+  readonly value = computed(() => this.form().get(this.name())?.value ?? '');
 
-  get $readonly() {
-    return this.readonly ? true : undefined;
-  }
-
-  @Input() set disabled(value: boolean) {
-    const control = this.form.get(this.name);
-
-    this.disabled$.set(value);
+  readonly disabledEffect = effect(() => {
+    const control = this.form().get(this.name());
 
     if (!control) {
       return;
     }
 
-    if (value) {
+    const disabled = this.disabled();
+
+    this.$disabled.set(disabled);
+
+    if (disabled) {
       control.disable({ emitEvent: false });
     } else {
       control.enable({ emitEvent: false });
     }
-  }
+  });
 
   getId(name: string): string {
     return `color-picker-${this.id}-${name}`;

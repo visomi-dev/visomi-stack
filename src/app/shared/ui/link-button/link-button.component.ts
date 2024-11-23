@@ -1,4 +1,4 @@
-import { Component, Input, booleanAttribute } from '@angular/core';
+import { Component, booleanAttribute, computed, input } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
@@ -10,72 +10,44 @@ import {
   outlineColors,
   sizes,
   solidColors,
-} from '../../../config/classes';
+} from '~/app/config/classes';
 
 @Component({
   selector: 'app-link-button',
   standalone: true,
   imports: [NgClass, RouterLink],
-  template: `
-    <a
-      [routerLink]="to"
-      class="flex w-full items-center justify-center gap-2 rounded-lg border-2 focus:outline-none focus:ring-offset-4 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-black md:focus:ring-2"
-      [ngClass]="classes"
-    >
-      <ng-content />
-    </a>
-  `,
-  styles: [],
+  templateUrl: './link-button.component.html',
 })
 export class LinkButtonComponent {
-  @Input({ required: true }) to!: string | string[];
+  readonly sizes = sizes;
+  readonly solidColors = solidColors;
+  readonly outlineColors = outlineColors;
 
-  @Input({
-    required: false,
-  })
-  size: Size = 'md';
+  readonly to = input.required<string | string[]>();
+  readonly size = input<Size>('md');
+  readonly variant = input<Variant>('solid');
+  readonly color = input<Color>('default');
+  readonly loading = input(false, { transform: booleanAttribute });
+  readonly disabled = input(false, { transform: booleanAttribute });
 
-  @Input({
-    required: false,
-  })
-  variant: Variant = 'solid';
+  readonly classes = computed(() => {
+    const classes: string[] = [this.sizes[this.size()]];
 
-  @Input({
-    required: false,
-  })
-  color: Color = 'default';
-
-  @Input({
-    required: false,
-    transform: booleanAttribute,
-  })
-  loading = false;
-
-  @Input({
-    required: false,
-    transform: booleanAttribute,
-  })
-  disabled = false;
-
-  sizes = sizes;
-  solidColors = solidColors;
-  outlineColors = outlineColors;
-
-  get classes(): string[] {
-    const classes: string[] = [this.sizes[this.size]];
-
-    if (this.loading) {
+    if (this.loading()) {
       classes.push(LOADING_CLASSES);
     }
 
-    if (this.variant === 'solid') {
-      classes.push(this.solidColors[this.color]);
+    switch (this.variant()) {
+      case 'solid':
+        classes.push(this.solidColors[this.color()]);
+        break;
+      case 'outline':
+        classes.push(this.outlineColors[this.color()]);
+        break;
+      default:
+        break;
     }
 
-    if (this.variant === 'outline') {
-      classes.push(this.outlineColors[this.color]);
-    }
-
-    return classes;
-  }
+    return classes.join(' ');
+  });
 }

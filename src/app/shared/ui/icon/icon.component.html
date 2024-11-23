@@ -1,0 +1,13 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  aria-hidden="true"
+  class="h-full w-full"
+  fill="none"
+  stroke-width="1.5"
+  stroke="currentColor"
+>
+  @for (path of paths(); track path) {
+    <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="path" />
+  }
+</svg>

@@ -1,0 +1,30 @@
+<label
+  tabindex="0"
+  [for]="id()"
+  class="relative flex flex-col rounded-md border bg-white p-2 transition-all focus:outline-none focus:ring-primary focus:ring-offset-4 focus:ring-offset-white dark:bg-transparent dark:focus:ring-offset-black md:focus:ring-2"
+  [ngClass]="inputClasses"
+  [formGroup]="form()"
+  (keyup)="onKeyUp($event)"
+>
+  <input
+    [id]="id()"
+    type="radio"
+    [value]="value"
+    class="absolute inset-0 h-full w-full opacity-0"
+    [formControlName]="name()"
+    (click)="onSelect()"
+  />
+
+  <ng-content />
+
+  <div
+    class="absolute right-3 top-2 h-6 w-6 rounded-full border-2 p-0.5 transition-all"
+    [ngClass]="inputClasses"
+  >
+    <app-icon
+      icon="check"
+      class="transition-all"
+      [ngClass]="[checked() ? 'text-primary' : 'opacity-0']"
+    />
+  </div>
+</label>

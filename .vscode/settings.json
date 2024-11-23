@@ -38,7 +38,8 @@
     "class",
     "className",
     "ngClass",
-    "routerLinkActive"
+    "routerLinkActive",
+    "class.*"
   ],
   "tailwindCSS.experimental.classRegex": [
     "/\\*\\s*tw\\s*\\*/\\s*'([^']*)'",

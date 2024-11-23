@@ -1,0 +1,56 @@
+<fieldset [formGroup]="form()" class="control flex flex-col gap-1">
+  @if (label()) {
+    <legend>
+      {{ label() }}
+    </legend>
+  }
+
+  <div
+    class="ml-1 mt-1 flex items-center gap-2 md:mb-1 md:mt-2"
+    [ngClass]="{
+      'opacity-50': $disabled(),
+    }"
+  >
+    @for (option of options; track option.name) {
+      <div
+        class="relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-1 focus:outline-none focus:ring-0"
+      >
+        <label [for]="getId(option.name)" class="sr-only">
+          {{ option.name }}
+        </label>
+
+        <div
+          class="relative h-6 w-6 rounded-full border-2 border-black border-opacity-10"
+          [ngClass]="[
+            option.classes,
+            value() === option.name ? option.selected : '',
+          ]"
+        >
+          <input
+            [id]="getId(option.name)"
+            [name]="name()"
+            [formControlName]="name()"
+            [value]="option.name"
+            type="radio"
+            class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            [attr.required]="requiredAttr()"
+            [attr.readonly]="readonlyAttr()"
+          />
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (error()) {
+    <p class="mt-1 text-red-400">
+      {{ error() }}
+    </p>
+  }
+  @if (help()) {
+    <p class="mt-1 text-xs text-slate-500">
+      {{ help() }}
+    </p>
+  }
+
+  <ng-content />
+</fieldset>

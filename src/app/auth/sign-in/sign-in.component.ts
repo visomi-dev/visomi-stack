@@ -20,16 +20,16 @@ import { AUTH_PAGE_CLASSES } from '../../config/classes';
 import { DASHBOARD_PATH } from '../../config/routes';
 
 @Component({
-    selector: 'app-sign-in',
-    imports: [
-        ReactiveFormsModule,
-        NgClass,
-        TextInputComponent,
-        PasswordInputComponent,
-        ButtonComponent,
-    ],
-    templateUrl: './sign-in.component.html',
-    styles: []
+  selector: 'app-sign-in',
+  imports: [
+    ReactiveFormsModule,
+    NgClass,
+    TextInputComponent,
+    PasswordInputComponent,
+    ButtonComponent,
+  ],
+  templateUrl: './sign-in.component.html',
+  styles: [],
 })
 export default class SignInComponent {
   @HostBinding('class') readonly cls = AUTH_PAGE_CLASSES;
@@ -74,16 +74,11 @@ export default class SignInComponent {
     }
   }
 
-  formValueChangesEffect = effect(
-    () => {
-      this.formValueChanges();
+  readonly formValueChangesEffect = effect(() => {
+    this.formValueChanges();
 
-      if (untracked(() => this.error())) {
-        this.error.set(null);
-      }
-    },
-    {
-      allowSignalWrites: true,
-    },
-  );
+    if (untracked(() => this.error())) {
+      this.error.set(null);
+    }
+  });
 }

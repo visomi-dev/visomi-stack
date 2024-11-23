@@ -1,4 +1,10 @@
-import { Component, Input, booleanAttribute } from '@angular/core';
+import {
+  Component,
+  booleanAttribute,
+  computed,
+  effect,
+  input,
+} from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
 
@@ -8,131 +14,40 @@ import { SelectOption } from '../../ui';
   selector: 'app-select',
   standalone: true,
   imports: [NgClass, ReactiveFormsModule],
-  template: `
-    <div [formGroup]="form" class="control flex flex-col gap-1">
-      @if (label) {
-        <label [for]="id">
-          {{ label }}
-        </label>
-      }
-
-      <select
-        [id]="id"
-        [name]="name"
-        [formControlName]="name"
-        class="w-full appearance-none rounded-md border-2 border-slate-300 bg-transparent px-3 py-2 focus:border-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        [ngClass]="{
-          'pointer-events-none relative flex items-center justify-center bg-opacity-90 !text-transparent after:absolute after:block after:h-[1em] after:w-[1em] after:animate-spin after:rounded-full after:border-2 after:border-r-transparent after:border-t-transparent':
-            loading,
-        }"
-        [attr.required]="$required"
-        [attr.readonly]="$readonly"
-      >
-        <option value="" hidden disabled selected>
-          {{ placeholder }}
-        </option>
-
-        @for (option of options; track option.value) {
-          <option [value]="option.value">
-            {{ option.label }}
-          </option>
-        }
-      </select>
-
-      @if (error) {
-        <p class="text-red-400">
-          {{ error }}
-        </p>
-      }
-      @if (help) {
-        <p class="text-xs text-slate-500">
-          {{ help }}
-        </p>
-      }
-
-      <ng-content />
-    </div>
-  `,
-  styles: [],
+  templateUrl: './select.component.html',
 })
 export class SelectComponent {
-  @Input({
-    required: true,
-  })
-  form!: FormGroup;
-
-  @Input({
-    required: true,
-  })
-  id!: string;
-
-  @Input({
-    required: true,
-  })
-  name!: string;
-
-  @Input({
-    required: false,
-  })
-  label?: string;
-
-  @Input({
-    required: true,
-  })
-  placeholder!: string;
-
-  @Input({
-    required: false,
+  readonly form = input.required<FormGroup>();
+  readonly id = input.required<string>();
+  readonly name = input.required<string>();
+  readonly label = input<string>();
+  readonly placeholder = input<string>();
+  readonly required = input(false, { transform: booleanAttribute });
+  readonly readonly = input<boolean, unknown>(undefined, {
     transform: booleanAttribute,
-  })
-  required = false;
+  });
+  readonly loading = input(false, { transform: booleanAttribute });
+  readonly error = input<string>();
+  readonly help = input<string>();
+  readonly disabled = input(false, { transform: booleanAttribute });
+  readonly options = input.required<SelectOption[]>();
 
-  @Input({
-    required: false,
-    transform: booleanAttribute,
-  })
-  readonly?: boolean;
+  readonly requiredAttr = computed(() => (this.required() ? true : undefined));
+  readonly readonlyAttr = computed(() => (this.readonly() ? true : undefined));
 
-  @Input({
-    required: false,
-    transform: booleanAttribute,
-  })
-  loading = false;
-
-  @Input({
-    required: false,
-  })
-  error?: string;
-
-  @Input({
-    required: false,
-  })
-  help?: string;
-
-  @Input({
-    required: true,
-  })
-  options!: readonly SelectOption[];
-
-  get $required() {
-    return this.required ? true : undefined;
-  }
-
-  get $readonly() {
-    return this.readonly ? true : undefined;
-  }
-
-  @Input() set disabled(value: boolean) {
-    const control = this.form.get(this.name);
+  readonly disabledEffect = effect(() => {
+    const control = this.form().get(this.name());
 
     if (!control) {
       return;
     }
 
-    if (value) {
+    const disabled = this.disabled();
+
+    if (disabled) {
       control.disable({ emitEvent: false });
     } else {
       control.enable({ emitEvent: false });
     }
-  }
+  });
 }
