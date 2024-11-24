@@ -1,0 +1,10 @@
+{
+  "passwordRecovery": {
+    "from": "visomi_stack <hola@{domain}>",
+    "subject": "Recuperar contraseña",
+    "title": "Recuperar contraseña",
+    "preview": "Hola {name}, ingresa el código de recuperación en la aplicación",
+    "greetings": "Hola {name}",
+    "instructions": "Ingresa el código de recuperación en la aplicación"
+  }
+}

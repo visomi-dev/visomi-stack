@@ -69,7 +69,7 @@ export default class SignInComponent {
       console.error(error);
 
       this.error.set(
-        $localize`:@@sign-in-error:Correo electrónico o contraseña incorrectos`,
+        $localize`:@@signInError:Correo electrónico o contraseña incorrectos`,
       );
     }
   }

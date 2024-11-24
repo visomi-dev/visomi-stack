@@ -8,7 +8,7 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2021",
     "sourceMap": true,
-    "outDir": "./dist/api",
+    "outDir": "./dist/src",
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
@@ -20,5 +20,6 @@
     "paths": {
       "~/*": ["./src/*"]
     }
-  }
+  },
+  "include": ["src/api/**/*.ts", "src/api/*.ts"]
 }

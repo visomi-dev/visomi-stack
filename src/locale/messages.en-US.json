@@ -1,0 +1,18 @@
+{
+  "locale": "en-US",
+  "translations": {
+    "signInTitle": "Sign In",
+    "signInDescription": "Enter your username and password to start.",
+    "usernameLabel": "Email",
+    "usernamePlaceholder": "Enter your email",
+    "usernameError": "Enter a valid email, example: user@mail.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordError": "Enter a valid password, example: Password123!",
+    "signInButton": "Sign In",
+    "signInError": "Incorrect email or password",
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "Sorry, the page you are looking for does not exist.",
+    "notFoundBack": "Back to home"
+  }
+}

@@ -3,17 +3,23 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "visomi-stack": {
+    "app": {
       "projectType": "application",
       "schematics": {},
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
+      "i18n": {
+        "sourceLocale": "es-419",
+        "locales": {
+          "en-US": "src/locale/messages.en-US.json"
+        }
+      },
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/visomi-stack",
+            "outputPath": "dist/app",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["@angular/localize/init"],
@@ -30,7 +36,8 @@
             "outputMode": "server",
             "ssr": {
               "entry": "src/server.ts"
-            }
+            },
+            "localize": true
           },
           "configurations": {
             "production": {
@@ -66,10 +73,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "visomi-stack:build:production"
+              "buildTarget": "app:build:production"
             },
             "development": {
-              "buildTarget": "visomi-stack:build:development"
+              "buildTarget": "app:build:development"
             }
           },
           "defaultConfiguration": "development"

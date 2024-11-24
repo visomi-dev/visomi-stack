@@ -1,0 +1,18 @@
+{
+  "locale": "es-419",
+  "translations": {
+    "signInTitle": "Iniciar Sesión",
+    "signInDescription": " Ingresa tu usuario y contraseña para comenzar. ",
+    "usernameLabel": "Correo Electrónico",
+    "usernamePlaceholder": "Ingresa tu correo electrónico",
+    "usernameError": "Ingresa un correo electrónico válido, ejemplo: user@domain.com",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "Ingresa tu contraseña",
+    "passwordError": "Ingresa una contraseña válida, ejemplo: Contraseña123!",
+    "signInButton": " Iniciar Sesión ",
+    "signInError": "Correo electrónico o contraseña incorrectos",
+    "notFoundTitle": " Pagina no encontrada ",
+    "notFoundDescription": " Lo sentimos, la página que buscas no existe. ",
+    "notFoundBack": "Volver al inicio"
+  }
+}

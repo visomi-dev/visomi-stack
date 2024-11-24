@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import concat from 'lodash/concat';
 
 import { routes as auth } from './auth/auth.routes';
 import { DASHBOARD_PATH } from './config/routes';
@@ -22,4 +21,4 @@ const base: Routes = [
   },
 ];
 
-export const routes: Routes = concat(auth, base);
+export const routes: Routes = auth.concat(base);

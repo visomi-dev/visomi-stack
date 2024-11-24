@@ -12,8 +12,8 @@
     },
     {
       "name": "launch server",
-      "program": "${workspaceFolder}/dist/visomi-stack/server/server.mjs",
-      "preLaunchTask": "npm: build",
+      "program": "${workspaceFolder}/dist/api/server.js",
+      "preLaunchTask": "npm: api:build",
       "request": "launch",
       "skipFiles": ["<node_internals>/**"],
       "type": "node"
