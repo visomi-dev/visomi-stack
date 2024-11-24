@@ -1,11 +1,11 @@
 import { Routes } from '@angular/router';
-import merge from 'lodash/merge';
+import concat from 'lodash/concat';
 
 import { routes as auth } from './auth/auth.routes';
 import { DASHBOARD_PATH } from './config/routes';
 import { authenticatedGuard } from './shared/auth/authenticated.guard';
 
-export const routes: Routes = merge(auth, [
+const base: Routes = [
   {
     path: '',
     redirectTo: DASHBOARD_PATH,
@@ -20,4 +20,6 @@ export const routes: Routes = merge(auth, [
     path: '**',
     loadComponent: () => import('./not-found/not-found.component'),
   },
-]);
+];
+
+export const routes: Routes = concat(auth, base);
