@@ -60,20 +60,6 @@ export class AuthService {
     return this.loadPromise;
   }
 
-  async getUser() {
-    try {
-      this.loading.set(true);
-
-      const user = await lastValueFrom(this.http.get<User>('/api/auth/me'));
-
-      this.user.set(user);
-
-      return user;
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
   async signIn(username: string, password: string) {
     try {
       this.signing.set(true);
@@ -86,7 +72,7 @@ export class AuthService {
             refreshToken: string;
           };
           user: User;
-        }>('/api/auth/sign-in', {
+        }>('/auth/sign-in', {
           username,
           password,
         }),
@@ -100,6 +86,20 @@ export class AuthService {
       return { session, user };
     } finally {
       this.signing.set(false);
+    }
+  }
+
+  async getUser() {
+    try {
+      this.loading.set(true);
+
+      const user = await lastValueFrom(this.http.get<User>('/auth/me'));
+
+      this.user.set(user);
+
+      return user;
+    } finally {
+      this.loading.set(false);
     }
   }
 }

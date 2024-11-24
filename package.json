@@ -4,10 +4,12 @@
   "scripts": {
     "commitlint": "commitlint",
     "prettier": "prettier",
+    "prisma": "prisma",
     "ng": "ng",
     "serve": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
+    "nest:watch": "nest start --watch",
     "test": "ng test",
     "serve:ssr:visomi-stack": "node dist/visomi-stack/server/server.mjs",
     "prepare": "husky || true",

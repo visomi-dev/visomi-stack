@@ -20,7 +20,11 @@ export class AuthController {
   @Post('sign-in')
   @ApiCreatedResponse({ type: AuthResultEntity })
   async signIn(@Req() req: Request, @Body() _signInDto: SignInDto) {
-    return await this.authService.signIn(req.user!);
+    const response = await this.authService.signIn(req.user!);
+
+    console.log(response);
+
+    return response;
   }
 
   @Get('me')
