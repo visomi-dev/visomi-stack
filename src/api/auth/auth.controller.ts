@@ -20,11 +20,7 @@ export class AuthController {
   @Post('sign-in')
   @ApiCreatedResponse({ type: AuthResultEntity })
   async signIn(@Req() req: Request, @Body() _signInDto: SignInDto) {
-    const response = await this.authService.signIn(req.user!);
-
-    console.log(response);
-
-    return response;
+    return await this.authService.signIn(req.user!);
   }
 
   @Get('me')
@@ -32,7 +28,9 @@ export class AuthController {
   async user(@Req() req: Request) {
     return {
       user: req.user,
-      accessToken: this.authService.refreshAccessToken(req.user!),
+      session: {
+        accessToken: this.authService.refreshAccessToken(req.user!),
+      },
     };
   }
 }

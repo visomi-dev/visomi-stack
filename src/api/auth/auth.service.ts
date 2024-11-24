@@ -7,6 +7,8 @@ import { UsersService } from '../users/users.service';
 import { AuthResult } from './entities/auth.entity';
 import { BcryptService } from './bcrypt/bcrypt.service';
 
+import { auth } from '~/common';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -21,7 +23,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(auth.INVALID_USER);
     }
 
     const isPasswordValid = await this.bcryptService.compare(
@@ -30,7 +32,7 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(auth.INVALID_USER);
     }
 
     return user;
@@ -43,7 +45,9 @@ export class AuthService {
 
     return {
       user,
-      accessToken,
+      session: {
+        accessToken,
+      },
     };
   }
 

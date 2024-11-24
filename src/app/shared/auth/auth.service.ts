@@ -9,9 +9,9 @@ import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
-import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from '../../config/storage';
-
 import { User } from './user';
+
+import { ACCESS_TOKEN_KEY } from '~/app/config/storage';
 
 @Injectable({
   providedIn: 'root',
@@ -67,9 +67,7 @@ export class AuthService {
       const { session, user } = await lastValueFrom(
         this.http.post<{
           session: {
-            idToken: string;
             accessToken: string;
-            refreshToken: string;
           };
           user: User;
         }>('/auth/sign-in', {
@@ -81,7 +79,6 @@ export class AuthService {
       this.user.set(user);
 
       localStorage.setItem(ACCESS_TOKEN_KEY, session.accessToken);
-      localStorage.setItem(REFRESH_TOKEN_KEY, session.refreshToken);
 
       return { session, user };
     } finally {

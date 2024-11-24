@@ -4,15 +4,28 @@ import { UserWithDependenciesEntity } from '../../users/entities/user.entity';
 
 export type AuthResult = {
   user: UserWithDependenciesEntity;
+  session: {
+    accessToken: string;
+  };
+};
+
+export type Session = {
   accessToken: string;
 };
+
+export class SessionEntity implements Session {
+  @ApiProperty()
+  accessToken!: string;
+}
 
 export class AuthResultEntity implements AuthResult {
   @ApiProperty({ type: UserWithDependenciesEntity })
   user!: UserWithDependenciesEntity;
 
-  @ApiProperty()
-  accessToken!: string;
+  @ApiProperty({
+    type: SessionEntity,
+  })
+  session!: Session;
 }
 
 export enum Action {
