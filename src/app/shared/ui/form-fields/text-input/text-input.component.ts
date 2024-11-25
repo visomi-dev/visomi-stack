@@ -55,7 +55,7 @@ export class TextInputComponent {
 
     if (this.loading()) {
       classes.push(
-        /* tw */ 'pointer-events-none relative flex items-center justify-center bg-opacity-90 !text-transparent after:absolute after:block after:h-[1em] after:w-[1em] after:animate-spin after:rounded-full after:border-2 after:border-r-transparent after:border-t-transparent',
+        /* tw */ 'pointer-events-none relative flex items-center justify-center bg-opacity-90 text-transparent! after:absolute after:block after:h-[1em] after:w-[1em] after:animate-spin after:rounded-full after:border-2 after:border-r-transparent after:border-t-transparent',
       );
     }
 

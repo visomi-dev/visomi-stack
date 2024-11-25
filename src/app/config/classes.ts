@@ -33,7 +33,7 @@ export const outlineColors = Object.freeze({
 });
 
 export const LOADING_CLASSES =
-  /* tw */ 'pointer-events-none relative bg-opacity-90 !text-transparent after:absolute after:block after:h-[1em] after:w-[1em] after:animate-spin after:rounded-full after:border-2 after:border-r-transparent after:border-t-transparent';
+  /* tw */ 'pointer-events-none relative bg-opacity-90 text-transparent! after:absolute after:block after:h-[1em] after:w-[1em] after:animate-spin after:rounded-full after:border-2 after:border-r-transparent after:border-t-transparent';
 
 export type Variant = 'solid' | 'outline';
 export type Size = keyof typeof sizes;

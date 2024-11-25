@@ -10,7 +10,7 @@
       @for (option of options(); track option.value; let index = $index) {
         <label
           [for]="getId(option.value)"
-          class="relative flex w-full items-center justify-center gap-2 border focus:outline-none focus:ring-offset-4 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-black md:focus:ring-2"
+          class="relative flex w-full items-center justify-center gap-2 border focus:outline-hidden focus:ring-offset-4 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-black md:focus:ring-2"
           [ngClass]="[
             value() === option.value
               ? solidColors[color()]
