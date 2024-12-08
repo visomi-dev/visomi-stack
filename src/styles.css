@@ -1,273 +1,108 @@
-@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@variant dark (&:is(.dark *));
-
-@theme {
-  --text-*: initial;
-  --text-xs: 0.75rem;
-  --text-xs--line-height: 1rem;
-  --text-sm: 0.875rem;
-  --text-sm--line-height: 1.5rem;
-  --text-base: 1rem;
-  --text-base--line-height: 1.75rem;
-  --text-lg: 1.125rem;
-  --text-lg--line-height: 2rem;
-  --text-xl: 1.25rem;
-  --text-xl--line-height: 2rem;
-  --text-2xl: 1.5rem;
-  --text-2xl--line-height: 2rem;
-  --text-3xl: 2rem;
-  --text-3xl--line-height: 2.5rem;
-  --text-4xl: 2.5rem;
-  --text-4xl--line-height: 3.5rem;
-  --text-5xl: 3rem;
-  --text-5xl--line-height: 3.5rem;
-  --text-6xl: 3.75rem;
-  --text-6xl--line-height: 1;
-  --text-7xl: 4.5rem;
-  --text-7xl--line-height: 1.1;
-  --text-8xl: 6rem;
-  --text-8xl--line-height: 1;
-  --text-9xl: 8rem;
-  --text-9xl--line-height: 1;
-
-  --padding-18: 4.5rem;
-
-  --margin-18: 4.5rem;
-
-  --height-18: 4.5rem;
-
-  --width-xl: 36rem;
-
-  --container-60: 15rem;
-  --container-2xl: 40rem;
-
-  --radius-4xl: 2rem;
-
-  --font-sans: Poppins, sans-serif;
-  --font-display: Poppins, sans-serif;
-
-  --transition-duration-400: 400ms;
-
-  --color-black: #1d1e25;
-  --color-soft-gray: #f5f5f5;
-  --color-primary: #1d1e25;
-
-  --animate-fade-in: fade-in 1000ms forwards;
-  --animate-fade-out: fade-out 1000ms forwards;
-  --animate-fade: fade 400ms ease-in-out forwards;
-  --animate-slide: slide 1000ms linear infinite;
-
-  @keyframes fade {
-    0% {
-      opacity: 0;
-    }
-    99.99% {
-      opacity: 0.9;
-    }
-  }
-
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes fade-out {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0;
-    }
-  }
-
-  @keyframes slide {
-    from {
-      transform: translateX(-100%);
-    }
-    to {
-      transform: translateX(100vw);
-    }
-  }
+.control.autocomplete input {
+  background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/></svg>");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
-  }
+.control.autocomplete.open input {
+  background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M 14,11.999969 10,7.9999689 6,11.999969'/></svg>");
 }
 
-@utility control {
-  &.autocomplete input {
-    background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/></svg>");
-    background-position: right 0.5rem center;
-    background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  &.autocomplete.open input {
-    background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M 14,11.999969 10,7.9999689 6,11.999969'/></svg>");
-  }
-
-  & input:not(:placeholder-shown):not(:autofill):not(:focus):invalid {
-    @apply border-red-400;
-  }
-
-  & input ~ p.error {
-    @apply max-h-0;
-  }
-
-  & input ~ p.error {
-    @apply -mt-1;
-  }
-
-  & input:not(:placeholder-shown):not(:autofill):not(:focus):invalid ~ p.error {
-    @apply mt-0 max-h-96;
-  }
-
-  & input[type='checkbox']:checked {
-    background-image: url("data:image/svg+xml,<svg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg>");
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-
-  & select:invalid {
-    @apply text-slate-400;
-  }
-
-  .dark & input[type='checkbox']:checked {
-    background-image: url("data:image/svg+xml,<svg viewBox='0 0 16 16' fill='black' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg>");
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-
-  & input[type='checkbox'].toggle {
-    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" /></svg>');
-  }
-
-  & select:focus {
-    background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M 14,11.999969 10,7.9999689 6,11.999969'/></svg>");
-  }
+.control input:not(:placeholder-shown):not(:autofill):not(:focus):invalid {
+  @apply border-red-400;
 }
 
-@utility autocomplete {
-  &.control input {
-    background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/></svg>");
-    background-position: right 0.5rem center;
-    background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  &.control.open input {
-    background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M 14,11.999969 10,7.9999689 6,11.999969'/></svg>");
-  }
+.control input ~ p.error,
+*:not(.control) p.error.hidden {
+  @apply max-h-0;
 }
 
-@utility open {
-  &.control.autocomplete input {
-    background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M 14,11.999969 10,7.9999689 6,11.999969'/></svg>");
-  }
+.control input ~ p.error {
+  @apply -mt-1;
 }
 
-@utility error {
-  .control input ~ &p {
-    @apply max-h-0;
-  }
-
-  *:not(.control) &p.hidden {
-    @apply max-h-0;
-  }
-
-  .control input ~ &p {
-    @apply -mt-1;
-  }
-
-  .control
-    input:not(:placeholder-shown):not(:autofill):not(:focus):invalid
-    ~ &p {
-    @apply mt-0 max-h-96;
-  }
+.control
+  input:not(:placeholder-shown):not(:autofill):not(:focus):invalid
+  ~ p.error {
+  @apply mt-0 max-h-96;
 }
 
-@utility hidden {
-  *:not(.control) &p.error {
-    @apply max-h-0;
-  }
+.control input[type='checkbox']:checked {
+  background-image: url("data:image/svg+xml,<svg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg>");
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-@utility dark {
-  & .control input[type='checkbox']:checked {
-    background-image: url("data:image/svg+xml,<svg viewBox='0 0 16 16' fill='black' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg>");
-    background-position: center;
-    background-repeat: no-repeat;
-  }
+.control select:invalid {
+  @apply text-slate-400;
 }
 
-@utility toggle {
-  .control &input[type='checkbox'] {
-    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" /></svg>');
-  }
+.dark .control input[type='checkbox']:checked {
+  background-image: url("data:image/svg+xml,<svg viewBox='0 0 16 16' fill='black' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg>");
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-@utility accordion {
-  & input[type='checkbox']:not(:checked) ~ .accordion-content {
-    max-height: 0;
-    border: none;
-  }
-
-  & input[type='checkbox']:not(:checked) ~ .accordion-control {
-    @apply rounded-b-md;
-  }
-
-  & input[type='checkbox']:not(:checked) ~ .accordion-control .accordion-icon {
-    transform: rotate(180deg);
-  }
+.control input[type='checkbox'].toggle {
+  background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" /></svg>');
 }
 
-@utility accordion-content {
-  .accordion input[type='checkbox']:not(:checked) ~ & {
-    max-height: 0;
-    border: none;
-  }
+.control select:focus {
+  background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'><path stroke='#6b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M 14,11.999969 10,7.9999689 6,11.999969'/></svg>");
 }
 
-@utility accordion-control {
-  .accordion input[type='checkbox']:not(:checked) ~ & {
-    @apply rounded-b-md;
-  }
-
-  .accordion input[type='checkbox']:not(:checked) ~ & .accordion-icon {
-    transform: rotate(180deg);
-  }
+progress {
+  appearance: none;
+  border: none;
+  border-radius: 9999px;
+  display: block;
+  height: 1rem;
+  overflow: hidden;
+  padding: 0;
+  width: 100%;
 }
 
-@utility accordion-icon {
-  .accordion input[type='checkbox']:not(:checked) ~ .accordion-control & {
-    transform: rotate(180deg);
-  }
+progress::-webkit-progress-bar {
+  background-color: #ededed;
 }
 
-@utility bg-rainbow {
+progress::-webkit-progress-value {
+  background-color: 'currentColor';
+}
+
+progress::-moz-progress-bar {
+  background-color: 'currentColor';
+}
+
+progress::-ms-fill {
+  background-color: 'currentColor';
+  border: none;
+}
+
+.accordion input[type='checkbox']:not(:checked) ~ .accordion-content {
+  max-height: 0;
+  border: none;
+}
+
+.accordion input[type='checkbox']:not(:checked) ~ .accordion-control {
+  @apply rounded-b-md;
+}
+
+.accordion
+  input[type='checkbox']:not(:checked)
+  ~ .accordion-control
+  .accordion-icon {
+  transform: rotate(180deg);
+}
+
+.bg-rainbow {
   background: linear-gradient(
     var(--bg-gradient-direction, 90deg),
     #ef4444,
@@ -280,88 +115,56 @@
   );
 }
 
-@utility transform-origin-center {
+.transform-origin-center {
   transform-origin: center;
 }
 
-@utility transform-box-fill {
+.transform-box-fill {
   transform-box: fill-box;
 }
 
-@utility animation-float {
+.animation-float {
   animation: float var(--animation-duration, 4000ms) ease-in-out infinite;
 }
 
-@utility animation-twinkling {
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(var(--animation-float-y, -2em));
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animation-twinkling {
   animation: twinkling var(--animation-duration, 8000ms) ease-in-out infinite;
 }
 
-@layer components {
-  progress {
-    appearance: none;
-    border: none;
-    border-radius: 9999px;
-    display: block;
-    height: 1rem;
-    overflow: hidden;
-    padding: 0;
-    width: 100%;
+@keyframes twinkling {
+  0%,
+  12%,
+  31.999%,
+  58.999%,
+  85.999%,
+  100% {
+    opacity: 0.99;
+    transform: scale(0.99);
   }
 
-  progress::-webkit-progress-bar {
-    background-color: #ededed;
-  }
-
-  progress::-webkit-progress-value {
-    background-color: 'currentColor';
-  }
-
-  progress::-moz-progress-bar {
-    background-color: 'currentColor';
-  }
-
-  progress::-ms-fill {
-    background-color: 'currentColor';
-    border: none;
-  }
-}
-
-@layer utilities {
-  @keyframes float {
-    0% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(var(--animation-float-y, -2em));
-    }
-
-    100% {
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes twinkling {
-    0%,
-    12%,
-    31.999%,
-    58.999%,
-    85.999%,
-    100% {
-      opacity: 0.99;
-      transform: scale(0.99);
-    }
-
-    22.99%,
-    45%,
-    70.999%,
-    95.999% {
-      opacity: 0.4;
-      transform: scale(0.1);
-    }
+  22.99%,
+  45%,
+  70.999%,
+  95.999% {
+    opacity: 0.4;
+    transform: scale(0.1);
   }
 }
 
 .grecaptcha-badge {
-  @apply h-0! w-0! opacity-0!;
+  @apply !h-0 !w-0 !opacity-0;
 }

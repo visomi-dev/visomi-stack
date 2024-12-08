@@ -1,19 +1,23 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import {
-  AngularNodeAppEngine,
-  createNodeRequestHandler,
-  isMainModule,
-  writeResponseToNodeResponse,
-} from '@angular/ssr/node';
-import express from 'express';
+import { AngularAppEngine, createRequestHandler } from '@angular/ssr';
+import { isMainModule } from '@angular/ssr/node';
+import { Hono } from 'hono';
+import { logger } from 'hono/logger';
+import { cache } from 'hono/cache';
+import { serve } from '@hono/node-server';
+import { serveStatic } from '@hono/node-server/serve-static';
+
+const app = new Hono();
 
 const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
 
-const app = express();
-const angularApp = new AngularNodeAppEngine();
+const angularApp = new AngularAppEngine();
+
+app.use(logger());
+app.use(cache({ cacheName: 'visomi-stack' }));
 
 /**
  * Example Express Rest API endpoints can be defined here.
@@ -30,33 +34,40 @@ const angularApp = new AngularNodeAppEngine();
 /**
  * Serve static files from /browser
  */
-app.use(express.static(browserDistFolder));
+app.use(serveStatic({ root: browserDistFolder }));
 
 /**
  * Handle all other requests by rendering the Angular application.
  */
-app.use('/**', (req, res, next) => {
-  angularApp
-    .handle(req)
-    .then((response) =>
-      response ? writeResponseToNodeResponse(response, res) : next(),
-    )
-    .catch(next);
+app.use('/*', async (ctx, next) => {
+  const response = await angularApp.handle(ctx.req.raw);
+
+  if (!response) {
+    return next();
+  }
+
+  return response;
 });
+
+/**
+ * The request handler used by the Angular CLI (dev-server and during build).
+ */
+export const reqHandler = createRequestHandler(app.fetch);
 
 /**
  * Start the server if this module is the main entry point.
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */
 if (isMainModule(import.meta.url)) {
-  const port = process.env['PORT'] ?? 4200;
+  const port = process.env['PORT'] ? parseInt(process.env['PORT'], 10) : 4200;
 
-  app.listen(port, () => {
-    console.log(`Node Express server listening on http://localhost:${port}`);
-  });
+  serve(
+    {
+      fetch: app.fetch,
+      port,
+    },
+    () => {
+      console.log(`Server is running on http://localhost:${port}`);
+    },
+  );
 }
-
-/**
- * The request handler used by the Angular CLI (dev-server and during build).
- */
-export const reqHandler = createNodeRequestHandler(app);

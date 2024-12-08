@@ -38,36 +38,7 @@
               "entry": "src/server.ts"
             },
             "localize": true,
-            "externalDependencies": [
-              "@nestjs/*",
-              "hbs",
-              "nock",
-              "aws-sdk",
-              "mock-aws-s3",
-              "@mapbox/*",
-              "nestjs-i18n",
-              "redis",
-              "@socket.io/redis-adapter",
-              "passport-local",
-              "passport-jwt",
-              "passport-jwt",
-              "bcrypt",
-              "ioredis",
-              "ioredis/*",
-              "semver",
-              "node-abort-controller",
-              "msgpackr-extract",
-              "class-validator",
-              "validator/*",
-              "handlebars",
-              "@prisma/client",
-              "@nestlab/google-recaptcha",
-              "@grpc/*",
-              "class-transformer/*",
-              "cron-parser",
-              "cron-parser/*",
-              "parseExpression"
-            ]
+            "externalDependencies": []
           },
           "configurations": {
             "production": {
