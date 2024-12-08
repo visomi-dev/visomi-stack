@@ -65,4 +65,20 @@
       Iniciar Sesión
     </app-button>
   </form>
+
+  <div class="relative flex w-full max-w-xs items-center justify-center">
+    <hr class="absolute w-full text-slate-500" />
+
+    <p class="z-10 bg-white px-3 dark:bg-black" i18n>o</p>
+  </div>
+
+  <div class="flex w-full max-w-xs items-center justify-center">
+    <p class="text-center">
+      <span i18n>¿Aún no tienes una cuenta?</span> <br />
+
+      <app-local-link [to]="signUpPath" [disabled]="loading()" i18n>
+        Regístrate aquí
+      </app-local-link>
+    </p>
+  </div>
 </div>

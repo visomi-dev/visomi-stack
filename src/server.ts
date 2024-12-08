@@ -5,9 +5,10 @@ import { AngularAppEngine, createRequestHandler } from '@angular/ssr';
 import { isMainModule } from '@angular/ssr/node';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
-import { cache } from 'hono/cache';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
+
+import { api } from './api/api.config';
 
 const app = new Hono();
 
@@ -17,7 +18,6 @@ const browserDistFolder = resolve(serverDistFolder, '../browser');
 const angularApp = new AngularAppEngine();
 
 app.use(logger());
-app.use(cache({ cacheName: 'visomi-stack' }));
 
 /**
  * Example Express Rest API endpoints can be defined here.
@@ -30,6 +30,7 @@ app.use(cache({ cacheName: 'visomi-stack' }));
  * });
  * ```
  */
+app.route('/api', api);
 
 /**
  * Serve static files from /browser

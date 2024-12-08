@@ -1,0 +1,136 @@
+<div
+  class="flex max-h-full w-full flex-col gap-6 overflow-auto p-6 md:items-center"
+>
+  <div class="flex w-full max-w-xs flex-col gap-2">
+    <h1 class="text-4xl font-bold" i18n>Registrarse en VisomiStack</h1>
+
+    <p class="text-slate-600 dark:text-slate-400" i18n>
+      Crea una cuenta para comenzar a leer tus historias favoritas.
+    </p>
+  </div>
+
+  <form
+    class="flex w-full max-w-xs flex-col gap-2"
+    method="post"
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    ngNativeValidate
+  >
+    <app-text-input
+      [id]="'nickname'"
+      [form]="form"
+      name="nickname"
+      label="Nickname"
+      i18n-label
+      placeholder="Ingresa tu nickname"
+      i18n-placeholder
+      help="Ej: Juanito123"
+      i18n-help
+      autocomplete="nickname"
+      maxLength="120"
+      [disabled]="loading()"
+      required
+    />
+
+    <app-text-input
+      [id]="'username'"
+      [form]="form"
+      name="username"
+      type="email"
+      label="Correo Electrónico"
+      i18n-label
+      placeholder="Ingresa tu correo electrónico"
+      i18n-placeholder
+      autocomplete="email"
+      [disabled]="loading()"
+      required
+    />
+
+    <app-password-input
+      [id]="'password'"
+      [form]="form"
+      name="password"
+      label="Contraseña"
+      i18n-label
+      placeholder="Ingresa tu contraseña"
+      i18n-placeholder
+      autocomplete="new-password"
+      error="Ingresa una contraseña válida, ejemplo: Contraseña123!"
+      i18n-error
+      [disabled]="loading()"
+    >
+      <app-password-requirements
+        class="text-slate-500"
+        [password]="password()"
+      />
+    </app-password-input>
+
+    <app-password-input
+      [id]="'passwordConfirm'"
+      [form]="form"
+      name="passwordConfirm"
+      label="Confirmar contraseña"
+      i18n-label
+      placeholder="Confirma tu contraseña"
+      i18n-placeholder
+      autocomplete="new-password"
+      [pattern]="passwordConfirmPattern()"
+      error="Las contraseñas no coinciden"
+      i18n-error
+      [disabled]="loading()"
+    />
+
+    <p
+      class="overflow-hidden text-center text-red-400 transition-all"
+      [ngClass]="{
+        '-mt-4 min-h-0': !error(),
+      }"
+    >
+      {{ error() }}
+    </p>
+
+    <app-button
+      type="submit"
+      class="mt-8 w-full"
+      color="primary"
+      [loading]="signingUp()"
+      i18n
+    >
+      Registrarse
+    </app-button>
+  </form>
+
+  <div class="relative flex w-full max-w-xs items-center justify-center">
+    <hr class="absolute w-full text-slate-500" />
+
+    <p class="z-10 bg-white px-3 dark:bg-black">o</p>
+  </div>
+
+  <div class="flex w-full max-w-xs items-center justify-center">
+    <p class="text-center">
+      <span i18n>¿Ya tienes una cuenta?</span> <br />
+
+      <app-local-link [to]="signIn" [disabled]="loading()" i18n>
+        Inicia sesión
+      </app-local-link>
+    </p>
+  </div>
+
+  <div class="flex w-full max-w-xs items-center justify-center text-sm">
+    <p class="text-center">
+      <span i18n>Al registrarte, aceptas nuestros</span> <br />
+
+      <app-link [href]="termsAndConditions" [disabled]="loading()" i18n>
+        términos y condiciones
+      </app-link>
+
+      <span i18n>y</span>
+
+      <br />
+
+      <app-link [href]="privacyPolicy" [disabled]="loading()" i18>
+        política de privacidad
+      </app-link>
+    </p>
+  </div>
+</div>

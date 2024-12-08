@@ -60,6 +60,22 @@ export class AuthService {
     return this.loadPromise;
   }
 
+  async signUp(nickname: string, username: string, password: string) {
+    try {
+      this.signing.set(true);
+
+      await lastValueFrom(
+        this.http.post('/auth/sign-up', {
+          nickname,
+          username,
+          password,
+        }),
+      );
+    } finally {
+      this.signing.set(false);
+    }
+  }
+
   async signIn(username: string, password: string) {
     try {
       this.signing.set(true);

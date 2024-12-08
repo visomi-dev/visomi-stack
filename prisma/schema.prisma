@@ -8,7 +8,7 @@ datasource db {
 }
 
 enum OneTimeCodeType {
-  SIGN_UP
+  SIGN_UP_CONFIRM
   PASSWORD_RECOVERY
 
   @@map("one_time_code_types")
@@ -24,6 +24,7 @@ enum Currency {
 enum Locale {
   es_419 @map("es-419")
   en_US  @map("en-US")
+  pt_BR  @map("pt-BR")
 
   @@map("locales")
 }
@@ -41,7 +42,7 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   name     String?
-  nickname String?
+  nickname String
   email    String  @unique
   username String  @unique
   password String

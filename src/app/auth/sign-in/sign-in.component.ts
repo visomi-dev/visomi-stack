@@ -12,12 +12,13 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 
-import { AuthService } from '../../shared/auth/auth.service';
-import { TextInputComponent } from '../../shared/ui/form-fields/text-input/text-input.component';
-import { PasswordInputComponent } from '../../shared/ui/form-fields/password-input/password-input.component';
-import { ButtonComponent } from '../../shared/ui/button/button.component';
-import { AUTH_PAGE_CLASSES } from '../../config/classes';
-import { DASHBOARD_PATH } from '../../config/routes';
+import { AuthService } from '~/app/shared/auth/auth.service';
+import { TextInputComponent } from '~/app/shared/ui/form-fields/text-input/text-input.component';
+import { PasswordInputComponent } from '~/app/shared/ui/form-fields/password-input/password-input.component';
+import { ButtonComponent } from '~/app/shared/ui/button/button.component';
+import { AUTH_PAGE_CLASSES } from '~/app/config/classes';
+import { DASHBOARD_PATH, SIGN_UP_PATH } from '~/app/config/routes';
+import { LocalLinkComponent } from '~/app/shared/ui/local-link/link.component';
 
 @Component({
   selector: 'app-sign-in',
@@ -27,6 +28,7 @@ import { DASHBOARD_PATH } from '../../config/routes';
     TextInputComponent,
     PasswordInputComponent,
     ButtonComponent,
+    LocalLinkComponent,
   ],
   templateUrl: './sign-in.component.html',
   styles: [],
@@ -42,6 +44,7 @@ export default class SignInComponent {
     username: new FormControl<string>(''),
     password: new FormControl<string>(''),
   });
+  signUpPath = `/${SIGN_UP_PATH}`;
 
   readonly error = signal<string | null>('');
   readonly signing = this.authService.signing;

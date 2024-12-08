@@ -1,11 +1,11 @@
 -- CreateEnum
-CREATE TYPE "one_time_code_types" AS ENUM ('SIGN_UP', 'PASSWORD_RECOVERY');
+CREATE TYPE "one_time_code_types" AS ENUM ('SIGN_UP_CONFIRM', 'PASSWORD_RECOVERY');
 
 -- CreateEnum
 CREATE TYPE "currencies" AS ENUM ('MXN', 'USD');
 
 -- CreateEnum
-CREATE TYPE "locales" AS ENUM ('es-419', 'en-US');
+CREATE TYPE "locales" AS ENUM ('es-419', 'en-US', 'pt-BR');
 
 -- CreateEnum
 CREATE TYPE "roles" AS ENUM ('admin', 'customer');
@@ -16,7 +16,7 @@ CREATE TABLE "users" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "name" TEXT,
-    "nickname" TEXT,
+    "nickname" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "password" TEXT NOT NULL,

@@ -38,7 +38,14 @@
               "entry": "src/server.ts"
             },
             "localize": true,
-            "externalDependencies": []
+            "externalDependencies": [
+              "@mapbox",
+              "mock-aws-s3",
+              "aws-sdk",
+              "nock",
+              "bcrypt",
+              "@prisma/client"
+            ]
           },
           "configurations": {
             "production": {
