@@ -1,0 +1,83 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always"
+    }
+  },
+  "[typescript]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always"
+    }
+  },
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
+  "[html]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always"
+    }
+  },
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
+  },
+  "[svg]": {
+    "editor.defaultFormatter": "jock.svg"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.stylelint": "always"
+    }
+  },
+  "material-icon-theme.activeIconPack": "angular",
+  "emmet.preferences": {
+    "output.selfClosingStyle": "html"
+  },
+  "tailwindCSS.classAttributes": [
+    "class",
+    "className",
+    "ngClass",
+    "routerLinkActive",
+    "class.*"
+  ],
+  "tailwindCSS.experimental.classRegex": [
+    "/\\*\\s*tw\\s*\\*/\\s*'([^']*)'",
+    "/\\*\\s*tw\\s*\\*/\\s*\"([^\"]*)\""
+  ],
+  "cSpell.language": "en,es,en-US,en-GB,es-ES,es-419,es-LA",
+  "cSpell.words": [
+    "avanttia",
+    "brocli",
+    "bullmq",
+    "commitlint",
+    "creze",
+    "datasource",
+    "hono",
+    "kavak",
+    "linkedin",
+    "mapbox",
+    "Mikhael",
+    "msgpackr",
+    "nestjs",
+    "nestlab",
+    "nive",
+    "postgres",
+    "postgresql",
+    "prerender",
+    "qwik",
+    "recaptcha",
+    "Sotelo",
+    "tailwindcss",
+    "tseslint",
+    "visomi",
+    "wakatime",
+    "WAKATIME"
+  ]
+}

@@ -6,8 +6,16 @@
       "name": "ng serve",
       "type": "chrome",
       "request": "launch",
-      "preLaunchTask": "npm: start",
-      "url": "http://localhost:4200/"
+      "url": "http://localhost:4200/",
+      "runtimeArgs": ["--auto-open-devtools-for-tabs"]
+    },
+    {
+      "name": "ng serve with task",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "npm: serve",
+      "url": "http://localhost:4200/",
+      "runtimeArgs": ["--auto-open-devtools-for-tabs"]
     },
     {
       "name": "ng test",
