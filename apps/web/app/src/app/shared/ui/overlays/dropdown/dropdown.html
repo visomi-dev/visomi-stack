@@ -1,0 +1,23 @@
+<span
+  class="contents"
+  cdkOverlayOrigin
+  #origin="cdkOverlayOrigin"
+  role="presentation"
+  (click)="onHostClick($event)"
+  (keydown)="onHostKeydown($event)"
+>
+  <ng-content select="[data-slot=trigger]" />
+</span>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayHasBackdrop]="true"
+  [cdkConnectedOverlayOpen]="open()"
+  [cdkConnectedOverlayOrigin]="origin"
+  (backdropClick)="close()"
+  (detach)="close()"
+>
+  <div class="ui-panel-raised z-50 mt-2 min-w-56 p-1" role="menu" tabindex="-1" (keydown)="handleKeydown($event)">
+    <ng-content />
+  </div>
+</ng-template>

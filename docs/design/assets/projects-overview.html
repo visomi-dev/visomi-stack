@@ -1,0 +1,379 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'secondary-fixed': '#d5e3fc',
+              'inverse-on-surface': '#9a9d9f',
+              'error-container': '#fe8983',
+              'tertiary-fixed-dim': '#71e4b1',
+              'on-tertiary-container': '#005a3d',
+              'on-primary-container': '#325668',
+              'on-primary-fixed': '#1e4355',
+              'surface-container-high': '#e1e9ee',
+              'surface-container-low': '#f0f4f7',
+              'primary-fixed-dim': '#b4daf0',
+              tertiary: '#006d4b',
+              primary: '#3f6376',
+              'on-secondary-fixed': '#324053',
+              'outline-variant': '#a9b4b9',
+              'on-background': '#2a3439',
+              'on-error-container': '#752121',
+              'on-error': '#fff7f6',
+              'inverse-primary': '#c2e8fe',
+              surface: '#f7f9fb',
+              'on-secondary': '#f8f8ff',
+              outline: '#717c82',
+              'primary-dim': '#325769',
+              'surface-bright': '#f7f9fb',
+              'on-tertiary-fixed': '#00452e',
+              'on-surface-variant': '#566166',
+              'tertiary-container': '#7ff3be',
+              'surface-variant': '#d9e4ea',
+              'primary-container': '#c2e8fe',
+              'tertiary-fixed': '#7ff3be',
+              'secondary-container': '#d5e3fc',
+              'on-surface': '#2a3439',
+              'surface-container-highest': '#d9e4ea',
+              'surface-dim': '#cfdce3',
+              'on-secondary-fixed-variant': '#4e5c71',
+              'surface-container': '#e8eff3',
+              'tertiary-dim': '#005f41',
+              'inverse-surface': '#0b0f10',
+              'secondary-fixed-dim': '#c7d5ed',
+              'on-tertiary-fixed-variant': '#006545',
+              'on-primary': '#f1f9ff',
+              'on-primary-fixed-variant': '#3c6073',
+              secondary: '#526074',
+              'on-tertiary': '#e6ffef',
+              'secondary-dim': '#465468',
+              'surface-tint': '#3f6376',
+              'on-secondary-container': '#455367',
+              'primary-fixed': '#c2e8fe',
+              background: '#f7f9fb',
+              'surface-container-lowest': '#ffffff',
+              error: '#9f403d',
+              'error-dim': '#4e0309',
+            },
+            borderRadius: {
+              DEFAULT: '0.125rem',
+              lg: '0.25rem',
+              xl: '0.5rem',
+              full: '0.75rem',
+            },
+            fontFamily: {
+              headline: ['Manrope'],
+              body: ['Inter'],
+              label: ['Inter'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+        font-size: 20px;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .header-text {
+        font-family: 'Manrope', sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-surface text-on-surface">
+    <aside
+      class="fixed top-0 left-0 z-40 flex h-full h-screen w-64 flex-col border-r border-slate-200/50 bg-[#e8eff3] py-6 font-['Inter'] text-sm tracking-wide dark:border-slate-800/50 dark:bg-slate-950"
+    >
+      <div class="mb-10 px-6">
+        <div class="flex items-center gap-3">
+          <div class="bg-primary text-on-primary flex h-8 w-8 items-center justify-center rounded-sm font-black">T</div>
+          <div>
+            <h1 class="text-xl leading-tight font-black text-[#2a3439] dark:text-white">Themis</h1>
+            <p class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase opacity-70">
+              Technical PM
+            </p>
+          </div>
+        </div>
+      </div>
+      <nav class="flex-1 space-y-1 px-3">
+        <a
+          class="group flex items-center gap-3 px-3 py-2 text-[#566166] transition-all duration-200 ease-in-out hover:bg-white/50 hover:text-[#3f6376] dark:text-slate-500 dark:hover:bg-slate-900/50 dark:hover:text-[#f1f9ff]"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+          <span>Dashboard</span>
+        </a>
+        <a
+          class="group flex items-center gap-3 border-l-2 border-[#3f6376] bg-white px-3 py-2 text-[#3f6376] transition-all duration-200 ease-in-out dark:bg-slate-900 dark:text-[#f1f9ff]"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+          <span class="font-semibold">Projects</span>
+        </a>
+        <a
+          class="group flex items-center gap-3 px-3 py-2 text-[#566166] transition-all duration-200 ease-in-out hover:bg-white/50 hover:text-[#3f6376] dark:text-slate-500 dark:hover:bg-slate-900/50 dark:hover:text-[#f1f9ff]"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+          <span>Execution</span>
+        </a>
+        <a
+          class="group flex items-center gap-3 px-3 py-2 text-[#566166] transition-all duration-200 ease-in-out hover:bg-white/50 hover:text-[#3f6376] dark:text-slate-500 dark:hover:bg-slate-900/50 dark:hover:text-[#f1f9ff]"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+          <span>Archives</span>
+        </a>
+      </nav>
+      <div class="mt-auto border-t border-slate-200/50 px-3 pt-6">
+        <a
+          class="flex items-center gap-3 px-3 py-2 text-[#566166] transition-all duration-200 ease-in-out hover:bg-white/50 hover:text-[#3f6376] dark:text-slate-500 dark:hover:bg-slate-900/50 dark:hover:text-[#f1f9ff]"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+          <span>Help</span>
+        </a>
+        <a
+          class="flex items-center gap-3 px-3 py-2 text-[#566166] transition-all duration-200 ease-in-out hover:bg-white/50 hover:text-[#3f6376] dark:text-slate-500 dark:hover:bg-slate-900/50 dark:hover:text-[#f1f9ff]"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="logout">logout</span>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+    <div class="ml-64 flex min-h-screen flex-col">
+      <header
+        class="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-slate-200/50 bg-[#f7f9fb] px-6 font-['Manrope'] tracking-tight text-[#3f6376] dark:border-slate-800/50 dark:bg-slate-900 dark:text-[#f1f9ff]"
+      >
+        <div class="flex items-center gap-8">
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined text-outline absolute left-3 text-sm" data-icon="search"
+              >search</span
+            >
+            <input
+              class="bg-surface-container-low placeholder:text-outline/50 w-64 rounded-sm border-none py-1.5 pr-4 pl-9 text-sm focus:ring-0"
+              placeholder="Search projects..."
+              type="text"
+            />
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <button
+            class="material-symbols-outlined rounded-sm p-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+            data-icon="notifications"
+          >
+            notifications
+          </button>
+          <button
+            class="material-symbols-outlined rounded-sm p-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+            data-icon="settings"
+          >
+            settings
+          </button>
+          <div class="bg-outline-variant/30 mx-1 h-6 w-[1px]"></div>
+          <button
+            class="bg-primary text-on-primary rounded-sm px-4 py-1.5 text-xs font-bold duration-150 active:opacity-80"
+          >
+            New Project
+          </button>
+          <img
+            alt="User profile"
+            class="border-outline-variant/20 h-8 w-8 rounded-full border"
+            data-alt="professional portrait of a project manager in a clean studio setting with soft neutral lighting"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0XwL1pW_tAVDswVpLzZNth8HIppJx7fThL-fUCPjBmyp6RGtTs18-bx2HsX5vqSmugijSTAxiGqFUyERJdVK7CXte_bNblyLO7Zxo2FIoE1dt0jgQdLLY7B7Htriu2vZP5nTdQ5MWjO73iLllu0p_cRku68NIcwDM03w9It8vvxyex_xp743nMiNW4ZXmhiLsqoXxVoz0toMbHbSuDUgVKEE9SSB94fxTRlTxxORc9bNRb32BKme1B2KGuz-xMwL3uAW2Wh9Vk8SZ"
+          />
+        </div>
+      </header>
+      <main class="max-w-5xl flex-1 p-12">
+        <div class="mb-12">
+          <h2 class="font-headline text-on-surface mb-2 text-3xl font-extrabold tracking-tighter">Projects Overview</h2>
+          <p class="text-on-surface-variant font-body text-sm">Active technical ledger for Q4 initiatives.</p>
+        </div>
+        <div class="border-outline-variant/10 space-y-0 border-t">
+          <div
+            class="group hover:bg-surface-container-low/30 border-outline-variant/10 -mx-4 border-b px-4 py-8 transition-colors"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-6">
+              <div class="min-w-[300px] flex-1">
+                <div class="mb-1 flex items-center gap-3">
+                  <h3 class="font-body text-primary text-lg font-bold tracking-tight">Core Infrastructure Migration</h3>
+                  <span
+                    class="text-tertiary border-tertiary/20 bg-tertiary-container/10 border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase"
+                    >Active</span
+                  >
+                </div>
+                <p class="text-on-surface-variant mb-4 text-sm leading-relaxed">
+                  Transitioning legacy databases to distributed cloud architecture with zero downtime requirements.
+                </p>
+                <div class="text-outline flex items-center gap-6 text-[11px] font-medium tracking-widest uppercase">
+                  <span class="flex items-center gap-2"><strong class="text-on-surface">42</strong> Tasks</span>
+                  <span class="flex items-center gap-2"><strong class="text-on-surface">0</strong> Blocked</span>
+                  <span class="flex items-center gap-2">Updated 45m ago</span>
+                </div>
+              </div>
+              <div class="w-full pt-1 md:w-64">
+                <p class="text-outline-variant mb-2 text-[10px] font-bold tracking-widest uppercase">Next Step</p>
+                <p class="text-on-surface text-sm leading-snug font-medium">
+                  Finalize validation scripts for staging environment sync.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="group hover:bg-surface-container-low/30 border-outline-variant/10 -mx-4 border-b px-4 py-8 transition-colors"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-6">
+              <div class="min-w-[300px] flex-1">
+                <div class="mb-1 flex items-center gap-3">
+                  <h3 class="font-body text-primary text-lg font-bold tracking-tight">Security Audit Framework</h3>
+                  <span
+                    class="text-error border-error/20 bg-error-container/10 border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase"
+                    >Blocked</span
+                  >
+                </div>
+                <p class="text-on-surface-variant mb-4 text-sm leading-relaxed">
+                  Automated compliance mapping for international data protection standards across all microservices.
+                </p>
+                <div class="text-outline flex items-center gap-6 text-[11px] font-medium tracking-widest uppercase">
+                  <span class="flex items-center gap-2"><strong class="text-on-surface">18</strong> Tasks</span>
+                  <span class="text-error flex items-center gap-2"><strong class="text-error">3</strong> Blocked</span>
+                  <span class="flex items-center gap-2">Updated 2h ago</span>
+                </div>
+              </div>
+              <div class="w-full pt-1 md:w-64">
+                <p class="text-outline-variant mb-2 text-[10px] font-bold tracking-widest uppercase">Primary Blocker</p>
+                <p class="text-error text-sm leading-snug font-medium">
+                  Awaiting legal clearance for third-party scanning tool integration.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="group hover:bg-surface-container-low/30 border-outline-variant/10 -mx-4 border-b px-4 py-8 transition-colors"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-6">
+              <div class="min-w-[300px] flex-1">
+                <div class="mb-1 flex items-center gap-3">
+                  <h3 class="font-body text-primary text-lg font-bold tracking-tight">DevOps Pipeline Refactor</h3>
+                  <span
+                    class="text-outline border-outline/20 border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase"
+                    >Stale</span
+                  >
+                </div>
+                <p class="text-on-surface-variant mb-4 text-sm leading-relaxed">
+                  Optimizing CI/CD build times by implementing advanced caching and parallel test execution.
+                </p>
+                <div class="text-outline flex items-center gap-6 text-[11px] font-medium tracking-widest uppercase">
+                  <span class="flex items-center gap-2"><strong class="text-on-surface">12</strong> Tasks</span>
+                  <span class="flex items-center gap-2"><strong class="text-on-surface">0</strong> Blocked</span>
+                  <span class="flex items-center gap-2">Updated 5d ago</span>
+                </div>
+              </div>
+              <div class="w-full pt-1 md:w-64">
+                <p class="text-outline-variant mb-2 text-[10px] font-bold tracking-widest uppercase">Next Step</p>
+                <p class="text-on-surface text-sm leading-snug font-medium">
+                  Assign secondary reviewer for pipeline-as-code definitions.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="group hover:bg-surface-container-low/30 border-outline-variant/10 -mx-4 border-b px-4 py-8 transition-colors"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-6">
+              <div class="min-w-[300px] flex-1">
+                <div class="mb-1 flex items-center gap-3">
+                  <h3 class="font-body text-primary text-lg font-bold tracking-tight">API Documentation Engine</h3>
+                  <span
+                    class="text-tertiary border-tertiary/20 bg-tertiary-container/10 border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase"
+                    >Active</span
+                  >
+                </div>
+                <p class="text-on-surface-variant mb-4 text-sm leading-relaxed">
+                  Generating real-time interactive developer documentation from live OpenAPI specifications.
+                </p>
+                <div class="text-outline flex items-center gap-6 text-[11px] font-medium tracking-widest uppercase">
+                  <span class="flex items-center gap-2"><strong class="text-on-surface">31</strong> Tasks</span>
+                  <span class="flex items-center gap-2"><strong class="text-on-surface">0</strong> Blocked</span>
+                  <span class="flex items-center gap-2">Updated 1h ago</span>
+                </div>
+              </div>
+              <div class="w-full pt-1 md:w-64">
+                <p class="text-outline-variant mb-2 text-[10px] font-bold tracking-widest uppercase">Next Step</p>
+                <p class="text-on-surface text-sm leading-snug font-medium">
+                  Integrate with authentication middleware for private endpoints.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="group hover:bg-surface-container-low/30 border-outline-variant/10 -mx-4 border-b px-4 py-8 transition-colors"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-6">
+              <div class="min-w-[300px] flex-1">
+                <div class="mb-1 flex items-center gap-3">
+                  <h3 class="font-body text-primary text-lg font-bold tracking-tight">Frontend Component Library</h3>
+                  <span
+                    class="text-tertiary border-tertiary/20 bg-tertiary-container/10 border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase"
+                    >Active</span
+                  >
+                </div>
+                <p class="text-on-surface-variant mb-4 text-sm leading-relaxed">
+                  Standardizing UI patterns across internal tools using a centralized, theme-able CSS framework.
+                </p>
+                <div class="text-outline flex items-center gap-6 text-[11px] font-medium tracking-widest uppercase">
+                  <span class="flex items-center gap-2"><strong class="text-on-surface">54</strong> Tasks</span>
+                  <span class="flex items-center gap-2"><strong class="text-on-surface">0</strong> Blocked</span>
+                  <span class="flex items-center gap-2">Updated 15m ago</span>
+                </div>
+              </div>
+              <div class="w-full pt-1 md:w-64">
+                <p class="text-outline-variant mb-2 text-[10px] font-bold tracking-widest uppercase">Next Step</p>
+                <p class="text-on-surface text-sm leading-snug font-medium">
+                  Export final design system tokens for mobile engineering team.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-12 flex justify-center">
+          <button
+            class="text-outline hover:text-primary flex items-center gap-2 text-[11px] font-bold tracking-widest uppercase transition-colors"
+          >
+            Load Archived Projects
+            <span class="material-symbols-outlined text-[14px]" data-icon="expand_more">expand_more</span>
+          </button>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

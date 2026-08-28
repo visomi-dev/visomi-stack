@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Auth Shell Template</title>
+    <link rel="stylesheet" href="/public/tailwind.css" />
+  </head>
+  <body class="bg-white text-zinc-950 min-h-screen dark:bg-zinc-950 dark:text-zinc-50">
+    <header class="border-zinc-950/10 flex items-center justify-between border-b px-4 py-3 md:px-8 dark:border-white/10">
+      <a class="font-heading text-lg font-bold tracking-tight no-underline" href="/">Brand</a>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="border-zinc-950/10 min-h-11 rounded-md border px-3 py-1.5 text-sm font-medium dark:border-white/10"
+        >
+          Lang
+        </button>
+        <button
+          type="button"
+          aria-label="Toggle theme"
+          class="border-zinc-950/10 min-h-11 rounded-md border px-3 py-1.5 text-sm font-medium dark:border-white/10"
+        >
+          Theme
+        </button>
+      </div>
+    </header>
+    <main class="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-12 md:py-16">
+      <article class="bg-zinc-50 rounded-lg border border-zinc-950/10 p-6 md:p-8 dark:bg-zinc-900 dark:border-white/10">
+        <header class="mb-6 space-y-2">
+          <p class="text-zinc-500 font-mono text-xs font-semibold tracking-widest uppercase dark:text-zinc-400">
+            Kicker
+          </p>
+          <h1 class="font-heading text-[1.625rem] leading-tight font-bold tracking-[-0.025em]">
+            Title
+          </h1>
+          <p class="text-zinc-500 text-[0.9375rem] leading-6 dark:text-zinc-400">
+            One-line description that orients the user.
+          </p>
+        </header>
+
+        <form class="grid gap-5" novalidate>
+          <div class="grid gap-1.5">
+            <label for="field-email" class="text-sm font-semibold">Email</label>
+            <input
+              id="field-email"
+              autocomplete="email"
+              name="email"
+              placeholder="name@organization.com"
+              type="email"
+              class="border-zinc-950/10 min-h-11 rounded-md border bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+            />
+          </div>
+
+          <div class="grid gap-1.5">
+            <label for="field-password" class="text-sm font-semibold">Password</label>
+            <input
+              id="field-password"
+              autocomplete="current-password"
+              name="password"
+              placeholder="***************"
+              type="password"
+              class="border-zinc-950/10 min-h-11 rounded-md border bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-950"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="min-h-11 w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 sm:w-auto"
+          >
+            Submit
+          </button>
+        </form>
+
+        <p class="text-zinc-500 mt-6 text-sm dark:text-zinc-400">Footer prompt.</p>
+        <a class="text-blue-600 text-sm font-medium no-underline dark:text-blue-500" href="#">
+          Footer link
+        </a>
+      </article>
+    </main>
+  </body>
+</html>

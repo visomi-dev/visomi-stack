@@ -1,0 +1,111 @@
+{
+  "name": "app",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/web/app/src",
+  "i18n": {
+    "sourceLocale": {
+      "code": "en-US",
+      "subPath": "en"
+    },
+    "locales": {
+      "es": {
+        "translation": "apps/web/app/src/locales/messages.es.xlf",
+        "subPath": "es"
+      }
+    }
+  },
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "allowedCommonJsDependencies": ["debug", "xmlhttprequest-ssl"],
+        "outputPath": "dist/apps/web/app",
+        "browser": "apps/web/app/src/main.ts",
+        "polyfills": ["@angular/localize/init"],
+        "tsConfig": "apps/web/app/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/web/app/public"
+          }
+        ],
+        "styles": ["apps/web/app/src/styles.css"],
+        "server": "apps/web/app/src/main.server.ts",
+        "ssr": {
+          "entry": "apps/web/app/src/server.ts"
+        },
+        "outputMode": "server",
+        "security": {
+          "allowedHosts": ["themis.visomi.dev", "themis-develop.up.railway.app", "localhost"]
+        }
+      },
+      "configurations": {
+        "production": {
+          "localize": true,
+          "baseHref": "/app/",
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "baseHref": "/app/",
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "options": {
+        "proxyConfig": "apps/web/app/proxy.conf.json"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "app:build:production"
+        },
+        "development": {
+          "buildTarget": "app:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "extract-i18n": {
+      "executor": "@angular/build:extract-i18n",
+      "options": {
+        "buildTarget": "app:build",
+        "format": "xlf",
+        "outFile": "messages.xlf",
+        "outputPath": "apps/web/app/src/locales"
+      }
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "app:build",
+        "port": 4200,
+        "staticFilePath": "dist/apps/web/app/browser/en",
+        "spa": true
+      }
+    }
+  }
+}

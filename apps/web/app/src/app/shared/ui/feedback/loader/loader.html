@@ -1,0 +1,32 @@
+<div
+  class="grid grid-cols-4 gap-1 transition"
+  [class.opacity-0]="!active()"
+  [class.opacity-100]="active()"
+  aria-hidden="true"
+>
+  <svg
+    class="loader-icon h-auto w-full text-red-600 dark:text-red-400"
+    viewBox="0 0 100 100"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="50" cy="50" fill="currentColor" r="50" />
+  </svg>
+  <svg
+    class="loader-icon h-auto w-full text-amber-600 dark:text-amber-400"
+    viewBox="0 0 100 100"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="50" cy="50" fill="currentColor" r="50" />
+  </svg>
+  <svg
+    class="loader-icon h-auto w-full text-green-600 dark:text-green-400"
+    viewBox="0 0 100 100"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="50" cy="50" fill="currentColor" r="50" />
+  </svg>
+  <svg class="loader-icon text-accent h-auto w-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" fill="currentColor" r="50" />
+  </svg>
+</div>
+<span class="sr-only">Loading</span>

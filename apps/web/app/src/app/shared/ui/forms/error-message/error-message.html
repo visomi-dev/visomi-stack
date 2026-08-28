@@ -1,0 +1,6 @@
+<p [class]="classes()" [attr.id]="controlId()" data-slot="error" role="alert">
+  @if (withIcon()) {
+    <app-icon name="circle-alert" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+  }
+  <span><ng-content /></span>
+</p>

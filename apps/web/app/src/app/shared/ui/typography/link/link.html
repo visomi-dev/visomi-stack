@@ -1,0 +1,5 @@
+@if (routerLink(); as link) {
+  <a [class]="classes()" [routerLink]="link">{{ text() }}</a>
+} @else {
+  <a [attr.href]="href()" [class]="classes()">{{ text() }}</a>
+}

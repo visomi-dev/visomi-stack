@@ -1,0 +1,47 @@
+<app-auth-layout>
+  <app-auth-card>
+    <header class="mb-7 space-y-2">
+      <p
+        data-slot="kicker"
+        class="font-mono text-xs font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400"
+        i18n="@@verifyEmailKicker"
+      >
+        Email verification
+      </p>
+      <h1
+        data-slot="title"
+        class="font-heading text-[1.625rem] leading-tight font-bold tracking-[-0.025em] text-slate-950 dark:text-slate-50"
+        i18n="@@verifyEmailTitle"
+      >
+        Verify email
+      </h1>
+      <p data-slot="sub" class="text-[0.9375rem] leading-6 text-slate-500 dark:text-slate-400" i18n="@@verifyEmailSub">
+        Enter the 6-digit code we sent.
+      </p>
+    </header>
+
+    @if (challenge()?.email; as pendingEmail) {
+      <div
+        data-od-id="pending-email"
+        class="mb-5 flex flex-col items-start gap-1 rounded-[var(--radius-control)] border border-slate-950/10 bg-white px-3 py-2 text-xs text-slate-500 dark:border-white/10 dark:bg-slate-950 dark:text-slate-400"
+      >
+        <span class="font-mono tracking-wide uppercase" i18n="@@verifyEmailSendingToLabel">Sending to</span>
+        <span class="font-mono break-all text-slate-950 dark:text-slate-50">{{ pendingEmail }}</span>
+      </div>
+    }
+
+    <app-verification-code-form
+      [errorMessage]="errorMessage()"
+      [pinManualError]="pinManualError()"
+      [statusMessage]="statusMessage()"
+      [submitting]="verificationSubmitting()"
+      (verify)="submit($event)"
+      (resend)="resend()"
+    />
+
+    <div class="mt-8 flex flex-col items-center gap-2 text-center text-sm text-slate-500 dark:text-slate-400">
+      <p i18n="@@verifyEmailFooterPrompt">Need to start over?</p>
+      <app-link data-slot="footer" i18n="@@verifyEmailFooterLink" [routerLink]="signInUrl" [text]="'Start again'" />
+    </div>
+  </app-auth-card>
+</app-auth-layout>

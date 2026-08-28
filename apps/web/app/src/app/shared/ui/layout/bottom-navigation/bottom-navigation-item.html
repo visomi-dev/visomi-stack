@@ -1,0 +1,9 @@
+<a
+  [attr.aria-label]="ariaLabel()"
+  [class]="classes()"
+  [routerLink]="routerLink()"
+  routerLinkActive
+  [routerLinkActiveOptions]="{ exact: exact() }"
+>
+  <ng-content />
+</a>

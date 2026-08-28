@@ -1,0 +1,10 @@
+<span [class]="classes()">
+  @if (src()) {
+    <img class="size-full object-cover" [alt]="alt()" [src]="src()" />
+  } @else {
+    <span aria-hidden="true">{{ initials() }}</span>
+    @if (alt()) {
+      <span class="sr-only">{{ alt() }}</span>
+    }
+  }
+</span>

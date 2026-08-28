@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 2,
+  "stateFile": ".themis/state.json",
+  "eventsFile": ".themis/events.ndjson",
+  "workflow": {
+    "requireHumanSprintApproval": true,
+    "requireVerificationEvidence": true,
+    "requireImplementationDiffEvidence": true,
+    "requireIndependentReview": true
+  }
+}

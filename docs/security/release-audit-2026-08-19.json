@@ -1,0 +1,38 @@
+{
+  "command": "pnpm audit --json",
+  "capturedAt": "2026-08-19",
+  "packageManager": "pnpm@11.3.0",
+  "resolvedPackages": 2195,
+  "metadata": {
+    "critical": 0,
+    "high": 0,
+    "moderate": 0,
+    "low": 0
+  },
+  "remediation": {
+    "action": "Upgrade the Astro 7-compatible release line and regenerate the lockfile",
+    "result": "The site moved from Astro 6.4.8/@astrojs-node 10.1.4 to Astro 7.1.0/@astrojs-node 11.0.3. This is the smallest compatible major transition that satisfies the OSV/GHSA patched ranges; pnpm install --frozen-lockfile passed.",
+    "overrides": {
+      "piscina": "5.3.0",
+      "shell-quote": "1.10.0",
+      "hono": "4.12.34",
+      "http-proxy-middleware@3": "3.0.7",
+      "sharp": "0.35.0",
+      "nx@23": "23.0.2",
+      "astro": "7.1.0",
+      "@astrojs/node": "11.0.3"
+    }
+  },
+  "remainingBlocker": "No dependency advisories remain in the final pnpm audit. Production distribution remains subject to the separate provenance/key-custody decisions in ADR 011.",
+  "criticalAdvisories": [],
+  "highFindings": 0,
+  "highAdvisories": [],
+  "remainingAdvisories": [],
+  "majorDecision": "A major update is required: @astrojs/node 11.0.3 declares peer astro ^7.0.0, while the Astro 6 line cannot satisfy the patched GHSA-4g3v-8h47-v7g6 range. The selected Astro 7.1.0 and @astrojs/node 11.0.3 are the smallest compatible patched versions verified by site typecheck/build and Nx builds.",
+  "osvResearch": {
+    "GHSA-f48w-9m4c-m7f5": "Astro fixed in 7.0.6; selected 7.1.0.",
+    "GHSA-4g3v-8h47-v7g6": "Astro fixed in 7.1.0; selected 7.1.0.",
+    "GHSA-r557-wffq-wvrc": "@astrojs/node fixed in 11.0.2; selected 11.0.3.",
+    "GHSA-7pw4-f3q4-r2p2": "Astro fixed in 7.0.4; selected 7.1.0."
+  }
+}

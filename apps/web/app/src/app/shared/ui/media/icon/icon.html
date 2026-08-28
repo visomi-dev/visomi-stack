@@ -1,0 +1,15 @@
+<svg
+  class="size-full"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  viewBox="0 0 24 24"
+  xmlns="http://www.w3.org/2000/svg"
+  [attr.aria-hidden]="ariaLabel() ? null : true"
+  [attr.aria-label]="ariaLabel()"
+  [attr.role]="ariaLabel() ? 'img' : null"
+>
+  @for (path of paths(); track path) {
+    <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="path" />
+  }
+</svg>

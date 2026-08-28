@@ -1,0 +1,32 @@
+@if (showAppShell()) {
+  <div
+    class="flex h-dvh min-h-0 flex-col overflow-hidden bg-white text-slate-950 [--bottom-nav-height:4rem] [--topbar-height:4rem] md:[--bottom-nav-height:0] dark:bg-slate-950 dark:text-slate-50"
+  >
+    <div class="flex min-h-0 flex-1">
+      <app-sidebar-menu
+        [collapsed]="sidebarCollapsed()"
+        [mobileMenuOpen]="mobileMenuOpen()"
+        (closed)="closeMobileMenu()"
+        (toggleCollapsed)="toggleSidebarCollapsed()"
+      />
+
+      <section class="flex min-h-0 min-w-0 flex-1 flex-col">
+        <app-topbar (openMobileMenu)="openMobileMenu()" />
+
+        <main class="min-h-0 min-w-0 flex-1 overflow-y-auto bg-white px-4 py-4 md:px-8 md:py-6 dark:bg-slate-950">
+          <router-outlet />
+        </main>
+
+        <app-bottom-navigation>
+          @for (item of bottomNavItems; track item.url) {
+            <app-bottom-navigation-item [ariaLabel]="item.ariaLabel" [routerLink]="item.url" [exact]="item.exact">
+              <app-icon data-slot="icon" [name]="item.icon" />
+            </app-bottom-navigation-item>
+          }
+        </app-bottom-navigation>
+      </section>
+    </div>
+  </div>
+} @else {
+  <router-outlet />
+}

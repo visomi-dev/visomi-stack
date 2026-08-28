@@ -1,0 +1,20 @@
+export const appRoute = '/app/en/';
+export const activationRoute = '/app/en/activation';
+export const dashboardRoute = '/app/en/dashboard';
+export const signInRoute = '/app/en/sign-in';
+export const signUpRoute = '/app/en/sign-up';
+export const verifyEmailRoute = '/app/en/verify-email';
+export const verifyDeviceRoute = '/app/en/verify-device';
+export const forgottenPasswordRoute = '/app/en/forgotten-password';
+export const galleryRoute = '/app/en/gallery';
+
+export const appUrlPattern = /\/app\/en\/?(?:projects|dashboard)?$/;
+export const activationUrlPattern = /\/app\/en\/activation$/;
+export const signInUrlPattern = /\/app\/en\/sign-in$/;
+export const signUpUrlPattern = /\/app\/en\/sign-up$/;
+export const verifyEmailUrlPattern = /\/app\/en\/verify-email$/;
+export const verifyDeviceUrlPattern = /\/app\/en\/verify-device$/;
+export const forgottenPasswordUrlPattern = /\/app\/en\/forgotten-password$/;
+export const resetPasswordRoute = '/app/en/reset-password';
+export const resetPasswordUrlPattern = /\/app\/en\/reset-password$/;
+export const galleryUrlPattern = /\/app\/en\/gallery$/;

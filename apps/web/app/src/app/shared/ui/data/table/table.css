@@ -1,0 +1,27 @@
+:host ::ng-deep thead {
+  background: color-mix(in srgb, var(--color-slate-100) 82%, transparent);
+}
+
+:host ::ng-deep html.dark thead {
+  background: color-mix(in srgb, var(--color-slate-800) 82%, transparent);
+}
+
+:host ::ng-deep th,
+:host ::ng-deep td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-slate-950) 52%, transparent);
+}
+
+:host ::ng-deep html.dark th,
+:host ::ng-deep html.dark td {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-white) 52%, transparent);
+}
+
+:host ::ng-deep th {
+  color: var(--color-slate-500);
+  font-weight: 700;
+}
+
+:host ::ng-deep html.dark th {
+  color: var(--color-slate-400);
+}

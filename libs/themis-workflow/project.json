@@ -1,0 +1,37 @@
+{
+  "name": "themis-workflow",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/themis-workflow/src",
+  "projectType": "library",
+  "tags": ["scope:workflow", "type:core"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec eslint libs/themis-workflow/src --rule '{\"padding-line-between-statements\":\"off\"}'",
+        "cwd": "."
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/themis-workflow",
+        "tsConfig": "libs/themis-workflow/tsconfig.lib.json",
+        "packageJson": "libs/themis-workflow/package.json",
+        "main": "libs/themis-workflow/src/index.build.ts"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --experimental-strip-types --test libs/themis-workflow/src/lib/project-workflow.spec.ts",
+        "cwd": "."
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "pnpm exec tsc --noEmit -p libs/themis-workflow/tsconfig.lib.json", "cwd": "." }
+    }
+  }
+}

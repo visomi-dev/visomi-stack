@@ -1,0 +1,15 @@
+{
+  "format": "themis.encrypted-envelope",
+  "version": 1,
+  "kind": "sync-object",
+  "envelopeId": "fixture-zk008-envelope",
+  "workspaceId": "fixture-project",
+  "recordType": "project-context-activity",
+  "revision": 1,
+  "createdAt": "2026-08-19T00:00:00.000Z",
+  "associatedData": { "accountId": "fixture-account", "migration": "project-context-activity-v1" },
+  "metadata": { "source": "synthetic-fixture" },
+  "nonce": "c3ludGhldGljLW5vbmNl",
+  "ciphertext": "c3ludGhldGljLWNpcGhlcnRleHQ",
+  "authTag": "c3ludGhldGljLWF1dGh0YWc"
+}

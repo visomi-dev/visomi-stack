@@ -1,0 +1,11 @@
+# Add files here to ignore them from prettier formatting
+/dist
+/coverage
+/.nx/cache
+/.nx/workspace-data
+.angular
+pnpm-lock.yaml
+resources
+/Dockerfile
+# open-design skills are vendored documentation shipped as-is
+.opencode

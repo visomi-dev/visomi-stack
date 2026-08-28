@@ -1,0 +1,191 @@
+<section class="mx-auto max-w-4xl px-0 py-4 md:py-8" aria-labelledby="security-title">
+  <p class="font-mono text-xs font-semibold tracking-widest text-slate-600 uppercase dark:text-slate-400">
+    Account security
+  </p>
+  <app-heading id="security-title" level="1" [text]="'Security'" />
+  <p class="mt-3 max-w-2xl leading-7 text-slate-500 dark:text-slate-400">
+    Manage the ways you can securely access your account.
+  </p>
+
+  @if (loading() || passkeyLoading()) {
+    <p class="mt-8" role="status">Loading security settings...</p>
+  } @else {
+    @if (error() || passkeyError()) {
+      <p class="mt-6 text-sm text-red-600 dark:text-red-400" role="alert">{{ error() || passkeyError() }}</p>
+    }
+    @if (view() === 'list') {
+      <section class="mt-8" aria-labelledby="passkeys-title">
+        <div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 id="passkeys-title" class="font-heading text-2xl font-bold tracking-tight">Passkeys</h2>
+            <p class="mt-2 leading-7 text-slate-500 dark:text-slate-400">
+              Devices and security keys that can sign in to your account.
+            </p>
+          </div>
+          <app-button tone="blue" (click)="showAdd()">Add passkey</app-button>
+        </div>
+        @if (!credentials().length) {
+          <app-card class="mt-6" padding="lg" tone="raised">
+            <h3 class="font-heading text-xl font-bold">No passkeys yet</h3>
+            <p class="text-slate-500 dark:text-slate-400">
+              Add a passkey to sign in without a password. Your passkey stays on your device.
+            </p>
+            <app-button class="mt-2" tone="blue" (click)="showAdd()">Add your first passkey</app-button>
+          </app-card>
+        } @else {
+          <div class="mt-6 grid gap-4" aria-label="Saved passkeys">
+            @for (credential of credentials(); track credential.id) {
+              <app-card padding="lg" tone="raised">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 class="font-heading text-lg font-bold">{{ credential.label }}</h3>
+                    <dl class="mt-3 grid gap-1 text-sm text-slate-500 dark:text-slate-400">
+                      <div>
+                        <dt class="inline font-medium text-slate-700 dark:text-slate-200">Created:</dt>
+                        <dd class="inline">
+                          <time [attr.datetime]="credential.createdAt">{{
+                            credential.createdAt | date: 'd MMMM y'
+                          }}</time>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt class="inline font-medium text-slate-700 dark:text-slate-200">Last used:</dt>
+                        <dd class="inline">
+                          {{ credential.lastUsedAt ? (credential.lastUsedAt | date: 'd MMMM y, HH:mm') : 'Never' }}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                  <div class="flex flex-col gap-2 sm:flex-row">
+                    <app-button variant="plain" tone="blue" (click)="showRename(credential)">Rename</app-button>
+                    <app-button variant="plain" tone="red" (click)="showRevoke(credential)">Revoke</app-button>
+                  </div>
+                </div>
+              </app-card>
+            }
+          </div>
+        }
+      </section>
+    } @else if (view() === 'add') {
+      <app-card class="mt-8 max-w-2xl" padding="lg" tone="raised">
+        <p class="font-mono text-xs font-semibold tracking-widest text-slate-600 uppercase dark:text-slate-400">
+          New access method
+        </p>
+        <h2 class="font-heading text-2xl font-bold">Add a passkey</h2>
+        <p class="leading-6 text-slate-500 dark:text-slate-400">
+          Confirm an existing passkey, then choose this device, another device, or a security key.
+        </p>
+        <form class="mt-4 grid gap-5" (submit)="$event.preventDefault(); addPasskey()">
+          <label class="grid gap-2 text-sm font-semibold" for="new-passkey-name">Passkey name</label>
+          <input
+            id="new-passkey-name"
+            class="min-h-11 rounded-md border border-slate-950/10 bg-white px-3 text-base outline-offset-2 focus:outline-2 focus:outline-slate-600 dark:border-white/10 dark:bg-slate-950"
+            [value]="passkeyName()"
+            (input)="setPasskeyName($event)"
+            autocomplete="off"
+            required
+            maxlength="64"
+            aria-describedby="passkey-name-help"
+          />
+          <p id="passkey-name-help" class="text-xs leading-5 text-slate-500 dark:text-slate-400">
+            Use a recognizable device name. Do not enter a password, PIN, or recovery code.
+          </p>
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <app-button type="submit" tone="blue" [disabled]="passkeySubmitting()">{{
+              passkeySubmitting() ? 'Waiting for confirmation...' : 'Confirm and add passkey'
+            }}</app-button
+            ><app-button type="button" variant="plain" (click)="cancelPasskeyAction()">Cancel</app-button>
+          </div>
+        </form>
+      </app-card>
+    } @else if (view() === 'name') {
+      <app-card class="mt-8 max-w-2xl" padding="lg" tone="raised">
+        <h2 class="font-heading text-2xl font-bold">Rename passkey</h2>
+        <p class="leading-6 text-slate-500 dark:text-slate-400">
+          Only the account-local label changes. The passkey stays on the same device.
+        </p>
+        <form class="mt-4 grid gap-5" (submit)="$event.preventDefault(); renamePasskey()">
+          <label class="grid gap-2 text-sm font-semibold" for="rename-passkey">Passkey name</label>
+          <input
+            id="rename-passkey"
+            class="min-h-11 rounded-md border border-slate-950/10 bg-white px-3 text-base outline-offset-2 focus:outline-2 focus:outline-slate-600 dark:border-white/10 dark:bg-slate-950"
+            [value]="passkeyName()"
+            (input)="setPasskeyName($event)"
+            maxlength="64"
+            required
+          />
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <app-button type="submit" tone="blue" [disabled]="passkeySubmitting()">Save name</app-button
+            ><app-button type="button" variant="plain" (click)="cancelPasskeyAction()">Cancel</app-button>
+          </div>
+        </form>
+      </app-card>
+    } @else {
+      <app-card class="mt-8 max-w-2xl" padding="lg" tone="raised">
+        <p class="font-mono text-xs font-semibold tracking-widest text-red-600 uppercase dark:text-red-400">
+          Permanent security change
+        </p>
+        <h2 class="font-heading text-2xl font-bold">Revoke “{{ selected()?.label }}”?</h2>
+        <p class="leading-6 text-slate-500 dark:text-slate-400">
+          This passkey will stop signing in immediately and cannot be restored.
+        </p>
+        <div class="rounded-lg bg-slate-100 p-4 text-sm leading-6 dark:bg-slate-800">
+          <strong class="block font-semibold">Access protection</strong> You must keep a password or another active
+          passkey.
+        </div>
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <app-button tone="red" [disabled]="passkeySubmitting()" (click)="revokePasskey()">{{
+            passkeySubmitting() ? 'Confirming...' : 'Confirm passkey and revoke'
+          }}</app-button
+          ><app-button variant="plain" (click)="cancelPasskeyAction()">Cancel</app-button>
+        </div>
+      </app-card>
+    }
+    @if (configured()) {
+      <app-card class="mt-8" padding="lg" tone="raised"
+        ><h2 class="font-heading text-xl font-bold">Password configured</h2>
+        <p class="text-slate-500 dark:text-slate-400">
+          Your password is another viable access method. Existing passkeys remain active.
+        </p></app-card
+      >
+    } @else if (setup()) {
+      <app-card class="mt-8" padding="lg" tone="raised"
+        ><h2 class="font-heading text-xl font-bold">Set up a password</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          Use at least 12 characters. Password managers and paste are supported.
+        </p>
+        <form class="mt-6 grid gap-5" (submit)="$event.preventDefault(); savePassword()">
+          <label class="grid gap-2 text-sm font-semibold" for="security-password">New password</label
+          ><app-password-input
+            [formField]="passwordForm.password"
+            controlId="security-password"
+            autocomplete="new-password"
+            [required]="true"
+            [minLength]="12"
+          /><label class="grid gap-2 text-sm font-semibold" for="security-password-confirm">Confirm password</label
+          ><app-password-input
+            [formField]="passwordForm.confirmPassword"
+            controlId="security-password-confirm"
+            autocomplete="new-password"
+            [required]="true"
+            [minLength]="12"
+          />
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <app-button type="submit" [disabled]="submitting()">{{
+              submitting() ? 'Saving...' : 'Confirm and save'
+            }}</app-button
+            ><app-button type="button" variant="plain" (click)="setup.set(false)">Cancel</app-button>
+          </div>
+        </form></app-card
+      >
+    } @else {
+      <app-card class="mt-8" padding="lg" tone="raised"
+        ><h2 class="font-heading text-xl font-bold">No password configured</h2>
+        <p class="text-slate-500 dark:text-slate-400">
+          Add a password as a secondary way to access your account. It does not replace your passkeys.
+        </p>
+        <app-button class="mt-2" (click)="beginSetup()">Set up password</app-button></app-card
+      >
+    }
+  }
+</section>

@@ -1,0 +1,39 @@
+@import '../../../../../styles.base.css';
+
+body {
+  transition:
+    background 200ms ease,
+    color 200ms ease;
+}
+
+@keyframes upward-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes upward-leave {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+}
+
+.upward-enter {
+  animation: 300ms ease-in-out both upward-enter;
+}
+
+.upward-leave {
+  animation: 300ms ease-in-out both upward-leave;
+}

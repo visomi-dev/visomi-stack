@@ -1,0 +1,200 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Themis - Sign In</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <!-- Icons -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'secondary-container': '#d5e3fc',
+              'surface-dim': '#cfdce3',
+              'on-tertiary-container': '#005a3d',
+              'surface-variant': '#d9e4ea',
+              'secondary-fixed-dim': '#c7d5ed',
+              'error-container': '#fe8983',
+              'on-secondary-fixed': '#324053',
+              'surface-tint': '#3f6376',
+              'on-secondary': '#f8f8ff',
+              'tertiary-fixed-dim': '#71e4b1',
+              'on-surface-variant': '#566166',
+              'on-secondary-container': '#455367',
+              'surface-container-low': '#f0f4f7',
+              'surface-container-high': '#e1e9ee',
+              'surface-container': '#e8eff3',
+              'surface-container-lowest': '#ffffff',
+              'secondary-dim': '#465468',
+              'primary-container': '#c2e8fe',
+              surface: '#f7f9fb',
+              'primary-dim': '#325769',
+              outline: '#717c82',
+              'tertiary-container': '#7ff3be',
+              'on-error-container': '#752121',
+              'on-tertiary-fixed': '#00452e',
+              primary: '#3f6376',
+              'primary-fixed-dim': '#b4daf0',
+              'on-primary-container': '#325668',
+              'on-error': '#fff7f6',
+              'on-tertiary': '#e6ffef',
+              'outline-variant': '#a9b4b9',
+              'on-tertiary-fixed-variant': '#006545',
+              'on-primary': '#f1f9ff',
+              'on-primary-fixed': '#1e4355',
+              'tertiary-fixed': '#7ff3be',
+              'surface-container-highest': '#d9e4ea',
+              'inverse-surface': '#0b0f10',
+              background: '#f7f9fb',
+              'primary-fixed': '#c2e8fe',
+              'secondary-fixed': '#d5e3fc',
+              'inverse-on-surface': '#9a9d9f',
+              'error-dim': '#4e0309',
+              'tertiary-dim': '#005f41',
+              error: '#9f403d',
+              tertiary: '#006d4b',
+              'inverse-primary': '#c2e8fe',
+              'on-secondary-fixed-variant': '#4e5c71',
+              'on-background': '#2a3439',
+              'on-surface': '#2a3439',
+              secondary: '#526074',
+              'on-primary-fixed-variant': '#3c6073',
+              'surface-bright': '#f7f9fb',
+            },
+            borderRadius: {
+              DEFAULT: '0.125rem',
+              lg: '0.25rem',
+              xl: '0.5rem',
+              full: '0.75rem',
+            },
+            fontFamily: {
+              headline: ['Manrope'],
+              body: ['Inter'],
+              label: ['Inter'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 20;
+        vertical-align: middle;
+        font-size: 20px;
+      }
+      .ghost-border-bottom {
+        border-bottom: 1px solid rgba(169, 180, 185, 0.2);
+      }
+      .ghost-border-bottom:focus-within {
+        border-bottom: 1px solid #3f6376;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-surface font-body text-on-surface flex min-h-screen flex-col items-center justify-center p-6 antialiased"
+  >
+    <!-- Themis Logo Header -->
+    <header class="mb-8 text-center">
+      <h1 class="font-headline text-on-background text-lg font-extrabold tracking-tight uppercase opacity-80">
+        Themis
+      </h1>
+    </header>
+    <!-- Auth Card -->
+    <main
+      class="bg-surface-container-lowest border-outline-variant/10 relative w-full max-w-md overflow-hidden border p-10 shadow-sm"
+    >
+      <section class="mb-8">
+        <h2 class="font-headline text-on-surface mb-2 text-2xl font-bold tracking-tight">Sign in</h2>
+        <p class="text-on-surface-variant text-sm leading-relaxed font-medium">
+          Enter your details to access your workspace.
+        </p>
+      </section>
+      <!-- Login Form -->
+      <form class="space-y-6">
+        <!-- Email Field -->
+        <div class="space-y-1.5">
+          <label class="text-on-surface block text-sm font-semibold" for="email"> Email </label>
+          <div class="ghost-border-bottom transition-all duration-200">
+            <input
+              class="placeholder:text-outline-variant/50 w-full border-none bg-transparent px-0 py-2 text-sm focus:ring-0"
+              id="email"
+              name="email"
+              placeholder="name@organization.com"
+              required=""
+              type="email"
+            />
+          </div>
+        </div>
+        <!-- Password Field -->
+        <div class="space-y-1.5">
+          <label class="text-on-surface block text-sm font-semibold" for="password"> Password </label>
+          <div class="ghost-border-bottom flex items-center transition-all duration-200">
+            <input
+              class="placeholder:text-outline-variant/50 w-full border-none bg-transparent px-0 py-2 text-sm focus:ring-0"
+              id="password"
+              name="password"
+              placeholder="••••••••"
+              required=""
+              type="password"
+            />
+            <button class="text-outline-variant hover:text-primary px-2 transition-colors" type="button">
+              <span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+            </button>
+          </div>
+        </div>
+        <!-- Options -->
+        <div class="flex items-center justify-between text-xs font-medium tracking-tight">
+          <label class="group flex cursor-pointer items-center space-x-2">
+            <input
+              class="border-outline-variant text-primary focus:ring-primary-container h-3.5 w-3.5 rounded-none"
+              type="checkbox"
+            />
+            <span class="text-on-surface-variant group-hover:text-on-surface transition-colors">Remember me</span>
+          </label>
+          <a class="text-primary hover:text-primary-dim transition-colors hover:underline" href="#">
+            Forgot Password?
+          </a>
+        </div>
+        <!-- Action Button -->
+        <button
+          class="bg-primary hover:bg-primary-dim text-on-primary group flex w-full items-center justify-center space-x-2 rounded py-3.5 text-sm font-semibold transition-all"
+          type="submit"
+        >
+          <span>Sign in</span>
+          <span
+            class="material-symbols-outlined transform transition-transform group-hover:translate-x-1"
+            data-icon="arrow_forward"
+            >arrow_forward</span
+          >
+        </button>
+      </form>
+      <!-- Signup Link -->
+      <footer class="border-outline-variant/10 mt-10 border-t pt-6 text-center">
+        <p class="text-on-surface-variant text-sm">
+          New to Themis?
+          <a class="text-primary ml-1 font-semibold hover:underline" href="#">Create an account</a>
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

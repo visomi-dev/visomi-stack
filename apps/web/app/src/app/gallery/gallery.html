@@ -1,0 +1,254 @@
+<div class="bg-bg min-h-full text-slate-950 dark:text-slate-50">
+  <header class="border-border-subtle bg-panel sticky top-0 z-20 border-b">
+    <div
+      class="mx-auto flex max-w-screen-2xl flex-col gap-4 px-4 py-6 sm:px-6 md:flex-row md:items-center md:justify-between md:px-8"
+    >
+      <div class="min-w-0">
+        <h1 class="font-heading text-2xl font-bold tracking-tight md:text-3xl" data-od-id="gallery-title">
+          Visomi Stack UI Gallery
+        </h1>
+        <p class="text-muted-fg mt-1 text-sm md:text-base">
+          Live previews of every primitive in
+          <code class="rounded-sm bg-slate-100 px-1.5 py-0.5 font-mono text-xs dark:bg-slate-800">shared/ui</code>. Use
+          this to compose new screens without guessing the API.
+        </p>
+      </div>
+      <label class="flex shrink-0 items-center gap-2">
+        <span class="sr-only" i18n="@@galleryFilterLabel">Filter components</span>
+        <input
+          type="search"
+          class="ui-focus-ring bg-bg border-border-subtle w-full rounded-md border px-3 py-2 text-sm md:w-72"
+          [value]="filter()"
+          (input)="setFilter($any($event.target).value)"
+          placeholder="Filter by name, description, or selector"
+          i18n-placeholder="@@galleryFilterPlaceholder"
+        />
+      </label>
+    </div>
+  </header>
+
+  <div
+    class="mx-auto flex max-w-screen-2xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 md:flex-row md:gap-10 md:px-8 md:py-10"
+  >
+    <aside class="md:w-56 md:shrink-0">
+      <nav
+        aria-label="Gallery sections"
+        i18n-aria-label="@@gallerySectionsNav"
+        class="sticky top-28 flex flex-row gap-2 overflow-x-auto md:flex-col md:gap-1"
+      >
+        @for (section of filteredSections(); track section.id) {
+          <button
+            type="button"
+            class="flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800"
+            [class.bg-slate-100]="activeSection() === section.id"
+            [class.dark:bg-slate-800]="activeSection() === section.id"
+            (click)="scrollTo(section.id)"
+            [attr.data-od-id]="'gallery-nav-' + section.id"
+          >
+            {{ section.title }}
+            <span class="text-muted-fg ml-auto font-mono text-xs">{{ section.examples.length }}</span>
+          </button>
+        }
+      </nav>
+    </aside>
+
+    <main class="min-w-0 flex-1 space-y-16">
+      @for (section of filteredSections(); track section.id) {
+        <section
+          [id]="'section-' + section.id"
+          class="scroll-mt-32 space-y-6"
+          [attr.data-od-id]="'gallery-section-' + section.id"
+        >
+          <header class="space-y-1">
+            <h2 class="font-heading text-xl font-bold tracking-tight md:text-2xl">{{ section.title }}</h2>
+            <p class="text-muted-fg text-sm md:text-base">{{ section.description }}</p>
+          </header>
+
+          <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            @for (example of section.examples; track example.title) {
+              <article
+                class="bg-panel border-border-subtle flex flex-col gap-4 rounded-lg border p-6"
+                [attr.data-od-id]="'gallery-card-' + example.host"
+              >
+                <header class="space-y-1">
+                  <h3 class="font-heading text-base font-semibold md:text-lg">{{ example.title }}</h3>
+                  <p class="text-muted-fg text-sm">{{ example.description }}</p>
+                </header>
+
+                <div class="bg-bg border-border-subtle flex min-h-32 flex-col gap-3 rounded-md border p-4">
+                  @switch (example.host) {
+                    @case ('button') {
+                      <div class="flex flex-wrap items-center gap-3">
+                        <app-button>Save changes</app-button>
+                        <app-button variant="outline">Cancel</app-button>
+                        <app-button variant="plain">Learn more</app-button>
+                        <app-button tone="red">Delete</app-button>
+                        <app-button [disabled]="true">Disabled</app-button>
+                      </div>
+                    }
+                    @case ('icon-button') {
+                      <div class="flex flex-wrap items-center gap-3">
+                        <app-icon-button ariaLabel="Edit" />
+                        <app-icon-button ariaLabel="Delete" tone="red" />
+                        <app-icon-button ariaLabel="Settings" variant="outline" />
+                      </div>
+                    }
+                    @case ('link-button') {
+                      <div class="flex flex-wrap items-center gap-3">
+                        <app-link-button text="Go to dashboard" href="/dashboard" />
+                        <app-link-button text="View projects" href="/projects" variant="outline" />
+                      </div>
+                    }
+                    @case ('input') {
+                      <app-input [formField]="inputForm.value" placeholder="Type something..." />
+                    }
+                    @case ('textarea') {
+                      <app-textarea [formField]="textareaForm.value" placeholder="Write a description..." />
+                    }
+                    @case ('select') {
+                      <app-select [formField]="selectForm.value">
+                        @for (option of selectOptions; track option.value) {
+                          <option [value]="option.value">{{ option.label }}</option>
+                        }
+                      </app-select>
+                    }
+                    @case ('checkbox') {
+                      <app-checkbox [formField]="checkboxForm.value">Accept terms and conditions</app-checkbox>
+                    }
+                    @case ('switch') {
+                      <app-switch [formField]="switchForm.value">Enable notifications</app-switch>
+                    }
+                    @case ('radio-group') {
+                      <app-radio-group [formField]="radioForm.value" name="plan" [options]="radioOptions" />
+                    }
+                    @case ('radio-card') {
+                      <div class="grid gap-3 sm:grid-cols-3">
+                        @for (option of radioOptions; track option.value) {
+                          <app-radio-card
+                            [formField]="radioForm.value"
+                            [name]="'plan-card'"
+                            [optionValue]="option.value"
+                          >
+                            >
+                            <span class="font-heading text-sm font-semibold">{{ option.label }}</span>
+                            <span class="text-muted-fg text-xs">{{ option.description }}</span>
+                          </app-radio-card>
+                        }
+                      </div>
+                    }
+                    @case ('listbox') {
+                      <app-listbox ariaLabel="Section filter" [options]="listboxOptions" />
+                    }
+                    @case ('dropdown') {
+                      <app-dropdown>
+                        <button
+                          data-slot="trigger"
+                          type="button"
+                          class="ui-focus-ring bg-bg border-border-subtle rounded-md border px-3 py-2 text-sm font-medium"
+                        >
+                          Open menu
+                        </button>
+                        <app-listbox ariaLabel="Dropdown options" [options]="listboxOptions" />
+                      </app-dropdown>
+                    }
+                    @case ('avatar') {
+                      <div class="flex flex-wrap items-center gap-3">
+                        <app-avatar initials="AB" size="sm" />
+                        <app-avatar initials="CD" size="md" />
+                        <app-avatar initials="EF" size="lg" />
+                      </div>
+                    }
+                    @case ('badge') {
+                      <div class="flex flex-wrap items-center gap-2">
+                        <app-badge tone="accent">In review</app-badge>
+                        <app-badge tone="success">Shipped</app-badge>
+                        <app-badge tone="danger">Blocked</app-badge>
+                        <app-badge tone="warning">At risk</app-badge>
+                        <app-badge>Archived</app-badge>
+                      </div>
+                    }
+                    @case ('pagination') {
+                      <app-pagination [page]="1" [pageSize]="10" [total]="120" />
+                    }
+                    @case ('table') {
+                      <app-table
+                        [columns]="[
+                          { key: 'name', label: 'Project' },
+                          { key: 'tone', label: 'Status' },
+                          { key: 'count', label: 'Tasks' },
+                        ]"
+                        [data]="tableRows"
+                      />
+                    }
+                    @case ('loader') {
+                      <div class="flex items-center justify-center py-8">
+                        <app-loader />
+                      </div>
+                    }
+                    @case ('icon') {
+                      <div class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+                        @for (name of filteredIconNames(); track name) {
+                          <div class="flex flex-col items-center gap-1 rounded-md p-2 text-center text-xs">
+                            <app-icon [name]="$any(name)" class="text-xl" />
+                            <span class="text-muted-fg font-mono text-[10px]">{{ name }}</span>
+                          </div>
+                        }
+                      </div>
+                    }
+                    @case ('heading') {
+                      <app-heading text="Section heading" level="2" />
+                      <app-text tone="muted">Body text under the heading.</app-text>
+                    }
+                    @case ('text') {
+                      <app-text>Default text</app-text>
+                      <app-text tone="muted">Muted text</app-text>
+                      <app-text size="sm">Small text</app-text>
+                      <app-text size="lg">Large text</app-text>
+                    }
+                    @case ('divider') {
+                      <app-text>Above the divider</app-text>
+                      <app-divider />
+                      <app-text>Below the divider</app-text>
+                    }
+                    @case ('card') {
+                      <app-card>
+                        <h3 class="font-heading text-base font-semibold">Card title</h3>
+                        <p class="text-muted-fg text-sm">Card description and content.</p>
+                      </app-card>
+                    }
+                    @case ('alert') {
+                      <app-alert tone="info" variant="default"
+                        >Heads up — informational message with the default tone.</app-alert
+                      >
+                      <app-alert tone="danger" variant="default"
+                        >Something went wrong — make the message actionable.</app-alert
+                      >
+                    }
+                    @case ('tooltip') {
+                      <app-tooltip text="Copies the share link to your clipboard.">
+                        <app-button variant="plain">Hover or focus me</app-button>
+                      </app-tooltip>
+                    }
+                    @case ('dialog') {
+                      <app-button (click)="openDialog()">Open dialog</app-button>
+                      <app-dialog [open]="dialogOpen()" (closed)="closeDialog()">
+                        <h2 class="font-heading text-lg font-semibold">Confirm action</h2>
+                        <p class="text-muted-fg text-sm">
+                          The dialog traps focus and closes on Escape or backdrop click.
+                        </p>
+                        <div class="flex justify-end gap-2">
+                          <app-button variant="plain" (click)="closeDialog()">Cancel</app-button>
+                          <app-button (click)="closeDialog()">Confirm</app-button>
+                        </div>
+                      </app-dialog>
+                    }
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      }
+    </main>
+  </div>
+</div>

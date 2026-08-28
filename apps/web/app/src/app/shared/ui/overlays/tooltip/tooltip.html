@@ -1,0 +1,15 @@
+<button
+  class="contents"
+  type="button"
+  [attr.aria-expanded]="active()"
+  [attr.aria-label]="text()"
+  (blur)="active.set(false)"
+  (click)="toggle($event)"
+  (keydown)="handleKeydown($event)"
+>
+  <ng-content />
+</button>
+
+@if (active()) {
+  <p [class]="panelClasses()" role="tooltip">{{ text() }}</p>
+}

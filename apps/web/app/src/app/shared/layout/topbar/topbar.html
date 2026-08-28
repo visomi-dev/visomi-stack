@@ -1,0 +1,64 @@
+<header
+  class="flex h-16 shrink-0 items-center gap-6 border-b border-slate-950/10 bg-white px-4 lg:px-8 dark:border-white/10 dark:bg-slate-50 dark:bg-slate-900 dark:bg-slate-950"
+>
+  <div
+    class="hidden flex-1 font-sans text-lg font-semibold text-slate-950 lg:block dark:text-slate-50"
+    i18n="@@layoutOverviewTitle"
+  >
+    Overview
+  </div>
+
+  <button
+    type="button"
+    class="flex h-9 w-9 items-center justify-center rounded-sm text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-950 lg:hidden dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"
+    aria-label="Open navigation"
+    i18n-aria-label="@@layoutOpenNavigation"
+    (click)="openMobileMenu.emit()"
+  >
+    <app-icon name="bars" />
+  </button>
+
+  <div class="relative ml-auto hidden w-70 md:block">
+    <app-icon
+      name="search"
+      class="absolute top-1/2 left-2 -translate-y-1/2 text-sm text-slate-500 dark:text-slate-400"
+    />
+    <input
+      class="h-9 w-full border-0 border-b border-slate-950/10 bg-transparent pr-3 pl-9 text-sm text-slate-950 transition-colors outline-none placeholder:text-slate-500 focus:border-slate-600 dark:border-slate-500 dark:border-white/10 dark:text-slate-50 dark:text-slate-400"
+      type="search"
+      placeholder="Search workspace..."
+      i18n-placeholder="@@layoutSearchPlaceholder"
+    />
+  </div>
+
+  <div class="flex items-center gap-2">
+    <button
+      type="button"
+      class="relative flex h-9 w-9 items-center justify-center rounded-sm text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"
+      aria-label="Notifications"
+      i18n-aria-label="@@layoutNotifications"
+    >
+      <app-icon name="bell" />
+      <span
+        class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full border border-white bg-amber-600 dark:border-slate-950 dark:bg-amber-500"
+      ></span>
+    </button>
+    <button
+      type="button"
+      class="flex h-9 w-9 items-center justify-center rounded-sm text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"
+      aria-label="Help"
+      i18n-aria-label="@@layoutHelp"
+    >
+      <app-icon name="question-circle" />
+    </button>
+    <button
+      type="button"
+      class="flex h-9 w-9 items-center justify-center rounded-sm text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"
+      (click)="toggleTheme()"
+    >
+      <span class="sr-only" i18n="@@themeSwitcherToggleTheme">Toggle theme</span>
+      <app-icon [name]="isDark() ? 'sun' : 'moon'" />
+    </button>
+    <app-language-switcher />
+  </div>
+</header>

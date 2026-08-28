@@ -1,0 +1,342 @@
+<!doctype html>
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Themis OG Image</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family:
+          'Manrope',
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+      }
+      body {
+        background-color: #080e1b;
+        font-family: 'Manrope', sans-serif;
+      }
+      .technical-grid {
+        background-image: radial-gradient(rgba(123, 208, 255, 0.05) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+      .glass-panel {
+        background: rgba(10, 24, 57, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(50, 69, 124, 0.2);
+        border-radius: 12px;
+      }
+      .frame {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        background: #080e1b;
+        display: flex;
+        align-items: center;
+        padding: 48px 56px;
+        overflow: hidden;
+      }
+      .content {
+        position: relative;
+        z-index: 10;
+        max-width: 620px;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 32px;
+      }
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #bdceff, #aac0fb);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+      .logo-text {
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #dfe4ff;
+      }
+      .title {
+        font-size: 48px;
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: #dfe4ff;
+        margin: 0 0 20px;
+      }
+      .title span {
+        color: #bdceff;
+      }
+      .subtitle {
+        font-size: 18px;
+        line-height: 1.5;
+        color: #9eabcb;
+        margin: 0;
+        max-width: 520px;
+      }
+      .badges {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+      }
+      .badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: #19253f;
+        border: 1px solid rgba(50, 69, 124, 0.2);
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #dfe4ff;
+      }
+      .badge-icon {
+        font-size: 16px;
+      }
+      .badge-icon.tertiary {
+        color: #daffeb;
+      }
+      .badge-icon.primary {
+        color: #bdceff;
+      }
+      .floating-cards {
+        position: absolute;
+        right: 48px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 380px;
+        height: 400px;
+        pointer-events: none;
+      }
+      .card {
+        position: absolute;
+        padding: 24px;
+        box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4);
+      }
+      .card-1 {
+        top: 0;
+        right: 0;
+        width: 320px;
+        transform: rotate(2deg);
+      }
+      .card-2 {
+        bottom: 20px;
+        right: 20px;
+        width: 340px;
+        transform: rotate(-1deg);
+      }
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .card-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #bdceff;
+      }
+      .card-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #dfe4ff;
+        margin: 0 0 8px;
+      }
+      .card-desc {
+        font-size: 11px;
+        color: #9eabcb;
+        margin: 0 0 16px;
+        line-height: 1.5;
+      }
+      .card-progress {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .card-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #19253f;
+        overflow: hidden;
+      }
+      .progress-bar {
+        flex: 1;
+        height: 4px;
+        background: #000000;
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        width: 75%;
+        background: #daffeb;
+        border-radius: 2px;
+      }
+      .progress-text {
+        font-size: 10px;
+        font-weight: 700;
+        color: #daffeb;
+      }
+      .card-terminal-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .terminal-icon {
+        color: #bdceff;
+        font-size: 14px;
+      }
+      .terminal-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #9eabcb;
+      }
+      .terminal-lines {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .terminal-line {
+        display: flex;
+        gap: 8px;
+        font-size: 10px;
+        font-family: monospace;
+      }
+      .terminal-time {
+        color: #47c4ff;
+      }
+      .terminal-text {
+        color: #dfe4ff;
+      }
+      .terminal-text.dim {
+        color: #54eed8;
+      }
+      .terminal-text.muted {
+        opacity: 0.5;
+      }
+      .bg-gradient-1 {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(123, 208, 255, 0.08) 0%, transparent 70%);
+        pointer-events: none;
+      }
+      .bg-gradient-2 {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(198, 255, 243, 0.06) 0%, transparent 70%);
+        pointer-events: none;
+      }
+      .accent-border {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(180deg, #bdceff 0%, transparent 50%, #daffeb 100%);
+        opacity: 0.4;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <div class="technical-grid" style="position: absolute; inset: 0; pointer-events: none"></div>
+      <div class="bg-gradient-1"></div>
+      <div class="bg-gradient-2"></div>
+      <div class="accent-border"></div>
+
+      <div class="content">
+        <div class="logo">
+          <div class="logo-icon">🏛</div>
+          <span class="logo-text">Themis</span>
+        </div>
+        <h1 class="title">Clarity for complex execution, <span>powered by AI context.</span></h1>
+        <p class="subtitle">The technical ledger for teams where humans and AI agents co-author the roadmap.</p>
+        <div class="badges">
+          <div class="badge">
+            <span class="badge-icon tertiary">✓</span>
+            <span>Precision-First</span>
+          </div>
+          <div class="badge">
+            <span class="badge-icon primary">🤖</span>
+            <span>AI Augmented</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="floating-cards">
+        <div class="card glass-panel card-1">
+          <div class="card-header">
+            <span class="card-label">Technical Sprint</span>
+            <span style="color: #9eabcb; font-size: 14px">⋯</span>
+          </div>
+          <h3 class="card-title">Refactor Kernel Logic</h3>
+          <p class="card-desc">Optimizing the execution engine for sub-10ms latency in agent-driven cycles.</p>
+          <div class="card-progress">
+            <div class="card-avatar"></div>
+            <div class="progress-bar">
+              <div class="progress-fill"></div>
+            </div>
+            <span class="progress-text">75%</span>
+          </div>
+        </div>
+
+        <div class="card glass-panel card-2">
+          <div class="card-terminal-label">
+            <span class="terminal-icon">⌨</span>
+            <span class="terminal-label">System Log v4.02</span>
+          </div>
+          <div class="terminal-lines">
+            <div class="terminal-line">
+              <span class="terminal-time">09:14</span>
+              <span class="terminal-text">Agent_01 initialized: Project_Themis</span>
+            </div>
+            <div class="terminal-line">
+              <span class="terminal-time">09:15</span>
+              <span class="terminal-text dim">Success: Context mapping complete</span>
+            </div>
+            <div class="terminal-line">
+              <span class="terminal-time">09:16</span>
+              <span class="terminal-text muted">Awaiting human validation...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

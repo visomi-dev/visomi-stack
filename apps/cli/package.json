@@ -1,0 +1,16 @@
+{
+  "name": "@visomi/visomi-stack",
+  "version": "0.1.0",
+  "description": "Example agent distribution CLI for Visomi Stack",
+  "bin": {
+    "visomi-stack": "./main.js"
+  },
+  "files": [
+    "main.js",
+    "main.js.map",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

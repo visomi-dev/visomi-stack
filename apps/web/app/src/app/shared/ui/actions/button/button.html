@@ -1,0 +1,9 @@
+<button [attr.aria-busy]="loading()" [class]="classes()" [disabled]="disabled() || loading()" [type]="type()">
+  @if (loading()) {
+    <span
+      aria-hidden="true"
+      class="size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+    ></span>
+  }
+  <ng-content />
+</button>

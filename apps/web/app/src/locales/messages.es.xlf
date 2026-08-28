@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en-US" target-language="es" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="activationApiKeyLabel" datatype="html">
+        <source>Named API access keys</source>
+        <target> Named API access keys </target>
+      </trans-unit>
+      <trans-unit id="activationApiKeyRequiredError" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{
+                labelError()
+              }}"/></source>
+        <target> &lt;x id="INTERPOLATION" equiv-text="{{
+                labelError()
+              }}"/&gt; </target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordSuccessTitle" datatype="html">
+        <source> Recovery link sent </source>
+        <target> Recovery link sent </target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordSuccessBody" datatype="html">
+        <source> We sent a recovery link to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong class=&quot;text-zinc-950 dark:text-zinc-50&quot;&gt;"/><x id="INTERPOLATION" equiv-text="{{ successEmail() }}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong
+          &gt;"/>. Open it on this device to choose a new password. </source>
+        <target> We sent a recovery link to &lt;x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&amp;lt;strong class=&amp;quot;text-zinc-950 dark:text-zinc-50&amp;quot;&amp;gt;"/&gt;&lt;x id="INTERPOLATION" equiv-text="{{ successEmail() }}"/&gt;&lt;x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&amp;lt;/strong
+          &amp;gt;"/&gt;. Open it on this device to choose a new password. </target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordKicker" datatype="html">
+        <source> Account recovery </source>
+        <target> Account recovery </target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordTitle" datatype="html">
+        <source> Recover password </source>
+        <target> Recover password </target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordSub" datatype="html">
+        <source> Enter your work email and we&apos;ll send you a recovery link. The link expires in 30 minutes. </source>
+        <target> Enter your work email and we&amp;apos;ll send you a recovery link. The link expires in 30 minutes. </target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordRequestFailedAlert" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{
+          errorMessage()
+        }}"/></source>
+        <target> &lt;x id="INTERPOLATION" equiv-text="{{
+          errorMessage()
+        }}"/&gt; </target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordEmailLabel" datatype="html">
+        <source>Email</source>
+        <target>Correo electrónico</target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordEmailErrorInvalid" datatype="html">
+        <source>Enter a valid email address.</source>
+        <target>Ingresa una dirección de correo electrónico válida.</target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordSubmitButton" datatype="html">
+        <source> Send reset link </source>
+        <target> Enviar enlace de restablecimiento </target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordFooterPrompt" datatype="html">
+        <source> Remembered your password? </source>
+        <target> Remembered your password? </target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordEmailErrorRequired" datatype="html">
+        <source>Enter your email address.</source>
+        <target>Ingresa tu dirección de correo electrónico.</target>
+      </trans-unit>
+      <trans-unit id="forgottenPasswordRequestFailed" datatype="html">
+        <source>Request failed.</source>
+        <target>La solicitud falló.</target>
+      </trans-unit>
+      <trans-unit id="resetPasswordSuccessTitle" datatype="html">
+        <source> Password updated </source>
+        <target> Password updated </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordSuccessBody" datatype="html">
+        <source> You&apos;re all set. Sign in with your new password to continue. </source>
+        <target> You&amp;apos;re all set. Sign in with your new password to continue. </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordKicker" datatype="html">
+        <source> Password reset </source>
+        <target> Password reset </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordTitle" datatype="html">
+        <source> Reset your password </source>
+        <target> Reset your password </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordSub" datatype="html">
+        <source> Enter the 6-digit code we sent to your email, then choose a new password. </source>
+        <target> Enter the 6-digit code we sent to your email, then choose a new password. </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordSendingToLabel" datatype="html">
+        <source>Sending to</source>
+        <target> Sending to </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordNewLabel" datatype="html">
+        <source>New password</source>
+        <target> New password </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordConfirmLabel" datatype="html">
+        <source>Confirm new password</source>
+        <target> Confirm new password </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordConfirmErrorMismatch" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{
+              passwordForm.confirmPassword().errors()[0]?.message ?? &apos;&apos;
+            }}"/></source>
+        <target> &lt;x id="INTERPOLATION" equiv-text="{{
+              passwordForm.confirmPassword().errors()[0]?.message ?? &amp;apos;&amp;apos;
+            }}"/&gt; </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordUpdateButton" datatype="html">
+        <source>Update password</source>
+        <target> Update password </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordFooterPrompt" datatype="html">
+        <source> Remembered your password? </source>
+        <target> Remembered your password? </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordPasswordErrorRequired" datatype="html">
+        <source>Choose a new password.</source>
+        <target> Choose a new password. </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordPasswordErrorMinlength" datatype="html">
+        <source>Use at least 8 characters.</source>
+        <target> Use at least 8 characters. </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordConfirmErrorRequired" datatype="html">
+        <source>Re-enter your new password.</source>
+        <target> Re-enter your new password. </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordMissingChallenge" datatype="html">
+        <source>The recovery session has expired. Please request a new code.</source>
+        <target> The recovery session has expired. Please request a new code. </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordVerifyFailed" datatype="html">
+        <source>That code didn&apos;t work. Try again.</source>
+        <target> That code didn&amp;apos;t work. Try again. </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordPinErrorMismatch" datatype="html">
+        <source>That code didn&apos;t work. Try again.</source>
+        <target> That code didn&amp;apos;t work. Try again. </target>
+      </trans-unit>
+      <trans-unit id="resetPasswordUpdateFailed" datatype="html">
+        <source>Could not update the password.</source>
+        <target> Could not update the password. </target>
+      </trans-unit>
+      <trans-unit id="signInKicker" datatype="html">
+        <source> Account access </source>
+        <target> Account access </target>
+      </trans-unit>
+      <trans-unit id="signInTitle" datatype="html">
+        <source> Sign in </source>
+        <target> Sign in </target>
+      </trans-unit>
+      <trans-unit id="signInSub" datatype="html">
+        <source> Welcome back. Use your work email to access your Themis workspace. </source>
+        <target> Welcome back. Use your work email to access your Themis workspace. </target>
+      </trans-unit>
+      <trans-unit id="signInAuthFailedAlert" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{
+        errorMessage()
+      }}"/></source>
+        <target> &lt;x id="INTERPOLATION" equiv-text="{{
+        errorMessage()
+      }}"/&gt; </target>
+      </trans-unit>
+      <trans-unit id="signInEmailLabel" datatype="html">
+        <source>Email</source>
+        <target>Correo electrónico</target>
+      </trans-unit>
+      <trans-unit id="signInEmailErrorInvalid" datatype="html">
+        <source>Enter a valid email address.</source>
+        <target>Ingresa una dirección de correo electrónico válida.</target>
+      </trans-unit>
+      <trans-unit id="signInPasswordLabel" datatype="html">
+        <source>Password</source>
+        <target>Contraseña</target>
+      </trans-unit>
+      <trans-unit id="signInPasswordErrorMinlength" datatype="html">
+        <source>Use at least 8 characters.</source>
+        <target>Usa al menos 8 caracteres.</target>
+      </trans-unit>
+      <trans-unit id="signInRememberDeviceLabel" datatype="html">
+        <source>Remember this device.</source>
+        <target>Recordar este dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="signInSubmitButton" datatype="html">
+        <source>Sign in</source>
+        <target>Iniciar sesión</target>
+      </trans-unit>
+      <trans-unit id="signInFooterPrompt" datatype="html">
+        <source>New to Themis?</source>
+        <target>¿Eres nuevo en Themis?</target>
+      </trans-unit>
+      <trans-unit id="signInEmailErrorRequired" datatype="html">
+        <source>Enter your email address.</source>
+        <target>Ingresa tu dirección de correo electrónico.</target>
+      </trans-unit>
+      <trans-unit id="signInPasswordErrorRequired" datatype="html">
+        <source>Enter your password.</source>
+        <target>Ingresa tu contraseña.</target>
+      </trans-unit>
+      <trans-unit id="signInAuthFailed" datatype="html">
+        <source>Authentication failed.</source>
+        <target>La autenticación falló.</target>
+      </trans-unit>
+      <trans-unit id="signUpKicker" datatype="html">
+        <source> New account </source>
+        <target> New account </target>
+      </trans-unit>
+      <trans-unit id="signUpTitle" datatype="html">
+        <source> Create your account </source>
+        <target> Create your account </target>
+      </trans-unit>
+      <trans-unit id="signUpSub" datatype="html">
+        <source> Use 8+ characters. Mix uppercase, lowercase, numbers, and symbols for the strongest result. </source>
+        <target> Use 8+ characters. Mix uppercase, lowercase, numbers, and symbols for the strongest result. </target>
+      </trans-unit>
+      <trans-unit id="signUpAuthFailedAlert" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{
+        errorMessage()
+      }}"/></source>
+        <target> &lt;x id="INTERPOLATION" equiv-text="{{
+        errorMessage()
+      }}"/&gt; </target>
+      </trans-unit>
+      <trans-unit id="signUpEmailLabel" datatype="html">
+        <source>Email</source>
+        <target>Correo electrónico</target>
+      </trans-unit>
+      <trans-unit id="signUpEmailErrorInvalid" datatype="html">
+        <source>Enter a valid email address.</source>
+        <target>Ingresa una dirección de correo electrónico válida.</target>
+      </trans-unit>
+      <trans-unit id="signUpPasswordLabel" datatype="html">
+        <source>Password</source>
+        <target>Contraseña</target>
+      </trans-unit>
+      <trans-unit id="signUpPasswordErrorMinlength" datatype="html">
+        <source>Use at least 8 characters.</source>
+        <target>Usa al menos 8 caracteres.</target>
+      </trans-unit>
+      <trans-unit id="signUpConfirmPasswordLabel" datatype="html">
+        <source>Confirm password</source>
+        <target> Confirm password </target>
+      </trans-unit>
+      <trans-unit id="signUpConfirmPasswordErrorMismatch" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{
+          signUpForm.confirmPassword().errors()[0]?.message ?? &apos;&apos;
+        }}"/></source>
+        <target> &lt;x id="INTERPOLATION" equiv-text="{{
+          signUpForm.confirmPassword().errors()[0]?.message ?? &amp;apos;&amp;apos;
+        }}"/&gt; </target>
+      </trans-unit>
+      <trans-unit id="signUpSubmitButton" datatype="html">
+        <source> Create account </source>
+        <target> Crear cuenta </target>
+      </trans-unit>
+      <trans-unit id="signUpFooterPrompt" datatype="html">
+        <source>Already have an account?</source>
+        <target>¿Ya tienes una cuenta?</target>
+      </trans-unit>
+      <trans-unit id="signUpEmailErrorRequired" datatype="html">
+        <source>Enter your email address.</source>
+        <target>Ingresa tu dirección de correo electrónico.</target>
+      </trans-unit>
+      <trans-unit id="signUpPasswordErrorRequired" datatype="html">
+        <source>Create a password before continuing.</source>
+        <target>Crea una contraseña antes de continuar.</target>
+      </trans-unit>
+      <trans-unit id="signUpConfirmPasswordErrorRequired" datatype="html">
+        <source>Re-enter your new password.</source>
+        <target> Re-enter your new password. </target>
+      </trans-unit>
+      <trans-unit id="signUpAuthFailed" datatype="html">
+        <source>Authentication failed.</source>
+        <target>La autenticación falló.</target>
+      </trans-unit>
+      <trans-unit id="verificationCodeLabel" datatype="html">
+        <source>Verification code</source>
+        <target>Código de verificación</target>
+      </trans-unit>
+      <trans-unit id="verificationCodeHelp" datatype="html">
+        <source>Enter the 6-digit code from your email.</source>
+        <target>Ingresa el código de 6 dígitos que recibiste por correo electrónico.</target>
+      </trans-unit>
+      <trans-unit id="verificationCodeErrorLength" datatype="html">
+        <source>Enter the full 6-digit code.</source>
+        <target>Ingresa el código completo de 6 dígitos.</target>
+      </trans-unit>
+      <trans-unit id="verificationCodeSubmitButton" datatype="html">
+        <source> Verify and continue </source>
+        <target> Verificar y continuar </target>
+      </trans-unit>
+      <trans-unit id="verificationCodeResendButton" datatype="html">
+        <source> Resend code </source>
+        <target> Reenviar código </target>
+      </trans-unit>
+      <trans-unit id="verificationCodeErrorRequired" datatype="html">
+        <source>Enter the verification code.</source>
+        <target>Ingresa el código de verificación.</target>
+      </trans-unit>
+      <trans-unit id="verifyDeviceKicker" datatype="html">
+        <source> Device verification </source>
+        <target> Device verification </target>
+      </trans-unit>
+      <trans-unit id="verifyDeviceTitle" datatype="html">
+        <source> Verify device </source>
+        <target> Verify device </target>
+      </trans-unit>
+      <trans-unit id="verifyDeviceSub" datatype="html">
+        <source> Enter the 6-digit code we sent to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong class=&quot;text-zinc-950 dark:text-zinc-50&quot;&gt;"/><x id="INTERPOLATION" equiv-text="{{ challenge()?.email }}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong
+        &gt;"/>. </source>
+        <target> Enter the 6-digit code we sent to &lt;x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&amp;lt;strong class=&amp;quot;text-zinc-950 dark:text-zinc-50&amp;quot;&amp;gt;"/&gt;&lt;x id="INTERPOLATION" equiv-text="{{ challenge()?.email }}"/&gt;&lt;x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&amp;lt;/strong
+        &amp;gt;"/&gt;. </target>
+      </trans-unit>
+      <trans-unit id="verifyDeviceFooterPrompt" datatype="html">
+        <source>Need to start over?</source>
+        <target> Need to start over? </target>
+      </trans-unit>
+      <trans-unit id="verifyDeviceFailed" datatype="html">
+        <source>Device verification failed.</source>
+        <target>La verificación del dispositivo falló.</target>
+      </trans-unit>
+      <trans-unit id="verifyDevicePinMismatch" datatype="html">
+        <source>The code didn&apos;t match. Try again.</source>
+        <target> The code didn&amp;apos;t match. Try again. </target>
+      </trans-unit>
+      <trans-unit id="verifyDeviceResendSuccess" datatype="html">
+        <source>A fresh device verification code was sent.</source>
+        <target>Se envió un nuevo código de verificación de dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="verifyDeviceResendFailed" datatype="html">
+        <source>Could not resend the device code.</source>
+        <target>No se pudo reenviar el código del dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="verifyEmailKicker" datatype="html">
+        <source> Email verification </source>
+        <target> Email verification </target>
+      </trans-unit>
+      <trans-unit id="verifyEmailTitle" datatype="html">
+        <source> Verify email </source>
+        <target> Verify email </target>
+      </trans-unit>
+      <trans-unit id="verifyEmailSub" datatype="html">
+        <source> Enter the 6-digit code we sent. </source>
+        <target> Enter the 6-digit code we sent. </target>
+      </trans-unit>
+      <trans-unit id="verifyEmailSendingToLabel" datatype="html">
+        <source>Sending to</source>
+        <target> Sending to </target>
+      </trans-unit>
+      <trans-unit id="verifyEmailFooterPrompt" datatype="html">
+        <source>Need to start over?</source>
+        <target> Need to start over? </target>
+      </trans-unit>
+      <trans-unit id="verifyEmailFailed" datatype="html">
+        <source>Verification failed.</source>
+        <target>La verificación falló.</target>
+      </trans-unit>
+      <trans-unit id="verifyEmailPinMismatch" datatype="html">
+        <source>The code didn&apos;t match. Try again.</source>
+        <target> The code didn&amp;apos;t match. Try again. </target>
+      </trans-unit>
+      <trans-unit id="verifyEmailResendSuccess" datatype="html">
+        <source>A fresh verification code was sent.</source>
+        <target>Se envió un nuevo código de verificación.</target>
+      </trans-unit>
+      <trans-unit id="verifyEmailResendFailed" datatype="html">
+        <source>Could not resend the verification code.</source>
+        <target>No se pudo reenviar el código de verificación.</target>
+      </trans-unit>
+      <trans-unit id="dashboardWelcomeBody" datatype="html">
+        <source> Welcome to the Themis workspace. This is a placeholder for the dashboard surface. </source>
+        <target> Welcome to the Themis workspace. This is a placeholder for the dashboard surface. </target>
+      </trans-unit>
+      <trans-unit id="projectDetailRunSeed" datatype="html">
+        <source> Run project seed </source>
+        <target> Run project seed </target>
+      </trans-unit>
+      <trans-unit id="projectNewBreadcrumbCurrent" datatype="html">
+        <source>New project</source>
+        <target> New project </target>
+      </trans-unit>
+      <trans-unit id="projectNewNameLabel" datatype="html">
+        <source>Project name</source>
+        <target> Project name </target>
+      </trans-unit>
+      <trans-unit id="projectNewNameRequiredError" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{
+            nameError()
+          }}"/></source>
+        <target> &lt;x id="INTERPOLATION" equiv-text="{{
+            nameError()
+          }}"/&gt; </target>
+      </trans-unit>
+      <trans-unit id="projectNewSummaryLabel" datatype="html">
+        <source>Summary</source>
+        <target> Summary </target>
+      </trans-unit>
+      <trans-unit id="projectNewSummaryHelp" datatype="html">
+        <source>A short description of the project (optional).</source>
+        <target> A short description of the project (optional). </target>
+      </trans-unit>
+      <trans-unit id="projectNewSummaryError" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="{{
+            summaryError()
+          }}"/></source>
+        <target> &lt;x id="INTERPOLATION" equiv-text="{{
+            summaryError()
+          }}"/&gt; </target>
+      </trans-unit>
+      <trans-unit id="projectNewSubmit" datatype="html">
+        <source> Create project </source>
+        <target> Create project </target>
+      </trans-unit>
+      <trans-unit id="languageSwitcherChangeLanguage" datatype="html">
+        <source>Change language</source>
+        <target>Cambiar idioma</target>
+      </trans-unit>
+      <trans-unit id="languageSwitcherEnglishOption" datatype="html">
+        <source>English</source>
+        <target>Inglés</target>
+      </trans-unit>
+      <trans-unit id="languageSwitcherSpanishOption" datatype="html">
+        <source>Spanish</source>
+        <target>Español</target>
+      </trans-unit>
+      <trans-unit id="languageSwitcherSpanish" datatype="html">
+        <source>Switch to Spanish</source>
+        <target>Cambiar a español</target>
+      </trans-unit>
+      <trans-unit id="languageSwitcherEnglish" datatype="html">
+        <source>Switch to English</source>
+        <target>Cambiar a inglés</target>
+      </trans-unit>
+      <trans-unit id="layoutBottomNavOverview" datatype="html">
+        <source>Overview</source>
+        <target>General</target>
+      </trans-unit>
+      <trans-unit id="layoutBottomNavProjects" datatype="html">
+        <source>Projects</source>
+        <target>Proyectos</target>
+      </trans-unit>
+      <trans-unit id="layoutBottomNavNewProject" datatype="html">
+        <source>New project</source>
+        <target>Nuevo proyecto</target>
+      </trans-unit>
+      <trans-unit id="layoutCloseNavigation" datatype="html">
+        <source>Close navigation</source>
+        <target>Cerrar navegación</target>
+      </trans-unit>
+      <trans-unit id="layoutMobileNavigationTitle" datatype="html">
+        <source>Navigation</source>
+        <target>Navegación</target>
+      </trans-unit>
+      <trans-unit id="layoutSidebarAriaLabel" datatype="html">
+        <source>Primary navigation</source>
+        <target>Navegación principal</target>
+      </trans-unit>
+      <trans-unit id="layoutOpenUserMenu" datatype="html">
+        <source>Open user menu</source>
+        <target>Abrir menú de usuario</target>
+      </trans-unit>
+      <trans-unit id="layoutSignedInStatus" datatype="html">
+        <source>Signed in</source>
+        <target>Sesión iniciada</target>
+      </trans-unit>
+      <trans-unit id="themeSwitcherToggleTheme" datatype="html">
+        <source>Toggle theme</source>
+        <target>Cambiar tema</target>
+      </trans-unit>
+      <trans-unit id="layoutWorkspaceTitle" datatype="html">
+        <source>Workspace</source>
+        <target>Espacio de trabajo</target>
+      </trans-unit>
+      <trans-unit id="layoutMenuDashboard" datatype="html">
+        <source>Overview</source>
+        <target>Resumen</target>
+      </trans-unit>
+      <trans-unit id="layoutMenuNewProject" datatype="html">
+        <source>New project</source>
+        <target>Nuevo proyecto</target>
+      </trans-unit>
+      <trans-unit id="layoutMenuProjects" datatype="html">
+        <source>Projects</source>
+        <target>Proyectos</target>
+      </trans-unit>
+      <trans-unit id="layoutSignOutLabel" datatype="html">
+        <source>Sign out</source>
+        <target>Cerrar sesión</target>
+      </trans-unit>
+      <trans-unit id="layoutOverviewTitle" datatype="html">
+        <source>Overview</source>
+        <target>Resumen</target>
+      </trans-unit>
+      <trans-unit id="layoutOpenNavigation" datatype="html">
+        <source>Open navigation</source>
+        <target>Abrir navegación</target>
+      </trans-unit>
+      <trans-unit id="layoutSearchPlaceholder" datatype="html">
+        <source>Search projects, tasks...</source>
+        <target>Buscar proyectos, tareas...</target>
+      </trans-unit>
+      <trans-unit id="layoutNotifications" datatype="html">
+        <source>Notifications</source>
+        <target>Notificaciones</target>
+      </trans-unit>
+      <trans-unit id="layoutHelp" datatype="html">
+        <source>Help</source>
+        <target>Ayuda</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

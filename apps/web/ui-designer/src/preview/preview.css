@@ -1,0 +1,65 @@
+@import '../../../../../styles.base.css';
+
+@source '../prototypes/*.html';
+
+html,
+body {
+  min-height: 100%;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  color: inherit;
+  background-color: transparent;
+}
+
+a {
+  color: inherit;
+}
+
+.preview-frame {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  min-height: calc(100vh - 50px);
+}
+
+#preview-iframe {
+  max-width: 100%;
+  border: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.viewport-btn[data-active='true'] {
+  background-color: var(--color-slate-600, #2563eb);
+  color: #fff;
+}
+
+html.dark .viewport-btn[data-active='true'] {
+  background-color: var(--color-slate-500, #3b82f6);
+}
+
+html.dark body {
+  background: #09090b;
+  color: #fafafa;
+}
+
+iframe#preview-iframe {
+  width: 1280px;
+}
+
+iframe#preview-iframe[data-viewport='mobile'] {
+  width: 375px;
+}
+
+iframe#preview-iframe[data-viewport='tablet'] {
+  width: 768px;
+}

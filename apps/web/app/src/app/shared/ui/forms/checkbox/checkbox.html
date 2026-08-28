@@ -1,0 +1,15 @@
+<input
+  #inputEl
+  [attr.aria-describedby]="ariaDescribedBy()"
+  [attr.aria-invalid]="invalid()"
+  [attr.id]="controlId()"
+  [attr.name]="name()"
+  [attr.required]="required() ? '' : null"
+  [disabled]="disabled()"
+  [class]="classes()"
+  [checked]="checked()"
+  data-slot="control"
+  type="checkbox"
+  (blur)="onBlur()"
+  (change)="onChangeEvent($event)"
+/>

@@ -1,0 +1,10 @@
+@if (routerLink(); as link) {
+  <a
+    [class]="classes()"
+    [routerLink]="link"
+    routerLinkActive="bg-slate-50 dark:bg-slate-900 text-slate-950 dark:text-slate-50"
+    ><ng-content
+  /></a>
+} @else {
+  <a [attr.href]="href()" [class]="classes()"><ng-content /></a>
+}

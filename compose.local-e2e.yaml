@@ -1,0 +1,65 @@
+name: ${COMPOSE_PROJECT_NAME:-themis-local-e2e}
+
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-themis_api_e2e}
+      POSTGRES_USER: ${POSTGRES_USER:-themis_api_e2e}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-themis_api_e2e_password}
+    ports:
+      - '${POSTGRES_PORT:-15432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: docker.io/library/redis:7-alpine
+    ports:
+      - '${REDIS_PORT:-16379}:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  minio:
+    image: quay.io/minio/minio:latest
+    command: ['server', '/data', '--address', ':9000', '--console-address', ':9001']
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-themis_api_e2e}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-themis_api_e2e_password}
+    ports:
+      - '${MINIO_PORT:-19000}:9000'
+      - '${MINIO_CONSOLE_PORT:-19001}:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl --fail --silent http://127.0.0.1:9000/minio/health/ready >/dev/null']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  minio-init:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: ['/bin/sh', '-ec']
+    command:
+      - >-
+        mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
+        mc mb --ignore-existing "local/$${OPAQUE_SYNC_S3_BUCKET}";
+        mc anonymous set private "local/$${OPAQUE_SYNC_S3_BUCKET}";
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-themis_api_e2e}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-themis_api_e2e_password}
+      OPAQUE_SYNC_S3_BUCKET: ${OPAQUE_SYNC_S3_BUCKET:-themis-local-e2e-opaque}
+
+volumes:
+  postgres-data:
+  minio-data:

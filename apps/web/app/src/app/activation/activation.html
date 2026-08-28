@@ -1,0 +1,246 @@
+<app-container size="lg">
+  <section class="flex flex-col gap-8 py-4">
+    <header class="flex flex-col gap-3">
+      <p class="font-mono text-xs font-semibold tracking-widest text-slate-600 uppercase dark:text-slate-500">
+        v1.0.2_stable
+      </p>
+      <app-heading i18n="@@activationTitle" level="1" [text]="'System activation'" />
+      <p class="max-w-2xl text-sm leading-relaxed text-slate-500 md:text-base dark:text-slate-400">
+        Configure your API key and local workspace settings before entering the workspace.
+      </p>
+    </header>
+
+    @if (errorMessage()) {
+      <app-alert tone="danger">{{ errorMessage() }}</app-alert>
+    }
+
+    @if (copyMessage()) {
+      <app-alert tone="success">{{ copyMessage() }}</app-alert>
+    }
+
+    @if (loading()) {
+      <app-card padding="md" tone="raised">
+        <div class="flex items-center gap-4">
+          <app-loader />
+          <p class="text-sm text-slate-500 dark:text-slate-400">Loading activation settings...</p>
+        </div>
+      </app-card>
+    } @else {
+      <div class="space-y-8">
+        <section>
+          <div class="mb-4 flex items-center gap-3">
+            <app-badge tone="accent">01</app-badge>
+            <app-heading i18n="@@activationApiInfrastructureTitle" level="2" [text]="'API infrastructure'" />
+          </div>
+
+          <app-card padding="md" tone="default">
+            <app-label for="activation-api-key-label" i18n="@@activationApiKeyLabel">Named API access keys</app-label>
+
+            <app-form class="flex flex-col gap-3 md:flex-row" [form]="apiKeyForm">
+              <app-field class="w-full md:flex-1">
+                <app-input
+                  class="w-full"
+                  [formField]="apiKeyForm.label"
+                  required
+                  maxLength="80"
+                  controlId="activation-api-key-label"
+                  name="label"
+                  placeholder="Production workspace key"
+                />
+                <app-error-message controlId="activation-api-key-label-error" i18n="@@activationApiKeyRequiredError">{{
+                  labelError()
+                }}</app-error-message>
+              </app-field>
+
+              <app-button tone="accent" type="submit" [loading]="creatingKey()">Generate key</app-button>
+            </app-form>
+
+            <div class="mt-5 grid gap-3">
+              @if ((activationData()?.apiKeys?.length ?? 0) === 0) {
+                <div
+                  class="rounded-sm border border-slate-950/10 bg-slate-50 px-4 py-5 font-mono text-sm text-slate-500 italic dark:border-white/10 dark:bg-slate-900 dark:text-slate-400"
+                >
+                  ••••••••••••••••••••••••••••••••••••
+                </div>
+              }
+
+              @for (apiKey of activationData()?.apiKeys ?? []; track apiKey.id) {
+                <article
+                  class="rounded-sm border border-slate-950/10 bg-slate-50 p-4 dark:border-white/10 dark:bg-slate-200 dark:bg-slate-700 dark:bg-slate-900"
+                >
+                  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-slate-950 dark:text-slate-50">{{ apiKey.label }}</p>
+                      @if (plaintextTokenFor(apiKey)) {
+                        <p class="mt-1 font-mono text-xs break-all text-slate-600 dark:text-slate-500">
+                          {{ plaintextTokenFor(apiKey) }}
+                        </p>
+                      } @else {
+                        <p class="mt-1 font-mono text-xs text-slate-500 dark:text-slate-400">
+                          {{ apiKey.tokenPrefix }}... created {{ keyCreatedAtLabel(apiKey) }}
+                        </p>
+                      }
+                    </div>
+
+                    <div class="flex shrink-0 flex-col gap-3 sm:flex-row md:gap-4">
+                      @if (plaintextTokenFor(apiKey)) {
+                        <app-button type="button" variant="outline" (click)="copyGeneratedKey()">Copy key</app-button>
+                      }
+
+                      <app-button
+                        tone="danger"
+                        type="button"
+                        variant="outline"
+                        [loading]="revokingKeyId() === apiKey.id"
+                        (click)="revokeApiKey(apiKey.id)"
+                      >
+                        Revoke
+                      </app-button>
+                    </div>
+                  </div>
+                </article>
+              }
+
+              <div class="border-l-2 border-red-600 bg-red-600/5 px-4 py-3 dark:border-red-500 dark:bg-red-500/10">
+                <div class="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
+                  <p class="shrink-0 text-xs font-black tracking-widest text-slate-950 uppercase dark:text-slate-50">
+                    Caution
+                  </p>
+                  <p class="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                    Each key is displayed only once. Copy it immediately before leaving this screen.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </app-card>
+        </section>
+
+        <section>
+          <div class="mb-4 flex items-center gap-3">
+            <app-badge tone="accent">02</app-badge>
+            <app-heading i18n="@@activationWorkspaceConfigurationTitle" level="2" [text]="'Workspace configuration'" />
+          </div>
+
+          <app-card padding="md" tone="default">
+            <div
+              role="tablist"
+              class="flex flex-wrap border-b border-slate-950/10 bg-slate-50 dark:border-white/10 dark:bg-slate-900"
+            >
+              <button
+                type="button"
+                role="tab"
+                id="config-tab-themis"
+                [attr.aria-selected]="selectedConfigTab() === 'themis'"
+                aria-controls="config-tabpanel"
+                class="cursor-pointer border-r border-slate-950/10 px-5 py-3 font-mono text-xs text-slate-500 focus:outline-none dark:border-white/10 dark:text-slate-400"
+                [class.bg-white]="selectedConfigTab() === 'themis'"
+                [class.dark:bg-slate-950]="selectedConfigTab() === 'themis'"
+                [class.text-slate-600]="selectedConfigTab() === 'themis'"
+                [class.dark:text-slate-500]="selectedConfigTab() === 'themis'"
+                (click)="selectConfigTab('themis')"
+              >
+                ~/.config/themis/core.json
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="config-tab-opencode"
+                [attr.aria-selected]="selectedConfigTab() === 'opencode'"
+                aria-controls="config-tabpanel"
+                class="cursor-pointer border-r border-slate-950/10 px-5 py-3 font-mono text-xs text-slate-500 focus:outline-none dark:border-white/10 dark:text-slate-400"
+                [class.bg-white]="selectedConfigTab() === 'opencode'"
+                [class.dark:bg-slate-950]="selectedConfigTab() === 'opencode'"
+                [class.text-slate-600]="selectedConfigTab() === 'opencode'"
+                [class.dark:text-slate-500]="selectedConfigTab() === 'opencode'"
+                (click)="selectConfigTab('opencode')"
+              >
+                ~/.config/opencode/opencode.json
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="config-tab-env"
+                [attr.aria-selected]="selectedConfigTab() === 'env'"
+                aria-controls="config-tabpanel"
+                class="cursor-pointer border-r border-slate-950/10 px-5 py-3 font-mono text-xs text-slate-500 focus:outline-none dark:border-white/10 dark:text-slate-400"
+                [class.bg-white]="selectedConfigTab() === 'env'"
+                [class.dark:bg-slate-950]="selectedConfigTab() === 'env'"
+                [class.text-slate-600]="selectedConfigTab() === 'env'"
+                [class.dark:text-slate-500]="selectedConfigTab() === 'env'"
+                (click)="selectConfigTab('env')"
+              >
+                .env.production
+              </button>
+            </div>
+
+            <div
+              id="config-tabpanel"
+              role="tabpanel"
+              [attr.aria-labelledby]="'config-tab-' + selectedConfigTab()"
+              class="bg-slate-200 p-6 dark:bg-slate-700"
+            >
+              <div class="flex items-center justify-between gap-4">
+                <p class="font-mono text-xs text-slate-500 dark:text-slate-400">{{ currentConfigPath() }}</p>
+                <app-button type="button" variant="outline" (click)="copySelectedConfig()">Copy config</app-button>
+              </div>
+
+              <pre
+                class="mt-5 overflow-x-auto font-mono text-sm leading-7 break-words whitespace-pre-wrap text-slate-950 dark:text-slate-50"
+                >{{ currentConfigText() }}</pre
+              >
+            </div>
+          </app-card>
+        </section>
+
+        <section>
+          <div class="mb-4 flex items-center gap-3">
+            <app-badge tone="accent">03</app-badge>
+            <app-heading i18n="@@activationSeedConfigurationTitle" level="2" [text]="'Seed configuration'" />
+          </div>
+
+          <app-card padding="md" tone="default">
+            <p class="font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400">System seed prompt</p>
+            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+              Use this prompt inside OpenCode to analyze the repository and seed the first project context into Themis.
+            </p>
+
+            <pre
+              class="mt-5 overflow-x-auto border border-slate-950/10 bg-slate-50 p-5 font-mono text-sm leading-7 break-words whitespace-pre-wrap text-slate-950 dark:border-white/10 dark:bg-slate-900 dark:text-slate-50"
+              >{{ activationData()?.seedPrompt }}</pre
+            >
+
+            <div class="mt-5 flex justify-end">
+              <app-button type="button" variant="outline" (click)="copySeedPrompt()">Copy prompt</app-button>
+            </div>
+          </app-card>
+        </section>
+
+        <footer
+          class="flex flex-col gap-6 border-t border-slate-950/10 pt-6 md:flex-row md:items-center md:justify-between dark:border-white/10"
+        >
+          <div class="flex items-center gap-3">
+            <span class="h-2 w-2 rounded-full bg-amber-600 dark:bg-amber-500"></span>
+            <span class="font-mono text-xs tracking-widest text-slate-500 uppercase dark:text-slate-400">
+              @if (hasMilestone('activation_completed')) {
+                Activation completed
+              } @else if (hasMilestone('activation_skipped')) {
+                Activation skipped once
+              } @else {
+                Pending secure initialization
+              }
+            </span>
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <app-button type="button" variant="outline" [loading]="continuing()" (click)="skipForNow()">
+              Skip for now
+            </app-button>
+            <app-button tone="accent" type="button" [loading]="continuing()" (click)="continueToWorkspace()">
+              Continue to workspace
+            </app-button>
+          </div>
+        </footer>
+      </div>
+    }
+  </section>
+</app-container>

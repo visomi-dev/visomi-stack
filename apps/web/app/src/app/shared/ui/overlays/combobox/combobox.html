@@ -1,0 +1,51 @@
+<div cdkOverlayOrigin #origin="cdkOverlayOrigin">
+  <input
+    class="ui-focus-ring w-full rounded-[var(--radius-control)] border border-slate-500/30 bg-slate-50 px-3 py-2.5 text-sm text-slate-950 placeholder:text-slate-500 disabled:opacity-50 dark:border-slate-400/30 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400"
+    role="combobox"
+    autocomplete="off"
+    [attr.aria-activedescendant]="open() ? activeId() : null"
+    aria-controls="combobox-options"
+    [attr.aria-expanded]="open()"
+    [attr.aria-label]="ariaLabel()"
+    [attr.id]="id()"
+    [disabled]="formDisabled()"
+    [placeholder]="placeholder()"
+    [value]="query()"
+    (blur)="markTouched()"
+    (focus)="open.set(true)"
+    (input)="updateQuery($event)"
+    (keydown)="handleKeydown($event)"
+  />
+</div>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayHasBackdrop]="true"
+  [cdkConnectedOverlayOpen]="open()"
+  [cdkConnectedOverlayOrigin]="origin"
+  (backdropClick)="open.set(false)"
+>
+  <div
+    class="ui-panel-raised mt-2 max-h-72 w-[var(--cdk-overlay-connected-position-bounding-box-width)] min-w-64 overflow-auto p-1"
+    id="combobox-options"
+    role="listbox"
+  >
+    @for (option of filteredOptions(); track option.value; let index = $index) {
+      <div
+        [attr.aria-disabled]="option.disabled"
+        [attr.aria-selected]="value() === option.value"
+        [class]="optionClasses(index, option)"
+        [id]="'combobox-option-' + index"
+        role="option"
+        tabindex="-1"
+        (mousedown)="$event.preventDefault()"
+        (click)="choose(option, index)"
+        (keydown)="chooseFromOptionKeydown($event, option, index)"
+      >
+        {{ option.label }}
+      </div>
+    } @empty {
+      <p class="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">No results</p>
+    }
+  </div>
+</ng-template>

@@ -1,0 +1,20 @@
+@if (isToggle()) {
+  <button
+    data-od-id="theme-toggle"
+    class="ui-focus-ring grid size-9 place-items-center rounded-[var(--radius-control)] text-slate-950 transition-colors hover:bg-slate-100 dark:text-slate-50 dark:hover:bg-slate-800"
+    type="button"
+    aria-label="Toggle light/dark theme"
+    (click)="settings.toggleTheme()"
+  >
+    <app-icon [name]="iconName()" class="size-4" aria-hidden="true" />
+  </button>
+} @else {
+  <button
+    class="hover:text-accent inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-950/10 bg-slate-50 text-slate-500 transition-colors hover:bg-slate-50 dark:border-white/10 dark:bg-slate-900 dark:text-slate-400"
+    type="button"
+    (click)="settings.toggleTheme()"
+  >
+    <span class="sr-only" i18n="@@themeSwitcherToggleTheme">Toggle theme</span>
+    <app-icon [name]="iconName()" />
+  </button>
+}

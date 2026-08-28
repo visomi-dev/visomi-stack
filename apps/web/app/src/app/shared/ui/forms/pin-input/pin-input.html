@@ -1,0 +1,47 @@
+<div class="flex flex-col gap-1">
+  @if (label()) {
+    <label class="text-sm font-semibold text-slate-950 dark:text-slate-50" [for]="labelFor()">
+      {{ label() }}
+    </label>
+  }
+
+  <div
+    class="grid gap-2"
+    [class]="gridClass()"
+    data-slot="pin-input"
+    role="group"
+    [attr.aria-label]="ariaLabel()"
+    [attr.aria-describedby]="ariaDescribedBy()"
+  >
+    @for (index of indexes(); track index) {
+      <input
+        #inputs
+        autocomplete="one-time-code"
+        data-slot="control"
+        inputmode="numeric"
+        maxlength="1"
+        placeholder="#"
+        type="text"
+        required
+        [attr.aria-posinset]="index + 1"
+        [attr.aria-setsize]="digits()"
+        [attr.aria-required]="true"
+        [attr.aria-invalid]="invalid()"
+        [attr.aria-label]="label() ? null : 'PIN digit ' + (index + 1)"
+        [attr.id]="id(index)"
+        [attr.name]="name(index)"
+        [attr.pattern]="digitPattern()"
+        [class]="inputClasses()"
+        [disabled]="disabled() || loading()"
+        [value]="valueAt(index)"
+        (blur)="onBlur()"
+        (focus)="onFocus($event, index)"
+        (input)="onInput($event, index)"
+        (keyup)="onKeyUp($event, index)"
+        (paste)="onPaste($event, index)"
+      />
+    }
+  </div>
+
+  <ng-content />
+</div>

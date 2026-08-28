@@ -1,0 +1,29 @@
+---
+import type { Locale } from '../content/site-content';
+
+type Props = {
+  locale: Locale;
+};
+
+const { locale } = Astro.props;
+---
+
+<div
+  class="flex items-center gap-4 font-sans text-xs font-black tracking-widest text-slate-500 uppercase dark:text-slate-400"
+>
+  <a
+    href="/en/"
+    class:list={[
+      'no-underline hover:text-slate-600 dark:hover:text-slate-500',
+      locale === 'en' && 'font-extrabold text-slate-950 dark:text-slate-50',
+    ]}>EN</a
+  >
+  <span class="opacity-30">/</span>
+  <a
+    href="/es/"
+    class:list={[
+      'no-underline hover:text-slate-600 dark:hover:text-slate-500',
+      locale === 'es' && 'font-extrabold text-slate-950 dark:text-slate-50',
+    ]}>ES</a
+  >
+</div>

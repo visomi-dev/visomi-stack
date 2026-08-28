@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NX_DAEMON: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm exec prettier --check .
+
+      - name: Lint workspace
+        run: pnpm nx run-many -t lint --projects site,app,api,server,site-e2e,app-e2e,api-e2e,server-e2e
+
+      - name: Typecheck site
+        run: pnpm nx run site:typecheck
+
+      - name: Run tests
+        run: pnpm nx run site:test && pnpm nx run app:vite:test && pnpm nx run api:test && pnpm nx run server:test
+
+      - name: Build composed runtime
+        run: pnpm nx run server:build
+
+      - name: Generate release inputs from the built runtime
+        env:
+          RELEASE_DIR: ${{ runner.temp }}/themis-release
+        run: |
+          mkdir -p "$RELEASE_DIR"
+          tar -czf "$RELEASE_DIR/themis-server.tgz" -C dist/apps/web/server .
+          pnpm exec node --experimental-strip-types scripts/release-gate-fixture.ts \
+            "$RELEASE_DIR/themis-server.tgz" "$RELEASE_DIR"
+
+      - name: Run release gate on generated inputs
+        env:
+          RELEASE_DIR: ${{ runner.temp }}/themis-release
+        run: |
+          pnpm run release:gate \
+            "$RELEASE_DIR/themis-server.tgz" \
+            "$RELEASE_DIR/catalogue-key.pem" \
+            "$RELEASE_DIR/themis.release-manifest.json" \
+            "$RELEASE_DIR/themis.key-catalogue.json" \
+            "$RELEASE_DIR/catalogue-key.pem" \
+            "$RELEASE_DIR/release-metadata.json" \
+            "$RELEASE_DIR/build.log" \
+            "$RELEASE_DIR/telemetry.json"
+
+      - name: Verify release gate fails closed for tampered generated input
+        env:
+          RELEASE_DIR: ${{ runner.temp }}/themis-release
+        run: |
+          printf 'project context: protected\n' >> "$RELEASE_DIR/release-metadata.json"
+          if pnpm run release:gate \
+            "$RELEASE_DIR/themis-server.tgz" \
+            "$RELEASE_DIR/catalogue-key.pem" \
+            "$RELEASE_DIR/themis.release-manifest.json" \
+            "$RELEASE_DIR/themis.key-catalogue.json" \
+            "$RELEASE_DIR/catalogue-key.pem" \
+            "$RELEASE_DIR/release-metadata.json" \
+            "$RELEASE_DIR/build.log" \
+            "$RELEASE_DIR/telemetry.json"; then
+            echo 'release gate unexpectedly accepted protected plaintext'
+            exit 1
+          fi

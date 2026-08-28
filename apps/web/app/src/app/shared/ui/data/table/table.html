@@ -1,0 +1,41 @@
+<div class="overflow-x-auto">
+  <table [class]="tableClasses()">
+    @if (declarative()) {
+      <thead [class]="headClasses()">
+        <tr>
+          @for (column of columns(); track column.key) {
+            <th [class]="headerClasses(column)">{{ column.label }}</th>
+          }
+        </tr>
+      </thead>
+
+      <tbody [class]="bodyClasses()">
+        @for (row of data(); track rowTrack($index, row)) {
+          <tr [class]="rowClasses()">
+            @for (column of columns(); track column.key) {
+              <td [class]="cellClasses(column)">
+                @if (mobileCards()) {
+                  <strong
+                    class="mb-1 flex text-xs font-semibold tracking-wide text-slate-500 uppercase md:hidden dark:text-slate-400"
+                  >
+                    {{ column.label }}
+                  </strong>
+                }
+
+                @if (templatesMap().get(column.key); as template) {
+                  <ng-container *ngTemplateOutlet="template; context: { $implicit: row, row, column }" />
+                } @else {
+                  {{ cellValue(row, column) }}
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+
+      <ng-content select="tfoot" />
+    } @else {
+      <ng-content />
+    }
+  </table>
+</div>

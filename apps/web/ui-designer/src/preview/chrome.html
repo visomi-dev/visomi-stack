@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Preview Chrome Source</title>
+  </head>
+  <body class="bg-bg text-fg">
+    <header class="border-border-subtle bg-panel border-b px-4 py-2">
+      <div class="mx-auto flex max-w-screen-2xl items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <a class="text-fg hover:text-accent font-mono text-xs no-underline" href="/">← Index</a>
+          <span class="text-muted-fg font-mono text-xs">slug</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div
+            class="border-border-subtle flex items-center gap-1 rounded-md border p-1"
+            role="group"
+            aria-label="Viewport"
+          >
+            <button type="button" data-viewport="mobile" class="viewport-btn rounded-sm px-2 py-1 text-xs font-medium">
+              Mobile
+            </button>
+            <button type="button" data-viewport="tablet" class="viewport-btn rounded-sm px-2 py-1 text-xs font-medium">
+              Tablet
+            </button>
+            <button type="button" data-viewport="desktop" class="viewport-btn rounded-sm px-2 py-1 text-xs font-medium">
+              Desktop
+            </button>
+          </div>
+          <button
+            type="button"
+            id="theme-toggle"
+            class="border-border-subtle rounded-md border px-3 py-1 text-xs font-medium"
+          >
+            <span data-theme-label="light">Light</span>
+            <span data-theme-label="dark" hidden>Dark</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <main class="preview-frame">
+      <iframe id="preview-iframe" data-viewport="desktop" title="preview" src="/"></iframe>
+    </main>
+  </body>
+</html>

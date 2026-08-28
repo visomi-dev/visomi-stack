@@ -1,0 +1,17 @@
+---
+import LandingPage from '../../components/landing-page.astro';
+import { getSiteContent } from '../../content/site-content';
+import BaseLayout from '../../layouts/base-layout.astro';
+
+const copy = getSiteContent('en');
+---
+
+<BaseLayout
+  lang="en"
+  locale="en"
+  page="home"
+  title="Visomi Stack | Production-ready application template"
+  description={copy.description}
+>
+  <LandingPage locale="en" />
+</BaseLayout>

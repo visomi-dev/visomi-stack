@@ -1,0 +1,10 @@
+@if (visible()) {
+  <div
+    class="fixed inset-0 z-40 h-screen w-screen bg-black/25 dark:bg-slate-950/40 dark:bg-white"
+    animate.enter="page-loader-enter"
+    animate.leave="page-loader-leave"
+  >
+    <div class="page-loader-indicator bg-accent fixed top-0 z-50 h-1 w-2/4 rounded"></div>
+    <span class="sr-only">Loading page</span>
+  </div>
+}

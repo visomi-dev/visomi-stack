@@ -1,0 +1,31 @@
+name: visomi-stack-agents
+version: 0.1.0
+description: Themis workflow agents, skills, commands, and tools for Visomi Stack projects
+
+source:
+  canonical: .opencode
+
+profiles:
+  core:
+    agents:
+      - ci-monitor-subagent
+      - themis-coordinator
+      - themis-executor
+      - themis-planner
+      - themis-reviewer
+      - themis-verifier
+    commands:
+      - monitor-ci
+      - themis-onboard
+      - themis-workflow
+    skills: all
+    tools:
+      - themis
+
+  full:
+    includes:
+      - core
+    skills: all
+
+targets:
+  - opencode

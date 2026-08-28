@@ -1,0 +1,1692 @@
+{
+  "components": [
+    {
+      "name": "button",
+      "selector": "app-button",
+      "inputs": [
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "fullWidth",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "loading",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "size",
+          "required": false,
+          "default": "md'",
+          "type": "input"
+        },
+        {
+          "name": "tone",
+          "required": false,
+          "default": "zinc'",
+          "type": "input"
+        },
+        {
+          "name": "type",
+          "required": false,
+          "default": "button'",
+          "type": "input"
+        },
+        {
+          "name": "variant",
+          "required": false,
+          "default": "solid'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/button/button.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/button/button.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/button/button.css",
+      "hasSpec": true
+    },
+    {
+      "name": "icon-button",
+      "selector": "app-icon-button",
+      "inputs": [
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "size",
+          "required": false,
+          "default": "md'",
+          "type": "input"
+        },
+        {
+          "name": "tone",
+          "required": false,
+          "default": "zinc'",
+          "type": "input"
+        },
+        {
+          "name": "type",
+          "required": false,
+          "default": "button'",
+          "type": "input"
+        },
+        {
+          "name": "variant",
+          "required": false,
+          "default": "plain'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/icon-button/icon-button.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/icon-button/icon-button.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/icon-button/icon-button.css",
+      "hasSpec": false
+    },
+    {
+      "name": "link-button",
+      "selector": "app-link-button",
+      "inputs": [
+        {
+          "name": "ariaLabel",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "href",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "routerLink",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "size",
+          "required": false,
+          "default": "md'",
+          "type": "input"
+        },
+        {
+          "name": "target",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "tone",
+          "required": false,
+          "default": "blue'",
+          "type": "input"
+        },
+        {
+          "name": "variant",
+          "required": false,
+          "default": "solid'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/link-button/link-button.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/link-button/link-button.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/link-button/link-button.css",
+      "hasSpec": false
+    },
+    {
+      "name": "touch-target",
+      "selector": "app-touch-target",
+      "inputs": [],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/touch-target/touch-target.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/touch-target/touch-target.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/actions/touch-target/touch-target.css",
+      "hasSpec": false
+    },
+    {
+      "name": "avatar",
+      "selector": "app-avatar",
+      "inputs": [
+        {
+          "name": "alt",
+          "required": false,
+          "default": "'",
+          "type": "input"
+        },
+        {
+          "name": "initials",
+          "required": false,
+          "default": "'",
+          "type": "input"
+        },
+        {
+          "name": "size",
+          "required": false,
+          "default": "md'",
+          "type": "input"
+        },
+        {
+          "name": "src",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/avatar/avatar.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/avatar/avatar.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/avatar/avatar.css",
+      "hasSpec": false
+    },
+    {
+      "name": "badge",
+      "selector": "app-badge",
+      "inputs": [
+        {
+          "name": "tone",
+          "required": false,
+          "default": "default'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/badge/badge.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/badge/badge.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/badge/badge.css",
+      "hasSpec": false
+    },
+    {
+      "name": "description-list",
+      "selector": "app-description-list",
+      "inputs": [],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/description-list/description-list.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/description-list/description-list.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/description-list/description-list.css",
+      "hasSpec": false
+    },
+    {
+      "name": "pagination",
+      "selector": "app-pagination",
+      "inputs": [
+        {
+          "name": "page",
+          "required": false,
+          "default": "1",
+          "type": "input"
+        },
+        {
+          "name": "pageSize",
+          "required": false,
+          "default": "10",
+          "type": "input"
+        },
+        {
+          "name": "total",
+          "required": false,
+          "default": "0",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pageChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/pagination/pagination.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/pagination/pagination.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/pagination/pagination.css",
+      "hasSpec": false
+    },
+    {
+      "name": "table",
+      "selector": "app-table",
+      "inputs": [
+        {
+          "name": "data",
+          "required": false,
+          "default": "[]",
+          "type": "input"
+        },
+        {
+          "name": "dense",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "mobileCards",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "stickyHeaders",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/table/table.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/table/table.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/data/table/table.css",
+      "hasSpec": false
+    },
+    {
+      "name": "loader",
+      "selector": "app-loader",
+      "inputs": [
+        {
+          "name": "active",
+          "required": false,
+          "default": "true",
+          "type": "input"
+        },
+        {
+          "name": "duration",
+          "required": false,
+          "default": "1000",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/feedback/loader/loader.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/feedback/loader/loader.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/feedback/loader/loader.css",
+      "hasSpec": false
+    },
+    {
+      "name": "checkbox",
+      "selector": "app-checkbox",
+      "inputs": [
+        {
+          "name": "ariaDescribedBy",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "controlId",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "invalid",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "name",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "required",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "checkedChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/checkbox/checkbox.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/checkbox/checkbox.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/checkbox/checkbox.css",
+      "hasSpec": true
+    },
+    {
+      "name": "color-picker",
+      "selector": "app-color-picker",
+      "inputs": [
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "label",
+          "required": false,
+          "default": "'",
+          "type": "input"
+        },
+        {
+          "name": "name",
+          "required": false,
+          "default": "color'",
+          "type": "input"
+        },
+        {
+          "name": "options",
+          "required": false,
+          "default": "defaultOptions",
+          "type": "input"
+        },
+        {
+          "name": "required",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "valueChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/color-picker/color-picker.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/color-picker/color-picker.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/color-picker/color-picker.css",
+      "hasSpec": true
+    },
+    {
+      "name": "description",
+      "selector": "app-description",
+      "inputs": [
+        {
+          "name": "id",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/description/description.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/description/description.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/description/description.css",
+      "hasSpec": false
+    },
+    {
+      "name": "error-message",
+      "selector": "app-error-message",
+      "inputs": [
+        {
+          "name": "controlId",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "withIcon",
+          "required": false,
+          "default": "true",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/error-message/error-message.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/error-message/error-message.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/error-message/error-message.css",
+      "hasSpec": false
+    },
+    {
+      "name": "field",
+      "selector": "app-field",
+      "inputs": [
+        {
+          "name": "compact",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "invalid",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "manualError",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/field/field.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/field/field.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/field/field.css",
+      "hasSpec": true
+    },
+    {
+      "name": "fieldset",
+      "selector": "app-fieldset",
+      "inputs": [
+        {
+          "name": "legend",
+          "required": false,
+          "default": "'",
+          "type": "input"
+        },
+        {
+          "name": "tone",
+          "required": false,
+          "default": "default'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/fieldset/fieldset.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/fieldset/fieldset.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/fieldset/fieldset.css",
+      "hasSpec": false
+    },
+    {
+      "name": "form",
+      "selector": "app-form",
+      "inputs": [
+        {
+          "name": "submitted",
+          "required": false,
+          "default": null,
+          "type": "model"
+        },
+        {
+          "name": "novalidate",
+          "required": false,
+          "default": "true",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "ngSubmit",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/form/form.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/form/form.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/form/form.css",
+      "hasSpec": true
+    },
+    {
+      "name": "input",
+      "selector": "app-input",
+      "inputs": [
+        {
+          "name": "ariaDescribedBy",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "autocomplete",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "controlId",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "invalid",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "max",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "maxLength",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "min",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "minLength",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "name",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "pattern",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "placeholder",
+          "required": false,
+          "default": "'",
+          "type": "input"
+        },
+        {
+          "name": "required",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "type",
+          "required": false,
+          "default": "text'",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "valueChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/input/input.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/input/input.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/input/input.css",
+      "hasSpec": true
+    },
+    {
+      "name": "input-group",
+      "selector": "app-input-group",
+      "inputs": [],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/input-group/input-group.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/input-group/input-group.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/input-group/input-group.css",
+      "hasSpec": false
+    },
+    {
+      "name": "label",
+      "selector": "app-label",
+      "inputs": [
+        {
+          "name": "for",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "tone",
+          "required": false,
+          "default": "mono-uppercase'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/label/label.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/label/label.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/label/label.css",
+      "hasSpec": false
+    },
+    {
+      "name": "password-input",
+      "selector": "app-password-input",
+      "inputs": [
+        {
+          "name": "ariaDescribedBy",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "autocomplete",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "controlId",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "invalid",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "loading",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "maxLength",
+          "required": false,
+          "default": "64",
+          "type": "input"
+        },
+        {
+          "name": "minLength",
+          "required": false,
+          "default": "8",
+          "type": "input"
+        },
+        {
+          "name": "name",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "pattern",
+          "required": false,
+          "default": "^(?=.*[A-Za-z]",
+          "type": "input"
+        },
+        {
+          "name": "placeholder",
+          "required": false,
+          "default": "'",
+          "type": "input"
+        },
+        {
+          "name": "required",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "variant",
+          "required": false,
+          "default": "text'",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "valueChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/password-input/password-input.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/password-input/password-input.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/password-input/password-input.css",
+      "hasSpec": true
+    },
+    {
+      "name": "password-strength",
+      "selector": "app-password-strength",
+      "inputs": [
+        {
+          "name": "id",
+          "required": false,
+          "default": "password-strength'",
+          "type": "input"
+        },
+        {
+          "name": "describedBy",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/password-strength/password-strength.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/password-strength/password-strength.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/password-strength/password-strength.css",
+      "hasSpec": true
+    },
+    {
+      "name": "pin-input",
+      "selector": "app-pin-input",
+      "inputs": [
+        {
+          "name": "ariaDescribedBy",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "digits",
+          "required": false,
+          "default": "6",
+          "type": "input"
+        },
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "idPrefix",
+          "required": false,
+          "default": "pin'",
+          "type": "input"
+        },
+        {
+          "name": "invalid",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "label",
+          "required": false,
+          "default": "'",
+          "type": "input"
+        },
+        {
+          "name": "loading",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "digitPattern",
+          "required": false,
+          "default": "[0-9a-zA-Z]{1}'",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "completed",
+          "type": "output"
+        },
+        {
+          "name": "valueChanges",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/pin-input/pin-input.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/pin-input/pin-input.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/pin-input/pin-input.css",
+      "hasSpec": true
+    },
+    {
+      "name": "radio-card",
+      "selector": "app-radio-card",
+      "inputs": [
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "inputId",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "invalid",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "name",
+          "required": false,
+          "default": "radio-card'",
+          "type": "input"
+        },
+        {
+          "name": "required",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "toggleable",
+          "required": false,
+          "default": "true",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "valueChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/radio-card/radio-card.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/radio-card/radio-card.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/radio-card/radio-card.css",
+      "hasSpec": true
+    },
+    {
+      "name": "radio-group",
+      "selector": "app-radio-group",
+      "inputs": [
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "invalid",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "legend",
+          "required": false,
+          "default": "'",
+          "type": "input"
+        },
+        {
+          "name": "name",
+          "required": false,
+          "default": "`radio-${globalThis.crypto?.randomUUID?.(",
+          "type": "input"
+        },
+        {
+          "name": "options",
+          "required": false,
+          "default": "[]",
+          "type": "input"
+        },
+        {
+          "name": "required",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "valueChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/radio-group/radio-group.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/radio-group/radio-group.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/radio-group/radio-group.css",
+      "hasSpec": true
+    },
+    {
+      "name": "select",
+      "selector": "app-select",
+      "inputs": [
+        {
+          "name": "ariaDescribedBy",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "id",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "invalid",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "name",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "required",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "valueChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/select/select.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/select/select.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/select/select.css",
+      "hasSpec": true
+    },
+    {
+      "name": "switch",
+      "selector": "app-switch",
+      "inputs": [
+        {
+          "name": "ariaDescribedBy",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "ariaLabel",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "id",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "invalid",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "required",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "checkedChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/switch/switch.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/switch/switch.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/switch/switch.css",
+      "hasSpec": true
+    },
+    {
+      "name": "textarea",
+      "selector": "app-textarea",
+      "inputs": [
+        {
+          "name": "ariaDescribedBy",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "controlId",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "invalid",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "maxLength",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "minLength",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "name",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "pattern",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "placeholder",
+          "required": false,
+          "default": "'",
+          "type": "input"
+        },
+        {
+          "name": "required",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "rows",
+          "required": false,
+          "default": "4",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "valueChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/textarea/textarea.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/textarea/textarea.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/forms/textarea/textarea.css",
+      "hasSpec": true
+    },
+    {
+      "name": "app-shell",
+      "selector": "app-app-shell",
+      "inputs": [
+        {
+          "name": "mobileMenuOpen",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mobileMenuClose",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/app-shell/app-shell.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/app-shell/app-shell.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/app-shell/app-shell.css",
+      "hasSpec": false
+    },
+    {
+      "name": "auth-card",
+      "selector": "app-auth-card",
+      "inputs": [
+        {
+          "name": "cardId",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "tone",
+          "required": false,
+          "default": "panel'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/auth-card/auth-card.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/auth-card/auth-card.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/auth-card/auth-card.css",
+      "hasSpec": false
+    },
+    {
+      "name": "auth-layout",
+      "selector": "app-auth-layout",
+      "inputs": [],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/auth-layout/auth-layout.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/auth-layout/auth-layout.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/auth-layout/auth-layout.css",
+      "hasSpec": false
+    },
+    {
+      "name": "bottom-navigation",
+      "selector": "app-bottom-navigation",
+      "inputs": [
+        {
+          "name": "exact",
+          "required": false,
+          "default": "true",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pressed",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/bottom-navigation/bottom-navigation.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/bottom-navigation/bottom-navigation.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/bottom-navigation/bottom-navigation.css",
+      "hasSpec": false
+    },
+    {
+      "name": "card",
+      "selector": "app-card",
+      "inputs": [
+        {
+          "name": "cardId",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "padding",
+          "required": false,
+          "default": "md'",
+          "type": "input"
+        },
+        {
+          "name": "tone",
+          "required": false,
+          "default": "default'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/card/card.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/card/card.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/card/card.css",
+      "hasSpec": false
+    },
+    {
+      "name": "container",
+      "selector": "app-container",
+      "inputs": [
+        {
+          "name": "size",
+          "required": false,
+          "default": "lg'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/container/container.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/container/container.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/container/container.css",
+      "hasSpec": false
+    },
+    {
+      "name": "lang-switcher",
+      "selector": "app-lang-switcher",
+      "inputs": [
+        {
+          "name": "default",
+          "required": false,
+          "default": "EN'",
+          "type": "input"
+        },
+        {
+          "name": "storageKey",
+          "required": false,
+          "default": "DEFAULT_LANG_STORAGE_KEY",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/lang-switcher/lang-switcher.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/lang-switcher/lang-switcher.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/lang-switcher/lang-switcher.css",
+      "hasSpec": false
+    },
+    {
+      "name": "page-header",
+      "selector": "app-page-header",
+      "inputs": [],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/page-header/page-header.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/page-header/page-header.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/page-header/page-header.css",
+      "hasSpec": false
+    },
+    {
+      "name": "page-loader",
+      "selector": "app-page-loader",
+      "inputs": [
+        {
+          "name": "loading",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "navigating",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/page-loader/page-loader.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/page-loader/page-loader.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/page-loader/page-loader.css",
+      "hasSpec": false
+    },
+    {
+      "name": "sidebar",
+      "selector": "app-sidebar",
+      "inputs": [
+        {
+          "name": "href",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "routerLink",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/sidebar/sidebar.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/sidebar/sidebar.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/sidebar/sidebar.css",
+      "hasSpec": false
+    },
+    {
+      "name": "stacked-layout",
+      "selector": "app-stacked-layout",
+      "inputs": [],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/stacked-layout/stacked-layout.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/stacked-layout/stacked-layout.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/stacked-layout/stacked-layout.css",
+      "hasSpec": false
+    },
+    {
+      "name": "topbar",
+      "selector": "app-topbar",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "menuClick",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/topbar/topbar.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/topbar/topbar.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/layout/topbar/topbar.css",
+      "hasSpec": false
+    },
+    {
+      "name": "icon",
+      "selector": "app-icon",
+      "inputs": [
+        {
+          "name": "ariaLabel",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/media/icon/icon.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/media/icon/icon.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/media/icon/icon.css",
+      "hasSpec": true
+    },
+    {
+      "name": "alert",
+      "selector": "app-alert",
+      "inputs": [
+        {
+          "name": "tone",
+          "required": false,
+          "default": "info'",
+          "type": "input"
+        },
+        {
+          "name": "variant",
+          "required": false,
+          "default": "auth'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/alert/alert.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/alert/alert.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/alert/alert.css",
+      "hasSpec": false
+    },
+    {
+      "name": "combobox",
+      "selector": "app-combobox",
+      "inputs": [
+        {
+          "name": "ariaLabel",
+          "required": false,
+          "default": "Choose option'",
+          "type": "input"
+        },
+        {
+          "name": "id",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "options",
+          "required": false,
+          "default": "[]",
+          "type": "input"
+        },
+        {
+          "name": "placeholder",
+          "required": false,
+          "default": "Search...'",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "valueChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": true,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/combobox/combobox.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/combobox/combobox.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/combobox/combobox.css",
+      "hasSpec": false
+    },
+    {
+      "name": "dialog",
+      "selector": "app-dialog",
+      "inputs": [
+        {
+          "name": "ariaLabelledBy",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "open",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "closed",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/dialog/dialog.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/dialog/dialog.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/dialog/dialog.css",
+      "hasSpec": false
+    },
+    {
+      "name": "dropdown",
+      "selector": "app-dropdown",
+      "inputs": [
+        {
+          "name": "align",
+          "required": false,
+          "default": "start'",
+          "type": "input"
+        },
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "openChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/dropdown/dropdown.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/dropdown/dropdown.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/dropdown/dropdown.css",
+      "hasSpec": false
+    },
+    {
+      "name": "listbox",
+      "selector": "app-listbox",
+      "inputs": [
+        {
+          "name": "ariaLabel",
+          "required": false,
+          "default": "Options'",
+          "type": "input"
+        },
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "options",
+          "required": false,
+          "default": "[]",
+          "type": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "valueChange",
+          "type": "output"
+        }
+      ],
+      "controlValueAccessor": true,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/listbox/listbox.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/listbox/listbox.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/listbox/listbox.css",
+      "hasSpec": true
+    },
+    {
+      "name": "tooltip",
+      "selector": "app-tooltip",
+      "inputs": [
+        {
+          "name": "position",
+          "required": false,
+          "default": "top'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/tooltip/tooltip.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/tooltip/tooltip.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/overlays/tooltip/tooltip.css",
+      "hasSpec": false
+    },
+    {
+      "name": "divider",
+      "selector": "app-divider",
+      "inputs": [
+        {
+          "name": "label",
+          "required": false,
+          "default": "'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/divider/divider.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/divider/divider.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/divider/divider.css",
+      "hasSpec": false
+    },
+    {
+      "name": "heading",
+      "selector": "app-heading",
+      "inputs": [
+        {
+          "name": "level",
+          "required": false,
+          "default": "2'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/heading/heading.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/heading/heading.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/heading/heading.css",
+      "hasSpec": false
+    },
+    {
+      "name": "link",
+      "selector": "app-link",
+      "inputs": [
+        {
+          "name": "disabled",
+          "required": false,
+          "default": "false",
+          "type": "input"
+        },
+        {
+          "name": "href",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        },
+        {
+          "name": "routerLink",
+          "required": false,
+          "default": "null",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/link/link.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/link/link.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/link/link.css",
+      "hasSpec": false
+    },
+    {
+      "name": "text",
+      "selector": "app-text",
+      "inputs": [
+        {
+          "name": "size",
+          "required": false,
+          "default": "md'",
+          "type": "input"
+        },
+        {
+          "name": "tone",
+          "required": false,
+          "default": "default'",
+          "type": "input"
+        }
+      ],
+      "outputs": [],
+      "controlValueAccessor": false,
+      "filePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/text/text.ts",
+      "templatePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/text/text.html",
+      "stylePath": "/home/visomi/Projects/GitHub/visomi-dev/themis/apps/web/app/src/app/shared/ui/typography/text/text.css",
+      "hasSpec": false
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+<fieldset class="grid gap-3" [disabled]="disabled()">
+  @if (legend()) {
+    <legend class="text-sm font-semibold text-slate-950 dark:text-slate-50">{{ legend() }}</legend>
+  }
+
+  @for (option of options(); track option.value) {
+    <label [class]="optionClasses()">
+      <span class="flex items-start gap-3">
+        <input
+          class="ui-focus-ring mt-0.5 size-4 accent-slate-600 dark:accent-slate-500"
+          data-slot="control"
+          [attr.aria-invalid]="invalid()"
+          [attr.required]="required() && $first ? '' : null"
+          [checked]="value() === option.value"
+          [name]="name()"
+          [value]="option.value"
+          type="radio"
+          (blur)="onBlur()"
+          (change)="selectValue(option.value)"
+        />
+        <span class="grid gap-1">
+          <span class="font-medium">{{ option.label }}</span>
+          @if (option.description) {
+            <span class="text-slate-500 dark:text-slate-400">{{ option.description }}</span>
+          }
+        </span>
+      </span>
+    </label>
+  }
+</fieldset>

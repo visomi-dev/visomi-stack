@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Security passkey states</title>
+    <link rel="stylesheet" href="/public/tailwind.css" />
+  </head>
+  <body class="min-h-screen bg-slate-50 font-sans text-slate-950 dark:bg-slate-950 dark:text-slate-50">
+    <header class="border-b border-slate-950/10 bg-white dark:border-white/10 dark:bg-slate-950">
+      <div class="mx-auto flex min-h-16 max-w-6xl items-center justify-between px-4 md:px-8">
+        <a
+          class="ui-focus-ring font-heading inline-flex min-h-11 items-center rounded-md text-lg font-bold no-underline"
+          href="/"
+          >Themis</a
+        ><span class="text-sm font-medium text-slate-500 dark:text-slate-400">Maya Chen</span>
+      </div>
+    </header>
+    <main class="mx-auto grid max-w-6xl gap-8 px-4 py-8 md:px-8 md:py-12 lg:grid-cols-[13rem_1fr]">
+      <nav aria-label="Account settings" class="flex gap-2 overflow-x-auto lg:flex-col">
+        <a
+          class="ui-focus-ring inline-flex min-h-11 shrink-0 items-center rounded-md px-3 text-sm font-semibold text-slate-600 no-underline dark:text-slate-300"
+          href="#"
+          >Profile</a
+        ><a
+          class="ui-focus-ring inline-flex min-h-11 shrink-0 items-center rounded-md bg-slate-600/10 px-3 text-sm font-semibold text-slate-700 no-underline dark:bg-slate-400/10 dark:text-slate-300"
+          href="#"
+          aria-current="page"
+          >Security</a
+        >
+      </nav>
+      <section aria-labelledby="passkeys-title">
+        <header class="flex max-w-3xl flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="font-mono text-xs font-semibold tracking-widest text-slate-600 uppercase dark:text-slate-400">
+              Account security
+            </p>
+            <h1 id="passkeys-title" class="font-heading mt-2 text-3xl font-bold tracking-tight md:text-4xl">
+              Passkeys
+            </h1>
+            <p class="mt-3 max-w-xl leading-7 text-slate-500 dark:text-slate-400">
+              Manage the devices and security keys that can sign in to your account.
+            </p>
+          </div>
+          <button
+            class="ui-focus-ring min-h-11 rounded-md bg-slate-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-slate-500 dark:hover:bg-slate-400"
+            type="button"
+            data-show-state="add"
+          >
+            Add passkey
+          </button>
+        </header>
+        <div class="mt-8">
+          <section data-state="list" class="grid gap-4" aria-label="Saved passkeys">
+            <article class="ui-panel-raised rounded-lg p-5 md:p-6">
+              <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-heading text-lg font-bold">Work laptop</h2>
+                    <span
+                      class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-500/20 dark:text-green-300"
+                      >Current · active</span
+                    >
+                  </div>
+                  <dl class="mt-3 grid gap-1 text-sm text-slate-500 dark:text-slate-400">
+                    <div>
+                      <dt class="inline font-medium text-slate-700 dark:text-slate-200">Created:</dt>
+                      <dd class="inline">18 August 2026</dd>
+                    </div>
+                    <div>
+                      <dt class="inline font-medium text-slate-700 dark:text-slate-200">Last used:</dt>
+                      <dd class="inline">Today at 09:42</dd>
+                    </div>
+                  </dl>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    class="ui-focus-ring min-h-11 rounded-md px-3 text-sm font-semibold text-slate-600 dark:text-slate-400"
+                    type="button"
+                    data-show-state="name"
+                  >
+                    Rename</button
+                  ><button
+                    class="ui-focus-ring min-h-11 rounded-md px-3 text-sm font-semibold text-red-600 dark:text-red-400"
+                    type="button"
+                    data-show-state="revoke"
+                  >
+                    Revoke
+                  </button>
+                </div>
+              </div>
+            </article>
+            <article class="ui-panel rounded-lg p-5 md:p-6">
+              <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-heading text-lg font-bold">Travel security key</h2>
+                    <span
+                      class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-500/20 dark:text-green-300"
+                      >Active</span
+                    >
+                  </div>
+                  <dl class="mt-3 grid gap-1 text-sm text-slate-500 dark:text-slate-400">
+                    <div>
+                      <dt class="inline font-medium text-slate-700 dark:text-slate-200">Created:</dt>
+                      <dd class="inline">21 August 2026</dd>
+                    </div>
+                    <div>
+                      <dt class="inline font-medium text-slate-700 dark:text-slate-200">Last used:</dt>
+                      <dd class="inline">Never</dd>
+                    </div>
+                  </dl>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    class="ui-focus-ring min-h-11 rounded-md px-3 text-sm font-semibold text-slate-600 dark:text-slate-400"
+                    type="button"
+                    data-show-state="name"
+                  >
+                    Rename</button
+                  ><button
+                    class="ui-focus-ring min-h-11 rounded-md px-3 text-sm font-semibold text-red-600 dark:text-red-400"
+                    type="button"
+                    data-show-state="revoke"
+                  >
+                    Revoke
+                  </button>
+                </div>
+              </div>
+            </article>
+          </section>
+          <section data-state="add" hidden class="ui-panel-raised max-w-2xl rounded-lg p-5 md:p-8">
+            <header class="space-y-2">
+              <p class="font-mono text-xs font-semibold tracking-widest text-slate-600 uppercase dark:text-slate-400">
+                New access method
+              </p>
+              <h2 class="font-heading text-2xl font-bold tracking-tight">Add a passkey</h2>
+              <p class="leading-6 text-slate-500 dark:text-slate-400">
+                Use this device, another device, or a security key. Confirm your existing passkey first.
+              </p>
+            </header>
+            <form class="mt-6 grid gap-5" data-submit-state="list">
+              <div class="grid gap-1.5">
+                <label class="text-sm font-semibold" for="new-passkey-name">Passkey name</label
+                ><input
+                  class="ui-focus-ring min-h-11 rounded-md border border-slate-950/10 bg-white px-3 text-base dark:border-white/10 dark:bg-slate-950"
+                  id="new-passkey-name"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="For example, Home laptop"
+                  required
+                />
+                <p class="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                  Choose a name that helps you recognize the device. Do not enter a password, PIN, or recovery code.
+                </p>
+              </div>
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <button
+                  class="ui-focus-ring min-h-11 rounded-md bg-slate-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-slate-500 dark:hover:bg-slate-400"
+                  type="submit"
+                >
+                  Confirm and add passkey</button
+                ><button
+                  class="ui-focus-ring min-h-11 rounded-md px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300"
+                  type="button"
+                  data-show-state="list"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </section>
+          <section data-state="name" hidden class="ui-panel-raised max-w-2xl rounded-lg p-5 md:p-8">
+            <header class="space-y-2">
+              <p class="font-mono text-xs font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400">
+                Work laptop
+              </p>
+              <h2 class="font-heading text-2xl font-bold tracking-tight">Rename passkey</h2>
+              <p class="leading-6 text-slate-500 dark:text-slate-400">
+                Only the account-local label changes. The passkey stays on the same device.
+              </p>
+            </header>
+            <form class="mt-6 grid gap-5" data-submit-state="list">
+              <div class="grid gap-1.5">
+                <label class="text-sm font-semibold" for="rename-passkey">Passkey name</label
+                ><input
+                  class="ui-focus-ring min-h-11 rounded-md border border-slate-950/10 bg-white px-3 text-base dark:border-white/10 dark:bg-slate-950"
+                  id="rename-passkey"
+                  type="text"
+                  value="Work laptop"
+                  required
+                />
+              </div>
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <button
+                  class="ui-focus-ring min-h-11 rounded-md bg-slate-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-slate-500 dark:hover:bg-slate-400"
+                  type="submit"
+                >
+                  Save name</button
+                ><button
+                  class="ui-focus-ring min-h-11 rounded-md px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300"
+                  type="button"
+                  data-show-state="list"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </section>
+          <section
+            data-state="revoke"
+            hidden
+            class="ui-panel-raised max-w-2xl rounded-lg p-5 md:p-8"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="revoke-title"
+          >
+            <header class="space-y-2">
+              <p class="font-mono text-xs font-semibold tracking-widest text-red-600 uppercase dark:text-red-400">
+                Permanent security change
+              </p>
+              <h2 id="revoke-title" class="font-heading text-2xl font-bold tracking-tight">
+                Revoke “Travel security key”?
+              </h2>
+              <p class="leading-6 text-slate-500 dark:text-slate-400">
+                This passkey will stop signing in immediately and cannot be restored by retrying.
+              </p>
+            </header>
+            <div class="mt-5 rounded-lg bg-slate-100 p-4 text-sm leading-6 dark:bg-slate-800">
+              <strong class="block font-semibold">Access that remains</strong>Work laptop · active passkey
+            </div>
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button
+                class="ui-focus-ring min-h-11 rounded-md bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-400"
+                type="button"
+                data-show-state="last-access-blocked"
+              >
+                Confirm passkey and revoke</button
+              ><button
+                class="ui-focus-ring min-h-11 rounded-md px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300"
+                type="button"
+                data-show-state="list"
+              >
+                Keep passkey
+              </button>
+            </div>
+          </section>
+          <section data-state="last-access-blocked" hidden class="ui-panel-raised max-w-2xl rounded-lg p-5 md:p-8">
+            <header class="space-y-2">
+              <span
+                class="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/20 dark:text-red-300"
+                >Removal blocked</span
+              >
+              <h2 class="font-heading text-2xl font-bold tracking-tight">
+                Keep one active way to access your account.
+              </h2>
+              <p class="leading-6 text-slate-500 dark:text-slate-400">
+                “Work laptop” is now your only active access method. It was not revoked.
+              </p>
+            </header>
+            <div
+              class="mt-5 rounded-lg border-l-4 border-red-600 bg-red-50 p-4 text-sm leading-6 text-red-800 dark:border-red-400 dark:bg-red-500/10 dark:text-red-200"
+              role="alert"
+            >
+              <strong class="block font-semibold">Add another method first</strong>Pending, expired, or revoked passkeys
+              do not count as active access.
+            </div>
+            <div class="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                class="ui-focus-ring min-h-11 rounded-md bg-slate-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-slate-500 dark:hover:bg-slate-400"
+                type="button"
+                data-show-state="add"
+              >
+                Add another passkey</button
+              ><a
+                class="ui-focus-ring inline-flex min-h-11 items-center justify-center rounded-md border border-slate-950/15 px-4 py-2.5 text-sm font-semibold no-underline dark:border-white/15"
+                href="/preview/security-password-setup/frame?state=setup"
+                >Set up password</a
+              >
+            </div>
+            <button
+              class="ui-focus-ring mt-4 min-h-11 rounded-md px-3 text-sm font-semibold text-slate-600 dark:text-slate-300"
+              type="button"
+              data-show-state="list"
+            >
+              Return to passkeys
+            </button>
+          </section>
+        </div>
+      </section>
+    </main>
+    <script>
+      const showState = (state) => {
+        document.querySelectorAll('[data-state]').forEach((section) => {
+          section.hidden = section.dataset.state !== state;
+        });
+        document.body.dataset.previewState = state;
+      };
+      showState(document.body.dataset.previewState || 'list');
+      document
+        .querySelectorAll('[data-show-state]')
+        .forEach((control) => control.addEventListener('click', () => showState(control.dataset.showState)));
+      document.querySelectorAll('form[data-submit-state]').forEach((form) =>
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          showState(form.dataset.submitState);
+        }),
+      );
+    </script>
+  </body>
+</html>

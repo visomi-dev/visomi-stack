@@ -1,0 +1,9 @@
+@if (label()) {
+  <div class="flex items-center gap-3 text-sm font-medium text-slate-500 dark:text-slate-400">
+    <div class="dark:bg-white/10/50 h-px flex-1 bg-slate-950/10"></div>
+    <span>{{ label() }}</span>
+    <div class="dark:bg-white/10/50 h-px flex-1 bg-slate-950/10"></div>
+  </div>
+} @else {
+  <hr class="dark:border-white/10/50 border-0 border-t border-slate-950/10" />
+}

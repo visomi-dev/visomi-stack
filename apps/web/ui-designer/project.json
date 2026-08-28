@@ -1,0 +1,107 @@
+{
+  "name": "ui-designer",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/web/ui-designer/src",
+  "projectType": "application",
+  "tags": ["scope:client", "type:tooling"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": [
+        "^build",
+        {
+          "projects": ["app", "site"],
+          "target": "build",
+          "params": "forward"
+        }
+      ],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/web/ui-designer",
+        "format": ["esm"],
+        "bundle": true,
+        "main": "apps/web/ui-designer/src/main.ts",
+        "tsConfig": "apps/web/ui-designer/tsconfig.app.json",
+        "assets": ["apps/web/ui-designer/src/preview/chrome.html", "apps/web/ui-designer/src/prototypes"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": [
+        "{workspaceRoot}/dist/apps/web/ui-designer/package.json",
+        "{workspaceRoot}/dist/apps/web/ui-designer/pnpm-lock.yaml"
+      ],
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "copy-workspace-modules": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/apps/web/ui-designer/workspace_modules"],
+      "executor": "@nx/js:copy-workspace-modules",
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "prune": {
+      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+      "executor": "nx:noop"
+    },
+    "build-css": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mkdir -p dist/apps/web/ui-designer/public/prototypes dist/apps/web/ui-designer/public/preview dist/apps/web/ui-designer/public/files && cp apps/web/ui-designer/src/preview/chrome.html dist/apps/web/ui-designer/public/preview/chrome.html && cp apps/web/ui-designer/src/prototypes/*.html dist/apps/web/ui-designer/public/prototypes/ && cp node_modules/@fontsource/*/files/* dist/apps/web/ui-designer/public/files/ && pnpm exec tailwindcss -i apps/web/ui-designer/src/preview/preview.css -o dist/apps/web/ui-designer/public/tailwind.css"
+      },
+      "outputs": [
+        "{workspaceRoot}/dist/apps/web/ui-designer/public/tailwind.css",
+        "{workspaceRoot}/dist/apps/web/ui-designer/public/prototypes",
+        "{workspaceRoot}/dist/apps/web/ui-designer/public/preview"
+      ]
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build", "build-css"],
+      "options": {
+        "buildTarget": "ui-designer:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "ui-designer:build:development"
+        },
+        "production": {
+          "buildTarget": "ui-designer:build:production"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,202 @@
+<app-auth-layout>
+  <app-auth-card>
+    <header class="mb-7 space-y-2">
+      <p
+        data-slot="kicker"
+        class="font-mono text-xs font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400"
+        i18n="@@signInKicker"
+      >
+        Account access
+      </p>
+      <h1
+        data-slot="title"
+        class="font-heading text-[1.625rem] leading-tight font-bold tracking-[-0.025em] text-slate-950 dark:text-slate-50"
+        i18n="@@signInTitle"
+      >
+        Sign in
+      </h1>
+      <p data-slot="sub" class="text-[0.9375rem] leading-6 text-slate-500 dark:text-slate-400" i18n="@@signInSub">
+        Welcome back. Use your work email to access your Visomi Stack workspace.
+      </p>
+    </header>
+
+    <section class="mb-6 grid gap-4" aria-labelledby="passkey-title" data-slot="passkey-panel">
+      <div class="rounded-lg bg-slate-100 p-4 dark:bg-slate-900">
+        <p
+          id="passkey-title"
+          class="font-heading text-base font-bold text-slate-950 dark:text-slate-50"
+          i18n="@@signInPasskeyTitle"
+        >
+          Sign in with your passkey
+        </p>
+        <p class="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-400" i18n="@@signInPasskeyDescription">
+          The fastest, phishing-resistant way to access your account.
+        </p>
+        <label
+          class="mt-4 grid gap-1 text-sm font-medium text-slate-950 dark:text-slate-50"
+          for="passkey-sign-in-email"
+        >
+          <span i18n="@@signInPasskeyEmailLabel">Work email</span>
+          <input
+            id="passkey-sign-in-email"
+            class="rounded-md border border-slate-950/10 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 dark:border-white/10 dark:bg-slate-950"
+            type="email"
+            autocomplete="email"
+            [value]="passkeyEmail()"
+            (input)="updatePasskeyEmail($event)"
+          />
+        </label>
+        <app-button
+          class="mt-4"
+          data-slot="passkey-submit"
+          tone="accent"
+          type="button"
+          size="lg"
+          fullWidth
+          [loading]="passkeyState() === 'loading'"
+          (click)="signInWithPasskey()"
+        >
+          @if (passkeyState() === 'retry') {
+            Try passkey again
+          } @else {
+            Continue with passkey
+          }
+        </app-button>
+      </div>
+
+      @if (passkeyState() === 'unsupported') {
+        <app-alert tone="danger" variant="auth" role="alert" i18n="@@signInPasskeyUnsupported">
+          This browser does not support passkeys. Choose password sign-in below.
+        </app-alert>
+      }
+      @if (passkeyState() === 'verification') {
+        <div
+          class="grid gap-3 rounded-lg border border-amber-950/10 bg-amber-50 p-4 dark:border-white/10 dark:bg-amber-950/30"
+        >
+          <p class="text-sm leading-5 text-amber-950 dark:text-amber-100" i18n="@@signInPasskeyVerification">
+            Verify your email first. Enter the PIN from your email to continue the passkey ceremony.
+          </p>
+          <label class="grid gap-1 text-sm font-medium text-slate-950 dark:text-slate-50" for="sign-in-pin">
+            <span i18n="@@signInPinLabel">Email PIN</span>
+            <input
+              id="sign-in-pin"
+              class="rounded-md border border-slate-950/10 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 dark:border-white/10 dark:bg-slate-950"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              [value]="pin()"
+              (input)="updatePin($event)"
+            />
+          </label>
+          <app-button
+            type="button"
+            tone="neutral"
+            size="md"
+            [disabled]="pin().length < 4"
+            (click)="continueAfterVerification()"
+            i18n="@@signInPinContinue"
+            >Continue after verification</app-button
+          >
+        </div>
+      }
+      @if (passkeyState() === 'retry') {
+        <app-alert tone="danger" variant="auth" role="alert">{{ errorMessage() }}</app-alert>
+      }
+      @if (passkeyState() === 'success') {
+        <p role="status" class="text-sm text-teal-700 dark:text-teal-300" i18n="@@signInPasskeySuccess">
+          Signed in successfully. Your vault remains locked until you unlock it.
+        </p>
+      }
+    </section>
+
+    @if (passkeyState() === 'fallback') {
+      <app-form class="grid w-full max-w-sm grid-cols-1 gap-4" [form]="signInForm">
+        <app-field>
+          <app-label for="sign-in-email" i18n="@@signInEmailLabel">Email</app-label>
+          <app-input
+            autocomplete="email"
+            [formField]="signInForm.email"
+            required
+            type="email"
+            placeholder="name@organization.com"
+            controlId="sign-in-email"
+            name="email"
+          />
+          <app-error-message controlId="sign-in-email-error" i18n="@@signInEmailErrorInvalid">{{
+            emailError()
+          }}</app-error-message>
+        </app-field>
+
+        <app-field>
+          <app-label for="sign-in-password" i18n="@@signInPasswordLabel">Password</app-label>
+          <app-password-input
+            autocomplete="current-password"
+            [formField]="signInForm.password"
+            required
+            minLength="8"
+            placeholder="***************"
+            controlId="sign-in-password"
+            name="password"
+          />
+          <app-error-message controlId="sign-in-password-error" i18n="@@signInPasswordErrorMinlength">{{
+            passwordError()
+          }}</app-error-message>
+        </app-field>
+
+        <div class="flex flex-col gap-4">
+          <app-link
+            i18n="@@signInForgottenPasswordLink"
+            [routerLink]="forgottenPasswordUrl"
+            [text]="'Forgotten password?'"
+            class="self-end text-sm font-semibold"
+          />
+
+          <label
+            for="sign-in-remember-device"
+            class="flex items-center gap-3 text-sm leading-6 font-medium text-slate-950 select-none dark:text-slate-50"
+          >
+            <app-checkbox
+              [formField]="signInForm.rememberDevice"
+              controlId="sign-in-remember-device"
+              name="rememberDevice"
+            />
+            <span i18n="@@signInRememberDeviceLabel">Remember this device</span>
+          </label>
+        </div>
+
+        <app-button
+          data-od-id="submit"
+          data-slot="submit"
+          i18n="@@signInSubmitButton"
+          tone="accent"
+          type="submit"
+          size="lg"
+          fullWidth
+          [loading]="submitting()"
+          >Sign in</app-button
+        >
+
+        @if (errorMessage()) {
+          <app-alert tone="danger" variant="auth" i18n="@@signInAuthFailedAlert">{{ errorMessage() }}</app-alert>
+        }
+      </app-form>
+    }
+    <button
+      type="button"
+      class="mb-6 w-full text-center text-sm font-semibold text-slate-600 underline-offset-4 hover:underline dark:text-slate-400"
+      (click)="usePasswordFallback()"
+      i18n="@@signInUsePassword"
+    >
+      Use password instead
+    </button>
+    <p class="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
+      <span i18n="@@signInFooterPrompt">New to Visomi Stack?</span>
+      <app-link
+        data-slot="footer"
+        class="ml-2 font-semibold"
+        i18n="@@signInFooterLink"
+        [routerLink]="footerLink"
+        [text]="'Create an account'"
+      />
+    </p>
+  </app-auth-card>
+</app-auth-layout>

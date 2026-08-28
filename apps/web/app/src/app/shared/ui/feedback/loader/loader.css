@@ -1,0 +1,73 @@
+.loader-icon {
+  animation-duration: var(--loader-animation-duration);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+.loader-icon:nth-child(1) {
+  animation-name: first-jump;
+}
+
+.loader-icon:nth-child(2) {
+  animation-name: second-jump;
+}
+
+.loader-icon:nth-child(3) {
+  animation-name: third-jump;
+}
+
+.loader-icon:nth-child(4) {
+  animation-name: fourth-jump;
+}
+
+@keyframes first-jump {
+  12.5% {
+    transform: translateY(-100%);
+  }
+
+  25% {
+    transform: translateY(0%);
+  }
+}
+
+@keyframes second-jump {
+  12.5% {
+    transform: translateY(0%);
+  }
+
+  25% {
+    transform: translateY(-100%);
+  }
+
+  50% {
+    transform: translateY(0%);
+  }
+}
+
+@keyframes third-jump {
+  25% {
+    transform: translateY(0%);
+  }
+
+  50% {
+    transform: translateY(-100%);
+  }
+
+  75% {
+    transform: translateY(0%);
+  }
+}
+
+@keyframes fourth-jump {
+  50% {
+    transform: translateY(0%);
+  }
+
+  75% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(0%);
+  }
+}

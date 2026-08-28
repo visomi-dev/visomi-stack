@@ -1,0 +1,65 @@
+{
+  "command": "pnpm audit --json",
+  "capturedAt": "2026-08-18",
+  "packageManager": "pnpm",
+  "resolvedPackages": 2276,
+  "metadata": {
+    "critical": 2,
+    "high": 46,
+    "moderate": 52,
+    "low": 11
+  },
+  "disposition": {
+    "critical": {
+      "owner": "security owner",
+      "deadline": "2026-08-25",
+      "status": "untriaged and release-blocking",
+      "exceptionPolicy": "none",
+      "advisories": ["GHSA-23hp-3jrh-7fpw", "GHSA-xv26-6w52-cph6"]
+    },
+    "high": {
+      "owner": "release owner with build owner for Nx/tooling",
+      "deadline": "2026-09-01",
+      "status": "untriaged and release-blocking pending owner disposition",
+      "exceptionPolicy": "documented, compensating, time-bounded exception approved by security only",
+      "advisories": [
+        "GHSA-28wg-ghj8-5hjv",
+        "GHSA-2m8v-j782-fhvr",
+        "GHSA-2p49-hgcm-8545",
+        "GHSA-2v37-7h3g-55p8",
+        "GHSA-395f-4hp3-45gv",
+        "GHSA-3jxr-9vmj-r5cp",
+        "GHSA-4c8g-83qw-93j6",
+        "GHSA-4cwx-7wf7-3272",
+        "GHSA-52cp-r559-cp3m",
+        "GHSA-5p2g-fcmc-qvqq",
+        "GHSA-5p4m-2wfm-xmqj",
+        "GHSA-7c78-jf6q-g5cm",
+        "GHSA-7p8r-x3mc-p8w7",
+        "GHSA-88fw-hqm2-52qc",
+        "GHSA-8x88-c5mf-7j5w",
+        "GHSA-96hv-2xvq-fx4p",
+        "GHSA-f88m-g3jw-g9cj",
+        "GHSA-fx2h-pf6j-xcff",
+        "GHSA-gcfj-64vw-6mp9",
+        "GHSA-gcq2-9pq2-cxqm",
+        "GHSA-hm92-r4w5-c3mj",
+        "GHSA-hmw2-7cc7-3qxx",
+        "GHSA-mh99-v99m-4gvg",
+        "GHSA-mwp4-54f8-5fhr",
+        "GHSA-r28c-9q8g-f849",
+        "GHSA-rgw5-rvv9-x895",
+        "GHSA-v2hh-gcrm-f6hx",
+        "GHSA-v56q-mh7h-f735",
+        "GHSA-vmh5-mc38-953g",
+        "GHSA-vp3h-ghgh-jr7g",
+        "GHSA-vpx6-8pjr-4g3v",
+        "GHSA-vxpw-j846-p89q",
+        "GHSA-w3rx-r6r6-pgpr",
+        "GHSA-x9g3-xrwr-cwfg",
+        "GHSA-xvcm-6775-5m9r"
+      ]
+    },
+    "moderateAndLow": "Retained in the audit record; not clearance. Production release remains blocked until security/release owners complete triage."
+  }
+}

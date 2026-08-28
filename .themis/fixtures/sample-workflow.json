@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "projects": [
+    {
+      "id": "PRJ-FIXTURE",
+      "name": "Local workflow fixture",
+      "summary": "Project used to validate portfolio organization",
+      "status": "active"
+    }
+  ],
+  "epics": [
+    {
+      "id": "EPIC-FIXTURE",
+      "projectId": "PRJ-FIXTURE",
+      "title": "Workflow validation",
+      "summary": "Validate project, epic, sprint, and work item relationships",
+      "goal": "Prove deterministic local coordination",
+      "status": "active"
+    }
+  ],
+  "workItems": [
+    {
+      "id": "THM-001",
+      "projectId": "PRJ-FIXTURE",
+      "epicId": "EPIC-FIXTURE",
+      "title": "Create local repository adapter",
+      "summary": "Create the adapter used by the local workflow fixture.",
+      "acceptanceCriteria": ["The adapter can be invoked by the fixture"],
+      "scopeIn": [".themis/fixtures/**"],
+      "scopeOut": ["apps/**", "libs/**"],
+      "verificationStrategy": ["node --experimental-strip-types --test scripts/themis-core.test.ts"]
+    },
+    {
+      "id": "THM-002",
+      "projectId": "PRJ-FIXTURE",
+      "epicId": "EPIC-FIXTURE",
+      "title": "Add repository adapter tests",
+      "summary": "Verify the adapter behavior after implementation.",
+      "acceptanceCriteria": ["The adapter behavior is covered by tests"],
+      "scopeIn": [".opencode/tools/**"],
+      "scopeOut": ["apps/**"],
+      "verificationStrategy": ["node --experimental-strip-types --test scripts/themis-core.test.ts"]
+    },
+    {
+      "id": "THM-003",
+      "projectId": "PRJ-FIXTURE",
+      "epicId": "EPIC-FIXTURE",
+      "title": "Document adapter behavior",
+      "summary": "Document the local adapter workflow and evidence expectations.",
+      "acceptanceCriteria": ["The local workflow is documented"],
+      "scopeIn": ["planning/**"],
+      "scopeOut": ["apps/**", "libs/**"],
+      "verificationStrategy": ["pnpm exec prettier --check ."]
+    }
+  ],
+  "dependencies": [
+    { "from": "THM-001", "to": "THM-002", "relation": "blocks" },
+    { "from": "THM-001", "to": "THM-003", "relation": "blocks" }
+  ]
+}

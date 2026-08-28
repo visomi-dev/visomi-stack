@@ -1,0 +1,441 @@
+{
+  "item": "THM-OWV-002",
+  "source": "THM-OWV-001",
+  "readOnly": true,
+  "routes": [
+    "/projects",
+    "/projects/:projectId/workspace",
+    "/projects/:projectId/work-items/:workItemId",
+    "/projects/:projectId/iterations/:iterationId",
+    "/projects/:projectId/timeline"
+  ],
+  "phase1Trace": [
+    "vocabulary",
+    "trust",
+    "visual-states",
+    "authority",
+    "translation",
+    "OWV-D01",
+    "OWV-D02",
+    "OWV-D03",
+    "OWV-D04",
+    "OWV-D05",
+    "OWV-D06",
+    "OWV-D07",
+    "OWV-R01",
+    "OWV-R02",
+    "OWV-R03"
+  ],
+  "flows": [
+    {
+      "id": "enter-project",
+      "actors": ["authorized tenant member"],
+      "steps": [
+        {
+          "order": 1,
+          "action": "Open the project directory and select a stable project link.",
+          "observe": "The selected project identity and visibility boundary are announced.",
+          "route": "/projects",
+          "state": "loading"
+        },
+        {
+          "order": 2,
+          "action": "Resolve project membership and source freshness.",
+          "observe": "Workspace orientation shows authority, freshness, and a visible state label.",
+          "route": "/projects/:projectId/workspace",
+          "state": "stale"
+        },
+        {
+          "order": 3,
+          "action": "Inspect the resulting project workspace or access explanation.",
+          "observe": "The reader sees project context or an explicit locked/unavailable/error reason, never a guessed empty fallback.",
+          "route": "/projects/:projectId/workspace",
+          "state": "locked"
+        }
+      ],
+      "states": ["loading", "empty", "locked", "unavailable", "stale", "error"],
+      "data": ["project identity", "freshness", "authority", "visibility boundary"],
+      "translation": "Project context is [state]; source [authority], updated [time].",
+      "outcome": "workspace orientation or explicit reason access cannot proceed",
+      "a11y": "landmarks, h1, visible state text, non-color cue, focus on error/locked boundary",
+      "failure": "not found, locked, unavailable, stale, or error; never empty fallback",
+      "trace": [
+        "vocabulary",
+        "trust",
+        "visual-states",
+        "authority",
+        "translation",
+        "OWV-D01",
+        "OWV-D02",
+        "OWV-D03",
+        "OWV-D04",
+        "OWV-D05",
+        "OWV-D06",
+        "OWV-D07",
+        "OWV-R01",
+        "OWV-R02",
+        "OWV-R03"
+      ]
+    },
+    {
+      "id": "find-attention",
+      "actors": ["authorized tenant member"],
+      "steps": [
+        {
+          "order": 1,
+          "action": "Open the workspace attention region.",
+          "observe": "Each derived attention item shows a reason, source object, actor, and freshness.",
+          "route": "/projects/:projectId/workspace",
+          "state": "attention"
+        },
+        {
+          "order": 2,
+          "action": "Choose the named source link.",
+          "observe": "The source work item opens through a stable deep link without a mutation control.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "loading"
+        },
+        {
+          "order": 3,
+          "action": "Return to the workspace attention context.",
+          "observe": "Focus and the prior inspection context are restored; stale or unavailable remains distinct.",
+          "route": "/projects/:projectId/workspace",
+          "state": "stale"
+        }
+      ],
+      "states": ["loading", "empty", "attention", "stale", "unavailable", "error"],
+      "data": ["derived reason", "source object", "actor", "timestamp", "freshness"],
+      "translation": "Needs attention: [reason]. Inspect [source].",
+      "outcome": "deep link to work item without mutation",
+      "a11y": "reason is text, marker is non-color, link has object name, focus preserved on return",
+      "failure": "no attention is empty; stale/unavailable/error stays distinct",
+      "trace": [
+        "vocabulary",
+        "trust",
+        "visual-states",
+        "authority",
+        "translation",
+        "OWV-D01",
+        "OWV-D02",
+        "OWV-D03",
+        "OWV-D04",
+        "OWV-D05",
+        "OWV-D06",
+        "OWV-D07",
+        "OWV-R01",
+        "OWV-R02",
+        "OWV-R03"
+      ]
+    },
+    {
+      "id": "understand-blocked-work",
+      "actors": ["authorized tenant member", "project owner"],
+      "steps": [
+        {
+          "order": 1,
+          "action": "Open a work item marked blocked.",
+          "observe": "Blocked status and its non-color barrier cue are visible as text.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "blocked"
+        },
+        {
+          "order": 2,
+          "action": "Expand the blocker explanation.",
+          "observe": "The causal dependency or decision includes authority and changed time.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "blocked"
+        },
+        {
+          "order": 3,
+          "action": "Follow the dependency or escalation reference.",
+          "observe": "The next useful inspection path is available; no automatic resolution is offered.",
+          "route": "/projects/:projectId/workspace",
+          "state": "unavailable"
+        }
+      ],
+      "states": ["blocked", "loading", "locked", "unavailable", "stale", "error"],
+      "data": ["blocker reason", "dependency or decision", "authority", "changedAt", "next action"],
+      "translation": "Work is blocked: [reason]. [Actor] recorded it at [time].",
+      "outcome": "inspect blocker or escalate; no automatic resolution",
+      "a11y": "barrier icon plus text, labelled dependency link, heading structure",
+      "failure": "missing cause is an error/data-quality state, not a guessed blocker",
+      "trace": [
+        "vocabulary",
+        "trust",
+        "visual-states",
+        "authority",
+        "translation",
+        "OWV-D01",
+        "OWV-D02",
+        "OWV-D03",
+        "OWV-D04",
+        "OWV-D05",
+        "OWV-D06",
+        "OWV-D07",
+        "OWV-R01",
+        "OWV-R02",
+        "OWV-R03"
+      ]
+    },
+    {
+      "id": "see-agent-execution",
+      "actors": ["authorized tenant member", "verifier"],
+      "steps": [
+        {
+          "order": 1,
+          "action": "Open the current execution region for a work item.",
+          "observe": "Run identity, executor, lifecycle, and start time are visible.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "in progress"
+        },
+        {
+          "order": 2,
+          "action": "Inspect the finished or active run details.",
+          "observe": "Finish time and result are separated from work-item lifecycle.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "run completed"
+        },
+        {
+          "order": 3,
+          "action": "Open the latest evidence category.",
+          "observe": "The reader is told to inspect evidence before treating the run as meaningful progress.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "stale"
+        }
+      ],
+      "states": ["in progress", "run completed", "loading", "unavailable", "stale", "error"],
+      "data": ["run identity", "executor", "startedAt", "finishedAt", "result", "latest evidence category"],
+      "translation": "Execution run [state] by [actor] [time]. Inspect evidence before deciding.",
+      "outcome": "distinguish run result from work-item lifecycle",
+      "a11y": "progress has text and time, actor is announced, no spinner-only state",
+      "failure": "run unavailable/stale/error is explicit; completion never implies acceptance",
+      "trace": [
+        "vocabulary",
+        "trust",
+        "visual-states",
+        "authority",
+        "translation",
+        "OWV-D01",
+        "OWV-D02",
+        "OWV-D03",
+        "OWV-D04",
+        "OWV-D05",
+        "OWV-D06",
+        "OWV-D07",
+        "OWV-R01",
+        "OWV-R02",
+        "OWV-R03"
+      ]
+    },
+    {
+      "id": "inspect-evidence",
+      "actors": ["authorized reviewer", "verifier", "tenant member"],
+      "steps": [
+        {
+          "order": 1,
+          "action": "Open the validation and evidence summary.",
+          "observe": "Category, exact check, target, observed result, and redaction boundary are listed.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "validated"
+        },
+        {
+          "order": 2,
+          "action": "Select an evidence pointer.",
+          "observe": "Minimized metadata is shown while loading, stale, unavailable, or blocked results remain explicit.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "loading"
+        },
+        {
+          "order": 3,
+          "action": "Attempt the protected artifact read.",
+          "observe": "Authorized readers see the artifact; locked readers see no protected preview.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "locked"
+        }
+      ],
+      "states": [
+        "loading",
+        "empty",
+        "locked",
+        "unavailable",
+        "stale",
+        "error",
+        "validated",
+        "validation failed",
+        "validation blocked"
+      ],
+      "data": ["category", "exact check", "target", "observed result", "artifact pointer", "redaction boundary"],
+      "translation": "Evidence recorded for [category]: [result]. Report: [pointer].",
+      "outcome": "view minimized metadata or authorized artifact",
+      "a11y": "category and result are text, artifact link name is descriptive, locked content has no preview",
+      "failure": "locked means no plaintext; unavailable is source failure; blocked check is not pass/fail",
+      "trace": [
+        "vocabulary",
+        "trust",
+        "visual-states",
+        "authority",
+        "translation",
+        "OWV-D01",
+        "OWV-D02",
+        "OWV-D03",
+        "OWV-D04",
+        "OWV-D05",
+        "OWV-D06",
+        "OWV-D07",
+        "OWV-R01",
+        "OWV-R02",
+        "OWV-R03"
+      ]
+    },
+    {
+      "id": "decide-review-acceptance",
+      "actors": ["independent reviewer", "authorized tenant member"],
+      "steps": [
+        {
+          "order": 1,
+          "action": "Open the review section after evidence is available.",
+          "observe": "Review pending shows reviewer role, request time, and referenced run/evidence.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "review pending"
+        },
+        {
+          "order": 2,
+          "action": "Inspect the independent verdict record.",
+          "observe": "Accepted, rejected, or rework is displayed with reviewer, time, and feedback boundary.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "accepted"
+        },
+        {
+          "order": 3,
+          "action": "Follow findings when the verdict is rejected or rework.",
+          "observe": "The surface remains read-only and exposes no self-approval or mutation affordance.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "rework"
+        }
+      ],
+      "states": ["review pending", "accepted", "rejected", "rework", "loading", "locked", "unavailable", "error"],
+      "data": ["reviewer role", "requestedAt", "decidedAt", "verdict", "feedback boundary", "run/evidence references"],
+      "translation": "Independent review is [state] by [reviewer] at [time].",
+      "outcome": "read-only display of verdict; decision is external to this item",
+      "a11y": "verdict is explicit text, reviewer role is visible, no self-approval or mutation control",
+      "failure": "missing independent reviewer is pending/error; rejected is not blocked",
+      "trace": [
+        "vocabulary",
+        "trust",
+        "visual-states",
+        "authority",
+        "translation",
+        "OWV-D01",
+        "OWV-D02",
+        "OWV-D03",
+        "OWV-D04",
+        "OWV-D05",
+        "OWV-D06",
+        "OWV-D07",
+        "OWV-R01",
+        "OWV-R02",
+        "OWV-R03"
+      ]
+    },
+    {
+      "id": "optional-iteration",
+      "actors": ["authorized tenant member"],
+      "steps": [
+        {
+          "order": 1,
+          "action": "Open optional iteration context from the workspace.",
+          "observe": "The project workspace remains primary and labels iteration as optional.",
+          "route": "/projects/:projectId/workspace",
+          "state": "empty/no sprint"
+        },
+        {
+          "order": 2,
+          "action": "Select an iteration when one exists.",
+          "observe": "Goal, selected work item IDs, and freshness appear as secondary context.",
+          "route": "/projects/:projectId/iterations/:iterationId",
+          "state": "selected"
+        },
+        {
+          "order": 3,
+          "action": "Continue with no iteration or when its source is unavailable.",
+          "observe": "Project, attention, work, runs, evidence, and review remain usable without a board.",
+          "route": "/projects/:projectId/workspace",
+          "state": "unavailable"
+        }
+      ],
+      "states": ["empty/no sprint", "selected", "loading", "locked", "unavailable", "stale", "error"],
+      "data": ["iteration identity", "goal", "selected work item IDs", "freshness"],
+      "translation": "[Iteration] is optional context. This project remains useful without a sprint.",
+      "outcome": "filter context or continue project-first workspace",
+      "a11y": "optional context is labelled, no board-only navigation, no-sprint message is visible",
+      "failure": "absent iteration is not an error; unavailable iteration never removes project work",
+      "trace": [
+        "vocabulary",
+        "trust",
+        "visual-states",
+        "authority",
+        "translation",
+        "OWV-D01",
+        "OWV-D02",
+        "OWV-D03",
+        "OWV-D04",
+        "OWV-D05",
+        "OWV-D06",
+        "OWV-D07",
+        "OWV-R01",
+        "OWV-R02",
+        "OWV-R03"
+      ]
+    },
+    {
+      "id": "trace-timeline-decisions",
+      "actors": ["authorized tenant member", "human actor", "agent actor"],
+      "steps": [
+        {
+          "order": 1,
+          "action": "Open the project timeline.",
+          "observe": "Events appear in ordered-list semantics with event ID/type, actor class, and timestamp.",
+          "route": "/projects/:projectId/timeline",
+          "state": "loading"
+        },
+        {
+          "order": 2,
+          "action": "Select an event object reference.",
+          "observe": "The referenced project object opens when available; missing references remain inspectable as events.",
+          "route": "/projects/:projectId/work-items/:workItemId",
+          "state": "empty"
+        },
+        {
+          "order": 3,
+          "action": "Inspect redacted or protected event detail.",
+          "observe": "Human translation and coarse visibility are shown without fabricating protected plaintext.",
+          "route": "/projects/:projectId/timeline",
+          "state": "locked"
+        }
+      ],
+      "states": ["loading", "empty", "locked", "unavailable", "stale", "error"],
+      "data": ["event ID/type", "actor class", "object ID", "timestamp", "coarse visibility", "redacted narrative"],
+      "translation": "[Actor] recorded [meaningful event] at [time]. Follow [object].",
+      "outcome": "trace provenance to object without treating narrative as plaintext authority",
+      "a11y": "ordered list semantics, event type/time in text, redaction explained, keyboard links",
+      "failure": "missing object remains an event; protected payload is redacted/locked, never fabricated",
+      "trace": [
+        "vocabulary",
+        "trust",
+        "visual-states",
+        "authority",
+        "translation",
+        "OWV-D01",
+        "OWV-D02",
+        "OWV-D03",
+        "OWV-D04",
+        "OWV-D05",
+        "OWV-D06",
+        "OWV-D07",
+        "OWV-R01",
+        "OWV-R02",
+        "OWV-R03"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+<textarea
+  #textareaEl
+  [attr.aria-describedby]="ariaDescribedBy()"
+  [attr.aria-invalid]="invalid()"
+  [attr.id]="controlId()"
+  [attr.maxlength]="maxLength()"
+  [attr.minlength]="minLength()"
+  [attr.name]="name()"
+  [attr.pattern]="pattern()"
+  [attr.placeholder]="placeholder()"
+  [attr.required]="required() ? '' : null"
+  [class]="classes()"
+  [rows]="rows()"
+  data-slot="control"
+  (blur)="onBlur()"
+  (input)="onInput($event)"
+></textarea>

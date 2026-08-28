@@ -1,0 +1,30 @@
+<app-dropdown>
+  <button
+    data-slot="trigger"
+    type="button"
+    class="flex h-9 items-center gap-2 rounded-sm px-3 text-xs font-black tracking-widest text-slate-500 uppercase transition-colors hover:bg-slate-50 hover:text-slate-950 dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"
+    aria-label="Change language"
+    i18n-aria-label="@@languageSwitcherChangeLanguage"
+  >
+    <app-icon name="globe" />
+    <span>{{ currentLocaleLabel() }}</span>
+    <app-icon name="angle-down" class="text-xs" />
+  </button>
+
+  <div class="ui-panel-raised min-w-40 p-1" role="menu">
+    <a
+      class="ui-focus-ring flex items-center rounded-[var(--radius-control)] px-3 py-2 text-sm text-slate-950 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-50"
+      [routerLink]="localeUrl('en')"
+      role="menuitem"
+    >
+      <span i18n="@@languageSwitcherEnglishOption">English</span>
+    </a>
+    <a
+      class="ui-focus-ring flex items-center rounded-[var(--radius-control)] px-3 py-2 text-sm text-slate-950 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-50"
+      [routerLink]="localeUrl('es')"
+      role="menuitem"
+    >
+      <span i18n="@@languageSwitcherSpanishOption">Spanish</span>
+    </a>
+  </div>
+</app-dropdown>

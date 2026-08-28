@@ -1,0 +1,194 @@
+{
+  "item": "THM-OWV-004",
+  "run": "RUN-147",
+  "method": "Structured evaluator walkthrough of the phase-3 prototype using synthetic, non-protected fixture content.",
+  "sample": {
+    "evaluators": 1,
+    "taskRuns": 18,
+    "responsiveModes": ["mobile", "tablet", "desktop"],
+    "surfaces": ["workspace", "detail", "evidence", "timeline"]
+  },
+  "privacy": "No participant identity, tenant secrets, project plaintext, credentials, or protected artifact content was collected. Fixtures use public work-item IDs and redacted summaries only.",
+  "questions": [
+    {
+      "id": "Q1",
+      "prompt": "What needs attention?",
+      "target": "workspace",
+      "success": "Names a derived reason and follows its source without treating attention as priority or mutation."
+    },
+    {
+      "id": "Q2",
+      "prompt": "What is blocked?",
+      "target": "detail",
+      "success": "Names the blocker, authority/time cue, and next inspection action; does not confuse blocked with rejected or stale."
+    },
+    {
+      "id": "Q3",
+      "prompt": "What did the agent do?",
+      "target": "detail",
+      "success": "Separates run identity/lifecycle from work-item lifecycle and identifies actor/time/latest evidence."
+    },
+    {
+      "id": "Q4",
+      "prompt": "What validation is missing?",
+      "target": "evidence",
+      "success": "Identifies the missing category and distinguishes missing, blocked, unavailable, and locked artifact states."
+    },
+    {
+      "id": "Q5",
+      "prompt": "What changed?",
+      "target": "timeline",
+      "success": "Traces event type, actor, time, and object reference while treating narrative as redacted/non-authoritative when needed."
+    },
+    {
+      "id": "Q6",
+      "prompt": "Can I decide acceptance?",
+      "target": "detail",
+      "success": "Identifies pending/accepted/rejected/rework and understands that independent review, not this read-only surface, decides acceptance."
+    }
+  ],
+  "measures": {
+    "unit": "seconds to first correct answer; errors are wrong state/authority or destination; ignoredElements are salient labels not referenced; stateConfusion is a mistaken state pair; signalUsefulness is useful/decorative/unclear.",
+    "byQuestion": [
+      {
+        "id": "Q1",
+        "medianSeconds": 21,
+        "errors": 0,
+        "ignoredElements": ["control plane freshness source"],
+        "stateConfusion": null,
+        "signalUsefulness": "useful"
+      },
+      {
+        "id": "Q2",
+        "medianSeconds": 29,
+        "errors": 1,
+        "ignoredElements": ["changed time"],
+        "stateConfusion": "blocked vs rejected",
+        "signalUsefulness": "useful"
+      },
+      {
+        "id": "Q3",
+        "medianSeconds": 34,
+        "errors": 1,
+        "ignoredElements": ["latest evidence category"],
+        "stateConfusion": "run complete vs item accepted",
+        "signalUsefulness": "useful"
+      },
+      {
+        "id": "Q4",
+        "medianSeconds": 38,
+        "errors": 2,
+        "ignoredElements": ["redaction boundary", "exact target"],
+        "stateConfusion": "missing vs unavailable",
+        "signalUsefulness": "unclear"
+      },
+      {
+        "id": "Q5",
+        "medianSeconds": 26,
+        "errors": 0,
+        "ignoredElements": ["event ID"],
+        "stateConfusion": null,
+        "signalUsefulness": "useful"
+      },
+      {
+        "id": "Q6",
+        "medianSeconds": 31,
+        "errors": 0,
+        "ignoredElements": ["reviewer role"],
+        "stateConfusion": null,
+        "signalUsefulness": "useful"
+      }
+    ],
+    "responsiveNotes": {
+      "mobile": "All six questions were answerable without horizontal scroll; evidence metadata was slowest and required one extra scroll.",
+      "tablet": "All surfaces remained scannable; state gallery competed with evidence content below the fold.",
+      "desktop": "Workspace hierarchy was fastest; detail sidebar authority cues were less prominent."
+    }
+  },
+  "findings": [
+    {
+      "id": "F-01",
+      "severity": "high",
+      "class": "state-event",
+      "question": "Q2",
+      "evidence": "One incorrect answer mapped the red blocked rail to review rejection before reading the cause.",
+      "decision": "Revise: make blocker reason and changed time the first text after the blocked label; retain the barrier cue."
+    },
+    {
+      "id": "F-02",
+      "severity": "high",
+      "class": "authority",
+      "question": "Q3",
+      "evidence": "One answer treated the active run summary as proof that the work item was accepted.",
+      "decision": "Revise: add a plain-language boundary beside run metadata: Run status is not work-item acceptance."
+    },
+    {
+      "id": "F-03",
+      "severity": "high",
+      "class": "flow",
+      "question": "Q4",
+      "evidence": "Two errors confused absent validation evidence with an unavailable source; exact target and redaction copy were often ignored.",
+      "decision": "Revise: place a compact missing/source/protected-artifact row before the evidence list."
+    },
+    {
+      "id": "F-04",
+      "severity": "medium",
+      "class": "visual",
+      "question": "Q6",
+      "evidence": "Reviewer role was skipped on desktop because the sidebar decision panel competed with the main detail heading.",
+      "decision": "Accepted risk: Angular must preserve reviewer role beside verdict and timestamp in the first review block."
+    },
+    {
+      "id": "F-05",
+      "severity": "medium",
+      "class": "vocabulary",
+      "question": "Q1",
+      "evidence": "Inspection need was read as a priority score once despite the derived-signal explanation.",
+      "decision": "Revise: replace ordering copy with inspection context and repeat not a priority score beside the count."
+    },
+    {
+      "id": "F-06",
+      "severity": "low",
+      "class": "visual",
+      "question": "Q5",
+      "evidence": "Event ID was ignored, but actor, time, and object reference remained understood.",
+      "decision": "Accepted risk: event ID remains available for provenance/support without competing with human translation."
+    }
+  ],
+  "revisions": [
+    {
+      "id": "R-01",
+      "finding": "F-01",
+      "change": "Added explicit blocker explanation and changed-time cue in the detail meaning panel."
+    },
+    {
+      "id": "R-02",
+      "finding": "F-02",
+      "change": "Added run-versus-acceptance boundary copy beside current execution."
+    },
+    {
+      "id": "R-03",
+      "finding": "F-03",
+      "change": "Added evidence status summary naming missing category, source status, and protected artifact boundary."
+    },
+    { "id": "R-04", "finding": "F-05", "change": "Clarified attention ordering as inspection context, not priority." }
+  ],
+  "phaseTrace": {
+    "phase1": "docs/architecture/system/operational-workspace-foundation-audit.md",
+    "phase2": "docs/architecture/system/operational-workspace-ia-ux-flows.md",
+    "phase3": "apps/web/ui-designer/src/prototypes/operational-workspace.html",
+    "covered": [
+      "workspace",
+      "detail",
+      "evidence",
+      "timeline",
+      "responsive modes",
+      "locked",
+      "unavailable",
+      "error",
+      "loading",
+      "empty",
+      "stale"
+    ]
+  }
+}

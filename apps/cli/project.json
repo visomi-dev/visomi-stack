@@ -1,0 +1,116 @@
+{
+  "name": "cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cli/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cli",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cli/src/main.ts",
+        "tsConfig": "apps/cli/tsconfig.app.json",
+        "assets": ["apps/cli/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": ["{workspaceRoot}/dist/apps/cli/package.json", "{workspaceRoot}/dist/apps/cli/pnpm-lock.yaml"],
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "copy-workspace-modules": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/apps/cli/workspace_modules"],
+      "executor": "@nx/js:copy-workspace-modules",
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "prune": {
+      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+      "executor": "nx:noop"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "cli:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "cli:build:development"
+        },
+        "production": {
+          "buildTarget": "cli:build:production"
+        }
+      }
+    },
+    "test": {
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsc --noEmit -p apps/cli/tsconfig.app.json",
+        "cwd": "."
+      }
+    },
+    "verify": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/apps/cli/main.js verify core",
+        "cwd": "."
+      }
+    },
+    "package": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/cli"],
+      "options": {
+        "command": "pnpm exec npm pack ./dist/apps/cli --pack-destination ./dist/apps/cli"
+      }
+    },
+    "publish:dry-run": {
+      "dependsOn": ["package"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec npm publish ./dist/apps/cli/*.tgz --dry-run"
+      }
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "plan": "PZS-001",
+  "source": "docs/architecture/project-scoped-sync-assurance.md",
+  "evidenceBoundary": "This inventory proves traceability only; it is not evidence that deferred implementation work is complete.",
+  "preservedCoverage": {
+    "uxFlows": true,
+    "humanReadableTranslation": true,
+    "validation": true,
+    "deferredNative": true
+  },
+  "phases": [
+    {
+      "id": "P0",
+      "itemIds": ["PZS-001"],
+      "statuses": ["in_progress"],
+      "gaps": [],
+      "decision": "update-existing-foundations"
+    },
+    {
+      "id": "P1",
+      "itemIds": ["PZS-002"],
+      "statuses": ["ready"],
+      "gaps": ["implementation deferred to PZS-002"],
+      "decision": "create-new-item"
+    },
+    {
+      "id": "P2",
+      "itemIds": ["PZS-003"],
+      "statuses": ["ready"],
+      "gaps": ["implementation deferred to PZS-003"],
+      "decision": "create-new-item"
+    },
+    {
+      "id": "P3",
+      "itemIds": ["PZS-004"],
+      "statuses": ["ready"],
+      "gaps": ["implementation deferred to PZS-004"],
+      "decision": "create-new-item"
+    },
+    {
+      "id": "P4",
+      "itemIds": ["PZS-005"],
+      "statuses": ["ready"],
+      "gaps": ["implementation deferred to PZS-005"],
+      "decision": "create-new-item"
+    },
+    {
+      "id": "P5",
+      "itemIds": ["PZS-006"],
+      "statuses": ["ready"],
+      "gaps": ["implementation deferred to PZS-006"],
+      "decision": "create-new-item"
+    },
+    {
+      "id": "P6",
+      "itemIds": ["PZS-007"],
+      "statuses": ["ready"],
+      "gaps": ["implementation deferred to PZS-007"],
+      "decision": "create-new-item"
+    },
+    {
+      "id": "P7",
+      "itemIds": ["PZS-007", "THM-OWV-005"],
+      "statuses": ["ready", "rework"],
+      "gaps": ["implementation deferred to PZS-007 and THM-OWV-005"],
+      "decision": "update-existing-read-model-and-create-sync-scope"
+    },
+    {
+      "id": "P8",
+      "itemIds": ["THM-OWV-006"],
+      "statuses": ["rework"],
+      "gaps": ["implementation deferred to THM-OWV-006"],
+      "decision": "update-existing-angular-scope"
+    },
+    {
+      "id": "P9",
+      "itemIds": ["PZS-008", "PZS-009"],
+      "statuses": ["ready", "ready"],
+      "gaps": ["implementation deferred to PZS-008 and PZS-009"],
+      "decision": "create-new-items"
+    },
+    {
+      "id": "P10",
+      "itemIds": ["PZS-010"],
+      "statuses": ["ready"],
+      "gaps": ["validation deferred to PZS-010"],
+      "decision": "create-new-item"
+    },
+    {
+      "id": "P11",
+      "itemIds": ["PZS-001", "PZS-007"],
+      "statuses": ["in_progress", "ready"],
+      "gaps": ["native UI, native runtime, and native-specific key storage are deferred"],
+      "decision": "update-contract-and-defer-native-delivery"
+    }
+  ]
+}

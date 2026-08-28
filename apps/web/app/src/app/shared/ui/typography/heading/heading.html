@@ -1,0 +1,14 @@
+@switch (level()) {
+  @case ('1') {
+    <h1 [class]="classes()">{{ text() }}</h1>
+  }
+  @case ('2') {
+    <h2 [class]="classes()">{{ text() }}</h2>
+  }
+  @case ('3') {
+    <h3 [class]="classes()">{{ text() }}</h3>
+  }
+  @default {
+    <h4 [class]="classes()">{{ text() }}</h4>
+  }
+}

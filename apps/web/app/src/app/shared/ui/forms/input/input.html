@@ -1,0 +1,20 @@
+<input
+  #inputEl
+  [attr.aria-describedby]="ariaDescribedBy()"
+  [attr.aria-invalid]="invalid()"
+  [attr.autocomplete]="autocomplete()"
+  [attr.id]="controlId()"
+  [attr.max]="max()"
+  [attr.maxlength]="maxLength()"
+  [attr.min]="min()"
+  [attr.minlength]="minLength()"
+  [attr.name]="name()"
+  [attr.pattern]="pattern()"
+  [attr.placeholder]="placeholder()"
+  [attr.required]="required() ? '' : null"
+  [attr.type]="type()"
+  [class]="classes()"
+  data-slot="control"
+  (blur)="onBlur()"
+  (input)="onInput($event)"
+/>

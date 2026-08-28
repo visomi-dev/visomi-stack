@@ -1,0 +1,16 @@
+<button
+  [attr.aria-checked]="checked()"
+  [attr.aria-describedby]="ariaDescribedBy()"
+  [attr.aria-invalid]="invalid()"
+  [attr.aria-label]="ariaLabel()"
+  [attr.aria-required]="required() ? '' : null"
+  [class]="classes()"
+  [disabled]="disabled()"
+  [id]="id()"
+  role="switch"
+  type="button"
+  (blur)="onBlur()"
+  (click)="toggle()"
+>
+  <span aria-hidden="true" [class]="thumbClasses()"></span>
+</button>

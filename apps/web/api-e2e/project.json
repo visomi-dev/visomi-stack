@@ -1,0 +1,48 @@
+{
+  "name": "api-e2e",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "implicitDependencies": ["server"],
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{e2eProjectRoot}"],
+      "options": {
+        "jestConfig": "apps/web/api-e2e/jest.config.cts",
+        "passWithNoTests": true
+      },
+      "dependsOn": ["api:build", "app:build", "site:build", "worker:build", "realtime:build", "server:build"]
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/coverage/{e2eProjectRoot}"],
+      "options": {
+        "command": "node --experimental-strip-types apps/web/api-e2e/src/support/run-api-e2e.ts"
+      },
+      "dependsOn": ["api:build", "app:build", "site:build", "worker:build", "realtime:build", "server:build"]
+    },
+    "openapi": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/test-results/api-e2e/openapi"],
+      "options": {
+        "command": "pnpm exec nx run server:build --skip-nx-cache && SCHEMATHESIS_INCLUDE_PATH_REGEX='^/auth/passkey/(registration|authentication)/' node --experimental-strip-types apps/web/api-e2e/src/support/run-openapi-contract.ts"
+      },
+      "dependsOn": ["api:build", "app:build", "site:build", "worker:build", "realtime:build", "server:build"]
+    },
+    "openapi-fuzz": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/test-results/api-e2e/openapi"],
+      "options": {
+        "command": "SCHEMATHESIS_PHASES=examples,coverage,fuzzing SCHEMATHESIS_INCLUDE_PATH_REGEX='^/auth/passkey/(registration|authentication)/' SCHEMATHESIS_MODE=negative node --experimental-strip-types apps/web/api-e2e/src/support/run-openapi-contract.ts"
+      },
+      "dependsOn": ["api:build", "app:build", "site:build", "worker:build", "realtime:build", "server:build"]
+    },
+    "durable-integration": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/test-results/api-e2e/durable-integration"],
+      "options": {
+        "command": "API_E2E_DURABLE_ONLY=true node --experimental-strip-types apps/web/api-e2e/src/support/run-api-e2e.ts"
+      }
+    }
+  }
+}

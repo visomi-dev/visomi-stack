@@ -1,0 +1,423 @@
+<!doctype html>
+
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Themis | AI-Integrated Technical Ledger</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#385ca9',
+              'on-primary': '#f9f8ff',
+              'primary-container': '#17428e',
+              'on-primary-container': '#d9e2ff',
+              secondary: '#3d6758',
+              'on-secondary': '#e4fff2',
+              tertiary: '#7fefc0',
+              'on-tertiary': '#003827',
+              surface: '#0f172a',
+              'on-surface': '#f1f5f9',
+              'surface-variant': '#1e293b',
+              'on-surface-variant': '#94a3b8',
+              outline: '#475569',
+              'outline-variant': '#334155',
+              background: '#0f172a',
+              'on-background': '#f1f5f9',
+              'surface-container-lowest': '#020617',
+              'surface-container-low': '#0f172a',
+              'surface-container': '#1e293b',
+              'surface-container-high': '#334155',
+              'surface-container-highest': '#475569',
+              error: '#f87171',
+              success: '#34d399',
+            },
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.25rem',
+              xl: '0.5rem',
+              full: '9999px',
+            },
+            fontFamily: {
+              headline: ['Manrope', 'sans-serif'],
+              body: ['Manrope', 'sans-serif'],
+              label: ['Manrope', 'sans-serif'],
+              display: ['Manrope', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: 'Manrope', sans-serif;
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 300,
+          'GRAD' 0,
+          'opsz' 24;
+        vertical-align: middle;
+      }
+      .ghost-border {
+        border: 1px solid rgba(148, 163, 184, 0.1);
+      }
+      .glass-panel {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+    </style>
+  </head>
+  <body class="bg-background text-on-surface selection:bg-primary/30 selection:text-white">
+    <nav
+      class="bg-surface/80 border-outline-variant/10 sticky top-0 z-50 mx-auto flex w-full max-w-screen-2xl items-center justify-between border-b px-12 py-6 backdrop-blur-md transition-colors duration-200 ease-in-out"
+    >
+      <div class="text-on-surface font-headline text-xl font-bold tracking-tighter uppercase">Themis</div>
+      <div class="flex items-center gap-8">
+        <div class="flex items-center gap-8">
+          <div
+            class="text-on-surface-variant font-headline flex items-center gap-4 text-[10px] font-black tracking-[0.2em] uppercase"
+          >
+            <button class="hover:text-primary cursor-pointer transition-colors">EN</button>
+            <span class="opacity-30">/</span>
+            <button class="hover:text-primary text-on-surface cursor-pointer transition-colors">ES</button>
+          </div>
+          <button class="text-on-surface-variant hover:text-primary flex cursor-pointer items-center transition-colors">
+            <span class="material-symbols-outlined text-lg">dark_mode</span>
+          </button>
+        </div>
+        <button
+          class="bg-primary text-on-primary hover:bg-primary/90 rounded-lg px-6 py-2 text-sm font-bold transition-all active:scale-[0.98]"
+        >
+          Get Started
+        </button>
+      </div>
+    </nav>
+    <main>
+      <!-- Hero Section -->
+      <section class="mx-auto flex max-w-screen-2xl flex-col items-center px-12 pt-32 pb-16 text-center">
+        <h1
+          class="text-on-surface font-headline mb-8 max-w-5xl text-6xl leading-[0.95] font-extrabold tracking-tighter md:text-8xl"
+        >
+          Clarity for complex execution, powered by AI context.
+        </h1>
+        <p class="text-on-surface-variant mb-12 max-w-2xl text-xl leading-relaxed font-light">
+          Themis is a technical ledger designed for teams where AI agents and human developers co-author the roadmap.
+          Bridge the gap between code generation and architectural intent.
+        </p>
+        <div class="flex gap-4">
+          <button class="bg-primary text-on-primary hover:bg-primary/90 rounded-lg px-8 py-3 font-bold transition-all">
+            Request Access
+          </button>
+          <button
+            class="border-outline text-on-surface hover:bg-surface-container rounded-lg border px-8 py-3 font-bold transition-colors"
+          >
+            Read Methodology
+          </button>
+        </div>
+      </section>
+      <!-- Projects Overview Preview (Dark Mode) -->
+      <section class="mx-auto mb-32 max-w-screen-2xl px-12">
+        <div
+          class="bg-surface-container-lowest border-outline-variant/20 overflow-hidden rounded-xl border shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)]"
+        >
+          <div class="bg-surface-container/50 p-8">
+            <div class="mb-10 flex items-center justify-between">
+              <div>
+                <h3 class="font-headline text-on-surface text-2xl font-extrabold">Projects Overview</h3>
+                <p class="text-on-surface-variant mt-1 text-[10px] font-bold tracking-widest uppercase">
+                  Unified briefing for Human &amp; AI Agent workstreams
+                </p>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="material-symbols-outlined text-on-surface-variant">search</span>
+                <div class="bg-primary/20 border-primary/30 flex items-center gap-2 rounded-full border px-3 py-1">
+                  <span class="material-symbols-outlined text-primary text-sm">smart_toy</span>
+                  <span class="text-primary text-[10px] font-bold tracking-tighter uppercase">4 Agents Active</span>
+                </div>
+                <div
+                  class="bg-surface-container-highest border-outline/20 flex h-8 w-8 items-center justify-center rounded-full border"
+                >
+                  <span class="material-symbols-outlined text-on-surface text-sm">person</span>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div class="space-y-4 lg:col-span-2">
+                <!-- Project Alpha Item -->
+                <div
+                  class="bg-surface-container-low border-primary border-outline-variant/10 rounded border border-l-4 p-6 shadow-lg"
+                >
+                  <div class="mb-4 flex items-start justify-between">
+                    <div>
+                      <h4 class="font-headline text-on-surface text-lg font-bold">Project Alpha</h4>
+                      <p class="text-on-surface-variant text-sm">
+                        System-wide migration. <span class="text-primary font-medium">Agent 0x42</span> is currently
+                        mapping dependencies.
+                      </p>
+                    </div>
+                    <span
+                      class="bg-tertiary/20 text-tertiary rounded px-2 py-0.5 text-[10px] font-black tracking-wider uppercase"
+                      >Active</span
+                    >
+                  </div>
+                  <div class="space-y-2">
+                    <div class="bg-surface-container-highest/30 h-1.5 w-full overflow-hidden rounded-full">
+                      <div class="bg-primary h-full w-[75%]"></div>
+                    </div>
+                    <div
+                      class="text-on-surface-variant flex justify-between text-[10px] font-bold tracking-wider uppercase"
+                    >
+                      <span>Technical Distribution</span>
+                      <span class="text-on-surface">12 Ready / 4 In Progress</span>
+                    </div>
+                  </div>
+                </div>
+                <!-- Infrastructure Core Item -->
+                <div
+                  class="bg-surface-container-low border-outline-variant border-outline-variant/10 rounded border border-l-4 p-6 opacity-70 shadow-lg"
+                >
+                  <div class="mb-4 flex items-start justify-between">
+                    <div>
+                      <h4 class="font-headline text-on-surface text-lg font-bold">Infrastructure Core</h4>
+                      <p class="text-on-surface-variant text-sm">Provisioning new GPU clusters in the Western Node.</p>
+                    </div>
+                    <span
+                      class="bg-surface-container-highest text-on-surface-variant rounded px-2 py-0.5 text-[10px] font-black tracking-wider uppercase"
+                      >Stale</span
+                    >
+                  </div>
+                  <div class="text-on-surface-variant text-[10px] font-bold tracking-wider uppercase italic">
+                    Awaiting agent validation of hardware allocation
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-6">
+                <div class="bg-surface-container-low border-outline-variant/20 rounded border p-6 shadow-lg">
+                  <h5 class="text-on-surface-variant mb-4 text-[10px] font-black tracking-[0.2em] uppercase">
+                    Agent Insights
+                  </h5>
+                  <div class="space-y-4">
+                    <div class="flex gap-3">
+                      <div class="bg-error mt-1.5 h-1.5 w-1.5 rounded-full"></div>
+                      <p class="text-on-surface text-xs font-bold">Logic Loop Detected: Neural Edge</p>
+                    </div>
+                    <div class="flex gap-3">
+                      <div class="bg-primary mt-1.5 h-1.5 w-1.5 rounded-full"></div>
+                      <p class="text-on-surface text-xs font-bold">Auto-refactoring: API Rate Limiter</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-surface-container-low border-outline-variant/20 rounded border p-6 shadow-lg">
+                  <h5 class="text-on-surface-variant mb-4 text-[10px] font-black tracking-[0.2em] uppercase">
+                    Recent Decisions
+                  </h5>
+                  <div class="border-primary/40 space-y-4 border-l-2 pl-3">
+                    <p class="text-on-surface-variant text-[11px] leading-relaxed">
+                      Agent suggested <span class="text-on-surface font-bold">Project Alpha</span> schema transition.
+                    </p>
+                    <p class="text-on-surface-variant text-[11px] leading-relaxed">
+                      Lead approved <span class="text-on-surface font-bold">Agent 0x88</span> refactor plan.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Value Proposition Section -->
+      <section class="bg-surface-container/30 border-outline-variant/10 border-y py-24">
+        <div class="mx-auto max-w-screen-2xl px-12">
+          <div class="grid grid-cols-1 gap-16 md:grid-cols-3">
+            <div class="border-primary/30 space-y-4 border-l pl-6">
+              <h3 class="font-headline text-on-surface text-xl font-bold">Shared Context.</h3>
+              <p class="text-on-surface-variant text-sm leading-relaxed">
+                One source of truth for humans and AI agents. No more context switching or "re-explaining" the goal to
+                your LLM.
+              </p>
+            </div>
+            <div class="border-primary/30 space-y-4 border-l pl-6">
+              <h3 class="font-headline text-on-surface text-xl font-bold">AI-Assisted Scoping.</h3>
+              <p class="text-on-surface-variant text-sm leading-relaxed">
+                Agents generate technical visuals, dependency maps, and spec drafts directly within the task ledger.
+              </p>
+            </div>
+            <div class="border-primary/30 space-y-4 border-l pl-6">
+              <h3 class="font-headline text-on-surface text-xl font-bold">Visual Agent Reports.</h3>
+              <p class="text-on-surface-variant text-sm leading-relaxed">
+                See visual progress reports from code agents. High-signal updates that show exactly what changed in the
+                codebase.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Task Detail Preview (Dark Mode) -->
+      <section class="mx-auto grid max-w-screen-2xl grid-cols-1 items-center gap-24 px-12 py-32 lg:grid-cols-2">
+        <div class="space-y-8">
+          <div
+            class="bg-primary/20 text-primary inline-block rounded px-3 py-1 text-[10px] font-black tracking-widest uppercase"
+          >
+            AI Context Window
+          </div>
+          <h2 class="font-headline text-on-surface text-5xl leading-tight font-extrabold tracking-tight">
+            Agent Insights: Pushed to the plan.
+          </h2>
+          <p class="text-on-surface-variant text-lg leading-relaxed">
+            Most tools bury technical context. Themis allows code agents to push architecture diagrams, security
+            benchmarks, and implementation visuals directly into the developer's workspace.
+          </p>
+          <div class="space-y-4">
+            <div
+              class="bg-surface-container-low border-primary border-outline-variant/10 flex items-center gap-4 rounded border border-l-4 p-4"
+            >
+              <span class="material-symbols-outlined text-primary">auto_graph</span>
+              <span class="text-on-surface text-sm font-bold">Agent-Generated Architectural Visuals</span>
+            </div>
+            <div
+              class="bg-surface-container-low border-primary border-outline-variant/10 flex items-center gap-4 rounded border border-l-4 p-4"
+            >
+              <span class="material-symbols-outlined text-primary">terminal</span>
+              <span class="text-on-surface text-sm font-bold">Direct Agent Feedback and Decision Logs</span>
+            </div>
+          </div>
+        </div>
+        <div class="relative">
+          <div
+            class="bg-surface-container-low border-outline-variant/20 relative z-10 mx-auto max-w-lg rounded-xl border p-8 shadow-[0_48px_96px_-24px_rgba(0,0,0,0.6)]"
+          >
+            <div class="border-outline-variant/20 mb-8 flex items-center justify-between border-b pb-4">
+              <span class="text-on-surface-variant font-mono text-[10px] font-bold tracking-tighter uppercase"
+                >TASK-442 / OPS</span
+              >
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-xs">smart_toy</span>
+                <span class="text-on-surface text-[10px] font-black tracking-tighter uppercase">Agent Tracking</span>
+              </div>
+            </div>
+            <h4 class="font-headline text-on-surface mb-4 text-2xl font-bold tracking-tight">
+              API Rate Limiter Implementation
+            </h4>
+            <p class="text-on-surface-variant mb-8 text-sm leading-relaxed">
+              Implement token bucket algorithm. <span class="text-primary font-semibold">Agent 0x9</span> has drafted
+              the spec and identified a race condition in the edge gateway.
+            </p>
+            <div class="space-y-3">
+              <div class="bg-primary/10 border-primary/30 flex items-center justify-between rounded border p-4">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-primary text-lg">schema</span>
+                  <span class="text-on-surface text-xs font-bold tracking-wide uppercase">Agent Flow Diagram</span>
+                </div>
+                <span class="text-primary text-[10px] font-bold">VIEW VISUAL</span>
+              </div>
+              <div
+                class="bg-surface-container border-outline-variant/10 flex items-center justify-between rounded border p-4"
+              >
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-tertiary text-lg">verified</span>
+                  <span class="text-on-surface text-xs font-bold tracking-wide uppercase">AI Security Audit</span>
+                </div>
+                <span class="text-tertiary text-[10px] font-bold uppercase">Passed</span>
+              </div>
+            </div>
+          </div>
+          <!-- Decorative element -->
+          <div class="bg-primary/5 absolute -top-6 -right-6 -z-10 h-full w-full rounded-xl blur-2xl"></div>
+        </div>
+      </section>
+      <!-- System Focus Section -->
+      <section class="border-outline-variant/10 mx-auto max-w-screen-2xl border-t px-12 py-32">
+        <div class="flex flex-col items-start gap-16 md:flex-row">
+          <div class="w-full md:w-1/3">
+            <h2 class="font-headline text-on-surface text-3xl leading-tight font-extrabold tracking-tight">
+              Engineered for teams that leverage AI.
+            </h2>
+          </div>
+          <div class="grid w-full grid-cols-1 gap-8 md:grid-cols-2">
+            <div class="bg-surface-container-low border-outline-variant/20 rounded border p-8 shadow-md">
+              <h4 class="font-headline text-on-surface mb-3 text-lg font-bold">Agent-Readable State</h4>
+              <p class="text-on-surface-variant text-sm leading-relaxed">
+                We use a highly structured relational ledger that allows AI agents to understand project context as
+                clearly as a developer does. No more "forgetful" assistants.
+              </p>
+            </div>
+            <div class="bg-surface-container-low border-outline-variant/20 rounded border p-8 shadow-md">
+              <h4 class="font-headline text-on-surface mb-3 text-lg font-bold">Sync with Execution</h4>
+              <p class="text-on-surface-variant text-sm leading-relaxed">
+                When your agent updates code, Themis updates the plan. Maintain structural integrity across complex
+                dependency trees with automated status syncing.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Closing CTA Section -->
+      <section class="bg-surface-container-lowest border-outline-variant/10 border-t px-12 py-32 text-center">
+        <div class="mx-auto max-w-3xl space-y-8">
+          <h2 class="font-headline text-on-surface text-5xl font-extrabold tracking-tight">
+            Ready for structural clarity?
+          </h2>
+          <p class="text-on-surface-variant text-xl">
+            Join technical leads who prioritize AI-integrated execution over noise.
+          </p>
+          <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <button
+              class="bg-primary text-on-primary hover:bg-primary/90 rounded-lg px-12 py-4 text-lg font-bold transition-all"
+            >
+              Get Started
+            </button>
+            <button
+              class="border-outline text-on-surface hover:bg-surface-container rounded-lg border px-12 py-4 text-lg font-bold transition-all"
+            >
+              Request Access
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="border-outline-variant/10 bg-surface-container-lowest w-full border-t px-12 py-10">
+      <div class="mx-auto flex max-w-screen-2xl flex-col items-center justify-between gap-6 md:flex-row">
+        <div class="font-headline text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">
+          © 2024 THEMIS TECHNICAL LEDGER. ALL RIGHTS RESERVED.
+        </div>
+        <div class="flex gap-8">
+          <a
+            class="font-headline text-on-surface-variant hover:text-on-surface text-[10px] font-bold tracking-widest uppercase transition-colors"
+            href="#"
+            >Documentation</a
+          >
+          <a
+            class="font-headline text-on-surface-variant hover:text-on-surface text-[10px] font-bold tracking-widest uppercase transition-colors"
+            href="#"
+            >System Status</a
+          >
+          <a
+            class="font-headline text-on-surface-variant hover:text-on-surface text-[10px] font-bold tracking-widest uppercase transition-colors"
+            href="#"
+            >Privacy</a
+          >
+          <a
+            class="font-headline text-on-surface-variant hover:text-on-surface text-[10px] font-bold tracking-widest uppercase transition-colors"
+            href="#"
+            >Terms</a
+          >
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

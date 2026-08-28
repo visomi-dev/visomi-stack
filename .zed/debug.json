@@ -1,0 +1,13 @@
+[
+  {
+    "adapter": "JavaScript",
+    "label": "Launch Chrome against localhost:4200",
+    "type": "chrome",
+    "request": "launch",
+    "url": "http://localhost:4200/",
+    "webRoot": "$ZED_WORKTREE_ROOT",
+    "console": "integratedTerminal",
+    "skipFiles": ["<node_internals>/**"],
+    "runtimeArgs": ["--auto-open-devtools-for-tabs"]
+  }
+]

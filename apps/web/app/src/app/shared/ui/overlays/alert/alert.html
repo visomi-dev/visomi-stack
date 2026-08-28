@@ -1,0 +1,6 @@
+<div [class]="classes()" [attr.role]="role()" data-slot="alert">
+  @if (showIcon()) {
+    <app-icon [name]="iconName()" class="mr-2 inline-block size-4 shrink-0 align-[-2px]" aria-hidden="true" />
+  }
+  <ng-content />
+</div>

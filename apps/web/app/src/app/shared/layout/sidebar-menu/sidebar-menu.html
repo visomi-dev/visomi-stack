@@ -1,0 +1,159 @@
+@if (mobileMenuOpen()) {
+  <button
+    type="button"
+    class="bg-on-surface/40 fixed inset-0 z-40 cursor-default lg:hidden"
+    aria-label="Close navigation"
+    i18n-aria-label="@@layoutCloseNavigation"
+    (click)="closeMenu()"
+  ></button>
+}
+
+<aside
+  class="shadow-panel fixed inset-y-0 left-0 z-50 flex min-h-dvh w-full max-w-120 shrink-0 flex-col bg-white p-6 text-slate-950 transition-all duration-200 lg:static lg:z-auto lg:translate-x-0 lg:bg-slate-100 lg:p-0 lg:shadow-none dark:bg-slate-800 dark:bg-slate-950 dark:text-slate-50"
+  [class.-translate-x-full]="!mobileMenuOpen()"
+  [class.translate-x-0]="mobileMenuOpen()"
+  [class.lg:w-16]="collapsed()"
+  [class.lg:w-60]="!collapsed()"
+>
+  <div class="mb-12 flex items-center justify-between gap-6 lg:hidden">
+    <h2 class="font-heading text-3xl font-bold text-slate-950 dark:text-slate-50" i18n="@@layoutMobileNavigationTitle">
+      Navigation
+    </h2>
+    <button
+      type="button"
+      class="flex h-9 w-9 items-center justify-center rounded-sm text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"
+      aria-label="Close navigation"
+      i18n-aria-label="@@layoutCloseNavigation"
+      (click)="closeMenu()"
+    >
+      <app-icon name="close" />
+    </button>
+  </div>
+
+  <a
+    class="focus:outline-primary font-heading mb-12 flex items-center gap-4 text-xl font-bold tracking-tight text-slate-950 no-underline focus:outline-2 focus:outline-offset-2 lg:mb-0 lg:px-4 lg:pt-8 lg:pb-9 dark:text-slate-50"
+    [class.lg:justify-center]="collapsed()"
+    [routerLink]="APP_URL"
+    (click)="closeMenu()"
+  >
+    <span
+      class="flex h-12 w-12 items-center justify-center rounded-sm bg-slate-600 text-2xl font-bold text-white lg:hidden dark:bg-slate-500 dark:text-slate-950"
+      >T</span
+    >
+    <span [class.lg:hidden]="collapsed()">Visomi Stack</span
+    ><span class="text-slate-600 dark:text-slate-400" [class.lg:hidden]="collapsed()">.</span>
+  </a>
+
+  <button
+    type="button"
+    class="mx-3 mb-6 hidden h-9 items-center justify-center rounded-sm text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-950 lg:flex dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"
+    [attr.aria-label]="collapsed() ? 'Expand navigation' : 'Collapse navigation'"
+    (click)="toggleCollapsed.emit()"
+  >
+    <app-icon [name]="collapsed() ? 'angle-right' : 'angle-left'" />
+  </button>
+
+  <nav class="flex flex-col gap-7 lg:px-3" aria-label="Primary navigation" i18n-aria-label="@@layoutSidebarAriaLabel">
+    @for (section of navSections; track section.label) {
+      <div class="flex flex-col gap-1">
+        <p
+          class="px-2 text-xs font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400"
+          [class.lg:sr-only]="collapsed()"
+        >
+          {{ section.label }}
+        </p>
+
+        @for (item of section.items; track item.url) {
+          <div class="flex flex-col gap-1">
+            <a
+              class="flex items-center gap-3 rounded-sm border-l-2 border-transparent px-2 py-2.5 text-base font-medium text-slate-500 no-underline transition-colors duration-100 hover:bg-slate-50 hover:text-slate-950 lg:gap-2.5 lg:py-2.25 lg:text-sm dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"
+              routerLinkActive="bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 shadow-panel border-slate-600 dark:border-slate-500 dark:bg-slate-200 dark:bg-slate-700"
+              [routerLink]="item.url"
+              [routerLinkActiveOptions]="{ exact: item.exact }"
+              (click)="closeMenu()"
+              [attr.title]="collapsed() ? item.label : null"
+            >
+              <app-icon [name]="item.icon" class="w-4.5 shrink-0 text-lg opacity-70" />
+              <span [class.lg:hidden]="collapsed()">{{ item.label }}</span>
+            </a>
+
+            @if (item.children?.length && !collapsed()) {
+              <div class="ml-5 flex flex-col gap-1 border-l border-slate-950/10 pl-3 dark:border-white/10">
+                @for (child of item.children; track child.url) {
+                  <a
+                    class="flex items-center gap-2 rounded-sm px-2 py-2 text-sm font-medium text-slate-500 no-underline transition-colors duration-100 hover:bg-slate-50 hover:text-slate-950 dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"
+                    routerLinkActive="bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 shadow-panel dark:bg-slate-200 dark:bg-slate-700"
+                    [routerLink]="child.url"
+                    [routerLinkActiveOptions]="{ exact: child.exact }"
+                    (click)="closeMenu()"
+                  >
+                    <app-icon [name]="child.icon" class="w-4 shrink-0 text-sm opacity-70" />
+                    <span>{{ child.label }}</span>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </nav>
+
+  <div class="mt-auto border-t border-slate-950/10 pt-3 lg:p-3 dark:border-white/10" data-od-id="sidebar-footer">
+    <div
+      class="flex items-center gap-2.5 rounded-sm px-2 py-2.5"
+      [class.lg:justify-center]="collapsed()"
+      [attr.title]="collapsed() ? userEmail() : null"
+    >
+      <app-avatar [initials]="userInitials()" size="sm" />
+      <div class="min-w-0 flex-1" [class.lg:hidden]="collapsed()">
+        <p class="truncate text-sm font-semibold text-slate-950 dark:text-slate-50">{{ userEmail() }}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400" i18n="@@layoutSignedInStatus">Signed in</p>
+      </div>
+    </div>
+
+    <div class="mt-2 flex flex-col gap-1" [class.lg:items-center]="collapsed()">
+      <button
+        type="button"
+        class="flex w-full items-center gap-2.5 rounded-sm px-2 py-2.5 text-left text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-950 lg:py-2 dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"
+        [class.lg:justify-center]="collapsed()"
+        [class.lg:w-auto]="collapsed()"
+        (click)="toggleTheme()"
+        [attr.aria-label]="'Toggle light/dark theme'"
+        i18n-aria-label="@@themeSwitcherToggleTheme"
+        [attr.data-od-id]="'theme-toggle-sidebar'"
+      >
+        <app-icon [name]="isDark() ? 'sun' : 'moon'" class="shrink-0 text-base" />
+        <span [class.lg:hidden]="collapsed()">
+          @if (isDark()) {
+            <ng-container i18n="@@themeSwitcherLight">Light mode</ng-container>
+          } @else {
+            <ng-container i18n="@@themeSwitcherDark">Dark mode</ng-container>
+          }
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="flex w-full items-center gap-2.5 rounded-sm border-t border-slate-950/10 px-2 py-2.5 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 lg:mt-1 lg:border-t lg:py-2 dark:border-white/10 dark:text-red-400 dark:hover:bg-red-950/30 dark:hover:text-red-300"
+        [class.lg:justify-center]="collapsed()"
+        [class.lg:w-auto]="collapsed()"
+        [disabled]="signingOut()"
+        (click)="signOut()"
+        i18n-aria-label="@@layoutSignOutLabel"
+        [attr.aria-label]="'Sign out'"
+        [attr.data-od-id]="'sidebar-sign-out'"
+      >
+        @if (signingOut()) {
+          <span
+            class="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+            aria-hidden="true"
+          ></span>
+        } @else {
+          <app-icon name="sign-out" class="shrink-0 text-base" />
+        }
+        <span [class.lg:hidden]="collapsed()" i18n="@@layoutSignOutLabel">Sign out</span>
+      </button>
+    </div>
+  </div>
+</aside>

@@ -1,0 +1,47 @@
+{
+  "name": "site",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/web/site/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/web/site"],
+      "options": {
+        "command": "pnpm exec astro build --root apps/web/site",
+        "cwd": "."
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "pnpm exec astro dev --root apps/web/site --host 0.0.0.0 --port 4200",
+        "cwd": "."
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "pnpm exec astro build --root apps/web/site && pnpm exec astro preview --root apps/web/site --host 0.0.0.0 --port 4300",
+        "cwd": "."
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec astro check --root apps/web/site",
+        "cwd": "."
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/coverage/apps/web/site"],
+      "options": {
+        "command": "pnpm exec vitest run --config apps/web/site/vitest.config.ts --coverage",
+        "cwd": "."
+      }
+    }
+  }
+}

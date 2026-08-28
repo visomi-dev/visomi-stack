@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Passkey sign-up states</title>
+    <link rel="stylesheet" href="/public/tailwind.css" />
+  </head>
+  <body class="min-h-screen bg-white font-sans text-slate-950 dark:bg-slate-950 dark:text-slate-50">
+    <header class="border-b border-slate-950/10 dark:border-white/10">
+      <div class="mx-auto flex min-h-16 max-w-6xl items-center justify-between px-4 md:px-8">
+        <a
+          class="ui-focus-ring font-heading inline-flex min-h-11 items-center rounded-md text-lg font-bold no-underline"
+          href="/"
+        >
+          Themis
+        </a>
+        <span class="font-mono text-xs font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400">
+          Secure account setup
+        </span>
+      </div>
+    </header>
+
+    <main
+      class="mx-auto grid w-full max-w-6xl gap-10 px-4 py-8 md:px-8 md:py-14 lg:grid-cols-[1fr_27.5rem] lg:items-center"
+    >
+      <aside class="hidden max-w-lg lg:block" aria-label="Passkey explanation">
+        <p class="font-mono text-xs font-semibold tracking-widest text-slate-600 uppercase dark:text-slate-400">
+          Passkey first
+        </p>
+        <h2 class="font-heading mt-3 text-4xl leading-tight font-bold tracking-tight">Your device proves it is you.</h2>
+        <p class="mt-5 text-base leading-7 text-slate-500 dark:text-slate-400">
+          A passkey uses your device unlock. Themis never receives your fingerprint, face scan, or device PIN.
+        </p>
+        <ol class="mt-8 grid gap-5 text-sm" aria-label="Account setup steps">
+          <li class="flex gap-4">
+            <span class="font-mono text-slate-600 dark:text-slate-400">01</span
+            ><span>Save a passkey on this device or a security key.</span>
+          </li>
+          <li class="flex gap-4">
+            <span class="font-mono text-slate-500 dark:text-slate-400">02</span
+            ><span>Verify your email before the account becomes active.</span>
+          </li>
+        </ol>
+      </aside>
+
+      <article class="ui-panel-raised rounded-lg p-5 md:p-8">
+        <section data-state="default">
+          <header class="mb-7 space-y-2">
+            <p class="font-mono text-xs font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400">
+              Create your account
+            </p>
+            <h1 class="font-heading text-[1.75rem] leading-tight font-bold tracking-tight">Start with a passkey</h1>
+            <p class="text-[0.9375rem] leading-6 text-slate-500 dark:text-slate-400">
+              Enter your work email, then use your device unlock to create a passkey.
+            </p>
+          </header>
+          <form class="grid gap-5" data-submit-state="pending-verification">
+            <div class="grid gap-1.5">
+              <label class="text-sm font-semibold" for="sign-up-email">Work email</label>
+              <input
+                class="ui-focus-ring min-h-11 rounded-md border border-slate-950/10 bg-white px-3 text-base dark:border-white/10 dark:bg-slate-950"
+                id="sign-up-email"
+                name="email"
+                autocomplete="email"
+                type="email"
+                placeholder="maya@example.test"
+                required
+              />
+            </div>
+            <button
+              class="ui-focus-ring min-h-11 w-full rounded-md bg-slate-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-slate-500 dark:hover:bg-slate-400"
+              type="submit"
+            >
+              Create account with passkey
+            </button>
+          </form>
+          <div class="my-6 flex items-center gap-3" aria-hidden="true">
+            <span class="h-px flex-1 bg-slate-950/10 dark:bg-white/10"></span
+            ><span class="text-xs text-slate-500 dark:text-slate-400">or</span
+            ><span class="h-px flex-1 bg-slate-950/10 dark:bg-white/10"></span>
+          </div>
+          <button
+            class="ui-focus-ring min-h-11 w-full rounded-md border border-slate-950/15 px-4 py-2.5 text-sm font-semibold hover:bg-slate-100 dark:border-white/15 dark:hover:bg-slate-800"
+            type="button"
+            data-show-state="secondary-password"
+          >
+            Use a password instead
+          </button>
+          <p class="mt-4 text-center text-xs leading-5 text-slate-500 dark:text-slate-400">
+            Password setup is a secondary account access option.
+          </p>
+        </section>
+
+        <section data-state="secondary-password" hidden>
+          <header class="mb-7 space-y-2">
+            <button
+              class="ui-focus-ring -ml-2 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-slate-600 dark:text-slate-400"
+              type="button"
+              data-show-state="default"
+            >
+              ← Back to passkey
+            </button>
+            <h1 class="font-heading text-[1.75rem] leading-tight font-bold tracking-tight">
+              Create account with password
+            </h1>
+            <p class="text-[0.9375rem] leading-6 text-slate-500 dark:text-slate-400">
+              You chose password setup. You will still need to verify your email before signing in.
+            </p>
+          </header>
+          <form class="grid gap-5" data-submit-state="pending-verification">
+            <div class="grid gap-1.5">
+              <label class="text-sm font-semibold" for="password-email">Work email</label
+              ><input
+                class="ui-focus-ring min-h-11 rounded-md border border-slate-950/10 bg-white px-3 text-base dark:border-white/10 dark:bg-slate-950"
+                id="password-email"
+                autocomplete="email"
+                type="email"
+                placeholder="maya@example.test"
+                required
+              />
+            </div>
+            <div class="grid gap-1.5">
+              <label class="text-sm font-semibold" for="new-password">Password</label
+              ><input
+                class="ui-focus-ring min-h-11 rounded-md border border-slate-950/10 bg-white px-3 text-base dark:border-white/10 dark:bg-slate-950"
+                id="new-password"
+                autocomplete="new-password"
+                type="password"
+                required
+                aria-describedby="password-help"
+              />
+              <p id="password-help" class="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                Use at least 12 characters. Password managers and paste are supported.
+              </p>
+            </div>
+            <button
+              class="ui-focus-ring min-h-11 rounded-md bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white"
+              type="submit"
+            >
+              Create account with password
+            </button>
+          </form>
+        </section>
+
+        <section data-state="pending-verification" hidden>
+          <header class="space-y-3">
+            <span
+              class="inline-flex rounded-full bg-slate-600/10 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-400/10 dark:text-slate-300"
+              >Activation pending</span
+            >
+            <h1 class="font-heading text-[1.75rem] leading-tight font-bold tracking-tight">
+              Passkey saved. Verify your email.
+            </h1>
+            <p class="text-[0.9375rem] leading-6 text-slate-500 dark:text-slate-400">
+              We sent a 6-digit code to
+              <strong class="font-semibold text-slate-700 dark:text-slate-200">m•••@example.test</strong>. Your account
+              is not active and you cannot sign in yet.
+            </p>
+          </header>
+          <form class="mt-7 grid gap-5" data-submit-state="error">
+            <fieldset class="grid gap-2">
+              <legend class="text-sm font-semibold">Verification code</legend>
+              <div class="grid grid-cols-6 gap-2">
+                <input
+                  class="ui-focus-ring min-h-11 min-w-0 rounded-md border border-slate-950/10 bg-white text-center font-mono text-lg dark:border-white/10 dark:bg-slate-950"
+                  aria-label="Digit 1"
+                  inputmode="numeric"
+                  maxlength="1"
+                /><input
+                  class="ui-focus-ring min-h-11 min-w-0 rounded-md border border-slate-950/10 bg-white text-center font-mono text-lg dark:border-white/10 dark:bg-slate-950"
+                  aria-label="Digit 2"
+                  inputmode="numeric"
+                  maxlength="1"
+                /><input
+                  class="ui-focus-ring min-h-11 min-w-0 rounded-md border border-slate-950/10 bg-white text-center font-mono text-lg dark:border-white/10 dark:bg-slate-950"
+                  aria-label="Digit 3"
+                  inputmode="numeric"
+                  maxlength="1"
+                /><input
+                  class="ui-focus-ring min-h-11 min-w-0 rounded-md border border-slate-950/10 bg-white text-center font-mono text-lg dark:border-white/10 dark:bg-slate-950"
+                  aria-label="Digit 4"
+                  inputmode="numeric"
+                  maxlength="1"
+                /><input
+                  class="ui-focus-ring min-h-11 min-w-0 rounded-md border border-slate-950/10 bg-white text-center font-mono text-lg dark:border-white/10 dark:bg-slate-950"
+                  aria-label="Digit 5"
+                  inputmode="numeric"
+                  maxlength="1"
+                /><input
+                  class="ui-focus-ring min-h-11 min-w-0 rounded-md border border-slate-950/10 bg-white text-center font-mono text-lg dark:border-white/10 dark:bg-slate-950"
+                  aria-label="Digit 6"
+                  inputmode="numeric"
+                  maxlength="1"
+                />
+              </div>
+            </fieldset>
+            <button
+              class="ui-focus-ring min-h-11 rounded-md bg-slate-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-slate-500 dark:hover:bg-slate-400"
+              type="submit"
+            >
+              Verify and activate account
+            </button>
+          </form>
+          <div class="mt-5 flex flex-col gap-1 sm:flex-row sm:justify-between">
+            <button
+              class="ui-focus-ring min-h-11 rounded-md px-2 text-sm font-semibold text-slate-600 dark:text-slate-400"
+              type="button"
+            >
+              Resend code in 00:24</button
+            ><button
+              class="ui-focus-ring min-h-11 rounded-md px-2 text-sm font-semibold text-slate-600 dark:text-slate-300"
+              type="button"
+              data-show-state="default"
+            >
+              Start over
+            </button>
+          </div>
+        </section>
+
+        <section data-state="error" hidden>
+          <header class="space-y-3">
+            <span
+              class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              >Account not active</span
+            >
+            <h1 class="font-heading text-[1.75rem] leading-tight font-bold tracking-tight">
+              This verification code expired.
+            </h1>
+            <p class="text-[0.9375rem] leading-6 text-slate-500 dark:text-slate-400">
+              The old code cannot activate your account. Request a new code to continue securely.
+            </p>
+          </header>
+          <div
+            class="mt-6 rounded-lg border-l-4 border-red-600 bg-red-50 p-4 text-sm text-red-800 dark:border-red-400 dark:bg-red-500/10 dark:text-red-200"
+            role="alert"
+          >
+            <strong class="block font-semibold">Verification did not complete</strong
+            ><span>No account session was created.</span>
+          </div>
+          <div class="mt-6 grid gap-3">
+            <button
+              class="ui-focus-ring min-h-11 rounded-md bg-slate-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-slate-500 dark:hover:bg-slate-400"
+              type="button"
+              data-show-state="pending-verification"
+            >
+              Request a new code</button
+            ><button
+              class="ui-focus-ring min-h-11 rounded-md border border-slate-950/15 px-4 py-2.5 text-sm font-semibold dark:border-white/15"
+              type="button"
+              data-show-state="default"
+            >
+              Start account setup again
+            </button>
+          </div>
+        </section>
+      </article>
+    </main>
+    <script>
+      const showState = (state) => {
+        document.querySelectorAll('[data-state]').forEach((section) => {
+          section.hidden = section.dataset.state !== state;
+        });
+        document.body.dataset.previewState = state;
+        document.querySelector('[data-state="' + state + '"] h1')?.focus?.();
+      };
+      showState(document.body.dataset.previewState || 'default');
+      document
+        .querySelectorAll('[data-show-state]')
+        .forEach((control) => control.addEventListener('click', () => showState(control.dataset.showState)));
+      document.querySelectorAll('form[data-submit-state]').forEach((form) =>
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          showState(form.dataset.submitState);
+        }),
+      );
+    </script>
+  </body>
+</html>

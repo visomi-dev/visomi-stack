@@ -1,0 +1,17 @@
+---
+import LandingPage from '../../components/landing-page.astro';
+import { getSiteContent } from '../../content/site-content';
+import BaseLayout from '../../layouts/base-layout.astro';
+
+const copy = getSiteContent('es');
+---
+
+<BaseLayout
+  lang="es"
+  locale="es"
+  page="home"
+  title="Visomi Stack | Template de aplicaciones listo para producción"
+  description={copy.description}
+>
+  <LandingPage locale="es" />
+</BaseLayout>

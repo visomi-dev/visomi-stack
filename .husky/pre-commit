@@ -1,0 +1,16 @@
+export NX_DAEMON=false
+export PATH="$HOME/.local/share/fnm/node-versions/v24.14.1/installation/bin:$HOME/.local/share/pnpm:$PATH"
+
+# Run lint-staged: format staged files with prettier, then ESLint for staged TS/HTML.
+# This is fast because it only operates on changed files.
+pnpm exec lint-staged
+
+# Run focused lint + unit tests on the affected projects. There is no Git
+# base to compare against during the repository's initial commit.
+if git rev-parse --verify main >/dev/null 2>&1; then
+  pnpm exec nx affected -t lint
+  pnpm exec nx affected -t test
+else
+  printf '%s\n' 'Skipping affected Nx checks because this is the initial commit.'
+fi
+# pnpm exec nx affected -t e2e

@@ -1,0 +1,7 @@
+@if (routerLink(); as link) {
+  <a [attr.aria-label]="ariaLabel()" [class]="classes()" [routerLink]="link">{{ text() }}</a>
+} @else {
+  <a [attr.aria-label]="ariaLabel()" [attr.href]="href()" [attr.target]="target()" [class]="classes()">
+    {{ text() }}
+  </a>
+}

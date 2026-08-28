@@ -1,0 +1,22 @@
+<label [class]="classes()" tabindex="0" (keydown)="handleKeydown($event)">
+  <input
+    class="absolute inset-0 size-full opacity-0"
+    data-slot="control"
+    type="radio"
+    [attr.aria-invalid]="invalid()"
+    [checked]="checked()"
+    [disabled]="disabled()"
+    [id]="inputId()"
+    [name]="name()"
+    [required]="required()"
+    [value]="optionValue()"
+    (blur)="onBlur()"
+    (click)="select()"
+  />
+
+  <ng-content />
+
+  <span [class]="markerClasses()" aria-hidden="true">
+    <app-icon name="check" />
+  </span>
+</label>
