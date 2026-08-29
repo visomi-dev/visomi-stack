@@ -76,73 +76,75 @@
       }
     </section>
 
-    @if (passkeyState() === 'fallback') {
-      <app-form class="grid w-full max-w-sm grid-cols-1 gap-4" [form]="signUpForm">
-        <app-field>
-          <app-label for="sign-up-email" i18n="@@signUpEmailLabel">Email</app-label>
-          <app-input
-            autocomplete="email"
-            [formField]="signUpForm.email"
-            required
-            type="email"
-            placeholder="name@organization.com"
-            controlId="sign-up-email"
-            name="email"
-          />
-          <app-error-message controlId="sign-up-email-error" i18n="@@signUpEmailErrorInvalid">{{
-            emailError()
-          }}</app-error-message>
-        </app-field>
+    <app-form
+      class="grid w-full max-w-sm grid-cols-1 gap-4"
+      [form]="signUpForm"
+      [hidden]="passkeyState() !== 'fallback'"
+    >
+      <app-field>
+        <app-label for="sign-up-email" i18n="@@signUpEmailLabel">Email</app-label>
+        <app-input
+          autocomplete="email"
+          [formField]="signUpForm.email"
+          required
+          type="email"
+          placeholder="name@organization.com"
+          controlId="sign-up-email"
+          name="email"
+        />
+        <app-error-message controlId="sign-up-email-error" i18n="@@signUpEmailErrorInvalid">{{
+          emailError()
+        }}</app-error-message>
+      </app-field>
 
-        <app-field>
-          <app-label for="sign-up-password" i18n="@@signUpPasswordLabel">Password</app-label>
-          <app-password-input
-            autocomplete="new-password"
-            [formField]="signUpForm.password"
-            required
-            minLength="8"
-            placeholder="***************"
-            controlId="sign-up-password"
-            name="password"
-          />
-          <app-password-strength [password]="passwordValue" />
-          <app-error-message controlId="sign-up-password-error" i18n="@@signUpPasswordErrorMinlength">{{
-            passwordError()
-          }}</app-error-message>
-        </app-field>
+      <app-field>
+        <app-label for="sign-up-password" i18n="@@signUpPasswordLabel">Password</app-label>
+        <app-password-input
+          autocomplete="new-password"
+          [formField]="signUpForm.password"
+          required
+          minLength="8"
+          placeholder="***************"
+          controlId="sign-up-password"
+          name="password"
+        />
+        <app-password-strength [password]="passwordValue" />
+        <app-error-message controlId="sign-up-password-error" i18n="@@signUpPasswordErrorMinlength">{{
+          passwordError()
+        }}</app-error-message>
+      </app-field>
 
-        <app-field>
-          <app-label for="sign-up-confirm-password" i18n="@@signUpConfirmPasswordLabel">Confirm password</app-label>
-          <app-password-input
-            autocomplete="new-password"
-            [formField]="signUpForm.confirmPassword"
-            required
-            minLength="8"
-            placeholder="***************"
-            controlId="sign-up-confirm-password"
-            name="confirmPassword"
-          />
-          <app-error-message controlId="sign-up-confirm-password-error" i18n="@@signUpConfirmPasswordErrorMismatch">{{
-            signUpForm.confirmPassword().errors()[0]?.message ?? ''
-          }}</app-error-message>
-        </app-field>
+      <app-field>
+        <app-label for="sign-up-confirm-password" i18n="@@signUpConfirmPasswordLabel">Confirm password</app-label>
+        <app-password-input
+          autocomplete="new-password"
+          [formField]="signUpForm.confirmPassword"
+          required
+          minLength="8"
+          placeholder="***************"
+          controlId="sign-up-confirm-password"
+          name="confirmPassword"
+        />
+        <app-error-message controlId="sign-up-confirm-password-error" i18n="@@signUpConfirmPasswordErrorMismatch">{{
+          signUpForm.confirmPassword().errors()[0]?.message ?? ''
+        }}</app-error-message>
+      </app-field>
 
-        <app-button
-          data-od-id="submit"
-          data-slot="submit"
-          i18n="@@signUpSubmitButton"
-          tone="accent"
-          type="submit"
-          size="lg"
-          fullWidth
-          [loading]="submitting()"
-          >Create account</app-button
-        >
-        @if (errorMessage()) {
-          <app-alert tone="danger" variant="auth" i18n="@@signUpAuthFailedAlert">{{ errorMessage() }}</app-alert>
-        }
-      </app-form>
-    }
+      <app-button
+        data-od-id="submit"
+        data-slot="submit"
+        i18n="@@signUpSubmitButton"
+        tone="accent"
+        type="submit"
+        size="lg"
+        fullWidth
+        [loading]="submitting()"
+        >Create account</app-button
+      >
+      @if (errorMessage()) {
+        <app-alert tone="danger" variant="auth" i18n="@@signUpAuthFailedAlert">{{ errorMessage() }}</app-alert>
+      }
+    </app-form>
     <button
       type="button"
       class="mb-6 w-full text-center text-sm font-semibold text-slate-600 underline-offset-4 hover:underline dark:text-slate-400"
