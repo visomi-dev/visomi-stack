@@ -8,236 +8,252 @@ const { locale } = Astro.props;
 const isEnglish = locale === 'en';
 const copy = isEnglish
   ? {
-      title: 'Visomi Stack | Build faster on a production-ready foundation',
-      eyebrow: 'VISOMI STACK / FULL-STACK TEMPLATE',
-      headline: 'Ship product ideas without rebuilding the platform first.',
-      body: 'A focused Nx monorepo for teams that need a serious web foundation: Angular, Astro, Node, PostgreSQL, Redis, passkeys, encrypted storage, E2E coverage, and Themis workflow automation.',
-      primary: 'Start building',
-      secondary: 'Explore the architecture',
-      architecture: 'One repository. Clear runtime boundaries.',
+      eyebrow: 'VISOMI STACK / APPLICATION CONTROL PLANE',
+      headline: 'The foundation between an idea and a product people can trust.',
+      intro:
+        'Visomi Stack is a reusable full-stack template for teams who want to ship product work without rebuilding auth, runtimes, security boundaries, and delivery discipline from zero.',
+      primary: 'Open the app',
+      secondary: 'See how it works',
+      signal: 'A working system, not a starter folder',
+      signalBody:
+        'Every layer arrives connected: public web, authenticated app, API, background jobs, realtime events, encrypted local storage, and an AI-native workflow for the team building it.',
+      stats: [
+        ['07', 'runtime surfaces'],
+        ['01', 'shared contract'],
+        ['0', 'plaintext cloud vault'],
+      ],
+      architectureLabel: '01 / THE SHAPE',
+      architectureTitle: 'One stack. Deliberate boundaries.',
       architectureBody:
-        'Public marketing, authenticated product surfaces, API, background jobs, realtime delivery, and local workflow state are designed to work together without becoming one tangled application.',
-      cards: [
-        [
-          'Passkey-first auth',
-          'WebAuthn is the default path, with verified email and explicit password fallback when users need it.',
-        ],
-        [
-          'Zero-knowledge data',
-          'Product data is encrypted before sync. Cloud runtimes validate and transport opaque envelopes.',
-        ],
-        [
-          'Themis-powered delivery',
-          'Projects, work items, evidence, verification, and independent review stay local in .themis.',
-        ],
+        'The stack keeps the public experience fast, the product experience authenticated, and every backend runtime focused. You can replace a domain without untangling the platform around it.',
+      architectureCards: [
+        ['Public surface', 'Astro', 'Marketing, documentation, SEO, and localized content stay lightweight and independently deployable.'],
+        ['Product surface', 'Angular SSR', 'A serious authenticated shell with passkey-first access, activation, security, and responsive UI primitives.'],
+        ['Runtime surface', 'Node + Nx', 'Express API, OpenAPI contracts, BullMQ jobs, Socket.IO realtime, and shared libraries live in one visible graph.'],
       ],
-      included: 'Included from day one',
-      includedBody:
-        'The stack gives every new product the same quality gates and operational shape from its first commit.',
-      items: [
-        'Angular SSR application',
-        'Astro public website',
-        'Express API and OpenAPI contracts',
-        'BullMQ worker and Socket.IO realtime',
-        'PostgreSQL, Drizzle, Redis, Docker',
-        'Playwright auth and gateway coverage',
-        'OpenCode agents, skills, commands, and tools',
+      flowLabel: 'REQUEST / EVENT FLOW',
+      flowTitle: 'A clear path from browser to durable work.',
+      flowSteps: [
+        ['01', 'Browser', 'A fast public site or authenticated Angular app receives the user intent.'],
+        ['02', 'Boundary', 'The API validates identity, capability, schema, and tenant context before work moves on.'],
+        ['03', 'Runtime', 'Workers and realtime subscribers process asynchronous work without blocking the request path.'],
+        ['04', 'Vault', 'Sensitive product data is encrypted locally and synchronized as opaque envelopes.'],
       ],
-      finalTitle: 'Your product starts here.',
-      finalBody: 'Clone the foundation, define your domain, and let Themis keep the work visible and verifiable.',
-      footer: 'Visomi Stack. A reusable foundation for serious products.',
+      capabilitiesLabel: '02 / INCLUDED',
+      capabilitiesTitle: 'The expensive decisions are already made.',
+      capabilitiesBody:
+        'Start with a platform that has opinions where quality matters and room for your domain where differentiation matters.',
+      capabilities: [
+        ['Passkey-first identity', 'WebAuthn is the primary sign-in path. Verified email, device verification, and explicit password fallback complete the recovery story.'],
+        ['Zero-knowledge persistence', 'WebCrypto and IndexedDB keep protected content on the client. The cloud can coordinate without needing to read it.'],
+        ['Runtime orchestration', 'API, worker, realtime, PostgreSQL, Drizzle, Redis, Docker, and local development compose into one operational shape.'],
+        ['AI-native delivery', 'OpenCode agents, skills, commands, and tools live beside the code. Themis keeps projects, evidence, reviews, and decisions auditable.'],
+        ['Testable by default', 'Angular unit tests, API contracts, Playwright auth flows, gateway coverage, visual snapshots, and focused Nx targets are included.'],
+        ['Ready to become yours', 'Keep the infrastructure. Replace the product domain, screens, policies, and data model with the thing only your team can build.'],
+      ],
+      securityLabel: '03 / TRUST MODEL',
+      securityTitle: 'Privacy is an architectural boundary, not a footer promise.',
+      securityBody:
+        'Protected content is encrypted before it leaves the device. API responses expose only the projection a client is allowed to see. Capability checks, device identity, and opaque sync contracts make the trust model explicit.',
+      securityItems: ['Client-side encryption', 'Opaque sync envelopes', 'Scoped capabilities', 'Device-bound identity'],
+      workflowLabel: '04 / DELIVERY LOOP',
+      workflowTitle: 'Build with the work in the open.',
+      workflowBody:
+        'Themis turns a repository into a visible delivery system. Define the work, claim one slice, attach implementation and verification evidence, then request an independent review before it is done.',
+      workflowCode: [
+        ['themis work claim', 'THM-042'],
+        ['themis run start', 'implementation'],
+        ['themis evidence add', 'verification'],
+        ['themis review request', 'independent'],
+      ],
+      finalKicker: 'YOUR DOMAIN STARTS HERE',
+      finalTitle: 'Stop rebuilding the runway.',
+      finalBody: 'Clone the stack, name the product, and spend your next sprint on the part that makes it worth using.',
+      cta: 'Start with Visomi Stack',
+      footer: 'Visomi Stack / A reusable foundation for serious products.',
     }
   : {
-      title: 'Visomi Stack | Construye sobre una base lista para producción',
-      eyebrow: 'VISOMI STACK / TEMPLATE FULL-STACK',
-      headline: 'Lanza ideas de producto sin reconstruir primero toda la plataforma.',
-      body: 'Un monorepo Nx enfocado para equipos que necesitan una base web seria: Angular, Astro, Node, PostgreSQL, Redis, passkeys, almacenamiento cifrado, cobertura E2E y automatización de workflow con Themis.',
-      primary: 'Empezar a construir',
-      secondary: 'Explorar la arquitectura',
-      architecture: 'Un repositorio. Límites de runtime claros.',
+      eyebrow: 'VISOMI STACK / CONTROL PLANE DE APLICACIONES',
+      headline: 'La base entre una idea y un producto en el que se puede confiar.',
+      intro:
+        'Visomi Stack es un template full-stack reusable para equipos que quieren lanzar producto sin reconstruir auth, runtimes, límites de seguridad y disciplina de entrega desde cero.',
+      primary: 'Abrir la aplicación',
+      secondary: 'Ver cómo funciona',
+      signal: 'Un sistema funcionando, no una carpeta de inicio',
+      signalBody:
+        'Cada capa llega conectada: web pública, app autenticada, API, jobs, eventos realtime, almacenamiento local cifrado y un workflow AI-native para el equipo que lo construye.',
+      stats: [
+        ['07', 'superficies de runtime'],
+        ['01', 'contrato compartido'],
+        ['0', 'vault cloud en plaintext'],
+      ],
+      architectureLabel: '01 / LA FORMA',
+      architectureTitle: 'Un stack. Límites deliberados.',
       architectureBody:
-        'Marketing público, producto autenticado, API, jobs, realtime y estado local de workflow están diseñados para trabajar juntos sin convertirse en una aplicación imposible de mantener.',
-      cards: [
-        [
-          'Auth passkey-first',
-          'WebAuthn es el camino principal, con email verificado y password como fallback explícito.',
-        ],
-        [
-          'Datos zero-knowledge',
-          'Los datos de producto se cifran antes de sincronizarse. El cloud transporta envelopes opacos.',
-        ],
-        [
-          'Workflow potenciado por Themis',
-          'Proyectos, work items, evidencias, verificación y revisión viven localmente en .themis.',
-        ],
+        'El stack mantiene rápida la experiencia pública, autenticado el producto y enfocado cada runtime backend. Puedes reemplazar un dominio sin desenredar la plataforma que lo rodea.',
+      architectureCards: [
+        ['Superficie pública', 'Astro', 'Marketing, documentación, SEO y contenido localizado se mantienen ligeros y desplegables de forma independiente.'],
+        ['Superficie de producto', 'Angular SSR', 'Un shell autenticado serio con acceso passkey-first, activation, seguridad y primitives UI responsive.'],
+        ['Superficie de runtime', 'Node + Nx', 'API Express, contratos OpenAPI, jobs BullMQ, realtime Socket.IO y librerías compartidas viven en un grafo visible.'],
       ],
-      included: 'Incluido desde el primer día',
-      includedBody:
-        'Cada nuevo producto recibe los mismos quality gates y la misma forma operativa desde su primer commit.',
-      items: [
-        'Aplicación Angular SSR',
-        'Website público con Astro',
-        'API Express y contratos OpenAPI',
-        'Worker BullMQ y realtime Socket.IO',
-        'PostgreSQL, Drizzle, Redis y Docker',
-        'Cobertura Playwright de auth y gateway',
-        'Agents, skills, commands y tools de OpenCode',
+      flowLabel: 'FLUJO DE REQUEST / EVENTO',
+      flowTitle: 'Un camino claro del browser al trabajo durable.',
+      flowSteps: [
+        ['01', 'Browser', 'Un sitio público rápido o una app Angular autenticada recibe la intención del usuario.'],
+        ['02', 'Boundary', 'La API valida identidad, capability, schema y contexto de tenant antes de continuar.'],
+        ['03', 'Runtime', 'Workers y subscribers realtime procesan el trabajo asíncrono sin bloquear el request path.'],
+        ['04', 'Vault', 'Los datos sensibles se cifran localmente y se sincronizan como envelopes opacos.'],
       ],
-      finalTitle: 'Tu producto empieza aquí.',
-      finalBody: 'Clona la base, define tu dominio y deja que Themis mantenga el trabajo visible y verificable.',
-      footer: 'Visomi Stack. Una base reusable para productos serios.',
+      capabilitiesLabel: '02 / INCLUIDO',
+      capabilitiesTitle: 'Las decisiones costosas ya están tomadas.',
+      capabilitiesBody:
+        'Empieza con una plataforma con opiniones donde importa la calidad y espacio para tu dominio donde importa diferenciarse.',
+      capabilities: [
+        ['Identidad passkey-first', 'WebAuthn es el camino principal. Email verificado, device verification y password fallback explícito completan la recuperación.'],
+        ['Persistencia zero-knowledge', 'WebCrypto e IndexedDB mantienen el contenido protegido en el cliente. El cloud puede coordinar sin leerlo.'],
+        ['Orquestación de runtime', 'API, worker, realtime, PostgreSQL, Drizzle, Redis, Docker y desarrollo local componen una forma operativa única.'],
+        ['Entrega AI-native', 'Agents, skills, commands y tools de OpenCode viven junto al código. Themis mantiene work items, evidencias, revisiones y decisiones auditables.'],
+        ['Testeable desde el inicio', 'Unit tests Angular, contratos API, flujos auth Playwright, gateway coverage, snapshots visuales y targets Nx enfocados.'],
+        ['Listo para ser tuyo', 'Conserva la infraestructura. Reemplaza dominio, pantallas, políticas y modelo de datos por aquello que solo tu equipo puede construir.'],
+      ],
+      securityLabel: '03 / MODELO DE CONFIANZA',
+      securityTitle: 'La privacidad es un límite arquitectónico, no una promesa en el footer.',
+      securityBody:
+        'El contenido protegido se cifra antes de salir del dispositivo. Las respuestas de API exponen solo la proyección permitida. Capabilities, identidad de dispositivo y contratos de sync opaco hacen explícito el modelo de confianza.',
+      securityItems: ['Cifrado client-side', 'Envelopes de sync opacos', 'Capabilities acotadas', 'Identidad ligada al device'],
+      workflowLabel: '04 / CICLO DE ENTREGA',
+      workflowTitle: 'Construye con el trabajo a la vista.',
+      workflowBody:
+        'Themis convierte un repositorio en un sistema de entrega visible. Define el trabajo, reclama un slice, adjunta evidencia de implementación y verificación, y pide una revisión independiente antes de darlo por terminado.',
+      workflowCode: [
+        ['themis work claim', 'THM-042'],
+        ['themis run start', 'implementation'],
+        ['themis evidence add', 'verification'],
+        ['themis review request', 'independent'],
+      ],
+      finalKicker: 'TU DOMINIO EMPIEZA AQUÍ',
+      finalTitle: 'Deja de reconstruir la pista de despegue.',
+      finalBody: 'Clona el stack, nombra el producto y dedica tu próximo sprint a la parte que hace que merezca la pena usarlo.',
+      cta: 'Empezar con Visomi Stack',
+      footer: 'Visomi Stack / Una base reusable para productos serios.',
     };
 ---
 
-<main class="min-h-screen bg-white text-slate-950 dark:bg-slate-950 dark:text-slate-50">
-  <nav
-    class="sticky top-0 z-50 border-b border-slate-950/10 bg-white/85 px-4 py-4 backdrop-blur-md md:px-12 dark:border-white/10 dark:bg-slate-950/85"
-  >
+<main class="min-h-screen overflow-hidden bg-slate-950 text-slate-50 selection:bg-teal-300 selection:text-slate-950">
+  <nav class="site-nav sticky top-0 z-50 border-b border-white/10 bg-slate-950/85 px-4 py-4 backdrop-blur-xl md:px-10">
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-4">
-      <a
-        href={locale === 'en' ? '/en/' : '/es/'}
-        class="font-mono text-sm font-bold tracking-[0.22em] text-slate-950 uppercase dark:text-slate-50"
-        >visomi<span class="text-slate-500">/</span>stack</a
-      >
+      <a href={locale === 'en' ? '/en/' : '/es/'} class="group flex items-center gap-3 font-mono text-sm font-bold tracking-[0.2em] uppercase">
+        <span class="grid h-7 w-7 place-items-center rounded-sm border border-teal-300/60 text-xs text-teal-300 transition-transform group-hover:rotate-45">+</span>
+        <span>visomi<span class="text-slate-500">/</span>stack</span>
+      </a>
       <div class="flex items-center gap-2 sm:gap-5">
+        <a href="#architecture" class="hidden text-xs font-semibold text-slate-400 transition-colors hover:text-white md:inline">{isEnglish ? 'Architecture' : 'Arquitectura'}</a>
+        <a href="#capabilities" class="hidden text-xs font-semibold text-slate-400 transition-colors hover:text-white md:inline">{isEnglish ? 'Included' : 'Incluido'}</a>
         <LocaleSwitcher locale={locale} />
         <ThemeSwitcher />
-        <a
-          href={locale === 'en' ? '/app/en/' : '/app/es/'}
-          class="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-slate-50 dark:text-slate-950 dark:hover:bg-white"
-          >{copy.primary}</a
-        >
+        <a href={locale === 'en' ? '/app/en/' : '/app/es/'} class="rounded-sm bg-teal-300 px-4 py-2 text-xs font-bold text-slate-950 transition-colors hover:bg-teal-200">{copy.primary}</a>
       </div>
     </div>
   </nav>
 
-  <section
-    class="mx-auto grid min-h-[78vh] max-w-7xl items-center gap-12 px-4 py-16 md:grid-cols-[1.15fr_0.85fr] md:px-12 md:py-24"
-  >
-    <div>
-      <p class="mb-6 font-mono text-xs font-bold tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400">
-        {copy.eyebrow}
-      </p>
-      <h1
-        class="font-heading max-w-4xl text-5xl leading-[0.98] font-extrabold tracking-[-0.055em] md:text-7xl lg:text-8xl"
-      >
-        {copy.headline}
-      </h1>
-      <p class="mt-8 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">{copy.body}</p>
-      <div class="mt-10 flex flex-col gap-3 sm:flex-row">
-        <a
-          href={locale === 'en' ? '/app/en/' : '/app/es/'}
-          class="rounded-md bg-slate-950 px-6 py-3 text-center font-semibold text-white hover:bg-slate-700 dark:bg-slate-50 dark:text-slate-950 dark:hover:bg-white"
-          >{copy.primary}</a
-        >
-        <a
-          href="#architecture"
-          class="rounded-md border border-slate-950/15 px-6 py-3 text-center font-semibold text-slate-700 hover:bg-slate-100 dark:border-white/15 dark:text-slate-200 dark:hover:bg-slate-900"
-          >{copy.secondary}</a
-        >
-      </div>
-    </div>
-    <div class="rounded-lg bg-slate-100 p-4 dark:bg-slate-900">
-      <div
-        class="rounded-md border border-slate-950/10 bg-white p-5 font-mono text-xs dark:border-white/10 dark:bg-slate-950"
-      >
-        <div class="mb-6 flex items-center justify-between text-slate-500">
-          <span>runtime-map</span><span>ready</span>
+  <section class="relative border-b border-white/10 px-4 py-20 md:px-10 md:py-32">
+    <div class="hero-grid pointer-events-none absolute inset-0 opacity-50"></div>
+    <div class="relative mx-auto grid max-w-7xl items-end gap-14 lg:grid-cols-[1.1fr_0.9fr]">
+      <div class="reveal-up">
+        <p class="mb-7 font-mono text-[0.65rem] font-bold tracking-[0.25em] text-teal-300 uppercase">{copy.eyebrow}</p>
+        <h1 class="font-heading max-w-5xl text-5xl leading-[0.94] font-extrabold tracking-[-0.07em] text-white md:text-7xl lg:text-[6.8rem]">{copy.headline}</h1>
+        <p class="mt-8 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">{copy.intro}</p>
+        <div class="mt-10 flex flex-col gap-3 sm:flex-row">
+          <a href={locale === 'en' ? '/app/en/' : '/app/es/'} class="rounded-sm bg-teal-300 px-6 py-3 text-center text-sm font-bold text-slate-950 transition-transform hover:-translate-y-0.5 hover:bg-teal-200">{copy.primary} <span aria-hidden="true">↗</span></a>
+          <a href="#architecture" class="rounded-sm border border-white/20 px-6 py-3 text-center text-sm font-bold text-slate-200 transition-colors hover:border-teal-300/70 hover:text-teal-200">{copy.secondary} <span aria-hidden="true">↓</span></a>
         </div>
-        <div class="grid gap-2">
-          {
-            [
-              'site / Astro',
-              'app / Angular SSR',
-              'api / Express + OpenAPI',
-              'worker / BullMQ',
-              'realtime / Socket.IO',
-              'vault / WebCrypto + IndexedDB',
-              'workflow / .themis + OpenCode',
-            ].map((item, index) => (
-              <div class="flex items-center gap-3 rounded-md bg-slate-100 px-3 py-3 dark:bg-slate-900">
-                <>
-                  <span class="text-slate-400">0{index + 1}</span>
-                  <span>{item}</span>
-                </>
-              </div>
-            ))
-          }
+      </div>
+
+      <div class="reveal-up relative lg:pb-3" style="animation-delay: 120ms">
+        <div class="absolute -inset-5 bg-teal-300/10 blur-3xl"></div>
+        <div class="relative border border-white/15 bg-slate-900/90 p-5 shadow-2xl shadow-black/40 backdrop-blur-sm md:p-7">
+          <div class="mb-10 flex items-center justify-between border-b border-white/10 pb-4 font-mono text-[0.65rem] tracking-[0.15em] text-slate-500 uppercase"><span>stack.signal</span><span class="text-teal-300">● online</span></div>
+          <p class="max-w-sm font-heading text-3xl leading-tight font-bold tracking-tight text-white">{copy.signal}</p>
+          <p class="mt-5 text-sm leading-6 text-slate-400">{copy.signalBody}</p>
+          <div class="mt-9 grid grid-cols-3 gap-3 border-t border-white/10 pt-5">
+            {copy.stats.map(([value, label]) => <div><p class="font-mono text-2xl font-bold text-teal-300">{value}</p><p class="mt-1 text-[0.6rem] leading-4 text-slate-500 uppercase">{label}</p></div>)}
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section
-    id="architecture"
-    class="border-y border-slate-950/10 bg-slate-50 px-4 py-16 md:px-12 md:py-24 dark:border-white/10 dark:bg-slate-900/60"
-  >
+  <section id="architecture" class="scroll-mt-20 border-b border-white/10 bg-slate-900/40 px-4 py-20 md:px-10 md:py-28">
     <div class="mx-auto max-w-7xl">
-      <p class="font-mono text-xs font-bold tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400">
-        01 / architecture
-      </p>
-      <h2 class="font-heading mt-4 max-w-3xl text-4xl font-extrabold tracking-tight md:text-6xl">
-        {copy.architecture}
-      </h2>
-      <p class="mt-6 max-w-3xl text-lg leading-8 text-slate-600 dark:text-slate-300">{copy.architectureBody}</p>
-      <div class="mt-12 grid gap-4 md:grid-cols-3 md:gap-6">
-        {
-          copy.cards.map(([title, body]) => (
-            <article class="rounded-lg bg-white p-6 dark:bg-slate-950">
-              <>
-                <h3 class="font-heading text-xl font-bold">{title}</h3>
-                <p class="mt-4 leading-7 text-slate-600 dark:text-slate-300">{body}</p>
-              </>
-            </article>
-          ))
-        }
+      <div class="max-w-3xl">
+        <p class="font-mono text-[0.65rem] font-bold tracking-[0.25em] text-teal-300 uppercase">{copy.architectureLabel}</p>
+        <h2 class="font-heading mt-5 text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-6xl">{copy.architectureTitle}</h2>
+        <p class="mt-6 text-lg leading-8 text-slate-400">{copy.architectureBody}</p>
+      </div>
+      <div class="mt-14 grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-3">
+        {copy.architectureCards.map(([label, technology, body], index) => (
+          <article class="bg-slate-950 p-6 transition-colors hover:bg-slate-900 md:p-8">
+            <div class="flex items-center justify-between font-mono text-[0.62rem] tracking-[0.18em] text-slate-500"><span>0{index + 1}</span><span>{label}</span></div>
+            <h3 class="mt-14 font-heading text-3xl font-bold tracking-tight text-white">{technology}</h3>
+            <p class="mt-4 text-sm leading-6 text-slate-400">{body}</p>
+          </article>
+        ))}
       </div>
     </div>
   </section>
 
-  <section class="mx-auto grid max-w-7xl gap-12 px-4 py-16 md:grid-cols-[0.8fr_1.2fr] md:px-12 md:py-24">
-    <div>
-      <p class="font-mono text-xs font-bold tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400">
-        02 / foundation
-      </p><h2 class="font-heading mt-4 text-4xl font-extrabold tracking-tight md:text-5xl">{copy.included}</h2><p
-        class="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300"
-      >
-        {copy.includedBody}
-      </p>
+  <section class="border-b border-white/10 px-4 py-20 md:px-10 md:py-28">
+    <div class="mx-auto max-w-7xl">
+      <div class="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div class="max-w-2xl"><p class="font-mono text-[0.65rem] font-bold tracking-[0.25em] text-teal-300 uppercase">{copy.flowLabel}</p><h2 class="font-heading mt-5 text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-5xl">{copy.flowTitle}</h2></div>
+        <span class="font-mono text-xs text-slate-500">browser → boundary → runtime → vault</span>
+      </div>
+      <div class="mt-14 grid border-l border-teal-300/50 md:grid-cols-4 md:border-l-0 md:border-t">
+        {copy.flowSteps.map(([number, title, body]) => (
+          <article class="relative border-b border-white/10 py-6 pl-6 md:border-b-0 md:border-r md:px-6 md:pt-8">
+            <span class="absolute -left-[5px] top-8 h-2 w-2 rounded-full bg-teal-300 md:-top-[5px] md:left-6"></span>
+            <p class="font-mono text-xs text-teal-300">{number}</p><h3 class="mt-7 font-heading text-xl font-bold text-white">{title}</h3><p class="mt-3 text-sm leading-6 text-slate-400">{body}</p>
+          </article>
+        ))}
+      </div>
     </div>
-    <ul class="grid gap-3 sm:grid-cols-2">
-      {
-        copy.items.map((item, index) => (
-          <li class="flex gap-4 border-b border-slate-950/10 py-4 text-sm font-semibold dark:border-white/10">
-            <>
-              <span class="font-mono text-slate-400">{String(index + 1).padStart(2, '0')}</span>
-              <span>{item}</span>
-            </>
-          </li>
-        ))
-      }
-    </ul>
   </section>
 
-  <section
-    class="border-t border-slate-950/10 bg-slate-950 px-4 py-20 text-center text-white md:px-12 md:py-28 dark:border-white/10"
-  >
-    <h2 class="font-heading text-4xl font-extrabold tracking-tight md:text-6xl">{copy.finalTitle}</h2><p
-      class="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-300"
-    >
-      {copy.finalBody}
-    </p><a
-      href={locale === 'en' ? '/app/en/' : '/app/es/'}
-      class="mt-9 inline-flex rounded-md bg-white px-6 py-3 font-semibold text-slate-950 hover:bg-slate-200"
-      >{copy.primary}</a
-    >
+  <section id="capabilities" class="scroll-mt-20 border-b border-white/10 bg-slate-100 px-4 py-20 text-slate-950 md:px-10 md:py-28">
+    <div class="mx-auto max-w-7xl">
+      <div class="grid gap-10 md:grid-cols-[0.8fr_1.2fr] md:gap-20">
+        <div><p class="font-mono text-[0.65rem] font-bold tracking-[0.25em] text-teal-700 uppercase">{copy.capabilitiesLabel}</p><h2 class="font-heading mt-5 text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-6xl">{copy.capabilitiesTitle}</h2><p class="mt-6 text-lg leading-8 text-slate-600">{copy.capabilitiesBody}</p></div>
+        <div class="grid gap-px overflow-hidden border border-slate-950/15 bg-slate-950/15 sm:grid-cols-2">
+          {copy.capabilities.map(([title, body], index) => <article class="bg-slate-100 p-6 transition-colors hover:bg-white"><p class="font-mono text-xs text-teal-700">0{index + 1}</p><h3 class="mt-8 font-heading text-xl font-bold">{title}</h3><p class="mt-3 text-sm leading-6 text-slate-600">{body}</p></article>)}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-b border-white/10 bg-teal-300 px-4 py-20 text-slate-950 md:px-10 md:py-28">
+    <div class="mx-auto grid max-w-7xl gap-12 md:grid-cols-[1.1fr_0.9fr] md:items-end">
+      <div><p class="font-mono text-[0.65rem] font-bold tracking-[0.25em] text-teal-900 uppercase">{copy.securityLabel}</p><h2 class="font-heading mt-5 max-w-3xl text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-6xl">{copy.securityTitle}</h2><p class="mt-6 max-w-2xl text-lg leading-8 text-teal-950/75">{copy.securityBody}</p></div>
+      <ul class="grid gap-3 sm:grid-cols-2 md:grid-cols-1">{copy.securityItems.map((item, index) => <li class="flex items-center gap-3 border-t border-teal-950/20 py-3 text-sm font-bold"><span class="font-mono text-xs text-teal-800">0{index + 1}</span>{item}</li>)}</ul>
+    </div>
+  </section>
+
+  <section class="border-b border-white/10 px-4 py-20 md:px-10 md:py-28">
+    <div class="mx-auto grid max-w-7xl gap-12 md:grid-cols-[0.9fr_1.1fr] md:items-center">
+      <div><p class="font-mono text-[0.65rem] font-bold tracking-[0.25em] text-teal-300 uppercase">{copy.workflowLabel}</p><h2 class="font-heading mt-5 text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-6xl">{copy.workflowTitle}</h2><p class="mt-6 text-lg leading-8 text-slate-400">{copy.workflowBody}</p></div>
+      <div class="border border-white/15 bg-black/30 p-5 font-mono text-xs shadow-2xl shadow-black/20 md:p-8">
+        <div class="mb-7 flex justify-between border-b border-white/10 pb-4 text-slate-500"><span>.themis / delivery.log</span><span>tail -f</span></div>
+        <div class="space-y-5">{copy.workflowCode.map(([command, result]) => <div class="grid gap-1 sm:grid-cols-[1fr_auto] sm:gap-5"><span><span class="text-teal-300">$</span> {command}</span><span class="text-slate-500">{result}</span></div>)}</div>
+        <div class="mt-8 border-t border-white/10 pt-5 text-teal-300">✓ evidence attached / review pending</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="relative overflow-hidden px-4 py-24 text-center md:px-10 md:py-36">
+    <div class="hero-grid pointer-events-none absolute inset-0 opacity-30"></div>
+    <div class="relative mx-auto max-w-4xl"><p class="font-mono text-[0.65rem] font-bold tracking-[0.25em] text-teal-300 uppercase">{copy.finalKicker}</p><h2 class="font-heading mt-6 text-5xl leading-[0.95] font-extrabold tracking-[-0.07em] md:text-8xl">{copy.finalTitle}</h2><p class="mx-auto mt-7 max-w-2xl text-lg leading-8 text-slate-400">{copy.finalBody}</p><a href={locale === 'en' ? '/app/en/' : '/app/es/'} class="mt-10 inline-flex rounded-sm bg-white px-7 py-3 text-sm font-bold text-slate-950 transition-transform hover:-translate-y-0.5 hover:bg-teal-200">{copy.cta} <span class="ml-2" aria-hidden="true">↗</span></a></div>
   </section>
 </main>
 
-<footer class="border-t border-slate-950/10 bg-slate-50 px-4 py-8 md:px-12 dark:border-white/10 dark:bg-slate-900">
-  <div
-    class="mx-auto flex max-w-7xl flex-col gap-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between dark:text-slate-400"
-  >
-    <span>{copy.footer}</span><span>© 2026 Visomi</span>
-  </div>
+<footer class="border-t border-white/10 bg-slate-950 px-4 py-8 md:px-10">
+  <div class="mx-auto flex max-w-7xl flex-col gap-3 font-mono text-[0.65rem] tracking-[0.12em] text-slate-500 uppercase sm:flex-row sm:items-center sm:justify-between"><span>{copy.footer}</span><span>© 2026 Visomi</span></div>
 </footer>

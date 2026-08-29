@@ -10,17 +10,17 @@ type SiteCopy = {
 const siteContent: Record<Locale, SiteCopy> = {
   en: {
     eyebrow: 'Production-ready application template',
-    title: 'Build your next product on a stack that is ready to grow.',
+    title: 'A full-stack foundation for products people can trust.',
     description:
-      'Visomi Stack combines a modern full-stack architecture, passkey-first authentication, zero-knowledge persistence, and Themis-powered delivery workflows.',
-    hero: 'Start with the boring infrastructure already solved, then spend your time building the product that matters.',
+      'Learn how Visomi Stack combines a full-stack architecture with Angular, Astro, Node, passkey-first authentication, zero-knowledge persistence, and Themis-powered delivery workflows in one reusable foundation.',
+    hero: 'Understand the architecture, security model, and delivery loop behind Visomi Stack.',
   },
   es: {
     eyebrow: 'Template de aplicaciones listo para producción',
-    title: 'Construye tu próximo producto sobre una base preparada para crecer.',
+    title: 'Una base full-stack para productos en los que se puede confiar.',
     description:
-      'Visomi Stack combina una arquitectura full-stack moderna, autenticación passkey-first, persistencia zero-knowledge y workflows potenciados por Themis.',
-    hero: 'Empieza con la infraestructura resuelta y dedica tu tiempo al producto que quieres construir.',
+      'Conoce cómo Visomi Stack combina una arquitectura full-stack con Angular, Astro, Node, autenticación passkey-first, persistencia zero-knowledge y workflows potenciados por Themis en una base reusable.',
+    hero: 'Entiende la arquitectura, el modelo de seguridad y el ciclo de entrega detrás de Visomi Stack.',
   },
 };
 
