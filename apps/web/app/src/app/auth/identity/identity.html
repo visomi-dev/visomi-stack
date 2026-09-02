@@ -1,0 +1,329 @@
+<app-auth-layout>
+  <app-auth-card>
+    @switch (state()) {
+      @case ('ready') {
+        <header class="text-center">
+          <p
+            class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400"
+            i18n="@@identityEyebrow"
+          >
+            Account access
+          </p>
+          <h1 class="font-heading mt-3 text-3xl leading-tight font-bold tracking-[-0.03em]" i18n="@@identityTitle">
+            Sign in or create an account
+          </h1>
+          <p class="mt-3 text-base leading-6 text-slate-500 dark:text-slate-400" i18n="@@identityDescription">
+            If the email already belongs to an account we will sign you in. If it does not, we will create your account
+            once you verify the email and finish setting up a passkey.
+          </p>
+        </header>
+        <div class="mt-7 grid gap-3">
+          <button
+            type="button"
+            class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-400"
+            [disabled]="state() === 'passkey-loading'"
+            (click)="authenticateWithPasskey()"
+            i18n="@@identityContinuePasskey"
+          >
+            Continue with a passkey
+          </button>
+          <p
+            class="px-2 text-center text-xs leading-5 text-slate-500 dark:text-slate-400"
+            i18n="@@identityPasskeyGuidance"
+          >
+            Your passkey may be saved on this device, synced from another device, or available on a nearby device or
+            security key.
+          </p>
+          <div class="my-2 flex items-center gap-3" aria-hidden="true">
+            <span class="h-px flex-1 bg-slate-950/10 dark:bg-white/10"></span>
+            <span
+              class="font-mono text-[0.6875rem] tracking-widest text-slate-400 uppercase"
+              i18n="@@identityOrSeparator"
+              >or</span
+            >
+            <span class="h-px flex-1 bg-slate-950/10 dark:bg-white/10"></span>
+          </div>
+          <button
+            type="button"
+            class="min-h-11 rounded-md px-4 text-sm font-semibold text-blue-600 underline-offset-4 hover:bg-blue-600/10 dark:text-blue-400"
+            (click)="showEmailRecovery()"
+            i18n="@@identityTryAnotherWay"
+          >
+            Try another way
+          </button>
+        </div>
+      }
+      @case ('passkey-loading') {
+        <header class="text-center" aria-live="polite">
+          <p
+            class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400"
+            i18n="@@identityPasskeyPromptEyebrow"
+          >
+            Passkey requested
+          </p>
+          <h1 class="font-heading mt-3 text-2xl font-bold" i18n="@@identityCheckDevice">Check your device</h1>
+          <p class="mt-3 text-base text-slate-500 dark:text-slate-400" i18n="@@identityCheckDeviceDescription">
+            Follow your device's prompt to continue.
+          </p>
+        </header>
+        <button
+          type="button"
+          class="mt-7 inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500"
+          disabled
+          i18n="@@identityWaitingPasskey"
+        >
+          Waiting for passkey
+        </button>
+      }
+      @case ('passkey-error') {
+        <header>
+          <p
+            class="font-mono text-xs font-semibold tracking-widest text-red-600 uppercase dark:text-red-400"
+            i18n="@@identityPasskeyErrorEyebrow"
+          >
+            Unable to continue
+          </p>
+          <h1 class="font-heading mt-3 text-2xl font-bold" i18n="@@identityPasskeyErrorTitle">
+            Passkey sign-in did not finish.
+          </h1>
+        </header>
+        <p
+          class="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+          role="alert"
+        >
+          {{ errorMessage() }}
+        </p>
+        <div class="mt-6 grid gap-3">
+          <button
+            type="button"
+            class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+            (click)="authenticateWithPasskey()"
+            i18n="@@identityRetryPasskey"
+          >
+            Try passkey again
+          </button>
+          <button
+            type="button"
+            class="min-h-11 rounded-md px-4 text-sm font-semibold text-blue-600 underline-offset-4 dark:text-blue-400"
+            (click)="showEmailRecovery()"
+            i18n="@@identityErrorTryAnotherWay"
+          >
+            Try another way
+          </button>
+        </div>
+      }
+      @case ('email') {
+        <header>
+          <button
+            type="button"
+            class="-ml-2 min-h-11 rounded-md px-2 text-sm font-semibold text-blue-600 dark:text-blue-400"
+            (click)="showReady()"
+            i18n="@@identityBack"
+          >
+            Back
+          </button>
+          <p
+            class="mt-2 font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400"
+            i18n="@@identityRecoveryEyebrow"
+          >
+            Bootstrap or recover
+          </p>
+          <h1 class="font-heading mt-3 text-2xl font-bold" i18n="@@identityRecoveryTitle">Try another way</h1>
+          <p class="mt-3 text-base text-slate-500 dark:text-slate-400" i18n="@@identityRecoveryDescription">
+            Enter an email you can verify. Email verification alone cannot sign you in.
+          </p>
+        </header>
+        <form class="mt-6 grid gap-5" (submit)="requestCode($event)">
+          <app-field>
+            <label for="identity-email" class="text-sm font-semibold" i18n="@@identityEmailLabel">Email address</label>
+            <input
+              id="identity-email"
+              controlId="identity-email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              [value]="emailModel().email"
+              (input)="emailModel.set({ email: $any($event.target).value })"
+              class="min-h-11 rounded-md border border-slate-950/10 bg-white px-3 outline-offset-2 focus:outline-2 focus:outline-slate-600 dark:border-white/10 dark:bg-slate-950"
+            />
+            @if (emailError()) {
+              <p class="text-sm text-red-600 dark:text-red-400" controlId="identity-email-error" role="alert">
+                {{ emailError() }}
+              </p>
+            }
+          </app-field>
+          <button
+            type="submit"
+            class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-400"
+            [disabled]="emailForm().invalid()"
+            i18n="@@identitySendCode"
+          >
+            Send code
+          </button>
+        </form>
+      }
+      @case ('otp') {
+        <header>
+          <p
+            class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400"
+            i18n="@@identityOtpEyebrow"
+          >
+            Email verification
+          </p>
+          <h1 class="font-heading mt-3 text-2xl font-bold" i18n="@@identityOtpTitle">Check for a 6-digit code</h1>
+          <p class="mt-3 text-base text-slate-500 dark:text-slate-400" i18n="@@identityOtpDescription">
+            If you can use that email, check for a 6-digit code. Delivery can take a few minutes.
+          </p>
+        </header>
+        <form class="mt-6 grid gap-5" (submit)="verifyCode($event)">
+          <app-field>
+            <label for="identity-pin" class="text-sm font-semibold" i18n="@@identityOtpLabel">Verification code</label>
+            <input
+              id="identity-pin"
+              controlId="identity-pin"
+              name="pin"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              [value]="otpModel().pin"
+              (input)="otpModel.set({ pin: $any($event.target).value })"
+              class="min-h-11 rounded-md border border-slate-950/10 bg-white px-3 outline-offset-2 focus:outline-2 focus:outline-slate-600 dark:border-white/10 dark:bg-slate-950"
+            />
+            @if (otpError()) {
+              <p class="text-sm text-red-600 dark:text-red-400" controlId="identity-pin-error" role="alert">
+                {{ otpError() }}
+              </p>
+            }
+          </app-field>
+          <button
+            type="submit"
+            class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-400"
+            [disabled]="otpForm().invalid()"
+            i18n="@@identityVerifyEmail"
+          >
+            Verify email
+          </button>
+        </form>
+      }
+      @case ('account-choice') {
+        <header>
+          <p
+            class="font-mono text-xs font-semibold tracking-widest text-green-700 uppercase dark:text-green-400"
+            i18n="@@identityVerifiedEyebrow"
+          >
+            Email verified
+          </p>
+          <h1 class="font-heading mt-3 text-2xl font-bold" i18n="@@identityAccountTitle">
+            Choose the account you want to access.
+          </h1>
+        </header>
+        <div class="mt-6 grid gap-3">
+          @for (account of accounts(); track account.accountId) {
+            <button
+              type="button"
+              class="min-h-14 rounded-lg border border-slate-950/10 px-4 text-left hover:border-blue-500 hover:bg-blue-50 dark:border-white/10 dark:hover:bg-blue-500/10"
+              (click)="chooseAccount(account)"
+            >
+              <span class="block font-semibold">{{ account.name }}</span>
+              <span class="block text-sm text-slate-500 dark:text-slate-400">{{ account.role }}</span>
+            </button>
+          }
+        </div>
+      }
+      @case ('enrollment') {
+        <header>
+          <p
+            class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400"
+            i18n="@@identityEnrollmentEyebrow"
+          >
+            Final security step
+          </p>
+          <h1 class="font-heading mt-3 text-2xl font-bold" i18n="@@identityEnrollmentTitle">
+            Create a passkey to finish.
+          </h1>
+          <p class="mt-3 text-base text-slate-500 dark:text-slate-400" i18n="@@identityEnrollmentDescription">
+            Email verification alone cannot sign you in. Create and verify a passkey for
+            {{ selectedAccount()?.name ?? '' }}.
+          </p>
+        </header>
+        <form class="mt-6 grid gap-5" (submit)="createPasskey($event)">
+          <app-field>
+            <label for="identity-passkey-label" class="text-sm font-semibold" i18n="@@identityPasskeyLabel"
+              >Passkey name</label
+            >
+            <input
+              id="identity-passkey-label"
+              controlId="identity-passkey-label"
+              name="label"
+              autocomplete="off"
+              [value]="enrollmentModel().label"
+              (input)="enrollmentModel.set({ label: $any($event.target).value })"
+              class="min-h-11 rounded-md border border-slate-950/10 bg-white px-3 outline-offset-2 focus:outline-2 focus:outline-slate-600 dark:border-white/10 dark:bg-slate-950"
+            />
+            @if (labelError()) {
+              <p class="text-sm text-red-600 dark:text-red-400" controlId="identity-passkey-label-error" role="alert">
+                {{ labelError() }}
+              </p>
+            }
+          </app-field>
+          <button
+            type="submit"
+            class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-400"
+            [disabled]="enrollmentForm().invalid()"
+            i18n="@@identityCreatePasskey"
+          >
+            Create passkey
+          </button>
+        </form>
+      }
+      @case ('enrollment-loading') {
+        <header class="text-center" aria-live="polite">
+          <h1 class="font-heading text-2xl font-bold" i18n="@@identityCreatingPasskey">Create your passkey</h1>
+          <p class="mt-3 text-base text-slate-500 dark:text-slate-400" i18n="@@identityCreatingPasskeyDescription">
+            Follow your device's prompt. You will verify the new passkey once more before entering Visomi Stack.
+          </p>
+        </header>
+        <button
+          type="button"
+          class="mt-7 inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500"
+          disabled
+          i18n="@@identityWaitingSetup"
+        >
+          Waiting for your device
+        </button>
+      }
+      @case ('verification-loading') {
+        <header class="text-center" aria-live="polite">
+          <h1 class="font-heading text-2xl font-bold" i18n="@@identityVerifyNewPasskey">Verify your new passkey</h1>
+          <p class="mt-3 text-base text-slate-500 dark:text-slate-400" i18n="@@identityVerifyNewPasskeyDescription">
+            Use the passkey you just created to finish signing in.
+          </p>
+        </header>
+        <button
+          type="button"
+          class="mt-7 inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500"
+          disabled
+          i18n="@@identityWaitingVerification"
+        >
+          Waiting for verification
+        </button>
+      }
+      @case ('success') {
+        <p
+          class="text-center text-sm font-semibold text-green-700 dark:text-green-400"
+          role="status"
+          i18n="@@identitySuccess"
+        >
+          Passkey verified. Opening Visomi Stack...
+        </p>
+      }
+    }
+    @if (errorMessage() && state() !== 'passkey-error') {
+      <p
+        class="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+        role="alert"
+      >
+        {{ errorMessage() }}
+      </p>
+    }
+  </app-auth-card>
+</app-auth-layout>

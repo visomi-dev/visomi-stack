@@ -54,8 +54,8 @@ describe('composition server', () => {
     expect(response.data).toEqual({ message: 'Hello Visomi Stack API' });
   });
 
-  it('serves the Angular auth surface under /app', async () => {
-    const response = await axios.get('/app/en/sign-in', {
+  it('serves the Angular identity route under /app', async () => {
+    const response = await axios.get('/app/en/auth/identity', {
       headers: {
         Accept: 'text/html',
       },

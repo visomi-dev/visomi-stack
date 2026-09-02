@@ -2,7 +2,7 @@ import { Component, computed, inject, input, output, signal } from '@angular/cor
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { Auth } from '../../auth/auth';
-import { APP_URL, SECURITY_URL, SIGN_IN_URL } from '../../constants/routes';
+import { APP_URL, IDENTITY_URL, SECURITY_URL } from '../../constants/routes';
 import { Settings } from '../../settings';
 import { Avatar } from '../../ui/data/avatar/avatar';
 import { Icon } from '../../ui/media/icon/icon';
@@ -77,7 +77,7 @@ export class SidebarMenu {
 
     try {
       await this.auth.signOut();
-      await this.router.navigateByUrl(SIGN_IN_URL);
+      await this.router.navigateByUrl(IDENTITY_URL);
     } finally {
       this.signingOut.set(false);
       this.closeMenu();

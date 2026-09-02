@@ -26,28 +26,18 @@ describe('BrowserAuth', () => {
     TestBed.inject(HttpTestingController).verify();
   });
 
-  it('stores the pending challenge after credential submission', async () => {
+  it('requests an email OTP after email submission', async () => {
     const auth = TestBed.inject(Auth);
     const http = TestBed.inject(HttpTestingController);
 
-    const submitPromise = auth.signUp({
-      email: 'engineer@themis.dev',
-      password: 'S3cureAuth!',
-    });
+    const submitPromise = auth.requestEmailOtp({ email: 'engineer@visomi.dev' });
 
-    http.expectOne('/api/auth/sign-up').flush({
-      data: {
-        challengeId: 'challenge-1',
-        email: 'engineer@themis.dev',
-        expiresAt: '2026-01-01T00:00:00.000Z',
-        purpose: 'sign_up',
-      },
+    http.expectOne('/api/auth/email-otp/request').flush({
+      data: { flowId: 'flow-1', resendAvailableAt: '2026-01-01T00:00:00.000Z' },
+      message: 'Verification code sent.',
     });
 
     await submitPromise;
-
-    expect(auth.pendingChallenge()?.challengeId).toBe('challenge-1');
-    expect(sessionStorage.getItem('themis.pendingChallenge')).toContain('challenge-1');
   });
 
   it('skips the session request when the hasSession cookie is absent', async () => {
@@ -75,7 +65,7 @@ describe('BrowserAuth', () => {
         authenticated: true,
         user: {
           accountId: 'account-1',
-          email: 'engineer@themis.dev',
+          email: 'engineer@visomi.dev',
           emailVerifiedAt: null,
           id: 'user-1',
           role: 'owner',
@@ -155,7 +145,7 @@ describe('ServerAuth', () => {
           useValue: {
             user: {
               accountId: 'account-1',
-              email: 'engineer@themis.dev',
+              email: 'engineer@visomi.dev',
               emailVerifiedAt: null,
               id: 'user-1',
               role: 'owner',

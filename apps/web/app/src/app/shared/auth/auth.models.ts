@@ -1,4 +1,4 @@
-export type AuthMode = 'sign_in' | 'sign_up';
+export type FlowKind = 'bootstrap_recovery';
 
 export type ResponseEnvelope<T> = {
   status?: number;
@@ -15,32 +15,35 @@ export type AuthUser = {
   role: string;
 };
 
-export type AuthChallenge = {
-  challengeId: string;
-  email: string;
-  expiresAt: string;
-  purpose: AuthMode;
-  rememberDevice?: boolean;
+export type EmailOtpResponse = ResponseEnvelope<{
+  flowId: string;
+  resendAvailableAt: string;
+}>;
+
+export type RestrictedSession = {
+  kind: 'restricted';
+  flowId: string;
+  user: AuthUser;
 };
+
+export type FullSession = {
+  kind: 'full';
+  user: AuthUser;
+};
+
+export type SessionUpgrade = RestrictedSession | FullSession;
+
+export type SessionUpgradeResponse = ResponseEnvelope<SessionUpgrade>;
 
 export type SessionResponse = ResponseEnvelope<{
   authenticated: boolean;
   user: AuthUser | null;
 }>;
 
-export type AuthenticatedResponse = ResponseEnvelope<{
-  authenticated: true;
-  user: AuthUser;
-}>;
-
-export type ChallengeResponse = ResponseEnvelope<AuthChallenge>;
-
-export type ChallengeOrAuthenticatedResponse = ResponseEnvelope<AuthChallenge | AuthenticatedResponse['data']>;
-
 export type MessageResponse = ResponseEnvelope<null>;
 
-export type CredentialsPayload = {
-  email: string;
-  password: string;
-  rememberDevice?: boolean;
-};
+export type EmailOtpRequestPayload = { email: string };
+export type EmailOtpVerifyPayload = { flowId: string; pin: string };
+export type EmailOtpResendPayload = { flowId: string };
+
+export type RememberDevicePayload = EmailOtpVerifyPayload;

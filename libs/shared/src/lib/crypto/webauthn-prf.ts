@@ -64,7 +64,7 @@ export function createBrowserWebAuthnCeremony(
       if (!publicKeyCredential) throw new Error('WebAuthn is unavailable.');
       const credential = (await navigator.credentials.create({
         publicKey: {
-          rp: { id: rpId, name: 'Themis' },
+          rp: { id: rpId, name: 'Visomi Stack' },
           user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'themis-vault', displayName: 'Themis vault' },
           challenge: crypto.getRandomValues(new Uint8Array(32)),
           pubKeyCredParams: [{ type: 'public-key', alg: -7 }],

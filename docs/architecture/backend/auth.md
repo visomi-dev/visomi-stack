@@ -2,13 +2,14 @@
 
 ## Purpose
 
-Define the first production auth slice for Themis.
+Define the passwordless auth slice for Visomi Stack.
 
 This architecture assumes:
 
 - Angular owns the auth UI
 - Express owns auth endpoints and session handling
-- Passport verifies email and password credentials
+- Sessions carry a `restricted | full` discriminator; full authority is
+  granted only after email OTP verification plus an active passkey
 - PostgreSQL stores auth state
 - Drizzle ORM owns the SQL schema and query layer
 - `drizzle-kit` beta owns SQL migration generation and application
@@ -20,28 +21,30 @@ This document covers:
 
 - runtime ownership across the monorepo
 - route composition between public and product surfaces
-- backend auth flow shape
-- persistence model for users, sessions, and verification challenges
-- security defaults for the first implementation
+- backend passwordless auth flow shape
+- persistence model for users, sessions, verification challenges,
+  and passkey credentials
+- security defaults for the passwordless implementation
 
 This document does not cover:
 
 - social login
 - SSO or enterprise identity providers
-- password reset implementation
-- MFA beyond email PIN verification
+- password reset, password setup, or password fallback (none exist)
+- MFA beyond email OTP and passkey possession
 
 ## Runtime Ownership
 
-The first auth slice should keep a clear separation of responsibilities.
+The passwordless slice keeps a clear separation of responsibilities.
 
 ### Angular App
 
 `apps/web/app` owns:
 
-- sign-in UI
-- sign-up UI
-- verification PIN UI
+- unified identity route UI (`/auth/identity`) for sign-in and account
+  bootstrap
+- email OTP request and verification form
+- passkey registration and authentication form
 - session restoration checks for product routes
 - post-authenticated product shell
 

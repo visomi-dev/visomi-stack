@@ -10,7 +10,7 @@ type PasskeyBegin = ResponseEnvelope<{
   verificationChallengeId?: string | null;
   enrollmentId?: string | null;
   options: Record<string, unknown> | null;
-  attempt?: 'passkey_default' | 'retry_available' | 'password_fallback' | 'authenticated';
+  attempt?: 'passkey_default' | 'retry_available' | 'authenticated';
 }>;
 
 type PasskeyComplete = ResponseEnvelope<{ authenticated: true; user: unknown }>;
@@ -34,25 +34,17 @@ export class Passkey {
     return typeof this.document.defaultView?.PublicKeyCredential !== 'undefined';
   }
 
-  async beginAuthentication(
-    email: string,
-    pinVerified: boolean,
-    retryRequested = false,
-  ): Promise<PasskeyBegin['data']> {
+  async beginAuthentication(email: string, retryRequested = false): Promise<PasskeyBegin['data']> {
     const response = await firstValueFrom(
-      this.http.post<PasskeyBegin>('/api/auth/passkey/authentication/begin', {
-        email,
-        pinVerified,
-        retryRequested,
-      }),
+      this.http.post<PasskeyBegin>('/api/auth/passkey/authentication/begin', { email, retryRequested }),
     );
 
     return response.data;
   }
 
-  async beginRegistration(email: string, label: string, pinVerified: boolean): Promise<PasskeyBegin['data']> {
+  async beginRegistration(email: string, label: string): Promise<PasskeyBegin['data']> {
     const response = await firstValueFrom(
-      this.http.post<PasskeyBegin>('/api/auth/passkey/registration/begin', { email, label, pinVerified }),
+      this.http.post<PasskeyBegin>('/api/auth/passkey/registration/begin', { email, label }),
     );
 
     return response.data;
