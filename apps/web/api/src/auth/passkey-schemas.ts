@@ -30,18 +30,13 @@ const assertionResponseSchema = z
   })
   .strict();
 
-const passkeyEmailSchema = z
-  .object({ email: emailSchema, pinVerified: z.boolean().optional().default(false) })
-  .strict();
+const passkeyEmailSchema = z.object({ email: emailSchema }).strict();
 const registrationBeginSchema = passkeyEmailSchema.extend({ label: z.string().trim().min(1).max(120) }).strict();
 const registrationCompleteSchema = z
   .object({ challengeId: z.string().min(1).max(200), response: credentialResponseSchema })
   .strict();
 const authenticationBeginSchema = passkeyEmailSchema
-  .extend({
-    explicitPassword: z.boolean().optional().default(false),
-    retryRequested: z.boolean().optional().default(false),
-  })
+  .extend({ retryRequested: z.boolean().optional().default(false) })
   .strict();
 const authenticationCompleteSchema = z
   .object({ challengeId: z.string().min(1).max(200), response: assertionResponseSchema })
@@ -60,7 +55,7 @@ const passkeyCredentialSchema = z
   })
   .strict()
   .meta({ id: 'PasskeyCredential' });
-const passkeyAttemptSchema = z.enum(['passkey_default', 'retry_available', 'password_fallback', 'authenticated']);
+const passkeyAttemptSchema = z.enum(['passkey_default', 'retry_available', 'authenticated']);
 const passkeyOptionsSchema = z.record(z.string(), z.unknown());
 const authenticatedPasskeySchema = z
   .object({ authenticated: z.literal(true), user: z.record(z.string(), z.unknown()) })
@@ -145,7 +140,7 @@ const passkeyOpenApiPaths = {
               ),
             },
           },
-          description: 'Authentication options and fallback signal.',
+          description: 'Authentication options.',
         },
       },
     },

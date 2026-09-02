@@ -1,7 +1,6 @@
 type PasskeyFailure =
   | 'email_required'
   | 'email_unverified'
-  | 'pin_required'
   | 'challenge_expired'
   | 'challenge_replayed'
   | 'challenge_mismatch'
@@ -14,20 +13,12 @@ type PasskeyFailure =
   | 'ceremony_cancelled'
   | 'platform_error';
 
-type EmailGate = 'email_required' | 'email_unverified' | 'pin_required' | 'ready';
-type PasskeyAttempt = 'passkey_default' | 'retry_available' | 'password_fallback' | 'authenticated';
+type EmailGate = 'email_required' | 'email_unverified' | 'ready';
+type PasskeyAttempt = 'passkey_default' | 'retry_available' | 'authenticated';
 type CredentialStatus = 'pending' | 'active' | 'revoked' | 'expired' | 'unusable';
 type UserVerification = 'required' | 'preferred' | 'discouraged';
 type EnrollmentStatus = 'pending' | 'active' | 'expired' | 'replayed' | 'mismatched' | 'cancelled' | 'superseded';
 type TerminalEnrollmentStatus = Exclude<EnrollmentStatus, 'pending' | 'active'>;
-
-type AccountSessionClaims = {
-  accountId: string;
-  authenticatedAt: Date;
-  authenticationMethod: 'passkey' | 'password';
-  credentialId?: string;
-  userId: string;
-};
 
 type ChallengeExpectation = {
   challengeHash: string;
@@ -49,7 +40,6 @@ type PasskeyCredential = {
   userId: string;
 };
 type CredentialOwner = Pick<PasskeyCredential, 'accountId' | 'userId'>;
-type PasswordAccess = CredentialOwner & { configured: boolean };
 
 type CeremonyResult = { ok: true; nextSignCount: number } | { ok: false; failure: PasskeyFailure };
 type EnrollmentEvent = 'expire' | 'replay' | 'mismatch' | 'cancel' | 'supersede';
@@ -77,34 +67,6 @@ type CredentialLifecycleResult =
       failure: 'credential_not_found' | 'credential_already_exists' | 'credential_name_conflict' | 'last_access_method';
       credentials: PasskeyCredential[];
     };
-type PasswordSetupControl =
-  | 'reauthentication'
-  | 'password_policy'
-  | 'csrf'
-  | 'rate_limit'
-  | 'session_policy'
-  | 'audit'
-  | 'redaction';
-type PasswordSetupInput = {
-  accountId: string;
-  auditEnabled: boolean;
-  csrfValid: boolean;
-  passwordPolicyValid: boolean;
-  passwordSecret: string;
-  recentlyReauthenticated: boolean;
-  redactSecrets: boolean;
-  sessionEffect: 'unresolved' | 'rotate_current' | 'rotate_all' | 'preserve';
-  userId: string;
-  withinRateLimit: boolean;
-};
-type PasswordSetupResult =
-  | {
-      ok: true;
-      passwordConfigured: true;
-      sessionEffect: Exclude<PasswordSetupInput['sessionEffect'], 'unresolved'>;
-      audit: { accountId: string; action: 'password_configured'; redactedFields: ['password']; userId: string };
-    }
-  | { ok: false; failure: 'password_setup_denied'; failedControl: PasswordSetupControl };
 
 function terminalizeEnrollment(
   state: PendingEnrollmentModel,
@@ -267,44 +229,27 @@ function useCredential(
   };
 }
 
-function viableAccessMethodIds(
-  credentials: PasskeyCredential[],
-  owner: CredentialOwner,
-  passwordAccess: PasswordAccess,
-): string[] {
-  const ids = credentials
-    .filter(
-      (credential) =>
-        credential.accountId === owner.accountId &&
-        credential.userId === owner.userId &&
-        credential.status === 'active',
-    )
-    .map((credential) => credential.id);
-  const ownerHasPassword =
-    passwordAccess.accountId === owner.accountId && passwordAccess.userId === owner.userId && passwordAccess.configured;
+function canRemoveAccessMethod(credentials: PasskeyCredential[], selector: CredentialOwner, methodId: string): boolean {
+  const otherActive = credentials.filter(
+    (credential) =>
+      credential.accountId === selector.accountId &&
+      credential.userId === selector.userId &&
+      credential.status === 'active' &&
+      credential.id !== methodId,
+  );
 
-  return ownerHasPassword ? [...ids, 'password'] : ids;
-}
-
-function canRemoveAccessMethod(
-  credentials: PasskeyCredential[],
-  owner: CredentialOwner,
-  passwordAccess: PasswordAccess,
-  methodId: string,
-): boolean {
-  return viableAccessMethodIds(credentials, owner, passwordAccess).some((id) => id !== methodId);
+  return otherActive.length > 0;
 }
 
 function revokeCredential(
   credentials: PasskeyCredential[],
   selector: { accountId: string; credentialId: string; userId: string },
-  passwordAccess: PasswordAccess,
 ): CredentialLifecycleResult {
   const selected = selectOwnedCredential(credentials, selector);
 
   if (!selected) return { ok: false, failure: 'credential_not_found', credentials };
   if (selected.status === 'revoked') return { ok: true, credential: selected, credentials };
-  if (!canRemoveAccessMethod(credentials, selector, passwordAccess, selected.id))
+  if (!canRemoveAccessMethod(credentials, selector, selected.id))
     return { ok: false, failure: 'last_access_method', credentials };
   const revoked = { ...selected, status: 'revoked' as const };
 
@@ -315,43 +260,13 @@ function revokeCredential(
   };
 }
 
-function configurePassword(input: PasswordSetupInput): PasswordSetupResult {
-  const controls: Array<[PasswordSetupControl, boolean]> = [
-    ['reauthentication', input.recentlyReauthenticated],
-    ['password_policy', input.passwordPolicyValid],
-    ['csrf', input.csrfValid],
-    ['rate_limit', input.withinRateLimit],
-    ['session_policy', input.sessionEffect !== 'unresolved'],
-    ['audit', input.auditEnabled],
-    ['redaction', input.redactSecrets],
-  ];
-  const failed = controls.find(([, passed]) => !passed);
-
-  if (failed) return { ok: false, failure: 'password_setup_denied', failedControl: failed[0] };
-
-  const sessionEffect = input.sessionEffect as Exclude<PasswordSetupInput['sessionEffect'], 'unresolved'>;
-
-  return {
-    ok: true,
-    passwordConfigured: true,
-    sessionEffect,
-    audit: {
-      accountId: input.accountId,
-      action: 'password_configured',
-      redactedFields: ['password'],
-      userId: input.userId,
-    },
-  };
-}
-
 function accountDiscoveryResponse(_accountExists: boolean): { next: 'check_email'; message: string } {
   return { next: 'check_email', message: 'If the account can continue, check the email for the next step.' };
 }
 
-function emailGate(email: string | null, verifiedAt: Date | null, pinVerified: boolean): EmailGate {
+function emailGate(email: string | null, verifiedAt: Date | null): EmailGate {
   if (!email || !normalizeEmail(email)) return 'email_required';
   if (!verifiedAt) return 'email_unverified';
-  if (!pinVerified) return 'pin_required';
 
   return 'ready';
 }
@@ -360,12 +275,7 @@ function normalizeEmail(email: string): string {
   return email.normalize('NFKC').trim().toLocaleLowerCase('en-US');
 }
 
-function nextPasskeyAttempt(input: {
-  ceremonyFailed?: boolean;
-  explicitPassword?: boolean;
-  retryRequested?: boolean;
-}): PasskeyAttempt {
-  if (input.explicitPassword) return 'password_fallback';
+function nextPasskeyAttempt(input: { ceremonyFailed?: boolean; retryRequested?: boolean }): PasskeyAttempt {
   if (input.retryRequested || input.ceremonyFailed) return 'retry_available';
 
   return 'passkey_default';
@@ -414,7 +324,6 @@ export {
   canEstablishSession,
   canRemoveAccessMethod,
   cleanupTerminalEnrollment,
-  configurePassword,
   emailGate,
   enrollmentRetryAction,
   listCredentials,
@@ -426,9 +335,6 @@ export {
   terminatePendingEnrollment,
   useCredential,
   validateCeremony,
-  viableAccessMethodIds,
-  type AccountSessionClaims,
-  type ActivationResult,
   type CeremonyResult,
   type ChallengeExpectation,
   type CredentialLifecycleResult,
@@ -439,9 +345,6 @@ export {
   type PasskeyAttempt,
   type PasskeyCredential,
   type PasskeyFailure,
-  type PasswordSetupInput,
-  type PasswordSetupResult,
-  type PasswordAccess,
   type PendingEnrollmentModel,
   type UserVerification,
 };

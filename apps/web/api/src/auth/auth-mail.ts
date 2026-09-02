@@ -46,12 +46,12 @@ export function getMailgunClient() {
 }
 
 export function createMessageBody(message: VerificationMessage) {
-  const intent = message.purpose === 'sign_in' ? 'sign in' : 'finish creating your account';
+  const intent = 'continue signing in or finish creating your account';
 
   return {
-    html: `<p>Your Themis verification code is <strong>${message.pin}</strong>.</p><p>Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.</p>`,
-    subject: 'Your Themis verification code',
-    text: `Your Themis verification code is ${message.pin}. Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.`,
+    html: `<p>Your Visomi Stack verification code is <strong>${message.pin}</strong>.</p><p>Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.</p>`,
+    subject: 'Your Visomi Stack verification code',
+    text: `Your Visomi Stack verification code is ${message.pin}. Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.`,
   };
 }
 

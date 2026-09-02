@@ -66,20 +66,41 @@ function requireFreshSecurityReauthentication(req: Parameters<typeof authedReque
   if (!verifiedAt || Date.now() - verifiedAt > SECURITY_REAUTH_TTL_MS)
     failure('reauthentication_required', 401, 'Confirm an existing passkey before changing security settings.');
 }
-async function requireVerifiedEmail(email: string, pinVerified: boolean) {
+async function requireVerifiedEmail(email: string) {
   const user = await findUserByEmail(email);
 
   if (!user) failure(PASSKEY_ACCOUNT_UNAVAILABLE, 404);
-  const gate = emailGate(email, user.emailVerifiedAt, pinVerified);
+  const gate = emailGate(email, user.emailVerifiedAt);
 
   if (gate === 'email_required') failure('email_required', 400, 'An email address is required.');
   if (gate === 'email_unverified') failure('email_unverified', 403, 'Verify the email address before using a passkey.');
-  if (gate === 'pin_required') failure('pin_required', 403, 'Complete email PIN verification before using a passkey.');
   const membership = await getPrimaryMembership(user.id);
 
   if (!membership) failure('account_membership_missing', 500);
 
   return { user, membership };
+}
+function requireRestrictedSession(req: Parameters<typeof authedRequest>[0]): {
+  userId: string;
+  email: string;
+  accountId: string;
+} {
+  const sessionUser = req.user;
+  const authority = req.session?.authority;
+
+  if (!sessionUser?.id || !sessionUser.email || !sessionUser.accountId) {
+    failure('authentication_required', 401, 'Sign in before changing security settings.');
+  }
+
+  if (authority !== 'restricted' && authority !== 'full') {
+    failure('restricted_session_required', 401, 'Verify the email before registering a passkey.');
+  }
+
+  return {
+    accountId: sessionUser.accountId,
+    email: sessionUser.email,
+    userId: sessionUser.id,
+  };
 }
 async function createChallenge(
   accountId: string,
@@ -142,7 +163,7 @@ async function loginPasskey(
   credentialId: string,
 ) {
   const authUser = await resolveAuthUser(user);
-  const authenticatedUser = { ...authUser, authenticationMethod: 'passkey' as const, credentialId };
+  const authenticatedUser = { ...authUser, authority: 'full' as const, credentialId };
 
   await new Promise<void>((resolve, reject) =>
     req.login(authenticatedUser, (error) => (error ? reject(error) : resolve())),
@@ -158,30 +179,35 @@ passkeyRouter.use(csrfProtection);
 passkeyRouter.use(passkeyRateLimit);
 
 passkeyRouter.post('/registration/begin', validateRequest({ body: registrationBeginSchema }), async (req, res) => {
-  const { email, label, pinVerified } = getValidated<{ body: typeof registrationBeginSchema }>(req).body!;
+  const { email, label } = getValidated<{ body: typeof registrationBeginSchema }>(req).body!;
   let verificationChallengeId: string | null = null;
   let enrollmentId: string | null = null;
   let user;
   let membership;
 
-  if (!req.isAuthenticated()) {
-    user = await findUserByEmail(email);
-    if (user?.emailVerifiedAt)
-      failure('email_already_registered', 409, 'An account already exists for this email address.');
-    const enrollment = await createPasskeyEnrollment(email, label, user ?? undefined);
-
-    user = enrollment.user;
-    membership = enrollment.membership;
-    verificationChallengeId = enrollment.verificationChallengeId;
-    enrollmentId = enrollment.enrollmentId;
+  if (!req.isAuthenticated() || req.session?.authority !== 'restricted') {
+    failure('restricted_session_required', 401, 'Verify the email before registering a passkey.');
   } else {
-    const verified = await requireVerifiedEmail(email, pinVerified);
+    const session = requireRestrictedSession(req);
 
-    user = verified.user;
-    membership = verified.membership;
-    if (req.user.id !== user.id) failure('authentication_required', 401, 'Sign in before registering a passkey.');
-    requireFreshSecurityReauthentication(req);
+    user = await findUserByEmail(session.email);
+
+    if (!user) failure(PASSKEY_ACCOUNT_UNAVAILABLE, 404);
+    if (user.emailVerifiedAt) {
+      const enrollment = await createPasskeyEnrollment(email, label, user);
+
+      user = enrollment.user;
+      membership = enrollment.membership;
+      verificationChallengeId = enrollment.verificationChallengeId;
+      enrollmentId = enrollment.enrollmentId;
+    } else {
+      const verified = await requireVerifiedEmail(email);
+
+      user = verified.user;
+      membership = verified.membership;
+    }
   }
+
   const existing = await db
     .select()
     .from(accountPasskeyCredentials)
@@ -194,7 +220,7 @@ passkeyRouter.post('/registration/begin', validateRequest({ body: registrationBe
     );
   const challenge = randomBytes(32).toString('base64url');
   const options = await generateRegistrationOptions({
-    rpName: 'Themis',
+    rpName: 'Visomi Stack',
     rpID: rpId,
     userName: user.email,
     userID: Buffer.from(user.id),
@@ -211,8 +237,7 @@ passkeyRouter.post('/registration/begin', validateRequest({ body: registrationBe
       challengeId: stored.id,
       email: user.email,
       label,
-      pinVerified: true,
-      enrollmentId: enrollmentId ?? undefined,
+      ...(enrollmentId ? { enrollmentId } : {}),
     };
   res.json({
     data: { challengeId: stored.id, verificationChallengeId, enrollmentId, options },
@@ -275,9 +300,6 @@ passkeyRouter.post(
       updatedAt: new Date(),
     };
 
-    // Consume the ceremony, persist the credential, and link the enrollment
-    // atomically. This prevents a consumed challenge or orphan credential if
-    // either persistence step fails.
     await db.transaction(async (tx) => {
       const now = new Date();
       const [consumed] = await tx
@@ -312,11 +334,24 @@ passkeyRouter.post(
       }
     });
     delete req.session?.passkeyRegistration;
-    res.status(201).json({ data: credentialView(value), message: 'Passkey registered.' });
+
+    const authUser = await loginPasskey(req, user, credential.id);
+
+    res.status(201).json({
+      data: {
+        credential: credentialView(value),
+        restrictedSession: {
+          kind: 'restricted' as const,
+          user: authUser,
+          verificationOptions: null,
+          verificationChallengeId: null,
+        },
+      },
+      message: 'Passkey registered.',
+    });
   },
 );
 
-// The browser response carries the challenge in clientDataJSON; the helper keeps raw challenge values out of durable state.
 function decodeChallengeFromResponse(response: { response: { clientDataJSON: string } }): string {
   try {
     const data = JSON.parse(Buffer.from(response.response.clientDataJSON, 'base64url').toString('utf8')) as {
@@ -332,19 +367,10 @@ function decodeChallengeFromResponse(response: { response: { clientDataJSON: str
 }
 
 passkeyRouter.post('/authentication/begin', validateRequest({ body: authenticationBeginSchema }), async (req, res) => {
-  const { email, explicitPassword, retryRequested, pinVerified } = getValidated<{
+  const { email, retryRequested } = getValidated<{
     body: typeof authenticationBeginSchema;
   }>(req).body!;
-  const { user, membership } = await requireVerifiedEmail(email, pinVerified);
-
-  if (explicitPassword) {
-    res.json({
-      data: { attempt: 'password_fallback', challengeId: null, options: null },
-      message: 'Password fallback selected.',
-    });
-
-    return;
-  }
+  const { user, membership } = await requireVerifiedEmail(email);
 
   const credentials = await db
     .select()
@@ -369,7 +395,7 @@ passkeyRouter.post('/authentication/begin', validateRequest({ body: authenticati
   const stored = await createChallenge(membership.accountId, user.id, 'authentication', options.challenge);
 
   res.json({
-    data: { challengeId: stored.id, options, attempt: nextPasskeyAttempt({ explicitPassword, retryRequested }) },
+    data: { challengeId: stored.id, options, attempt: nextPasskeyAttempt({ retryRequested }) },
     message: 'Passkey authentication options created.',
   });
 });
@@ -379,12 +405,12 @@ passkeyRouter.post(
   validateRequest({ body: authenticationCompleteSchema }),
   async (req, res) => {
     const body = getValidated<{ body: typeof authenticationCompleteSchema }>(req).body!;
-    const pending = await db
+    const [pending] = await db
       .select()
       .from(accountWebAuthnChallenges)
       .where(eq(accountWebAuthnChallenges.id, body.challengeId))
       .limit(1);
-    const challenge = pending[0];
+    const challenge = pending;
 
     if (!challenge || !challenge.userId) failure('challenge_mismatch', 400);
     const [credential] = await db
@@ -406,10 +432,10 @@ passkeyRouter.post(
         expectedRPID: rpId,
         requireUserVerification: true,
         credential: {
-          id: credential.credentialId,
+          id: credential.id,
           publicKey: Buffer.from(credential.publicKey, 'base64url'),
           counter: credential.signCount,
-        } satisfies WebAuthnCredential,
+        } as unknown as WebAuthnCredential,
       });
     } catch {
       failure('platform_error', 401);
@@ -429,7 +455,7 @@ passkeyRouter.post(
 
     if (!user) failure('credential_not_found', 401);
     const wasAuthenticated = req.isAuthenticated() && req.user?.id === user.id;
-    const authUser = await loginPasskey(req, user, credential.credentialId);
+    const authUser = await loginPasskey(req, user, credential.id);
 
     if (wasAuthenticated) req.session.passkeySecurityReauthenticatedAt = Date.now();
 
@@ -536,7 +562,6 @@ async function revokeCredential(
     .limit(1);
 
   if (!active.length) return null;
-  const [accountUser] = await db.select().from(users).where(eq(users.id, user.id)).limit(1);
   const activeCredentials = await db
     .select({ id: accountPasskeyCredentials.id })
     .from(accountPasskeyCredentials)
@@ -548,8 +573,8 @@ async function revokeCredential(
       ),
     );
 
-  if (!accountUser?.passwordConfigured && activeCredentials.length <= 1)
-    failure('last_access_method', 409, 'Keep a password or another active passkey before revoking this credential.');
+  if (activeCredentials.length <= 1)
+    failure('last_access_method', 409, 'Keep another active passkey before revoking this credential.');
   await db
     .update(accountPasskeyCredentials)
     .set({ revokedAt: new Date(), updatedAt: new Date() })

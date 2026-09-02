@@ -1,39 +1,35 @@
 import passport from 'passport';
-import { Strategy as LocalStrategy } from 'passport-local';
 
-import { findUserById, resolveAuthUser, verifyPassword } from './auth-service';
+import { findUserById, resolveAuthUser } from './auth-service';
 
 type SerializedUser = {
   accountId: string;
+  authority: 'restricted' | 'full';
   id: string;
-  authenticationMethod?: 'passkey' | 'password';
-  credentialId?: string;
 };
 
-passport.use(
-  'local',
-  new LocalStrategy({ passwordField: 'password', usernameField: 'email' }, async (email, password, done) => {
-    try {
-      const user = await verifyPassword(email, password);
+type AuthorizedUser = Awaited<ReturnType<typeof resolveAuthUser>> & {
+  authority: 'restricted' | 'full';
+};
 
-      if (!user) {
-        return done(null, false, { message: 'Incorrect email or password.' });
-      }
+function toExpressUser(user: AuthorizedUser) {
+  return {
+    accountId: user.accountId,
+    authority: user.authority,
+    credentialId: undefined as string | undefined,
+    email: user.email,
+    emailVerifiedAt: user.emailVerifiedAt,
+    id: user.id,
+    role: user.role,
+  };
+}
 
-      return done(null, { ...(await resolveAuthUser(user)), authenticationMethod: 'password' });
-    } catch (error) {
-      return done(error as Error);
-    }
-  }),
-);
-
-passport.serializeUser((user, done) => {
+passport.serializeUser((user: Express.User, done) => {
   done(null, {
     accountId: user.accountId,
-    credentialId: user.credentialId,
+    authority: (user as AuthorizedUser).authority ?? 'full',
     id: user.id,
-    authenticationMethod: user.authenticationMethod,
-  });
+  } satisfies SerializedUser);
 });
 
 passport.deserializeUser(async (serializedUser: SerializedUser, done) => {
@@ -44,14 +40,13 @@ passport.deserializeUser(async (serializedUser: SerializedUser, done) => {
       return done(null, false);
     }
 
-    return done(null, {
-      ...(await resolveAuthUser(user)),
-      authenticationMethod: serializedUser.authenticationMethod ?? 'password',
-      credentialId: serializedUser.credentialId,
-    });
+    const authUser = await resolveAuthUser(user);
+
+    return done(null, toExpressUser({ ...authUser, authority: serializedUser.authority }));
   } catch (error) {
     return done(error as Error);
   }
 });
 
 export { passport };
+export type SessionAuthority = 'restricted' | 'full';

@@ -4,7 +4,15 @@ import { eq } from 'drizzle-orm';
 import { Router } from 'express';
 
 import { clearMailbox, listSentMessages } from '../auth/auth-mail';
-import { signUp, verifyChallenge } from '../auth/auth-service';
+import {
+  consumeChallenge,
+  createChallenge,
+  findOrCreateUserByEmail,
+  findUserById,
+  listMembershipsForUser,
+  markChallengeConsumed,
+  resolveAuthUser,
+} from '../auth/auth-service';
 import { emailSchema, getValidated, validateRequest, z } from '../shared/http/route-schemas';
 
 import { accountMemberships, db } from 'shared';
@@ -12,7 +20,7 @@ import { accountMemberships, db } from 'shared';
 const mailboxQuerySchema = z
   .object({
     email: emailSchema.optional(),
-    purpose: z.enum(['sign_in', 'sign_up', 'password_reset']).optional(),
+    purpose: z.enum(['bootstrap_recovery']).optional(),
   })
   .meta({ id: 'TestMailboxQuery' });
 
@@ -22,12 +30,12 @@ const mailboxMessageSchema = z
     email: emailSchema,
     expiresAt: z.string(),
     pin: z.string(),
-    purpose: z.enum(['sign_in', 'sign_up']),
+    purpose: z.literal('bootstrap_recovery'),
   })
   .meta({ id: 'MailboxMessage' });
 
 const deterministicSessionSchema = z
-  .object({ email: emailSchema, password: z.string().min(1), accountId: z.string().min(1).optional() })
+  .object({ email: emailSchema, accountId: z.string().min(1).optional() })
   .meta({ id: 'DeterministicTestSession' });
 
 const testOpenApiPaths = {
@@ -56,11 +64,10 @@ testRouter.post(
   validateRequest({ body: deterministicSessionSchema }),
   async function deterministicSessionHandler(req, res, next) {
     try {
-      const { email, password, accountId } = getValidated<{ body: typeof deterministicSessionSchema }>(req).body!;
-      const challenge = await signUp(email, password);
-      const message = listSentMessages().find(
-        (candidate) => candidate.challengeId === challenge.challengeId && candidate.purpose === 'sign_up',
-      );
+      const { email, accountId } = getValidated<{ body: typeof deterministicSessionSchema }>(req).body!;
+      const user = await findOrCreateUserByEmail(email);
+      const challenge = await createChallenge(user, 'bootstrap_recovery');
+      const message = listSentMessages().find((candidate) => candidate.challengeId === challenge.challengeId);
 
       if (!message) {
         res.status(503).send({ error: 'deterministic_auth_unavailable' });
@@ -68,7 +75,9 @@ testRouter.post(
         return;
       }
 
-      const user = await verifyChallenge(challenge.challengeId, message.pin, 'sign_up');
+      await consumeChallenge(challenge.challengeId, message.pin);
+      await markChallengeConsumed(challenge.challengeId);
+      await listMembershipsForUser(user.id);
 
       if (accountId) {
         await db.delete(accountMemberships).where(eq(accountMemberships.userId, user.id));
@@ -80,19 +89,27 @@ testRouter.post(
           updatedAt: new Date(),
           userId: user.id,
         });
-        user.accountId = accountId;
-        user.role = 'member';
       }
 
+      const freshUser = await findUserById(user.id);
+
+      if (!freshUser) {
+        res.status(503).send({ error: 'deterministic_auth_unavailable' });
+
+        return;
+      }
+
+      const authUser = await resolveAuthUser(freshUser);
+
       await new Promise<void>((resolve, reject) => {
-        req.login(user, (error) => (error ? reject(error) : resolve()));
+        req.login(authUser, (error) => (error ? reject(error) : resolve()));
       });
 
       await new Promise<void>((resolve, reject) => {
         req.session.save((error) => (error ? reject(error) : resolve()));
       });
 
-      res.status(200).send({ data: { accountId: user.accountId, userId: user.id } });
+      res.status(200).send({ data: { accountId: authUser.accountId, userId: authUser.id } });
     } catch (error: unknown) {
       next(error);
     }

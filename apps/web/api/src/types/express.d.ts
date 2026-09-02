@@ -3,11 +3,11 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface User {
       accountId: string;
+      authority?: 'restricted' | 'full';
       email: string;
       emailVerifiedAt: string | null;
       id: string;
       role: string;
-      authenticationMethod?: 'passkey' | 'password';
       credentialId?: string;
     }
   }
@@ -19,23 +19,18 @@ declare module 'express-session' {
     passport?: {
       user?: {
         accountId: string;
+        authority?: 'restricted' | 'full';
         id: string;
       };
     };
-    resetPassword?: {
-      challengeId: string;
-      email: string;
-      userId: string;
-    };
+    authority?: 'restricted' | 'full';
     passkeyRegistration?: {
       challengeId: string;
       email: string;
       label: string;
-      pinVerified: true;
       enrollmentId?: string;
     };
     authenticatedAt?: number;
-    reauthenticatedAt?: number;
     passkeySecurityReauthenticatedAt?: number;
   }
 }
