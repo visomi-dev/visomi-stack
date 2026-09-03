@@ -7,19 +7,27 @@ import { getValidated, validateRequest } from '../shared/http/route-schemas';
 import { authed, authedRequest } from './auth-middleware';
 import {
   consumeChallenge,
-  createChallenge,
+  createEmailChallenge,
   createUserDevice,
   findOrCreateUserByEmail,
   findUserById,
+  findVerificationChallenge,
   isRememberedDevice,
   listMembershipsForUser,
   markChallengeConsumed,
   resolveAuthUser,
+  resolveAuthUserForAccount,
   resendChallenge,
 } from './auth-service';
-import { authOpenApiPaths, emailOtpRequestSchema, emailOtpResendSchema, emailOtpVerifySchema } from './auth-schemas';
+import {
+  authOpenApiPaths,
+  emailOtpRequestSchema,
+  emailOtpResendSchema,
+  emailOtpVerifySchema,
+  restrictedAccountSelectSchema,
+} from './auth-schemas';
 
-import { db, HttpError, httpResponse, users } from 'shared';
+import { accounts, db, HttpError, httpResponse, users } from 'shared';
 
 const router = Router();
 
@@ -92,8 +100,7 @@ router.post(
   async function requestEmailOtpHandler(req, res) {
     const { email } = getValidated<{ body: typeof emailOtpRequestSchema }>(req).body!;
 
-    const user = await findOrCreateUserByEmail(email);
-    const challenge = await createChallenge(user, 'bootstrap_recovery');
+    const challenge = await createEmailChallenge(email);
 
     httpResponse.json(res, {
       data: {
@@ -113,7 +120,9 @@ router.post(
     const { flowId, pin } = getValidated<{ body: typeof emailOtpVerifySchema }>(req).body!;
 
     const challenge = await consumeChallenge(flowId, pin);
-    const user = await findUserById(challenge.userId);
+    const user = challenge.userId
+      ? await findUserById(challenge.userId)
+      : await findOrCreateUserByEmail(challenge.email);
 
     if (!user) {
       throw new HttpError({
@@ -123,22 +132,36 @@ router.post(
       });
     }
 
-    const memberships = await listMembershipsForUser(user.id);
-
-    if (memberships.length > 1) {
-      throw new HttpError({
-        code: 'multiple_accounts',
-        message: 'The email belongs to multiple accounts. Continue with the original flow.',
-        statusCode: 409,
-      });
-    }
-
     await markChallengeConsumed(challenge.id);
 
     if (!user.emailVerifiedAt) {
       const now = new Date();
 
       await db.update(users).set({ emailVerifiedAt: now, updatedAt: now }).where(eq(users.id, user.id));
+    }
+
+    const memberships = await listMembershipsForUser(user.id);
+
+    if (memberships.length > 1) {
+      throw new HttpError({
+        code: 'multiple_accounts',
+        message: 'Choose an account to continue.',
+        statusCode: 409,
+        data: {
+          accounts: await Promise.all(
+            memberships.map(async (membership) => {
+              const [account] = await db.select().from(accounts).where(eq(accounts.id, membership.accountId)).limit(1);
+
+              return {
+                accountId: membership.accountId,
+                name: account?.name ?? membership.accountId,
+                role: membership.role,
+              };
+            }),
+          ),
+          flowId: challenge.id,
+        },
+      });
     }
 
     const authUser = await resolveAuthUser({ ...user, emailVerifiedAt: user.emailVerifiedAt ?? new Date() });
@@ -157,6 +180,48 @@ router.post(
     httpResponse.json(res, {
       data: { kind: 'restricted' as const, user: authUser, flowId: challenge.id },
       message: 'Email verified.',
+    });
+  },
+);
+
+router.post(
+  '/restricted/accounts',
+  validateRequest({ body: restrictedAccountSelectSchema }),
+  async function selectRestrictedAccountHandler(req, res) {
+    const { accountId, flowId } = getValidated<{ body: typeof restrictedAccountSelectSchema }>(req).body!;
+    const challenge = await findVerificationChallenge(flowId);
+
+    if (!challenge?.consumedAt) {
+      throw new HttpError({
+        code: 'challenge_mismatch',
+        message: 'Verify the email before choosing an account.',
+        statusCode: 400,
+      });
+    }
+
+    if (!challenge.userId) {
+      throw new HttpError({
+        code: 'challenge_mismatch',
+        message: 'Choose an account from the verified email flow.',
+        statusCode: 400,
+      });
+    }
+
+    const user = await findUserById(challenge.userId);
+
+    if (!user)
+      throw new HttpError({ code: 'user_not_found', message: 'The account could not be found.', statusCode: 404 });
+    const authUser = await resolveAuthUserForAccount(user, accountId);
+
+    await new Promise<void>((resolve, reject) => req.login(authUser, (error) => (error ? reject(error) : resolve())));
+    if (req.session) {
+      req.session.authority = 'restricted';
+      req.session.passkeyRegistration = { challengeId: flowId, email: user.email, label: '' };
+    }
+    setSessionHintCookie(res);
+    httpResponse.json(res, {
+      data: { kind: 'restricted' as const, user: authUser, flowId },
+      message: 'Account selected.',
     });
   },
 );
@@ -188,6 +253,14 @@ router.post(
       throw new HttpError({
         code: 'session_missing',
         message: 'Sign in again before remembering this device.',
+        statusCode: 401,
+      });
+    }
+
+    if (!challenge.userId) {
+      throw new HttpError({
+        code: 'authentication_required',
+        message: 'Sign in before remembering this device.',
         statusCode: 401,
       });
     }

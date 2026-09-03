@@ -79,7 +79,7 @@ function publicRecovery(value: RecoveryMetadata) {
 
 const webAuthnRouter = Router();
 
-webAuthnRouter.use(authed());
+webAuthnRouter.use(authed({ authority: 'full' }));
 
 webAuthnRouter.get('/:workspaceId/credentials', validateRequest({ params: webAuthnParamsSchema }), async (req, res) => {
   const { workspaceId } = getValidated<{ params: typeof webAuthnParamsSchema }>(req).params!;

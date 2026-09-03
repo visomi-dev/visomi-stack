@@ -25,6 +25,7 @@ type AccessState =
   | 'account-choice'
   | 'enrollment'
   | 'enrollment-loading'
+  | 'verification'
   | 'verification-loading'
   | 'success';
 
@@ -50,6 +51,8 @@ export class Identity {
   readonly selectedAccount = signal<{ accountId: string; name: string; role: string } | null>(null);
   readonly flowId = signal('');
   readonly resendAvailableAt = signal('');
+  readonly verificationChallengeId = signal('');
+  readonly verificationOptions = signal<Record<string, unknown> | null>(null);
 
   readonly emailModel = signal<EmailModel>({ email: '' });
   readonly emailForm: FieldTree<EmailModel> = form(this.emailModel, (path) => {
@@ -175,6 +178,14 @@ export class Identity {
       });
       this.state.set('enrollment');
     } catch (error) {
+      const accounts = this.accountChoices(error);
+
+      if (accounts) {
+        this.accounts.set(accounts);
+        this.state.set('account-choice');
+
+        return;
+      }
       this.errorMessage.set(
         this.safeError(error, $localize`:@@identityOtpFailed:That code is not valid. Check it and try again.`),
       );
@@ -182,8 +193,13 @@ export class Identity {
   }
 
   protected async chooseAccount(account: { accountId: string; name: string; role: string }): Promise<void> {
-    this.selectedAccount.set(account);
-    this.state.set('enrollment');
+    try {
+      await this.auth.selectRestrictedAccount({ flowId: this.flowId(), accountId: account.accountId });
+      this.selectedAccount.set(account);
+      this.state.set('enrollment');
+    } catch (error) {
+      this.errorMessage.set(this.safeError(error, 'We could not select that account.'));
+    }
   }
 
   protected async createPasskey(event: Event): Promise<void> {
@@ -206,10 +222,18 @@ export class Identity {
 
       const credential = await this.passkey.createCredential(begin.options);
 
-      await this.passkey.completeRegistration(begin.challengeId, credential);
-      await this.auth.ensureSessionLoaded();
-      this.state.set('success');
-      await this.router.navigateByUrl(APP_URL);
+      const completed = (await this.passkey.completeRegistration(begin.challengeId, credential)) as {
+        restrictedSession?: { verificationChallengeId?: string; verificationOptions?: Record<string, unknown> };
+      };
+      const verification = completed.restrictedSession;
+
+      if (!verification?.verificationChallengeId || !verification.verificationOptions) {
+        throw new Error('Passkey verification options were not returned.');
+      }
+
+      this.verificationChallengeId.set(verification.verificationChallengeId);
+      this.verificationOptions.set(verification.verificationOptions);
+      this.state.set('verification');
     } catch (error) {
       this.state.set('enrollment');
       this.errorMessage.set(
@@ -217,6 +241,27 @@ export class Identity {
           ? $localize`:@@identityEnrollmentCancelled:Passkey setup was cancelled. You can try again.`
           : this.safeError(error, $localize`:@@identityEnrollmentFailed:We could not create and verify that passkey.`),
       );
+    }
+  }
+
+  protected async verifyNewPasskey(): Promise<void> {
+    const challengeId = this.verificationChallengeId();
+    const options = this.verificationOptions();
+
+    if (!challengeId || !options) return;
+
+    this.state.set('verification-loading');
+
+    try {
+      const assertion = await this.passkey.getCredential(options);
+
+      await this.passkey.verifyRegistration(challengeId, assertion);
+      await this.auth.ensureSessionLoaded();
+      this.state.set('success');
+      await this.router.navigateByUrl(APP_URL);
+    } catch (error) {
+      this.state.set('verification');
+      this.errorMessage.set(this.safeError(error, 'We could not verify the new passkey. Try again.'));
     }
   }
 
@@ -229,5 +274,20 @@ export class Identity {
     return error instanceof HttpErrorResponse && typeof error.error?.message === 'string'
       ? error.error.message
       : fallback;
+  }
+
+  private accountChoices(error: unknown): { accountId: string; name: string; role: string }[] | null {
+    if (!(error instanceof HttpErrorResponse) || error.status !== 409 || error.error?.code !== 'multiple_accounts')
+      return null;
+    const accounts = error.error?.data?.accounts;
+
+    return Array.isArray(accounts) ? accounts : null;
+  }
+
+  private async createEnrollmentState(): Promise<void> {
+    this.selectedAccount.set(
+      this.accounts().find((account) => account.accountId === this.auth.user()?.accountId) ?? null,
+    );
+    this.state.set('enrollment');
   }
 }

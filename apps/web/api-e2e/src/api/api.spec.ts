@@ -7,15 +7,8 @@ const toCookieHeader = (setCookie: string[] | undefined) =>
 
 async function bootstrapSession(suffix: string): Promise<{ cookie: string; workspaceId: string; email: string }> {
   const accountEmail = `webauthn-${suffix}-${Date.now()}@visomi-stack.dev`;
-  const request = await axios.post('/auth/email-otp/request', { email: accountEmail });
-  const mailbox = await axios.get('/test/mailbox/latest', {
-    params: { email: accountEmail, purpose: 'bootstrap_recovery' },
-  });
-  const verify = await axios.post('/auth/email-otp/verify', {
-    flowId: request.data.data.flowId,
-    pin: mailbox.data.pin,
-  });
-  const cookie = toCookieHeader(verify.headers['set-cookie']);
+  const session = await axios.post('/test/auth/session', { email: accountEmail });
+  const cookie = toCookieHeader(session.headers['set-cookie']);
   const project = await axios.post(
     '/projects',
     { name: `WebAuthn ${suffix}`, sourceType: 'manual' },

@@ -22,6 +22,7 @@ export abstract class Auth {
   abstract requestEmailOtp(payload: EmailOtpRequestPayload): Promise<EmailOtpResponse['data']>;
   abstract verifyEmailOtp(payload: EmailOtpVerifyPayload): Promise<SessionUpgrade>;
   abstract resendEmailOtp(payload: EmailOtpResendPayload): Promise<EmailOtpResponse['data']>;
+  abstract selectRestrictedAccount(payload: { flowId: string; accountId: string }): Promise<SessionUpgrade>;
   abstract rememberDevice(payload: RememberDevicePayload): Promise<void>;
   abstract signOut(): Promise<void>;
 }

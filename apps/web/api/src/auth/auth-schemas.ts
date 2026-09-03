@@ -48,6 +48,11 @@ export const emailOtpResendSchema = z
   })
   .meta({ id: 'EmailOtpResend' });
 
+export const restrictedAccountSelectSchema = z
+  .object({ flowId: challengeIdSchema, accountId: z.string().min(1) })
+  .strict()
+  .meta({ id: 'RestrictedAccountSelect' });
+
 export const sessionResponseSchema = z
   .object({
     authenticated: z.boolean(),
@@ -152,6 +157,19 @@ export const authOpenApiPaths = {
           description: 'Email OTP resent.',
         },
         ...rateLimitResponse,
+      },
+    },
+  },
+  '/auth/restricted/accounts': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: restrictedAccountSelectSchema } } },
+      responses: {
+        200: {
+          content: {
+            'application/json': { schema: responseEnvelope(restrictedSessionSchema, 'RestrictedAccountEnvelope') },
+          },
+          description: 'Restricted session bound to the selected account.',
+        },
       },
     },
   },

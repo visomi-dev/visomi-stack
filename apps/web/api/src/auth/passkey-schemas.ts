@@ -121,6 +121,21 @@ const passkeyOpenApiPaths = {
       },
     },
   },
+  '/auth/passkey/registration/verify': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: authenticationCompleteSchema } } },
+      responses: {
+        200: {
+          content: {
+            'application/json': {
+              schema: responseEnvelope(authenticatedPasskeySchema, 'PasskeyRegistrationVerifyEnvelope'),
+            },
+          },
+          description: 'Upgraded full session after registration verification.',
+        },
+      },
+    },
+  },
   '/auth/passkey/authentication/begin': {
     post: {
       requestBody: { required: true, content: { 'application/json': { schema: authenticationBeginSchema } } },

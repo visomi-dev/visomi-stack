@@ -185,9 +185,10 @@ passkeyRouter.post('/registration/begin', validateRequest({ body: registrationBe
   let user;
   let membership;
 
-  if (!req.isAuthenticated() || req.session?.authority !== 'restricted') {
+  if (!req.isAuthenticated() || !req.session?.authority) {
     failure('restricted_session_required', 401, 'Verify the email before registering a passkey.');
   } else {
+    if (req.session.authority === 'full') requireFreshSecurityReauthentication(req);
     const session = requireRestrictedSession(req);
 
     user = await findUserByEmail(session.email);
@@ -333,18 +334,28 @@ passkeyRouter.post(
         if (!linked) throw new Error('Passkey enrollment linkage failed.');
       }
     });
-    delete req.session?.passkeyRegistration;
-
-    const authUser = await loginPasskey(req, user, credential.id);
+    const verificationOptions = await generateAuthenticationOptions({
+      rpID: rpId,
+      userVerification: 'required',
+      timeout: 60000,
+      challenge: randomBytes(32).toString('base64url'),
+      allowCredentials: [{ id: credential.id, transports: credential.transports as never[] }],
+    });
+    const verification = await createChallenge(
+      membership.accountId,
+      user.id,
+      'authentication',
+      verificationOptions.challenge,
+    );
 
     res.status(201).json({
       data: {
         credential: credentialView(value),
         restrictedSession: {
           kind: 'restricted' as const,
-          user: authUser,
-          verificationOptions: null,
-          verificationChallengeId: null,
+          user: await resolveAuthUser(user),
+          verificationOptions,
+          verificationChallengeId: verification.id,
         },
       },
       message: 'Passkey registered.',
@@ -401,10 +412,14 @@ passkeyRouter.post('/authentication/begin', validateRequest({ body: authenticati
 });
 
 passkeyRouter.post(
-  '/authentication/complete',
+  ['/authentication/complete', '/registration/verify'],
   validateRequest({ body: authenticationCompleteSchema }),
   async (req, res) => {
     const body = getValidated<{ body: typeof authenticationCompleteSchema }>(req).body!;
+
+    if (req.path === '/registration/verify' && req.session?.authority !== 'restricted') {
+      failure('restricted_session_required', 401);
+    }
     const [pending] = await db
       .select()
       .from(accountWebAuthnChallenges)
@@ -463,7 +478,7 @@ passkeyRouter.post(
   },
 );
 
-passkeyRouter.use('/credentials', authed());
+passkeyRouter.use('/credentials', authed({ authority: 'full' }));
 passkeyRouter.get('/credentials', async (req, res) => {
   const user = authedRequest(req).user;
   const values = await db
@@ -532,6 +547,7 @@ passkeyRouter.delete(
   '/credentials/:credentialId',
   validateRequest({ params: credentialIdPathSchema }),
   async (req, res) => {
+    requireFreshSecurityReauthentication(req);
     await revokeCredential(req, pathCredentialId(req));
     res.status(204).send();
   },

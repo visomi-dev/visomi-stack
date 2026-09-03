@@ -15,7 +15,7 @@ import { httpResponse } from 'shared';
 
 const activationRouter = Router();
 
-activationRouter.use(authed());
+activationRouter.use(authed({ authority: 'full' }));
 
 activationRouter.get('/', async function activationStateHandler(req, res) {
   const state = await getActivationState(authedContext(req));

@@ -14,6 +14,7 @@ import type {
   EmailOtpVerifyPayload,
   RememberDevicePayload,
   SessionResponse,
+  SessionUpgradeResponse,
   SessionUpgrade,
 } from './auth.models';
 
@@ -95,6 +96,16 @@ export class BrowserAuth extends Auth {
 
   async resendEmailOtp(payload: EmailOtpResendPayload): Promise<EmailOtpResponse['data']> {
     const response = await firstValueFrom(this.http.post<EmailOtpResponse>('/api/auth/email-otp/resend', payload));
+
+    return response.data;
+  }
+
+  async selectRestrictedAccount(payload: { flowId: string; accountId: string }): Promise<SessionUpgrade> {
+    const response = await firstValueFrom(
+      this.http.post<SessionUpgradeResponse>('/api/auth/restricted/accounts', payload),
+    );
+
+    this.$user.set(response.data.user);
 
     return response.data;
   }

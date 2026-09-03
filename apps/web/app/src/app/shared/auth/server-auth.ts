@@ -99,6 +99,10 @@ export class ServerAuth extends Auth {
     return response.data;
   }
 
+  async selectRestrictedAccount(_payload: { flowId: string; accountId: string }): Promise<SessionUpgrade> {
+    throw new Error('Account selection is only available in the browser.');
+  }
+
   async rememberDevice(payload: RememberDevicePayload): Promise<void> {
     await firstValueFrom(this.http.post('/api/auth/sign-in/remember-device', payload, { responseType: 'text' }));
   }

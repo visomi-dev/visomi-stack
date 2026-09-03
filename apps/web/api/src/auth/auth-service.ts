@@ -62,6 +62,16 @@ export async function findUserById(id: string) {
   return user;
 }
 
+export async function findVerificationChallenge(id: string) {
+  const [challenge] = await db
+    .select()
+    .from(authVerificationChallenges)
+    .where(eq(authVerificationChallenges.id, id))
+    .limit(1);
+
+  return challenge;
+}
+
 export async function getPrimaryMembership(userId: string) {
   const [membership] = await db
     .select()
@@ -74,7 +84,22 @@ export async function getPrimaryMembership(userId: string) {
 }
 
 export async function resolveAuthUser(user: typeof users.$inferSelect): Promise<AuthUser> {
-  const membership = await getPrimaryMembership(user.id);
+  return resolveAuthUserForAccount(user);
+}
+
+export async function resolveAuthUserForAccount(
+  user: typeof users.$inferSelect,
+  accountId?: string,
+): Promise<AuthUser> {
+  const membership = accountId
+    ? (
+        await db
+          .select()
+          .from(accountMemberships)
+          .where(and(eq(accountMemberships.userId, user.id), eq(accountMemberships.accountId, accountId)))
+          .limit(1)
+      )[0]
+    : await getPrimaryMembership(user.id);
 
   if (!membership) {
     throw new HttpError({
@@ -126,6 +151,7 @@ export async function createChallenge(
       db.insert(authVerificationChallenges).values({
         attemptCount: 0,
         createdAt: now,
+        email: user.email,
         expiresAt,
         id: challengeId,
         lastSentAt: now,
@@ -156,6 +182,30 @@ export async function createChallenge(
     expiresAt: expiresAt.toISOString(),
     purpose,
   };
+}
+
+export async function createEmailChallenge(email: string): Promise<AuthChallengePayload> {
+  const normalizedEmail = normalizeEmail(email);
+  const pin = generateVerificationPin();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + env.PIN_EXPIRY_MINUTES * 60 * 1000);
+  const challengeId = randomUUID();
+
+  await db.insert(authVerificationChallenges).values({
+    attemptCount: 0,
+    createdAt: now,
+    email: normalizedEmail,
+    expiresAt,
+    id: challengeId,
+    lastSentAt: now,
+    pinHash: await hashSecret(pin),
+    purpose: 'bootstrap_recovery',
+    updatedAt: now,
+    userId: null,
+  });
+  await sendVerificationMessage({ challengeId, email: normalizedEmail, expiresAt, pin, purpose: 'bootstrap_recovery' });
+
+  return { challengeId, email: normalizedEmail, expiresAt: expiresAt.toISOString(), purpose: 'bootstrap_recovery' };
 }
 
 export async function findOrCreateUserByEmail(email: string): Promise<typeof users.$inferSelect> {
@@ -379,17 +429,21 @@ export async function resendChallenge(challengeId: string) {
     });
   }
 
-  const user = await findUserById(challenge.userId);
+  if (challenge.userId) {
+    const user = await findUserById(challenge.userId);
 
-  if (!user) {
-    throw new HttpError({
-      code: 'user_not_found',
-      message: 'The verification request is no longer valid.',
-      statusCode: 404,
-    });
+    if (!user) {
+      throw new HttpError({
+        code: 'user_not_found',
+        message: 'The verification request is no longer valid.',
+        statusCode: 404,
+      });
+    }
+
+    return createChallenge(user, challenge.purpose as VerificationPurpose);
   }
 
-  return createChallenge(user, challenge.purpose as VerificationPurpose);
+  return createEmailChallenge(challenge.email);
 }
 
 export async function consumeChallenge(challengeId: string, pin: string) {

@@ -56,9 +56,8 @@ const userSessions = pgTable('user_sessions', {
 
 const authVerificationChallenges = pgTable('auth_verification_challenges', {
   id: text('id').primaryKey(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  email: text('email').notNull(),
   purpose: text('purpose').notNull(),
   pinHash: text('pin_hash').notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),

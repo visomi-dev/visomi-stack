@@ -72,6 +72,17 @@ export class Passkey {
     return response.data;
   }
 
+  async verifyRegistration(challengeId: string, credential: Credential): Promise<PasskeyComplete['data']> {
+    const response = await firstValueFrom(
+      this.http.post<PasskeyComplete>('/api/auth/passkey/registration/verify', {
+        challengeId,
+        response: serializeCredential(credential),
+      }),
+    );
+
+    return response.data;
+  }
+
   async getCredential(options: Record<string, unknown>): Promise<Credential> {
     const view = this.document.defaultView;
 
@@ -134,7 +145,14 @@ export class Passkey {
 function serializeCredential(credential: Credential): Record<string, unknown> {
   const publicKey = credential as PublicKeyCredential;
   const response = publicKey.response as AuthenticatorAssertionResponse | AuthenticatorAttestationResponse;
-  const encoded = (value: ArrayBuffer): string => btoa(String.fromCharCode(...new Uint8Array(value)));
+  const encoded = (value: ArrayBuffer): string => {
+    const bytes = new Uint8Array(value);
+    let binary = '';
+
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/u, '');
+  };
 
   const result: Record<string, unknown> = {
     id: credential.id,

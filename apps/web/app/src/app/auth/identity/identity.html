@@ -307,6 +307,22 @@
           Waiting for verification
         </button>
       }
+      @case ('verification') {
+        <header class="text-center">
+          <h1 class="font-heading text-2xl font-bold" i18n="@@identityVerifyNewPasskey">Verify your new passkey</h1>
+          <p class="mt-3 text-base text-slate-500 dark:text-slate-400" i18n="@@identityVerifyNewPasskeyDescription">
+            Use the passkey you just created to finish signing in.
+          </p>
+        </header>
+        <button
+          type="button"
+          class="mt-7 inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-blue-500"
+          (click)="verifyNewPasskey()"
+          i18n="@@identityVerifyNewPasskeyAction"
+        >
+          Verify passkey
+        </button>
+      }
       @case ('success') {
         <p
           class="text-center text-sm font-semibold text-green-700 dark:text-green-400"

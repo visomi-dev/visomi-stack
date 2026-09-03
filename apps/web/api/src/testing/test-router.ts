@@ -102,8 +102,9 @@ testRouter.post(
       const authUser = await resolveAuthUser(freshUser);
 
       await new Promise<void>((resolve, reject) => {
-        req.login(authUser, (error) => (error ? reject(error) : resolve()));
+        req.login({ ...authUser, authority: 'full' }, (error) => (error ? reject(error) : resolve()));
       });
+      req.session.authority = 'full';
 
       await new Promise<void>((resolve, reject) => {
         req.session.save((error) => (error ? reject(error) : resolve()));
