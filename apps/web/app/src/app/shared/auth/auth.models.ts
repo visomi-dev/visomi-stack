@@ -23,10 +23,14 @@ export type EmailOtpResponse = ResponseEnvelope<{
 export type RestrictedSession = {
   kind: 'restricted';
   flowId: string;
-  user: AuthUser;
+  authenticated: false;
+  expiresAt: string;
+  user: null;
+  verifiedEmail: string;
 };
 
 export type FullSession = {
+  authenticated: true;
   kind: 'full';
   user: AuthUser;
 };
@@ -37,13 +41,16 @@ export type SessionUpgradeResponse = ResponseEnvelope<SessionUpgrade>;
 
 export type SessionResponse = ResponseEnvelope<{
   authenticated: boolean;
+  kind: 'anonymous' | 'restricted' | 'full';
   user: AuthUser | null;
+  expiresAt?: string;
+  verifiedEmail?: string;
 }>;
+
+export type RestrictedAccount = { accountId: string; name: string; role: string; selected?: boolean };
 
 export type MessageResponse = ResponseEnvelope<null>;
 
 export type EmailOtpRequestPayload = { email: string };
 export type EmailOtpVerifyPayload = { flowId: string; pin: string };
 export type EmailOtpResendPayload = { flowId: string };
-
-export type RememberDevicePayload = EmailOtpVerifyPayload;

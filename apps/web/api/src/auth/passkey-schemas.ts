@@ -30,7 +30,7 @@ const assertionResponseSchema = z
   })
   .strict();
 
-const passkeyEmailSchema = z.object({ email: emailSchema }).strict();
+const passkeyEmailSchema = z.object({ email: emailSchema.optional() }).strict();
 const registrationBeginSchema = passkeyEmailSchema.extend({ label: z.string().trim().min(1).max(120) }).strict();
 const registrationCompleteSchema = z
   .object({ challengeId: z.string().min(1).max(200), response: credentialResponseSchema })
@@ -59,6 +59,19 @@ const passkeyAttemptSchema = z.enum(['passkey_default', 'retry_available', 'auth
 const passkeyOptionsSchema = z.record(z.string(), z.unknown());
 const authenticatedPasskeySchema = z
   .object({ authenticated: z.literal(true), user: z.record(z.string(), z.unknown()) })
+  .strict();
+const restrictedRegistrationResponseSchema = z
+  .object({
+    credential: passkeyCredentialSchema,
+    restrictedSession: z
+      .object({
+        kind: z.literal('restricted'),
+        user: z.record(z.string(), z.unknown()),
+        verificationChallengeId: z.string(),
+        verificationOptions: z.record(z.string(), z.unknown()),
+      })
+      .strict(),
+  })
   .strict();
 const credentialIdPathSchema = z.object({ credentialId: z.string().min(1).max(1024) }).strict();
 const passkeyLabelSchema = z
@@ -113,7 +126,7 @@ const passkeyOpenApiPaths = {
         201: {
           content: {
             'application/json': {
-              schema: responseEnvelope(passkeyCredentialSchema, 'PasskeyRegistrationCompleteEnvelope'),
+              schema: responseEnvelope(restrictedRegistrationResponseSchema, 'PasskeyRegistrationCompleteEnvelope'),
             },
           },
           description: 'Registered passkey.',

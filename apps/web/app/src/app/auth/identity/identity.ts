@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { email, form, maxLength, minLength, pattern, required, type FieldTree } from '@angular/forms/signals';
 
 import { Auth } from '../../shared/auth/auth';
+import type { RestrictedAccount } from '../../shared/auth/auth.models';
 import { Passkey } from '../../shared/auth/passkey';
 import { APP_URL } from '../../shared/constants/routes';
 import { Alert } from '../../shared/ui/overlays/alert/alert';
@@ -47,8 +48,8 @@ export class Identity {
 
   readonly state = signal<AccessState>('ready');
   readonly errorMessage = signal('');
-  readonly accounts = signal<{ accountId: string; name: string; role: string }[]>([]);
-  readonly selectedAccount = signal<{ accountId: string; name: string; role: string } | null>(null);
+  readonly accounts = signal<RestrictedAccount[]>([]);
+  readonly selectedAccount = signal<RestrictedAccount | null>(null);
   readonly flowId = signal('');
   readonly resendAvailableAt = signal('');
   readonly verificationChallengeId = signal('');
@@ -93,7 +94,7 @@ export class Identity {
     this.errorMessage.set('');
 
     try {
-      const begin = await this.passkey.beginAuthentication(this.emailModel().email.trim(), retryRequested);
+      const begin = await this.passkey.beginAuthentication(retryRequested);
 
       if (!begin.options || !begin.challengeId) {
         throw new Error('Passkey options were not returned.');
@@ -166,17 +167,18 @@ export class Identity {
     this.errorMessage.set('');
 
     try {
-      const session = await this.auth.verifyEmailOtp({
+      await this.auth.verifyEmailOtp({
         flowId: this.flowId(),
         pin: this.otpForm.pin().value(),
       });
 
-      this.selectedAccount.set({
-        accountId: session.user.accountId,
-        name: session.user.email,
-        role: session.user.role,
-      });
-      this.state.set('enrollment');
+      const accounts = await this.auth.getRestrictedAccounts();
+
+      this.accounts.set(accounts);
+      const selected = accounts.find((account) => account.selected) ?? null;
+
+      this.selectedAccount.set(selected);
+      this.state.set(selected ? 'enrollment' : 'account-choice');
     } catch (error) {
       const accounts = this.accountChoices(error);
 
@@ -192,10 +194,11 @@ export class Identity {
     }
   }
 
-  protected async chooseAccount(account: { accountId: string; name: string; role: string }): Promise<void> {
+  protected async chooseAccount(account: RestrictedAccount): Promise<void> {
     try {
-      await this.auth.selectRestrictedAccount({ flowId: this.flowId(), accountId: account.accountId });
-      this.selectedAccount.set(account);
+      const selected = await this.auth.selectRestrictedAccount(account.accountId);
+
+      this.selectedAccount.set(selected);
       this.state.set('enrollment');
     } catch (error) {
       this.errorMessage.set(this.safeError(error, 'We could not select that account.'));
@@ -211,10 +214,7 @@ export class Identity {
     this.state.set('enrollment-loading');
 
     try {
-      const begin = await this.passkey.beginRegistration(
-        this.emailModel().email.trim(),
-        this.enrollmentForm.label().value(),
-      );
+      const begin = await this.passkey.beginRegistration(this.enrollmentForm.label().value());
 
       if (!begin.options || !begin.challengeId) {
         throw new Error('Passkey options were not returned.');
@@ -222,9 +222,7 @@ export class Identity {
 
       const credential = await this.passkey.createCredential(begin.options);
 
-      const completed = (await this.passkey.completeRegistration(begin.challengeId, credential)) as {
-        restrictedSession?: { verificationChallengeId?: string; verificationOptions?: Record<string, unknown> };
-      };
+      const completed = await this.passkey.completeRegistration(begin.challengeId, credential);
       const verification = completed.restrictedSession;
 
       if (!verification?.verificationChallengeId || !verification.verificationOptions) {
@@ -276,7 +274,7 @@ export class Identity {
       : fallback;
   }
 
-  private accountChoices(error: unknown): { accountId: string; name: string; role: string }[] | null {
+  private accountChoices(error: unknown): RestrictedAccount[] | null {
     if (!(error instanceof HttpErrorResponse) || error.status !== 409 || error.error?.code !== 'multiple_accounts')
       return null;
     const accounts = error.error?.data?.accounts;

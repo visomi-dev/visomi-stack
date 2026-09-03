@@ -14,7 +14,13 @@ import { getValidated, validateRequest } from '../shared/http/route-schemas';
 import { env } from '../shared/env';
 
 import { authed, authedRequest } from './auth-middleware';
-import { createPasskeyEnrollment, findUserByEmail, getPrimaryMembership, resolveAuthUser } from './auth-service';
+import {
+  createPasskeyEnrollment,
+  findUserByEmail,
+  findUserById,
+  getPrimaryMembership,
+  resolveAuthUser,
+} from './auth-service';
 import {
   authenticationBeginSchema,
   authenticationCompleteSchema,
@@ -103,10 +109,11 @@ function requireRestrictedSession(req: Parameters<typeof authedRequest>[0]): {
   };
 }
 async function createChallenge(
-  accountId: string,
+  accountId: string | null,
   userId: string | null,
-  purpose: 'registration' | 'authentication',
+  purpose: 'registration' | 'authentication' | 'discoverable_authentication',
   value: string,
+  sessionBinding = 'legacy',
 ) {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + CHALLENGE_TTL_MS);
@@ -118,6 +125,11 @@ async function createChallenge(
     userId,
     challengeHash: hashChallenge(value),
     purpose,
+    ceremonyType: 'authentication',
+    sessionBinding,
+    flowId: null,
+    credentialId: null,
+    allowCredentialIds: [],
     rpId,
     origin,
     userVerification: 'required',
@@ -129,7 +141,12 @@ async function createChallenge(
 
   return { id, expiresAt };
 }
-async function consumeChallenge(id: string, value: string, purpose: 'registration' | 'authentication') {
+async function consumeChallenge(
+  id: string,
+  value: string,
+  purpose: 'registration' | 'authentication' | 'discoverable_authentication',
+  sessionBinding?: string,
+) {
   const now = new Date();
   const [updated] = await db
     .update(accountWebAuthnChallenges)
@@ -139,6 +156,7 @@ async function consumeChallenge(id: string, value: string, purpose: 'registratio
         eq(accountWebAuthnChallenges.id, id),
         eq(accountWebAuthnChallenges.purpose, purpose),
         eq(accountWebAuthnChallenges.challengeHash, hashChallenge(value)),
+        ...(sessionBinding ? [eq(accountWebAuthnChallenges.sessionBinding, sessionBinding)] : []),
         isNull(accountWebAuthnChallenges.consumedAt),
         gt(accountWebAuthnChallenges.expiresAt, now),
       ),
@@ -179,7 +197,8 @@ passkeyRouter.use(csrfProtection);
 passkeyRouter.use(passkeyRateLimit);
 
 passkeyRouter.post('/registration/begin', validateRequest({ body: registrationBeginSchema }), async (req, res) => {
-  const { email, label } = getValidated<{ body: typeof registrationBeginSchema }>(req).body!;
+  const { email: requestedEmail, label } = getValidated<{ body: typeof registrationBeginSchema }>(req).body!;
+  const email = requestedEmail ?? req.user?.email ?? '';
   let verificationChallengeId: string | null = null;
   let enrollmentId: string | null = null;
   let user;
@@ -231,7 +250,7 @@ passkeyRouter.post('/registration/begin', validateRequest({ body: registrationBe
     excludeCredentials: existing.map((item) => ({ id: item.credentialId, transports: item.transports as never[] })),
     authenticatorSelection: { residentKey: 'preferred', userVerification: 'required' },
   });
-  const stored = await createChallenge(membership.accountId, user.id, 'registration', options.challenge);
+  const stored = await createChallenge(membership.accountId, user.id, 'registration', options.challenge, req.sessionID);
 
   if (req.session)
     req.session.passkeyRegistration = {
@@ -295,7 +314,10 @@ passkeyRouter.post(
       signCount: credential.counter,
       backupEligible: verified.registrationInfo.credentialDeviceType === 'multiDevice',
       backupState: verified.registrationInfo.credentialBackedUp,
+      status: 'active',
+      enrollmentFlowId: null,
       createdAt: new Date(),
+      activatedAt: new Date(),
       lastUsedAt: null,
       revokedAt: null,
       updatedAt: new Date(),
@@ -311,6 +333,7 @@ passkeyRouter.post(
             eq(accountWebAuthnChallenges.id, body.challengeId),
             eq(accountWebAuthnChallenges.purpose, 'registration'),
             eq(accountWebAuthnChallenges.challengeHash, hashChallenge(decodeChallengeFromResponse(body.response))),
+            eq(accountWebAuthnChallenges.sessionBinding, req.sessionID),
             isNull(accountWebAuthnChallenges.consumedAt),
             gt(accountWebAuthnChallenges.expiresAt, now),
           ),
@@ -346,6 +369,7 @@ passkeyRouter.post(
       user.id,
       'authentication',
       verificationOptions.challenge,
+      req.sessionID,
     );
 
     res.status(201).json({
@@ -378,9 +402,22 @@ function decodeChallengeFromResponse(response: { response: { clientDataJSON: str
 }
 
 passkeyRouter.post('/authentication/begin', validateRequest({ body: authenticationBeginSchema }), async (req, res) => {
-  const { email, retryRequested } = getValidated<{
+  const { email: requestedEmail, retryRequested } = getValidated<{
     body: typeof authenticationBeginSchema;
   }>(req).body!;
+
+  if (!requestedEmail) {
+    const options = await generateAuthenticationOptions({ rpID: rpId, userVerification: 'required', timeout: 60000 });
+    const stored = await createChallenge(null, null, 'discoverable_authentication', options.challenge, req.sessionID);
+
+    res.json({
+      data: { challengeId: stored.id, options, attempt: nextPasskeyAttempt({ retryRequested }) },
+      message: 'Passkey authentication options created.',
+    });
+
+    return;
+  }
+  const email = requestedEmail;
   const { user, membership } = await requireVerifiedEmail(email);
 
   const credentials = await db
@@ -403,7 +440,13 @@ passkeyRouter.post('/authentication/begin', validateRequest({ body: authenticati
     challenge,
     allowCredentials: credentials.map((item) => ({ id: item.credentialId, transports: item.transports as never[] })),
   });
-  const stored = await createChallenge(membership.accountId, user.id, 'authentication', options.challenge);
+  const stored = await createChallenge(
+    membership.accountId,
+    user.id,
+    'authentication',
+    options.challenge,
+    req.sessionID,
+  );
 
   res.json({
     data: { challengeId: stored.id, options, attempt: nextPasskeyAttempt({ retryRequested }) },
@@ -427,14 +470,17 @@ passkeyRouter.post(
       .limit(1);
     const challenge = pending;
 
-    if (!challenge || !challenge.userId) failure('challenge_mismatch', 400);
+    if (!challenge) failure('challenge_mismatch', 400);
     const [credential] = await db
       .select()
       .from(accountPasskeyCredentials)
       .where(eq(accountPasskeyCredentials.credentialId, body.response.id))
       .limit(1);
 
-    if (!credential || credential.accountId !== challenge.accountId || credential.userId !== challenge.userId)
+    if (
+      !credential ||
+      (challenge.userId && (credential.accountId !== challenge.accountId || credential.userId !== challenge.userId))
+    )
       failure('credential_not_found', 401);
     if (credential.revokedAt) failure('credential_revoked', 401);
     let verified;
@@ -457,16 +503,19 @@ passkeyRouter.post(
     }
     if (!verified.verified) failure('platform_error', 401);
     if (verified.authenticationInfo.newCounter < credential.signCount) failure('sign_count_regression', 401);
-    await consumeChallenge(body.challengeId, decodeChallengeFromResponse(body.response), 'authentication');
+    await consumeChallenge(
+      body.challengeId,
+      decodeChallengeFromResponse(body.response),
+      challenge.purpose as 'authentication' | 'discoverable_authentication',
+      req.sessionID,
+    );
     const now = new Date();
 
     await db
       .update(accountPasskeyCredentials)
       .set({ signCount: verified.authenticationInfo.newCounter, lastUsedAt: now, updatedAt: now })
       .where(eq(accountPasskeyCredentials.id, credential.id));
-    const user = await findUserByEmail(
-      (await db.select().from(users).where(eq(users.id, challenge.userId)).limit(1))[0]?.email ?? '',
-    );
+    const user = await findUserById(credential.userId);
 
     if (!user) failure('credential_not_found', 401);
     const wasAuthenticated = req.isAuthenticated() && req.user?.id === user.id;

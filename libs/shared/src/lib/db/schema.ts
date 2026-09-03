@@ -1,12 +1,11 @@
-import { boolean, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { boolean, check, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 const users = pgTable(
   'users',
   {
     id: text('id').primaryKey(),
     email: text('email').notNull(),
-    passwordHash: text('password_hash'),
-    passwordConfigured: boolean('password_configured').notNull().default(true),
     emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -54,6 +53,34 @@ const userSessions = pgTable('user_sessions', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+const authEmailChallenges = pgTable(
+  'auth_email_challenges',
+  {
+    id: text('id').primaryKey(),
+    flowId: text('flow_id').notNull(),
+    normalizedEmail: text('normalized_email').notNull(),
+    purpose: text('purpose').notNull().default('bootstrap_recovery'),
+    pinHash: text('pin_hash').notNull(),
+    clientContextHash: text('client_context_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    supersededAt: timestamp('superseded_at', { withTimezone: true }),
+    attemptCount: integer('attempt_count').default(0).notNull(),
+    lastSentAt: timestamp('last_sent_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('auth_email_challenges_flow_active_idx')
+      .on(table.flowId)
+      .where(sql`${table.consumedAt} IS NULL AND ${table.supersededAt} IS NULL`),
+    uniqueIndex('auth_email_challenges_flow_pin_idx').on(table.flowId, table.pinHash),
+    index('auth_email_challenges_expiry_idx').on(table.expiresAt, table.consumedAt, table.supersededAt),
+    check('auth_email_challenges_purpose_check', sql`${table.purpose} = 'bootstrap_recovery'`),
+    check('auth_email_challenges_attempt_count_check', sql`${table.attemptCount} >= 0 AND ${table.attemptCount} <= 5`),
+  ],
+);
+
 const authVerificationChallenges = pgTable('auth_verification_challenges', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
@@ -67,31 +94,6 @@ const authVerificationChallenges = pgTable('auth_verification_challenges', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
-
-const accountPasskeyEnrollments = pgTable(
-  'account_passkey_enrollments',
-  {
-    id: text('id').primaryKey(),
-    accountId: text('account_id')
-      .notNull()
-      .references(() => accounts.id, { onDelete: 'cascade' }),
-    userId: text('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    email: text('email').notNull(),
-    credentialId: text('credential_id'),
-    status: text('status').notNull().default('pending'),
-    verificationChallengeId: text('verification_challenge_id').references(() => authVerificationChallenges.id, {
-      onDelete: 'set null',
-    }),
-    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-    activatedAt: timestamp('activated_at', { withTimezone: true }),
-    terminalAt: timestamp('terminal_at', { withTimezone: true }),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-  },
-  (table) => [index('account_passkey_enrollments_account_status_idx').on(table.accountId, table.status)],
-);
 
 const accountPasskeyCredentials = pgTable(
   'account_passkey_credentials',
@@ -107,32 +109,63 @@ const accountPasskeyCredentials = pgTable(
     publicKey: text('public_key').notNull(),
     rpId: text('rp_id').notNull(),
     label: text('label').notNull(),
+    status: text('status').notNull().default('pending'),
+    enrollmentFlowId: text('enrollment_flow_id'),
     transports: jsonb('transports').$type<string[]>().notNull().default([]),
     signCount: integer('sign_count').notNull().default(0),
     backupEligible: boolean('backup_eligible').notNull().default(false),
     backupState: boolean('backup_state').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    activatedAt: timestamp('activated_at', { withTimezone: true }),
     lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex('account_passkey_credentials_credential_idx').on(table.credentialId),
-    uniqueIndex('account_passkey_credentials_account_label_idx').on(table.accountId, table.label),
-    index('account_passkey_credentials_account_status_idx').on(table.accountId, table.revokedAt),
+    uniqueIndex('account_passkey_credentials_account_label_idx')
+      .on(table.accountId, table.label)
+      .where(sql`${table.status} <> 'revoked'`),
+    index('account_passkey_credentials_account_status_idx').on(table.accountId, table.status),
+    index('account_passkey_credentials_enrollment_flow_idx').on(table.enrollmentFlowId, table.status),
+    check('account_passkey_credentials_status_check', sql`${table.status} IN ('pending', 'active', 'revoked')`),
   ],
 );
+
+const accountPasskeyEnrollments = pgTable('account_passkey_enrollments', {
+  id: text('id').primaryKey(),
+  accountId: text('account_id')
+    .notNull()
+    .references(() => accounts.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  email: text('email').notNull(),
+  credentialId: text('credential_id'),
+  status: text('status').notNull().default('pending'),
+  verificationChallengeId: text('verification_challenge_id').references(() => authVerificationChallenges.id, {
+    onDelete: 'set null',
+  }),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  activatedAt: timestamp('activated_at', { withTimezone: true }),
+  terminalAt: timestamp('terminal_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
 
 const accountWebAuthnChallenges = pgTable(
   'account_webauthn_challenges',
   {
     id: text('id').primaryKey(),
-    accountId: text('account_id')
-      .notNull()
-      .references(() => accounts.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').references(() => accounts.id, { onDelete: 'cascade' }),
     userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
     challengeHash: text('challenge_hash').notNull(),
     purpose: text('purpose').notNull(),
+    ceremonyType: text('ceremony_type').notNull(),
+    sessionBinding: text('session_binding').notNull(),
+    flowId: text('flow_id'),
+    credentialId: text('credential_id'),
+    allowCredentialIds: jsonb('allow_credential_ids').$type<string[]>().notNull().default([]),
     rpId: text('rp_id').notNull(),
     origin: text('origin').notNull(),
     userVerification: text('user_verification').notNull(),
@@ -140,10 +173,13 @@ const accountWebAuthnChallenges = pgTable(
     consumedAt: timestamp('consumed_at', { withTimezone: true }),
     attemptCount: integer('attempt_count').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex('account_webauthn_challenges_hash_idx').on(table.challengeHash),
-    index('account_webauthn_challenges_account_expiry_idx').on(table.accountId, table.expiresAt),
+    index('account_webauthn_challenges_session_idx').on(table.sessionBinding, table.purpose, table.consumedAt),
+    index('account_webauthn_challenges_flow_idx').on(table.flowId, table.purpose),
+    check('auth_webauthn_challenges_ceremony_check', sql`${table.ceremonyType} IN ('registration', 'authentication')`),
   ],
 );
 
@@ -430,6 +466,7 @@ export {
   accountMemberships,
   apiKeys,
   asyncJobs,
+  authEmailChallenges,
   authVerificationChallenges,
   accountPasskeyCredentials,
   accountPasskeyEnrollments,

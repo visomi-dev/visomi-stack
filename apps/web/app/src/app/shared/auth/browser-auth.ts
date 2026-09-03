@@ -12,10 +12,10 @@ import type {
   EmailOtpResendPayload,
   EmailOtpResponse,
   EmailOtpVerifyPayload,
-  RememberDevicePayload,
   SessionResponse,
-  SessionUpgradeResponse,
   SessionUpgrade,
+  RestrictedAccount,
+  ResponseEnvelope,
 } from './auth.models';
 
 @Injectable({ providedIn: 'root' })
@@ -94,24 +94,26 @@ export class BrowserAuth extends Auth {
     }
   }
 
+  async getRestrictedAccounts(): Promise<RestrictedAccount[]> {
+    const response = await firstValueFrom(
+      this.http.get<ResponseEnvelope<{ accounts: RestrictedAccount[] }>>('/api/auth/restricted/accounts'),
+    );
+
+    return response.data.accounts;
+  }
+
   async resendEmailOtp(payload: EmailOtpResendPayload): Promise<EmailOtpResponse['data']> {
     const response = await firstValueFrom(this.http.post<EmailOtpResponse>('/api/auth/email-otp/resend', payload));
 
     return response.data;
   }
 
-  async selectRestrictedAccount(payload: { flowId: string; accountId: string }): Promise<SessionUpgrade> {
+  async selectRestrictedAccount(accountId: string): Promise<RestrictedAccount> {
     const response = await firstValueFrom(
-      this.http.post<SessionUpgradeResponse>('/api/auth/restricted/accounts', payload),
+      this.http.post<ResponseEnvelope<RestrictedAccount>>('/api/auth/restricted/accounts/select', { accountId }),
     );
 
-    this.$user.set(response.data.user);
-
     return response.data;
-  }
-
-  async rememberDevice(payload: RememberDevicePayload): Promise<void> {
-    await firstValueFrom(this.http.post('/api/auth/sign-in/remember-device', payload, { responseType: 'text' }));
   }
 
   async signOut(): Promise<void> {

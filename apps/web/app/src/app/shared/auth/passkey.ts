@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import type { ResponseEnvelope } from './auth.models';
+import type { AuthUser, ResponseEnvelope } from './auth.models';
 
 type PasskeyBegin = ResponseEnvelope<{
   challengeId: string | null;
@@ -13,7 +13,11 @@ type PasskeyBegin = ResponseEnvelope<{
   attempt?: 'passkey_default' | 'retry_available' | 'authenticated';
 }>;
 
-type PasskeyComplete = ResponseEnvelope<{ authenticated: true; user: unknown }>;
+type PasskeyComplete = ResponseEnvelope<{ authenticated: true; user: AuthUser }>;
+type PasskeyRegistrationComplete = ResponseEnvelope<{
+  credential: PasskeyCredential;
+  restrictedSession?: { verificationChallengeId: string; verificationOptions: Record<string, unknown> };
+}>;
 export type PasskeyCredential = {
   id: string;
   label: string;
@@ -34,17 +38,17 @@ export class Passkey {
     return typeof this.document.defaultView?.PublicKeyCredential !== 'undefined';
   }
 
-  async beginAuthentication(email: string, retryRequested = false): Promise<PasskeyBegin['data']> {
+  async beginAuthentication(retryRequested = false): Promise<PasskeyBegin['data']> {
     const response = await firstValueFrom(
-      this.http.post<PasskeyBegin>('/api/auth/passkey/authentication/begin', { email, retryRequested }),
+      this.http.post<PasskeyBegin>('/api/auth/passkey/authentication/begin', { retryRequested }),
     );
 
     return response.data;
   }
 
-  async beginRegistration(email: string, label: string): Promise<PasskeyBegin['data']> {
+  async beginRegistration(label: string): Promise<PasskeyBegin['data']> {
     const response = await firstValueFrom(
-      this.http.post<PasskeyBegin>('/api/auth/passkey/registration/begin', { email, label }),
+      this.http.post<PasskeyBegin>('/api/auth/passkey/registration/begin', { label }),
     );
 
     return response.data;
@@ -61,9 +65,12 @@ export class Passkey {
     return response.data;
   }
 
-  async completeRegistration(challengeId: string, credential: Credential): Promise<unknown> {
+  async completeRegistration(
+    challengeId: string,
+    credential: Credential,
+  ): Promise<PasskeyRegistrationComplete['data']> {
     const response = await firstValueFrom(
-      this.http.post<ResponseEnvelope<unknown>>('/api/auth/passkey/registration/complete', {
+      this.http.post<PasskeyRegistrationComplete>('/api/auth/passkey/registration/complete', {
         challengeId,
         response: serializeCredential(credential),
       }),
@@ -182,7 +189,8 @@ function serializeCredential(credential: Credential): Record<string, unknown> {
 function decodeOptions(options: Record<string, unknown>): Record<string, unknown> {
   const decode = (value: unknown): ArrayBuffer | unknown => {
     if (typeof value !== 'string') return value;
-    const binary = atob(value.replace(/-/g, '+').replace(/_/g, '/'));
+    const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '='));
 
     return Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
   };

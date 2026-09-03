@@ -13,21 +13,19 @@ export const authUserSchema = z
     }),
     id: z.string().meta({ description: 'User identifier.', example: 'user-123', id: 'AuthUserId' }),
     role: z.string().meta({ description: 'Active account role.', example: 'owner', id: 'AuthRole' }),
+    authenticationMethod: z.literal('passkey').optional(),
+    credentialId: z.string().optional(),
   })
   .meta({ id: 'AuthUser' });
 
-export const challengeSchema = z
-  .object({
-    challengeId: challengeIdSchema,
-    email: emailSchema,
-    expiresAt: z.string().meta({ description: 'Challenge expiry timestamp.', example: '2026-01-01T00:10:00.000Z' }),
-    purpose: z.literal('bootstrap_recovery').meta({ description: 'Challenge purpose.', example: 'bootstrap_recovery' }),
-  })
-  .meta({ id: 'AuthChallenge' });
-
 export type AuthUser = z.infer<typeof authUserSchema>;
+export const challengeSchema = z.object({
+  challengeId: challengeIdSchema,
+  email: emailSchema,
+  expiresAt: z.string(),
+  purpose: z.literal('bootstrap_recovery'),
+});
 export type VerificationPurpose = z.infer<typeof challengeSchema>['purpose'];
-export type AuthChallengePayload = z.infer<typeof challengeSchema>;
 
 export const emailOtpRequestSchema = z
   .object({
@@ -49,15 +47,31 @@ export const emailOtpResendSchema = z
   .meta({ id: 'EmailOtpResend' });
 
 export const restrictedAccountSelectSchema = z
-  .object({ flowId: challengeIdSchema, accountId: z.string().min(1) })
+  .object({ accountId: z.string().min(1) })
   .strict()
   .meta({ id: 'RestrictedAccountSelect' });
 
-export const sessionResponseSchema = z
+export const restrictedAccountChoiceSchema = z
+  .object({ accountId: z.string(), name: z.string(), role: z.string(), selected: z.boolean() })
+  .strict()
+  .meta({ id: 'RestrictedAccountChoice' });
+
+export const restrictedSessionSchema = z
   .object({
-    authenticated: z.boolean(),
-    user: authUserSchema.nullable(),
+    kind: z.literal('restricted'),
+    authenticated: z.literal(false),
+    expiresAt: z.string(),
+    user: z.null(),
+    verifiedEmail: emailSchema,
   })
+  .meta({ id: 'AuthRestrictedSession' });
+
+export const sessionResponseSchema = z
+  .discriminatedUnion('kind', [
+    z.object({ authenticated: z.literal(false), kind: z.literal('anonymous'), user: z.null() }),
+    restrictedSessionSchema,
+    z.object({ authenticated: z.literal(true), kind: z.literal('full'), user: authUserSchema }),
+  ])
   .meta({ id: 'AuthSessionResponse' });
 
 export const authenticatedResponseSchema = z
@@ -73,16 +87,9 @@ export const messageResponseSchema = z
   })
   .meta({ id: 'MessageResponse' });
 
-export const restrictedSessionSchema = z
-  .object({
-    kind: z.literal('restricted'),
-    user: authUserSchema,
-    flowId: challengeIdSchema,
-  })
-  .meta({ id: 'AuthRestrictedSession' });
-
 export const fullSessionSchema = z
   .object({
+    authenticated: z.literal(true),
     kind: z.literal('full'),
     user: authUserSchema,
   })
@@ -161,12 +168,39 @@ export const authOpenApiPaths = {
     },
   },
   '/auth/restricted/accounts': {
+    get: {
+      responses: {
+        200: {
+          content: {
+            'application/json': {
+              schema: responseEnvelope(
+                z
+                  .object({
+                    accounts: z.array(
+                      z
+                        .object({ accountId: z.string(), name: z.string(), role: z.string(), selected: z.boolean() })
+                        .strict(),
+                    ),
+                  })
+                  .strict(),
+                'RestrictedAccountChoicesEnvelope',
+              ),
+            },
+          },
+          description: 'Accounts eligible for the verified email.',
+        },
+      },
+    },
+  },
+  '/auth/restricted/accounts/select': {
     post: {
       requestBody: { required: true, content: { 'application/json': { schema: restrictedAccountSelectSchema } } },
       responses: {
         200: {
           content: {
-            'application/json': { schema: responseEnvelope(restrictedSessionSchema, 'RestrictedAccountEnvelope') },
+            'application/json': {
+              schema: responseEnvelope(restrictedAccountChoiceSchema, 'RestrictedAccountSelectionEnvelope'),
+            },
           },
           description: 'Restricted session bound to the selected account.',
         },

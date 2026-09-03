@@ -6,9 +6,9 @@ import type {
   EmailOtpResendPayload,
   EmailOtpResponse,
   EmailOtpVerifyPayload,
-  RememberDevicePayload,
   SessionResponse,
   SessionUpgrade,
+  RestrictedAccount,
 } from './auth.models';
 
 export abstract class Auth {
@@ -21,9 +21,9 @@ export abstract class Auth {
   abstract ensureSessionLoaded(): Promise<void>;
   abstract requestEmailOtp(payload: EmailOtpRequestPayload): Promise<EmailOtpResponse['data']>;
   abstract verifyEmailOtp(payload: EmailOtpVerifyPayload): Promise<SessionUpgrade>;
+  abstract getRestrictedAccounts(): Promise<RestrictedAccount[]>;
   abstract resendEmailOtp(payload: EmailOtpResendPayload): Promise<EmailOtpResponse['data']>;
-  abstract selectRestrictedAccount(payload: { flowId: string; accountId: string }): Promise<SessionUpgrade>;
-  abstract rememberDevice(payload: RememberDevicePayload): Promise<void>;
+  abstract selectRestrictedAccount(accountId: string): Promise<RestrictedAccount>;
   abstract signOut(): Promise<void>;
 }
 

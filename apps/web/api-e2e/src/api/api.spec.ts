@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const origin = 'http://localhost:8080';
+const csrfConfig = { headers: { Origin: origin } };
 
 const toCookieHeader = (setCookie: string[] | undefined) =>
   setCookie?.map((cookie) => cookie.split(';', 1)[0]).join('; ') ?? '';
@@ -78,7 +79,7 @@ describe('auth API', () => {
 
   it('completes the email-OTP bootstrap and session lifecycle', async () => {
     const accountEmail = `engineer-${Date.now()}@visomi-stack.dev`;
-    const request = await axios.post('/auth/email-otp/request', { email: accountEmail });
+    const request = await axios.post('/auth/email-otp/request', { email: accountEmail }, csrfConfig);
 
     expect(request.status).toBe(202);
     expect(request.data.data.flowId).toBeDefined();
@@ -90,30 +91,33 @@ describe('auth API', () => {
     expect(mailbox.data.purpose).toBe('bootstrap_recovery');
     expect(mailbox.data.email).toBe(accountEmail);
 
-    const verify = await axios.post('/auth/email-otp/verify', {
-      flowId: request.data.data.flowId,
-      pin: mailbox.data.pin,
-    });
+    const verify = await axios.post(
+      '/auth/email-otp/verify',
+      {
+        flowId: request.data.data.flowId,
+        pin: mailbox.data.pin,
+      },
+      csrfConfig,
+    );
 
     expect(verify.status).toBe(200);
     expect(verify.data.data.kind).toBe('restricted');
-    expect(verify.data.data.user.email).toBe(accountEmail);
-    expect(verify.data.data.user.accountId).toBeTruthy();
+    expect(verify.data.data.user).toBeNull();
 
     const sessionCookie = toCookieHeader(verify.headers['set-cookie']);
     const session = await axios.get('/auth/session', {
       headers: { Cookie: sessionCookie },
     });
 
-    expect(session.data.data.authenticated).toBe(true);
-    expect(session.data.data.user.email).toBe(accountEmail);
+    expect(session.data.data.authenticated).toBe(false);
+    expect(session.data.data.user).toBeNull();
 
-    const invalid = await axios.post('/auth/email-otp/request', { email: accountEmail });
+    const invalid = await axios.post('/auth/email-otp/request', { email: accountEmail }, csrfConfig);
 
     const invalidVerify = await axios.post(
       '/auth/email-otp/verify',
       { flowId: invalid.data.data.flowId, pin: '000000' },
-      { validateStatus: () => true },
+      { ...csrfConfig, validateStatus: () => true },
     );
 
     expect(invalidVerify.status).toBe(401);
@@ -122,7 +126,7 @@ describe('auth API', () => {
       '/auth/sign-out',
       {},
       {
-        headers: { Cookie: sessionCookie },
+        headers: { ...csrfConfig.headers, Cookie: sessionCookie },
         validateStatus: () => true,
       },
     );
@@ -134,10 +138,10 @@ describe('auth API', () => {
     const knownEmail = `known-${Date.now()}@visomi-stack.dev`;
     const unknownEmail = `unknown-${Date.now()}@visomi-stack.dev`;
 
-    await axios.post('/auth/email-otp/request', { email: knownEmail });
+    await axios.post('/auth/email-otp/request', { email: knownEmail }, csrfConfig);
 
-    const known = await axios.post('/auth/email-otp/request', { email: knownEmail });
-    const unknown = await axios.post('/auth/email-otp/request', { email: unknownEmail });
+    const known = await axios.post('/auth/email-otp/request', { email: knownEmail }, csrfConfig);
+    const unknown = await axios.post('/auth/email-otp/request', { email: unknownEmail }, csrfConfig);
 
     expect(known.status).toBe(unknown.status);
     expect(known.data.data.flowId).toBeDefined();
@@ -147,15 +151,15 @@ describe('auth API', () => {
   it('enforces the OTP resend cooldown', async () => {
     const accountEmail = `resend-${Date.now()}@visomi-stack.dev`;
 
-    const request = await axios.post('/auth/email-otp/request', { email: accountEmail });
+    const request = await axios.post('/auth/email-otp/request', { email: accountEmail }, csrfConfig);
     const resend = await axios.post(
       '/auth/email-otp/resend',
       { flowId: request.data.data.flowId },
-      { validateStatus: () => true },
+      { ...csrfConfig, validateStatus: () => true },
     );
 
     expect(resend.status).toBe(429);
-    expect(resend.data).toEqual(expect.objectContaining({ code: 'challenge_cooldown', message: expect.any(String) }));
+    expect(resend.data).toEqual(expect.objectContaining({ code: 'rate_limited', message: expect.any(String) }));
   });
 
   it('rejects anonymous passkey registration with restricted_session_required', async () => {

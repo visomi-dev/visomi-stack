@@ -10,9 +10,9 @@ import type {
   EmailOtpResendPayload,
   EmailOtpResponse,
   EmailOtpVerifyPayload,
-  RememberDevicePayload,
   SessionResponse,
   SessionUpgrade,
+  RestrictedAccount,
 } from './auth.models';
 
 @Injectable()
@@ -99,12 +99,16 @@ export class ServerAuth extends Auth {
     return response.data;
   }
 
-  async selectRestrictedAccount(_payload: { flowId: string; accountId: string }): Promise<SessionUpgrade> {
-    throw new Error('Account selection is only available in the browser.');
+  async getRestrictedAccounts(): Promise<RestrictedAccount[]> {
+    const response = await firstValueFrom(
+      this.http.get<{ data: { accounts: RestrictedAccount[] } }>('/api/auth/restricted/accounts'),
+    );
+
+    return response.data.accounts;
   }
 
-  async rememberDevice(payload: RememberDevicePayload): Promise<void> {
-    await firstValueFrom(this.http.post('/api/auth/sign-in/remember-device', payload, { responseType: 'text' }));
+  async selectRestrictedAccount(_accountId: string): Promise<RestrictedAccount> {
+    throw new Error('Account selection is only available in the browser.');
   }
 
   async signOut(): Promise<void> {

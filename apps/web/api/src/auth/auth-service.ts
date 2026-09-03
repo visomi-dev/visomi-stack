@@ -1,6 +1,6 @@
-import { randomUUID } from 'node:crypto';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 
-import { and, asc, desc, eq, gt, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, isNull, lt, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 
 import { env } from '../shared/env';
@@ -21,6 +21,7 @@ import {
   accountPasskeyEnrollments,
   accounts,
   authVerificationChallenges,
+  authEmailChallenges,
   db,
   HttpError,
   safeInsert,
@@ -33,6 +34,41 @@ type AuthUser = z.infer<typeof authUserSchema>;
 type AuthChallengePayload = z.infer<typeof challengeSchema>;
 
 const MAX_CHALLENGE_ATTEMPTS = 5;
+const OTP_PURPOSE = 'bootstrap_recovery' as const;
+
+type RestrictedIdentity = {
+  accounts: Array<{ accountId: string; name: string; role: string }>;
+  email: string;
+  userId: string;
+};
+type EmailOtpDelivery = { flowId: string; resendAvailableAt: string };
+
+export function clientContextHash(ip: string | undefined, userAgent: string | undefined): string {
+  return createHmac('sha256', env.SESSION_SECRET)
+    .update(`${ip ?? 'unknown'}\u0000${userAgent ?? 'unknown'}`)
+    .digest('hex');
+}
+
+function hashPin(flowId: string, email: string, context: string, pin: string): string {
+  return createHmac('sha256', env.SESSION_SECRET)
+    .update(`${flowId}\u0000${email}\u0000${context}\u0000${pin}`)
+    .digest('hex');
+}
+
+function pinMatches(expected: string, actual: string): boolean {
+  const left = Buffer.from(expected, 'hex');
+  const right = Buffer.from(actual, 'hex');
+
+  return left.length === right.length && timingSafeEqual(left, right);
+}
+
+function verificationFailed(): never {
+  throw new HttpError({
+    code: 'verification_failed',
+    message: 'The verification request could not be completed.',
+    statusCode: 401,
+  });
+}
 
 export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -542,4 +578,167 @@ export async function getLatestChallengeForUser(userId: string) {
     .limit(1);
 
   return challenge;
+}
+
+async function deliverEmailOtp(flowId: string, email: string, context: string): Promise<EmailOtpDelivery> {
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + env.PIN_EXPIRY_MINUTES * 60_000);
+  const pin = generateVerificationPin();
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(authEmailChallenges)
+      .set({ supersededAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(authEmailChallenges.flowId, flowId),
+          isNull(authEmailChallenges.consumedAt),
+          isNull(authEmailChallenges.supersededAt),
+        ),
+      );
+    await tx.insert(authEmailChallenges).values({
+      id: randomUUID(),
+      flowId,
+      normalizedEmail: email,
+      purpose: OTP_PURPOSE,
+      pinHash: hashPin(flowId, email, context, pin),
+      clientContextHash: context,
+      expiresAt,
+      consumedAt: null,
+      supersededAt: null,
+      attemptCount: 0,
+      lastSentAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+  });
+  try {
+    await sendVerificationMessage({ challengeId: flowId, email, expiresAt, pin, purpose: OTP_PURPOSE });
+  } catch {
+    /* Do not disclose delivery failures. */
+  }
+
+  return { flowId, resendAvailableAt: new Date(now.getTime() + env.PIN_RESEND_COOLDOWN_SECONDS * 1000).toISOString() };
+}
+
+export async function requestEmailOtp(email: string, context: string): Promise<EmailOtpDelivery> {
+  return deliverEmailOtp(randomUUID(), normalizeEmail(email), context);
+}
+
+export async function resendEmailOtp(flowId: string, context: string): Promise<EmailOtpDelivery> {
+  const [challenge] = await db
+    .select()
+    .from(authEmailChallenges)
+    .where(
+      and(
+        eq(authEmailChallenges.flowId, flowId),
+        isNull(authEmailChallenges.consumedAt),
+        isNull(authEmailChallenges.supersededAt),
+      ),
+    )
+    .limit(1);
+
+  if (!challenge || challenge.clientContextHash !== context)
+    return { flowId, resendAvailableAt: new Date(Date.now() + env.PIN_RESEND_COOLDOWN_SECONDS * 1000).toISOString() };
+  if (Date.now() < challenge.lastSentAt.getTime() + env.PIN_RESEND_COOLDOWN_SECONDS * 1000)
+    throw new HttpError({
+      code: 'rate_limited',
+      message: 'Wait before requesting another verification code.',
+      statusCode: 429,
+    });
+
+  return deliverEmailOtp(flowId, challenge.normalizedEmail, context);
+}
+
+export async function verifyEmailOtp(flowId: string, pin: string, context: string): Promise<RestrictedIdentity> {
+  const [challenge] = await db
+    .select()
+    .from(authEmailChallenges)
+    .where(
+      and(
+        eq(authEmailChallenges.flowId, flowId),
+        isNull(authEmailChallenges.consumedAt),
+        isNull(authEmailChallenges.supersededAt),
+      ),
+    )
+    .limit(1);
+
+  if (
+    !challenge ||
+    challenge.clientContextHash !== context ||
+    challenge.expiresAt <= new Date() ||
+    challenge.attemptCount >= MAX_CHALLENGE_ATTEMPTS
+  )
+    verificationFailed();
+  if (!pinMatches(challenge.pinHash, hashPin(flowId, challenge.normalizedEmail, context, pin))) {
+    await db
+      .update(authEmailChallenges)
+      .set({ attemptCount: sql`${authEmailChallenges.attemptCount} + 1`, updatedAt: new Date() })
+      .where(
+        and(eq(authEmailChallenges.id, challenge.id), lt(authEmailChallenges.attemptCount, MAX_CHALLENGE_ATTEMPTS)),
+      );
+    verificationFailed();
+  }
+  const identity = await db.transaction(async (tx) => {
+    const now = new Date();
+    const [consumed] = await tx
+      .update(authEmailChallenges)
+      .set({ consumedAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(authEmailChallenges.id, challenge.id),
+          eq(authEmailChallenges.clientContextHash, context),
+          isNull(authEmailChallenges.consumedAt),
+          isNull(authEmailChallenges.supersededAt),
+          gt(authEmailChallenges.expiresAt, now),
+          lt(authEmailChallenges.attemptCount, MAX_CHALLENGE_ATTEMPTS),
+        ),
+      )
+      .returning();
+
+    if (!consumed) return null;
+    const [created] = await tx
+      .insert(users)
+      .values({
+        id: randomUUID(),
+        email: challenge.normalizedEmail,
+        emailVerifiedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoNothing({ target: users.email })
+      .returning();
+    const [user] = created
+      ? [created]
+      : await tx.select().from(users).where(eq(users.email, challenge.normalizedEmail)).limit(1);
+
+    if (!user) throw new Error('Verified email identity could not be resolved.');
+    if (created) {
+      const accountId = randomUUID();
+
+      await tx.insert(accounts).values({
+        id: accountId,
+        name: challenge.normalizedEmail.split('@')[0] || 'Personal account',
+        slug: `${normalizeAccountSlug(challenge.normalizedEmail)}-${accountId.slice(0, 8)}`,
+        ownerUserId: user.id,
+        createdAt: now,
+        updatedAt: now,
+      });
+      await tx
+        .insert(accountMemberships)
+        .values({ id: randomUUID(), accountId, userId: user.id, role: 'owner', createdAt: now, updatedAt: now });
+    }
+    const memberships = await tx
+      .select({ accountId: accountMemberships.accountId, name: accounts.name, role: accountMemberships.role })
+      .from(accountMemberships)
+      .innerJoin(accounts, eq(accounts.id, accountMemberships.accountId))
+      .where(eq(accountMemberships.userId, user.id))
+      .orderBy(asc(accountMemberships.createdAt));
+
+    return { accounts: memberships, email: user.email, userId: user.id };
+  });
+
+  if (!identity || !identity.accounts.length) verificationFailed();
+
+  return identity;
 }

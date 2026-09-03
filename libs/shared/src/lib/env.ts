@@ -28,6 +28,19 @@ const environmentSchema = z
       .transform((v) => v === 'true'),
     PIN_EXPIRY_MINUTES: z.coerce.number().default(10),
     PIN_RESEND_COOLDOWN_SECONDS: z.coerce.number().default(45),
+    EMAIL_OTP_DELIVERY_WINDOW_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(60 * 60 * 1000),
+    EMAIL_OTP_DELIVERY_EMAIL_MAX: z.coerce.number().int().positive().default(5),
+    EMAIL_OTP_DELIVERY_IP_MAX: z.coerce.number().int().positive().default(20),
+    EMAIL_OTP_VERIFY_WINDOW_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(15 * 60 * 1000),
+    EMAIL_OTP_VERIFY_IP_MAX: z.coerce.number().int().positive().default(30),
     REMEMBERED_DEVICE_MAX_AGE_MS: z.coerce.number().default(1000 * 60 * 60 * 24 * 30),
     REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
     REALTIME_INTERNAL_URL: z.string().default('http://127.0.0.1:3001'),

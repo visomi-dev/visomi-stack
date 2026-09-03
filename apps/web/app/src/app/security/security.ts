@@ -79,7 +79,7 @@ export class Security {
       const user = await this.currentUser();
 
       if (!user) throw new Error('Sign in again before adding a passkey.');
-      const registration = await this.passkey.beginRegistration(user.email, name);
+      const registration = await this.passkey.beginRegistration(name);
       const credential = await this.passkey.createCredential(registration.options!);
 
       await this.passkey.completeRegistration(registration.challengeId!, credential);
@@ -118,7 +118,7 @@ export class Security {
     const user = await this.currentUser();
 
     if (!user) throw new Error('Sign in again before changing passkeys.');
-    const authentication = await this.passkey.beginAuthentication(user.email);
+    const authentication = await this.passkey.beginAuthentication();
     const credential = await this.passkey.getCredential(authentication.options!);
 
     await this.passkey.completeAuthentication(authentication.challengeId!, credential);
