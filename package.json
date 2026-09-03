@@ -30,7 +30,7 @@
     "e2e:local": "node --experimental-strip-types scripts/run-local-api-e2e.ts"
   },
   "lint-staged": {
-    "*.{ts,html,md,json,yml,yaml}": [
+    "*.{ts,html,astro,md,json,yml,yaml}": [
       "prettier --write"
     ],
     "apps/web/app/**/*.ts": [
