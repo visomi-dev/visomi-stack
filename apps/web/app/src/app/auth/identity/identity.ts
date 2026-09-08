@@ -126,16 +126,22 @@ export class Identity {
       const flow = await this.auth.startIdentityFlow();
 
       this.identityFlowId.set(flow.flowId);
-      if (!flow.google?.enabled || !flow.google.clientId || !this.googleButton())
+      if (!flow.google?.enabled || !flow.google.clientId || !flow.nonce || !this.googleButton())
         throw new Error('Google sign-in is not configured.');
       this.googleClientId.set(flow.google.clientId);
-      await this.google.renderButton(this.googleButton()!.nativeElement, flow.google.clientId, flow.flowId, (user) => {
-        void this.auth.ensureSessionLoaded(true).then(() => this.router.navigateByUrl(APP_URL));
-        this.state.set('success');
-        this.selectedAccount.set(null);
-        this.errorMessage.set('');
-        void user;
-      });
+      await this.google.renderButton(
+        this.googleButton()!.nativeElement,
+        flow.google.clientId,
+        flow.flowId,
+        flow.nonce,
+        (user) => {
+          void this.auth.ensureSessionLoaded(true).then(() => this.router.navigateByUrl(APP_URL));
+          this.state.set('success');
+          this.selectedAccount.set(null);
+          this.errorMessage.set('');
+          void user;
+        },
+      );
     } catch (error) {
       this.errorMessage.set(
         this.safeError(error, $localize`:@@identityGoogleFailed:Google sign-in is not available right now.`),
@@ -172,12 +178,16 @@ export class Identity {
     this.errorMessage.set('');
 
     try {
-      const result = await this.auth.requestEmailOtp({
-        email: this.emailForm.email().value(),
-      });
+      const email = this.emailForm.email().value();
+      const started = this.identityFlowId() ? null : await this.auth.startIdentityFlow();
+      const flowId = started?.flowId ?? this.identityFlowId();
 
-      this.flowId.set(result.flowId);
-      this.resendAvailableAt.set(result.resendAvailableAt);
+      await this.auth.identifyIdentity(flowId, email);
+      await this.auth.requestIdentityRecovery(flowId, email);
+
+      this.identityFlowId.set(flowId);
+      this.flowId.set(flowId);
+      this.resendAvailableAt.set('');
       this.otpModel.set({ pin: '' });
       this.state.set('otp');
     } catch (error) {
@@ -195,10 +205,7 @@ export class Identity {
     this.errorMessage.set('');
 
     try {
-      await this.auth.verifyEmailOtp({
-        flowId: this.flowId(),
-        pin: this.otpForm.pin().value(),
-      });
+      await this.auth.verifyIdentityRecovery(this.flowId(), this.otpForm.pin().value());
 
       const accounts = await this.auth.getRestrictedAccounts();
 
@@ -308,12 +315,5 @@ export class Identity {
     const accounts = error.error?.data?.accounts;
 
     return Array.isArray(accounts) ? accounts : null;
-  }
-
-  private async createEnrollmentState(): Promise<void> {
-    this.selectedAccount.set(
-      this.accounts().find((account) => account.accountId === this.auth.user()?.accountId) ?? null,
-    );
-    this.state.set('enrollment');
   }
 }

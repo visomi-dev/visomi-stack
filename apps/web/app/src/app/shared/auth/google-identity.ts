@@ -11,6 +11,7 @@ type GoogleIdentityApi = {
       initialize(config: {
         client_id: string;
         callback: (response: { credential: string }) => void;
+        nonce: string;
         use_fedcm_for_prompt?: boolean;
       }): void;
       renderButton(parent: HTMLElement, options: Record<string, string>): void;
@@ -28,6 +29,7 @@ export class GoogleIdentity {
     element: HTMLElement,
     clientId: string,
     flowId: string,
+    nonce: string,
     onComplete: (user: AuthUser) => void,
   ): Promise<void> {
     const view = this.document.defaultView;
@@ -39,6 +41,7 @@ export class GoogleIdentity {
     if (!google) throw new Error('Google sign-in could not be loaded.');
     google.accounts.id.initialize({
       client_id: clientId,
+      nonce,
       use_fedcm_for_prompt: true,
       callback: async ({ credential }) => {
         const response = await firstValueFrom(

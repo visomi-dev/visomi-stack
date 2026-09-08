@@ -13,21 +13,47 @@ jest.mock('./auth-service', () => ({
   resolveAuthUser: jest.fn(),
 }));
 
-function createApp(authenticated = false): express.Express {
+function createApp(
+  authenticated = false,
+  isNewUser?: boolean,
+  authority: 'restricted' | 'full' = 'restricted',
+  reauthenticatedAt?: number,
+): express.Express {
   const app = express();
 
   app.use(json());
   app.use((req: Request, _res, next) => {
     req.user = {
       accountId: 'account-1',
-      authority: 'restricted',
+      authority,
       email: 'person@example.test',
       emailVerifiedAt: null,
       id: 'user-1',
       role: 'owner',
     };
     (req as unknown as { isAuthenticated: () => boolean }).isAuthenticated = () => authenticated;
-    Object.assign(req, { session: { authority: 'restricted' as const } });
+    Object.assign(req, {
+      session: {
+        authority,
+        ...(reauthenticatedAt === undefined ? {} : { passkeySecurityReauthenticatedAt: reauthenticatedAt }),
+        ...(isNewUser === undefined
+          ? {}
+          : {
+              restrictedAuth: {
+                allowedOperations: ['passkeys:enroll', 'passkeys:verify'],
+                eligibleAccounts: [{ accountId: 'account-1', name: 'Account', role: 'owner' }],
+                expiresAt: Date.now() + 60_000,
+                flowId: 'flow-1',
+                isNewUser,
+                issuedAt: Date.now(),
+                purpose: 'bootstrap_recovery' as const,
+                selectedAccountId: 'account-1',
+                userId: 'user-1',
+                verifiedEmail: 'person@example.test',
+              },
+            }),
+      },
+    });
     next();
   });
   app.use('/auth/passkey', passkeyRouter);
@@ -81,6 +107,36 @@ describe('passkey account ceremony router', () => {
 
     expect(response.status).toBe(401);
     expect(response.body.code).toBe('restricted_session_required');
+  });
+
+  it('requires an enrollment grant for an existing account but preserves new-user bootstrap', async () => {
+    const existing = await request(createApp(true, false))
+      .post('/auth/passkey/registration/begin')
+      .set('Origin', 'http://localhost:8080')
+      .send({ label: 'Laptop' });
+    const bootstrap = await request(createApp(true, true))
+      .post('/auth/passkey/registration/begin')
+      .set('Origin', 'http://localhost:8080')
+      .send({ label: 'Laptop' });
+
+    expect(existing.status).toBe(401);
+    expect(existing.body.code).toBe('enrollment_grant_required');
+    expect(bootstrap.body.code).not.toBe('enrollment_grant_required');
+  });
+
+  it('requires fresh passkey reauthentication before a full session can register', async () => {
+    const stale = await request(createApp(true, undefined, 'full'))
+      .post('/auth/passkey/registration/begin')
+      .set('Origin', 'http://localhost:8080')
+      .send({ label: 'Laptop' });
+    const fresh = await request(createApp(true, undefined, 'full', Date.now()))
+      .post('/auth/passkey/registration/begin')
+      .set('Origin', 'http://localhost:8080')
+      .send({ label: 'Laptop' });
+
+    expect(stale.status).toBe(401);
+    expect(stale.body.code).toBe('reauthentication_required');
+    expect(fresh.body.code).not.toBe('reauthentication_required');
   });
 
   it('rejects malformed completion payloads and unauthenticated lifecycle access', async () => {

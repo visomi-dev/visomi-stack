@@ -42,6 +42,7 @@ declare module 'express-session' {
       expiresAt: number;
       flowId: string;
       issuedAt: number;
+      isNewUser: boolean;
       purpose: 'bootstrap_recovery' | 'existing_account_recovery';
       selectedAccountId?: string;
       userId: string;

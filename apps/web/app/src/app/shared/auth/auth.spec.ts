@@ -40,6 +40,39 @@ describe('BrowserAuth', () => {
     await submitPromise;
   });
 
+  it('uses the server identity and recovery flow for an existing account', async () => {
+    const auth = TestBed.inject(Auth);
+    const http = TestBed.inject(HttpTestingController);
+    const identify = auth.identifyIdentity('14d91d31-826f-4059-a742-a92c982b73f9', 'engineer@visomi.dev');
+
+    http.expectOne('/api/auth/identity/identify').flush({
+      data: { flowId: '14d91d31-826f-4059-a742-a92c982b73f9', state: 'identify' },
+      message: 'Identity identified.',
+    });
+    await identify;
+    const requestRecovery = auth.requestIdentityRecovery('14d91d31-826f-4059-a742-a92c982b73f9', 'engineer@visomi.dev');
+
+    http.expectOne('/api/auth/identity/recovery/request').flush({
+      data: { flowId: '14d91d31-826f-4059-a742-a92c982b73f9', state: 'identify' },
+      message: 'Recovery requested.',
+    });
+    await requestRecovery;
+    const verifyRecovery = auth.verifyIdentityRecovery('14d91d31-826f-4059-a742-a92c982b73f9', '123456');
+
+    http.expectOne('/api/auth/identity/recovery/verify').flush({
+      data: {
+        authenticated: false,
+        expiresAt: '2026-09-08T00:00:00.000Z',
+        flowId: '14d91d31-826f-4059-a742-a92c982b73f9',
+        kind: 'restricted',
+        user: null,
+        verifiedEmail: 'engineer@visomi.dev',
+      },
+      message: 'Recovery verified.',
+    });
+    await expect(verifyRecovery).resolves.toMatchObject({ kind: 'restricted' });
+  });
+
   it('skips the session request when the hasSession cookie is absent', async () => {
     const auth = TestBed.inject(Auth);
 

@@ -54,9 +54,16 @@ export type MessageResponse = ResponseEnvelope<null>;
 export type EmailOtpRequestPayload = { email: string };
 export type EmailOtpVerifyPayload = { flowId: string; pin: string };
 export type EmailOtpResendPayload = { flowId: string };
+export type IdentityFlowState =
+  | 'passkey'
+  | 'identify'
+  | 'verify_new_email'
+  | 'authorize_existing_account'
+  | 'enroll_passkey'
+  | 'complete';
 export type IdentityFlow = {
   flowId: string;
-  state: string;
+  state: IdentityFlowState;
   expiresAt?: string;
   google?: { enabled: boolean; clientId: string | null };
   nonce?: string;

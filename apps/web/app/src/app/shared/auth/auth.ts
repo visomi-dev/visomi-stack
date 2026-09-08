@@ -8,6 +8,7 @@ import type {
   EmailOtpVerifyPayload,
   SessionResponse,
   SessionUpgrade,
+  RestrictedSession,
   RestrictedAccount,
   IdentityFlow,
 } from './auth.models';
@@ -20,6 +21,9 @@ export abstract class Auth {
   abstract readonly user: Signal<AuthUser | null>;
 
   abstract startIdentityFlow(): Promise<IdentityFlow>;
+  abstract identifyIdentity(flowId: string, email: string): Promise<IdentityFlow>;
+  abstract requestIdentityRecovery(flowId: string, email: string): Promise<IdentityFlow>;
+  abstract verifyIdentityRecovery(flowId: string, pin: string): Promise<RestrictedSession>;
   abstract ensureSessionLoaded(force?: boolean): Promise<void>;
   abstract requestEmailOtp(payload: EmailOtpRequestPayload): Promise<EmailOtpResponse['data']>;
   abstract verifyEmailOtp(payload: EmailOtpVerifyPayload): Promise<SessionUpgrade>;

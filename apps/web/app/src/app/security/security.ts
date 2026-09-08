@@ -148,10 +148,18 @@ export class Security {
       const user = await this.currentUser();
 
       if (!user) throw new Error('Sign in again before adding a passkey.');
+      await this.reauthenticateWithPasskey();
       const registration = await this.passkey.beginRegistration(name);
       const credential = await this.passkey.createCredential(registration.options!);
+      const completed = await this.passkey.completeRegistration(registration.challengeId!, credential);
+      const verification = completed.restrictedSession;
 
-      await this.passkey.completeRegistration(registration.challengeId!, credential);
+      if (!verification?.verificationChallengeId || !verification.verificationOptions) {
+        throw new Error('Passkey verification options were not returned.');
+      }
+      const assertion = await this.passkey.getCredential(verification.verificationOptions);
+
+      await this.passkey.verifyRegistration(verification.verificationChallengeId, assertion);
       await this.loadCredentials();
       this.cancelPasskeyAction();
     });

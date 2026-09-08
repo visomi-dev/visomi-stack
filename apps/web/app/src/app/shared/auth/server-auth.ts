@@ -12,6 +12,7 @@ import type {
   EmailOtpVerifyPayload,
   SessionResponse,
   SessionUpgrade,
+  RestrictedSession,
   RestrictedAccount,
   IdentityFlow,
   ResponseEnvelope,
@@ -37,6 +38,30 @@ export class ServerAuth extends Auth {
   async startIdentityFlow(): Promise<IdentityFlow> {
     const response = await firstValueFrom(
       this.http.post<ResponseEnvelope<IdentityFlow>>('/api/auth/identity/start', {}),
+    );
+
+    return response.data;
+  }
+
+  async identifyIdentity(flowId: string, email: string): Promise<IdentityFlow> {
+    const response = await firstValueFrom(
+      this.http.post<ResponseEnvelope<IdentityFlow>>('/api/auth/identity/identify', { flowId, email }),
+    );
+
+    return response.data;
+  }
+
+  async requestIdentityRecovery(flowId: string, email: string): Promise<IdentityFlow> {
+    const response = await firstValueFrom(
+      this.http.post<ResponseEnvelope<IdentityFlow>>('/api/auth/identity/recovery/request', { flowId, email }),
+    );
+
+    return response.data;
+  }
+
+  async verifyIdentityRecovery(flowId: string, pin: string): Promise<RestrictedSession> {
+    const response = await firstValueFrom(
+      this.http.post<ResponseEnvelope<RestrictedSession>>('/api/auth/identity/recovery/verify', { flowId, pin }),
     );
 
     return response.data;

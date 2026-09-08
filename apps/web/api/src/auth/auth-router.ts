@@ -78,6 +78,48 @@ async function identityFlow(req: Request, id: string) {
   return flow;
 }
 
+async function establishRestrictedSession(
+  req: Request,
+  flowId: string,
+  identity: Awaited<ReturnType<typeof verifyEmailOtp>>,
+) {
+  const issuedAt = Date.now();
+  const expiresAt = issuedAt + 15 * 60_000;
+
+  await new Promise<void>((resolve, reject) => req.session.regenerate((error) => (error ? reject(error) : resolve())));
+  const restrictedAuth = {
+    allowedOperations: ['accounts:read', 'accounts:select', 'passkeys:enroll', 'passkeys:verify'],
+    eligibleAccounts: identity.accounts,
+    expiresAt,
+    flowId,
+    issuedAt,
+    isNewUser: identity.isNewUser,
+    purpose: 'bootstrap_recovery' as const,
+    selectedAccountId: identity.accounts.length === 1 ? identity.accounts[0]?.accountId : undefined,
+    userId: identity.userId,
+    verifiedEmail: identity.email,
+  };
+  const selectedAccountId = restrictedAuth.selectedAccountId;
+
+  if (selectedAccountId) {
+    const user = await findUserById(identity.userId);
+
+    if (user) {
+      const authUser = {
+        ...(await resolveAuthUserForAccount(user, selectedAccountId)),
+        authority: 'restricted' as const,
+      };
+
+      await new Promise<void>((resolve, reject) => req.login(authUser, (error) => (error ? reject(error) : resolve())));
+    }
+  }
+  req.session.restrictedAuth = restrictedAuth;
+  req.session.authority = 'restricted';
+  req.session.cookie.maxAge = 15 * 60_000;
+
+  return expiresAt;
+}
+
 router.post('/identity/start', csrfProtection, async (req, res) => {
   const now = new Date();
   const id = randomUUID();
@@ -307,16 +349,12 @@ router.post(
     const flow = await identityFlow(req, body.flowId);
     const user = await findUserByEmail(body.email);
     const now = new Date();
+    const state = user ? 'authorize_existing_account' : 'verify_new_email';
 
     await db
       .update(authIdentityFlows)
-      .set({ emailHash: flowHash(body.email), state: 'identify', updatedAt: now })
+      .set({ emailHash: flowHash(body.email), state, updatedAt: now })
       .where(eq(authIdentityFlows.id, flow.id));
-    await requestEmailOtp(
-      body.email,
-      requestContext(req),
-      flow.id as `${string}-${string}-${string}-${string}-${string}`,
-    );
     if (user)
       await db.insert(authAuditEvents).values({
         id: randomUUID(),
@@ -328,7 +366,7 @@ router.post(
         createdAt: now,
       });
     httpResponse.json(res, {
-      data: { flowId: flow.id, state: 'identify' },
+      data: { flowId: flow.id, state: 'identify' as const },
       status: 202,
       message: 'If the address can be used, a verification code has been sent.',
     });
@@ -338,9 +376,11 @@ router.post(
 router.post('/identity/status', csrfProtection, validateRequest({ body: identityStatusSchema }), async (req, res) => {
   const body = getValidated<{ body: typeof identityStatusSchema }>(req).body!;
   const flow = await identityFlow(req, body.flowId);
+  const state =
+    flow.state === 'verify_new_email' || flow.state === 'authorize_existing_account' ? 'identify' : flow.state;
 
   httpResponse.json(res, {
-    data: { flowId: flow.id, state: flow.state, expiresAt: flow.expiresAt.toISOString() },
+    data: { flowId: flow.id, state, expiresAt: flow.expiresAt.toISOString() },
     message: 'Identity flow status retrieved.',
   });
 });
@@ -354,7 +394,7 @@ router.post(
     const flow = await identityFlow(req, body.flowId);
     const user = await findUserByEmail(body.email);
 
-    if (user) {
+    if (user && flow.state === 'authorize_existing_account' && flow.emailHash === flowHash(body.email)) {
       await createRecoveryChallenge(user, flow.id as `${string}-${string}-${string}-${string}-${string}`);
       await db
         .update(authIdentityFlows)
@@ -365,9 +405,15 @@ router.post(
           updatedAt: new Date(),
         })
         .where(eq(authIdentityFlows.id, flow.id));
+    } else if (!user && flow.state === 'verify_new_email' && flow.emailHash === flowHash(body.email)) {
+      await requestEmailOtp(
+        body.email,
+        requestContext(req),
+        flow.id as `${string}-${string}-${string}-${string}-${string}`,
+      );
     }
     httpResponse.json(res, {
-      data: { flowId: flow.id, state: 'authorize_existing_account' },
+      data: { flowId: flow.id, state: 'identify' as const },
       status: 202,
       message: 'If the address can be recovered, a verification code has been sent.',
     });
@@ -381,13 +427,44 @@ router.post(
   async (req, res) => {
     const body = getValidated<{ body: typeof recoveryVerifySchema }>(req).body!;
     const flow = await identityFlow(req, body.flowId);
+
+    if (flow.state === 'verify_new_email') {
+      const identity = await verifyEmailOtp(body.flowId, body.pin, requestContext(req));
+
+      if (!identity.isNewUser)
+        throw new HttpError({
+          code: 'recovery_unavailable',
+          message: 'The recovery request could not be completed.',
+          statusCode: 401,
+        });
+      const expiresAt = await establishRestrictedSession(req, body.flowId, identity);
+
+      httpResponse.json(res, {
+        data: {
+          kind: 'restricted' as const,
+          flowId: body.flowId,
+          authenticated: false as const,
+          expiresAt: new Date(expiresAt).toISOString(),
+          user: null,
+          verifiedEmail: identity.email,
+        },
+        message: 'Email verified. Create and verify a passkey to finish signing in.',
+      });
+
+      return;
+    }
     const [challenge] = await db
       .select()
       .from(authVerificationChallenges)
       .where(and(eq(authVerificationChallenges.id, body.flowId), isNull(authVerificationChallenges.consumedAt)))
       .limit(1);
 
-    if (!challenge || challenge.purpose !== 'existing_account_recovery')
+    if (
+      flow.state !== 'authorize_existing_account' ||
+      flow.authorizationMethod !== 'email_recovery' ||
+      !challenge ||
+      challenge.purpose !== 'existing_account_recovery'
+    )
       throw new HttpError({
         code: 'recovery_unavailable',
         message: 'The recovery request could not be completed.',
@@ -422,6 +499,7 @@ router.post(
       ...(await resolveAuthUserForAccount(user, selected.accountId)),
       authority: 'restricted' as const,
     };
+    const expiresAt = Date.now() + FLOW_TTL_MS;
 
     await db
       .update(authEnrollmentGrants)
@@ -444,9 +522,10 @@ router.post(
         name: membership.accountId,
         role: membership.role,
       })),
-      expiresAt: Date.now() + FLOW_TTL_MS,
+      expiresAt,
       flowId: flow.id,
       issuedAt: Date.now(),
+      isNewUser: false,
       purpose: 'existing_account_recovery',
       selectedAccountId: selected.accountId,
       userId: user.id,
@@ -491,7 +570,14 @@ router.post(
       /* Recovery remains complete if notification delivery is unavailable. */
     }
     httpResponse.json(res, {
-      data: { flowId: flow.id, state: 'enroll_passkey' },
+      data: {
+        kind: 'restricted' as const,
+        flowId: flow.id,
+        authenticated: false as const,
+        expiresAt: new Date(expiresAt).toISOString(),
+        user: null,
+        verifiedEmail: user.email,
+      },
       message: 'Recovery verified. Create a new passkey to finish.',
     });
   },
@@ -514,6 +600,7 @@ router.get('/security/overview', authed({ authority: 'full' }), async (req, res)
         and(
           eq(accountPasskeyCredentials.userId, current.id),
           eq(accountPasskeyCredentials.accountId, current.accountId),
+          eq(accountPasskeyCredentials.status, 'active'),
           isNull(accountPasskeyCredentials.revokedAt),
         ),
       ),
@@ -725,7 +812,6 @@ router.post('/google/complete', csrfProtection, validateRequest({ body: googleCo
   );
   req.session.authority = 'full';
   req.session.authenticatedAt = Date.now();
-  req.session.passkeySecurityReauthenticatedAt = Date.now();
   req.session.cookie.maxAge = env.SESSION_MAX_AGE_MS;
   delete req.session.googleNonce;
   setSessionHintCookie(res);
@@ -815,42 +901,7 @@ router.post(
     const { flowId, pin } = getValidated<{ body: typeof emailOtpVerifySchema }>(req).body!;
 
     const identity = await verifyEmailOtp(flowId, pin, requestContext(req));
-    const issuedAt = Date.now();
-    const expiresAt = issuedAt + 15 * 60_000;
-
-    await new Promise<void>((resolve, reject) =>
-      req.session.regenerate((error) => (error ? reject(error) : resolve())),
-    );
-    const restrictedAuth = {
-      allowedOperations: ['accounts:read', 'accounts:select', 'passkeys:enroll', 'passkeys:verify'],
-      eligibleAccounts: identity.accounts,
-      expiresAt,
-      flowId,
-      issuedAt,
-      purpose: 'bootstrap_recovery' as const,
-      selectedAccountId: identity.accounts.length === 1 ? identity.accounts[0]?.accountId : undefined,
-      userId: identity.userId,
-      verifiedEmail: identity.email,
-    };
-    const selectedAccountId = restrictedAuth.selectedAccountId;
-
-    if (selectedAccountId) {
-      const user = await findUserById(identity.userId);
-
-      if (user) {
-        const authUser = {
-          ...(await resolveAuthUserForAccount(user, selectedAccountId)),
-          authority: 'restricted' as const,
-        };
-
-        await new Promise<void>((resolve, reject) =>
-          req.login(authUser, (error) => (error ? reject(error) : resolve())),
-        );
-      }
-    }
-    req.session.restrictedAuth = restrictedAuth;
-    req.session.authority = 'restricted';
-    req.session.cookie.maxAge = 15 * 60_000;
+    const expiresAt = await establishRestrictedSession(req, flowId, identity);
 
     httpResponse.json(res, {
       data: {

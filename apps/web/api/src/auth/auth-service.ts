@@ -40,6 +40,7 @@ const OTP_PURPOSE = 'bootstrap_recovery' as const;
 type RestrictedIdentity = {
   accounts: Array<{ accountId: string; name: string; role: string }>;
   email: string;
+  isNewUser: boolean;
   userId: string;
 };
 type EmailOtpDelivery = { flowId: string; resendAvailableAt: string };
@@ -757,7 +758,7 @@ export async function verifyEmailOtp(flowId: string, pin: string, context: strin
       .where(eq(accountMemberships.userId, user.id))
       .orderBy(asc(accountMemberships.createdAt));
 
-    return { accounts: memberships, email: user.email, userId: user.id };
+    return { accounts: memberships, email: user.email, isNewUser: Boolean(created), userId: user.id };
   });
 
   if (!identity || !identity.accounts.length) verificationFailed();
