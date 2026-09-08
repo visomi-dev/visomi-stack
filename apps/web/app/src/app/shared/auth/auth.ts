@@ -18,7 +18,7 @@ export abstract class Auth {
   abstract readonly sessionLoaded: Signal<boolean>;
   abstract readonly user: Signal<AuthUser | null>;
 
-  abstract ensureSessionLoaded(): Promise<void>;
+  abstract ensureSessionLoaded(force?: boolean): Promise<void>;
   abstract requestEmailOtp(payload: EmailOtpRequestPayload): Promise<EmailOtpResponse['data']>;
   abstract verifyEmailOtp(payload: EmailOtpVerifyPayload): Promise<SessionUpgrade>;
   abstract getRestrictedAccounts(): Promise<RestrictedAccount[]>;

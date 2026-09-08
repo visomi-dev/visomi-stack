@@ -334,18 +334,19 @@ export async function listMembershipsForUser(userId: string) {
   return memberships;
 }
 
-export async function createPasskeyEnrollment(email: string, _label: string, existingUser?: typeof users.$inferSelect) {
+export async function createPasskeyEnrollment(
+  email: string,
+  accountId: string,
+  existingUser?: typeof users.$inferSelect,
+) {
   const user = existingUser ?? (await findOrCreateUserByEmail(email));
-  const membership = (await getPrimaryMembership(user.id)) ?? {
-    accountId: '',
-    createdAt: new Date(),
-    id: '',
-    role: 'owner',
-    updatedAt: new Date(),
-    userId: user.id,
-  };
+  const [membership] = await db
+    .select()
+    .from(accountMemberships)
+    .where(and(eq(accountMemberships.userId, user.id), eq(accountMemberships.accountId, accountId)))
+    .limit(1);
 
-  if (!membership.accountId) {
+  if (!membership) {
     throw new HttpError({
       code: 'account_membership_missing',
       message: 'The account membership could not be found.',
@@ -354,7 +355,6 @@ export async function createPasskeyEnrollment(email: string, _label: string, exi
   }
 
   const now = new Date();
-  const verification = await createChallenge(user, 'bootstrap_recovery');
   const enrollmentId = randomUUID();
 
   await db.insert(accountPasskeyEnrollments).values({
@@ -369,14 +369,14 @@ export async function createPasskeyEnrollment(email: string, _label: string, exi
     terminalAt: null,
     updatedAt: now,
     userId: user.id,
-    verificationChallengeId: verification.challengeId,
+    verificationChallengeId: null,
   });
 
   return {
     enrollmentId,
     membership: { ...membership, accountId: membership.accountId, userId: user.id },
     user,
-    verificationChallengeId: verification.challengeId,
+    verificationChallengeId: null,
   };
 }
 
@@ -708,11 +708,20 @@ export async function verifyEmailOtp(flowId: string, pin: string, context: strin
       })
       .onConflictDoNothing({ target: users.email })
       .returning();
-    const [user] = created
+    let [user] = created
       ? [created]
       : await tx.select().from(users).where(eq(users.email, challenge.normalizedEmail)).limit(1);
 
     if (!user) throw new Error('Verified email identity could not be resolved.');
+    if (!user.emailVerifiedAt) {
+      const [verifiedUser] = await tx
+        .update(users)
+        .set({ emailVerifiedAt: now, updatedAt: now })
+        .where(and(eq(users.id, user.id), isNull(users.emailVerifiedAt)))
+        .returning();
+
+      user = verifiedUser ?? user;
+    }
     if (created) {
       const accountId = randomUUID();
 

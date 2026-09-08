@@ -77,7 +77,7 @@ describe('passkey account ceremony router', () => {
     const response = await request(app)
       .post('/auth/passkey/registration/begin')
       .set('Origin', 'http://localhost:8080')
-      .send({ email: 'person@example.test', label: 'Laptop' });
+      .send({ label: 'Laptop' });
 
     expect(response.status).toBe(401);
     expect(response.body.code).toBe('restricted_session_required');

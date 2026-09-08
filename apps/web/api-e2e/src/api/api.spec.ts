@@ -112,6 +112,21 @@ describe('auth API', () => {
     expect(session.data.data.authenticated).toBe(false);
     expect(session.data.data.user).toBeNull();
 
+    const registration = await axios.post(
+      '/auth/passkey/registration/begin',
+      { label: 'Primary passkey' },
+      {
+        headers: { ...csrfConfig.headers, Cookie: sessionCookie },
+        validateStatus: () => true,
+      },
+    );
+
+    expect(registration.status).toBe(200);
+    expect(registration.data.data.challengeId).toBeDefined();
+    expect(registration.data.data.options.authenticatorSelection).toEqual(
+      expect.objectContaining({ residentKey: 'required', requireResidentKey: true, userVerification: 'required' }),
+    );
+
     const invalid = await axios.post('/auth/email-otp/request', { email: accountEmail }, csrfConfig);
 
     const invalidVerify = await axios.post(
@@ -163,11 +178,9 @@ describe('auth API', () => {
   });
 
   it('rejects anonymous passkey registration with restricted_session_required', async () => {
-    const accountEmail = `anonymous-${Date.now()}@visomi-stack.dev`;
-
     const response = await axios.post(
       '/auth/passkey/registration/begin',
-      { email: accountEmail, label: 'Laptop' },
+      { label: 'Laptop' },
       { headers: { Origin: origin }, validateStatus: () => true },
     );
 

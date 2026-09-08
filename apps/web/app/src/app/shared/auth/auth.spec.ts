@@ -94,6 +94,33 @@ describe('BrowserAuth', () => {
 
     expect(document.cookie).not.toContain('themis.hasSession=1');
   });
+
+  it('refreshes an already loaded session after authentication completes', async () => {
+    const auth = TestBed.inject(Auth);
+    const http = TestBed.inject(HttpTestingController);
+
+    await auth.ensureSessionLoaded();
+    const refresh = auth.ensureSessionLoaded(true);
+
+    http.expectOne('/api/auth/session').flush({
+      data: {
+        authenticated: true,
+        kind: 'full',
+        user: {
+          accountId: 'account-1',
+          email: 'engineer@visomi.dev',
+          emailVerifiedAt: '2026-09-07T00:00:00.000Z',
+          id: 'user-1',
+          role: 'owner',
+        },
+      },
+      message: 'Session retrieved.',
+    });
+
+    await refresh;
+
+    expect(auth.user()?.accountId).toBe('account-1');
+  });
 });
 
 describe('ServerAuth', () => {

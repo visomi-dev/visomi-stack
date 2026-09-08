@@ -34,12 +34,12 @@ export class BrowserAuth extends Auth {
   readonly sessionLoaded = this.$sessionLoaded.asReadonly();
   readonly user = this.$user.asReadonly();
 
-  async ensureSessionLoaded(): Promise<void> {
-    if (this.$sessionLoaded()) {
+  async ensureSessionLoaded(force = false): Promise<void> {
+    if (this.$sessionLoaded() && !force) {
       return;
     }
 
-    if (!this.hasSessionHint()) {
+    if (!force && !this.hasSessionHint()) {
       this.$user.set(null);
       this.$sessionLoaded.set(true);
       this.clearSessionHint();

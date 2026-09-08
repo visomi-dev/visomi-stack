@@ -103,7 +103,7 @@ export class Identity {
       const credential = await this.passkey.getCredential(begin.options);
 
       await this.passkey.completeAuthentication(begin.challengeId, credential);
-      await this.auth.ensureSessionLoaded();
+      await this.auth.ensureSessionLoaded(true);
       this.state.set('success');
       await this.router.navigateByUrl(APP_URL);
     } catch (error) {
@@ -254,7 +254,7 @@ export class Identity {
       const assertion = await this.passkey.getCredential(options);
 
       await this.passkey.verifyRegistration(challengeId, assertion);
-      await this.auth.ensureSessionLoaded();
+      await this.auth.ensureSessionLoaded(true);
       this.state.set('success');
       await this.router.navigateByUrl(APP_URL);
     } catch (error) {

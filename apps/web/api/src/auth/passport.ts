@@ -1,6 +1,6 @@
 import passport from 'passport';
 
-import { findUserById, resolveAuthUser } from './auth-service';
+import { findUserById, resolveAuthUser, resolveAuthUserForAccount } from './auth-service';
 
 type SerializedUser = {
   accountId: string;
@@ -40,7 +40,7 @@ passport.deserializeUser(async (serializedUser: SerializedUser, done) => {
       return done(null, false);
     }
 
-    const authUser = await resolveAuthUser(user);
+    const authUser = await resolveAuthUserForAccount(user, serializedUser.accountId);
 
     return done(null, toExpressUser({ ...authUser, authority: serializedUser.authority }));
   } catch (error) {

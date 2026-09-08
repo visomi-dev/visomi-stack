@@ -25,6 +25,7 @@ declare module 'express-session' {
     };
     authority?: 'restricted' | 'full';
     passkeyRegistration?: {
+      accountId: string;
       challengeId: string;
       email: string;
       label: string;

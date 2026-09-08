@@ -32,7 +32,7 @@ export class ServerAuth extends Auth {
   readonly sessionLoaded = this.$sessionLoaded.asReadonly();
   readonly user = this.$user.asReadonly();
 
-  async ensureSessionLoaded(): Promise<void> {
+  async ensureSessionLoaded(_force = false): Promise<void> {
     if (this.$sessionLoaded()) {
       return;
     }

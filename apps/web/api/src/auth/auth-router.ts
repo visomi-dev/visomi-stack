@@ -1,6 +1,5 @@
-import { Router, type Response, type Request } from 'express';
+import { Router, type Request } from 'express';
 
-import { env } from '../shared/env';
 import { getValidated, validateRequest } from '../shared/http/route-schemas';
 
 import {
@@ -19,29 +18,14 @@ import {
   restrictedAccountSelectSchema,
 } from './auth-schemas';
 import { csrfProtection, emailOtpDeliveryRateLimit, emailOtpVerificationRateLimit } from './passkey-security';
+import { clearSessionHintCookie } from './session-cookie';
 
 import { HttpError, httpResponse } from 'shared';
 
 const router = Router();
 
-const SESSION_HINT_COOKIE = 'themis.hasSession';
-
 function requestContext(req: Request): string {
   return clientContextHash(req.ip, req.get('user-agent'));
-}
-
-function sessionHintCookieOptions(maxAgeMs: number) {
-  return {
-    httpOnly: false,
-    maxAge: maxAgeMs,
-    path: '/',
-    sameSite: 'lax' as const,
-    secure: env.COOKIE_SECURE,
-  };
-}
-
-function clearSessionHintCookie(res: Response) {
-  res.clearCookie(SESSION_HINT_COOKIE, sessionHintCookieOptions(0));
 }
 
 function restrictedSession(req: Request) {
@@ -126,19 +110,18 @@ router.post(
     await new Promise<void>((resolve, reject) =>
       req.session.regenerate((error) => (error ? reject(error) : resolve())),
     );
-    req.session.restrictedAuth = {
+    const restrictedAuth = {
       allowedOperations: ['accounts:read', 'accounts:select', 'passkeys:enroll', 'passkeys:verify'],
       eligibleAccounts: identity.accounts,
       expiresAt,
       flowId,
       issuedAt,
-      purpose: 'bootstrap_recovery',
+      purpose: 'bootstrap_recovery' as const,
       selectedAccountId: identity.accounts.length === 1 ? identity.accounts[0]?.accountId : undefined,
       userId: identity.userId,
       verifiedEmail: identity.email,
     };
-    req.session.cookie.maxAge = 15 * 60_000;
-    const selectedAccountId = req.session.restrictedAuth.selectedAccountId;
+    const selectedAccountId = restrictedAuth.selectedAccountId;
 
     if (selectedAccountId) {
       const user = await findUserById(identity.userId);
@@ -154,6 +137,9 @@ router.post(
         );
       }
     }
+    req.session.restrictedAuth = restrictedAuth;
+    req.session.authority = 'restricted';
+    req.session.cookie.maxAge = 15 * 60_000;
 
     httpResponse.json(res, {
       data: {
@@ -184,6 +170,20 @@ router.post(
     }
 
     restricted.selectedAccountId = account.accountId;
+    const user = await findUserById(restricted.userId);
+
+    if (!user) {
+      throw new HttpError({ code: 'account_unavailable', message: 'The account is not available.', statusCode: 404 });
+    }
+    const authUser = {
+      ...(await resolveAuthUserForAccount(user, account.accountId)),
+      authority: 'restricted' as const,
+    };
+
+    await new Promise<void>((resolve, reject) => req.login(authUser, (error) => (error ? reject(error) : resolve())));
+    req.session.restrictedAuth = restricted;
+    req.session.authority = 'restricted';
+    req.session.cookie.maxAge = Math.max(0, restricted.expiresAt - Date.now());
     httpResponse.json(res, { data: { ...account, selected: true }, message: 'Account selected.' });
   },
 );

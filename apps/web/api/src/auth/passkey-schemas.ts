@@ -29,9 +29,24 @@ const assertionResponseSchema = z
     authenticatorAttachment: z.enum(['cross-platform', 'platform']).optional(),
   })
   .strict();
+const passkeyLabelSchema = z
+  .string()
+  .refine(
+    (value) =>
+      [...value].every((character) => {
+        const codePoint = character.codePointAt(0) ?? 0;
+
+        return codePoint > 31 && codePoint !== 127;
+      }),
+    'Use a valid device or security key name.',
+  )
+  .trim()
+  .min(1)
+  .max(64)
+  .regex(/^[\p{L}\p{N}][\p{L}\p{N} ._'()&/-]*$/u, 'Use a valid device or security key name.');
 
 const passkeyEmailSchema = z.object({ email: emailSchema.optional() }).strict();
-const registrationBeginSchema = passkeyEmailSchema.extend({ label: z.string().trim().min(1).max(120) }).strict();
+const registrationBeginSchema = z.object({ label: passkeyLabelSchema }).strict();
 const registrationCompleteSchema = z
   .object({ challengeId: z.string().min(1).max(200), response: credentialResponseSchema })
   .strict();
@@ -74,21 +89,6 @@ const restrictedRegistrationResponseSchema = z
   })
   .strict();
 const credentialIdPathSchema = z.object({ credentialId: z.string().min(1).max(1024) }).strict();
-const passkeyLabelSchema = z
-  .string()
-  .refine(
-    (value) =>
-      [...value].every((character) => {
-        const codePoint = character.codePointAt(0) ?? 0;
-
-        return codePoint > 31 && codePoint !== 127;
-      }),
-    'Use a valid device or security key name.',
-  )
-  .trim()
-  .min(1)
-  .max(64)
-  .regex(/^[\p{L}\p{N}][\p{L}\p{N} ._'()&/-]*$/u, 'Use a valid device or security key name.');
 const credentialRenameSchema = z.object({ label: passkeyLabelSchema }).strict();
 const credentialActionSchema = z.object({ action: z.literal('revoke') }).strict();
 const credentialMutationSchema = z.union([credentialRenameSchema, credentialActionSchema]);
