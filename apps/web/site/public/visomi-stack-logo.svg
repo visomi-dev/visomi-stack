@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 64" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Visomi Stack</title>
+  <desc id="desc">Connected application layers forming a V-shaped control plane.</desc>
+  <style>
+    .line { stroke-dasharray: 120; stroke-dashoffset: 120; animation: draw 900ms cubic-bezier(.22,1,.36,1) forwards; }
+    .path { animation-delay: 180ms; }
+    .node { opacity: 0; animation: reveal 240ms ease-out 760ms forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    @keyframes reveal { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .line { animation: none; stroke-dashoffset: 0; } .node { animation: none; opacity: 1; } }
+  </style>
+  <g stroke="#2563eb">
+    <path class="line" d="M7 13.5h42M7 50.5h42" stroke-width="2" />
+    <path class="line path" d="M11 22 28 42l17-20M28 42V13.5" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  <g fill="#2563eb">
+    <circle class="node" cx="11" cy="22" r="3" /><circle class="node" cx="28" cy="42" r="3" /><circle class="node" cx="45" cy="22" r="3" />
+  </g>
+  <text x="65" y="39" fill="#18181b" font-family="Manrope, sans-serif" font-size="25" font-weight="800" letter-spacing="-1">Visomi Stack</text>
+</svg>

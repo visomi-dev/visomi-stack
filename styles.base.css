@@ -34,10 +34,14 @@
 }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
   --container-max: 1440px;
   --content-max: 1152px;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -53,33 +57,33 @@
   outline-offset: 2px;
 
   &:focus-visible {
-    outline-color: var(--color-slate-600);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-slate-600) 18%, transparent);
+    outline-color: var(--color-blue-600);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-blue-600) 18%, transparent);
   }
 }
 
 @utility ui-panel {
-  background: var(--color-slate-50);
-  color: var(--color-slate-950);
+  background: var(--color-zinc-50);
+  color: var(--color-zinc-950);
   border-radius: var(--radius-panel);
-  border: 1px solid color-mix(in srgb, var(--color-slate-950) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-zinc-950) 5%, transparent);
 
   html.dark & {
-    background: var(--color-slate-900);
-    color: var(--color-slate-50);
+    background: var(--color-zinc-900);
+    color: var(--color-zinc-50);
   }
 }
 
 @utility ui-panel-raised {
-  background: var(--color-slate-100);
-  color: var(--color-slate-950);
+  background: var(--color-zinc-100);
+  color: var(--color-zinc-950);
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-panel);
-  border: 1px solid color-mix(in srgb, var(--color-slate-950) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-zinc-950) 5%, transparent);
 
   html.dark & {
-    background: var(--color-slate-800);
-    color: var(--color-slate-50);
+    background: var(--color-zinc-800);
+    color: var(--color-zinc-50);
   }
 }
 
@@ -186,7 +190,7 @@ body {
   min-height: 100%;
   margin: 0;
   background: #ffffff;
-  color: var(--color-slate-950);
+  color: var(--color-zinc-950);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -194,8 +198,8 @@ body {
 }
 
 html.dark body {
-  background: var(--color-slate-950);
-  color: var(--color-slate-50);
+  background: var(--color-zinc-950);
+  color: var(--color-zinc-50);
 }
 
 a,
@@ -204,13 +208,13 @@ button:not(:disabled) {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-slate-600) 24%, transparent);
+  background: color-mix(in srgb, var(--color-blue-600) 24%, transparent);
   color: #ffffff;
 }
 
 html.dark ::selection {
-  background: color-mix(in srgb, var(--color-slate-600) 30%, transparent);
-  color: var(--color-slate-50);
+  background: color-mix(in srgb, var(--color-blue-500) 34%, transparent);
+  color: var(--color-zinc-50);
 }
 
 .material-symbols-outlined {

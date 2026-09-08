@@ -8,10 +8,38 @@ body {
 
 .hero-grid {
   background-image:
-    linear-gradient(rgba(94, 234, 212, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(94, 234, 212, 0.08) 1px, transparent 1px);
+    linear-gradient(rgb(37 99 235 / 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(37 99 235 / 0.1) 1px, transparent 1px);
   background-size: 42px 42px;
   mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+.brand-mark-frame,
+.brand-mark-path {
+  stroke-dasharray: 96;
+  stroke-dashoffset: 96;
+  animation: draw-mark 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.brand-mark-path {
+  animation-delay: 180ms;
+}
+
+.brand-mark circle {
+  opacity: 0;
+  animation: reveal-node 240ms ease-out 760ms forwards;
+}
+
+@keyframes draw-mark {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes reveal-node {
+  to {
+    opacity: 1;
+  }
 }
 
 .reveal-up {
@@ -31,8 +59,20 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal-up {
+  .reveal-up,
+  .brand-mark-frame,
+  .brand-mark-path,
+  .brand-mark circle {
     animation: none;
+  }
+
+  .brand-mark-frame,
+  .brand-mark-path {
+    stroke-dashoffset: 0;
+  }
+
+  .brand-mark circle {
+    opacity: 1;
   }
 }
 
