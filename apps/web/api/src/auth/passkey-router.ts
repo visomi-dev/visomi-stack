@@ -20,6 +20,7 @@ import {
   findUserById,
   getPrimaryMembership,
   resolveAuthUserForAccount,
+  clientContextHash,
 } from './auth-service';
 import {
   authenticationBeginSchema,
@@ -38,6 +39,7 @@ import {
   accountPasskeyCredentials,
   accountPasskeyEnrollments,
   accountWebAuthnChallenges,
+  authEnrollmentGrants,
   db,
   HttpError,
   users,
@@ -212,6 +214,27 @@ passkeyRouter.post('/registration/begin', validateRequest({ body: registrationBe
   }
   if (req.session.authority === 'full') requireFreshSecurityReauthentication(req);
   const session = requireRestrictedSession(req);
+
+  if (req.session.enrollmentGrantId) {
+    const sessionHash = clientContextHash(req.sessionID, req.get('user-agent'));
+    const [grant] = await db
+      .select()
+      .from(authEnrollmentGrants)
+      .where(
+        and(
+          eq(authEnrollmentGrants.id, req.session.enrollmentGrantId),
+          eq(authEnrollmentGrants.userId, session.userId),
+          eq(authEnrollmentGrants.accountId, session.accountId),
+          eq(authEnrollmentGrants.requesterSessionHash, sessionHash),
+          isNull(authEnrollmentGrants.consumedAt),
+          isNull(authEnrollmentGrants.revokedAt),
+          gt(authEnrollmentGrants.expiresAt, new Date()),
+        ),
+      )
+      .limit(1);
+
+    if (!grant) failure('enrollment_grant_unavailable', 401, 'The enrollment authorization has expired.');
+  }
   const user = await findUserByEmail(session.email);
 
   if (!user) failure(PASSKEY_ACCOUNT_UNAVAILABLE, 404);
@@ -553,8 +576,16 @@ passkeyRouter.post(
           .returning();
 
         if (!activatedCredential) failure('challenge_mismatch', 400);
+        if (req.session.enrollmentGrantId)
+          await tx
+            .update(authEnrollmentGrants)
+            .set({ consumedAt: now })
+            .where(
+              and(eq(authEnrollmentGrants.id, req.session.enrollmentGrantId), isNull(authEnrollmentGrants.consumedAt)),
+            );
       });
       delete req.session.passkeyRegistration;
+      delete req.session.enrollmentGrantId;
     } else {
       await consumeChallenge(
         body.challengeId,

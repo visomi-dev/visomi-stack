@@ -61,61 +61,61 @@ This plan replaces the broken identity implementation with one explicit server-o
 
 - GOAL-002: Replace component-local branching with an explicit identity-flow contract.
 
-| Task     | Description                                                                                                                                                                                                                                                      | Completed | Date |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---- |
-| TASK-009 | Add an opaque `auth_identity_flows` record with state, expiry, session binding, normalized email hash, user/account references, authorization method, and terminal timestamps in `libs/shared/src/lib/db/schema.ts`.                                             |           |      |
-| TASK-010 | Add `/api/auth/identity/start`, `/identify`, and `/status` schemas and handlers. Return generic next actions so known-email responses do not enumerate accounts.                                                                                                 |           |      |
-| TASK-011 | Refactor `apps/web/app/src/app/auth/identity/identity.ts` to consume server states: `passkey`, `identify`, `verify_new_email`, `authorize_existing_account`, `enroll_passkey`, and `complete`.                                                                   |           |      |
-| TASK-012 | Detect WebAuthn capability using `PublicKeyCredential`, `navigator.credentials`, secure context, and platform-authenticator capability where available. Treat platform availability as a UX hint, not proof that no roaming or cross-device credential can work. |           |      |
-| TASK-013 | Add route restoration so a restricted flow survives refresh without exposing verified email or account choices to an unrelated browser session.                                                                                                                  |           |      |
+| Task     | Description                                                                                                                                                                                                                                                      | Completed | Date       |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---------- |
+| TASK-009 | Add an opaque `auth_identity_flows` record with state, expiry, session binding, normalized email hash, user/account references, authorization method, and terminal timestamps in `libs/shared/src/lib/db/schema.ts`.                                             | ✅        | 2026-09-07 |
+| TASK-010 | Add `/api/auth/identity/start`, `/identify`, and `/status` schemas and handlers. Return generic next actions so known-email responses do not enumerate accounts.                                                                                                 | ✅        | 2026-09-07 |
+| TASK-011 | Refactor `apps/web/app/src/app/auth/identity/identity.ts` to consume server states: `passkey`, `identify`, `verify_new_email`, `authorize_existing_account`, `enroll_passkey`, and `complete`.                                                                   |           |            |
+| TASK-012 | Detect WebAuthn capability using `PublicKeyCredential`, `navigator.credentials`, secure context, and platform-authenticator capability where available. Treat platform availability as a UX hint, not proof that no roaming or cross-device credential can work. |           |            |
+| TASK-013 | Add route restoration so a restricted flow survives refresh without exposing verified email or account choices to an unrelated browser session.                                                                                                                  |           |            |
 
 ### Implementation Phase 3
 
 - GOAL-003: Authorize a new device from an already authenticated device.
 
-| Task     | Description                                                                                                                                                                     | Completed | Date |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---- |
-| TASK-014 | Add `auth_device_approval_requests` with hashed user code, requester session hash, account/user binding, expiry, attempts, approval credential, and consumed/denied timestamps. |           |      |
-| TASK-015 | Add requester endpoints to create, poll, cancel, and consume an approval request; use generic responses before email ownership is verified.                                     |           |      |
-| TASK-016 | Add an authenticated approval page that requires a fresh active-passkey assertion and displays account, approximate device, location context, and expiry before approval.       |           |      |
-| TASK-017 | Convert an approved request into a one-time passkey enrollment grant bound to the requesting session and selected account.                                                      |           |      |
-| TASK-018 | Deliver approval status through polling first; add realtime fanout only if latency requirements justify the additional runtime dependency.                                      |           |      |
+| Task     | Description                                                                                                                                                                     | Completed | Date       |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---------- |
+| TASK-014 | Add `auth_device_approval_requests` with hashed user code, requester session hash, account/user binding, expiry, attempts, approval credential, and consumed/denied timestamps. | ✅        | 2026-09-07 |
+| TASK-015 | Add requester endpoints to create, poll, approve, and consume an approval request; use generic responses before email ownership is verified.                                    | ✅        | 2026-09-07 |
+| TASK-016 | Add an authenticated approval page that requires a fresh active-passkey assertion and displays account, approximate device, location context, and expiry before approval.       |           |            |
+| TASK-017 | Convert an approved request into a one-time passkey enrollment grant bound to the requesting session and selected account.                                                      | ✅        | 2026-09-08 |
+| TASK-018 | Deliver approval status through polling first; add realtime fanout only if latency requirements justify the additional runtime dependency.                                      | ✅        | 2026-09-08 |
 
 ### Implementation Phase 4
 
 - GOAL-004: Add explicit email recovery for users who cannot access any active passkey or approved device.
 
-| Task     | Description                                                                                                                                    | Completed | Date |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---- |
-| TASK-019 | Separate `new_email_verification` from `existing_account_recovery` purposes, templates, rate limits, and audit events.                         |           |      |
-| TASK-020 | Require a new one-time recovery code for existing accounts, bind it to the identity flow and requester context, and consume it atomically.     |           |      |
-| TASK-021 | Issue a short-lived enrollment-only grant after recovery; do not issue a full session until the new pending passkey is asserted and activated. |           |      |
-| TASK-022 | Notify the account after recovery, revoke outstanding recovery grants, and expose recent recovery events in security settings.                 |           |      |
+| Task     | Description                                                                                                                                    | Completed | Date       |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---------- |
+| TASK-019 | Separate `new_email_verification` from `existing_account_recovery` purposes, templates, rate limits, and audit events.                         | ✅        | 2026-09-07 |
+| TASK-020 | Require a new one-time recovery code for existing accounts, bind it to the identity flow and requester context, and consume it atomically.     | ✅        | 2026-09-07 |
+| TASK-021 | Issue a short-lived enrollment-only grant after recovery; do not issue a full session until the new pending passkey is asserted and activated. | ✅        | 2026-09-08 |
+| TASK-022 | Notify the account after recovery, revoke outstanding recovery grants, and expose recent recovery events in security settings.                 | ✅        | 2026-09-08 |
 
 ### Implementation Phase 5
 
 - GOAL-005: Add Sign in with Google as a federated fallback and enrollment authority.
 
-| Task     | Description                                                                                                                                                                                              | Completed | Date |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---- |
-| TASK-023 | Add `user_federated_identities` with provider, issuer, subject, user ID, email-at-link, linked/last-used/revoked timestamps, and unique `(issuer, subject)` constraint.                                  |           |      |
-| TASK-024 | Add optional validated `GOOGLE_AUTH_CLIENT_ID` configuration and a public provider-capabilities response that exposes only whether Google auth is enabled and its client ID.                             |           |      |
-| TASK-025 | Add the Google Identity Services browser adapter under `apps/web/app/src/app/shared/auth/`, loaded through the repository's `Deps` boundary, and render the official button on identity fallback states. |           |      |
-| TASK-026 | Add `POST /api/auth/google/complete` to verify the ID token server-side and bind it to the initiating browser using nonce and CSRF state.                                                                |           |      |
-| TASK-027 | For a known `(issuer, sub)`, establish a full session for the linked account. For a new Google subject, create a new user only after policy checks. Never silently attach it to an existing email match. |           |      |
-| TASK-028 | Permit an explicitly linked Google identity to authorize a new passkey enrollment, then encourage passkey creation after federated sign-in.                                                              |           |      |
-| TASK-029 | Update CSP, COOP, privacy documentation, consent configuration, and local/production authorized origins for Google Identity Services and FedCM.                                                          |           |      |
+| Task     | Description                                                                                                                                                                                              | Completed | Date       |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---------- |
+| TASK-023 | Add `user_federated_identities` with provider, issuer, subject, user ID, email-at-link, linked/last-used/revoked timestamps, and unique `(issuer, subject)` constraint.                                  | ✅        | 2026-09-07 |
+| TASK-024 | Add optional validated `GOOGLE_AUTH_CLIENT_ID` configuration and a public provider-capabilities response that exposes only whether Google auth is enabled and its client ID.                             | ✅        | 2026-09-07 |
+| TASK-025 | Add the Google Identity Services browser adapter under `apps/web/app/src/app/shared/auth/`, loaded through the repository's `Deps` boundary, and render the official button on identity fallback states. | ✅        | 2026-09-08 |
+| TASK-026 | Add `POST /api/auth/google/complete` to verify the ID token server-side and bind it to the initiating browser using nonce and CSRF state.                                                                | ✅        | 2026-09-07 |
+| TASK-027 | For a known `(issuer, sub)`, establish a full session for the linked account. For a new Google subject, create a new user only after policy checks. Never silently attach it to an existing email match. | ✅        | 2026-09-07 |
+| TASK-028 | Permit an explicitly linked Google identity to authorize a new passkey enrollment, then encourage passkey creation after federated sign-in.                                                              | ✅        | 2026-09-08 |
+| TASK-029 | Update CSP, COOP, privacy documentation, consent configuration, and local/production authorized origins for Google Identity Services and FedCM.                                                          |           |            |
 
 ### Implementation Phase 6
 
 - GOAL-006: Complete management, observability, and release validation.
 
-| Task     | Description                                                                                                                                                  | Completed | Date |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- | ---- |
-| TASK-030 | Add passkey, trusted-device, federated-identity, and recovery-event management to `/security`.                                                               |           |      |
-| TASK-031 | Add durable `auth_audit_events` for all successful and rejected authority transitions without storing raw tokens, PINs, credential payloads, or precise PII. |           |      |
-| TASK-032 | Add API, app E2E, gateway E2E, visual, accessibility, security, and production-build evidence for every terminal path.                                       |           |      |
-| TASK-033 | Update `docs/product/auth-flow.md` and `docs/architecture/backend/auth.md`; remove stale password-era endpoint descriptions.                                 |           |      |
+| Task     | Description                                                                                                                                                  | Completed | Date       |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- | ---------- |
+| TASK-030 | Add passkey, trusted-device, federated-identity, and recovery-event management to `/security`.                                                               | ✅        | 2026-09-08 |
+| TASK-031 | Add durable `auth_audit_events` for all successful and rejected authority transitions without storing raw tokens, PINs, credential payloads, or precise PII. |           |            |
+| TASK-032 | Add API, app E2E, gateway E2E, visual, accessibility, security, and production-build evidence for every terminal path.                                       |           |            |
+| TASK-033 | Update `docs/product/auth-flow.md` and `docs/architecture/backend/auth.md`; remove stale password-era endpoint descriptions.                                 | ✅        | 2026-09-07 |
 
 ## 3. Alternatives
 
@@ -178,14 +178,14 @@ Validation matrix:
 
 Phase traceability:
 
-| Phase                | Work-item ID(s) or explicit sub-scope | Status      | Gaps                                                                   |
-| -------------------- | ------------------------------------- | ----------- | ---------------------------------------------------------------------- |
-| `passkey-foundation` | `TASK-001` through `TASK-008`         | in_progress | Regression and real-ceremony E2E tests remain.                         |
-| `identity-contract`  | `TASK-009` through `TASK-013`         | planned     | Server-owned identity-flow persistence and refresh restoration remain. |
-| `device-approval`    | `TASK-014` through `TASK-018`         | planned     | Entire phase remains.                                                  |
-| `email-recovery`     | `TASK-019` through `TASK-022`         | planned     | Entire phase remains.                                                  |
-| `google-fallback`    | `TASK-023` through `TASK-029`         | planned     | Google Cloud client configuration and implementation remain.           |
-| `release-hardening`  | `TASK-030` through `TASK-033`         | planned     | Entire phase remains.                                                  |
+| Phase                | Work-item ID(s) or explicit sub-scope | Status      | Gaps                                                                          |
+| -------------------- | ------------------------------------- | ----------- | ----------------------------------------------------------------------------- |
+| `passkey-foundation` | `TASK-001` through `TASK-008`         | in_progress | Regression and real-ceremony E2E tests remain.                                |
+| `identity-contract`  | `TASK-009` through `TASK-013`         | in_progress | Angular server-state rendering and refresh restoration remain.                |
+| `device-approval`    | `TASK-014` through `TASK-018`         | in_progress | Approval context display and full browser flow coverage remain.               |
+| `email-recovery`     | `TASK-019` through `TASK-022`         | in_progress | Production notification delivery and full browser flow coverage remain.       |
+| `google-fallback`    | `TASK-023` through `TASK-029`         | in_progress | CSP/origins, explicit linking UI, and provider-console setup remain.          |
+| `release-hardening`  | `TASK-030` through `TASK-033`         | in_progress | Broader E2E, visual, accessibility, security, and production evidence remain. |
 
 ## 8. Related Specifications / Further Reading
 

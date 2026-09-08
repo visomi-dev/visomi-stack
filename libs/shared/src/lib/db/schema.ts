@@ -76,9 +76,103 @@ const authEmailChallenges = pgTable(
       .where(sql`${table.consumedAt} IS NULL AND ${table.supersededAt} IS NULL`),
     uniqueIndex('auth_email_challenges_flow_pin_idx').on(table.flowId, table.pinHash),
     index('auth_email_challenges_expiry_idx').on(table.expiresAt, table.consumedAt, table.supersededAt),
-    check('auth_email_challenges_purpose_check', sql`${table.purpose} = 'bootstrap_recovery'`),
+    check(
+      'auth_email_challenges_purpose_check',
+      sql`${table.purpose} IN ('bootstrap_recovery', 'existing_account_recovery')`,
+    ),
     check('auth_email_challenges_attempt_count_check', sql`${table.attemptCount} >= 0 AND ${table.attemptCount} <= 5`),
   ],
+);
+
+const authIdentityFlows = pgTable(
+  'auth_identity_flows',
+  {
+    id: text('id').primaryKey(),
+    state: text('state').notNull().default('passkey'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    sessionBinding: text('session_binding').notNull(),
+    emailHash: text('email_hash'),
+    userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
+    accountId: text('account_id').references(() => accounts.id, { onDelete: 'set null' }),
+    authorizationMethod: text('authorization_method'),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    terminalAt: timestamp('terminal_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('auth_identity_flows_session_idx').on(table.sessionBinding, table.expiresAt)],
+);
+
+const authDeviceApprovalRequests = pgTable(
+  'auth_device_approval_requests',
+  {
+    id: text('id').primaryKey(),
+    userCodeHash: text('user_code_hash').notNull(),
+    requesterSessionHash: text('requester_session_hash').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    accountId: text('account_id')
+      .notNull()
+      .references(() => accounts.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    attemptCount: integer('attempt_count').notNull().default(0),
+    approvalCredentialId: text('approval_credential_id'),
+    approvedAt: timestamp('approved_at', { withTimezone: true }),
+    deniedAt: timestamp('denied_at', { withTimezone: true }),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('auth_device_approval_requests_requester_idx').on(table.requesterSessionHash, table.expiresAt)],
+);
+
+const userFederatedIdentities = pgTable(
+  'user_federated_identities',
+  {
+    id: text('id').primaryKey(),
+    provider: text('provider').notNull(),
+    issuer: text('issuer').notNull(),
+    subject: text('subject').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    emailAtLink: text('email_at_link').notNull(),
+    linkedAt: timestamp('linked_at', { withTimezone: true }).defaultNow().notNull(),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  },
+  (table) => [uniqueIndex('user_federated_identities_issuer_subject_idx').on(table.issuer, table.subject)],
+);
+
+const authAuditEvents = pgTable('auth_audit_events', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
+  accountId: text('account_id').references(() => accounts.id, { onDelete: 'set null' }),
+  event: text('event').notNull(),
+  outcome: text('outcome').notNull(),
+  contextHash: text('context_hash'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+const authEnrollmentGrants = pgTable(
+  'auth_enrollment_grants',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    accountId: text('account_id')
+      .notNull()
+      .references(() => accounts.id, { onDelete: 'cascade' }),
+    requesterSessionHash: text('requester_session_hash').notNull(),
+    source: text('source').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('auth_enrollment_grants_session_idx').on(table.requesterSessionHash, table.expiresAt)],
 );
 
 const authVerificationChallenges = pgTable('auth_verification_challenges', {
@@ -467,6 +561,11 @@ export {
   apiKeys,
   asyncJobs,
   authEmailChallenges,
+  authIdentityFlows,
+  authDeviceApprovalRequests,
+  userFederatedIdentities,
+  authAuditEvents,
+  authEnrollmentGrants,
   authVerificationChallenges,
   accountPasskeyCredentials,
   accountPasskeyEnrollments,

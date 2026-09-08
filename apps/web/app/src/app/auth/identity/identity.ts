@@ -1,11 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { email, form, maxLength, minLength, pattern, required, type FieldTree } from '@angular/forms/signals';
 
 import { Auth } from '../../shared/auth/auth';
 import type { RestrictedAccount } from '../../shared/auth/auth.models';
 import { Passkey } from '../../shared/auth/passkey';
+import { GoogleIdentity } from '../../shared/auth/google-identity';
 import { APP_URL } from '../../shared/constants/routes';
 import { Alert } from '../../shared/ui/overlays/alert/alert';
 import { AuthCard } from '../../shared/ui/layout/auth-card/auth-card';
@@ -45,6 +46,8 @@ export class Identity {
   private readonly auth = inject(Auth);
   private readonly passkey = inject(Passkey);
   private readonly router = inject(Router);
+  private readonly google = inject(GoogleIdentity);
+  private readonly googleButton = viewChild<ElementRef<HTMLElement>>('googleButton');
 
   readonly state = signal<AccessState>('ready');
   readonly errorMessage = signal('');
@@ -54,6 +57,8 @@ export class Identity {
   readonly resendAvailableAt = signal('');
   readonly verificationChallengeId = signal('');
   readonly verificationOptions = signal<Record<string, unknown> | null>(null);
+  readonly identityFlowId = signal('');
+  readonly googleClientId = signal<string | null>(null);
 
   readonly emailModel = signal<EmailModel>({ email: '' });
   readonly emailForm: FieldTree<EmailModel> = form(this.emailModel, (path) => {
@@ -94,6 +99,7 @@ export class Identity {
     this.errorMessage.set('');
 
     try {
+      if (!this.identityFlowId()) this.identityFlowId.set((await this.auth.startIdentityFlow()).flowId);
       const begin = await this.passkey.beginAuthentication(retryRequested);
 
       if (!begin.options || !begin.challengeId) {
@@ -111,6 +117,28 @@ export class Identity {
         error instanceof DOMException && error.name === 'AbortError'
           ? $localize`:@@identityPasskeyCancelled:Passkey sign-in was cancelled. No changes were made.`
           : $localize`:@@identityPasskeyFailed:We could not verify that passkey.`,
+      );
+    }
+  }
+
+  protected async showGoogle(): Promise<void> {
+    try {
+      const flow = await this.auth.startIdentityFlow();
+
+      this.identityFlowId.set(flow.flowId);
+      if (!flow.google?.enabled || !flow.google.clientId || !this.googleButton())
+        throw new Error('Google sign-in is not configured.');
+      this.googleClientId.set(flow.google.clientId);
+      await this.google.renderButton(this.googleButton()!.nativeElement, flow.google.clientId, flow.flowId, (user) => {
+        void this.auth.ensureSessionLoaded(true).then(() => this.router.navigateByUrl(APP_URL));
+        this.state.set('success');
+        this.selectedAccount.set(null);
+        this.errorMessage.set('');
+        void user;
+      });
+    } catch (error) {
+      this.errorMessage.set(
+        this.safeError(error, $localize`:@@identityGoogleFailed:Google sign-in is not available right now.`),
       );
     }
   }

@@ -1,11 +1,18 @@
 import { DatePipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
 import { Auth } from '../shared/auth/auth';
 import { Passkey, type PasskeyCredential } from '../shared/auth/passkey';
+import { DeviceApproval } from '../shared/auth/device-approval';
 
 type View = 'list' | 'add' | 'name' | 'revoke';
+type SecurityOverview = {
+  federatedIdentities: Array<{ id: string; provider: string; emailAtLink: string; linkedAt: string }>;
+  trustedDevices: Array<{ id: string; createdAt: string; lastUsedAt: string | null; expiresAt: string }>;
+  recoveryEvents: Array<{ event: string; outcome: string; createdAt: string }>;
+};
 
 @Component({
   imports: [DatePipe],
@@ -16,6 +23,8 @@ type View = 'list' | 'add' | 'name' | 'revoke';
 export class Security {
   private readonly passkey = inject(Passkey);
   private readonly auth = inject(Auth);
+  private readonly http = inject(HttpClient);
+  private readonly approval = inject(DeviceApproval);
   readonly loading = signal(true);
   readonly error = signal('');
   readonly credentials = signal<PasskeyCredential[]>([]);
@@ -25,9 +34,59 @@ export class Security {
   readonly passkeyLoading = signal(true);
   readonly passkeySubmitting = signal(false);
   readonly passkeyError = signal('');
+  readonly overview = signal<SecurityOverview | null>(null);
+  readonly approvalRequest = signal<{ requestId: string; userCode: string; expiresAt: string } | null>(null);
+  readonly approvalStatus = signal('');
 
   constructor() {
     void this.loadCredentials();
+    void this.loadOverview();
+  }
+
+  async revokeFederatedIdentity(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete(`/api/auth/security/federated/${encodeURIComponent(id)}`));
+    await this.loadOverview();
+  }
+
+  async revokeTrustedDevice(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete(`/api/auth/security/devices/${encodeURIComponent(id)}`));
+    await this.loadOverview();
+  }
+
+  async requestDeviceApproval(): Promise<void> {
+    const user = await this.currentUser();
+
+    if (!user) return;
+    const request = await this.approval.request(user.accountId);
+
+    this.approvalRequest.set({
+      requestId: request.requestId,
+      userCode: request.userCode ?? '',
+      expiresAt: request.expiresAt,
+    });
+    this.approvalStatus.set('Waiting for approval from another trusted device.');
+    void this.pollApproval(request.requestId);
+  }
+
+  async approveDevice(requestId: string): Promise<void> {
+    await this.reauthenticateWithPasskey();
+    await this.approval.approve(requestId);
+    this.approvalStatus.set('Device approved.');
+  }
+
+  private async pollApproval(requestId: string): Promise<void> {
+    for (let attempt = 0; attempt < 60; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      const status = await this.approval.poll(requestId);
+
+      if (status.status === 'approved') {
+        this.approvalStatus.set('Device approved. Enter the code on the new device.');
+
+        return;
+      }
+      if (status.status === 'denied' || status.status === 'consumed') return;
+    }
+    this.approvalStatus.set('The approval request expired.');
   }
 
   private async loadCredentials() {
@@ -38,6 +97,16 @@ export class Security {
     } finally {
       this.passkeyLoading.set(false);
       this.loading.set(false);
+    }
+  }
+
+  private async loadOverview(): Promise<void> {
+    try {
+      const response = await firstValueFrom(this.http.get<{ data: SecurityOverview }>('/api/auth/security/overview'));
+
+      this.overview.set(response.data);
+    } catch {
+      this.overview.set(null);
     }
   }
 

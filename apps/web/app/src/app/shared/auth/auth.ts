@@ -9,6 +9,7 @@ import type {
   SessionResponse,
   SessionUpgrade,
   RestrictedAccount,
+  IdentityFlow,
 } from './auth.models';
 
 export abstract class Auth {
@@ -18,6 +19,7 @@ export abstract class Auth {
   abstract readonly sessionLoaded: Signal<boolean>;
   abstract readonly user: Signal<AuthUser | null>;
 
+  abstract startIdentityFlow(): Promise<IdentityFlow>;
   abstract ensureSessionLoaded(force?: boolean): Promise<void>;
   abstract requestEmailOtp(payload: EmailOtpRequestPayload): Promise<EmailOtpResponse['data']>;
   abstract verifyEmailOtp(payload: EmailOtpVerifyPayload): Promise<SessionUpgrade>;

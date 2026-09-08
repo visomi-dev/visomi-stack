@@ -23,7 +23,7 @@ export const challengeSchema = z.object({
   challengeId: challengeIdSchema,
   email: emailSchema,
   expiresAt: z.string(),
-  purpose: z.literal('bootstrap_recovery'),
+  purpose: z.enum(['bootstrap_recovery', 'existing_account_recovery']),
 });
 export type VerificationPurpose = z.infer<typeof challengeSchema>['purpose'];
 
@@ -55,6 +55,19 @@ export const restrictedAccountChoiceSchema = z
   .object({ accountId: z.string(), name: z.string(), role: z.string(), selected: z.boolean() })
   .strict()
   .meta({ id: 'RestrictedAccountChoice' });
+
+export const identityFlowIdSchema = z.string().uuid();
+export const identityIdentifySchema = z.object({ flowId: identityFlowIdSchema, email: emailSchema }).strict();
+export const identityStatusSchema = z.object({ flowId: identityFlowIdSchema }).strict();
+export const recoveryVerifySchema = z.object({ flowId: identityFlowIdSchema, pin: pinSchema }).strict();
+export const googleCompleteSchema = z.object({ flowId: identityFlowIdSchema, idToken: z.string().min(1) }).strict();
+export const approvalCreateSchema = z.object({ accountId: z.string().min(1) }).strict();
+export const approvalIdSchema = z.object({ requestId: z.string().uuid() }).strict();
+export const approvalConsumeSchema = z
+  .object({ requestId: z.string().uuid(), userCode: z.string().regex(/^\d{6}$/) })
+  .strict();
+export const securityIdentityPathSchema = z.object({ identityId: z.string().min(1) }).strict();
+export const securityDevicePathSchema = z.object({ deviceId: z.string().min(1) }).strict();
 
 export const restrictedSessionSchema = z
   .object({
@@ -107,6 +120,64 @@ const rateLimitResponse = {
 };
 
 export const authOpenApiPaths = {
+  '/auth/identity/start': {
+    post: { responses: { 201: { description: 'Identity flow created.' } } },
+  },
+  '/auth/identity/identify': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: identityIdentifySchema } } },
+      responses: { 202: { description: 'Identity verification requested.' } },
+    },
+  },
+  '/auth/identity/status': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: identityStatusSchema } } },
+      responses: { 200: { description: 'Identity flow status.' } },
+    },
+  },
+  '/auth/identity/recovery/verify': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: recoveryVerifySchema } } },
+      responses: { 200: { description: 'Recovery verified.' } },
+    },
+  },
+  '/auth/google/complete': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: googleCompleteSchema } } },
+      responses: { 200: { description: 'Google authentication complete.' } },
+    },
+  },
+  '/auth/device-approval/request': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: approvalCreateSchema } } },
+      responses: { 201: { description: 'Approval request created.' } },
+    },
+  },
+  '/auth/device-approval/status': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: approvalIdSchema } } },
+      responses: { 200: { description: 'Approval request status.' } },
+    },
+  },
+  '/auth/device-approval/consume': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: approvalConsumeSchema } } },
+      responses: { 200: { description: 'Approval grant consumed.' } },
+    },
+  },
+  '/auth/device-approval/approve': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: approvalIdSchema } } },
+      responses: { 200: { description: 'Device approval accepted.' } },
+    },
+  },
+  '/auth/security/overview': {
+    get: { responses: { 200: { description: 'Security settings and recent security events.' } } },
+  },
+  '/auth/security/federated/{identityId}': {
+    delete: { responses: { 204: { description: 'Federated identity revoked.' } } },
+  },
+  '/auth/security/devices/{deviceId}': { delete: { responses: { 204: { description: 'Trusted device revoked.' } } } },
   '/auth/email-otp/request': {
     post: {
       requestBody: { required: true, content: { 'application/json': { schema: emailOtpRequestSchema } } },

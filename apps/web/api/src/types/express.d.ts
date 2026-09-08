@@ -33,13 +33,16 @@ declare module 'express-session' {
     };
     authenticatedAt?: number;
     passkeySecurityReauthenticatedAt?: number;
+    identityFlowId?: string;
+    googleNonce?: string;
+    enrollmentGrantId?: string;
     restrictedAuth?: {
       allowedOperations: string[];
       eligibleAccounts: Array<{ accountId: string; name: string; role: string }>;
       expiresAt: number;
       flowId: string;
       issuedAt: number;
-      purpose: 'bootstrap_recovery';
+      purpose: 'bootstrap_recovery' | 'existing_account_recovery';
       selectedAccountId?: string;
       userId: string;
       verifiedEmail: string;

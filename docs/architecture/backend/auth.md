@@ -8,12 +8,11 @@ This architecture assumes:
 
 - Angular owns the auth UI
 - Express owns auth endpoints and session handling
-- Sessions carry a `restricted | full` discriminator; full authority is
-  granted only after email OTP verification plus an active passkey
+- Sessions carry a `restricted | full` discriminator; full authority is granted after an active passkey or a verified, linked federated identity
 - PostgreSQL stores auth state
 - Drizzle ORM owns the SQL schema and query layer
 - `drizzle-kit` beta owns SQL migration generation and application
-- Mailgun delivers verification emails
+- Mailgun delivers verification and recovery emails
 
 ## Scope
 
@@ -28,9 +27,9 @@ This document covers:
 
 This document does not cover:
 
-- social login
+- optional Google Identity Services fallback
 - SSO or enterprise identity providers
-- password reset, password setup, or password fallback (none exist)
+- password reset, password setup, or password fallback
 - MFA beyond email OTP and passkey possession
 
 ## Runtime Ownership
@@ -47,6 +46,7 @@ The passwordless slice keeps a clear separation of responsibilities.
 - passkey registration and authentication form
 - session restoration checks for product routes
 - post-authenticated product shell
+- explicit provider fallback and identity-flow restoration
 
 ### API
 
@@ -58,6 +58,7 @@ The passwordless slice keeps a clear separation of responsibilities.
 - session establishment and teardown
 - Mailgun email delivery
 - auth rate limiting and audit logging
+- identity-flow, device-approval, recovery, and Google token transitions
 
 ### Composition Server
 
@@ -83,11 +84,16 @@ Recommended Angular auth routes:
 
 Recommended API auth routes:
 
-- `POST /api/auth/sign-up`
-- `POST /api/auth/sign-up/verify`
-- `POST /api/auth/sign-in/password`
-- `POST /api/auth/sign-in/verify`
-- `POST /api/auth/verification/resend`
+- `POST /api/auth/identity/start`
+- `POST /api/auth/identity/identify`
+- `POST /api/auth/identity/status`
+- `POST /api/auth/identity/recovery/request`
+- `POST /api/auth/identity/recovery/verify`
+- `POST /api/auth/google/complete`
+- `POST /api/auth/device-approval/request`
+- `POST /api/auth/device-approval/status`
+- `POST /api/auth/device-approval/approve`
+- `POST /api/auth/device-approval/consume`
 - `GET /api/auth/session`
 - `POST /api/auth/sign-out`
 
@@ -103,24 +109,21 @@ This keeps:
 
 ## Authentication Model
 
-The first auth implementation uses two stages.
+The passwordless implementation uses an explicit server-owned identity flow.
 
-### Stage 1: Credential Verification
+### Stage 1: Passkey Or Federated Verification
 
-Passport with a local strategy validates the submitted email and password.
+Discoverable passkeys are verified with RP ID, origin, session-bound, single-use challenges. An explicitly linked Google identity is verified server-side with `google-auth-library`.
 
 Passport is responsible only for the credential check in this stage. Successful password verification does not immediately establish the logged-in session.
 
-### Stage 2: Email PIN Verification
+### Stage 2: Explicit Recovery
 
-After password verification succeeds, the API creates a verification challenge and sends a short-lived numeric PIN by email.
+When no usable passkey is available, the API can send a short-lived numeric recovery PIN. This creates restricted enrollment authority only; a new passkey must be asserted before a full session is established.
 
 The user enters the PIN in the Angular UI. Only after that PIN is validated should the API call `req.login()` and establish the authenticated session.
 
-This applies to:
-
-- sign-up
-- sign-in
+New email bootstrap and existing-account recovery use separate purposes and audit events.
 
 ## Session Model
 

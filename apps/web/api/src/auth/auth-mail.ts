@@ -78,6 +78,34 @@ export async function sendVerificationMessage(message: VerificationMessage) {
   });
 }
 
+export async function sendRecoveryNotification(email: string): Promise<void> {
+  const subject = 'Your Visomi Stack account was recovered';
+  const text =
+    'A lower-assurance email recovery was completed for your Visomi Stack account. If you did not do this, secure your account immediately.';
+
+  if (env.MAIL_TRANSPORT === 'memory') {
+    mailbox.push({
+      challengeId: 'recovery-notification',
+      email,
+      expiresAt: new Date(),
+      pin: '',
+      purpose: 'existing_account_recovery',
+      sentAt: new Date(),
+    });
+
+    return;
+  }
+  const client = getMailgunClient();
+
+  await client.messages.create(env.MAILGUN_DOMAIN, {
+    from: env.MAILGUN_FROM,
+    html: `<p>${text}</p>`,
+    subject,
+    text,
+    to: [email],
+  });
+}
+
 export function listSentMessages() {
   return mailbox.map((message) => ({ ...message }));
 }

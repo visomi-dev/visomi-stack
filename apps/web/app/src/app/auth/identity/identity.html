@@ -27,6 +27,18 @@
           >
             Continue with a passkey
           </button>
+          <p class="text-center text-xs text-slate-500 dark:text-slate-400" i18n="@@identityFlowSecurityNote">
+            This secure sign-in flow expires if left inactive.
+          </p>
+          <button
+            type="button"
+            class="min-h-11 rounded-md border border-slate-300 px-4 text-sm font-semibold dark:border-slate-700"
+            (click)="showGoogle()"
+            i18n="@@identityGoogleFallback"
+          >
+            Continue with Google
+          </button>
+          <div #googleButton class="flex min-h-10 justify-center" [class.hidden]="!googleClientId()"></div>
           <p
             class="px-2 text-center text-xs leading-5 text-slate-500 dark:text-slate-400"
             i18n="@@identityPasskeyGuidance"

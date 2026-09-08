@@ -25,17 +25,19 @@ type GatewayDeps = {
 };
 
 const gatewaySecurityHeaders = helmet({
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       baseUri: ["'self'"],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", 'https://accounts.google.com'],
       fontSrc: ["'self'", 'data:'],
       formAction: ["'self'"],
       frameAncestors: ["'self'"],
+      frameSrc: ["'self'", 'https://accounts.google.com'],
       imgSrc: ["'self'", 'data:', 'blob:'],
       objectSrc: ["'none'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://accounts.google.com'],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       upgradeInsecureRequests: null,

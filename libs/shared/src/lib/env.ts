@@ -54,6 +54,7 @@ const environmentSchema = z
     OPAQUE_SYNC_S3_SECRET_KEY: z.string().default(''),
     OPAQUE_SYNC_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
     LOCAL_AGENT_PUBLIC_KEY: z.string().default(''),
+    GOOGLE_AUTH_CLIENT_ID: z.string().default(''),
   })
   .superRefine((data, context) => {
     if (data.NODE_ENV !== 'production') return;

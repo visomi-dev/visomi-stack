@@ -13,6 +13,8 @@ import type {
   SessionResponse,
   SessionUpgrade,
   RestrictedAccount,
+  IdentityFlow,
+  ResponseEnvelope,
 } from './auth.models';
 
 @Injectable()
@@ -31,6 +33,14 @@ export class ServerAuth extends Auth {
   readonly passkeySubmitting = this.$passkeySubmitting.asReadonly();
   readonly sessionLoaded = this.$sessionLoaded.asReadonly();
   readonly user = this.$user.asReadonly();
+
+  async startIdentityFlow(): Promise<IdentityFlow> {
+    const response = await firstValueFrom(
+      this.http.post<ResponseEnvelope<IdentityFlow>>('/api/auth/identity/start', {}),
+    );
+
+    return response.data;
+  }
 
   async ensureSessionLoaded(_force = false): Promise<void> {
     if (this.$sessionLoaded()) {

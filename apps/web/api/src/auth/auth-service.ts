@@ -32,6 +32,7 @@ import {
 type VerificationPurpose = z.infer<typeof challengeSchema>['purpose'];
 type AuthUser = z.infer<typeof authUserSchema>;
 type AuthChallengePayload = z.infer<typeof challengeSchema>;
+type ChallengeId = AuthChallengePayload['challengeId'];
 
 const MAX_CHALLENGE_ATTEMPTS = 5;
 const OTP_PURPOSE = 'bootstrap_recovery' as const;
@@ -157,14 +158,13 @@ export async function resolveAuthUserForAccount(
 export async function createChallenge(
   user: typeof users.$inferSelect,
   purpose: VerificationPurpose = 'bootstrap_recovery',
+  challengeId: ChallengeId = randomUUID(),
 ): Promise<AuthChallengePayload> {
   const pin = generateVerificationPin();
 
   const now = new Date();
 
   const expiresAt = new Date(now.getTime() + env.PIN_EXPIRY_MINUTES * 60 * 1000);
-
-  const challengeId = randomUUID();
 
   await db
     .update(authVerificationChallenges)
@@ -242,6 +242,15 @@ export async function createEmailChallenge(email: string): Promise<AuthChallenge
   await sendVerificationMessage({ challengeId, email: normalizedEmail, expiresAt, pin, purpose: 'bootstrap_recovery' });
 
   return { challengeId, email: normalizedEmail, expiresAt: expiresAt.toISOString(), purpose: 'bootstrap_recovery' };
+}
+
+export async function createRecoveryChallenge(
+  user: typeof users.$inferSelect,
+  flowId: ChallengeId,
+): Promise<AuthChallengePayload> {
+  const challenge = await createChallenge(user, 'existing_account_recovery', flowId);
+
+  return challenge;
 }
 
 export async function findOrCreateUserByEmail(email: string): Promise<typeof users.$inferSelect> {
@@ -621,8 +630,12 @@ async function deliverEmailOtp(flowId: string, email: string, context: string): 
   return { flowId, resendAvailableAt: new Date(now.getTime() + env.PIN_RESEND_COOLDOWN_SECONDS * 1000).toISOString() };
 }
 
-export async function requestEmailOtp(email: string, context: string): Promise<EmailOtpDelivery> {
-  return deliverEmailOtp(randomUUID(), normalizeEmail(email), context);
+export async function requestEmailOtp(
+  email: string,
+  context: string,
+  flowId = randomUUID(),
+): Promise<EmailOtpDelivery> {
+  return deliverEmailOtp(flowId, normalizeEmail(email), context);
 }
 
 export async function resendEmailOtp(flowId: string, context: string): Promise<EmailOtpDelivery> {
