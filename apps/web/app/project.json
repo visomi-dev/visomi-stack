@@ -39,7 +39,7 @@
         },
         "outputMode": "server",
         "security": {
-          "allowedHosts": ["themis.visomi.dev", "themis-develop.up.railway.app", "localhost"]
+          "allowedHosts": ["stack.visomi.dev", "localhost"]
         }
       },
       "configurations": {
