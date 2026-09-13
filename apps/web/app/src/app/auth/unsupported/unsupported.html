@@ -1,0 +1,26 @@
+<app-auth-layout>
+  <app-auth-card>
+    <p class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400">
+      Account security
+    </p>
+    <h1 class="font-heading mt-3 text-3xl font-bold">{{ title }}</h1>
+    <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">{{ description }}</p>
+    <p
+      class="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+    >
+      This action is not enabled by the current server contract. No account change was made.
+    </p>
+    <div class="mt-6 grid gap-3">
+      <a
+        routerLink="/auth/sign-in"
+        class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
+        >Return to sign in</a
+      >
+      <a
+        routerLink="/"
+        class="inline-flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-semibold text-blue-600 dark:text-blue-400"
+        >Return home</a
+      >
+    </div>
+  </app-auth-card>
+</app-auth-layout>

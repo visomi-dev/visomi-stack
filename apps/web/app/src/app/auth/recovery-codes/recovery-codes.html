@@ -1,0 +1,33 @@
+<app-auth-layout>
+  <app-auth-card>
+    <p class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400">
+      Account security
+    </p>
+    <h1 class="font-heading mt-3 text-3xl font-bold">Recovery codes</h1>
+    <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+      Generate a new set of one-time codes for recovering access when your other factors are unavailable.
+    </p>
+    <button
+      type="button"
+      class="mt-6 min-h-11 w-full rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+      [disabled]="loading()"
+      (click)="regenerate()"
+    >
+      {{ loading() ? 'Confirming identity...' : 'Regenerate recovery codes' }}
+    </button>
+    @if (codes().length) {
+      <section class="mt-6 rounded-md border border-green-200 bg-green-50 p-4" aria-labelledby="codes-title">
+        <h2 id="codes-title" class="font-semibold">Your new recovery codes</h2>
+        <p class="mt-2 text-sm">Store these codes somewhere safe. The previous codes no longer work.</p>
+        <ul class="mt-4 grid grid-cols-2 gap-2 font-mono text-sm" aria-label="Recovery codes">
+          @for (code of codes(); track code) {
+            <li>{{ code }}</li>
+          }
+        </ul>
+      </section>
+    }
+    @if (error()) {
+      <p class="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ error() }}</p>
+    }
+  </app-auth-card>
+</app-auth-layout>

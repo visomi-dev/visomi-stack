@@ -1,0 +1,43 @@
+{
+  "runId": "RUN-1789230269614-1878585",
+  "database": {
+    "driver": "PostgreSQL",
+    "metadataRows": [
+      {
+        "object_key": "zk006-it-account-611c68b9-abb8-48ca-a1b9-0c8322614e0c/zk006-it-workspace-fcac5eac-a8be-44ff-aca3-e07393d359c8/zk006-it-envelope-839053b5-dbb4-44db-a7ce-8c296ddcf093/1-ab0b632c-2324-4241-a591-12ef4ef9258c.json",
+        "ciphertext_sha256": "65f9d5e4d4e5f7358bcc3667205e2d1664eed9a7548f894a8fc60808192488b4",
+        "revision": 1,
+        "tombstoned_at": null
+      },
+      {
+        "object_key": "zk006-it-account-611c68b9-abb8-48ca-a1b9-0c8322614e0c/zk006-it-workspace-fcac5eac-a8be-44ff-aca3-e07393d359c8/zk006-it-envelope-839053b5-dbb4-44db-a7ce-8c296ddcf093/2-0fae9810-97ef-4749-804f-f06a33ef9eb5.json",
+        "ciphertext_sha256": "c9ca52ce1925360ccc2b1cda0880183c200030417643e92fc63d5a5916d051d8",
+        "revision": 2,
+        "tombstoned_at": null
+      },
+      {
+        "object_key": "zk006-it-account-611c68b9-abb8-48ca-a1b9-0c8322614e0c/zk006-it-workspace-fcac5eac-a8be-44ff-aca3-e07393d359c8/concurrent-3/3-7b36b735-8ae1-47af-9b69-a08d0ef127f0.json",
+        "ciphertext_sha256": "c5facb82a3b3a2a7dc34c8f7c1ddfe87ad2ab8f3d1d377cf9c2dffa57f928b1d",
+        "revision": 3,
+        "tombstoned_at": null
+      },
+      {
+        "object_key": "zk006-it-account-611c68b9-abb8-48ca-a1b9-0c8322614e0c/zk006-it-workspace-fcac5eac-a8be-44ff-aca3-e07393d359c8/concurrent-4/4-2b79a84d-db33-46dc-88d7-67a5aa62cd65.json",
+        "ciphertext_sha256": "d2f344fe189f11b78154d6d98ba58927aad5c08fdf89c990d679be4be68a3248",
+        "revision": 4,
+        "tombstoned_at": null
+      }
+    ],
+    "protectedColumns": "none observed",
+    "plaintextMarkerObserved": false
+  },
+  "objectStorage": {
+    "provider": "MinIO S3-compatible",
+    "bucket": "themis-api-e2e-1878585-opaque",
+    "listing": "The repository object-store abstraction has no list operation; observed object key is retained below.",
+    "objectKey": "zk006-it-account-611c68b9-abb8-48ca-a1b9-0c8322614e0c/zk006-it-workspace-fcac5eac-a8be-44ff-aca3-e07393d359c8/zk006-it-envelope-839053b5-dbb4-44db-a7ce-8c296ddcf093/2-0fae9810-97ef-4749-804f-f06a33ef9eb5.json",
+    "retrievedBytes": 535,
+    "ciphertextSha256": "c9ca52ce1925360ccc2b1cda0880183c200030417643e92fc63d5a5916d051d8",
+    "metadataHashMatchesPostgres": true
+  }
+}

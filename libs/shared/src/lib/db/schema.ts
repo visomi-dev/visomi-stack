@@ -7,6 +7,9 @@ const users = pgTable(
     id: text('id').primaryKey(),
     email: text('email').notNull(),
     emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
+    passwordHash: text('password_hash'),
+    authVersion: integer('auth_version').notNull().default(1),
+    passwordChangedAt: timestamp('password_changed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
@@ -89,18 +92,79 @@ const authIdentityFlows = pgTable(
   {
     id: text('id').primaryKey(),
     state: text('state').notNull().default('passkey'),
+    intent: text('intent').notNull().default('sign_in'),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     sessionBinding: text('session_binding').notNull(),
     emailHash: text('email_hash'),
     userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
     accountId: text('account_id').references(() => accounts.id, { onDelete: 'set null' }),
     authorizationMethod: text('authorization_method'),
+    passwordProofAt: timestamp('password_proof_at', { withTimezone: true }),
+    requiredFactor: text('required_factor'),
+    userAuthVersion: integer('user_auth_version'),
+    factorEnrollmentId: text('factor_enrollment_id'),
+    factorEnrollmentVersion: integer('factor_enrollment_version'),
+    pendingPasswordHash: text('pending_password_hash'),
+    pendingEmail: text('pending_email'),
+    attemptCount: integer('attempt_count').notNull().default(0),
     completedAt: timestamp('completed_at', { withTimezone: true }),
     terminalAt: timestamp('terminal_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [index('auth_identity_flows_session_idx').on(table.sessionBinding, table.expiresAt)],
+);
+
+const userTotpEnrollments = pgTable(
+  'user_totp_enrollments',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    encryptedSecret: text('encrypted_secret').notNull(),
+    keyVersion: integer('key_version').notNull().default(1),
+    status: text('status').notNull().default('pending'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    confirmedAt: timestamp('confirmed_at', { withTimezone: true }),
+    lastAcceptedTimeStep: integer('last_accepted_time_step'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('user_totp_enrollments_user_status_idx').on(table.userId, table.status),
+    check('user_totp_enrollments_status_check', sql`${table.status} IN ('pending', 'active', 'revoked')`),
+  ],
+);
+
+const userRecoveryCodes = pgTable(
+  'user_recovery_codes',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    codeHash: text('code_hash').notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('user_recovery_codes_user_idx').on(table.userId, table.usedAt)],
+);
+
+const authOperationGrants = pgTable(
+  'auth_operation_grants',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    purpose: text('purpose').notNull(),
+    sessionBinding: text('session_binding').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('auth_operation_grants_user_purpose_idx').on(table.userId, table.purpose, table.expiresAt)],
 );
 
 const authDeviceApprovalRequests = pgTable(
@@ -562,6 +626,9 @@ export {
   asyncJobs,
   authEmailChallenges,
   authIdentityFlows,
+  userTotpEnrollments,
+  userRecoveryCodes,
+  authOperationGrants,
   authDeviceApprovalRequests,
   userFederatedIdentities,
   authAuditEvents,

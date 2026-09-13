@@ -1,0 +1,117 @@
+<app-auth-layout>
+  <app-auth-card>
+    @if (complete()) {
+      <p class="font-mono text-xs font-semibold tracking-widest text-green-700 uppercase dark:text-green-400">
+        Account ready
+      </p>
+      <h1 class="font-heading mt-3 text-3xl font-bold">Your account is verified</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+        Sign in with your password or create a passkey.
+      </p>
+      <a
+        routerLink="/auth/sign-in"
+        class="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
+        >Continue to sign in</a
+      >
+    } @else if (flowId()) {
+      <p class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400">
+        Email verification
+      </p>
+      <h1 class="font-heading mt-3 text-3xl font-bold">Check your email</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+        Enter the 6-digit code sent to verify your new account.
+      </p>
+      <app-form class="mt-6 grid gap-5" [form]="codeForm" (ngSubmit)="verifySignUp()">
+        <app-field>
+          <app-label for="sign-up-code" tone="plain">Verification code</app-label>
+          <app-input
+            [formField]="codeForm.code"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            controlId="sign-up-code"
+            name="code"
+            required
+          />
+          @if (codeError()) {
+            <app-error-message controlId="sign-up-code-error">{{ codeError() }}</app-error-message>
+          }
+        </app-field>
+        <button
+          type="submit"
+          class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+          [disabled]="codeForm().invalid() || submitting()"
+        >
+          Verify email
+        </button>
+      </app-form>
+    } @else {
+      <p class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400">
+        Password signup
+      </p>
+      <h1 class="font-heading mt-3 text-3xl font-bold">Create your account</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+        Use an email you can verify and a password of at least 15 characters.
+      </p>
+      <app-form class="mt-6 grid gap-5" [form]="form" (ngSubmit)="signUp()">
+        <app-field>
+          <app-label for="sign-up-email" tone="plain">Email address</app-label>
+          <app-input
+            [formField]="form.email"
+            type="email"
+            autocomplete="email"
+            controlId="sign-up-email"
+            name="email"
+            required
+          />
+          @if (emailError()) {
+            <app-error-message controlId="sign-up-email-error">{{ emailError() }}</app-error-message>
+          }
+        </app-field>
+        <app-field>
+          <app-label for="sign-up-password" tone="plain">Password</app-label>
+          <app-password-input
+            [formField]="form.password"
+            autocomplete="new-password"
+            controlId="sign-up-password"
+            name="password"
+            [loading]="submitting()"
+            minLength="15"
+            maxLength="128"
+            required
+          />
+          @if (passwordError()) {
+            <app-error-message controlId="sign-up-password-error">{{ passwordError() }}</app-error-message>
+          }
+        </app-field>
+        <app-field>
+          <app-label for="sign-up-confirmation" tone="plain">Confirm password</app-label>
+          <app-password-input
+            [formField]="form.confirmation"
+            autocomplete="new-password"
+            controlId="sign-up-confirmation"
+            name="confirmation"
+            [loading]="submitting()"
+            required
+          />
+          @if (confirmationError()) {
+            <app-error-message controlId="sign-up-confirmation-error">{{ confirmationError() }}</app-error-message>
+          }
+        </app-field>
+        <button
+          type="submit"
+          class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+          [disabled]="form().invalid() || submitting()"
+        >
+          Create account
+        </button>
+      </app-form>
+      <p class="mt-5 text-center text-sm text-slate-500 dark:text-slate-400">
+        Already have an account?
+        <a routerLink="/auth/sign-in" class="font-semibold text-blue-600 dark:text-blue-400">Sign in</a>
+      </p>
+    }
+    @if (error()) {
+      <p class="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ error() }}</p>
+    }
+  </app-auth-card>
+</app-auth-layout>

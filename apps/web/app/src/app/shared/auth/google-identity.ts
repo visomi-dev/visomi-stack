@@ -32,6 +32,37 @@ export class GoogleIdentity {
     nonce: string,
     onComplete: (user: AuthUser) => void,
   ): Promise<void> {
+    await this.render(element, clientId, nonce, async (credential) => {
+      const response = await firstValueFrom(
+        this.http.post<ResponseEnvelope<{ authenticated: true; user: AuthUser }>>('/api/auth/google/complete', {
+          flowId,
+          idToken: credential,
+        }),
+      );
+
+      onComplete(response.data.user);
+    });
+  }
+
+  async renderLinkButton(
+    element: HTMLElement,
+    clientId: string,
+    grantId: string,
+    nonce: string,
+    onComplete: () => void,
+  ): Promise<void> {
+    await this.render(element, clientId, nonce, async (credential) => {
+      await firstValueFrom(this.http.post('/api/auth/google/link', { grantId, idToken: credential }));
+      onComplete();
+    });
+  }
+
+  private async render(
+    element: HTMLElement,
+    clientId: string,
+    nonce: string,
+    onCredential: (credential: string) => Promise<void>,
+  ): Promise<void> {
     const view = this.document.defaultView;
 
     if (!view) throw new Error('Google sign-in is unavailable during server rendering.');
@@ -44,14 +75,7 @@ export class GoogleIdentity {
       nonce,
       use_fedcm_for_prompt: true,
       callback: async ({ credential }) => {
-        const response = await firstValueFrom(
-          this.http.post<ResponseEnvelope<{ authenticated: true; user: AuthUser }>>('/api/auth/google/complete', {
-            flowId,
-            idToken: credential,
-          }),
-        );
-
-        onComplete(response.data.user);
+        await onCredential(credential);
       },
     });
     google.accounts.id.renderButton(element, {

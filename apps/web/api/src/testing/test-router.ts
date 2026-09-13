@@ -15,7 +15,7 @@ import {
 } from '../auth/auth-service';
 import { emailSchema, getValidated, validateRequest, z } from '../shared/http/route-schemas';
 
-import { accountMemberships, db } from 'shared';
+import { accountMemberships, db, users } from 'shared';
 
 const mailboxQuerySchema = z
   .object({
@@ -35,7 +35,11 @@ const mailboxMessageSchema = z
   .meta({ id: 'MailboxMessage' });
 
 const deterministicSessionSchema = z
-  .object({ email: emailSchema, accountId: z.string().min(1).optional() })
+  .object({
+    accountId: z.string().min(1).optional(),
+    email: emailSchema,
+    mode: z.enum(['full', 'restricted']).optional(),
+  })
   .meta({ id: 'DeterministicTestSession' });
 
 const testOpenApiPaths = {
@@ -64,7 +68,7 @@ testRouter.post(
   validateRequest({ body: deterministicSessionSchema }),
   async function deterministicSessionHandler(req, res, next) {
     try {
-      const { email, accountId } = getValidated<{ body: typeof deterministicSessionSchema }>(req).body!;
+      const { email, accountId, mode = 'full' } = getValidated<{ body: typeof deterministicSessionSchema }>(req).body!;
       const user = await findOrCreateUserByEmail(email);
       const challenge = await createChallenge(user, 'bootstrap_recovery');
       const message = listSentMessages().find((candidate) => candidate.challengeId === challenge.challengeId);
@@ -77,6 +81,7 @@ testRouter.post(
 
       await consumeChallenge(challenge.challengeId, message.pin);
       await markChallengeConsumed(challenge.challengeId);
+      await db.update(users).set({ emailVerifiedAt: new Date(), updatedAt: new Date() }).where(eq(users.id, user.id));
       await listMembershipsForUser(user.id);
 
       if (accountId) {
@@ -101,10 +106,53 @@ testRouter.post(
 
       const authUser = await resolveAuthUser(freshUser);
 
+      if (mode === 'restricted') {
+        await new Promise<void>((resolve, reject) =>
+          req.login(
+            {
+              ...authUser,
+              authority: 'restricted',
+              authenticationMethod: 'password',
+              authVersion: freshUser.authVersion,
+            },
+            (error) => (error ? reject(error) : resolve()),
+          ),
+        );
+        req.session.authority = 'restricted';
+        req.session.restrictedAuth = {
+          allowedOperations: ['password:set'],
+          eligibleAccounts: [{ accountId: authUser.accountId, name: authUser.accountId, role: authUser.role }],
+          expiresAt: Date.now() + 15 * 60_000,
+          flowId: challenge.challengeId,
+          issuedAt: Date.now(),
+          isNewUser: false,
+          purpose: 'bootstrap_recovery',
+          selectedAccountId: authUser.accountId,
+          userId: freshUser.id,
+          verifiedEmail: authUser.email,
+        };
+        req.session.cookie.maxAge = 15 * 60_000;
+
+        await new Promise<void>((resolve, reject) => {
+          req.session.save((error) => (error ? reject(error) : resolve()));
+        });
+
+        res.status(200).send({ data: { accountId: authUser.accountId, userId: authUser.id } });
+
+        return;
+      }
+
       await new Promise<void>((resolve, reject) => {
-        req.login({ ...authUser, authority: 'full' }, (error) => (error ? reject(error) : resolve()));
+        req.login(
+          { ...authUser, authority: 'full', authenticationMethod: 'password', authVersion: freshUser.authVersion },
+          (error) => (error ? reject(error) : resolve()),
+        );
       });
       req.session.authority = 'full';
+      req.session.authenticationMethod = 'password';
+      req.session.authVersion = freshUser.authVersion;
+      // The deterministic test session represents a freshly reauthenticated test user.
+      req.session.passkeySecurityReauthenticatedAt = Date.now();
 
       await new Promise<void>((resolve, reject) => {
         req.session.save((error) => (error ? reject(error) : resolve()));

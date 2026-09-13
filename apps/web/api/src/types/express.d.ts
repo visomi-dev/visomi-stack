@@ -8,6 +8,9 @@ declare global {
       emailVerifiedAt: string | null;
       id: string;
       role: string;
+      authenticationMethod?: 'passkey' | 'google' | 'password';
+      secondFactor?: 'email' | 'totp' | 'recovery_code';
+      authVersion?: number;
       credentialId?: string;
     }
   }
@@ -32,7 +35,12 @@ declare module 'express-session' {
       enrollmentId?: string;
     };
     authenticatedAt?: number;
+    authenticationMethod?: 'passkey' | 'google' | 'password';
+    secondFactor?: 'email' | 'totp' | 'recovery_code';
+    authVersion?: number;
+    passwordFlowId?: string;
     passkeySecurityReauthenticatedAt?: number;
+    reauthGrantId?: string;
     identityFlowId?: string;
     googleNonce?: string;
     enrollmentGrantId?: string;

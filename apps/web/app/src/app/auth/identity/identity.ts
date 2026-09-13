@@ -1,30 +1,35 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
-import { Router } from '@angular/router';
-import { email, form, maxLength, minLength, pattern, required, type FieldTree } from '@angular/forms/signals';
+import { Router, RouterLink } from '@angular/router';
+import { email, form, maxLength, minLength, pattern, required, type FieldTree, validate } from '@angular/forms/signals';
 
 import { Auth } from '../../shared/auth/auth';
 import type { RestrictedAccount } from '../../shared/auth/auth.models';
 import { Passkey } from '../../shared/auth/passkey';
 import { GoogleIdentity } from '../../shared/auth/google-identity';
-import { APP_URL } from '../../shared/constants/routes';
-import { Alert } from '../../shared/ui/overlays/alert/alert';
+import { PasswordAuth, type PasswordSecondFactor, type PasswordSignInPending } from '../../shared/auth/password';
+import { APP_URL, EMAIL_VERIFICATION_URL } from '../../shared/constants/routes';
 import { AuthCard } from '../../shared/ui/layout/auth-card/auth-card';
 import { AuthLayout } from '../../shared/ui/layout/auth-layout/auth-layout';
-import { Button } from '../../shared/ui/actions/button/button';
 import { ErrorMessage } from '../../shared/ui/forms/error-message/error-message';
 import { Field } from '../../shared/ui/forms/field/field';
 import { Form as AppForm } from '../../shared/ui/forms/form/form';
 import { Input } from '../../shared/ui/forms/input/input';
 import { Label } from '../../shared/ui/forms/label/label';
+import { PasswordInput } from '../../shared/ui/forms/password-input/password-input';
 
 type AccessState =
   | 'ready'
   | 'passkey-loading'
   | 'passkey-error'
+  | 'password'
+  | 'password-factor'
   | 'email'
   | 'otp'
   | 'account-choice'
+  | 'password-setup'
+  | 'password-setup-loading'
+  | 'password-setup-success'
   | 'enrollment'
   | 'enrollment-loading'
   | 'verification'
@@ -32,12 +37,14 @@ type AccessState =
   | 'success';
 
 type EmailModel = { email: string };
+type PasswordModel = { email: string; password: string };
+type PasswordSetupModel = { password: string; confirmation: string };
 type OtpModel = { pin: string };
 type EnrollmentModel = { label: string };
 
 @Component({
   host: { class: /* tw */ 'block min-h-full w-full' },
-  imports: [Alert, AppForm, AuthCard, AuthLayout, Button, ErrorMessage, Field, Input, Label],
+  imports: [AppForm, AuthCard, AuthLayout, ErrorMessage, Field, Input, Label, PasswordInput, RouterLink],
   selector: 'app-identity',
   templateUrl: './identity.html',
   styleUrl: './identity.css',
@@ -47,6 +54,7 @@ export class Identity {
   private readonly passkey = inject(Passkey);
   private readonly router = inject(Router);
   private readonly google = inject(GoogleIdentity);
+  private readonly password = inject(PasswordAuth);
   private readonly googleButton = viewChild<ElementRef<HTMLElement>>('googleButton');
 
   readonly state = signal<AccessState>('ready');
@@ -59,6 +67,10 @@ export class Identity {
   readonly verificationOptions = signal<Record<string, unknown> | null>(null);
   readonly identityFlowId = signal('');
   readonly googleClientId = signal<string | null>(null);
+  readonly passwordFlow = signal<PasswordSignInPending | null>(null);
+  readonly passwordFactor = signal<PasswordSecondFactor | null>(null);
+  readonly passwordSubmitting = signal(false);
+  readonly passwordSetupSubmitting = signal(false);
 
   readonly emailModel = signal<EmailModel>({ email: '' });
   readonly emailForm: FieldTree<EmailModel> = form(this.emailModel, (path) => {
@@ -81,6 +93,33 @@ export class Identity {
   });
 
   readonly emailError = computed(() => this.emailForm.email().errors()[0]?.message ?? '');
+  readonly passwordModel = signal<PasswordModel>({ email: '', password: '' });
+  readonly passwordForm: FieldTree<PasswordModel> = form(this.passwordModel, (path) => {
+    required(path.email, { message: $localize`:@@identityPasswordEmailRequired:Enter your email address.` });
+    email(path.email, { message: $localize`:@@identityPasswordEmailInvalid:Enter a valid email address.` });
+    required(path.password, { message: $localize`:@@identityPasswordRequired:Enter your password.` });
+    maxLength(path.password, 512, { message: $localize`:@@identityPasswordLength:Use 512 characters or fewer.` });
+  });
+  readonly passwordEmailError = computed(() => this.passwordForm.email().errors()[0]?.message ?? '');
+  readonly passwordError = computed(() => this.passwordForm.password().errors()[0]?.message ?? '');
+  readonly passwordSetupModel = signal<PasswordSetupModel>({ password: '', confirmation: '' });
+  readonly passwordSetupForm: FieldTree<PasswordSetupModel> = form(this.passwordSetupModel, (path) => {
+    required(path.password, { message: $localize`:@@identityPasswordSetupRequired:Enter a password.` });
+    minLength(path.password, 15, {
+      message: $localize`:@@identityPasswordSetupLength:Use at least 15 characters.`,
+    });
+    maxLength(path.password, 512, {
+      message: $localize`:@@identityPasswordSetupMaxLength:Use 512 characters or fewer.`,
+    });
+    required(path.confirmation, { message: $localize`:@@identityPasswordConfirmationRequired:Confirm your password.` });
+    validate(path.confirmation, ({ value, valueOf }) =>
+      value() === valueOf(path.password)
+        ? undefined
+        : { kind: 'password_mismatch', message: $localize`:@@identityPasswordMismatch:Passwords do not match.` },
+    );
+  });
+  readonly passwordSetupError = computed(() => this.passwordSetupForm.password().errors()[0]?.message ?? '');
+  readonly passwordConfirmationError = computed(() => this.passwordSetupForm.confirmation().errors()[0]?.message ?? '');
   readonly otpError = computed(() => this.otpForm.pin().errors()[0]?.message ?? '');
   readonly labelError = computed(() => this.enrollmentForm.label().errors()[0]?.message ?? '');
 
@@ -161,14 +200,105 @@ export class Identity {
     void this.sendEmailOtp();
   }
 
+  protected showPassword(): void {
+    this.errorMessage.set('');
+    this.passwordModel.update((model) => ({ ...model, email: this.emailModel().email }));
+    this.state.set('password');
+  }
+
+  protected async signInWithPassword(): Promise<void> {
+    if (this.passwordForm().invalid() || this.passwordSubmitting()) return;
+
+    this.errorMessage.set('');
+    this.passwordSubmitting.set(true);
+    this.state.set('password');
+
+    try {
+      const password = this.passwordForm.password().value();
+
+      this.passwordModel.update((model) => ({ ...model, password: '' }));
+      const pending = await this.password.signIn({
+        email: this.passwordForm.email().value(),
+        password,
+      });
+
+      this.passwordFlow.set(pending);
+      this.passwordFactor.set(pending.requiredFactor);
+      this.flowId.set(pending.flowId);
+      this.resendAvailableAt.set(pending.resendAvailableAt ?? '');
+      this.otpModel.set({ pin: '' });
+      this.passwordModel.update((model) => ({ ...model, password: '' }));
+      this.state.set('password-factor');
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.error?.code === 'email_unverified') {
+        await this.router.navigate([EMAIL_VERIFICATION_URL], {
+          queryParams: { email: this.passwordForm.email().value() },
+        });
+
+        return;
+      }
+      this.state.set('password');
+      this.errorMessage.set(
+        this.safeError(error, $localize`:@@identityPasswordFailed:We could not sign in with that password.`),
+      );
+    } finally {
+      this.passwordSubmitting.set(false);
+    }
+  }
+
+  protected async verifyPassword(): Promise<void> {
+    const flowId = this.flowId();
+    const factor = this.passwordFactor();
+
+    if (!flowId || !factor || this.otpForm().invalid() || this.passwordSubmitting()) return;
+
+    this.errorMessage.set('');
+    this.passwordSubmitting.set(true);
+    this.state.set('password-factor');
+
+    try {
+      await this.password.verify(flowId, this.otpForm.pin().value(), factor);
+      await this.auth.ensureSessionLoaded(true);
+      this.state.set('success');
+      await this.router.navigateByUrl(APP_URL);
+    } catch (error) {
+      this.state.set('password-factor');
+      this.errorMessage.set(
+        this.safeError(error, $localize`:@@identityPasswordCodeFailed:That verification code is not valid. Try again.`),
+      );
+    } finally {
+      this.passwordSubmitting.set(false);
+    }
+  }
+
+  protected async resendPasswordCode(): Promise<void> {
+    const flowId = this.flowId();
+
+    if (!flowId || this.passwordFactor() !== 'email' || this.passwordSubmitting()) return;
+
+    this.errorMessage.set('');
+    this.passwordSubmitting.set(true);
+
+    try {
+      const response = await this.password.resend(flowId);
+
+      this.resendAvailableAt.set(response.resendAvailableAt ?? '');
+    } catch (error) {
+      this.errorMessage.set(
+        this.safeError(error, $localize`:@@identityPasswordResendFailed:We could not resend the verification code.`),
+      );
+    } finally {
+      this.passwordSubmitting.set(false);
+    }
+  }
+
   protected showReady(): void {
     this.errorMessage.set('');
+    this.passwordModel.update((model) => ({ ...model, password: '' }));
     this.state.set('ready');
   }
 
-  protected async requestCode(event: Event): Promise<void> {
-    event.preventDefault();
-
+  protected async requestCode(): Promise<void> {
     if (this.emailForm().invalid()) return;
 
     await this.sendEmailOtp();
@@ -197,9 +327,7 @@ export class Identity {
     }
   }
 
-  protected async verifyCode(event: Event): Promise<void> {
-    event.preventDefault();
-
+  protected async verifyCode(): Promise<void> {
     if (this.otpForm().invalid() || !this.flowId()) return;
 
     this.errorMessage.set('');
@@ -213,7 +341,7 @@ export class Identity {
       const selected = accounts.find((account) => account.selected) ?? null;
 
       this.selectedAccount.set(selected);
-      this.state.set(selected ? 'enrollment' : 'account-choice');
+      this.state.set(selected ? 'password-setup' : 'account-choice');
     } catch (error) {
       const accounts = this.accountChoices(error);
 
@@ -234,15 +362,44 @@ export class Identity {
       const selected = await this.auth.selectRestrictedAccount(account.accountId);
 
       this.selectedAccount.set(selected);
-      this.state.set('enrollment');
+      this.state.set('password-setup');
     } catch (error) {
       this.errorMessage.set(this.safeError(error, 'We could not select that account.'));
     }
   }
 
-  protected async createPasskey(event: Event): Promise<void> {
-    event.preventDefault();
+  protected skipPasswordSetup(): void {
+    this.errorMessage.set('');
+    this.state.set('enrollment');
+  }
 
+  protected async setPassword(): Promise<void> {
+    if (this.passwordSetupForm().invalid() || this.passwordSetupSubmitting()) return;
+
+    this.errorMessage.set('');
+    this.passwordSetupSubmitting.set(true);
+    this.state.set('password-setup-loading');
+
+    try {
+      await this.password.setPassword({ password: this.passwordSetupForm.password().value() });
+      this.passwordSetupModel.set({ password: '', confirmation: '' });
+      this.state.set('password-setup-success');
+    } catch (error) {
+      this.state.set('password-setup');
+      this.errorMessage.set(
+        this.safeError(error, $localize`:@@identityPasswordSetupFailed:We could not set your password. Try again.`),
+      );
+    } finally {
+      this.passwordSetupSubmitting.set(false);
+    }
+  }
+
+  protected continueToPasskeyEnrollment(): void {
+    this.errorMessage.set('');
+    this.state.set('enrollment');
+  }
+
+  protected async createPasskey(): Promise<void> {
     if (this.enrollmentForm().invalid()) return;
 
     this.errorMessage.set('');

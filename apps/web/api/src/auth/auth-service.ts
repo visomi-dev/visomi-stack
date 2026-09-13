@@ -1,4 +1,4 @@
-import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 
 import { and, asc, desc, eq, gt, isNull, lt, sql } from 'drizzle-orm';
 import type { z } from 'zod';
@@ -12,9 +12,12 @@ import {
   hashUserDeviceToken,
   verifySecret,
   verifyUserDeviceToken,
+  isLegacySecretHash,
 } from './auth-crypto';
 import { sendVerificationMessage } from './auth-mail';
 import { authUserSchema, challengeSchema } from './auth-schemas';
+import { decryptTotpSecret, totpTimeStep, verifyTotpCode } from './totp';
+import { assertPasswordAuthenticationAvailable, hashPassword, verifyPassword } from './password';
 
 import {
   accountMemberships,
@@ -22,6 +25,10 @@ import {
   accounts,
   authVerificationChallenges,
   authEmailChallenges,
+  authIdentityFlows,
+  userTotpEnrollments,
+  userRecoveryCodes,
+  authOperationGrants,
   db,
   HttpError,
   safeInsert,
@@ -36,6 +43,12 @@ type ChallengeId = AuthChallengePayload['challengeId'];
 
 const MAX_CHALLENGE_ATTEMPTS = 5;
 const OTP_PURPOSE = 'bootstrap_recovery' as const;
+const PASSWORD_OTP_PURPOSE = 'password_second_step' as const;
+const DUMMY_PASSWORD_HASH = `${'00'.repeat(16)}:${'00'.repeat(32)}`;
+
+function flowHash(email: string): string {
+  return createHmac('sha256', env.SESSION_SECRET).update(normalizeEmail(email)).digest('hex');
+}
 
 type RestrictedIdentity = {
   accounts: Array<{ accountId: string; name: string; role: string }>;
@@ -590,7 +603,12 @@ export async function getLatestChallengeForUser(userId: string) {
   return challenge;
 }
 
-async function deliverEmailOtp(flowId: string, email: string, context: string): Promise<EmailOtpDelivery> {
+async function deliverEmailOtp(
+  flowId: string,
+  email: string,
+  context: string,
+  purpose: VerificationPurpose = OTP_PURPOSE,
+): Promise<EmailOtpDelivery> {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + env.PIN_EXPIRY_MINUTES * 60_000);
   const pin = generateVerificationPin();
@@ -610,7 +628,7 @@ async function deliverEmailOtp(flowId: string, email: string, context: string): 
       id: randomUUID(),
       flowId,
       normalizedEmail: email,
-      purpose: OTP_PURPOSE,
+      purpose,
       pinHash: hashPin(flowId, email, context, pin),
       clientContextHash: context,
       expiresAt,
@@ -623,7 +641,7 @@ async function deliverEmailOtp(flowId: string, email: string, context: string): 
     });
   });
   try {
-    await sendVerificationMessage({ challengeId: flowId, email, expiresAt, pin, purpose: OTP_PURPOSE });
+    await sendVerificationMessage({ challengeId: flowId, email, expiresAt, pin, purpose });
   } catch {
     /* Do not disclose delivery failures. */
   }
@@ -635,8 +653,9 @@ export async function requestEmailOtp(
   email: string,
   context: string,
   flowId = randomUUID(),
+  purpose: VerificationPurpose = OTP_PURPOSE,
 ): Promise<EmailOtpDelivery> {
-  return deliverEmailOtp(flowId, normalizeEmail(email), context);
+  return deliverEmailOtp(flowId, normalizeEmail(email), context, purpose);
 }
 
 export async function resendEmailOtp(flowId: string, context: string): Promise<EmailOtpDelivery> {
@@ -661,7 +680,589 @@ export async function resendEmailOtp(flowId: string, context: string): Promise<E
       statusCode: 429,
     });
 
-  return deliverEmailOtp(flowId, challenge.normalizedEmail, context);
+  return deliverEmailOtp(flowId, challenge.normalizedEmail, context, challenge.purpose as VerificationPurpose);
+}
+
+export async function startPasswordSignIn(email: string, password: string, context: string, sessionBinding: string) {
+  const normalizedEmail = normalizeEmail(email);
+  const user = await findUserByEmail(normalizedEmail);
+  const passwordMatches = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
+
+  if (!user || !user.passwordHash || !passwordMatches) verificationFailed();
+  if (!user.emailVerifiedAt)
+    throw new HttpError({
+      code: 'email_unverified',
+      message: 'Verify your email address before signing in.',
+      statusCode: 403,
+    });
+
+  if (user.passwordHash && isLegacySecretHash(user.passwordHash)) {
+    const upgradedHash = await hashPassword(password);
+
+    await db
+      .update(users)
+      .set({ passwordHash: upgradedHash, updatedAt: new Date() })
+      .where(
+        and(eq(users.id, user.id), eq(users.passwordHash, user.passwordHash), eq(users.authVersion, user.authVersion)),
+      );
+  }
+
+  const memberships = await listMembershipsForUser(user.id);
+
+  if (!memberships.length) verificationFailed();
+
+  const [activeTotp] = await db
+    .select()
+    .from(userTotpEnrollments)
+    .where(and(eq(userTotpEnrollments.userId, user.id), eq(userTotpEnrollments.status, 'active')))
+    .limit(1);
+  const requiredFactor = activeTotp ? 'totp' : 'email';
+  const now = new Date();
+  const flowId = randomUUID();
+  const expiresAt = new Date(now.getTime() + 10 * 60_000);
+
+  await db.insert(authIdentityFlows).values({
+    id: flowId,
+    state: 'password_pending_email',
+    intent: 'sign_in',
+    expiresAt,
+    sessionBinding,
+    emailHash: flowHash(normalizedEmail),
+    userId: user.id,
+    accountId: memberships[0]?.accountId,
+    authorizationMethod: 'password',
+    passwordProofAt: now,
+    requiredFactor,
+    userAuthVersion: user.authVersion,
+    factorEnrollmentId: activeTotp?.id,
+    factorEnrollmentVersion: activeTotp ? user.authVersion : null,
+    attemptCount: 0,
+    createdAt: now,
+    updatedAt: now,
+  });
+  const delivery = activeTotp
+    ? undefined
+    : await requestEmailOtp(normalizedEmail, context, flowId, PASSWORD_OTP_PURPOSE);
+
+  return {
+    flowId,
+    requiredFactor,
+    expiresAt: expiresAt.toISOString(),
+    ...(delivery ? { resendAvailableAt: delivery.resendAvailableAt } : {}),
+    maskedEmail: `${normalizedEmail.slice(0, 1)}***@${normalizedEmail.split('@')[1]}`,
+  };
+}
+
+export async function startPasswordSignUp(email: string, password: string, context: string, sessionBinding: string) {
+  assertPasswordAuthenticationAvailable();
+  const normalizedEmail = normalizeEmail(email);
+
+  if (await findUserByEmail(normalizedEmail)) {
+    throw new HttpError({
+      code: 'email_already_registered',
+      message: 'This email address is already registered.',
+      statusCode: 409,
+    });
+  }
+  const now = new Date();
+  const flowId = randomUUID();
+  const expiresAt = new Date(now.getTime() + 10 * 60_000);
+
+  await db.insert(authIdentityFlows).values({
+    id: flowId,
+    state: 'password_pending_email',
+    intent: 'password_signup',
+    expiresAt,
+    sessionBinding,
+    emailHash: flowHash(normalizedEmail),
+    pendingPasswordHash: await hashPassword(password),
+    pendingEmail: normalizedEmail,
+    requiredFactor: 'email',
+    createdAt: now,
+    updatedAt: now,
+  });
+  const delivery = await requestEmailOtp(normalizedEmail, context, flowId, 'password_signup');
+
+  return { flowId, expiresAt: expiresAt.toISOString(), resendAvailableAt: delivery.resendAvailableAt };
+}
+
+export async function verifyPasswordSignUp(flowId: string, pin: string, context: string, sessionBinding: string) {
+  const flow = await consumePasswordEmailOtp(flowId, pin, context, sessionBinding, 'password_signup');
+
+  if (!flow.pendingPasswordHash || flow.intent !== 'password_signup') verificationFailed();
+  const now = new Date();
+  const identity = await db.transaction(async (tx) => {
+    const [user] = await tx
+      .insert(users)
+      .values({
+        id: randomUUID(),
+        email: flow.pendingEmail ?? '',
+        passwordHash: flow.pendingPasswordHash,
+        emailVerifiedAt: now,
+        passwordChangedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoNothing({ target: users.email })
+      .returning();
+
+    if (!user) verificationFailed();
+    const accountId = randomUUID();
+
+    await tx.insert(accounts).values({
+      id: accountId,
+      name: user.email.split('@')[0] || 'Personal account',
+      slug: `${normalizeAccountSlug(user.email)}-${accountId.slice(0, 8)}`,
+      ownerUserId: user.id,
+      createdAt: now,
+      updatedAt: now,
+    });
+    await tx.insert(accountMemberships).values({
+      id: randomUUID(),
+      accountId,
+      userId: user.id,
+      role: 'owner',
+      createdAt: now,
+      updatedAt: now,
+    });
+    await tx
+      .update(authIdentityFlows)
+      .set({
+        userId: user.id,
+        accountId,
+        state: 'complete',
+        completedAt: now,
+        pendingPasswordHash: null,
+        pendingEmail: null,
+        updatedAt: now,
+      })
+      .where(eq(authIdentityFlows.id, flow.id));
+
+    return {
+      accounts: [{ accountId, name: user.email.split('@')[0] || 'Personal account', role: 'owner' }],
+      email: user.email,
+      isNewUser: true,
+      userId: user.id,
+    };
+  });
+
+  return identity;
+}
+
+export async function startPasswordReset(email: string, context: string, sessionBinding: string) {
+  assertPasswordAuthenticationAvailable();
+  const normalizedEmail = normalizeEmail(email);
+  const user = await findUserByEmail(normalizedEmail);
+  const flowId = randomUUID();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 10 * 60_000);
+  let requiredFactor: 'email' | 'totp' = 'email';
+  let factorEnrollmentId: string | null = null;
+
+  if (user) {
+    const [totp] = await db
+      .select()
+      .from(userTotpEnrollments)
+      .where(and(eq(userTotpEnrollments.userId, user.id), eq(userTotpEnrollments.status, 'active')))
+      .limit(1);
+
+    requiredFactor = totp ? 'totp' : 'email';
+    factorEnrollmentId = totp?.id ?? null;
+  }
+  await db.insert(authIdentityFlows).values({
+    id: flowId,
+    state: 'password_reset_pending_email',
+    intent: 'password_reset',
+    expiresAt,
+    sessionBinding,
+    emailHash: flowHash(normalizedEmail),
+    userId: user?.id,
+    accountId: (await (user ? getPrimaryMembership(user.id) : undefined))?.accountId,
+    requiredFactor,
+    factorEnrollmentId,
+    userAuthVersion: user?.authVersion,
+    createdAt: now,
+    updatedAt: now,
+  });
+  if (user) await requestEmailOtp(normalizedEmail, context, flowId, 'password_reset');
+
+  return {
+    flowId,
+    requiredFactor: requiredFactor === 'totp' ? 'totp_or_recovery' : 'email',
+    expiresAt: expiresAt.toISOString(),
+  };
+}
+
+export async function completePasswordReset(
+  flowId: string,
+  emailCode: string,
+  factor: { kind: 'totp' | 'recovery_code'; code: string } | undefined,
+  password: string,
+  context: string,
+  sessionBinding: string,
+) {
+  const flow = await getPasswordFlow(flowId, sessionBinding, 'password_reset_pending_email');
+  const user = await findUserById(flow.userId ?? '');
+
+  if (!user || flow.userAuthVersion === null || user.authVersion !== flow.userAuthVersion) verificationFailed();
+  const [totp] = await db
+    .select()
+    .from(userTotpEnrollments)
+    .where(
+      and(
+        eq(userTotpEnrollments.userId, user.id),
+        eq(userTotpEnrollments.status, 'active'),
+        eq(userTotpEnrollments.id, flow.factorEnrollmentId ?? ''),
+      ),
+    )
+    .limit(1);
+
+  if (flow.requiredFactor === 'totp' && !totp) verificationFailed();
+  if (totp) {
+    if (!factor) verificationFailed();
+    if (factor.kind === 'recovery_code') {
+      if (!(await consumeRecoveryCode(user.id, factor.code))) verificationFailed();
+    } else {
+      let valid: boolean;
+
+      try {
+        valid = await verifyTotpCode(decryptTotpSecret(totp.encryptedSecret, totp.keyVersion), factor.code);
+      } catch {
+        valid = false;
+      }
+      if (!valid) verificationFailed();
+    }
+  } else if (factor || flow.requiredFactor === 'totp') verificationFailed();
+  await consumePasswordEmailOtp(flowId, emailCode, context, sessionBinding, 'password_reset');
+  const passwordHash = await hashPassword(password);
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(users)
+      .set({
+        passwordHash,
+        passwordChangedAt: new Date(),
+        authVersion: sql`${users.authVersion} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(users.id, user.id), eq(users.authVersion, flow.userAuthVersion!)));
+    await tx
+      .update(authIdentityFlows)
+      .set({ state: 'complete', completedAt: new Date(), updatedAt: new Date() })
+      .where(eq(authIdentityFlows.id, flow.id));
+  });
+}
+
+async function getPasswordFlow(flowId: string, sessionBinding: string, state: string) {
+  const [flow] = await db
+    .select()
+    .from(authIdentityFlows)
+    .where(
+      and(
+        eq(authIdentityFlows.id, flowId),
+        eq(authIdentityFlows.sessionBinding, sessionBinding),
+        eq(authIdentityFlows.state, state),
+        gt(authIdentityFlows.expiresAt, new Date()),
+        isNull(authIdentityFlows.completedAt),
+        isNull(authIdentityFlows.terminalAt),
+      ),
+    )
+    .limit(1);
+
+  if (!flow) verificationFailed();
+
+  return flow;
+}
+
+async function consumePasswordEmailOtp(
+  flowId: string,
+  pin: string,
+  context: string,
+  sessionBinding: string,
+  purpose: 'password_signup' | 'password_reset',
+) {
+  const flow = await getPasswordFlow(
+    flowId,
+    sessionBinding,
+    purpose === 'password_signup' ? 'password_pending_email' : 'password_reset_pending_email',
+  );
+  const [challenge] = await db
+    .select()
+    .from(authEmailChallenges)
+    .where(
+      and(
+        eq(authEmailChallenges.flowId, flowId),
+        eq(authEmailChallenges.purpose, purpose),
+        isNull(authEmailChallenges.consumedAt),
+        isNull(authEmailChallenges.supersededAt),
+      ),
+    )
+    .limit(1);
+
+  if (!challenge || challenge.clientContextHash !== context || challenge.expiresAt <= new Date()) verificationFailed();
+  if (!pinMatches(challenge.pinHash, hashPin(flowId, challenge.normalizedEmail, context, pin))) {
+    await db
+      .update(authEmailChallenges)
+      .set({ attemptCount: sql`${authEmailChallenges.attemptCount} + 1`, updatedAt: new Date() })
+      .where(
+        and(eq(authEmailChallenges.id, challenge.id), lt(authEmailChallenges.attemptCount, MAX_CHALLENGE_ATTEMPTS)),
+      );
+    verificationFailed();
+  }
+  const [consumed] = await db
+    .update(authEmailChallenges)
+    .set({ consumedAt: new Date(), updatedAt: new Date() })
+    .where(
+      and(
+        eq(authEmailChallenges.id, challenge.id),
+        isNull(authEmailChallenges.consumedAt),
+        gt(authEmailChallenges.expiresAt, new Date()),
+        lt(authEmailChallenges.attemptCount, MAX_CHALLENGE_ATTEMPTS),
+      ),
+    )
+    .returning();
+
+  if (!consumed) verificationFailed();
+
+  return flow;
+}
+
+export async function verifyPasswordEmailOtp(flowId: string, pin: string, context: string, sessionBinding: string) {
+  const [challenge] = await db
+    .select()
+    .from(authEmailChallenges)
+    .where(
+      and(
+        eq(authEmailChallenges.flowId, flowId),
+        eq(authEmailChallenges.purpose, PASSWORD_OTP_PURPOSE),
+        isNull(authEmailChallenges.consumedAt),
+        isNull(authEmailChallenges.supersededAt),
+      ),
+    )
+    .limit(1);
+
+  if (!challenge || challenge.clientContextHash !== context || challenge.expiresAt <= new Date()) verificationFailed();
+  if (!pinMatches(challenge.pinHash, hashPin(flowId, challenge.normalizedEmail, context, pin))) {
+    await db
+      .update(authEmailChallenges)
+      .set({ attemptCount: sql`${authEmailChallenges.attemptCount} + 1`, updatedAt: new Date() })
+      .where(
+        and(eq(authEmailChallenges.id, challenge.id), lt(authEmailChallenges.attemptCount, MAX_CHALLENGE_ATTEMPTS)),
+      );
+    verificationFailed();
+  }
+  const [consumed] = await db
+    .update(authEmailChallenges)
+    .set({ consumedAt: new Date(), updatedAt: new Date() })
+    .where(
+      and(
+        eq(authEmailChallenges.id, challenge.id),
+        isNull(authEmailChallenges.consumedAt),
+        isNull(authEmailChallenges.supersededAt),
+        lt(authEmailChallenges.attemptCount, MAX_CHALLENGE_ATTEMPTS),
+      ),
+    )
+    .returning();
+
+  if (!consumed) verificationFailed();
+
+  const [flow] = await db
+    .select()
+    .from(authIdentityFlows)
+    .where(and(eq(authIdentityFlows.id, flowId), eq(authIdentityFlows.state, 'password_pending_email')))
+    .limit(1);
+
+  if (!flow || flow.sessionBinding !== sessionBinding || flow.userAuthVersion === null) verificationFailed();
+  const user = await findUserById(flow.userId ?? '');
+
+  if (!user || user.authVersion !== flow.userAuthVersion) verificationFailed();
+  const [activeTotp] = await db
+    .select()
+    .from(userTotpEnrollments)
+    .where(and(eq(userTotpEnrollments.userId, user.id), eq(userTotpEnrollments.status, 'active')))
+    .limit(1);
+
+  if (activeTotp) verificationFailed();
+  await db
+    .update(authIdentityFlows)
+    .set({ state: 'complete', completedAt: new Date(), updatedAt: new Date() })
+    .where(
+      and(
+        eq(authIdentityFlows.id, flow.id),
+        isNull(authIdentityFlows.completedAt),
+        isNull(authIdentityFlows.terminalAt),
+      ),
+    );
+
+  return { flow, user };
+}
+
+export async function verifyPasswordTotp(flowId: string, code: string, sessionBinding: string) {
+  const [flow] = await db
+    .select()
+    .from(authIdentityFlows)
+    .where(
+      and(
+        eq(authIdentityFlows.id, flowId),
+        eq(authIdentityFlows.state, 'password_pending_email'),
+        eq(authIdentityFlows.sessionBinding, sessionBinding),
+        eq(authIdentityFlows.requiredFactor, 'totp'),
+        gt(authIdentityFlows.expiresAt, new Date()),
+      ),
+    )
+    .limit(1);
+
+  if (!flow || flow.userAuthVersion === null) verificationFailed();
+  const user = await findUserById(flow.userId ?? '');
+
+  if (!user || user.authVersion !== flow.userAuthVersion) verificationFailed();
+  const [enrollment] = await db
+    .select()
+    .from(userTotpEnrollments)
+    .where(
+      and(
+        eq(userTotpEnrollments.userId, user.id),
+        eq(userTotpEnrollments.status, 'active'),
+        eq(userTotpEnrollments.id, flow.factorEnrollmentId ?? ''),
+      ),
+    )
+    .limit(1);
+
+  if (!enrollment) verificationFailed();
+  let valid: boolean;
+
+  try {
+    valid = await verifyTotpCode(decryptTotpSecret(enrollment.encryptedSecret, enrollment.keyVersion), code);
+  } catch {
+    valid = false;
+  }
+  const timeStep = totpTimeStep();
+
+  if (!valid || enrollment.lastAcceptedTimeStep === timeStep) verificationFailed();
+  const [accepted] = await db
+    .update(userTotpEnrollments)
+    .set({ lastAcceptedTimeStep: timeStep, updatedAt: new Date() })
+    .where(
+      and(
+        eq(userTotpEnrollments.id, enrollment.id),
+        eq(userTotpEnrollments.status, 'active'),
+        sql`(${userTotpEnrollments.lastAcceptedTimeStep} IS NULL OR ${userTotpEnrollments.lastAcceptedTimeStep} <> ${timeStep})`,
+      ),
+    )
+    .returning();
+
+  if (!accepted) verificationFailed();
+  await db
+    .update(authIdentityFlows)
+    .set({ state: 'complete', completedAt: new Date(), updatedAt: new Date() })
+    .where(eq(authIdentityFlows.id, flow.id));
+
+  return { flow, user };
+}
+
+export async function setUserPassword(userId: string, password: string): Promise<void> {
+  assertPasswordAuthenticationAvailable();
+  const passwordHash = await hashPassword(password);
+  const now = new Date();
+  const [updated] = await db.transaction(async (tx) =>
+    tx
+      .update(users)
+      .set({
+        passwordHash,
+        passwordChangedAt: now,
+        authVersion: sql`${users.authVersion} + 1`,
+        updatedAt: now,
+      })
+      .where(eq(users.id, userId))
+      .returning({ id: users.id }),
+  );
+
+  if (!updated) {
+    throw new HttpError({ code: 'account_unavailable', message: 'The account is not available.', statusCode: 404 });
+  }
+}
+
+export function generateRecoveryCode(): string {
+  const value = randomBytes(16).toString('hex').toUpperCase();
+
+  return `${value.slice(0, 8)}-${value.slice(8)}`;
+}
+
+export async function replaceRecoveryCodes(userId: string): Promise<string[]> {
+  const codes = Array.from({ length: 10 }, generateRecoveryCode);
+  const now = new Date();
+
+  await db.transaction(async (tx) => {
+    await tx.delete(userRecoveryCodes).where(eq(userRecoveryCodes.userId, userId));
+    await tx
+      .insert(userRecoveryCodes)
+      .values(
+        await Promise.all(
+          codes.map(async (code) => ({ id: randomUUID(), userId, codeHash: await hashSecret(code), createdAt: now })),
+        ),
+      );
+  });
+
+  return codes;
+}
+
+export async function consumeRecoveryCode(userId: string, code: string): Promise<boolean> {
+  const candidates = await db
+    .select()
+    .from(userRecoveryCodes)
+    .where(and(eq(userRecoveryCodes.userId, userId), isNull(userRecoveryCodes.usedAt)));
+
+  for (const candidate of candidates) {
+    if (!(await verifySecret(code.toUpperCase(), candidate.codeHash))) continue;
+    const [consumed] = await db
+      .update(userRecoveryCodes)
+      .set({ usedAt: new Date() })
+      .where(and(eq(userRecoveryCodes.id, candidate.id), isNull(userRecoveryCodes.usedAt)))
+      .returning();
+
+    return Boolean(consumed);
+  }
+
+  return false;
+}
+
+export async function createOperationGrant(userId: string, purpose: string, sessionBinding: string): Promise<string> {
+  const id = randomUUID();
+
+  await db.insert(authOperationGrants).values({
+    id,
+    userId,
+    purpose,
+    sessionBinding,
+    expiresAt: new Date(Date.now() + 5 * 60_000),
+    createdAt: new Date(),
+  });
+
+  return id;
+}
+
+export async function consumeOperationGrant(
+  id: string,
+  userId: string,
+  purpose: string,
+  sessionBinding: string,
+): Promise<boolean> {
+  const [grant] = await db
+    .update(authOperationGrants)
+    .set({ consumedAt: new Date() })
+    .where(
+      and(
+        eq(authOperationGrants.id, id),
+        eq(authOperationGrants.userId, userId),
+        eq(authOperationGrants.purpose, purpose),
+        eq(authOperationGrants.sessionBinding, sessionBinding),
+        isNull(authOperationGrants.consumedAt),
+        gt(authOperationGrants.expiresAt, new Date()),
+      ),
+    )
+    .returning();
+
+  return Boolean(grant);
 }
 
 export async function verifyEmailOtp(flowId: string, pin: string, context: string): Promise<RestrictedIdentity> {

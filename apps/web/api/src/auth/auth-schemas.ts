@@ -1,5 +1,7 @@
 import { challengeIdSchema, emailSchema, pinSchema, responseEnvelope, z } from '../shared/http/route-schemas';
 
+import { normalizePassword, validatePasswordPolicy } from './password';
+
 export const authUserSchema = z
   .object({
     accountId: z
@@ -13,7 +15,9 @@ export const authUserSchema = z
     }),
     id: z.string().meta({ description: 'User identifier.', example: 'user-123', id: 'AuthUserId' }),
     role: z.string().meta({ description: 'Active account role.', example: 'owner', id: 'AuthRole' }),
-    authenticationMethod: z.literal('passkey').optional(),
+    authenticationMethod: z.enum(['passkey', 'google', 'password']).optional(),
+    secondFactor: z.enum(['email', 'totp', 'recovery_code']).optional(),
+    authVersion: z.number().int().positive().optional(),
     credentialId: z.string().optional(),
   })
   .meta({ id: 'AuthUser' });
@@ -23,7 +27,13 @@ export const challengeSchema = z.object({
   challengeId: challengeIdSchema,
   email: emailSchema,
   expiresAt: z.string(),
-  purpose: z.enum(['bootstrap_recovery', 'existing_account_recovery']),
+  purpose: z.enum([
+    'bootstrap_recovery',
+    'existing_account_recovery',
+    'password_second_step',
+    'password_signup',
+    'password_reset',
+  ]),
 });
 export type VerificationPurpose = z.infer<typeof challengeSchema>['purpose'];
 
@@ -61,6 +71,108 @@ export const identityIdentifySchema = z.object({ flowId: identityFlowIdSchema, e
 export const identityStatusSchema = z.object({ flowId: identityFlowIdSchema }).strict();
 export const recoveryVerifySchema = z.object({ flowId: identityFlowIdSchema, pin: pinSchema }).strict();
 export const googleCompleteSchema = z.object({ flowId: identityFlowIdSchema, idToken: z.string().min(1) }).strict();
+export const passwordSignInSchema = z
+  .object({ email: emailSchema, password: z.string().min(1).max(512) })
+  .strict()
+  .meta({ id: 'PasswordSignIn' });
+export const passwordVerifySchema = z
+  .object({
+    flowId: identityFlowIdSchema,
+    code: z.string().min(1).max(128),
+    kind: z.enum(['email', 'totp', 'recovery_code']),
+  })
+  .strict()
+  .meta({ id: 'PasswordVerify' });
+export const passwordResendSchema = z.object({ flowId: identityFlowIdSchema }).strict().meta({ id: 'PasswordResend' });
+export const passwordSignUpSchema = z
+  .object({
+    email: emailSchema,
+    password: z.string().max(512).transform(normalizePassword).refine(validatePasswordPolicy),
+  })
+  .strict()
+  .meta({ id: 'PasswordSignUp' });
+export const passwordSignUpVerifySchema = z
+  .object({ flowId: identityFlowIdSchema, code: pinSchema })
+  .strict()
+  .meta({ id: 'PasswordSignUpVerify' });
+export const passwordResetRequestSchema = z
+  .object({ email: emailSchema })
+  .strict()
+  .meta({ id: 'PasswordResetRequest' });
+export const passwordResetCompleteSchema = z
+  .object({
+    flowId: identityFlowIdSchema,
+    emailCode: pinSchema,
+    factor: z
+      .object({ kind: z.enum(['totp', 'recovery_code']), code: z.string().min(1).max(128) })
+      .strict()
+      .optional(),
+    password: z.string().max(512).transform(normalizePassword).refine(validatePasswordPolicy),
+  })
+  .strict()
+  .meta({ id: 'PasswordResetComplete' });
+export const passwordSignUpResponseSchema = z
+  .object({ flowId: identityFlowIdSchema, expiresAt: z.string(), resendAvailableAt: z.string() })
+  .strict()
+  .meta({ id: 'PasswordSignUpResponse' });
+export const passwordResetRequestResponseSchema = z
+  .object({
+    flowId: identityFlowIdSchema,
+    requiredFactor: z.enum(['email', 'totp_or_recovery']),
+    expiresAt: z.string(),
+  })
+  .strict()
+  .meta({ id: 'PasswordResetRequestResponse' });
+export const passwordResetResponseSchema = z
+  .object({ passwordReset: z.literal(true) })
+  .strict()
+  .meta({ id: 'PasswordResetResponse' });
+export const passwordSetSchema = z
+  .object({
+    password: z
+      .string()
+      .max(512)
+      .transform(normalizePassword)
+      .refine(validatePasswordPolicy, 'Password must be between 15 and 128 characters.'),
+  })
+  .strict()
+  .meta({ id: 'PasswordSet' });
+export const passwordSetResponseSchema = z
+  .object({ passwordSet: z.literal(true) })
+  .strict()
+  .meta({ id: 'PasswordSetResponse' });
+export const passwordChangeSchema = z
+  .object({ currentPassword: z.string().min(1).max(512), password: passwordSetSchema.shape.password })
+  .strict();
+export const passwordRemoveSchema = z.object({ currentPassword: z.string().min(1).max(512) }).strict();
+export const recoveryCodeSchema = z.object({ code: z.string().regex(/^[A-Z0-9-]{8,64}$/) }).strict();
+export const reauthStartSchema = z
+  .object({
+    purpose: z.enum([
+      'password_change',
+      'password_remove',
+      'totp_change',
+      'totp_disable',
+      'recovery_codes_regenerate',
+      'google_link',
+    ]),
+  })
+  .strict();
+export const reauthCompleteSchema = z
+  .object({
+    grantId: identityFlowIdSchema,
+    method: z.enum(['passkey', 'google', 'password', 'totp', 'recovery_code']),
+    code: z.string().max(128).optional(),
+    password: z.string().max(512).optional(),
+    idToken: z.string().min(1).optional(),
+  })
+  .strict();
+export const operationGrantSchema = z.object({ grantId: identityFlowIdSchema }).strict();
+export const googleLinkSchema = z.object({ grantId: identityFlowIdSchema, idToken: z.string().min(1) }).strict();
+export const totpConfirmSchema = z
+  .object({ enrollmentId: identityFlowIdSchema, code: z.string().regex(/^\d{6}$/) })
+  .strict()
+  .meta({ id: 'TotpConfirm' });
 export const approvalCreateSchema = z.object({ accountId: z.string().min(1) }).strict();
 export const approvalIdSchema = z.object({ requestId: z.string().uuid() }).strict();
 export const approvalConsumeSchema = z
@@ -145,6 +257,144 @@ export const authOpenApiPaths = {
     post: {
       requestBody: { required: true, content: { 'application/json': { schema: googleCompleteSchema } } },
       responses: { 200: { description: 'Google authentication complete.' } },
+    },
+  },
+  '/auth/password/sign-in': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordSignInSchema } } },
+      responses: {
+        202: { description: 'Password accepted; server-selected second factor required.' },
+        404: { description: 'Password authentication is disabled.' },
+        503: { description: 'Password authentication prerequisites are unavailable.' },
+      },
+    },
+  },
+  '/auth/password/sign-up': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordSignUpSchema } } },
+      responses: {
+        202: {
+          content: {
+            'application/json': { schema: responseEnvelope(passwordSignUpResponseSchema, 'PasswordSignUpEnvelope') },
+          },
+          description: 'Signup started; verify the email address.',
+        },
+      },
+    },
+  },
+  '/auth/password/sign-up/verify': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordSignUpVerifySchema } } },
+      responses: { 200: { description: 'Signup email verified; no full session is created.' } },
+    },
+  },
+  '/auth/password/reset/request': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordResetRequestSchema } } },
+      responses: {
+        202: {
+          content: {
+            'application/json': {
+              schema: responseEnvelope(passwordResetRequestResponseSchema, 'PasswordResetRequestEnvelope'),
+            },
+          },
+          description: 'If eligible, a password reset code was sent.',
+        },
+      },
+    },
+  },
+  '/auth/password/reset/complete': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordResetCompleteSchema } } },
+      responses: {
+        200: {
+          content: {
+            'application/json': { schema: responseEnvelope(passwordResetResponseSchema, 'PasswordResetEnvelope') },
+          },
+          description: 'Password reset completed.',
+        },
+      },
+    },
+  },
+  '/auth/password/verify': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordVerifySchema } } },
+      responses: { 200: { description: 'Password second factor verified.' } },
+    },
+  },
+  '/auth/password/resend': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordResendSchema } } },
+      responses: { 202: { description: 'Password second-factor code resent.' } },
+    },
+  },
+  '/auth/password/set': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordSetSchema } } },
+      responses: {
+        200: {
+          content: {
+            'application/json': { schema: responseEnvelope(passwordSetResponseSchema, 'PasswordSetEnvelope') },
+          },
+          description: 'Password set successfully.',
+        },
+      },
+    },
+  },
+  '/auth/password/change': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordChangeSchema } } },
+      responses: { 200: { description: 'Password changed.' } },
+    },
+  },
+  '/auth/password/remove': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordRemoveSchema } } },
+      responses: { 204: { description: 'Password removed.' } },
+    },
+  },
+  '/auth/reauth/start': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: reauthStartSchema } } },
+      responses: { 201: { description: 'Reauthentication started.' } },
+    },
+  },
+  '/auth/reauth/complete': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: reauthCompleteSchema } } },
+      responses: { 200: { description: 'Reauthentication completed.' } },
+    },
+  },
+  '/auth/recovery-codes/regenerate': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: operationGrantSchema } } },
+      responses: { 200: { description: 'Recovery codes regenerated.' } },
+    },
+  },
+  '/auth/google/link': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: googleLinkSchema } } },
+      responses: { 200: { description: 'Google identity linked.' } },
+    },
+  },
+  '/auth/totp/setup': {
+    post: {
+      responses: {
+        201: { description: 'TOTP enrollment started.' },
+        404: { description: 'TOTP enrollment disabled.' },
+      },
+    },
+  },
+  '/auth/totp/confirm': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: totpConfirmSchema } } },
+      responses: { 200: { description: 'TOTP enrollment confirmed.' } },
+    },
+  },
+  '/auth/totp/disable': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: operationGrantSchema } } },
+      responses: { 204: { description: 'TOTP disabled.' } },
     },
   },
   '/auth/device-approval/request': {

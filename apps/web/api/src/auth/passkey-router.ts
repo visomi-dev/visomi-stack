@@ -14,6 +14,7 @@ import { getValidated, validateRequest } from '../shared/http/route-schemas';
 import { env } from '../shared/env';
 
 import { authed, authedRequest } from './auth-middleware';
+import { establishFullSession } from './auth-session';
 import {
   createPasskeyEnrollment,
   findUserByEmail,
@@ -33,7 +34,6 @@ import {
 } from './passkey-schemas';
 import { emailGate, nextPasskeyAttempt } from './passkey-contract';
 import { csrfProtection, passkeyRateLimit } from './passkey-security';
-import { setSessionHintCookie } from './session-cookie';
 
 import {
   accountPasskeyCredentials,
@@ -196,16 +196,16 @@ async function loginPasskey(
   credentialId: string,
 ) {
   const authUser = await resolveAuthUserForAccount(user, accountId);
-  const authenticatedUser = { ...authUser, authority: 'full' as const, credentialId };
+  const authenticatedUser = {
+    ...authUser,
+    authority: 'full' as const,
+    authenticationMethod: 'passkey' as const,
+    authVersion: user.authVersion,
+    credentialId,
+  };
 
-  await new Promise<void>((resolve, reject) =>
-    req.login(authenticatedUser, (error) => (error ? reject(error) : resolve())),
-  );
-  req.session.authority = 'full';
-  req.session.authenticatedAt = Date.now();
-  req.session.cookie.maxAge = env.SESSION_MAX_AGE_MS;
+  await establishFullSession(req, res, authenticatedUser);
   delete req.session.restrictedAuth;
-  setSessionHintCookie(res);
 
   return authenticatedUser;
 }

@@ -178,8 +178,8 @@ async function main(): Promise<void> {
   const requestedRestart = requestedArgs.some((argument) => argument.includes('sync-restart.spec.ts'));
   const needsDurableRun = fullRun || requestedRestart || durableOnly || pzs005Real;
   const externalServices = process.env['API_E2E_EXTERNAL_SERVICES'] === 'true';
-  const needsPostgres = !databaseUrl || pzs005Real;
-  const needsMinio = !objectStoreEndpoint || pzs005Real;
+  const needsPostgres = !externalServices;
+  const needsMinio = !externalServices;
 
   selectedCli = needsDurableRun && !externalServices && (needsPostgres || needsMinio) ? runtimeCli() : undefined;
   const cli = selectedCli;
@@ -247,17 +247,24 @@ async function main(): Promise<void> {
       OPAQUE_SYNC_S3_SECRET_KEY: durableEnvironment.OPAQUE_SYNC_S3_SECRET_KEY,
     };
 
+    migrationEnvironment.DRIZZLE_DATABASE_URL = effectiveDatabaseUrl;
     run('pnpm', ['db:migrate'], migrationEnvironment);
   }
 
   let exitCode: number;
 
   if (pzs005Real) {
-    exitCode = await runJest(durableEnvironment, ['--runTestsByPath', 'apps/web/api-e2e/src/api/pzs-005-real.spec.ts']);
+    exitCode = await runJest(
+      durableEnvironment,
+      ['--runTestsByPath', 'apps/web/api-e2e/src/api/pzs-005-real.spec.ts'],
+      'apps/web/api-e2e/pzs-jest.config.cts',
+    );
   } else if (durableOnly) {
     exitCode = await runJest(durableEnvironment, requestedArgs, 'apps/web/api-e2e/durable-jest.config.cts');
   } else if (fullRun) {
-    exitCode = await runJest(memoryEnvironment, ['--testPathIgnorePatterns=sync-restart.spec.ts|durable/']);
+    exitCode = await runJest(memoryEnvironment, [
+      '--testPathIgnorePatterns=sync-restart.spec.ts|durable/|pzs-005-real.spec.ts',
+    ]);
     if (exitCode === 0)
       exitCode = await runJest(durableEnvironment, [
         '--runTestsByPath',

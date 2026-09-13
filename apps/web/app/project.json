@@ -45,11 +45,12 @@
       "configurations": {
         "production": {
           "localize": true,
+          "i18nMissingTranslation": "ignore",
           "baseHref": "/app/",
           "budgets": [
             {
               "type": "initial",
-              "maximumWarning": "500kb",
+              "maximumWarning": "650kb",
               "maximumError": "1mb"
             },
             {

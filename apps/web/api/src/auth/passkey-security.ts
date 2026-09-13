@@ -1,6 +1,10 @@
+import { createHmac } from 'node:crypto';
+
 import type { NextFunction, Request, Response } from 'express';
 
 import { env } from '../shared/env';
+
+import { getRedis } from 'shared';
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 60;
@@ -85,6 +89,27 @@ function rateLimitResponse(res: Response, retryAfter: number): void {
   res.status(429).send({ code: 'rate_limited', message: 'Too many requests; retry after the cooldown.' });
 }
 
+async function consumePasswordRateLimit(req: Request): Promise<{ allowed: boolean; retryAfter: number }> {
+  const identifier =
+    typeof req.body?.email === 'string' ? req.body.email.normalize('NFKC').trim().toLowerCase() : 'invalid';
+  const identifierKey = createHmac('sha256', env.SESSION_SECRET).update(identifier).digest('hex');
+
+  if (env.DATABASE_DRIVER === 'memory') return { allowed: true, retryAfter: 1 };
+  try {
+    const redis = getRedis();
+    const keys = [`auth:password:identifier:${identifierKey}`, `auth:password:ip:${req.ip}`];
+    const limits = [env.AUTH_PASSWORD_RATE_IDENTIFIER_MAX, env.AUTH_PASSWORD_RATE_IP_MAX];
+    const values = await Promise.all(keys.map((key) => redis.incr(key)));
+
+    await Promise.all(keys.map((key) => redis.pexpire(key, env.AUTH_PASSWORD_RATE_WINDOW_MS)));
+    const allowed = values.every((value, index) => value <= limits[index]!);
+
+    return { allowed, retryAfter: Math.max(1, Math.ceil(env.AUTH_PASSWORD_RATE_WINDOW_MS / 1000)) };
+  } catch {
+    throw new Error('Authentication rate limiter unavailable.');
+  }
+}
+
 function emailOtpDeliveryRateLimit(req: Request, res: Response, next: NextFunction): void {
   const email = typeof req.body?.email === 'string' ? req.body.email.normalize('NFKC').trim().toLowerCase() : undefined;
   const flowId = typeof req.body?.flowId === 'string' ? req.body.flowId : undefined;
@@ -130,6 +155,7 @@ export {
   csrfProtection,
   emailOtpDeliveryRateLimit,
   emailOtpVerificationRateLimit,
+  consumePasswordRateLimit,
   passkeyRateLimit,
   resetPasskeySecurityState,
 };
