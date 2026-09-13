@@ -15,6 +15,7 @@ export class BrowserSettings extends Settings {
 
   applyTheme(): void {
     this.document.documentElement.classList.toggle('dark', this.isDark());
+    this.document.documentElement.style.colorScheme = this.theme();
   }
 
   setTheme(theme: Theme): void {

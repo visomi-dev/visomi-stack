@@ -28,13 +28,19 @@ const ogImageUrl = new URL(seoImage.image, Astro.site ?? 'https://visomi-stack.v
       (() => {
         const html = document.documentElement;
 
-        const savedTheme = window.localStorage.getItem('theme');
+        try {
+          const savedTheme = window.localStorage.getItem('themis.theme');
 
-        const systemDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+          const systemDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
 
-        const isDark = savedTheme === 'dark' || (!savedTheme && systemDark);
+          const isDark = savedTheme === 'dark' || (!savedTheme && systemDark);
 
-        html.classList.toggle('dark', isDark);
+          html.classList.toggle('dark', isDark);
+          html.style.colorScheme = isDark ? 'dark' : 'light';
+        } catch {
+          html.classList.remove('dark');
+          html.style.colorScheme = 'light';
+        }
       })();
     </script>
     <title>{title}</title>

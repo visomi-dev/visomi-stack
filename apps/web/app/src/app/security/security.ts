@@ -1,36 +1,32 @@
 import { DatePipe } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import { form, FormField, minLength, required, type FieldTree } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 
-import { Card } from '../shared/ui/layout/card/card';
-import { Heading } from '../shared/ui/typography/heading/heading';
-import { PasswordInput } from '../shared/ui/forms/password-input/password-input';
-import { Button } from '../shared/ui/actions/button/button';
 import { Auth } from '../shared/auth/auth';
 import { Passkey, type PasskeyCredential } from '../shared/auth/passkey';
+import { DeviceApproval } from '../shared/auth/device-approval';
 
-type PasswordModel = { password: string; confirmPassword: string };
-type StatusResponse = { data: { configured: boolean; setupAvailable: boolean } };
 type View = 'list' | 'add' | 'name' | 'revoke';
+type SecurityOverview = {
+  federatedIdentities: Array<{ id: string; provider: string; emailAtLink: string; linkedAt: string }>;
+  trustedDevices: Array<{ id: string; createdAt: string; lastUsedAt: string | null; expiresAt: string }>;
+  recoveryEvents: Array<{ event: string; outcome: string; createdAt: string }>;
+};
 
 @Component({
-  imports: [Button, Card, DatePipe, FormField, Heading, PasswordInput],
+  imports: [DatePipe],
   selector: 'app-security',
   templateUrl: './security.html',
   styleUrl: './security.css',
 })
 export class Security {
-  private readonly http = inject(HttpClient);
-  private readonly auth = inject(Auth);
   private readonly passkey = inject(Passkey);
+  private readonly auth = inject(Auth);
+  private readonly http = inject(HttpClient);
+  private readonly approval = inject(DeviceApproval);
   readonly loading = signal(true);
-  readonly submitting = signal(false);
   readonly error = signal('');
-  readonly configured = signal(false);
-  readonly setup = signal(false);
-  readonly reauthenticated = signal(false);
   readonly credentials = signal<PasskeyCredential[]>([]);
   readonly view = signal<View>('list');
   readonly selected = signal<PasskeyCredential | null>(null);
@@ -38,29 +34,59 @@ export class Security {
   readonly passkeyLoading = signal(true);
   readonly passkeySubmitting = signal(false);
   readonly passkeyError = signal('');
-  readonly model = signal<PasswordModel>({ password: '', confirmPassword: '' });
-  readonly passwordForm: FieldTree<PasswordModel> = form(this.model, (p) => {
-    required(p.password, { message: 'Choose a password.' });
-    minLength(p.password, 12, { message: 'Use at least 12 characters.' });
-    required(p.confirmPassword, { message: 'Confirm your password.' });
-  });
+  readonly overview = signal<SecurityOverview | null>(null);
+  readonly approvalRequest = signal<{ requestId: string; userCode: string; expiresAt: string } | null>(null);
+  readonly approvalStatus = signal('');
 
   constructor() {
-    void this.loadStatus();
     void this.loadCredentials();
+    void this.loadOverview();
   }
 
-  private async loadStatus() {
-    try {
-      const result = await firstValueFrom(this.http.get<StatusResponse>('/api/auth/security/password'));
+  async revokeFederatedIdentity(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete(`/api/auth/security/federated/${encodeURIComponent(id)}`));
+    await this.loadOverview();
+  }
 
-      this.configured.set(result.data.configured);
-      this.setup.set(result.data.setupAvailable);
-    } catch {
-      this.error.set('Security status could not be loaded.');
-    } finally {
-      this.loading.set(false);
+  async revokeTrustedDevice(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete(`/api/auth/security/devices/${encodeURIComponent(id)}`));
+    await this.loadOverview();
+  }
+
+  async requestDeviceApproval(): Promise<void> {
+    const user = await this.currentUser();
+
+    if (!user) return;
+    const request = await this.approval.request(user.accountId);
+
+    this.approvalRequest.set({
+      requestId: request.requestId,
+      userCode: request.userCode ?? '',
+      expiresAt: request.expiresAt,
+    });
+    this.approvalStatus.set('Waiting for approval from another trusted device.');
+    void this.pollApproval(request.requestId);
+  }
+
+  async approveDevice(requestId: string): Promise<void> {
+    await this.reauthenticateWithPasskey();
+    await this.approval.approve(requestId);
+    this.approvalStatus.set('Device approved.');
+  }
+
+  private async pollApproval(requestId: string): Promise<void> {
+    for (let attempt = 0; attempt < 60; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      const status = await this.approval.poll(requestId);
+
+      if (status.status === 'approved') {
+        this.approvalStatus.set('Device approved. Enter the code on the new device.');
+
+        return;
+      }
+      if (status.status === 'denied' || status.status === 'consumed') return;
     }
+    this.approvalStatus.set('The approval request expired.');
   }
 
   private async loadCredentials() {
@@ -70,6 +96,17 @@ export class Security {
       this.passkeyError.set('Passkeys could not be loaded.');
     } finally {
       this.passkeyLoading.set(false);
+      this.loading.set(false);
+    }
+  }
+
+  private async loadOverview(): Promise<void> {
+    try {
+      const response = await firstValueFrom(this.http.get<{ data: SecurityOverview }>('/api/auth/security/overview'));
+
+      this.overview.set(response.data);
+    } catch {
+      this.overview.set(null);
     }
   }
 
@@ -108,17 +145,21 @@ export class Security {
 
     if (!name || this.passkeySubmitting()) return;
     await this.runPasskeyMutation(async () => {
-      const user = this.auth.user();
+      const user = await this.currentUser();
 
       if (!user) throw new Error('Sign in again before adding a passkey.');
-      const authentication = await this.passkey.beginAuthentication(user.email, true);
-      const existing = await this.passkey.getCredential(authentication.options!);
-
-      await this.passkey.completeAuthentication(authentication.challengeId!, existing);
-      const registration = await this.passkey.beginRegistration(user.email, name, true);
+      await this.reauthenticateWithPasskey();
+      const registration = await this.passkey.beginRegistration(name);
       const credential = await this.passkey.createCredential(registration.options!);
+      const completed = await this.passkey.completeRegistration(registration.challengeId!, credential);
+      const verification = completed.restrictedSession;
 
-      await this.passkey.completeRegistration(registration.challengeId!, credential);
+      if (!verification?.verificationChallengeId || !verification.verificationOptions) {
+        throw new Error('Passkey verification options were not returned.');
+      }
+      const assertion = await this.passkey.getCredential(verification.verificationOptions);
+
+      await this.passkey.verifyRegistration(verification.verificationChallengeId, assertion);
       await this.loadCredentials();
       this.cancelPasskeyAction();
     });
@@ -151,13 +192,19 @@ export class Security {
   }
 
   private async reauthenticateWithPasskey() {
-    const user = this.auth.user();
+    const user = await this.currentUser();
 
     if (!user) throw new Error('Sign in again before changing passkeys.');
-    const authentication = await this.passkey.beginAuthentication(user.email, true);
+    const authentication = await this.passkey.beginAuthentication();
     const credential = await this.passkey.getCredential(authentication.options!);
 
     await this.passkey.completeAuthentication(authentication.challengeId!, credential);
+  }
+
+  private async currentUser() {
+    await this.auth.ensureSessionLoaded();
+
+    return this.auth.user();
   }
 
   private async runPasskeyMutation(mutation: () => Promise<void>) {
@@ -173,49 +220,6 @@ export class Security {
       );
     } finally {
       this.passkeySubmitting.set(false);
-    }
-  }
-
-  async beginSetup() {
-    this.error.set('');
-    try {
-      await firstValueFrom(this.http.post('/api/auth/security/password/reauthenticate', {}));
-      this.reauthenticated.set(true);
-      this.setup.set(true);
-    } catch (error) {
-      this.error.set(
-        error instanceof HttpErrorResponse
-          ? (error.error?.message ?? 'Recent sign-in required.')
-          : 'Recent sign-in required.',
-      );
-    }
-  }
-
-  async savePassword() {
-    if (this.submitting() || this.passwordForm().invalid()) return;
-    const value = this.passwordForm().value();
-
-    if (value.password !== value.confirmPassword) {
-      this.error.set("Passwords don't match.");
-
-      return;
-    }
-    this.submitting.set(true);
-    this.error.set('');
-    try {
-      await firstValueFrom(this.http.post('/api/auth/security/password', value));
-      this.configured.set(true);
-      this.setup.set(false);
-      this.reauthenticated.set(false);
-      this.model.set({ password: '', confirmPassword: '' });
-    } catch (error) {
-      this.error.set(
-        error instanceof HttpErrorResponse
-          ? (error.error?.message ?? 'Could not configure the password.')
-          : 'Could not configure the password.',
-      );
-    } finally {
-      this.submitting.set(false);
     }
   }
 }

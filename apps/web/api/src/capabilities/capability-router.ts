@@ -134,7 +134,7 @@ async function authorizeWorkspace(req: Parameters<typeof authedContext>[0], work
   return context;
 }
 
-capabilityRouter.use(authed());
+capabilityRouter.use(authed({ authority: 'full' }));
 
 capabilityRouter.get(
   '/:workspaceId',

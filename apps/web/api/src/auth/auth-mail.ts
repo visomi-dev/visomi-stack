@@ -46,12 +46,12 @@ export function getMailgunClient() {
 }
 
 export function createMessageBody(message: VerificationMessage) {
-  const intent = message.purpose === 'sign_in' ? 'sign in' : 'finish creating your account';
+  const intent = 'continue signing in or finish creating your account';
 
   return {
-    html: `<p>Your Themis verification code is <strong>${message.pin}</strong>.</p><p>Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.</p>`,
-    subject: 'Your Themis verification code',
-    text: `Your Themis verification code is ${message.pin}. Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.`,
+    html: `<p>Your Visomi Stack verification code is <strong>${message.pin}</strong>.</p><p>Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.</p>`,
+    subject: 'Your Visomi Stack verification code',
+    text: `Your Visomi Stack verification code is ${message.pin}. Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.`,
   };
 }
 
@@ -75,6 +75,34 @@ export async function sendVerificationMessage(message: VerificationMessage) {
     subject: body.subject,
     text: body.text,
     to: [message.email],
+  });
+}
+
+export async function sendRecoveryNotification(email: string): Promise<void> {
+  const subject = 'Your Visomi Stack account was recovered';
+  const text =
+    'A lower-assurance email recovery was completed for your Visomi Stack account. If you did not do this, secure your account immediately.';
+
+  if (env.MAIL_TRANSPORT === 'memory') {
+    mailbox.push({
+      challengeId: 'recovery-notification',
+      email,
+      expiresAt: new Date(),
+      pin: '',
+      purpose: 'existing_account_recovery',
+      sentAt: new Date(),
+    });
+
+    return;
+  }
+  const client = getMailgunClient();
+
+  await client.messages.create(env.MAILGUN_DOMAIN, {
+    from: env.MAILGUN_FROM,
+    html: `<p>${text}</p>`,
+    subject,
+    text,
+    to: [email],
   });
 }
 

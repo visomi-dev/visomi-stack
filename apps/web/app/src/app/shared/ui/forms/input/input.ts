@@ -30,6 +30,7 @@ export class Input {
   readonly controlId = input<string | null>(null);
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly invalid = input(false, { transform: booleanAttribute });
+  readonly inputmode = input<string | null>(null);
   readonly max = input<string | number | null>(null);
   readonly maxLength = input<string | number | null>(null, { transform: numberAttribute });
   readonly min = input<string | number | null>(null);

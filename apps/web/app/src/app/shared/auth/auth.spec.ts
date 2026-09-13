@@ -26,28 +26,51 @@ describe('BrowserAuth', () => {
     TestBed.inject(HttpTestingController).verify();
   });
 
-  it('stores the pending challenge after credential submission', async () => {
+  it('requests an email OTP after email submission', async () => {
     const auth = TestBed.inject(Auth);
     const http = TestBed.inject(HttpTestingController);
 
-    const submitPromise = auth.signUp({
-      email: 'engineer@themis.dev',
-      password: 'S3cureAuth!',
-    });
+    const submitPromise = auth.requestEmailOtp({ email: 'engineer@visomi.dev' });
 
-    http.expectOne('/api/auth/sign-up').flush({
-      data: {
-        challengeId: 'challenge-1',
-        email: 'engineer@themis.dev',
-        expiresAt: '2026-01-01T00:00:00.000Z',
-        purpose: 'sign_up',
-      },
+    http.expectOne('/api/auth/email-otp/request').flush({
+      data: { flowId: 'flow-1', resendAvailableAt: '2026-01-01T00:00:00.000Z' },
+      message: 'Verification code sent.',
     });
 
     await submitPromise;
+  });
 
-    expect(auth.pendingChallenge()?.challengeId).toBe('challenge-1');
-    expect(sessionStorage.getItem('themis.pendingChallenge')).toContain('challenge-1');
+  it('uses the server identity and recovery flow for an existing account', async () => {
+    const auth = TestBed.inject(Auth);
+    const http = TestBed.inject(HttpTestingController);
+    const identify = auth.identifyIdentity('14d91d31-826f-4059-a742-a92c982b73f9', 'engineer@visomi.dev');
+
+    http.expectOne('/api/auth/identity/identify').flush({
+      data: { flowId: '14d91d31-826f-4059-a742-a92c982b73f9', state: 'identify' },
+      message: 'Identity identified.',
+    });
+    await identify;
+    const requestRecovery = auth.requestIdentityRecovery('14d91d31-826f-4059-a742-a92c982b73f9', 'engineer@visomi.dev');
+
+    http.expectOne('/api/auth/identity/recovery/request').flush({
+      data: { flowId: '14d91d31-826f-4059-a742-a92c982b73f9', state: 'identify' },
+      message: 'Recovery requested.',
+    });
+    await requestRecovery;
+    const verifyRecovery = auth.verifyIdentityRecovery('14d91d31-826f-4059-a742-a92c982b73f9', '123456');
+
+    http.expectOne('/api/auth/identity/recovery/verify').flush({
+      data: {
+        authenticated: false,
+        expiresAt: '2026-09-08T00:00:00.000Z',
+        flowId: '14d91d31-826f-4059-a742-a92c982b73f9',
+        kind: 'restricted',
+        user: null,
+        verifiedEmail: 'engineer@visomi.dev',
+      },
+      message: 'Recovery verified.',
+    });
+    await expect(verifyRecovery).resolves.toMatchObject({ kind: 'restricted' });
   });
 
   it('skips the session request when the hasSession cookie is absent', async () => {
@@ -75,7 +98,7 @@ describe('BrowserAuth', () => {
         authenticated: true,
         user: {
           accountId: 'account-1',
-          email: 'engineer@themis.dev',
+          email: 'engineer@visomi.dev',
           emailVerifiedAt: null,
           id: 'user-1',
           role: 'owner',
@@ -103,6 +126,33 @@ describe('BrowserAuth', () => {
     await promise;
 
     expect(document.cookie).not.toContain('themis.hasSession=1');
+  });
+
+  it('refreshes an already loaded session after authentication completes', async () => {
+    const auth = TestBed.inject(Auth);
+    const http = TestBed.inject(HttpTestingController);
+
+    await auth.ensureSessionLoaded();
+    const refresh = auth.ensureSessionLoaded(true);
+
+    http.expectOne('/api/auth/session').flush({
+      data: {
+        authenticated: true,
+        kind: 'full',
+        user: {
+          accountId: 'account-1',
+          email: 'engineer@visomi.dev',
+          emailVerifiedAt: '2026-09-07T00:00:00.000Z',
+          id: 'user-1',
+          role: 'owner',
+        },
+      },
+      message: 'Session retrieved.',
+    });
+
+    await refresh;
+
+    expect(auth.user()?.accountId).toBe('account-1');
   });
 });
 
@@ -155,7 +205,7 @@ describe('ServerAuth', () => {
           useValue: {
             user: {
               accountId: 'account-1',
-              email: 'engineer@themis.dev',
+              email: 'engineer@visomi.dev',
               emailVerifiedAt: null,
               id: 'user-1',
               role: 'owner',

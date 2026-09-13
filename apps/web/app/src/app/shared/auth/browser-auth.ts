@@ -3,16 +3,21 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import { PENDING_CHALLENGE_KEY, SESSION_PRESENCE_KEY } from '../constants/storage';
+import { SESSION_PRESENCE_KEY } from '../constants/storage';
 
-import { Auth, type SignInWithPasswordResult } from './auth';
+import { Auth } from './auth';
 import type {
-  AuthChallenge,
   AuthUser,
-  ChallengeOrAuthenticatedResponse,
-  ChallengeResponse,
-  CredentialsPayload,
+  EmailOtpRequestPayload,
+  EmailOtpResendPayload,
+  EmailOtpResponse,
+  EmailOtpVerifyPayload,
   SessionResponse,
+  SessionUpgrade,
+  RestrictedSession,
+  RestrictedAccount,
+  ResponseEnvelope,
+  IdentityFlow,
 } from './auth.models';
 
 @Injectable({ providedIn: 'root' })
@@ -20,25 +25,55 @@ export class BrowserAuth extends Auth {
   private readonly http = inject(HttpClient);
   private readonly document = inject(DOCUMENT);
 
-  private readonly $pendingChallenge = signal<AuthChallenge | null>(this.readStoredChallenge());
   private readonly $sessionLoaded = signal(false);
-  private readonly $submitting = signal(false);
   private readonly $user = signal<AuthUser | null>(null);
-  private readonly $verificationSubmitting = signal(false);
+  private readonly $emailOtpSubmitting = signal(false);
+  private readonly $passkeySubmitting = signal(false);
 
+  readonly emailOtpSubmitting = this.$emailOtpSubmitting.asReadonly();
   readonly isAuthenticated = computed(() => this.$user() !== null);
-  readonly pendingChallenge = this.$pendingChallenge.asReadonly();
+  readonly passkeySubmitting = this.$passkeySubmitting.asReadonly();
   readonly sessionLoaded = this.$sessionLoaded.asReadonly();
-  readonly submitting = this.$submitting.asReadonly();
   readonly user = this.$user.asReadonly();
-  readonly verificationSubmitting = this.$verificationSubmitting.asReadonly();
 
-  async ensureSessionLoaded(): Promise<void> {
-    if (this.$sessionLoaded()) {
+  async startIdentityFlow(): Promise<IdentityFlow> {
+    const response = await firstValueFrom(
+      this.http.post<ResponseEnvelope<IdentityFlow>>('/api/auth/identity/start', {}),
+    );
+
+    return response.data;
+  }
+
+  async identifyIdentity(flowId: string, email: string): Promise<IdentityFlow> {
+    const response = await firstValueFrom(
+      this.http.post<ResponseEnvelope<IdentityFlow>>('/api/auth/identity/identify', { flowId, email }),
+    );
+
+    return response.data;
+  }
+
+  async requestIdentityRecovery(flowId: string, email: string): Promise<IdentityFlow> {
+    const response = await firstValueFrom(
+      this.http.post<ResponseEnvelope<IdentityFlow>>('/api/auth/identity/recovery/request', { flowId, email }),
+    );
+
+    return response.data;
+  }
+
+  async verifyIdentityRecovery(flowId: string, pin: string): Promise<RestrictedSession> {
+    const response = await firstValueFrom(
+      this.http.post<ResponseEnvelope<RestrictedSession>>('/api/auth/identity/recovery/verify', { flowId, pin }),
+    );
+
+    return response.data;
+  }
+
+  async ensureSessionLoaded(force = false): Promise<void> {
+    if (this.$sessionLoaded() && !force) {
       return;
     }
 
-    if (!this.hasSessionHint()) {
+    if (!force && !this.hasSessionHint()) {
       this.$user.set(null);
       this.$sessionLoaded.set(true);
       this.clearSessionHint();
@@ -62,91 +97,55 @@ export class BrowserAuth extends Auth {
     }
   }
 
-  async signInWithPassword(payload: CredentialsPayload): Promise<SignInWithPasswordResult> {
-    this.$submitting.set(true);
+  async requestEmailOtp(payload: EmailOtpRequestPayload): Promise<EmailOtpResponse['data']> {
+    this.$emailOtpSubmitting.set(true);
 
     try {
-      const response = await firstValueFrom(
-        this.http.post<ChallengeOrAuthenticatedResponse>('/api/auth/sign-in/password', payload),
-      );
-
-      if ('authenticated' in response.data) {
-        this.$user.set(response.data.user);
-        this.$sessionLoaded.set(true);
-        this.setPendingChallenge(null);
-
-        return response.data;
-      }
-
-      this.setPendingChallenge({
-        ...response.data,
-        rememberDevice: payload.rememberDevice ?? false,
-      });
+      const response = await firstValueFrom(this.http.post<EmailOtpResponse>('/api/auth/email-otp/request', payload));
 
       return response.data;
     } finally {
-      this.$submitting.set(false);
+      this.$emailOtpSubmitting.set(false);
     }
   }
 
-  async signUp(payload: CredentialsPayload): Promise<AuthChallenge> {
-    this.$submitting.set(true);
+  async verifyEmailOtp(payload: EmailOtpVerifyPayload): Promise<SessionUpgrade> {
+    this.$emailOtpSubmitting.set(true);
 
     try {
-      const response = await firstValueFrom(this.http.post<ChallengeResponse>('/api/auth/sign-up', payload));
-
-      this.setPendingChallenge(response.data);
-
-      return response.data;
-    } finally {
-      this.$submitting.set(false);
-    }
-  }
-
-  async submitVerification(pin: string): Promise<AuthUser> {
-    const challenge = this.$pendingChallenge();
-
-    if (!challenge) {
-      throw new Error('No pending verification challenge is available.');
-    }
-
-    this.$verificationSubmitting.set(true);
-
-    try {
-      const endpoint = challenge.purpose === 'sign_in' ? '/api/auth/sign-in/verify' : '/api/auth/sign-up/verify';
-
       const response = await firstValueFrom(
-        this.http.post<{ data: { user: AuthUser } }>(endpoint, {
-          challengeId: challenge.challengeId,
-          pin,
-          rememberDevice: challenge.purpose === 'sign_in' ? (challenge.rememberDevice ?? false) : false,
-        }),
+        this.http.post<{ data: SessionUpgrade }>('/api/auth/email-otp/verify', payload),
       );
 
-      this.$user.set(response.data.user);
+      const session = response.data;
+
+      this.$user.set(session.user);
       this.$sessionLoaded.set(true);
-      this.setPendingChallenge(null);
 
-      return response.data.user;
+      return session;
     } finally {
-      this.$verificationSubmitting.set(false);
+      this.$emailOtpSubmitting.set(false);
     }
   }
 
-  async resendVerification(): Promise<AuthChallenge> {
-    const challenge = this.$pendingChallenge();
-
-    if (!challenge) {
-      throw new Error('No pending verification challenge is available.');
-    }
-
+  async getRestrictedAccounts(): Promise<RestrictedAccount[]> {
     const response = await firstValueFrom(
-      this.http.post<ChallengeResponse>('/api/auth/verification/resend', {
-        challengeId: challenge.challengeId,
-      }),
+      this.http.get<ResponseEnvelope<{ accounts: RestrictedAccount[] }>>('/api/auth/restricted/accounts'),
     );
 
-    this.setPendingChallenge(response.data);
+    return response.data.accounts;
+  }
+
+  async resendEmailOtp(payload: EmailOtpResendPayload): Promise<EmailOtpResponse['data']> {
+    const response = await firstValueFrom(this.http.post<EmailOtpResponse>('/api/auth/email-otp/resend', payload));
+
+    return response.data;
+  }
+
+  async selectRestrictedAccount(accountId: string): Promise<RestrictedAccount> {
+    const response = await firstValueFrom(
+      this.http.post<ResponseEnvelope<RestrictedAccount>>('/api/auth/restricted/accounts/select', { accountId }),
+    );
 
     return response.data;
   }
@@ -155,37 +154,8 @@ export class BrowserAuth extends Auth {
     await firstValueFrom(this.http.post('/api/auth/sign-out', {}, { responseType: 'text' }));
 
     this.$user.set(null);
-    this.setPendingChallenge(null);
     this.$sessionLoaded.set(true);
     this.clearSessionHint();
-  }
-
-  async requestPasswordReset(email: string): Promise<AuthChallenge | null> {
-    const response = await firstValueFrom(
-      this.http.post<{ data: AuthChallenge | null }>('/api/auth/password/forgotten', { email }),
-    );
-
-    if (response.data) {
-      this.setPendingChallenge(response.data);
-    }
-
-    return response.data;
-  }
-
-  async verifyPasswordReset(challengeId: string, pin: string): Promise<void> {
-    await firstValueFrom(this.http.post('/api/auth/password/reset/verify', { challengeId, pin }));
-  }
-
-  async submitPasswordReset(password: string): Promise<void> {
-    await firstValueFrom(this.http.post('/api/auth/password/reset', { password }, { responseType: 'text' }));
-  }
-
-  clearPendingChallenge(): void {
-    this.setPendingChallenge(null);
-  }
-
-  setPendingVerification(challenge: AuthChallenge): void {
-    this.setPendingChallenge(challenge);
   }
 
   private hasSessionHint(): boolean {
@@ -218,39 +188,5 @@ export class BrowserAuth extends Auth {
     }
 
     this.document.cookie = parts.join('; ');
-  }
-
-  private readStoredChallenge(): AuthChallenge | null {
-    const storedChallenge = this.document.defaultView?.sessionStorage.getItem(PENDING_CHALLENGE_KEY);
-
-    if (!storedChallenge) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(storedChallenge) as AuthChallenge;
-    } catch {
-      this.document.defaultView?.sessionStorage.removeItem(PENDING_CHALLENGE_KEY);
-
-      return null;
-    }
-  }
-
-  private setPendingChallenge(challenge: AuthChallenge | null): void {
-    this.$pendingChallenge.set(challenge);
-
-    const storage = this.document.defaultView?.sessionStorage;
-
-    if (!storage) {
-      return;
-    }
-
-    if (!challenge) {
-      storage.removeItem(PENDING_CHALLENGE_KEY);
-
-      return;
-    }
-
-    storage.setItem(PENDING_CHALLENGE_KEY, JSON.stringify(challenge));
   }
 }

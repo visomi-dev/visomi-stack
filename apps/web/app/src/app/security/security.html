@@ -2,46 +2,172 @@
   <p class="font-mono text-xs font-semibold tracking-widest text-slate-600 uppercase dark:text-slate-400">
     Account security
   </p>
-  <app-heading id="security-title" level="1" [text]="'Security'" />
-  <p class="mt-3 max-w-2xl leading-7 text-slate-500 dark:text-slate-400">
-    Manage the ways you can securely access your account.
+  <h1 id="security-title" class="font-heading mt-2 text-3xl font-bold tracking-[-0.025em]" i18n="@@securityTitle">
+    Security
+  </h1>
+  <p class="mt-3 max-w-2xl leading-7 text-slate-500 dark:text-slate-400" i18n="@@securitySubtitle">
+    Manage the devices and security keys that can sign in to your account.
   </p>
 
   @if (loading() || passkeyLoading()) {
-    <p class="mt-8" role="status">Loading security settings...</p>
+    <p class="mt-8" role="status" i18n="@@securityLoading">Loading security settings...</p>
   } @else {
     @if (error() || passkeyError()) {
       <p class="mt-6 text-sm text-red-600 dark:text-red-400" role="alert">{{ error() || passkeyError() }}</p>
     }
     @if (view() === 'list') {
+      @if (overview(); as details) {
+        <section class="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-5 dark:border-blue-900 dark:bg-blue-950/30">
+          <h2 class="font-heading text-lg font-bold" i18n="@@securityApproveDeviceTitle">Approve a new device</h2>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300" i18n="@@securityApproveDeviceBody">
+            Create a one-time request, then approve it with a fresh passkey assertion on another trusted device.
+          </p>
+          <button
+            type="button"
+            class="mt-4 min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white"
+            (click)="requestDeviceApproval()"
+            i18n="@@securityStartApproval"
+          >
+            Create approval request
+          </button>
+          @if (approvalRequest(); as request) {
+            <p class="mt-3 font-mono text-sm">Request: {{ request.requestId }}<br />Code: {{ request.userCode }}</p>
+          }
+          @if (approvalStatus()) {
+            <p class="mt-3 text-sm" role="status">{{ approvalStatus() }}</p>
+          }
+          <form
+            class="mt-4 flex flex-col gap-2 sm:flex-row"
+            (submit)="$event.preventDefault(); approveDevice(approvalId.value)"
+          >
+            <label class="sr-only" for="approval-request-id" i18n="@@securityApprovalRequestLabel"
+              >Approval request ID</label
+            >
+            <input
+              #approvalId
+              id="approval-request-id"
+              class="min-h-11 rounded-md border border-slate-300 bg-white px-3 dark:border-slate-700 dark:bg-slate-950"
+              placeholder="Request ID"
+              required
+            />
+            <button
+              type="submit"
+              class="min-h-11 rounded-md border border-blue-600 px-4 text-sm font-semibold text-blue-700 dark:text-blue-300"
+              i18n="@@securityApproveButton"
+            >
+              Approve request
+            </button>
+          </form>
+        </section>
+        <section class="mt-8 grid gap-4 md:grid-cols-3" aria-label="Additional account security">
+          <article class="rounded-lg border border-slate-950/10 p-5 dark:border-white/10">
+            <h2 class="font-heading text-lg font-bold" i18n="@@securityFederatedTitle">Federated identities</h2>
+            @if (!details.federatedIdentities.length) {
+              <p class="mt-2 text-sm text-slate-500" i18n="@@securityNoFederated">None linked.</p>
+            }
+            @for (identity of details.federatedIdentities; track identity.id) {
+              <div class="mt-3 flex items-center justify-between gap-2 text-sm">
+                <span>{{ identity.provider }}<br />{{ identity.emailAtLink }}</span
+                ><button
+                  type="button"
+                  class="text-red-600 underline"
+                  (click)="revokeFederatedIdentity(identity.id)"
+                  i18n="@@securityRevokeFederated"
+                >
+                  Revoke
+                </button>
+              </div>
+            }
+          </article>
+          <article class="rounded-lg border border-slate-950/10 p-5 dark:border-white/10">
+            <h2 class="font-heading text-lg font-bold" i18n="@@securityTrustedDevices">Trusted devices</h2>
+            @if (!details.trustedDevices.length) {
+              <p class="mt-2 text-sm text-slate-500" i18n="@@securityNoTrusted">None active.</p>
+            }
+            @for (device of details.trustedDevices; track device.id) {
+              <div class="mt-3 flex items-center justify-between text-sm">
+                <time [attr.datetime]="device.createdAt">{{ device.createdAt | date: 'd MMM y' }}</time
+                ><button
+                  type="button"
+                  class="text-red-600 underline"
+                  (click)="revokeTrustedDevice(device.id)"
+                  i18n="@@securityRevokeDevice"
+                >
+                  Revoke
+                </button>
+              </div>
+            }
+          </article>
+          <article class="rounded-lg border border-slate-950/10 p-5 dark:border-white/10">
+            <h2 class="font-heading text-lg font-bold" i18n="@@securityRecoveryEvents">Recovery activity</h2>
+            @if (!details.recoveryEvents.length) {
+              <p class="mt-2 text-sm text-slate-500" i18n="@@securityNoRecovery">No recent recovery events.</p>
+            }
+            @for (event of details.recoveryEvents; track event.createdAt + event.event) {
+              <p class="mt-3 text-sm">
+                {{ event.event }}<br /><time [attr.datetime]="event.createdAt">{{
+                  event.createdAt | date: 'd MMM y, HH:mm'
+                }}</time>
+              </p>
+            }
+          </article>
+        </section>
+      }
       <section class="mt-8" aria-labelledby="passkeys-title">
         <div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 id="passkeys-title" class="font-heading text-2xl font-bold tracking-tight">Passkeys</h2>
-            <p class="mt-2 leading-7 text-slate-500 dark:text-slate-400">
+            <h2
+              id="passkeys-title"
+              class="font-heading text-2xl font-bold tracking-tight"
+              i18n="@@securityPasskeysTitle"
+            >
+              Passkeys
+            </h2>
+            <p class="mt-2 leading-7 text-slate-500 dark:text-slate-400" i18n="@@securityPasskeysSubtitle">
               Devices and security keys that can sign in to your account.
             </p>
           </div>
-          <app-button tone="blue" (click)="showAdd()">Add passkey</app-button>
+          <button
+            type="button"
+            class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+            (click)="showAdd()"
+            i18n="@@securityAddPasskey"
+          >
+            Add passkey
+          </button>
         </div>
         @if (!credentials().length) {
-          <app-card class="mt-6" padding="lg" tone="raised">
-            <h3 class="font-heading text-xl font-bold">No passkeys yet</h3>
-            <p class="text-slate-500 dark:text-slate-400">
+          <div
+            class="mt-6 rounded-lg border border-slate-950/10 bg-slate-50 p-6 dark:border-white/10 dark:bg-slate-900"
+          >
+            <h3 class="font-heading text-xl font-bold" i18n="@@securityNoPasskeysTitle">No passkeys yet</h3>
+            <p class="mt-2 text-slate-500 dark:text-slate-400" i18n="@@securityNoPasskeysBody">
               Add a passkey to sign in without a password. Your passkey stays on your device.
             </p>
-            <app-button class="mt-2" tone="blue" (click)="showAdd()">Add your first passkey</app-button>
-          </app-card>
+            <button
+              type="button"
+              class="mt-4 inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+              (click)="showAdd()"
+              i18n="@@securityAddFirstPasskey"
+            >
+              Add your first passkey
+            </button>
+          </div>
         } @else {
           <div class="mt-6 grid gap-4" aria-label="Saved passkeys">
             @for (credential of credentials(); track credential.id) {
-              <app-card padding="lg" tone="raised">
+              <div class="rounded-lg border border-slate-950/10 bg-white p-6 dark:border-white/10 dark:bg-slate-950">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h3 class="font-heading text-lg font-bold">{{ credential.label }}</h3>
                     <dl class="mt-3 grid gap-1 text-sm text-slate-500 dark:text-slate-400">
                       <div>
-                        <dt class="inline font-medium text-slate-700 dark:text-slate-200">Created:</dt>
+                        <dt
+                          class="inline font-medium text-slate-700 dark:text-slate-200"
+                          i18n="@@securityPasskeyCreatedLabel"
+                        >
+                          Created:
+                        </dt>
                         <dd class="inline">
                           <time [attr.datetime]="credential.createdAt">{{
                             credential.createdAt | date: 'd MMMM y'
@@ -49,7 +175,12 @@
                         </dd>
                       </div>
                       <div>
-                        <dt class="inline font-medium text-slate-700 dark:text-slate-200">Last used:</dt>
+                        <dt
+                          class="inline font-medium text-slate-700 dark:text-slate-200"
+                          i18n="@@securityPasskeyLastUsedLabel"
+                        >
+                          Last used:
+                        </dt>
                         <dd class="inline">
                           {{ credential.lastUsedAt ? (credential.lastUsedAt | date: 'd MMMM y, HH:mm') : 'Never' }}
                         </dd>
@@ -57,26 +188,47 @@
                     </dl>
                   </div>
                   <div class="flex flex-col gap-2 sm:flex-row">
-                    <app-button variant="plain" tone="blue" (click)="showRename(credential)">Rename</app-button>
-                    <app-button variant="plain" tone="red" (click)="showRevoke(credential)">Revoke</app-button>
+                    <button
+                      type="button"
+                      class="inline-flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-semibold text-blue-600 underline-offset-4 hover:underline dark:text-blue-400"
+                      (click)="showRename(credential)"
+                      i18n="@@securityRenameButton"
+                    >
+                      Rename
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-semibold text-red-600 underline-offset-4 hover:underline dark:text-red-400"
+                      (click)="showRevoke(credential)"
+                      i18n="@@securityRevokeButton"
+                    >
+                      Revoke
+                    </button>
                   </div>
                 </div>
-              </app-card>
+              </div>
             }
           </div>
         }
       </section>
     } @else if (view() === 'add') {
-      <app-card class="mt-8 max-w-2xl" padding="lg" tone="raised">
-        <p class="font-mono text-xs font-semibold tracking-widest text-slate-600 uppercase dark:text-slate-400">
+      <div
+        class="mt-8 max-w-2xl rounded-lg border border-slate-950/10 bg-white p-6 dark:border-white/10 dark:bg-slate-950"
+      >
+        <p
+          class="font-mono text-xs font-semibold tracking-widest text-slate-600 uppercase dark:text-slate-400"
+          i18n="@@securityAddPasskeyEyebrow"
+        >
           New access method
         </p>
-        <h2 class="font-heading text-2xl font-bold">Add a passkey</h2>
-        <p class="leading-6 text-slate-500 dark:text-slate-400">
+        <h2 class="font-heading text-2xl font-bold" i18n="@@securityAddPasskeyTitle">Add a passkey</h2>
+        <p class="leading-6 text-slate-500 dark:text-slate-400" i18n="@@securityAddPasskeyBody">
           Confirm an existing passkey, then choose this device, another device, or a security key.
         </p>
         <form class="mt-4 grid gap-5" (submit)="$event.preventDefault(); addPasskey()">
-          <label class="grid gap-2 text-sm font-semibold" for="new-passkey-name">Passkey name</label>
+          <label class="grid gap-2 text-sm font-semibold" for="new-passkey-name" i18n="@@securityAddPasskeyNameLabel"
+            >Passkey name</label
+          >
           <input
             id="new-passkey-name"
             class="min-h-11 rounded-md border border-slate-950/10 bg-white px-3 text-base outline-offset-2 focus:outline-2 focus:outline-slate-600 dark:border-white/10 dark:bg-slate-950"
@@ -87,25 +239,45 @@
             maxlength="64"
             aria-describedby="passkey-name-help"
           />
-          <p id="passkey-name-help" class="text-xs leading-5 text-slate-500 dark:text-slate-400">
-            Use a recognizable device name. Do not enter a password, PIN, or recovery code.
+          <p
+            id="passkey-name-help"
+            class="text-xs leading-5 text-slate-500 dark:text-slate-400"
+            i18n="@@securityAddPasskeyNameHelp"
+          >
+            Use a recognizable device name.
           </p>
           <div class="flex flex-col gap-3 sm:flex-row">
-            <app-button type="submit" tone="blue" [disabled]="passkeySubmitting()">{{
-              passkeySubmitting() ? 'Waiting for confirmation...' : 'Confirm and add passkey'
-            }}</app-button
-            ><app-button type="button" variant="plain" (click)="cancelPasskeyAction()">Cancel</app-button>
+            <button
+              type="submit"
+              class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-400"
+              [disabled]="passkeySubmitting()"
+              i18n="@@securityAddPasskeySubmit"
+            >
+              {{ passkeySubmitting() ? 'Waiting for confirmation...' : 'Confirm and add passkey' }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-semibold text-slate-600 underline-offset-4 hover:underline dark:text-slate-400"
+              (click)="cancelPasskeyAction()"
+              i18n="@@securityCancelButton"
+            >
+              Cancel
+            </button>
           </div>
         </form>
-      </app-card>
+      </div>
     } @else if (view() === 'name') {
-      <app-card class="mt-8 max-w-2xl" padding="lg" tone="raised">
-        <h2 class="font-heading text-2xl font-bold">Rename passkey</h2>
-        <p class="leading-6 text-slate-500 dark:text-slate-400">
+      <div
+        class="mt-8 max-w-2xl rounded-lg border border-slate-950/10 bg-white p-6 dark:border-white/10 dark:bg-slate-950"
+      >
+        <h2 class="font-heading text-2xl font-bold" i18n="@@securityRenameTitle">Rename passkey</h2>
+        <p class="leading-6 text-slate-500 dark:text-slate-400" i18n="@@securityRenameBody">
           Only the account-local label changes. The passkey stays on the same device.
         </p>
         <form class="mt-4 grid gap-5" (submit)="$event.preventDefault(); renamePasskey()">
-          <label class="grid gap-2 text-sm font-semibold" for="rename-passkey">Passkey name</label>
+          <label class="grid gap-2 text-sm font-semibold" for="rename-passkey" i18n="@@securityRenameLabel"
+            >Passkey name</label
+          >
           <input
             id="rename-passkey"
             class="min-h-11 rounded-md border border-slate-950/10 bg-white px-3 text-base outline-offset-2 focus:outline-2 focus:outline-slate-600 dark:border-white/10 dark:bg-slate-950"
@@ -115,77 +287,65 @@
             required
           />
           <div class="flex flex-col gap-3 sm:flex-row">
-            <app-button type="submit" tone="blue" [disabled]="passkeySubmitting()">Save name</app-button
-            ><app-button type="button" variant="plain" (click)="cancelPasskeyAction()">Cancel</app-button>
+            <button
+              type="submit"
+              class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-400"
+              [disabled]="passkeySubmitting()"
+              i18n="@@securityRenameSave"
+            >
+              Save name
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-semibold text-slate-600 underline-offset-4 hover:underline dark:text-slate-400"
+              (click)="cancelPasskeyAction()"
+              i18n="@@securityCancelButton"
+            >
+              Cancel
+            </button>
           </div>
         </form>
-      </app-card>
+      </div>
     } @else {
-      <app-card class="mt-8 max-w-2xl" padding="lg" tone="raised">
-        <p class="font-mono text-xs font-semibold tracking-widest text-red-600 uppercase dark:text-red-400">
+      <div
+        class="mt-8 max-w-2xl rounded-lg border border-slate-950/10 bg-white p-6 dark:border-white/10 dark:bg-slate-950"
+      >
+        <p
+          class="font-mono text-xs font-semibold tracking-widest text-red-600 uppercase dark:text-red-400"
+          i18n="@@securityRevokeEyebrow"
+        >
           Permanent security change
         </p>
-        <h2 class="font-heading text-2xl font-bold">Revoke “{{ selected()?.label }}”?</h2>
-        <p class="leading-6 text-slate-500 dark:text-slate-400">
+        <h2 class="font-heading text-2xl font-bold">
+          {{ 'Revoke "' + (selected()?.label ?? '') + '"?' }}
+        </h2>
+        <p class="leading-6 text-slate-500 dark:text-slate-400" i18n="@@securityRevokeBody">
           This passkey will stop signing in immediately and cannot be restored.
         </p>
-        <div class="rounded-lg bg-slate-100 p-4 text-sm leading-6 dark:bg-slate-800">
-          <strong class="block font-semibold">Access protection</strong> You must keep a password or another active
-          passkey.
+        <div class="mt-4 rounded-lg bg-slate-100 p-4 text-sm leading-6 dark:bg-slate-800">
+          <strong class="block font-semibold" i18n="@@securityRevokeProtection">Access protection</strong>
+          <span i18n="@@securityRevokeProtectionBody">You must keep another active passkey.</span>
         </div>
-        <div class="flex flex-col gap-3 sm:flex-row">
-          <app-button tone="red" [disabled]="passkeySubmitting()" (click)="revokePasskey()">{{
-            passkeySubmitting() ? 'Confirming...' : 'Confirm passkey and revoke'
-          }}</app-button
-          ><app-button variant="plain" (click)="cancelPasskeyAction()">Cancel</app-button>
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            class="inline-flex min-h-11 items-center justify-center rounded-md bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-500 dark:hover:bg-red-400"
+            [disabled]="passkeySubmitting()"
+            (click)="revokePasskey()"
+            i18n="@@securityRevokeSubmit"
+          >
+            {{ passkeySubmitting() ? 'Confirming...' : 'Confirm passkey and revoke' }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-semibold text-slate-600 underline-offset-4 hover:underline dark:text-slate-400"
+            (click)="cancelPasskeyAction()"
+            i18n="@@securityCancelButton"
+          >
+            Cancel
+          </button>
         </div>
-      </app-card>
-    }
-    @if (configured()) {
-      <app-card class="mt-8" padding="lg" tone="raised"
-        ><h2 class="font-heading text-xl font-bold">Password configured</h2>
-        <p class="text-slate-500 dark:text-slate-400">
-          Your password is another viable access method. Existing passkeys remain active.
-        </p></app-card
-      >
-    } @else if (setup()) {
-      <app-card class="mt-8" padding="lg" tone="raised"
-        ><h2 class="font-heading text-xl font-bold">Set up a password</h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400">
-          Use at least 12 characters. Password managers and paste are supported.
-        </p>
-        <form class="mt-6 grid gap-5" (submit)="$event.preventDefault(); savePassword()">
-          <label class="grid gap-2 text-sm font-semibold" for="security-password">New password</label
-          ><app-password-input
-            [formField]="passwordForm.password"
-            controlId="security-password"
-            autocomplete="new-password"
-            [required]="true"
-            [minLength]="12"
-          /><label class="grid gap-2 text-sm font-semibold" for="security-password-confirm">Confirm password</label
-          ><app-password-input
-            [formField]="passwordForm.confirmPassword"
-            controlId="security-password-confirm"
-            autocomplete="new-password"
-            [required]="true"
-            [minLength]="12"
-          />
-          <div class="flex flex-col gap-3 sm:flex-row">
-            <app-button type="submit" [disabled]="submitting()">{{
-              submitting() ? 'Saving...' : 'Confirm and save'
-            }}</app-button
-            ><app-button type="button" variant="plain" (click)="setup.set(false)">Cancel</app-button>
-          </div>
-        </form></app-card
-      >
-    } @else {
-      <app-card class="mt-8" padding="lg" tone="raised"
-        ><h2 class="font-heading text-xl font-bold">No password configured</h2>
-        <p class="text-slate-500 dark:text-slate-400">
-          Add a password as a secondary way to access your account. It does not replace your passkeys.
-        </p>
-        <app-button class="mt-2" (click)="beginSetup()">Set up password</app-button></app-card
-      >
+      </div>
     }
   }
 </section>

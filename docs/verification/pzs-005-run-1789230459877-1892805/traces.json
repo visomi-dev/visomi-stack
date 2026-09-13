@@ -1,0 +1,6 @@
+{
+  "runId": "RUN-1789230459877-1892805",
+  "streamId": "stream-4deda114-d1b3-4491-8d17-5720eb30fd47",
+  "status": "N/A",
+  "reason": "No trace exporter/collector is configured in the isolated API harness; current-run server log inspection is retained."
+}

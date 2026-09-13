@@ -1,4 +1,4 @@
-export type AuthMode = 'sign_in' | 'sign_up';
+export type FlowKind = 'bootstrap_recovery';
 
 export type ResponseEnvelope<T> = {
   status?: number;
@@ -15,32 +15,56 @@ export type AuthUser = {
   role: string;
 };
 
-export type AuthChallenge = {
-  challengeId: string;
-  email: string;
+export type EmailOtpResponse = ResponseEnvelope<{
+  flowId: string;
+  resendAvailableAt: string;
+}>;
+
+export type RestrictedSession = {
+  kind: 'restricted';
+  flowId: string;
+  authenticated: false;
   expiresAt: string;
-  purpose: AuthMode;
-  rememberDevice?: boolean;
+  user: null;
+  verifiedEmail: string;
 };
+
+export type FullSession = {
+  authenticated: true;
+  kind: 'full';
+  user: AuthUser;
+};
+
+export type SessionUpgrade = RestrictedSession | FullSession;
+
+export type SessionUpgradeResponse = ResponseEnvelope<SessionUpgrade>;
 
 export type SessionResponse = ResponseEnvelope<{
   authenticated: boolean;
+  kind: 'anonymous' | 'restricted' | 'full';
   user: AuthUser | null;
+  expiresAt?: string;
+  verifiedEmail?: string;
 }>;
 
-export type AuthenticatedResponse = ResponseEnvelope<{
-  authenticated: true;
-  user: AuthUser;
-}>;
-
-export type ChallengeResponse = ResponseEnvelope<AuthChallenge>;
-
-export type ChallengeOrAuthenticatedResponse = ResponseEnvelope<AuthChallenge | AuthenticatedResponse['data']>;
+export type RestrictedAccount = { accountId: string; name: string; role: string; selected?: boolean };
 
 export type MessageResponse = ResponseEnvelope<null>;
 
-export type CredentialsPayload = {
-  email: string;
-  password: string;
-  rememberDevice?: boolean;
+export type EmailOtpRequestPayload = { email: string };
+export type EmailOtpVerifyPayload = { flowId: string; pin: string };
+export type EmailOtpResendPayload = { flowId: string };
+export type IdentityFlowState =
+  | 'passkey'
+  | 'identify'
+  | 'verify_new_email'
+  | 'authorize_existing_account'
+  | 'enroll_passkey'
+  | 'complete';
+export type IdentityFlow = {
+  flowId: string;
+  state: IdentityFlowState;
+  expiresAt?: string;
+  google?: { enabled: boolean; clientId: string | null };
+  nonce?: string;
 };

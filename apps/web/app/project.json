@@ -39,17 +39,18 @@
         },
         "outputMode": "server",
         "security": {
-          "allowedHosts": ["themis.visomi.dev", "themis-develop.up.railway.app", "localhost"]
+          "allowedHosts": ["stack.visomi.dev", "localhost"]
         }
       },
       "configurations": {
         "production": {
           "localize": true,
+          "i18nMissingTranslation": "ignore",
           "baseHref": "/app/",
           "budgets": [
             {
               "type": "initial",
-              "maximumWarning": "500kb",
+              "maximumWarning": "650kb",
               "maximumError": "1mb"
             },
             {

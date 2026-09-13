@@ -1,0 +1,394 @@
+<!doctype html>
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Visomi Stack - Sign in</title>
+    <link rel="stylesheet" href="/public/tailwind.css" />
+  </head>
+  <body class="min-h-screen bg-zinc-50 font-sans text-zinc-950 antialiased dark:bg-zinc-950 dark:text-zinc-50">
+    <header class="mx-auto flex w-full max-w-md items-center justify-center px-4 pt-8 md:pt-12">
+      <a
+        class="ui-focus-ring font-heading inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-lg font-extrabold tracking-tight uppercase opacity-80"
+        href="/"
+      >
+        Visomi Stack
+      </a>
+    </header>
+
+    <main class="mx-auto flex w-full max-w-md px-4 py-8 md:py-12">
+      <article class="ui-panel-raised w-full rounded-lg bg-white p-6 shadow-sm md:p-10 dark:bg-zinc-900">
+        <section data-state="sign-in">
+          <header class="space-y-2">
+            <p class="font-mono text-xs font-semibold tracking-widest text-zinc-500 uppercase dark:text-zinc-400">
+              Welcome
+            </p>
+            <h1 class="font-heading text-3xl leading-tight font-bold tracking-tight">Sign in</h1>
+            <p class="text-sm leading-6 text-zinc-500 dark:text-zinc-400">Access your workspace.</p>
+          </header>
+
+          <div class="mt-7 grid gap-3">
+            <button
+              class="ui-focus-ring min-h-11 w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+              type="button"
+              data-show-state="passkey-loading"
+            >
+              Sign in with a passkey
+            </button>
+            <button
+              class="ui-focus-ring min-h-11 w-full rounded-md border border-zinc-950/15 bg-white px-4 py-3 text-sm font-semibold hover:bg-zinc-50 dark:border-white/15 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+              type="button"
+              data-show-state="google-loading"
+            >
+              <span
+                class="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full border border-zinc-200 text-xs font-bold dark:border-zinc-700"
+                >G</span
+              >
+              Continue with Google
+            </button>
+          </div>
+
+          <button
+            class="ui-focus-ring mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-md px-3 text-sm font-semibold text-zinc-600 underline underline-offset-4 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
+            type="button"
+            data-show-state="password-sign-in"
+          >
+            Use password instead
+          </button>
+
+          <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
+            <button
+              class="ui-focus-ring inline-flex min-h-11 items-center rounded-md font-semibold text-zinc-600 underline underline-offset-4 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
+              type="button"
+              data-show-state="password-reset"
+            >
+              Forgot password?
+            </button>
+            <button
+              class="ui-focus-ring inline-flex min-h-11 items-center rounded-md font-semibold text-blue-700 underline underline-offset-4 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              type="button"
+              data-show-state="sign-up"
+            >
+              Create an account
+            </button>
+          </div>
+        </section>
+
+        <section data-state="password-sign-in" hidden>
+          <header class="space-y-2">
+            <button
+              class="ui-focus-ring -ml-2 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-zinc-600 underline underline-offset-4 dark:text-zinc-300"
+              type="button"
+              data-show-state="sign-in"
+            >
+              Back to passkey
+            </button>
+            <h1 class="font-heading text-2xl font-bold tracking-tight">Sign in with password</h1>
+            <p class="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              Use your password when a passkey is not available.
+            </p>
+          </header>
+          <form class="mt-7 grid gap-5" data-submit-state="factor-email">
+            <label class="grid gap-1.5 text-sm font-semibold" for="sign-in-email"
+              >Email<input
+                class="ui-focus-ring min-h-11 rounded-md border border-zinc-950/10 bg-white px-3 text-base font-normal dark:border-white/10 dark:bg-zinc-950"
+                id="sign-in-email"
+                name="email"
+                autocomplete="username webauthn"
+                type="email"
+                placeholder="name@organization.com"
+                required
+            /></label>
+            <div class="grid gap-1.5">
+              <label class="text-sm font-semibold" for="sign-in-password">Password</label>
+              <div
+                class="flex items-center rounded-md border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-950"
+              >
+                <input
+                  class="ui-focus-ring min-h-11 w-full border-none bg-transparent px-3 text-base focus:ring-0"
+                  id="sign-in-password"
+                  name="password"
+                  autocomplete="current-password"
+                  type="password"
+                  required
+                />
+                <button
+                  class="ui-focus-ring mr-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md px-2 text-xs font-semibold text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
+                  type="button"
+                  aria-label="Show characters"
+                  data-toggle-password
+                >
+                  Show
+                </button>
+              </div>
+            </div>
+            <button
+              class="ui-focus-ring min-h-11 w-full rounded-md bg-zinc-950 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+              type="submit"
+            >
+              Sign in
+            </button>
+          </form>
+          <button
+            class="ui-focus-ring mt-5 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-zinc-600 underline underline-offset-4 dark:text-zinc-300"
+            type="button"
+            data-show-state="password-reset"
+          >
+            Forgot password?
+          </button>
+        </section>
+
+        <section data-state="passkey-loading" hidden>
+          <header class="space-y-2" aria-live="polite">
+            <p class="font-mono text-xs font-semibold tracking-widest text-zinc-500 uppercase dark:text-zinc-400">
+              Passkey
+            </p>
+            <h1 class="font-heading text-2xl font-bold tracking-tight">Check your device</h1>
+            <p class="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              Complete the prompt from your browser or device.
+            </p>
+          </header>
+          <div
+            class="mt-7 rounded-md bg-zinc-100 p-4 text-sm text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+            role="status"
+          >
+            Waiting for passkey confirmation.
+          </div>
+          <button
+            class="ui-focus-ring mt-5 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-zinc-600 underline underline-offset-4 dark:text-zinc-300"
+            type="button"
+            data-show-state="sign-in"
+          >
+            Cancel and choose another method
+          </button>
+        </section>
+
+        <section data-state="google-loading" hidden>
+          <header class="space-y-2" aria-live="polite">
+            <p class="font-mono text-xs font-semibold tracking-widest text-zinc-500 uppercase dark:text-zinc-400">
+              Google
+            </p>
+            <h1 class="font-heading text-2xl font-bold tracking-tight">Continue with Google</h1>
+            <p class="text-sm leading-6 text-zinc-500 dark:text-zinc-400">Choose your Google account to continue.</p>
+          </header>
+          <div
+            class="mt-7 rounded-md bg-zinc-100 p-4 text-sm text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+            role="status"
+          >
+            Opening Google's secure sign-in.
+          </div>
+          <button
+            class="ui-focus-ring mt-5 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-zinc-600 underline underline-offset-4 dark:text-zinc-300"
+            type="button"
+            data-show-state="sign-in"
+          >
+            Back to sign in
+          </button>
+        </section>
+
+        <section data-state="factor-email" hidden>
+          <header class="space-y-2">
+            <p class="font-mono text-xs font-semibold tracking-widest text-zinc-500 uppercase dark:text-zinc-400">
+              One more step
+            </p>
+            <h1 class="font-heading text-2xl font-bold tracking-tight">Check your email</h1>
+            <p class="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              Enter the code sent to your verified email address.
+            </p>
+          </header>
+          <form class="mt-7 grid gap-5" data-submit-state="signed-in">
+            <div class="grid gap-1.5">
+              <label class="text-sm font-semibold" for="email-code">Email code</label>
+              <input
+                class="ui-focus-ring min-h-11 rounded-md border border-zinc-950/10 bg-white px-3 text-base tracking-[0.3em] dark:border-white/10 dark:bg-zinc-950"
+                id="email-code"
+                autocomplete="one-time-code"
+                inputmode="numeric"
+                maxlength="6"
+                required
+              />
+              <p class="text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+                Didn't receive it?
+                <button class="font-semibold underline underline-offset-4" type="button">Resend code</button>
+              </p>
+            </div>
+            <button
+              class="ui-focus-ring min-h-11 rounded-md bg-zinc-950 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950"
+              type="submit"
+            >
+              Verify and sign in
+            </button>
+          </form>
+        </section>
+
+        <section data-state="sign-up" hidden>
+          <header class="space-y-2">
+            <button
+              class="ui-focus-ring -ml-2 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-zinc-600 underline underline-offset-4 dark:text-zinc-300"
+              type="button"
+              data-show-state="sign-in"
+            >
+              Back to sign in
+            </button>
+            <h1 class="font-heading text-2xl font-bold tracking-tight">Create your account</h1>
+            <p class="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              Choose a secure way to access your workspace.
+            </p>
+          </header>
+          <div class="mt-7 grid gap-3">
+            <button
+              class="ui-focus-ring min-h-11 rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-blue-500"
+              type="button"
+            >
+              Create with a passkey
+            </button>
+            <button
+              class="ui-focus-ring min-h-11 rounded-md border border-zinc-950/15 px-4 py-3 text-sm font-semibold dark:border-white/15"
+              type="button"
+            >
+              Continue with Google
+            </button>
+            <button
+              class="ui-focus-ring min-h-11 rounded-md px-4 py-3 text-sm font-semibold text-zinc-600 underline underline-offset-4 dark:text-zinc-300"
+              type="button"
+              data-show-state="password-sign-up"
+            >
+              Create with a password
+            </button>
+          </div>
+        </section>
+
+        <section data-state="password-sign-up" hidden>
+          <header class="space-y-2">
+            <button
+              class="ui-focus-ring -ml-2 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-zinc-600 underline underline-offset-4 dark:text-zinc-300"
+              type="button"
+              data-show-state="sign-up"
+            >
+              Back
+            </button>
+            <h1 class="font-heading text-2xl font-bold tracking-tight">Create with a password</h1>
+            <p class="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              You will verify your email before your account is ready.
+            </p>
+          </header>
+          <form class="mt-7 grid gap-5" data-submit-state="factor-email">
+            <label class="grid gap-1.5 text-sm font-semibold" for="sign-up-email"
+              >Email<input
+                class="ui-focus-ring min-h-11 rounded-md border border-zinc-950/10 bg-white px-3 text-base font-normal dark:border-white/10 dark:bg-zinc-950"
+                id="sign-up-email"
+                autocomplete="email"
+                type="email"
+                required
+            /></label>
+            <label class="grid gap-1.5 text-sm font-semibold" for="sign-up-password"
+              >Password<input
+                class="ui-focus-ring min-h-11 rounded-md border border-zinc-950/10 bg-white px-3 text-base font-normal dark:border-white/10 dark:bg-zinc-950"
+                id="sign-up-password"
+                autocomplete="new-password"
+                type="password"
+                required
+            /></label>
+            <button
+              class="ui-focus-ring min-h-11 rounded-md bg-zinc-950 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950"
+              type="submit"
+            >
+              Continue
+            </button>
+          </form>
+        </section>
+
+        <section data-state="password-reset" hidden>
+          <header class="space-y-2">
+            <button
+              class="ui-focus-ring -ml-2 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-zinc-600 underline underline-offset-4 dark:text-zinc-300"
+              type="button"
+              data-show-state="sign-in"
+            >
+              Back
+            </button>
+            <h1 class="font-heading text-2xl font-bold tracking-tight">Reset your password</h1>
+            <p class="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              We will send instructions to the email on your account.
+            </p>
+          </header>
+          <form class="mt-7 grid gap-5" data-submit-state="reset-sent">
+            <label class="grid gap-1.5 text-sm font-semibold" for="reset-email"
+              >Email<input
+                class="ui-focus-ring min-h-11 rounded-md border border-zinc-950/10 bg-white px-3 text-base font-normal dark:border-white/10 dark:bg-zinc-950"
+                id="reset-email"
+                autocomplete="email"
+                type="email"
+                required
+            /></label>
+            <button
+              class="ui-focus-ring min-h-11 rounded-md bg-zinc-950 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950"
+              type="submit"
+            >
+              Send reset link
+            </button>
+          </form>
+        </section>
+
+        <section data-state="reset-sent" hidden>
+          <header class="space-y-2">
+            <p class="font-mono text-xs font-semibold tracking-widest text-zinc-500 uppercase dark:text-zinc-400">
+              Check your email
+            </p>
+            <h1 class="font-heading text-2xl font-bold tracking-tight">Reset link sent</h1>
+            <p class="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              If an account uses that email, you will receive reset instructions.
+            </p>
+          </header>
+          <button
+            class="ui-focus-ring mt-7 inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-zinc-600 underline underline-offset-4 dark:text-zinc-300"
+            type="button"
+            data-show-state="sign-in"
+          >
+            Back to sign in
+          </button>
+        </section>
+
+        <section data-state="signed-in" hidden>
+          <p class="text-sm font-semibold text-emerald-700 dark:text-emerald-400" role="status">
+            Signed in. Opening Visomi Stack...
+          </p>
+        </section>
+      </article>
+    </main>
+
+    <footer class="mx-auto flex max-w-md justify-center gap-4 px-4 pb-8 text-xs text-zinc-500 dark:text-zinc-400">
+      <a class="ui-focus-ring rounded-sm underline underline-offset-4" href="#">Terms</a>
+      <a class="ui-focus-ring rounded-sm underline underline-offset-4" href="#">Privacy</a>
+    </footer>
+
+    <script>
+      const showState = (state) => {
+        document.querySelectorAll('[data-state]').forEach((section) => {
+          section.hidden = section.dataset.state !== state;
+        });
+        document.body.dataset.previewState = state;
+      };
+
+      showState(document.body.dataset.previewState || 'sign-in');
+      document.querySelectorAll('[data-show-state]').forEach((control) => {
+        control.addEventListener('click', () => showState(control.dataset.showState));
+      });
+      document.querySelectorAll('form[data-submit-state]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          showState(form.dataset.submitState);
+        });
+      });
+      document.querySelectorAll('[data-toggle-password]').forEach((toggle) => {
+        toggle.addEventListener('click', () => {
+          const input = toggle.closest('div').querySelector('input');
+          const visible = input.type === 'text';
+          input.type = visible ? 'password' : 'text';
+          toggle.textContent = visible ? 'Show' : 'Hide';
+          toggle.setAttribute('aria-label', visible ? 'Show characters' : 'Hide characters');
+        });
+      });
+    </script>
+  </body>
+</html>

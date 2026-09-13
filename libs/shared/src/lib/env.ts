@@ -28,6 +28,19 @@ const environmentSchema = z
       .transform((v) => v === 'true'),
     PIN_EXPIRY_MINUTES: z.coerce.number().default(10),
     PIN_RESEND_COOLDOWN_SECONDS: z.coerce.number().default(45),
+    EMAIL_OTP_DELIVERY_WINDOW_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(60 * 60 * 1000),
+    EMAIL_OTP_DELIVERY_EMAIL_MAX: z.coerce.number().int().positive().default(5),
+    EMAIL_OTP_DELIVERY_IP_MAX: z.coerce.number().int().positive().default(20),
+    EMAIL_OTP_VERIFY_WINDOW_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(15 * 60 * 1000),
+    EMAIL_OTP_VERIFY_IP_MAX: z.coerce.number().int().positive().default(30),
     REMEMBERED_DEVICE_MAX_AGE_MS: z.coerce.number().default(1000 * 60 * 60 * 24 * 30),
     REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
     REALTIME_INTERNAL_URL: z.string().default('http://127.0.0.1:3001'),
@@ -41,6 +54,24 @@ const environmentSchema = z
     OPAQUE_SYNC_S3_SECRET_KEY: z.string().default(''),
     OPAQUE_SYNC_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
     LOCAL_AGENT_PUBLIC_KEY: z.string().default(''),
+    GOOGLE_AUTH_CLIENT_ID: z.string().default(''),
+    AUTH_PASSWORD_ENABLED: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform((value) => value === 'true'),
+    AUTH_TOTP_ENROLLMENT_ENABLED: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform((value) => value === 'true'),
+    AUTH_TOTP_ENCRYPTION_KEY: z.string().default(''),
+    AUTH_PASSWORD_RATE_WINDOW_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(15 * 60 * 1000),
+    AUTH_PASSWORD_RATE_IDENTIFIER_MAX: z.coerce.number().int().positive().default(10),
+    AUTH_PASSWORD_RATE_IP_MAX: z.coerce.number().int().positive().default(50),
+    AUTH_PASSWORD_BLOCKLIST_PATH: z.string().default(''),
   })
   .superRefine((data, context) => {
     if (data.NODE_ENV !== 'production') return;
@@ -80,6 +111,20 @@ const environmentSchema = z
     }
     if (data.COOKIE_SECURE === 'false') {
       context.addIssue({ code: 'custom', path: ['COOKIE_SECURE'], message: 'Production cookies must be secure.' });
+    }
+    if (data.AUTH_TOTP_ENROLLMENT_ENABLED && data.AUTH_TOTP_ENCRYPTION_KEY.length < 32) {
+      context.addIssue({
+        code: 'custom',
+        path: ['AUTH_TOTP_ENCRYPTION_KEY'],
+        message: 'A dedicated TOTP encryption key of at least 32 characters is required when TOTP is enabled.',
+      });
+    }
+    if (data.AUTH_PASSWORD_ENABLED && !data.AUTH_PASSWORD_BLOCKLIST_PATH) {
+      context.addIssue({
+        code: 'custom',
+        path: ['AUTH_PASSWORD_BLOCKLIST_PATH'],
+        message: 'Password authentication requires a deployed common-password blocklist.',
+      });
     }
   })
   .transform((data) => {

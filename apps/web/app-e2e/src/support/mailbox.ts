@@ -1,6 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
 
-type AuthMode = 'sign_in' | 'sign_up';
+type AuthMode = 'bootstrap_recovery' | 'password_second_step';
 
 type MailboxMessage = {
   email: string;

@@ -1,0 +1,34 @@
+<app-auth-layout>
+  <app-auth-card>
+    @if (confirmed()) {
+      <p class="font-mono text-xs font-semibold tracking-widest text-green-700 uppercase dark:text-green-400">
+        Identity confirmed
+      </p>
+      <h1 class="font-heading mt-3 text-3xl font-bold">Passkey confirmed</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+        The server accepted the existing passkey ceremony.
+      </p>
+      <a
+        [href]="appUrl"
+        class="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white"
+        >Continue</a
+      >
+    } @else {
+      <h1 class="font-heading text-3xl font-bold">Confirm your identity</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+        Use an existing passkey. A new passkey cannot be used to identify an account.
+      </p>
+      <button
+        type="button"
+        class="mt-6 min-h-11 w-full rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+        [disabled]="loading()"
+        (click)="confirmIdentity()"
+      >
+        {{ loading() ? 'Waiting for passkey' : 'Confirm with passkey' }}
+      </button>
+    }
+    @if (error()) {
+      <p class="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ error() }}</p>
+    }
+  </app-auth-card>
+</app-auth-layout>

@@ -1,39 +1,44 @@
 import passport from 'passport';
-import { Strategy as LocalStrategy } from 'passport-local';
 
-import { findUserById, resolveAuthUser, verifyPassword } from './auth-service';
+import { findUserById, resolveAuthUser, resolveAuthUserForAccount } from './auth-service';
 
 type SerializedUser = {
   accountId: string;
+  authority: 'restricted' | 'full';
   id: string;
-  authenticationMethod?: 'passkey' | 'password';
-  credentialId?: string;
+  authenticationMethod?: Express.User['authenticationMethod'];
+  secondFactor?: Express.User['secondFactor'];
+  authVersion?: number;
 };
 
-passport.use(
-  'local',
-  new LocalStrategy({ passwordField: 'password', usernameField: 'email' }, async (email, password, done) => {
-    try {
-      const user = await verifyPassword(email, password);
+type AuthorizedUser = Awaited<ReturnType<typeof resolveAuthUser>> & {
+  authority: 'restricted' | 'full';
+};
 
-      if (!user) {
-        return done(null, false, { message: 'Incorrect email or password.' });
-      }
-
-      return done(null, { ...(await resolveAuthUser(user)), authenticationMethod: 'password' });
-    } catch (error) {
-      return done(error as Error);
-    }
-  }),
-);
-
-passport.serializeUser((user, done) => {
-  done(null, {
+function toExpressUser(user: AuthorizedUser) {
+  return {
     accountId: user.accountId,
-    credentialId: user.credentialId,
+    authority: user.authority,
+    credentialId: undefined as string | undefined,
+    email: user.email,
+    emailVerifiedAt: user.emailVerifiedAt,
     id: user.id,
     authenticationMethod: user.authenticationMethod,
-  });
+    secondFactor: user.secondFactor,
+    authVersion: user.authVersion,
+    role: user.role,
+  };
+}
+
+passport.serializeUser((user: Express.User, done) => {
+  done(null, {
+    accountId: user.accountId,
+    authority: (user as AuthorizedUser).authority ?? 'full',
+    id: user.id,
+    authenticationMethod: user.authenticationMethod,
+    secondFactor: user.secondFactor,
+    authVersion: user.authVersion,
+  } satisfies SerializedUser);
 });
 
 passport.deserializeUser(async (serializedUser: SerializedUser, done) => {
@@ -44,10 +49,20 @@ passport.deserializeUser(async (serializedUser: SerializedUser, done) => {
       return done(null, false);
     }
 
+    if (
+      (serializedUser.authVersion !== undefined && serializedUser.authVersion !== user.authVersion) ||
+      (serializedUser.authVersion === undefined && user.authVersion !== 1)
+    ) {
+      return done(null, false);
+    }
+
+    const authUser = await resolveAuthUserForAccount(user, serializedUser.accountId);
+
     return done(null, {
-      ...(await resolveAuthUser(user)),
-      authenticationMethod: serializedUser.authenticationMethod ?? 'password',
-      credentialId: serializedUser.credentialId,
+      ...toExpressUser({ ...authUser, authority: serializedUser.authority }),
+      authenticationMethod: serializedUser.authenticationMethod,
+      secondFactor: serializedUser.secondFactor,
+      authVersion: serializedUser.authVersion,
     });
   } catch (error) {
     return done(error as Error);
@@ -55,3 +70,4 @@ passport.deserializeUser(async (serializedUser: SerializedUser, done) => {
 });
 
 export { passport };
+export type SessionAuthority = 'restricted' | 'full';

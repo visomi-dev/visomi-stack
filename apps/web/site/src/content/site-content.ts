@@ -9,18 +9,18 @@ type SiteCopy = {
 
 const siteContent: Record<Locale, SiteCopy> = {
   en: {
-    eyebrow: 'Production-ready application template',
-    title: 'A full-stack foundation for products people can trust.',
+    eyebrow: 'Modular application foundation',
+    title: 'One public origin. Explicit runtime and trust boundaries.',
     description:
-      'Learn how Visomi Stack combines a full-stack architecture with Angular, Astro, Node, passkey-first authentication, zero-knowledge persistence, and Themis-powered delivery workflows in one reusable foundation.',
-    hero: 'Understand the architecture, security model, and delivery loop behind Visomi Stack.',
+      'Explore how Visomi Stack provides a modular full-stack foundation with Angular, Astro, Express, workers, realtime delivery, passwordless identity, a zero-knowledge architecture under review, and the local Themis workflow.',
+    hero: 'Understand the runtime topology, plaintext authority, cloud control plane, and evidence-driven delivery loop.',
   },
   es: {
-    eyebrow: 'Template de aplicaciones listo para producción',
-    title: 'Una base full-stack para productos en los que se puede confiar.',
+    eyebrow: 'Base modular para aplicaciones',
+    title: 'Un origen público. Límites explícitos de runtime y confianza.',
     description:
-      'Conoce cómo Visomi Stack combina una arquitectura full-stack con Angular, Astro, Node, autenticación passkey-first, persistencia zero-knowledge y workflows potenciados por Themis en una base reusable.',
-    hero: 'Entiende la arquitectura, el modelo de seguridad y el ciclo de entrega detrás de Visomi Stack.',
+      'Descubre cómo Visomi Stack ofrece una base full-stack modular con Angular, Astro, Express, workers, realtime, identidad passwordless, una arquitectura zero-knowledge bajo revisión y el workflow local Themis.',
+    hero: 'Entiende la topología de runtimes, la autoridad sobre plaintext, el control plane cloud y el ciclo de entrega basado en evidencia.',
   },
 };
 

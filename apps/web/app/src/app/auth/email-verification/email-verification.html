@@ -1,0 +1,77 @@
+<app-auth-layout>
+  <app-auth-card>
+    @if (complete()) {
+      <p class="font-mono text-xs font-semibold tracking-widest text-green-700 uppercase dark:text-green-400">
+        Email verified
+      </p>
+      <h1 class="font-heading mt-3 text-3xl font-bold">Your email is verified</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+        Email verification alone does not sign you in. Continue with a passkey to access your account.
+      </p>
+      <a
+        [href]="signInUrl"
+        class="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
+        >Continue to sign in</a
+      >
+    } @else if (flowId()) {
+      <h1 class="font-heading text-3xl font-bold">Check your email</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+        Enter the 6-digit code sent to your email.
+      </p>
+      <app-form class="mt-6 grid gap-5" [form]="codeForm" (ngSubmit)="verifyEmail()">
+        <app-field>
+          <app-label for="email-verification-code" tone="plain">Verification code</app-label>
+          <app-input
+            [formField]="codeForm.pin"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            controlId="email-verification-code"
+            name="pin"
+            required
+          />
+          @if (codeError()) {
+            <app-error-message controlId="email-verification-code-error">{{ codeError() }}</app-error-message>
+          }
+        </app-field>
+        <button
+          type="submit"
+          class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+          [disabled]="codeForm().invalid() || submitting()"
+        >
+          Verify email
+        </button>
+      </app-form>
+    } @else {
+      <h1 class="font-heading text-3xl font-bold">Verify your email</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+        We will send a one-time code. Email verification does not replace passkey sign-in.
+      </p>
+      <app-form class="mt-6 grid gap-5" [form]="emailForm" (ngSubmit)="requestVerification()">
+        <app-field>
+          <app-label for="email-verification-email" tone="plain">Email address</app-label>
+          <app-input
+            [formField]="emailForm.email"
+            type="email"
+            autocomplete="email"
+            controlId="email-verification-email"
+            name="email"
+            required
+          />
+          @if (emailError()) {
+            <app-error-message controlId="email-verification-email-error">{{ emailError() }}</app-error-message>
+          }
+        </app-field>
+        <button
+          type="submit"
+          class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+          [disabled]="emailForm().invalid() || submitting()"
+        >
+          Send verification code
+        </button>
+      </app-form>
+    }
+    @if (error()) {
+      <p class="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ error() }}</p>
+    }
+  </app-auth-card>
+</app-auth-layout>

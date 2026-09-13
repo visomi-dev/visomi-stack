@@ -13,6 +13,7 @@ type AuthenticatedRequest = Request & {
 };
 
 type AuthenticatedOptions = {
+  authority?: 'full';
   roles?: string[];
 };
 
@@ -24,6 +25,21 @@ export function authed(options?: AuthenticatedOptions): RequestHandler {
           code: 'authentication_required',
           message: 'Sign in to access this resource.',
           statusCode: 401,
+        }),
+      );
+
+      return;
+    }
+
+    if (
+      options?.authority === 'full' &&
+      (req.session?.authority === 'restricted' || req.user.authority === 'restricted')
+    ) {
+      next(
+        new HttpError({
+          code: 'full_session_required',
+          message: 'Complete passkey verification to access this resource.',
+          statusCode: 403,
         }),
       );
 

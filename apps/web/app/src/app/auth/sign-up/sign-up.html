@@ -1,168 +1,117 @@
 <app-auth-layout>
   <app-auth-card>
-    <header class="mb-7 space-y-2">
-      <p
-        data-slot="kicker"
-        class="font-mono text-xs font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400"
-        i18n="@@signUpKicker"
-      >
-        New account
+    @if (complete()) {
+      <p class="font-mono text-xs font-semibold tracking-widest text-green-700 uppercase dark:text-green-400">
+        Account ready
       </p>
-      <h1
-        data-slot="title"
-        class="font-heading text-[1.625rem] leading-tight font-bold tracking-[-0.025em] text-slate-950 dark:text-slate-50"
-        i18n="@@signUpTitle"
-      >
-        Create your account
-      </h1>
-      <p data-slot="sub" class="text-[0.9375rem] leading-6 text-slate-500 dark:text-slate-400" i18n="@@signUpSub">
-        Create your account with a passkey. You can add a password later in Security.
+      <h1 class="font-heading mt-3 text-3xl font-bold">Your account is verified</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+        Sign in with your password or create a passkey.
       </p>
-    </header>
-
-    <section class="mb-6 grid gap-4" aria-labelledby="registration-passkey-title" data-slot="passkey-panel">
-      <div class="rounded-lg bg-slate-100 p-4 dark:bg-slate-900">
-        <h2
-          id="registration-passkey-title"
-          class="font-heading text-base font-bold text-slate-950 dark:text-slate-50"
-          i18n="@@signUpPasskeyTitle"
+      <a
+        routerLink="/auth/sign-in"
+        class="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
+        >Continue to sign in</a
+      >
+    } @else if (flowId()) {
+      <p class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400">
+        Email verification
+      </p>
+      <h1 class="font-heading mt-3 text-3xl font-bold">Check your email</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+        Enter the 6-digit code sent to verify your new account.
+      </p>
+      <app-form class="mt-6 grid gap-5" [form]="codeForm" (ngSubmit)="verifySignUp()">
+        <app-field>
+          <app-label for="sign-up-code" tone="plain">Verification code</app-label>
+          <app-input
+            [formField]="codeForm.code"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            controlId="sign-up-code"
+            name="code"
+            required
+          />
+          @if (codeError()) {
+            <app-error-message controlId="sign-up-code-error">{{ codeError() }}</app-error-message>
+          }
+        </app-field>
+        <button
+          type="submit"
+          class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+          [disabled]="codeForm().invalid() || submitting()"
         >
-          Create with a passkey
-        </h2>
-        <p class="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-400" i18n="@@signUpPasskeyDescription">
-          Passkeys keep your account protected without sharing a password.
-        </p>
-        <label
-          class="mt-4 grid gap-1 text-sm font-medium text-slate-950 dark:text-slate-50"
-          for="passkey-sign-up-email"
-        >
-          <span i18n="@@signUpPasskeyEmailLabel">Work email</span>
-          <input
-            id="passkey-sign-up-email"
-            class="rounded-md border border-slate-950/10 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 dark:border-white/10 dark:bg-slate-950"
+          Verify email
+        </button>
+      </app-form>
+    } @else {
+      <p class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400">
+        Password signup
+      </p>
+      <h1 class="font-heading mt-3 text-3xl font-bold">Create your account</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+        Use an email you can verify and a password of at least 15 characters.
+      </p>
+      <app-form class="mt-6 grid gap-5" [form]="form" (ngSubmit)="signUp()">
+        <app-field>
+          <app-label for="sign-up-email" tone="plain">Email address</app-label>
+          <app-input
+            [formField]="form.email"
             type="email"
             autocomplete="email"
-            [value]="passkeyEmail()"
-            (input)="updatePasskeyEmail($event)"
+            controlId="sign-up-email"
+            name="email"
+            required
           />
-        </label>
-        <app-button
-          class="mt-4"
-          tone="accent"
-          type="button"
-          size="lg"
-          fullWidth
-          [loading]="passkeyState() === 'loading'"
-          (click)="registerWithPasskey()"
-          i18n="@@signUpPasskeyButton"
-          >Create account with passkey</app-button
+          @if (emailError()) {
+            <app-error-message controlId="sign-up-email-error">{{ emailError() }}</app-error-message>
+          }
+        </app-field>
+        <app-field>
+          <app-label for="sign-up-password" tone="plain">Password</app-label>
+          <app-password-input
+            [formField]="form.password"
+            autocomplete="new-password"
+            controlId="sign-up-password"
+            name="password"
+            [loading]="submitting()"
+            minLength="15"
+            maxLength="128"
+            required
+          />
+          @if (passwordError()) {
+            <app-error-message controlId="sign-up-password-error">{{ passwordError() }}</app-error-message>
+          }
+        </app-field>
+        <app-field>
+          <app-label for="sign-up-confirmation" tone="plain">Confirm password</app-label>
+          <app-password-input
+            [formField]="form.confirmation"
+            autocomplete="new-password"
+            controlId="sign-up-confirmation"
+            name="confirmation"
+            [loading]="submitting()"
+            required
+          />
+          @if (confirmationError()) {
+            <app-error-message controlId="sign-up-confirmation-error">{{ confirmationError() }}</app-error-message>
+          }
+        </app-field>
+        <button
+          type="submit"
+          class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+          [disabled]="form().invalid() || submitting()"
         >
-      </div>
-      @if (passkeyState() === 'unsupported') {
-        <app-alert tone="danger" variant="auth" role="alert">{{ errorMessage() }}</app-alert>
-      }
-      @if (passkeyState() === 'verification') {
-        <app-alert tone="warning" variant="auth" role="status" i18n="@@signUpPasskeyVerification"
-          >Email verification and PIN confirmation are required before registration completes.</app-alert
-        >
-      }
-      @if (passkeyState() === 'retry' || passkeyState() === 'fallback') {
-        <app-alert tone="danger" variant="auth" role="alert">{{ errorMessage() }}</app-alert>
-      }
-      @if (passkeyState() === 'success') {
-        <p role="status" class="text-sm text-teal-700 dark:text-teal-300" i18n="@@signUpPasskeySuccess">
-          Passkey created. Email verification is still required before your account is complete.
-        </p>
-      }
-    </section>
-
-    <app-form
-      class="grid w-full max-w-sm grid-cols-1 gap-4"
-      [form]="signUpForm"
-      [hidden]="passkeyState() !== 'fallback'"
-    >
-      <app-field>
-        <app-label for="sign-up-email" i18n="@@signUpEmailLabel">Email</app-label>
-        <app-input
-          autocomplete="email"
-          [formField]="signUpForm.email"
-          required
-          type="email"
-          placeholder="name@organization.com"
-          controlId="sign-up-email"
-          name="email"
-        />
-        <app-error-message controlId="sign-up-email-error" i18n="@@signUpEmailErrorInvalid">{{
-          emailError()
-        }}</app-error-message>
-      </app-field>
-
-      <app-field>
-        <app-label for="sign-up-password" i18n="@@signUpPasswordLabel">Password</app-label>
-        <app-password-input
-          autocomplete="new-password"
-          [formField]="signUpForm.password"
-          required
-          minLength="8"
-          placeholder="***************"
-          controlId="sign-up-password"
-          name="password"
-        />
-        <app-password-strength [password]="passwordValue" />
-        <app-error-message controlId="sign-up-password-error" i18n="@@signUpPasswordErrorMinlength">{{
-          passwordError()
-        }}</app-error-message>
-      </app-field>
-
-      <app-field>
-        <app-label for="sign-up-confirm-password" i18n="@@signUpConfirmPasswordLabel">Confirm password</app-label>
-        <app-password-input
-          autocomplete="new-password"
-          [formField]="signUpForm.confirmPassword"
-          required
-          minLength="8"
-          placeholder="***************"
-          controlId="sign-up-confirm-password"
-          name="confirmPassword"
-        />
-        <app-error-message controlId="sign-up-confirm-password-error" i18n="@@signUpConfirmPasswordErrorMismatch">{{
-          signUpForm.confirmPassword().errors()[0]?.message ?? ''
-        }}</app-error-message>
-      </app-field>
-
-      <app-button
-        data-od-id="submit"
-        data-slot="submit"
-        i18n="@@signUpSubmitButton"
-        tone="accent"
-        type="submit"
-        size="lg"
-        fullWidth
-        [loading]="submitting()"
-        >Create account</app-button
-      >
-      @if (errorMessage()) {
-        <app-alert tone="danger" variant="auth" i18n="@@signUpAuthFailedAlert">{{ errorMessage() }}</app-alert>
-      }
-    </app-form>
-    <button
-      type="button"
-      class="mb-6 w-full text-center text-sm font-semibold text-slate-600 underline-offset-4 hover:underline dark:text-slate-400"
-      (click)="usePasswordFallback()"
-      i18n="@@signUpUsePassword"
-    >
-      Use password instead
-    </button>
-
-    <p class="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
-      <span i18n="@@signUpFooterPrompt">Already have an account?</span>
-      <app-link
-        data-slot="footer"
-        class="ml-2 font-semibold"
-        i18n="@@signUpFooterLink"
-        [routerLink]="footerLink"
-        [text]="'Back to sign in'"
-      />
-    </p>
+          Create account
+        </button>
+      </app-form>
+      <p class="mt-5 text-center text-sm text-slate-500 dark:text-slate-400">
+        Already have an account?
+        <a routerLink="/auth/sign-in" class="font-semibold text-blue-600 dark:text-blue-400">Sign in</a>
+      </p>
+    }
+    @if (error()) {
+      <p class="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ error() }}</p>
+    }
   </app-auth-card>
 </app-auth-layout>

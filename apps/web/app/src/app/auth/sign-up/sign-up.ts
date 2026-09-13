@@ -1,199 +1,96 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
-import { email, form, minLength, required, validate, type FieldTree, FormField } from '@angular/forms/signals';
-import { Router, RouterLink } from '@angular/router';
+import { email, form, maxLength, minLength, pattern, required, type FieldTree, validate } from '@angular/forms/signals';
+import { RouterLink } from '@angular/router';
 
-import { Auth } from '../../shared/auth/auth';
-import { Passkey } from '../../shared/auth/passkey';
-import { SIGN_IN_URL, VERIFY_EMAIL_URL } from '../../shared/constants/routes';
-import { Alert } from '../../shared/ui/overlays/alert/alert';
-import { AuthCard } from '../../shared/ui/layout/auth-card/auth-card';
-import { AuthLayout } from '../../shared/ui/layout/auth-layout/auth-layout';
-import { Button } from '../../shared/ui/actions/button/button';
-import {} from '../../shared/ui/forms/description/description';
+import { PasswordAuth } from '../../shared/auth/password';
 import { ErrorMessage } from '../../shared/ui/forms/error-message/error-message';
 import { Field } from '../../shared/ui/forms/field/field';
 import { Form as AppForm } from '../../shared/ui/forms/form/form';
 import { Input } from '../../shared/ui/forms/input/input';
 import { Label } from '../../shared/ui/forms/label/label';
-import { Link } from '../../shared/ui/typography/link/link';
 import { PasswordInput } from '../../shared/ui/forms/password-input/password-input';
-import { PasswordStrength } from '../../shared/ui/forms/password-strength/password-strength';
+import { AuthCard } from '../../shared/ui/layout/auth-card/auth-card';
+import { AuthLayout } from '../../shared/ui/layout/auth-layout/auth-layout';
 
-type SignUpModel = {
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
+type SignUpModel = { email: string; password: string; confirmation: string };
+type CodeModel = { code: string };
 
 @Component({
-  host: {
-    class: /* tw */ 'block min-h-full w-full',
-  },
-  imports: [
-    Alert,
-    AppForm,
-    AuthCard,
-    AuthLayout,
-    Button,
-    ErrorMessage,
-    Field,
-    FormField,
-    Input,
-    Label,
-    Link,
-    PasswordInput,
-    PasswordStrength,
-    RouterLink,
-  ],
+  imports: [AppForm, AuthCard, AuthLayout, ErrorMessage, Field, Input, Label, PasswordInput, RouterLink],
   selector: 'app-sign-up',
   templateUrl: './sign-up.html',
   styleUrl: './sign-up.css',
 })
 export class SignUp {
-  private readonly auth = inject(Auth);
-  private readonly passkey = inject(Passkey);
-  private readonly router = inject(Router);
-
-  readonly signUpModel = signal<SignUpModel>({
-    email: '',
-    password: '',
-    confirmPassword: '',
+  private readonly password = inject(PasswordAuth);
+  readonly model = signal<SignUpModel>({ email: '', password: '', confirmation: '' });
+  readonly form: FieldTree<SignUpModel> = form(this.model, (path) => {
+    required(path.email, { message: 'Enter your email address.' });
+    email(path.email, { message: 'Enter a valid email address.' });
+    required(path.password, { message: 'Enter a password.' });
+    minLength(path.password, 15, { message: 'Use at least 15 characters.' });
+    maxLength(path.password, 128, { message: 'Use 128 characters or fewer.' });
+    required(path.confirmation, { message: 'Confirm your password.' });
+    validate(path.confirmation, ({ value, valueOf }) =>
+      value() === valueOf(path.password)
+        ? undefined
+        : { kind: 'password_mismatch', message: 'Passwords do not match.' },
+    );
   });
+  readonly codeModel = signal<CodeModel>({ code: '' });
+  readonly codeForm: FieldTree<CodeModel> = form(this.codeModel, (path) => {
+    required(path.code, { message: 'Enter the 6-digit code.' });
+    minLength(path.code, 6, { message: 'Enter all 6 digits.' });
+    maxLength(path.code, 6, { message: 'Enter all 6 digits.' });
+    pattern(path.code, /^\d{6}$/u, { message: 'Use the 6 digits from your email.' });
+  });
+  readonly flowId = signal('');
+  readonly submitting = signal(false);
+  readonly error = signal('');
+  readonly complete = signal(false);
+  readonly emailError = computed(() => this.form.email().errors()[0]?.message ?? '');
+  readonly passwordError = computed(() => this.form.password().errors()[0]?.message ?? '');
+  readonly confirmationError = computed(() => this.form.confirmation().errors()[0]?.message ?? '');
+  readonly codeError = computed(() => this.codeForm.code().errors()[0]?.message ?? '');
 
-  readonly signUpForm: FieldTree<SignUpModel> = form(
-    this.signUpModel,
-    (p) => {
-      required(p.email, { message: $localize`:@@signUpEmailErrorRequired:Enter your email address.` });
-      email(p.email, {
-        message: $localize`:@@signUpEmailErrorInvalid:Enter a valid email address (e.g. you@company.com).`,
-      });
-      required(p.password, { message: $localize`:@@signUpPasswordErrorRequired:Choose a password.` });
-      minLength(p.password, 8, { message: $localize`:@@signUpPasswordErrorMinlength:Use at least 8 characters.` });
-      required(p.confirmPassword, {
-        message: $localize`:@@signUpConfirmPasswordErrorRequired:Re-enter your new password.`,
-      });
-      validate(p.confirmPassword, ({ value, valueOf }) => {
-        const password = valueOf(p.password);
-        const current = value();
-
-        return current && password && current !== password
-          ? {
-              kind: 'passwordMismatch',
-              message: $localize`:@@signUpConfirmPasswordErrorMismatch:Passwords don't match.`,
-            }
-          : null;
-      });
-    },
-    {
-      submission: {
-        action: async (field) => {
-          await this.submit(field);
-        },
-      },
-    },
-  );
-
-  readonly submitting = this.auth.submitting;
-  readonly errorMessage = signal('');
-  readonly passkeyState = signal<
-    'ready' | 'loading' | 'unsupported' | 'verification' | 'retry' | 'fallback' | 'success'
-  >('ready');
-  readonly passkeyEmail = signal('');
-
-  readonly passwordValue = computed(() => this.signUpForm.password().value());
-
-  readonly emailError = computed(() => this.signUpForm.email().errors()[0]?.message ?? '');
-  readonly passwordError = computed(() => this.signUpForm.password().errors()[0]?.message ?? '');
-
-  private async submit(field: FieldTree<SignUpModel>): Promise<void> {
-    if (this.submitting()) {
-      return;
-    }
-
-    this.errorMessage.set('');
-
-    const value = field().value();
-
+  protected async signUp(): Promise<void> {
+    if (this.form().invalid() || this.submitting()) return;
+    this.submitting.set(true);
+    this.error.set('');
     try {
-      await this.auth.signUp({
-        email: value.email,
-        password: value.password,
+      const response = await this.password.signUp({
+        email: this.form.email().value(),
+        password: this.form.password().value(),
       });
-      await this.router.navigate([VERIFY_EMAIL_URL]);
+
+      this.flowId.set(response.flowId);
+      this.codeModel.set({ code: '' });
+      this.model.update((model) => ({ ...model, password: '', confirmation: '' }));
     } catch (error) {
-      this.errorMessage.set(
-        error instanceof HttpErrorResponse
-          ? (error.error?.message ?? $localize`:@@signUpAuthFailed:Authentication failed.`)
-          : $localize`:@@signUpAuthFailed:Authentication failed.`,
-      );
+      this.error.set(this.message(error, 'We could not create your account.'));
+    } finally {
+      this.submitting.set(false);
     }
   }
 
-  protected async registerWithPasskey(): Promise<void> {
-    const email = this.passkeyEmail().trim();
-
-    if (!email) {
-      this.passkeyState.set('retry');
-      this.errorMessage.set('Enter your email address to continue.');
-
-      return;
-    }
-
-    if (!this.passkey.isSupported()) {
-      this.passkeyState.set('unsupported');
-      this.errorMessage.set('This browser does not support passkeys. Choose password sign-up below.');
-
-      return;
-    }
-
-    this.passkeyState.set('loading');
-    this.errorMessage.set('');
-
+  protected async verifySignUp(): Promise<void> {
+    if (this.codeForm().invalid() || !this.flowId() || this.submitting()) return;
+    this.submitting.set(true);
+    this.error.set('');
     try {
-      const begin = await this.passkey.beginRegistration(email, 'Visomi Stack passkey', false);
-
-      if (!begin.options || !begin.challengeId) {
-        this.passkeyState.set('fallback');
-
-        return;
-      }
-
-      const credential = await this.passkey.createCredential(begin.options);
-
-      await this.passkey.completeRegistration(begin.challengeId, credential);
-      if (begin.verificationChallengeId) {
-        this.auth.setPendingVerification({
-          challengeId: begin.verificationChallengeId,
-          email,
-          expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-          purpose: 'sign_up',
-        });
-      }
-      this.passkeyState.set('success');
-      await this.router.navigate([VERIFY_EMAIL_URL]);
+      await this.password.verifySignUp(this.flowId(), this.codeForm.code().value());
+      this.complete.set(true);
     } catch (error) {
-      const code = error instanceof HttpErrorResponse ? error.error?.code : '';
-
-      this.passkeyState.set(code === 'email_unverified' || code === 'pin_required' ? 'verification' : 'retry');
-      this.errorMessage.set(
-        code === 'email_unverified' || code === 'pin_required'
-          ? 'Verify your email and PIN before completing passkey registration.'
-          : error instanceof DOMException && error.name === 'AbortError'
-            ? 'Passkey registration was cancelled. Try again when you are ready.'
-            : 'Passkey registration failed. Try again or choose password sign-up.',
-      );
+      this.error.set(this.message(error, 'That verification code is not valid.'));
+    } finally {
+      this.submitting.set(false);
     }
   }
 
-  protected usePasswordFallback(): void {
-    this.signUpModel.update((model) => ({ ...model, email: this.passkeyEmail() }));
-    this.passkeyState.set('fallback');
+  private message(error: unknown, fallback: string): string {
+    return error instanceof HttpErrorResponse && typeof error.error?.message === 'string'
+      ? error.error.message
+      : fallback;
   }
-
-  protected updatePasskeyEmail(event: Event): void {
-    this.passkeyEmail.set((event.target as HTMLInputElement).value);
-  }
-
-  protected readonly footerLink = SIGN_IN_URL;
 }

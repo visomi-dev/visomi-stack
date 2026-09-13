@@ -5,7 +5,7 @@ import { Router, type CanActivateFn, type UrlTree } from '@angular/router';
 
 import { Auth } from '../auth/auth';
 import { BrowserAuth } from '../auth/browser-auth';
-import { ACTIVATION_URL, DASHBOARD_URL, SIGN_IN_URL } from '../constants/routes';
+import { ACTIVATION_URL, DASHBOARD_URL, IDENTITY_URL } from '../constants/routes';
 
 import { activatedGuard } from './activated-guard';
 import { Activation } from './activation';
@@ -29,7 +29,7 @@ describe('activatedGuard', () => {
     TestBed.inject(HttpTestingController).verify();
   });
 
-  it('redirects to /sign-in when no session is loaded and never hits the API', async () => {
+  it('redirects to /auth/identity when no session is loaded and never hits the API', async () => {
     const auth = TestBed.inject(Auth);
     const router = TestBed.inject(Router);
 
@@ -42,7 +42,7 @@ describe('activatedGuard', () => {
 
     expect(auth.ensureSessionLoaded).toHaveBeenCalled();
     expect(auth.isAuthenticated).toHaveBeenCalled();
-    expect(router.serializeUrl(result)).toBe(router.serializeUrl(router.createUrlTree([SIGN_IN_URL])));
+    expect(router.serializeUrl(result)).toBe(router.serializeUrl(router.createUrlTree([IDENTITY_URL])));
   });
 
   it('redirects to /activation when session is valid but milestones are missing', async () => {

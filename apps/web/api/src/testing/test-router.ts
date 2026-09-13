@@ -4,15 +4,23 @@ import { eq } from 'drizzle-orm';
 import { Router } from 'express';
 
 import { clearMailbox, listSentMessages } from '../auth/auth-mail';
-import { signUp, verifyChallenge } from '../auth/auth-service';
+import {
+  consumeChallenge,
+  createChallenge,
+  findOrCreateUserByEmail,
+  findUserById,
+  listMembershipsForUser,
+  markChallengeConsumed,
+  resolveAuthUser,
+} from '../auth/auth-service';
 import { emailSchema, getValidated, validateRequest, z } from '../shared/http/route-schemas';
 
-import { accountMemberships, db } from 'shared';
+import { accountMemberships, db, users } from 'shared';
 
 const mailboxQuerySchema = z
   .object({
     email: emailSchema.optional(),
-    purpose: z.enum(['sign_in', 'sign_up', 'password_reset']).optional(),
+    purpose: z.enum(['bootstrap_recovery']).optional(),
   })
   .meta({ id: 'TestMailboxQuery' });
 
@@ -22,12 +30,16 @@ const mailboxMessageSchema = z
     email: emailSchema,
     expiresAt: z.string(),
     pin: z.string(),
-    purpose: z.enum(['sign_in', 'sign_up']),
+    purpose: z.literal('bootstrap_recovery'),
   })
   .meta({ id: 'MailboxMessage' });
 
 const deterministicSessionSchema = z
-  .object({ email: emailSchema, password: z.string().min(1), accountId: z.string().min(1).optional() })
+  .object({
+    accountId: z.string().min(1).optional(),
+    email: emailSchema,
+    mode: z.enum(['full', 'restricted']).optional(),
+  })
   .meta({ id: 'DeterministicTestSession' });
 
 const testOpenApiPaths = {
@@ -56,11 +68,10 @@ testRouter.post(
   validateRequest({ body: deterministicSessionSchema }),
   async function deterministicSessionHandler(req, res, next) {
     try {
-      const { email, password, accountId } = getValidated<{ body: typeof deterministicSessionSchema }>(req).body!;
-      const challenge = await signUp(email, password);
-      const message = listSentMessages().find(
-        (candidate) => candidate.challengeId === challenge.challengeId && candidate.purpose === 'sign_up',
-      );
+      const { email, accountId, mode = 'full' } = getValidated<{ body: typeof deterministicSessionSchema }>(req).body!;
+      const user = await findOrCreateUserByEmail(email);
+      const challenge = await createChallenge(user, 'bootstrap_recovery');
+      const message = listSentMessages().find((candidate) => candidate.challengeId === challenge.challengeId);
 
       if (!message) {
         res.status(503).send({ error: 'deterministic_auth_unavailable' });
@@ -68,7 +79,10 @@ testRouter.post(
         return;
       }
 
-      const user = await verifyChallenge(challenge.challengeId, message.pin, 'sign_up');
+      await consumeChallenge(challenge.challengeId, message.pin);
+      await markChallengeConsumed(challenge.challengeId);
+      await db.update(users).set({ emailVerifiedAt: new Date(), updatedAt: new Date() }).where(eq(users.id, user.id));
+      await listMembershipsForUser(user.id);
 
       if (accountId) {
         await db.delete(accountMemberships).where(eq(accountMemberships.userId, user.id));
@@ -80,19 +94,71 @@ testRouter.post(
           updatedAt: new Date(),
           userId: user.id,
         });
-        user.accountId = accountId;
-        user.role = 'member';
+      }
+
+      const freshUser = await findUserById(user.id);
+
+      if (!freshUser) {
+        res.status(503).send({ error: 'deterministic_auth_unavailable' });
+
+        return;
+      }
+
+      const authUser = await resolveAuthUser(freshUser);
+
+      if (mode === 'restricted') {
+        await new Promise<void>((resolve, reject) =>
+          req.login(
+            {
+              ...authUser,
+              authority: 'restricted',
+              authenticationMethod: 'password',
+              authVersion: freshUser.authVersion,
+            },
+            (error) => (error ? reject(error) : resolve()),
+          ),
+        );
+        req.session.authority = 'restricted';
+        req.session.restrictedAuth = {
+          allowedOperations: ['password:set'],
+          eligibleAccounts: [{ accountId: authUser.accountId, name: authUser.accountId, role: authUser.role }],
+          expiresAt: Date.now() + 15 * 60_000,
+          flowId: challenge.challengeId,
+          issuedAt: Date.now(),
+          isNewUser: false,
+          purpose: 'bootstrap_recovery',
+          selectedAccountId: authUser.accountId,
+          userId: freshUser.id,
+          verifiedEmail: authUser.email,
+        };
+        req.session.cookie.maxAge = 15 * 60_000;
+
+        await new Promise<void>((resolve, reject) => {
+          req.session.save((error) => (error ? reject(error) : resolve()));
+        });
+
+        res.status(200).send({ data: { accountId: authUser.accountId, userId: authUser.id } });
+
+        return;
       }
 
       await new Promise<void>((resolve, reject) => {
-        req.login(user, (error) => (error ? reject(error) : resolve()));
+        req.login(
+          { ...authUser, authority: 'full', authenticationMethod: 'password', authVersion: freshUser.authVersion },
+          (error) => (error ? reject(error) : resolve()),
+        );
       });
+      req.session.authority = 'full';
+      req.session.authenticationMethod = 'password';
+      req.session.authVersion = freshUser.authVersion;
+      // The deterministic test session represents a freshly reauthenticated test user.
+      req.session.passkeySecurityReauthenticatedAt = Date.now();
 
       await new Promise<void>((resolve, reject) => {
         req.session.save((error) => (error ? reject(error) : resolve()));
       });
 
-      res.status(200).send({ data: { accountId: user.accountId, userId: user.id } });
+      res.status(200).send({ data: { accountId: authUser.accountId, userId: authUser.id } });
     } catch (error: unknown) {
       next(error);
     }

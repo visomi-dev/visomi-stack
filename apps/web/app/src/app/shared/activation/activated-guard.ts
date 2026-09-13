@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { Router, type ActivatedRouteSnapshot, type RouterStateSnapshot } from '@angular/router';
 
 import { Auth } from '../auth/auth';
-import { ACTIVATION_URL, SIGN_IN_URL } from '../constants/routes';
+import { ACTIVATION_URL, IDENTITY_URL } from '../constants/routes';
 
 import { Activation } from './activation';
 import type { ActivationMilestone } from './activation.models';
@@ -19,7 +19,7 @@ export async function activatedGuard(_route: ActivatedRouteSnapshot, _state: Rou
   await auth.ensureSessionLoaded();
 
   if (!auth.isAuthenticated()) {
-    return router.createUrlTree([SIGN_IN_URL]);
+    return router.createUrlTree([IDENTITY_URL]);
   }
 
   const activationData = await activation.loadState();
