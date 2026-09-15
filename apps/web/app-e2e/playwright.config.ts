@@ -8,7 +8,7 @@ import { LOCAL_AGENT_FIXTURE_PUBLIC_KEY } from './src/support/local-agent-fixtur
 // composed Playwright server must own its deterministic port so auth helpers,
 // browser navigation, and the local-agent callback all address one gateway.
 const gatewayPort = process.env['E2E_GATEWAY_PORT'] || '8081';
-const gatewayHost = process.env['E2E_GATEWAY_HOST'] || '127.0.0.1';
+const gatewayHost = process.env['E2E_GATEWAY_HOST'] || 'localhost';
 const baseURL = process.env['BASE_URL'] || `http://${gatewayHost}:${gatewayPort}`;
 
 process.env['BASE_URL'] = baseURL;
@@ -46,7 +46,6 @@ export default defineConfig({
       DATABASE_AUTO_MIGRATE: 'true',
       DATABASE_DRIVER: 'memory',
       ENABLE_TEST_API: 'true',
-      AUTH_PASSWORD_ENABLED: 'true',
       AUTH_TOTP_ENROLLMENT_ENABLED: 'true',
       AUTH_TOTP_ENCRYPTION_KEY: 'themis-app-e2e-dedicated-totp-key-2026',
       HOST: gatewayHost,

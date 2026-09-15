@@ -27,6 +27,22 @@ declare module 'express-session' {
       };
     };
     authority?: 'restricted' | 'full';
+    passkeySignup?: {
+      id: string;
+      userId: string;
+      email: string;
+      challenge: string;
+      expiresAt: number;
+      emailChallengeId?: string;
+      credential?: {
+        id: string;
+        publicKey: string;
+        counter: number;
+        transports: string[];
+        backupEligible: boolean;
+        backupState: boolean;
+      };
+    };
     passkeyRegistration?: {
       accountId: string;
       challengeId: string;

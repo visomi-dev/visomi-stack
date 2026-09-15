@@ -6,14 +6,14 @@
       </p>
       <h1 class="font-heading mt-3 text-3xl font-bold">Your account is verified</h1>
       <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
-        Sign in with your password or create a passkey.
+        Your email is verified. You can now sign in with the method you just created.
       </p>
       <a
         routerLink="/auth/sign-in"
         class="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
         >Continue to sign in</a
       >
-    } @else if (flowId()) {
+    } @else if (flowId() || passkeyEmailPending()) {
       <p class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400">
         Email verification
       </p>
@@ -39,18 +39,71 @@
         <button
           type="submit"
           class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-          [disabled]="codeForm().invalid() || submitting()"
+          [disabled]="submitting()"
         >
           Verify email
         </button>
       </app-form>
+    } @else if (!passwordMode()) {
+      <p
+        class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400"
+        i18n="@@signupPasskeyEyebrow"
+      >
+        Passkey signup
+      </p>
+      <h1 class="font-heading mt-3 text-3xl font-bold" i18n="@@signupPasskeyHeading">Create your account</h1>
+      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400" i18n="@@signupPasskeyDescription">
+        Create a passkey with your device, then verify your email. No password needed.
+      </p>
+      <app-form class="mt-6 grid gap-5" [form]="passkeyEmailForm" (ngSubmit)="createPasskey()">
+        <app-field>
+          <app-label for="passkey-signup-email" tone="plain"
+            ><span i18n="@@signupPasskeyEmail">Email address</span></app-label
+          >
+          <app-input
+            [formField]="passkeyEmailForm.email"
+            type="email"
+            autocomplete="email"
+            controlId="passkey-signup-email"
+            name="email"
+            ariaDescribedBy="passkey-signup-email-error"
+            required
+          />
+          <app-error-message controlId="passkey-signup-email-error">{{
+            passkeyEmailForm.email().errors()[0]?.message
+          }}</app-error-message>
+        </app-field>
+        <button
+          type="submit"
+          class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+          [disabled]="submitting()"
+          i18n="@@signupCreatePasskey"
+        >
+          Create account with passkey
+        </button>
+      </app-form>
+      <div class="my-5 flex items-center gap-3" aria-hidden="true">
+        <span class="h-px flex-1 bg-slate-950/10 dark:bg-white/10"></span>
+        <span class="font-mono text-xs text-slate-400 uppercase" i18n="@@signupMethodSeparator">or</span>
+        <span class="h-px flex-1 bg-slate-950/10 dark:bg-white/10"></span>
+      </div>
+      <a
+        routerLink="."
+        [queryParams]="{ method: 'password' }"
+        class="ui-focus-ring flex min-h-11 w-full items-center justify-center rounded-md border border-slate-950/10 px-4 text-center text-sm font-semibold text-blue-600 hover:bg-blue-600/10 dark:border-white/10 dark:text-blue-400"
+        i18n="@@signupUsePassword"
+        >Use password instead</a
+      >
+      <p class="mt-5 text-center text-sm">
+        <a routerLink="/auth/sign-in" i18n="@@signupExistingAccount">Already have an account? Sign in</a>
+      </p>
     } @else {
       <p class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400">
         Password signup
       </p>
       <h1 class="font-heading mt-3 text-3xl font-bold">Create your account</h1>
       <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
-        Use an email you can verify and a password of at least 15 characters.
+        Use an email you can verify and a password of at least 12 characters.
       </p>
       <app-form class="mt-6 grid gap-5" [form]="form" (ngSubmit)="signUp()">
         <app-field>
@@ -63,9 +116,7 @@
             name="email"
             required
           />
-          @if (emailError()) {
-            <app-error-message controlId="sign-up-email-error">{{ emailError() }}</app-error-message>
-          }
+          <app-error-message controlId="sign-up-email-error">{{ emailError() }}</app-error-message>
         </app-field>
         <app-field>
           <app-label for="sign-up-password" tone="plain">Password</app-label>
@@ -73,15 +124,14 @@
             [formField]="form.password"
             autocomplete="new-password"
             controlId="sign-up-password"
+            showStrength
             name="password"
             [loading]="submitting()"
-            minLength="15"
+            minLength="12"
             maxLength="128"
             required
           />
-          @if (passwordError()) {
-            <app-error-message controlId="sign-up-password-error">{{ passwordError() }}</app-error-message>
-          }
+          <app-error-message controlId="sign-up-password-error">{{ passwordError() }}</app-error-message>
         </app-field>
         <app-field>
           <app-label for="sign-up-confirmation" tone="plain">Confirm password</app-label>
@@ -93,19 +143,20 @@
             [loading]="submitting()"
             required
           />
-          @if (confirmationError()) {
-            <app-error-message controlId="sign-up-confirmation-error">{{ confirmationError() }}</app-error-message>
-          }
+          <app-error-message controlId="sign-up-confirmation-error">{{ confirmationError() }}</app-error-message>
         </app-field>
         <button
           type="submit"
           class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-          [disabled]="form().invalid() || submitting()"
+          [disabled]="submitting()"
         >
           Create account
         </button>
       </app-form>
       <p class="mt-5 text-center text-sm text-slate-500 dark:text-slate-400">
+        <a routerLink="." class="mb-4 block font-semibold text-blue-600 dark:text-blue-400" i18n="@@signupUsePasskey"
+          >Use a passkey instead</a
+        >
         Already have an account?
         <a routerLink="/auth/sign-in" class="font-semibold text-blue-600 dark:text-blue-400">Sign in</a>
       </p>

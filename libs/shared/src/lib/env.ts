@@ -55,10 +55,6 @@ const environmentSchema = z
     OPAQUE_SYNC_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
     LOCAL_AGENT_PUBLIC_KEY: z.string().default(''),
     GOOGLE_AUTH_CLIENT_ID: z.string().default(''),
-    AUTH_PASSWORD_ENABLED: z
-      .enum(['true', 'false'])
-      .optional()
-      .transform((value) => value === 'true'),
     AUTH_TOTP_ENROLLMENT_ENABLED: z
       .enum(['true', 'false'])
       .optional()
@@ -117,13 +113,6 @@ const environmentSchema = z
         code: 'custom',
         path: ['AUTH_TOTP_ENCRYPTION_KEY'],
         message: 'A dedicated TOTP encryption key of at least 32 characters is required when TOTP is enabled.',
-      });
-    }
-    if (data.AUTH_PASSWORD_ENABLED && !data.AUTH_PASSWORD_BLOCKLIST_PATH) {
-      context.addIssue({
-        code: 'custom',
-        path: ['AUTH_PASSWORD_BLOCKLIST_PATH'],
-        message: 'Password authentication requires a deployed common-password blocklist.',
       });
     }
   })

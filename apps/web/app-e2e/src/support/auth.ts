@@ -4,7 +4,7 @@ import { expect, type APIRequestContext, type Page } from '@playwright/test';
 
 import { clearMailbox, readLatestPin } from './mailbox';
 import { fillOtp } from './otp';
-import { activationUrlPattern, identityRoute, identityUrlPattern } from './routes';
+import { activationUrlPattern, signInRoute, signInUrlPattern } from './routes';
 
 type VerificationOptions = {
   completeActivation?: boolean;
@@ -59,8 +59,8 @@ const completeActivationIfNeeded = async (page: Page) => {
 export const authenticateViaApi = async (page: Page, request: APIRequestContext, email: string, _password: string) => {
   await clearMailbox(request);
 
-  await page.goto(identityRoute);
-  await expect(page).toHaveURL(identityUrlPattern);
+  await page.goto(signInRoute);
+  await expect(page).toHaveURL(signInUrlPattern);
   await page.getByRole('button', { name: 'Try another way' }).click();
 
   const emailField = page.locator('#identity-email');
@@ -89,8 +89,8 @@ export const authenticateViaDeterministicTestSession = async (
   email: string,
   _password: string,
 ) => {
-  await page.goto(identityRoute);
-  await expect(page).toHaveURL(identityUrlPattern);
+  await page.goto(signInRoute);
+  await expect(page).toHaveURL(signInUrlPattern);
   const response = await request.post('/api/test/auth/session', { data: { email } });
 
   if (!response.ok()) throw new Error(`deterministic test session failed with ${response.status()}`);
@@ -123,8 +123,8 @@ export const authenticateViaDeterministicTestSession = async (
 };
 
 export const signIn = async (page: Page, _email: string, _password: string) => {
-  await page.goto(identityRoute);
-  await expect(page).toHaveURL(identityUrlPattern);
+  await page.goto(signInRoute);
+  await expect(page).toHaveURL(signInUrlPattern);
   await expect(page.getByRole('heading', { name: 'Sign in or create an account' })).toBeVisible();
 };
 
@@ -134,7 +134,7 @@ export const verifyLatestCode = async (
   email: string,
   options: VerificationOptions = {},
 ) => {
-  await page.goto(identityRoute);
+  await page.goto(signInRoute);
   await page.getByRole('button', { name: 'Try another way' }).click();
 
   await page.locator('#identity-email').fill(email);
@@ -161,8 +161,39 @@ export const registerAndAuthenticate = async (
   password: string,
   options: VerificationOptions = {},
 ) => {
-  await signIn(page, email, password);
-  await verifyLatestCode(page, request, email, options);
+  void password;
+  await addVirtualAuthenticator(page);
+  await page.goto('/app/en/auth/sign-up');
+  await page.getByRole('textbox', { name: 'Email address', exact: true }).fill(email);
+  await page.getByRole('button', { name: 'Create account with passkey' }).click();
+  await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+  await page
+    .getByRole('textbox', { name: 'Verification code' })
+    .fill(await readLatestPin(request, email, 'bootstrap_recovery'));
+  await page.getByRole('button', { name: 'Verify email', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Your account is verified' })).toBeVisible();
+  await page.getByRole('link', { name: 'Continue to sign in' }).click();
+  await page.getByRole('button', { name: 'Continue with a passkey' }).click();
+  await waitForAuthenticatedSession(page, email);
+  await expect(page).toHaveURL(activationUrlPattern);
+  if (options.completeActivation ?? true) await completeActivationIfNeeded(page);
+};
+
+export const addVirtualAuthenticator = async (page: Page, transport: 'internal' | 'usb' = 'internal') => {
+  const cdp = await page.context().newCDPSession(page);
+
+  await cdp.send('WebAuthn.enable');
+
+  return cdp.send('WebAuthn.addVirtualAuthenticator', {
+    options: {
+      protocol: 'ctap2',
+      transport,
+      hasResidentKey: true,
+      hasUserVerification: true,
+      isUserVerified: true,
+      automaticPresenceSimulation: true,
+    },
+  });
 };
 
 export const signOutViaApi = async (page: Page) => {
@@ -181,6 +212,6 @@ export const signOutViaMenu = async (page: Page) => {
 export const registerAndSignOut = async (page: Page, request: APIRequestContext, email: string, password: string) => {
   await registerAndAuthenticate(page, request, email, password);
   await signOutViaApi(page);
-  await page.goto(identityRoute);
-  await expect(page).toHaveURL(identityUrlPattern);
+  await page.goto(signInRoute);
+  await expect(page).toHaveURL(signInUrlPattern);
 };

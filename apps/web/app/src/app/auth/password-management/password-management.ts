@@ -46,7 +46,7 @@ export class PasswordManagement {
   readonly passwordForm: FieldTree<PasswordModel> = form(this.passwordModel, (path) => {
     required(path.currentPassword, { message: 'Enter your current password.' });
     required(path.password, { message: 'Enter a new password.' });
-    minLength(path.password, 15, { message: 'Use at least 15 characters.' });
+    minLength(path.password, 12, { message: 'Use at least 12 characters.' });
     maxLength(path.password, 512, { message: 'Use 512 characters or fewer.' });
     required(path.confirmation, { message: 'Confirm your new password.' });
     validate(path.confirmation, ({ value, valueOf }) =>
@@ -103,7 +103,15 @@ export class PasswordManagement {
   }
 
   protected async removePassword(): Promise<void> {
-    if (this.passwordForm.currentPassword().invalid() || this.submitting()) return;
+    if (this.submitting()) return;
+    if (this.passwordForm.currentPassword().invalid()) {
+      this.passwordForm.currentPassword().markAsTouched();
+      this.error.set(
+        $localize`:@@passwordRemovalCurrentRequired:Enter your current password before removing password access.`,
+      );
+
+      return;
+    }
     await this.runPasswordMutation('password_remove', () =>
       this.security.removePassword(this.passwordForm.currentPassword().value()),
     );

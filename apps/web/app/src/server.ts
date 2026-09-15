@@ -12,7 +12,7 @@ import express, { static as serveStatic, type Request } from 'express';
 import type { AuthUser } from './app/shared/auth/auth.models';
 
 type AuthenticatedRequest = Request & {
-  user?: AuthUser | null;
+  user?: (AuthUser & { authority?: 'full' | 'restricted' }) | null;
 };
 
 const serverDistFolder = dirname(fileURLToPath(import.meta.url));
@@ -33,7 +33,7 @@ app.use(
 
 app.use((req, res, next) => {
   const request = req as AuthenticatedRequest;
-  const user = request.user ?? null;
+  const user = request.user?.authority === 'restricted' ? null : (request.user ?? null);
 
   angularApp
     .handle(req, { user })

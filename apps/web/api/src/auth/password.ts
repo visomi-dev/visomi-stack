@@ -2,25 +2,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 
 import { argon2id } from 'hash-wasm';
 
-import { env } from '../shared/env';
-
 import { verifySecret } from './auth-crypto';
-
-import { HttpError } from 'shared';
-
-/**
- * Password authentication is intentionally fail-closed until the approved
- * Argon2id implementation and TOTP key configuration are deployed.
- */
-export function assertPasswordAuthenticationAvailable(): void {
-  if (!env.AUTH_PASSWORD_ENABLED) {
-    throw new HttpError({
-      code: 'password_auth_disabled',
-      message: 'Password sign-in is not enabled.',
-      statusCode: 404,
-    });
-  }
-}
 
 export function normalizePassword(password: string): string {
   return password.normalize('NFC');
@@ -33,7 +15,7 @@ export function passwordLength(password: string): number {
 export function validatePasswordPolicy(password: string): boolean {
   const length = passwordLength(password);
 
-  return length >= 15 && length <= 128;
+  return length >= 12 && length <= 128;
 }
 
 const ARGON2_MEMORY_KIB = 19_456;

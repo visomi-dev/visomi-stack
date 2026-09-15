@@ -8,14 +8,14 @@ import { Passkey } from '../../shared/auth/passkey';
 import { PasswordAuth } from '../../shared/auth/password';
 import { Settings } from '../../shared/settings';
 
-import { Identity } from './identity';
+import { SignIn } from './sign-in';
 
-describe('Identity', () => {
-  let fixture: ComponentFixture<Identity>;
+describe('SignIn', () => {
+  let fixture: ComponentFixture<SignIn>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Identity],
+      imports: [SignIn],
       providers: [
         provideRouter([]),
         {
@@ -58,7 +58,7 @@ describe('Identity', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Identity);
+    fixture = TestBed.createComponent(SignIn);
     fixture.detectChanges();
   });
 

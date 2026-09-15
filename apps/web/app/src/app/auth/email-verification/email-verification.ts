@@ -4,7 +4,7 @@ import { email, form, maxLength, minLength, pattern, required, type FieldTree } 
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { Auth } from '../../shared/auth/auth';
-import { APP_URL, IDENTITY_URL } from '../../shared/constants/routes';
+import { APP_URL, SIGN_IN_URL } from '../../shared/constants/routes';
 import { ErrorMessage } from '../../shared/ui/forms/error-message/error-message';
 import { Field } from '../../shared/ui/forms/field/field';
 import { Form as AppForm } from '../../shared/ui/forms/form/form';
@@ -80,7 +80,7 @@ export class EmailVerification {
     }
   }
 
-  protected readonly signInUrl = IDENTITY_URL;
+  protected readonly signInUrl = SIGN_IN_URL;
 
   private message(error: unknown, fallback: string): string {
     return error instanceof HttpErrorResponse && typeof error.error?.message === 'string'

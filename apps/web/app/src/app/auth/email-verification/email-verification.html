@@ -36,7 +36,7 @@
         <button
           type="submit"
           class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-          [disabled]="codeForm().invalid() || submitting()"
+          [disabled]="submitting()"
         >
           Verify email
         </button>
@@ -64,7 +64,7 @@
         <button
           type="submit"
           class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-          [disabled]="emailForm().invalid() || submitting()"
+          [disabled]="submitting()"
         >
           Send verification code
         </button>

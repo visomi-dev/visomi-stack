@@ -17,7 +17,7 @@ import {
 import { sendVerificationMessage } from './auth-mail';
 import { authUserSchema, challengeSchema } from './auth-schemas';
 import { decryptTotpSecret, totpTimeStep, verifyTotpCode } from './totp';
-import { assertPasswordAuthenticationAvailable, hashPassword, verifyPassword } from './password';
+import { hashPassword, verifyPassword } from './password';
 
 import {
   accountMemberships,
@@ -754,7 +754,6 @@ export async function startPasswordSignIn(email: string, password: string, conte
 }
 
 export async function startPasswordSignUp(email: string, password: string, context: string, sessionBinding: string) {
-  assertPasswordAuthenticationAvailable();
   const normalizedEmail = normalizeEmail(email);
 
   if (await findUserByEmail(normalizedEmail)) {
@@ -850,7 +849,6 @@ export async function verifyPasswordSignUp(flowId: string, pin: string, context:
 }
 
 export async function startPasswordReset(email: string, context: string, sessionBinding: string) {
-  assertPasswordAuthenticationAvailable();
   const normalizedEmail = normalizeEmail(email);
   const user = await findUserByEmail(normalizedEmail);
   const flowId = randomUUID();
@@ -1161,7 +1159,6 @@ export async function verifyPasswordTotp(flowId: string, code: string, sessionBi
 }
 
 export async function setUserPassword(userId: string, password: string): Promise<void> {
-  assertPasswordAuthenticationAvailable();
   const passwordHash = await hashPassword(password);
   const now = new Date();
   const [updated] = await db.transaction(async (tx) =>

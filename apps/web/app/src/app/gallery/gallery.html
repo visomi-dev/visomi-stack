@@ -119,7 +119,13 @@
                       <app-switch [formField]="switchForm.value">Enable notifications</app-switch>
                     }
                     @case ('radio-group') {
-                      <app-radio-group [formField]="radioForm.value" name="plan" [options]="radioOptions" />
+                      <app-radio-group
+                        [formField]="radioForm.value"
+                        name="plan"
+                        legend="Choose a plan"
+                        [options]="radioOptions"
+                        layout="responsive"
+                      />
                     }
                     @case ('radio-card') {
                       <div class="grid gap-3 sm:grid-cols-3">
@@ -128,8 +134,8 @@
                             [formField]="radioForm.value"
                             [name]="'plan-card'"
                             [optionValue]="option.value"
+                            [disabled]="option.disabled ?? false"
                           >
-                            >
                             <span class="font-heading text-sm font-semibold">{{ option.label }}</span>
                             <span class="text-muted-fg text-xs">{{ option.description }}</span>
                           </app-radio-card>

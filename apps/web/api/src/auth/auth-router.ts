@@ -77,7 +77,7 @@ import {
   emailOtpVerificationRateLimit,
 } from './passkey-security';
 import { clearSessionHintCookie, setSessionHintCookie } from './session-cookie';
-import { assertPasswordAuthenticationAvailable, verifyPassword } from './password';
+import { verifyPassword } from './password';
 import { decryptTotpSecret, encryptTotpSecret, generateTotpSecret, verifyTotpCode } from './totp';
 
 import {
@@ -626,7 +626,7 @@ router.get('/identity/providers', (_req, res) => {
   httpResponse.json(res, {
     data: {
       google: { enabled: Boolean(env.GOOGLE_AUTH_CLIENT_ID), clientId: env.GOOGLE_AUTH_CLIENT_ID || null },
-      password: { enabled: env.AUTH_PASSWORD_ENABLED },
+      password: { enabled: true },
     },
     message: 'Authentication providers retrieved.',
   });
@@ -652,7 +652,6 @@ router.post(
   csrfProtection,
   validateRequest({ body: passwordSignUpVerifySchema }),
   async (req, res) => {
-    assertPasswordAuthenticationAvailable();
     const body = getValidated<{ body: typeof passwordSignUpVerifySchema }>(req).body!;
 
     if (req.session.passwordFlowId !== body.flowId)
@@ -701,7 +700,6 @@ router.post(
   csrfProtection,
   validateRequest({ body: passwordResetCompleteSchema }),
   async (req, res) => {
-    assertPasswordAuthenticationAvailable();
     const body = getValidated<{ body: typeof passwordResetCompleteSchema }>(req).body!;
 
     if (req.session.passwordFlowId !== body.flowId)
@@ -728,7 +726,6 @@ router.post(
   csrfProtection,
   validateRequest({ body: passwordSignInSchema }),
   async function passwordSignInHandler(req, res) {
-    assertPasswordAuthenticationAvailable();
     let passwordLimit;
 
     try {
@@ -772,7 +769,6 @@ router.post(
   csrfProtection,
   validateRequest({ body: passwordVerifySchema }),
   async function passwordVerifyHandler(req, res) {
-    assertPasswordAuthenticationAvailable();
     const body = getValidated<{ body: typeof passwordVerifySchema }>(req).body!;
 
     if (req.session.passwordFlowId !== body.flowId)
@@ -1042,7 +1038,6 @@ router.post(
   csrfProtection,
   validateRequest({ body: passwordResendSchema }),
   async function passwordResendHandler(req, res) {
-    assertPasswordAuthenticationAvailable();
     const { flowId } = getValidated<{ body: typeof passwordResendSchema }>(req).body!;
 
     if (req.session.passwordFlowId !== flowId)

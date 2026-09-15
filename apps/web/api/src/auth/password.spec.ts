@@ -1,13 +1,4 @@
-import {
-  assertPasswordAuthenticationAvailable,
-  hashPassword,
-  normalizePassword,
-  passwordLength,
-  validatePasswordPolicy,
-  verifyPassword,
-} from './password';
-
-import { HttpError } from 'shared';
+import { hashPassword, normalizePassword, passwordLength, validatePasswordPolicy, verifyPassword } from './password';
 
 describe('password authentication foundation', () => {
   it('normalizes passwords with NFC without trimming or collapsing spaces', () => {
@@ -16,13 +7,10 @@ describe('password authentication foundation', () => {
 
   it('counts Unicode code points and enforces the configured length bounds', () => {
     expect(passwordLength('12345678901234')).toBe(14);
-    expect(validatePasswordPolicy('123456789012345')).toBe(true);
+    expect(validatePasswordPolicy('12345678901')).toBe(false);
+    expect(validatePasswordPolicy('123456789012')).toBe(true);
     expect(validatePasswordPolicy('😀'.repeat(15))).toBe(true);
     expect(validatePasswordPolicy('x'.repeat(129))).toBe(false);
-  });
-
-  it('fails closed because Argon2id and factor configuration are not present', () => {
-    expect(() => assertPasswordAuthenticationAvailable()).toThrow(HttpError);
   });
 
   it('uses PHC Argon2id hashes and rejects a wrong password', async () => {

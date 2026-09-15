@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { email, form, maxLength, minLength, pattern, required, type FieldTree, validate } from '@angular/forms/signals';
 
 import { Auth } from '../../shared/auth/auth';
@@ -45,14 +46,16 @@ type EnrollmentModel = { label: string };
 @Component({
   host: { class: /* tw */ 'block min-h-full w-full' },
   imports: [AppForm, AuthCard, AuthLayout, ErrorMessage, Field, Input, Label, PasswordInput, RouterLink],
-  selector: 'app-identity',
-  templateUrl: './identity.html',
-  styleUrl: './identity.css',
+  selector: 'app-sign-in',
+  templateUrl: './sign-in.html',
+  styleUrl: './sign-in.css',
 })
-export class Identity {
+export class SignIn {
+  private passwordAttempt = 0;
   private readonly auth = inject(Auth);
   private readonly passkey = inject(Passkey);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly google = inject(GoogleIdentity);
   private readonly password = inject(PasswordAuth);
   private readonly googleButton = viewChild<ElementRef<HTMLElement>>('googleButton');
@@ -105,8 +108,8 @@ export class Identity {
   readonly passwordSetupModel = signal<PasswordSetupModel>({ password: '', confirmation: '' });
   readonly passwordSetupForm: FieldTree<PasswordSetupModel> = form(this.passwordSetupModel, (path) => {
     required(path.password, { message: $localize`:@@identityPasswordSetupRequired:Enter a password.` });
-    minLength(path.password, 15, {
-      message: $localize`:@@identityPasswordSetupLength:Use at least 15 characters.`,
+    minLength(path.password, 12, {
+      message: $localize`:@@identityPasswordSetupLength:Use at least 12 characters.`,
     });
     maxLength(path.password, 512, {
       message: $localize`:@@identityPasswordSetupMaxLength:Use 512 characters or fewer.`,
@@ -122,6 +125,24 @@ export class Identity {
   readonly passwordConfirmationError = computed(() => this.passwordSetupForm.confirmation().errors()[0]?.message ?? '');
   readonly otpError = computed(() => this.otpForm.pin().errors()[0]?.message ?? '');
   readonly labelError = computed(() => this.enrollmentForm.label().errors()[0]?.message ?? '');
+
+  constructor() {
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      if (params.get('method') === 'password') this.state.set('password');
+      else if (this.state() === 'password' || this.state() === 'password-factor') {
+        this.passwordAttempt += 1;
+        this.passwordFlow.set(null);
+        this.passwordFactor.set(null);
+        this.passwordSubmitting.set(false);
+        this.flowId.set('');
+        this.resendAvailableAt.set('');
+        this.otpModel.set({ pin: '' });
+        this.passwordModel.update((model) => ({ ...model, password: '' }));
+        this.errorMessage.set('');
+        this.state.set('ready');
+      }
+    });
+  }
 
   protected async authenticateWithPasskey(): Promise<void> {
     if (this.state() === 'passkey-loading') return;
@@ -204,10 +225,16 @@ export class Identity {
     this.errorMessage.set('');
     this.passwordModel.update((model) => ({ ...model, email: this.emailModel().email }));
     this.state.set('password');
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { method: 'password' },
+      queryParamsHandling: 'merge',
+    });
   }
 
   protected async signInWithPassword(): Promise<void> {
     if (this.passwordForm().invalid() || this.passwordSubmitting()) return;
+    const attempt = ++this.passwordAttempt;
 
     this.errorMessage.set('');
     this.passwordSubmitting.set(true);
@@ -222,6 +249,8 @@ export class Identity {
         password,
       });
 
+      if (attempt !== this.passwordAttempt) return;
+
       this.passwordFlow.set(pending);
       this.passwordFactor.set(pending.requiredFactor);
       this.flowId.set(pending.flowId);
@@ -230,6 +259,7 @@ export class Identity {
       this.passwordModel.update((model) => ({ ...model, password: '' }));
       this.state.set('password-factor');
     } catch (error) {
+      if (attempt !== this.passwordAttempt) return;
       if (error instanceof HttpErrorResponse && error.error?.code === 'email_unverified') {
         await this.router.navigate([EMAIL_VERIFICATION_URL], {
           queryParams: { email: this.passwordForm.email().value() },
@@ -242,7 +272,7 @@ export class Identity {
         this.safeError(error, $localize`:@@identityPasswordFailed:We could not sign in with that password.`),
       );
     } finally {
-      this.passwordSubmitting.set(false);
+      if (attempt === this.passwordAttempt) this.passwordSubmitting.set(false);
     }
   }
 
@@ -296,6 +326,11 @@ export class Identity {
     this.errorMessage.set('');
     this.passwordModel.update((model) => ({ ...model, password: '' }));
     this.state.set('ready');
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { method: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   protected async requestCode(): Promise<void> {

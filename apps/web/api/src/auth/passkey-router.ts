@@ -34,6 +34,7 @@ import {
 } from './passkey-schemas';
 import { emailGate, nextPasskeyAttempt } from './passkey-contract';
 import { csrfProtection, passkeyRateLimit } from './passkey-security';
+import { passkeySignupRouter } from './passkey-signup';
 
 import {
   accountPasskeyCredentials,
@@ -214,6 +215,7 @@ const passkeyRouter = Router();
 
 passkeyRouter.use(csrfProtection);
 passkeyRouter.use(passkeyRateLimit);
+passkeyRouter.use('/sign-up', passkeySignupRouter);
 
 passkeyRouter.post('/registration/begin', validateRequest({ body: registrationBeginSchema }), async (req, res) => {
   const { label } = getValidated<{ body: typeof registrationBeginSchema }>(req).body!;

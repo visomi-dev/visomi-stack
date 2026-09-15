@@ -8,7 +8,7 @@ import {
   APP_PATH,
   DASHBOARD_PATH,
   GALLERY_PATH,
-  IDENTITY_PATH,
+  SIGN_IN_PATH,
   LEGACY_IDENTITY_PATH,
   SECURITY_PATH,
   SIGN_UP_PATH,
@@ -27,14 +27,14 @@ export const appRoutes: Route[] = [
     redirectTo: DASHBOARD_PATH,
   },
   {
-    path: IDENTITY_PATH,
+    path: SIGN_IN_PATH,
     canActivate: [anonymousGuard],
     data: { hideAppShell: true },
-    loadComponent: () => import('./auth/identity/identity').then((module) => module.Identity),
+    loadComponent: () => import('./auth/sign-in/sign-in').then((module) => module.SignIn),
   },
   {
     path: LEGACY_IDENTITY_PATH,
-    redirectTo: IDENTITY_PATH,
+    redirectTo: SIGN_IN_PATH,
     pathMatch: 'full',
   },
   {

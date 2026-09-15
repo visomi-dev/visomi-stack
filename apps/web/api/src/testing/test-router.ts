@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { Router } from 'express';
 
 import { clearMailbox, listSentMessages } from '../auth/auth-mail';
+import { challengeSchema } from '../auth/auth-schemas';
 import {
   consumeChallenge,
   createChallenge,
@@ -20,7 +21,7 @@ import { accountMemberships, db, users } from 'shared';
 const mailboxQuerySchema = z
   .object({
     email: emailSchema.optional(),
-    purpose: z.enum(['bootstrap_recovery']).optional(),
+    purpose: challengeSchema.shape.purpose.optional(),
   })
   .meta({ id: 'TestMailboxQuery' });
 
@@ -30,7 +31,7 @@ const mailboxMessageSchema = z
     email: emailSchema,
     expiresAt: z.string(),
     pin: z.string(),
-    purpose: z.literal('bootstrap_recovery'),
+    purpose: challengeSchema.shape.purpose,
   })
   .meta({ id: 'MailboxMessage' });
 

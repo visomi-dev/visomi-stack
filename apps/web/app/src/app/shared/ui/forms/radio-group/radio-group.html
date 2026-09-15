@@ -1,16 +1,28 @@
-<fieldset class="grid gap-3" [disabled]="disabled()">
+<fieldset
+  class="grid min-w-0 gap-3"
+  [disabled]="isDisabled()"
+  [attr.aria-describedby]="ariaDescribedBy()"
+  [attr.aria-busy]="loading()"
+>
   @if (legend()) {
     <legend class="text-sm font-semibold text-slate-950 dark:text-slate-50">{{ legend() }}</legend>
   }
 
-  @for (option of options(); track option.value) {
-    <label [class]="optionClasses()">
-      <span class="flex items-start gap-3">
+  <div
+    class="grid gap-3"
+    [class.sm:grid-flow-col]="layout() === 'responsive'"
+    [class.sm:auto-cols-fr]="layout() === 'responsive'"
+  >
+    @for (option of options(); track option.value) {
+      <label [class]="optionClasses()">
         <input
-          class="ui-focus-ring mt-0.5 size-4 accent-slate-600 dark:accent-slate-500"
+          class="mt-0.5 size-4 shrink-0 accent-blue-600 dark:accent-blue-400"
           data-slot="control"
-          [attr.aria-invalid]="invalid()"
-          [attr.required]="required() && $first ? '' : null"
+          [attr.aria-invalid]="isInvalid()"
+          [required]="required()"
+          [disabled]="isDisabled() || option.disabled === true"
+          [attr.aria-labelledby]="name() + '-' + $index + '-label'"
+          [attr.aria-describedby]="option.description ? name() + '-' + $index + '-description' : null"
           [checked]="value() === option.value"
           [name]="name()"
           [value]="option.value"
@@ -18,13 +30,18 @@
           (blur)="onBlur()"
           (change)="selectValue(option.value)"
         />
-        <span class="grid gap-1">
-          <span class="font-medium">{{ option.label }}</span>
+        @if (option.icon) {
+          <app-icon [name]="option.icon" class="shrink-0" aria-hidden="true" />
+        }
+        <span class="grid min-w-0 gap-1">
+          <span class="font-medium" [id]="name() + '-' + $index + '-label'">{{ option.label }}</span>
           @if (option.description) {
-            <span class="text-slate-500 dark:text-slate-400">{{ option.description }}</span>
+            <span class="text-slate-500 dark:text-slate-400" [id]="name() + '-' + $index + '-description'">{{
+              option.description
+            }}</span>
           }
         </span>
-      </span>
-    </label>
-  }
+      </label>
+    }
+  </div>
 </fieldset>

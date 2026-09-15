@@ -48,7 +48,7 @@ export class PasswordReset {
     maxLength(path.emailCode, 6, { message: 'Enter all 6 digits.' });
     pattern(path.emailCode, /^\d{6}$/u, { message: 'Use the code from your email.' });
     required(path.password, { message: 'Enter a new password.' });
-    minLength(path.password, 15, { message: 'Use at least 15 characters.' });
+    minLength(path.password, 12, { message: 'Use at least 12 characters.' });
     maxLength(path.password, 128, { message: 'Use 128 characters or fewer.' });
     required(path.confirmation, { message: 'Confirm your new password.' });
     validate(path.confirmation, ({ value, valueOf }) =>

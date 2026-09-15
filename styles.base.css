@@ -102,10 +102,11 @@ html.dark {
    * by field.html's inner `<div class="gap-2 grid">`). Use the descendant
    * combinator (space), not the child combinator (`>`), so the selector matches. */
   [data-control] app-error-message {
+    min-height: 0;
     max-height: 0;
     overflow: hidden;
     opacity: 0;
-    margin-top: 0;
+    margin-top: -0.5rem;
     transition:
       max-height var(--motion-base),
       opacity var(--motion-base),
@@ -158,8 +159,9 @@ html.dark {
    * submit, even though their placeholder is still showing. */
   [data-control]:not(:focus-within):has([data-slot='control']:user-invalid:not(:placeholder-shown):not(:autofill))
     app-error-message,
-  [data-control]:not(:focus-within):not(:has([data-slot='control']:placeholder-shown))
-    [data-manual-invalid]
+  [data-control][data-manual-invalid]:not(:focus-within):not(:has([data-slot='control']:placeholder-shown))
+    app-error-message,
+  [data-control]:not(:focus-within):has([data-slot='control'][aria-invalid='true']:not(:placeholder-shown))
     app-error-message,
   [data-submitted] [data-control]:not(:focus-within):has([data-slot='control']:invalid) app-error-message,
   [data-submitted]
@@ -172,7 +174,7 @@ html.dark {
     app-error-message {
     max-height: 6rem;
     opacity: 1;
-    margin-top: 0.25rem;
+    margin-top: 0;
   }
 
   @media (prefers-reduced-motion: reduce) {

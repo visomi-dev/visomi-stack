@@ -54,6 +54,22 @@ export class Passkey {
     return response.data;
   }
 
+  async beginSignUp(email: string): Promise<PasskeyBegin['data']> {
+    const response = await firstValueFrom(this.http.post<PasskeyBegin>('/api/auth/passkey/sign-up/begin', { email }));
+
+    return response.data;
+  }
+
+  async completeSignUp(challengeId: string, credential: Credential): Promise<void> {
+    await firstValueFrom(
+      this.http.post('/api/auth/passkey/sign-up/complete', { challengeId, response: serializeCredential(credential) }),
+    );
+  }
+
+  async verifySignUp(code: string): Promise<void> {
+    await firstValueFrom(this.http.post('/api/auth/passkey/sign-up/verify', { code }));
+  }
+
   async completeAuthentication(challengeId: string, credential: Credential): Promise<PasskeyComplete['data']> {
     const response = await firstValueFrom(
       this.http.post<PasskeyComplete>('/api/auth/passkey/authentication/complete', {

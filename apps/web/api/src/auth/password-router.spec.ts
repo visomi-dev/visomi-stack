@@ -109,14 +109,14 @@ describe('password authentication routes', () => {
     expect(setUserPassword).not.toHaveBeenCalled();
   });
 
-  it('rejects password sign-in while the security prerequisites are disabled', async () => {
+  it('validates credentials without requiring a password feature flag', async () => {
     const response = await request(createApp())
       .post('/auth/password/sign-in')
       .set('Origin', 'http://localhost:8080')
       .send({ email: 'person@example.test', password: 'a secure password' });
 
-    expect(response.status).toBe(404);
-    expect(response.body.code).toBe('password_auth_disabled');
+    expect(response.status).toBe(401);
+    expect(response.body.code).toBe('verification_failed');
   });
 
   it('validates password sign-in input before reaching the disabled guard', async () => {

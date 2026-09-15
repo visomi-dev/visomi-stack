@@ -18,7 +18,7 @@ export class ErrorMessage {
 
   readonly classes = computed(() =>
     uiClass(
-      'text-red-600 dark:text-red-400 mt-1 inline-flex items-start gap-1.5 text-sm font-medium',
+      'text-red-600 dark:text-red-400 inline-flex items-center gap-1.5 text-sm font-medium',
       this.withIcon() && 'pl-0',
     ),
   );

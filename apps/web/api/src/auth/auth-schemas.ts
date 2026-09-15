@@ -133,7 +133,7 @@ export const passwordSetSchema = z
       .string()
       .max(512)
       .transform(normalizePassword)
-      .refine(validatePasswordPolicy, 'Password must be between 15 and 128 characters.'),
+      .refine(validatePasswordPolicy, 'Password must be between 12 and 128 characters.'),
   })
   .strict()
   .meta({ id: 'PasswordSet' });

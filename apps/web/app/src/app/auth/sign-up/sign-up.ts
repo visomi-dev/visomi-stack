@@ -1,9 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { email, form, maxLength, minLength, pattern, required, type FieldTree, validate } from '@angular/forms/signals';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { PasswordAuth } from '../../shared/auth/password';
+import { Passkey } from '../../shared/auth/passkey';
 import { ErrorMessage } from '../../shared/ui/forms/error-message/error-message';
 import { Field } from '../../shared/ui/forms/field/field';
 import { Form as AppForm } from '../../shared/ui/forms/form/form';
@@ -24,12 +26,22 @@ type CodeModel = { code: string };
 })
 export class SignUp {
   private readonly password = inject(PasswordAuth);
+  private readonly passkey = inject(Passkey);
+  private readonly route = inject(ActivatedRoute);
+  private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
+  readonly passwordMode = computed(() => this.params().get('method') === 'password');
+  readonly passkeyEmailModel = signal({ email: '' });
+  readonly passkeyEmailForm = form(this.passkeyEmailModel, (path) => {
+    required(path.email, { message: $localize`:@@signupEmailRequired:Enter your email address.` });
+    email(path.email, { message: $localize`:@@signupEmailInvalid:Enter a valid email address.` });
+  });
+  readonly passkeyEmailPending = signal(false);
   readonly model = signal<SignUpModel>({ email: '', password: '', confirmation: '' });
   readonly form: FieldTree<SignUpModel> = form(this.model, (path) => {
     required(path.email, { message: 'Enter your email address.' });
     email(path.email, { message: 'Enter a valid email address.' });
     required(path.password, { message: 'Enter a password.' });
-    minLength(path.password, 15, { message: 'Use at least 15 characters.' });
+    minLength(path.password, 12, { message: 'Use at least 12 characters.' });
     maxLength(path.password, 128, { message: 'Use 128 characters or fewer.' });
     required(path.confirmation, { message: 'Confirm your password.' });
     validate(path.confirmation, ({ value, valueOf }) =>
@@ -54,6 +66,37 @@ export class SignUp {
   readonly confirmationError = computed(() => this.form.confirmation().errors()[0]?.message ?? '');
   readonly codeError = computed(() => this.codeForm.code().errors()[0]?.message ?? '');
 
+  protected async createPasskey(): Promise<void> {
+    if (this.passkeyEmailForm().invalid() || this.submitting()) return;
+    this.error.set('');
+    if (!this.passkey.isSupported()) {
+      this.error.set(
+        $localize`:@@signupPasskeyUnsupported:This browser cannot create passkeys. Use another browser or create an account with a password.`,
+      );
+
+      return;
+    }
+    this.submitting.set(true);
+    try {
+      const begin = await this.passkey.beginSignUp(this.passkeyEmailModel().email);
+
+      if (!begin.challengeId || !begin.options) throw new Error('Missing passkey options.');
+      const credential = await this.passkey.createCredential(begin.options);
+
+      await this.passkey.completeSignUp(begin.challengeId, credential);
+      this.passkeyEmailPending.set(true);
+    } catch (error) {
+      this.error.set(
+        this.message(
+          error,
+          $localize`:@@signupPasskeyFailed:Passkey creation was cancelled or could not be completed. Try again.`,
+        ),
+      );
+    } finally {
+      this.submitting.set(false);
+    }
+  }
+
   protected async signUp(): Promise<void> {
     if (this.form().invalid() || this.submitting()) return;
     this.submitting.set(true);
@@ -75,11 +118,12 @@ export class SignUp {
   }
 
   protected async verifySignUp(): Promise<void> {
-    if (this.codeForm().invalid() || !this.flowId() || this.submitting()) return;
+    if (this.codeForm().invalid() || (!this.flowId() && !this.passkeyEmailPending()) || this.submitting()) return;
     this.submitting.set(true);
     this.error.set('');
     try {
-      await this.password.verifySignUp(this.flowId(), this.codeForm.code().value());
+      if (this.passkeyEmailPending()) await this.passkey.verifySignUp(this.codeForm.code().value());
+      else await this.password.verifySignUp(this.flowId(), this.codeForm.code().value());
       this.complete.set(true);
     } catch (error) {
       this.error.set(this.message(error, 'That verification code is not valid.'));

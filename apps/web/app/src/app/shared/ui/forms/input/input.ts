@@ -1,4 +1,5 @@
 import {
+  afterNextRender,
   booleanAttribute,
   Component,
   computed,
@@ -7,6 +8,7 @@ import {
   input,
   numberAttribute,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import type { Field } from '@angular/forms/signals';
@@ -22,6 +24,8 @@ import { uiClass } from '../../classes';
   styleUrl: './input.css',
 })
 export class Input {
+  protected readonly ready = signal(false);
+  private readonly enableInputAfterRender = afterNextRender(() => this.ready.set(true));
   private readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('inputEl');
 
   readonly formField = input.required<Field<string>>();

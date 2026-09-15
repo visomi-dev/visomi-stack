@@ -50,6 +50,9 @@ const registrationBeginSchema = z.object({ label: passkeyLabelSchema }).strict()
 const registrationCompleteSchema = z
   .object({ challengeId: z.string().min(1).max(200), response: credentialResponseSchema })
   .strict();
+
+export const passkeySignupBeginSchema = z.object({ email: emailSchema }).strict();
+export const passkeySignupVerifySchema = z.object({ code: z.string().regex(/^\d{6}$/u) }).strict();
 const authenticationBeginSchema = passkeyEmailSchema
   .extend({ retryRequested: z.boolean().optional().default(false) })
   .strict();
@@ -94,6 +97,24 @@ const credentialActionSchema = z.object({ action: z.literal('revoke') }).strict(
 const credentialMutationSchema = z.union([credentialRenameSchema, credentialActionSchema]);
 
 const passkeyOpenApiPaths = {
+  '/auth/passkey/sign-up/begin': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passkeySignupBeginSchema } } },
+      responses: { 200: { description: 'Session-bound passkey creation options for a new account.' } },
+    },
+  },
+  '/auth/passkey/sign-up/complete': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: registrationCompleteSchema } } },
+      responses: { 202: { description: 'Passkey proof accepted. Email verification is required.' } },
+    },
+  },
+  '/auth/passkey/sign-up/verify': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passkeySignupVerifySchema } } },
+      responses: { 201: { description: 'Verified account and passkey created atomically.' } },
+    },
+  },
   '/auth/passkey/registration/begin': {
     post: {
       requestBody: { required: true, content: { 'application/json': { schema: registrationBeginSchema } } },

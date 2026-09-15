@@ -11,6 +11,7 @@ const RATE_LIMIT_MAX = 60;
 const attempts = new Map<string, { count: number; resetAt: number }>();
 const otpDeliveryAttempts = new Map<string, { count: number; resetAt: number }>();
 const otpVerificationAttempts = new Map<string, { count: number; resetAt: number }>();
+const otpDeliveryCooldowns = new Map<string, number>();
 
 function expectedOrigin(): string {
   return process.env.WEBAUTHN_ORIGIN ?? new URL(env.APP_BASE_URL).origin;
@@ -66,6 +67,7 @@ function resetPasskeySecurityState(): void {
   attempts.clear();
   otpDeliveryAttempts.clear();
   otpVerificationAttempts.clear();
+  otpDeliveryCooldowns.clear();
 }
 
 function consumeLimit(
@@ -114,9 +116,21 @@ function emailOtpDeliveryRateLimit(req: Request, res: Response, next: NextFuncti
   const email = typeof req.body?.email === 'string' ? req.body.email.normalize('NFKC').trim().toLowerCase() : undefined;
   const flowId = typeof req.body?.flowId === 'string' ? req.body.flowId : undefined;
   const destinationKey = email ?? flowId ?? 'invalid';
+  const result = consumeEmailOtpDeliveryLimit(req.ip, destinationKey);
+
+  if (!result.allowed) {
+    rateLimitResponse(res, result.retryAfter);
+
+    return;
+  }
+  next();
+}
+
+function consumeEmailOtpDeliveryLimit(ip: string | undefined, destination: string, enforceCooldown = false) {
+  const destinationKey = destination.normalize('NFKC').trim().toLowerCase();
   const ipResult = consumeLimit(
     otpDeliveryAttempts,
-    `ip:${req.ip}`,
+    `ip:${ip}`,
     env.EMAIL_OTP_DELIVERY_WINDOW_MS,
     env.EMAIL_OTP_DELIVERY_IP_MAX,
   );
@@ -127,12 +141,26 @@ function emailOtpDeliveryRateLimit(req: Request, res: Response, next: NextFuncti
     env.EMAIL_OTP_DELIVERY_EMAIL_MAX,
   );
 
-  if (!ipResult.allowed || !destinationResult.allowed) {
-    rateLimitResponse(res, Math.max(ipResult.retryAfter, destinationResult.retryAfter));
+  const now = Date.now();
+  const cooldownUntil = otpDeliveryCooldowns.get(destinationKey) ?? 0;
 
-    return;
+  if (!ipResult.allowed || !destinationResult.allowed || (enforceCooldown && cooldownUntil > now)) {
+    return {
+      allowed: false,
+      retryAfter: Math.max(
+        !ipResult.allowed ? ipResult.retryAfter : 0,
+        !destinationResult.allowed ? destinationResult.retryAfter : 0,
+        enforceCooldown ? Math.ceil((cooldownUntil - now) / 1000) : 0,
+        1,
+      ),
+    };
   }
-  next();
+  if (enforceCooldown) {
+    for (const [key, until] of otpDeliveryCooldowns) if (until <= now) otpDeliveryCooldowns.delete(key);
+    otpDeliveryCooldowns.set(destinationKey, now + env.PIN_RESEND_COOLDOWN_SECONDS * 1000);
+  }
+
+  return { allowed: true, retryAfter: 0 };
 }
 
 function emailOtpVerificationRateLimit(req: Request, res: Response, next: NextFunction): void {
@@ -154,6 +182,7 @@ function emailOtpVerificationRateLimit(req: Request, res: Response, next: NextFu
 export {
   csrfProtection,
   emailOtpDeliveryRateLimit,
+  consumeEmailOtpDeliveryLimit,
   emailOtpVerificationRateLimit,
   consumePasswordRateLimit,
   passkeyRateLimit,
