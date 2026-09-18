@@ -21,3 +21,7 @@ export const SIGN_IN_URL = '/auth/sign-in';
 export const SECURITY_URL = '/security';
 export const SIGN_UP_URL = '/auth/sign-up';
 export const EMAIL_VERIFICATION_URL = '/auth/verify';
+
+export function authDestination(value: string | null): string {
+  return value && /^\/(?:dashboard|security|gallery|activation)$/.test(value) ? value : APP_URL;
+}

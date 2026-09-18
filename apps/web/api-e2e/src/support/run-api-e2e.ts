@@ -158,7 +158,7 @@ function provisionMinio(cli: string): string {
     `MINIO_ROOT_USER=${minioAccessKey}`,
     '--env',
     `MINIO_ROOT_PASSWORD=${minioSecretKey}`,
-    'docker.io/minio/minio:latest',
+    process.env['API_E2E_MINIO_IMAGE'] ?? 'quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z',
     'server',
     '/data',
     '--address',

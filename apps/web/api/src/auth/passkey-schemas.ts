@@ -183,6 +183,7 @@ const passkeyOpenApiPaths = {
                     challengeId: z.string().nullable(),
                     options: passkeyOptionsSchema.nullable(),
                     attempt: passkeyAttemptSchema,
+                    expiresAt: z.iso.datetime(),
                   })
                   .strict(),
                 'PasskeyAuthenticationBeginEnvelope',

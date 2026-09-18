@@ -16,67 +16,140 @@
             Use a passkey saved on this device, another device, or a security key.
           </p>
         </header>
-        <div class="mt-7 grid gap-3">
+        <div class="mt-7 grid gap-4">
+          <app-field>
+            <app-label for="access-email" tone="plain" i18n="@@identityPasswordEmailLabel">Email address</app-label>
+            <app-input
+              [formField]="emailForm.email"
+              controlId="access-email"
+              name="username"
+              type="email"
+              autocomplete="username webauthn"
+              [disabled]="passkeyVerifying()"
+            />
+          </app-field>
           <button
             type="button"
-            class="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-600 px-4 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-500 dark:hover:bg-slate-400"
-            [disabled]="state() === 'passkey-loading'"
-            (click)="authenticateWithPasskey()"
-            i18n="@@identityContinuePasskey"
+            class="min-h-12 rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 disabled:opacity-60 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+            [disabled]="passkeyVerifying()"
+            #continueButton
+            (click)="openMethods()"
+            i18n="@@accessContinue"
           >
-            Continue with a passkey
+            Continue
           </button>
-          <button
-            type="button"
-            class="min-h-11 rounded-md border border-slate-950/10 px-4 text-sm font-semibold dark:border-white/10"
-            (click)="showGoogle()"
-            [class.hidden]="googleClientId()"
-            i18n="@@identityGoogleFallback"
-          >
-            Continue with Google
-          </button>
-          <div
-            #googleButton
-            class="flex min-h-10 justify-center"
-            [class.hidden]="!googleClientId()"
-            aria-live="polite"
-          ></div>
-          <p
-            class="px-2 text-center text-xs leading-5 text-slate-500 dark:text-slate-400"
-            i18n="@@identityPasskeyGuidance"
-          >
-            Your passkey may be saved on this device, synced from another device, or available on a nearby device or
-            security key.
+          <p class="text-center text-sm leading-6 text-zinc-500 dark:text-zinc-400" i18n="@@accessSuggestion">
+            Your browser can suggest a saved passkey. You can also choose another way to sign in.
           </p>
-          <div class="my-2 flex items-center gap-3" aria-hidden="true">
-            <span class="h-px flex-1 bg-slate-950/10 dark:bg-white/10"></span>
-            <span
-              class="font-mono text-[0.6875rem] tracking-widest text-slate-400 uppercase"
-              i18n="@@identityOrSeparator"
-              >or</span
+          @if (passkeyVerifying()) {
+            <p role="status" class="text-center text-sm" i18n="@@accessVerifying">Verifying your passkey…</p>
+          } @else {
+            <a
+              routerLink="/auth/sign-up"
+              queryParamsHandling="preserve"
+              class="min-h-11 content-center text-center text-sm font-semibold text-blue-600 underline underline-offset-4 dark:text-blue-400"
+              i18n="@@accessCreateAccount"
+              >Create an account</a
             >
-            <span class="h-px flex-1 bg-slate-950/10 dark:bg-white/10"></span>
-          </div>
-          <button
-            type="button"
-            class="min-h-11 rounded-md px-4 text-sm font-semibold text-blue-600 underline-offset-4 hover:bg-blue-600/10 dark:text-blue-400"
-            (click)="showPassword()"
-            i18n="@@identityUsePassword"
-          >
-            Use password instead
-          </button>
-          <button
-            type="button"
-            class="min-h-11 rounded-md px-4 text-sm font-semibold text-blue-600 underline-offset-4 hover:bg-blue-600/10 dark:text-blue-400"
-            (click)="showEmailRecovery()"
-            i18n="@@identityTryAnotherWay"
-          >
-            Recover with email
-          </button>
-          <div class="mt-3 grid gap-2 border-t border-slate-950/10 pt-4 text-center text-sm dark:border-white/10">
-            <a routerLink="/auth/sign-up" class="font-semibold text-blue-600 dark:text-blue-400">Create an account</a>
-          </div>
+          }
         </div>
+        <dialog
+          #methodDialog
+          aria-labelledby="access-methods-title"
+          (cancel)="$event.preventDefault(); closeMethods()"
+          (close)="closeMethods()"
+          class="fixed inset-x-0 top-auto bottom-0 m-0 max-h-[90dvh] w-full max-w-none overflow-y-auto rounded-t-2xl bg-white p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-zinc-950 shadow-2xl backdrop:bg-zinc-950/50 md:inset-0 md:m-auto md:max-w-md md:rounded-lg md:p-8 dark:bg-zinc-900 dark:text-white"
+        >
+          <header class="flex items-start justify-between gap-4">
+            <div>
+              <p
+                class="font-mono text-xs tracking-widest text-zinc-500 uppercase dark:text-zinc-400"
+                i18n="@@accessMethodsEyebrow"
+              >
+                Your account
+              </p>
+              <h2
+                id="access-methods-title"
+                class="font-heading mt-2 text-2xl font-bold tracking-tight"
+                i18n="@@accessMethodsTitle"
+              >
+                Choose how to continue
+              </h2>
+            </div>
+            <button
+              type="button"
+              autofocus
+              class="min-h-11 min-w-11 rounded-md text-sm font-semibold hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-blue-600 dark:hover:bg-zinc-800"
+              (click)="closeMethods()"
+              i18n="@@accessClose"
+            >
+              Close
+            </button>
+          </header>
+          <div class="mt-7 grid gap-3">
+            <button
+              type="button"
+              class="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-600 px-4 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-500 dark:hover:bg-slate-400"
+              [disabled]="state() === 'passkey-loading' || passkeyVerifying()"
+              (click)="authenticateWithPasskey()"
+              i18n="@@identityContinuePasskey"
+            >
+              Continue with a passkey
+            </button>
+            <div
+              #googleButton
+              class="flex min-h-10 justify-center"
+              [class.hidden]="!googleClientId()"
+              aria-live="polite"
+            ></div>
+            @if (errorMessage()) {
+              <p role="alert" class="text-sm text-red-700 dark:text-red-400">{{ errorMessage() }}</p>
+            }
+            <p
+              class="px-2 text-center text-xs leading-5 text-slate-500 dark:text-slate-400"
+              i18n="@@identityPasskeyGuidance"
+            >
+              Your passkey may be saved on this device, synced from another device, or available on a nearby device or
+              security key.
+            </p>
+            <div class="my-2 flex items-center gap-3" aria-hidden="true">
+              <span class="h-px flex-1 bg-slate-950/10 dark:bg-white/10"></span>
+              <span
+                class="font-mono text-[0.6875rem] tracking-widest text-slate-400 uppercase"
+                i18n="@@identityOrSeparator"
+                >or</span
+              >
+              <span class="h-px flex-1 bg-slate-950/10 dark:bg-white/10"></span>
+            </div>
+            <button
+              type="button"
+              class="min-h-11 rounded-md px-4 text-sm font-semibold text-blue-600 underline-offset-4 hover:bg-blue-600/10 dark:text-blue-400"
+              (click)="showPassword()"
+              i18n="@@identityUsePassword"
+            >
+              Use password instead
+            </button>
+            <button
+              type="button"
+              class="min-h-11 rounded-md px-4 text-sm font-semibold text-blue-600 underline-offset-4 hover:bg-blue-600/10 dark:text-blue-400"
+              (click)="showEmailRecovery()"
+              i18n="@@identityTryAnotherWay"
+            >
+              Recover with email
+            </button>
+            @if (!passkeyVerifying()) {
+              <div class="mt-3 grid gap-2 border-t border-slate-950/10 pt-4 text-center text-sm dark:border-white/10">
+                <a
+                  routerLink="/auth/sign-up"
+                  queryParamsHandling="preserve"
+                  class="min-h-11 content-center font-semibold text-blue-600 dark:text-blue-400"
+                  i18n="@@accessCreateAccount"
+                  >Create an account</a
+                >
+              </div>
+            }
+          </div>
+        </dialog>
       }
       @case ('password') {
         <header>

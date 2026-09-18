@@ -31,16 +31,23 @@ export class GoogleIdentity {
     flowId: string,
     nonce: string,
     onComplete: (user: AuthUser) => void,
+    onError: (error: unknown) => void = () => undefined,
+    isActive: () => boolean = () => true,
   ): Promise<void> {
     await this.render(element, clientId, nonce, async (credential) => {
-      const response = await firstValueFrom(
-        this.http.post<ResponseEnvelope<{ authenticated: true; user: AuthUser }>>('/api/auth/google/complete', {
-          flowId,
-          idToken: credential,
-        }),
-      );
+      if (!isActive()) return;
+      try {
+        const response = await firstValueFrom(
+          this.http.post<ResponseEnvelope<{ authenticated: true; user: AuthUser }>>('/api/auth/google/complete', {
+            flowId,
+            idToken: credential,
+          }),
+        );
 
-      onComplete(response.data.user);
+        onComplete(response.data.user);
+      } catch (error) {
+        onError(error);
+      }
     });
   }
 

@@ -15,13 +15,16 @@ test.describe('/app/auth/sign-in', () => {
 
     await assertOpenDesignChrome(page);
     await expect(page.getByRole('heading', { name: 'Sign in to Visomi Stack' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Email address' })).toBeEditable();
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Continue with a passkey' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Recover with email' })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: 'Email address' })).toBeHidden();
+    await expect(page.getByRole('dialog')).toBeVisible();
   });
 
   test('opens email recovery inline without changing routes', async ({ page }) => {
     await page.goto(signInRoute);
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
     await page.getByRole('button', { name: 'Recover with email' }).click();
 
     await expect(page).toHaveURL(signInUrlPattern);
@@ -30,6 +33,12 @@ test.describe('/app/auth/sign-in', () => {
 
   test('offers passkey retry before retaining email recovery', async ({ page }) => {
     const retryRequests: boolean[] = [];
+
+    await page.addInitScript(() => {
+      Object.defineProperty(PublicKeyCredential, 'getClientCapabilities', {
+        value: async () => ({ conditionalGet: false }),
+      });
+    });
 
     await page.route('**/api/auth/passkey/authentication/begin', async (route) => {
       const body = route.request().postDataJSON() as { retryRequested: boolean };
@@ -42,6 +51,7 @@ test.describe('/app/auth/sign-in', () => {
       });
     });
     await page.goto(signInRoute);
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
     await page.getByRole('button', { name: 'Continue with a passkey' }).click();
 
     await expect(page.getByRole('heading', { name: 'Passkey sign-in did not finish.' })).toBeVisible();

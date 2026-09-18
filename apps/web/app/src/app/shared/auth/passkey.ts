@@ -7,6 +7,7 @@ import type { AuthUser, ResponseEnvelope } from './auth.models';
 
 type PasskeyBegin = ResponseEnvelope<{
   challengeId: string | null;
+  expiresAt?: string;
   verificationChallengeId?: string | null;
   enrollmentId?: string | null;
   options: Record<string, unknown> | null;
@@ -36,6 +37,50 @@ export class Passkey {
 
   isSupported(): boolean {
     return typeof this.document.defaultView?.PublicKeyCredential !== 'undefined';
+  }
+
+  async supportsConditionalAuthentication(): Promise<boolean> {
+    const view = this.document.defaultView;
+    const credential = view?.PublicKeyCredential;
+
+    if (!view?.isSecureContext || !view.navigator.credentials || !credential) return false;
+    try {
+      if (credential.getClientCapabilities) {
+        const capabilities = await credential.getClientCapabilities();
+
+        if (typeof capabilities['conditionalGet'] === 'boolean') return capabilities['conditionalGet'];
+      }
+
+      return (await credential.isConditionalMediationAvailable?.()) === true;
+    } catch {
+      return false;
+    }
+  }
+
+  async supportsImmediateAuthentication(): Promise<boolean> {
+    const view = this.document.defaultView;
+
+    if (!view?.isSecureContext || !view.navigator.credentials) return false;
+    try {
+      return (await view.PublicKeyCredential?.getClientCapabilities?.())?.['immediateGet'] === true;
+    } catch {
+      return false;
+    }
+  }
+
+  async getImmediateCredential(options: Record<string, unknown>): Promise<Credential> {
+    const view = this.document.defaultView;
+
+    if (!view?.navigator.credentials) throw new Error('WebAuthn is unavailable.');
+    const request: CredentialRequestOptions & { uiMode: 'immediate' } = {
+      publicKey: decodeOptions({ ...options, allowCredentials: [] }) as unknown as PublicKeyCredentialRequestOptions,
+      uiMode: 'immediate',
+    };
+    const credential = await view.navigator.credentials.get(request);
+
+    if (!credential) throw new DOMException('Sign-in was not completed.', 'NotAllowedError');
+
+    return credential;
   }
 
   async beginAuthentication(retryRequested = false): Promise<PasskeyBegin['data']> {
@@ -106,7 +151,10 @@ export class Passkey {
     return response.data;
   }
 
-  async getCredential(options: Record<string, unknown>): Promise<Credential> {
+  async getCredential(
+    options: Record<string, unknown>,
+    request: { mediation?: 'conditional' | 'required'; signal?: AbortSignal } = {},
+  ): Promise<Credential> {
     const view = this.document.defaultView;
 
     if (!view?.navigator.credentials) {
@@ -115,6 +163,7 @@ export class Passkey {
 
     const credential = await view.navigator.credentials.get({
       publicKey: decodeOptions(options) as unknown as PublicKeyCredentialRequestOptions,
+      ...request,
     });
 
     if (!credential) {

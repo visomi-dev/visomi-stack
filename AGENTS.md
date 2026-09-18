@@ -28,6 +28,8 @@ Themis is an Nx monorepo with Angular frontend apps and Node backend runtimes. K
 
 ## Mandatory Rules
 
+- Before every shell command that invokes Nx directly or indirectly, run `export NX_DAEMON=false`. Keep `useDaemonProcess: false` in `nx.json`; never run `nx daemon --start` unless the user explicitly requests it. Use one-shot verification and stop task-owned watchers after use.
+
 - All repository artifacts must be written in English, including specs, docs, comments, code identifiers, commit messages, UI copy, test names, and generated files.
 - User-facing localized content may be translated through the existing i18n flow, but source text and documentation should remain English unless a file is explicitly a translation resource.
 - Build context by inspecting the codebase first; follow existing files before introducing new names, folders, or patterns.

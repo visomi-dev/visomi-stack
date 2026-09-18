@@ -39,12 +39,13 @@ test('keeps email validation collapsed while typing and centers its icon after b
 
 test('uses query parameters for password navigation and survives reload and browser back', async ({ page }) => {
   await page.goto('/app/en/auth/sign-in');
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await page.getByRole('button', { name: 'Use password instead' }).click();
   await expect(page).toHaveURL(/method=password/);
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Sign in with password' })).toBeVisible();
   await page.goBack();
-  await expect(page.getByRole('button', { name: 'Continue with a passkey' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeVisible();
 });
 
 test('creates a password account with 12 characters and completes email and password sign-in', async ({
@@ -57,8 +58,12 @@ test('creates a password account with 12 characters and completes email and pass
   await page.goto('/app/en/auth/sign-up');
   await page.getByRole('link', { name: 'Use password instead' }).click();
   await expect(page).toHaveURL(/method=password/);
+  await expect(page.getByRole('heading', { name: 'Create your account', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Password', { exact: true })).toBeEditable();
   await page.getByRole('textbox', { name: 'Email address', exact: true }).fill(email);
+  await expect(page.getByRole('textbox', { name: 'Email address', exact: true })).toHaveValue(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
+  await expect(page.getByRole('textbox', { name: 'Email address', exact: true })).toHaveValue(email);
   await page.getByLabel('Confirm password', { exact: true }).fill(password);
   await expect(page.getByText('Length requirement met (12–128 characters).')).toBeVisible();
   await page.screenshot({ path: 'tmp/auth-captures/password-indicator.png', fullPage: true });
@@ -83,54 +88,72 @@ test('creates a password account with 12 characters and completes email and pass
     .toBe(true);
 });
 
-test('creates the passkey before email verification and signs in only after verification', async ({
-  page,
-  request,
-}) => {
-  const cdp = await page.context().newCDPSession(page);
+for (const expiredAssertion of [false, true]) {
+  test(`creates the passkey before email verification and signs in with fresh cookies (expired assertion: ${expiredAssertion})`, async ({
+    page,
+    request,
+  }) => {
+    const cdp = await page.context().newCDPSession(page);
 
-  await cdp.send('WebAuthn.enable');
-  await cdp.send('WebAuthn.addVirtualAuthenticator', {
-    options: {
-      protocol: 'ctap2',
-      transport: 'internal',
-      hasResidentKey: true,
-      hasUserVerification: true,
-      isUserVerified: true,
-      automaticPresenceSimulation: true,
-    },
+    await cdp.send('WebAuthn.enable');
+    await cdp.send('WebAuthn.addVirtualAuthenticator', {
+      options: {
+        protocol: 'ctap2',
+        transport: 'internal',
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+        automaticPresenceSimulation: true,
+      },
+    });
+    const email = `passkey-${randomUUID()}@example.test`;
+
+    await page.goto('/app/en/auth/sign-up');
+    await expect(page.getByLabel('Password', { exact: true })).toHaveCount(0);
+    await page.getByRole('textbox', { name: 'Email address', exact: true }).fill(email);
+    await page.getByRole('button', { name: 'Create account with passkey' }).click();
+    await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+    expect((await (await page.request.get('/api/auth/session')).json()).data.authenticated).toBe(false);
+    const otherSession = await request.post('/api/auth/passkey/sign-up/verify', {
+      data: { code: '123456' },
+      headers: { Origin: new URL(page.url()).origin },
+    });
+
+    expect(otherSession.status()).toBe(410);
+    const pin = await readLatestPin(request, email, 'bootstrap_recovery');
+
+    await page.getByRole('textbox', { name: 'Verification code' }).fill(pin === '000000' ? '111111' : '000000');
+    await page.getByRole('button', { name: 'Verify email', exact: true }).click();
+    await expect(page.getByRole('alert').filter({ hasText: 'The verification code is invalid.' })).toBeVisible();
+    await page.getByRole('textbox', { name: 'Verification code' }).fill(pin);
+    await page.getByRole('button', { name: 'Verify email', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Your account is verified' })).toBeVisible();
+    const replay = await page.request.post('/api/auth/passkey/sign-up/verify', {
+      data: { code: pin },
+      headers: { Origin: new URL(page.url()).origin },
+    });
+
+    expect(replay.status()).toBe(410);
+    await page.context().clearCookies();
+    if (expiredAssertion) {
+      await page.route(
+        '**/api/auth/passkey/authentication/complete',
+        (route) =>
+          route.fulfill({
+            status: 410,
+            json: { code: 'challenge_expired', message: 'The challenge has expired.' },
+          }),
+        { times: 1 },
+      );
+    }
+    await page.getByRole('link', { name: 'Continue to sign in' }).click();
+    if (expiredAssertion) {
+      await expect(page.getByRole('heading', { name: 'Passkey sign-in did not finish.' })).toBeVisible();
+      expect((await (await page.request.get('/api/auth/session')).json()).data.authenticated).toBe(false);
+      await page.getByRole('button', { name: 'Try passkey again' }).click();
+    }
+    await expect
+      .poll(async () => (await (await page.request.get('/api/auth/session')).json()).data.authenticated)
+      .toBe(true);
   });
-  const email = `passkey-${randomUUID()}@example.test`;
-
-  await page.goto('/app/en/auth/sign-up');
-  await expect(page.getByLabel('Password', { exact: true })).toHaveCount(0);
-  await page.getByRole('textbox', { name: 'Email address', exact: true }).fill(email);
-  await page.getByRole('button', { name: 'Create account with passkey' }).click();
-  await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
-  expect((await (await page.request.get('/api/auth/session')).json()).data.authenticated).toBe(false);
-  const otherSession = await request.post('/api/auth/passkey/sign-up/verify', {
-    data: { code: '123456' },
-    headers: { Origin: new URL(page.url()).origin },
-  });
-
-  expect(otherSession.status()).toBe(410);
-  const pin = await readLatestPin(request, email, 'bootstrap_recovery');
-
-  await page.getByRole('textbox', { name: 'Verification code' }).fill(pin === '000000' ? '111111' : '000000');
-  await page.getByRole('button', { name: 'Verify email', exact: true }).click();
-  await expect(page.getByRole('alert').filter({ hasText: 'The verification code is invalid.' })).toBeVisible();
-  await page.getByRole('textbox', { name: 'Verification code' }).fill(pin);
-  await page.getByRole('button', { name: 'Verify email', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Your account is verified' })).toBeVisible();
-  const replay = await page.request.post('/api/auth/passkey/sign-up/verify', {
-    data: { code: pin },
-    headers: { Origin: new URL(page.url()).origin },
-  });
-
-  expect(replay.status()).toBe(410);
-  await page.getByRole('link', { name: 'Continue to sign in' }).click();
-  await page.getByRole('button', { name: 'Continue with a passkey' }).click();
-  await expect
-    .poll(async () => (await (await page.request.get('/api/auth/session')).json()).data.authenticated)
-    .toBe(true);
-});
+}

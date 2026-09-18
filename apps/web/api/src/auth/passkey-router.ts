@@ -443,7 +443,12 @@ passkeyRouter.post('/authentication/begin', validateRequest({ body: authenticati
     const stored = await createChallenge(null, null, 'discoverable_authentication', options.challenge, req.sessionID);
 
     res.json({
-      data: { challengeId: stored.id, options, attempt: nextPasskeyAttempt({ retryRequested }) },
+      data: {
+        challengeId: stored.id,
+        expiresAt: stored.expiresAt.toISOString(),
+        options,
+        attempt: nextPasskeyAttempt({ retryRequested }),
+      },
       message: 'Passkey authentication options created.',
     });
 
@@ -486,7 +491,12 @@ passkeyRouter.post('/authentication/begin', validateRequest({ body: authenticati
   );
 
   res.json({
-    data: { challengeId: stored.id, options, attempt: nextPasskeyAttempt({ retryRequested }) },
+    data: {
+      challengeId: stored.id,
+      expiresAt: stored.expiresAt.toISOString(),
+      options,
+      attempt: nextPasskeyAttempt({ retryRequested }),
+    },
     message: 'Passkey authentication options created.',
   });
 });

@@ -13,10 +13,7 @@ const environmentSchema = z
     DATABASE_URL: z.string().default('postgresql://postgres:postgres@127.0.0.1:5432/themis'),
     APP_BASE_URL: z.url().default('http://localhost:8080/app'),
     COOKIE_SECURE: z.enum(['true', 'false']).optional(),
-    DATABASE_AUTO_MIGRATE: z
-      .enum(['true', 'false'])
-      .optional()
-      .transform((v) => v === 'true'),
+    DATABASE_AUTO_MIGRATE: z.enum(['true', 'false']).optional(),
     DATABASE_DRIVER: z.enum(['memory', 'pg']).default('pg'),
     DATABASE_SSL: z
       .enum(['true', 'false'])
@@ -79,7 +76,7 @@ const environmentSchema = z
         message: 'A unique production session secret is required.',
       });
     }
-    if (data.DATABASE_DRIVER !== 'pg' || data.DATABASE_AUTO_MIGRATE === true) {
+    if (data.DATABASE_DRIVER !== 'pg' || data.DATABASE_AUTO_MIGRATE === 'true') {
       context.addIssue({
         code: 'custom',
         path: ['DATABASE_DRIVER'],
@@ -124,6 +121,10 @@ const environmentSchema = z
     return {
       ...data,
       COOKIE_SECURE: data.COOKIE_SECURE === undefined ? data.NODE_ENV === 'production' : data.COOKIE_SECURE === 'true',
+      DATABASE_AUTO_MIGRATE:
+        data.DATABASE_AUTO_MIGRATE === undefined
+          ? data.NODE_ENV !== 'production'
+          : data.DATABASE_AUTO_MIGRATE === 'true',
       MAIL_TRANSPORT: mailTransport,
     } as const;
   });

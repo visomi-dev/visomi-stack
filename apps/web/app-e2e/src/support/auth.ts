@@ -8,6 +8,7 @@ import { activationUrlPattern, signInRoute, signInUrlPattern } from './routes';
 
 type VerificationOptions = {
   completeActivation?: boolean;
+  immediate?: boolean;
 };
 
 export const createCredentials = () => ({
@@ -162,6 +163,22 @@ export const registerAndAuthenticate = async (
   options: VerificationOptions = {},
 ) => {
   void password;
+  await page.addInitScript((immediate) => {
+    const capabilities = PublicKeyCredential.getClientCapabilities.bind(PublicKeyCredential);
+
+    Object.defineProperty(PublicKeyCredential, 'getClientCapabilities', {
+      value: async () => ({ ...(immediate ? await capabilities() : {}), conditionalGet: false }),
+    });
+    const get = navigator.credentials.get.bind(navigator.credentials);
+
+    Object.defineProperty(navigator.credentials, 'get', {
+      value: (request: CredentialRequestOptions & { uiMode?: string }) => {
+        document.documentElement.dataset['passkeyMode'] = request.uiMode ?? 'modal';
+
+        return get(request);
+      },
+    });
+  }, options.immediate ?? false);
   await addVirtualAuthenticator(page);
   await page.goto('/app/en/auth/sign-up');
   await page.getByRole('textbox', { name: 'Email address', exact: true }).fill(email);
@@ -172,8 +189,22 @@ export const registerAndAuthenticate = async (
     .fill(await readLatestPin(request, email, 'bootstrap_recovery'));
   await page.getByRole('button', { name: 'Verify email', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Your account is verified' })).toBeVisible();
+  // A saved credential must work even after the browser's anonymous/signup session has disappeared.
+  await page.context().clearCookies();
+  const prepared = options.immediate ? page.waitForResponse('**/api/auth/passkey/authentication/begin') : null;
+
   await page.getByRole('link', { name: 'Continue to sign in' }).click();
-  await page.getByRole('button', { name: 'Continue with a passkey' }).click();
+  if (prepared) {
+    const response = await prepared;
+
+    expect(response.ok()).toBe(true);
+    expect(await page.evaluate(async () => (await PublicKeyCredential.getClientCapabilities()).immediateGet)).toBe(
+      true,
+    );
+  }
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  if (options.immediate) await expect(page.locator('html')).toHaveAttribute('data-passkey-mode', 'immediate');
+  else await page.getByRole('button', { name: 'Continue with a passkey' }).click();
   await waitForAuthenticatedSession(page, email);
   await expect(page).toHaveURL(activationUrlPattern);
   if (options.completeActivation ?? true) await completeActivationIfNeeded(page);

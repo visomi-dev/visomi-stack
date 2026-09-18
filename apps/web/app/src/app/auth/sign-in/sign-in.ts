@@ -1,5 +1,16 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
+import {
+  afterNextRender,
+  afterRenderEffect,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { email, form, maxLength, minLength, pattern, required, type FieldTree, validate } from '@angular/forms/signals';
@@ -9,7 +20,7 @@ import type { RestrictedAccount } from '../../shared/auth/auth.models';
 import { Passkey } from '../../shared/auth/passkey';
 import { GoogleIdentity } from '../../shared/auth/google-identity';
 import { PasswordAuth, type PasswordSecondFactor, type PasswordSignInPending } from '../../shared/auth/password';
-import { APP_URL, EMAIL_VERIFICATION_URL } from '../../shared/constants/routes';
+import { authDestination, EMAIL_VERIFICATION_URL } from '../../shared/constants/routes';
 import { AuthCard } from '../../shared/ui/layout/auth-card/auth-card';
 import { AuthLayout } from '../../shared/ui/layout/auth-layout/auth-layout';
 import { ErrorMessage } from '../../shared/ui/forms/error-message/error-message';
@@ -59,6 +70,32 @@ export class SignIn {
   private readonly google = inject(GoogleIdentity);
   private readonly password = inject(PasswordAuth);
   private readonly googleButton = viewChild<ElementRef<HTMLElement>>('googleButton');
+  private readonly methodDialog = viewChild<ElementRef<HTMLDialogElement>>('methodDialog');
+  private readonly continueButton = viewChild<ElementRef<HTMLButtonElement>>('continueButton');
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
+  private googleAttempt = 0;
+  private credentialController?: AbortController;
+  private credentialAttempt = 0;
+  private identityPreparation?: ReturnType<Auth['startIdentityFlow']>;
+  private immediateOptions?: { challengeId: string; options: Record<string, unknown>; expiresAt: number };
+  private destroyed = false;
+  readonly methodsOpen = signal(false);
+  private destination(): string {
+    return authDestination(this.route.snapshot.queryParamMap.get('returnTo'));
+  }
+  readonly passkeyVerifying = signal(false);
+
+  private readonly syncMethodDialog = afterRenderEffect(() => {
+    const dialog = this.methodDialog()?.nativeElement;
+
+    if (!dialog) return;
+    if (this.methodsOpen() && !dialog.open) dialog.showModal();
+    else if (!this.methodsOpen() && dialog.open) {
+      dialog.close();
+      this.continueButton()?.nativeElement.focus();
+    }
+  });
 
   readonly state = signal<AccessState>('ready');
   readonly errorMessage = signal('');
@@ -127,9 +164,17 @@ export class SignIn {
   readonly labelError = computed(() => this.enrollmentForm.label().errors()[0]?.message ?? '');
 
   constructor() {
+    afterNextRender(() => void this.suggestPasskey());
+    this.destroyRef.onDestroy(() => {
+      this.destroyed = true;
+      this.cancelCredential();
+    });
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
-      if (params.get('method') === 'password') this.state.set('password');
-      else if (this.state() === 'password' || this.state() === 'password-factor') {
+      if (params.get('method') === 'password') {
+        this.cancelCredential();
+        this.closeMethods();
+        this.state.set('password');
+      } else if (this.state() === 'password' || this.state() === 'password-factor') {
         this.passwordAttempt += 1;
         this.passwordFlow.set(null);
         this.passwordFactor.set(null);
@@ -144,8 +189,142 @@ export class SignIn {
     });
   }
 
+  private cancelCredential(): void {
+    this.credentialAttempt += 1;
+    this.credentialController?.abort();
+    this.credentialController = undefined;
+  }
+
+  private prepareIdentityFlow(): ReturnType<Auth['startIdentityFlow']> {
+    this.identityPreparation ??= this.auth
+      .startIdentityFlow()
+      .then((flow) => {
+        this.identityFlowId.set(flow.flowId);
+
+        return flow;
+      })
+      .finally(() => {
+        this.identityPreparation = undefined;
+      });
+
+    return this.identityPreparation;
+  }
+
+  protected openMethods(): void {
+    if (this.passkeyVerifying()) return;
+    const immediate = this.immediateOptions;
+
+    this.immediateOptions = undefined;
+    this.cancelCredential();
+    if (immediate && immediate.expiresAt > Date.now() + 5000) {
+      this.passkeyVerifying.set(true);
+      void this.authenticateImmediately(immediate);
+
+      return;
+    }
+    this.showMethodSheet();
+  }
+
+  private async authenticateImmediately(begin: {
+    challengeId: string;
+    options: Record<string, unknown>;
+  }): Promise<void> {
+    const attempt = this.credentialAttempt;
+
+    try {
+      // Called directly by the click handler with prepared options to retain transient activation.
+      const credential = await this.passkey.getImmediateCredential(begin.options);
+
+      if (this.destroyed || attempt !== this.credentialAttempt) return;
+      await this.passkey.completeAuthentication(begin.challengeId, credential);
+      await this.auth.ensureSessionLoaded(true);
+      if (!this.destroyed && attempt === this.credentialAttempt) await this.router.navigateByUrl(this.destination());
+    } catch {
+      if (!this.destroyed && attempt === this.credentialAttempt) this.showMethodSheet();
+    } finally {
+      this.passkeyVerifying.set(false);
+    }
+  }
+
+  private showMethodSheet(): void {
+    this.methodsOpen.set(true);
+    this.errorMessage.set('');
+    afterNextRender(
+      () => {
+        if (this.methodsOpen()) void this.showGoogle();
+      },
+      { injector: this.injector },
+    );
+  }
+
+  protected closeMethods(): void {
+    if (this.passkeyVerifying()) return;
+    this.googleAttempt += 1;
+    this.methodsOpen.set(false);
+  }
+
+  private async suggestPasskey(): Promise<void> {
+    if (this.destroyed || this.state() !== 'ready' || this.methodsOpen() || this.passkeyVerifying()) return;
+    const attempt = ++this.credentialAttempt;
+
+    const [conditional, immediate] = await Promise.all([
+      this.passkey.supportsConditionalAuthentication(),
+      this.passkey.supportsImmediateAuthentication(),
+    ]);
+
+    if ((!conditional && !immediate) || attempt !== this.credentialAttempt) return;
+    const controller = new AbortController();
+
+    this.credentialController = controller;
+    let credentialSelected = false;
+
+    try {
+      await this.prepareIdentityFlow();
+      if (attempt !== this.credentialAttempt) return;
+      const begin = await this.passkey.beginAuthentication();
+
+      if (attempt !== this.credentialAttempt || !begin.options || !begin.challengeId) return;
+      if (immediate && begin.expiresAt) {
+        this.immediateOptions = {
+          challengeId: begin.challengeId,
+          options: begin.options,
+          expiresAt: Date.parse(begin.expiresAt),
+        };
+      }
+      if (!conditional) return;
+      const credential = await this.passkey.getCredential(begin.options, {
+        mediation: 'conditional',
+        signal: controller.signal,
+      });
+
+      if (attempt !== this.credentialAttempt) return;
+      this.immediateOptions = undefined;
+      credentialSelected = true;
+      this.passkeyVerifying.set(true);
+      await this.passkey.completeAuthentication(begin.challengeId, credential);
+      await this.auth.ensureSessionLoaded(true);
+      if (!this.destroyed) await this.router.navigateByUrl(this.destination());
+    } catch {
+      // Discovery may end silently, but a selected credential needs visible verification feedback.
+      if (credentialSelected && !this.destroyed && attempt === this.credentialAttempt) {
+        this.failPasskey($localize`:@@identityPasskeyFailed:We could not verify that passkey.`);
+      }
+    } finally {
+      if (attempt === this.credentialAttempt) {
+        this.passkeyVerifying.set(false);
+        this.credentialController = undefined;
+      }
+    }
+  }
+
   protected async authenticateWithPasskey(): Promise<void> {
-    if (this.state() === 'passkey-loading') return;
+    if (this.state() === 'passkey-loading' || this.passkeyVerifying()) return;
+    this.cancelCredential();
+    this.closeMethods();
+    const attempt = this.credentialAttempt;
+    const controller = new AbortController();
+
+    this.credentialController = controller;
 
     if (!this.passkey.isSupported()) {
       this.failPasskey($localize`:@@identityPasskeyUnsupported:This browser cannot use a passkey here.`);
@@ -159,35 +338,48 @@ export class SignIn {
     this.errorMessage.set('');
 
     try {
-      if (!this.identityFlowId()) this.identityFlowId.set((await this.auth.startIdentityFlow()).flowId);
+      await this.prepareIdentityFlow();
+      if (attempt !== this.credentialAttempt) return;
       const begin = await this.passkey.beginAuthentication(retryRequested);
 
       if (!begin.options || !begin.challengeId) {
         throw new Error('Passkey options were not returned.');
       }
 
-      const credential = await this.passkey.getCredential(begin.options);
+      if (attempt !== this.credentialAttempt) return;
+      const credential = await this.passkey.getCredential(begin.options, { signal: controller.signal });
 
+      if (attempt !== this.credentialAttempt) return;
+      this.passkeyVerifying.set(true);
       await this.passkey.completeAuthentication(begin.challengeId, credential);
       await this.auth.ensureSessionLoaded(true);
+      if (this.destroyed) return;
       this.state.set('success');
-      await this.router.navigateByUrl(APP_URL);
+      await this.router.navigateByUrl(this.destination());
     } catch (error) {
+      if (attempt !== this.credentialAttempt) return;
       this.failPasskey(
-        error instanceof DOMException && error.name === 'AbortError'
+        error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError')
           ? $localize`:@@identityPasskeyCancelled:Passkey sign-in was cancelled. No changes were made.`
           : $localize`:@@identityPasskeyFailed:We could not verify that passkey.`,
       );
+    } finally {
+      if (attempt === this.credentialAttempt) this.passkeyVerifying.set(false);
     }
   }
 
   protected async showGoogle(): Promise<void> {
-    try {
-      const flow = await this.auth.startIdentityFlow();
+    if (this.passkeyVerifying()) return;
+    this.cancelCredential();
+    const attempt = ++this.googleAttempt;
+    const active = () => !this.destroyed && this.methodsOpen() && attempt === this.googleAttempt;
 
+    try {
+      const flow = await this.prepareIdentityFlow();
+
+      if (!active()) return;
       this.identityFlowId.set(flow.flowId);
-      if (!flow.google?.enabled || !flow.google.clientId || !flow.nonce || !this.googleButton())
-        throw new Error('Google sign-in is not configured.');
+      if (!flow.google?.enabled || !flow.google.clientId || !flow.nonce || !this.googleButton()) return;
       this.googleClientId.set(flow.google.clientId);
       await this.google.renderButton(
         this.googleButton()!.nativeElement,
@@ -195,14 +387,30 @@ export class SignIn {
         flow.flowId,
         flow.nonce,
         (user) => {
-          void this.auth.ensureSessionLoaded(true).then(() => this.router.navigateByUrl(APP_URL));
+          void this.auth.ensureSessionLoaded(true).then(() => {
+            if (!this.destroyed) return this.router.navigateByUrl(this.destination());
+
+            return false;
+          });
           this.state.set('success');
           this.selectedAccount.set(null);
           this.errorMessage.set('');
           void user;
         },
+        () => {
+          this.passkeyVerifying.set(false);
+          if (active())
+            this.errorMessage.set($localize`:@@identityGoogleFailed:Google sign-in is not available right now.`);
+        },
+        () => {
+          if (!active()) return false;
+          this.passkeyVerifying.set(true);
+
+          return true;
+        },
       );
     } catch (error) {
+      if (!active()) return;
       this.errorMessage.set(
         this.safeError(error, $localize`:@@identityGoogleFailed:Google sign-in is not available right now.`),
       );
@@ -210,6 +418,9 @@ export class SignIn {
   }
 
   protected showEmailRecovery(): void {
+    if (this.passkeyVerifying()) return;
+    this.cancelCredential();
+    this.closeMethods();
     this.errorMessage.set('');
 
     if (!this.emailModel().email) {
@@ -222,6 +433,9 @@ export class SignIn {
   }
 
   protected showPassword(): void {
+    if (this.passkeyVerifying()) return;
+    this.cancelCredential();
+    this.closeMethods();
     this.errorMessage.set('');
     this.passwordModel.update((model) => ({ ...model, email: this.emailModel().email }));
     this.state.set('password');
@@ -290,7 +504,7 @@ export class SignIn {
       await this.password.verify(flowId, this.otpForm.pin().value(), factor);
       await this.auth.ensureSessionLoaded(true);
       this.state.set('success');
-      await this.router.navigateByUrl(APP_URL);
+      await this.router.navigateByUrl(this.destination());
     } catch (error) {
       this.state.set('password-factor');
       this.errorMessage.set(
@@ -344,7 +558,7 @@ export class SignIn {
 
     try {
       const email = this.emailForm.email().value();
-      const started = this.identityFlowId() ? null : await this.auth.startIdentityFlow();
+      const started = this.identityFlowId() ? null : await this.prepareIdentityFlow();
       const flowId = started?.flowId ?? this.identityFlowId();
 
       await this.auth.identifyIdentity(flowId, email);
@@ -483,7 +697,7 @@ export class SignIn {
       await this.passkey.verifyRegistration(challengeId, assertion);
       await this.auth.ensureSessionLoaded(true);
       this.state.set('success');
-      await this.router.navigateByUrl(APP_URL);
+      await this.router.navigateByUrl(this.destination());
     } catch (error) {
       this.state.set('verification');
       this.errorMessage.set(this.safeError(error, 'We could not verify the new passkey. Try again.'));

@@ -38,9 +38,26 @@ The gateway exposes the public site at `/`, the Angular app at `/app`, the API a
 
 ## Local Development
 
+### Compiler compatibility
+
+Nx and all `@nx/*` packages stay aligned at 23.2.1. The workspace follows
+[Nx's side-by-side TypeScript setup](https://nx.dev/docs/kb/typescript-7):
+`@typescript/native` aliases TypeScript 7 for the `tsc` CLI, while `typescript`
+aliases `@typescript/typescript6` for tools that require the JavaScript compiler
+API (Angular, Nx plugins, ESLint and Jest). `tsc6` is also available. Do not replace
+the API alias with TypeScript 7: version 7.0 does not expose that API.
+
+Vitest and its coverage provider stay on 4.1.11 because the current Angular,
+Analog and Nx integrations do not declare support for Vitest 5. Shared runtime
+dependency versions must also be updated in `libs/shared/package.json` and
+`libs/projects/package.json` to avoid incompatible duplicate Drizzle/Redis types.
+
+### Starting the stack
+
 Install dependencies and start PostgreSQL and Redis:
 
 ```bash
+export NX_DAEMON=false
 pnpm install
 podman compose up -d
 ```

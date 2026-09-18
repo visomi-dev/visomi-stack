@@ -33,6 +33,8 @@ describe('SignIn', () => {
           provide: Passkey,
           useValue: {
             isSupported: () => true,
+            supportsConditionalAuthentication: async () => false,
+            supportsImmediateAuthentication: async () => false,
           },
         },
         { provide: GoogleIdentity, useValue: { renderButton: vi.fn() } },
@@ -67,7 +69,8 @@ describe('SignIn', () => {
 
     expect(text).toContain('Secure account access');
     expect(text).toContain('Continue with a passkey');
-    expect(text).toContain('Continue with Google');
+    expect(text).not.toContain('Continue with Google');
+    expect(text).toContain('Choose how to continue');
     expect(text).not.toContain('Sign in with password');
   });
 

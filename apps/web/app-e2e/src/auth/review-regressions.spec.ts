@@ -14,7 +14,9 @@ test('abandons the password verification screen on browser Back without showing 
     }),
   );
   await page.goto('/app/en/auth/sign-in');
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await page.getByRole('button', { name: 'Use password instead' }).click();
+  await expect(page.getByRole('heading', { name: 'Sign in with password', exact: true })).toBeVisible();
   await page.getByRole('textbox', { name: 'Email address', exact: true }).fill('person@example.test');
   await page.getByLabel('Password', { exact: true }).fill('twelve chars');
   await page.getByRole('button', { name: 'Sign in with password', exact: true }).click();
@@ -22,7 +24,7 @@ test('abandons the password verification screen on browser Back without showing 
   await expect(page.getByRole('alert').filter({ hasText: 'Enter your password' })).toHaveCount(0);
   await page.goBack();
   await expect(page).toHaveURL(/\/auth\/sign-in$/);
-  await expect(page.getByRole('button', { name: 'Continue with a passkey' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeVisible();
   await page.goForward();
   await expect(page.getByRole('heading', { name: 'Sign in with password' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Check your email' })).toHaveCount(0);

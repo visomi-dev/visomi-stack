@@ -38,24 +38,24 @@ export class SignUp {
   readonly passkeyEmailPending = signal(false);
   readonly model = signal<SignUpModel>({ email: '', password: '', confirmation: '' });
   readonly form: FieldTree<SignUpModel> = form(this.model, (path) => {
-    required(path.email, { message: 'Enter your email address.' });
-    email(path.email, { message: 'Enter a valid email address.' });
-    required(path.password, { message: 'Enter a password.' });
-    minLength(path.password, 12, { message: 'Use at least 12 characters.' });
-    maxLength(path.password, 128, { message: 'Use 128 characters or fewer.' });
-    required(path.confirmation, { message: 'Confirm your password.' });
+    required(path.email, { message: $localize`:@@signupEmailRequired:Enter your email address.` });
+    email(path.email, { message: $localize`:@@signupEmailInvalid:Enter a valid email address.` });
+    required(path.password, { message: $localize`:@@identityPasswordSetupRequired:Enter a password.` });
+    minLength(path.password, 12, { message: $localize`:@@identityPasswordSetupLength:Use at least 12 characters.` });
+    maxLength(path.password, 128, { message: $localize`:@@signupPasswordMaximum:Use 128 characters or fewer.` });
+    required(path.confirmation, { message: $localize`:@@identityPasswordConfirmationRequired:Confirm your password.` });
     validate(path.confirmation, ({ value, valueOf }) =>
       value() === valueOf(path.password)
         ? undefined
-        : { kind: 'password_mismatch', message: 'Passwords do not match.' },
+        : { kind: 'password_mismatch', message: $localize`:@@identityPasswordMismatch:Passwords do not match.` },
     );
   });
   readonly codeModel = signal<CodeModel>({ code: '' });
   readonly codeForm: FieldTree<CodeModel> = form(this.codeModel, (path) => {
-    required(path.code, { message: 'Enter the 6-digit code.' });
-    minLength(path.code, 6, { message: 'Enter all 6 digits.' });
-    maxLength(path.code, 6, { message: 'Enter all 6 digits.' });
-    pattern(path.code, /^\d{6}$/u, { message: 'Use the 6 digits from your email.' });
+    required(path.code, { message: $localize`:@@identityOtpRequired:Enter the 6-digit code.` });
+    minLength(path.code, 6, { message: $localize`:@@identityOtpLength:Enter all 6 digits.` });
+    maxLength(path.code, 6, { message: $localize`:@@identityOtpLength:Enter all 6 digits.` });
+    pattern(path.code, /^\d{6}$/u, { message: $localize`:@@identityOtpDigits:Use the 6 digits from your email.` });
   });
   readonly flowId = signal('');
   readonly submitting = signal(false);
@@ -111,7 +111,7 @@ export class SignUp {
       this.codeModel.set({ code: '' });
       this.model.update((model) => ({ ...model, password: '', confirmation: '' }));
     } catch (error) {
-      this.error.set(this.message(error, 'We could not create your account.'));
+      this.error.set(this.message(error, $localize`:@@signupFailed:We could not create your account.`));
     } finally {
       this.submitting.set(false);
     }
@@ -126,7 +126,7 @@ export class SignUp {
       else await this.password.verifySignUp(this.flowId(), this.codeForm.code().value());
       this.complete.set(true);
     } catch (error) {
-      this.error.set(this.message(error, 'That verification code is not valid.'));
+      this.error.set(this.message(error, $localize`:@@signupCodeFailed:That verification code is not valid.`));
     } finally {
       this.submitting.set(false);
     }

@@ -45,7 +45,7 @@
       "configurations": {
         "production": {
           "localize": true,
-          "i18nMissingTranslation": "ignore",
+          "i18nMissingTranslation": "error",
           "baseHref": "/app/",
           "budgets": [
             {

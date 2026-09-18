@@ -14,7 +14,9 @@ test.describe('site smoke', () => {
   }
 
   test('persists the selected theme across navigation', async ({ page }) => {
-    await page.addInitScript(() => window.localStorage.setItem('themis.theme', 'light'));
+    await page.addInitScript(() => {
+      if (!window.localStorage.getItem('themis.theme')) window.localStorage.setItem('themis.theme', 'light');
+    });
     await page.goto('/en/');
 
     const themeSwitcher = page.getByRole('button', { name: 'Switch to dark theme' });
@@ -22,7 +24,7 @@ test.describe('site smoke', () => {
     await themeSwitcher.click();
 
     await expect(page.locator('html')).toHaveClass(/dark/);
-    await expect(themeSwitcher).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Switch to light theme' })).toHaveAttribute('aria-pressed', 'true');
     expect(await page.evaluate(() => window.localStorage.getItem('themis.theme'))).toBe('dark');
 
     await page.goto('/docs/');

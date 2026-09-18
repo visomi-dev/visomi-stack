@@ -69,5 +69,15 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'firefox-fallback',
+      testMatch: ['**/password-fallback.spec.ts', '**/registration-options.spec.ts'],
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit-fallback',
+      testMatch: ['**/password-fallback.spec.ts', '**/registration-options.spec.ts'],
+      use: { ...devices['Desktop Safari'] },
+    },
   ],
 });
