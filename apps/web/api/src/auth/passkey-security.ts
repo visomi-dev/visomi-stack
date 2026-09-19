@@ -12,6 +12,35 @@ const attempts = new Map<string, { count: number; resetAt: number }>();
 const otpDeliveryAttempts = new Map<string, { count: number; resetAt: number }>();
 const otpVerificationAttempts = new Map<string, { count: number; resetAt: number }>();
 const otpDeliveryCooldowns = new Map<string, number>();
+const authenticationVerificationAttempts = new Map<string, { count: number; resetAt: number }>();
+
+export async function consumeAuthenticationVerificationLimit(
+  req: Request,
+): Promise<{ allowed: boolean; retryAfter: number }> {
+  const windowMs = 60_000;
+  const maximum = 30;
+  const key = `auth:verification:ip:${req.ip}`;
+
+  if (env.DATABASE_DRIVER === 'memory') {
+    for (const [entry, state] of authenticationVerificationAttempts) {
+      if (state.resetAt <= Date.now()) authenticationVerificationAttempts.delete(entry);
+    }
+
+    return consumeLimit(authenticationVerificationAttempts, key, windowMs, maximum);
+  }
+  const result = await getRedis().eval(
+    "local count = redis.call('INCR', KEYS[1]); if count == 1 then redis.call('PEXPIRE', KEYS[1], ARGV[1]) end; return {count, redis.call('PTTL', KEYS[1])}",
+    1,
+    key,
+    windowMs,
+  );
+
+  if (!Array.isArray(result) || typeof result[0] !== 'number' || typeof result[1] !== 'number') {
+    throw new Error('Authentication rate limiter unavailable.');
+  }
+
+  return { allowed: result[0] <= maximum, retryAfter: Math.max(1, Math.ceil(result[1] / 1000)) };
+}
 
 function expectedOrigin(): string {
   return process.env.WEBAUTHN_ORIGIN ?? new URL(env.APP_BASE_URL).origin;
@@ -64,6 +93,7 @@ function passkeyRateLimit(req: Request, res: Response, next: NextFunction): void
 }
 
 function resetPasskeySecurityState(): void {
+  authenticationVerificationAttempts.clear();
   attempts.clear();
   otpDeliveryAttempts.clear();
   otpVerificationAttempts.clear();

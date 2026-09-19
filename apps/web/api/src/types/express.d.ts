@@ -24,6 +24,7 @@ declare module 'express-session' {
         accountId: string;
         authority?: 'restricted' | 'full';
         id: string;
+        authVersion?: number;
       };
     };
     authority?: 'restricted' | 'full';

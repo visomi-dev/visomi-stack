@@ -6,6 +6,7 @@ describe('establishFullSession', () => {
   it.each(['passkey', 'google'] as const)('persists %s metadata without a second factor', async (method) => {
     const login = jest.fn((_user: Express.User, done: (error?: Error) => void) => done());
     const req = {
+      isAuthenticated: () => false,
       login,
       session: {
         secondFactor: 'email' as const,

@@ -1,6 +1,7 @@
 import passport from 'passport';
 
 import { findUserById, resolveAuthUser, resolveAuthUserForAccount } from './auth-service';
+import { hasCurrentAuthVersion } from './auth-middleware';
 
 type SerializedUser = {
   accountId: string;
@@ -49,10 +50,7 @@ passport.deserializeUser(async (serializedUser: SerializedUser, done) => {
       return done(null, false);
     }
 
-    if (
-      (serializedUser.authVersion !== undefined && serializedUser.authVersion !== user.authVersion) ||
-      (serializedUser.authVersion === undefined && user.authVersion !== 1)
-    ) {
+    if (!hasCurrentAuthVersion(serializedUser.authVersion, user.authVersion)) {
       return done(null, false);
     }
 
@@ -62,7 +60,7 @@ passport.deserializeUser(async (serializedUser: SerializedUser, done) => {
       ...toExpressUser({ ...authUser, authority: serializedUser.authority }),
       authenticationMethod: serializedUser.authenticationMethod,
       secondFactor: serializedUser.secondFactor,
-      authVersion: serializedUser.authVersion,
+      authVersion: user.authVersion,
     });
   } catch (error) {
     return done(error as Error);

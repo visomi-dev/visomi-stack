@@ -166,6 +166,7 @@ export async function resolveAuthUserForAccount(
     emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
     id: user.id,
     role: membership.role,
+    authVersion: user.authVersion,
   };
 }
 
@@ -1097,8 +1098,8 @@ export async function verifyPasswordEmailOtp(flowId: string, pin: string, contex
 
 export async function verifyPasswordTotp(flowId: string, code: string, sessionBinding: string) {
   const [flow] = await db
-    .select()
-    .from(authIdentityFlows)
+    .update(authIdentityFlows)
+    .set({ attemptCount: sql`${authIdentityFlows.attemptCount} + 1`, updatedAt: new Date() })
     .where(
       and(
         eq(authIdentityFlows.id, flowId),
@@ -1106,9 +1107,12 @@ export async function verifyPasswordTotp(flowId: string, code: string, sessionBi
         eq(authIdentityFlows.sessionBinding, sessionBinding),
         eq(authIdentityFlows.requiredFactor, 'totp'),
         gt(authIdentityFlows.expiresAt, new Date()),
+        isNull(authIdentityFlows.completedAt),
+        isNull(authIdentityFlows.terminalAt),
+        lt(authIdentityFlows.attemptCount, MAX_CHALLENGE_ATTEMPTS),
       ),
     )
-    .limit(1);
+    .returning();
 
   if (!flow || flow.userAuthVersion === null) verificationFailed();
   const user = await findUserById(flow.userId ?? '');
@@ -1150,15 +1154,25 @@ export async function verifyPasswordTotp(flowId: string, code: string, sessionBi
     .returning();
 
   if (!accepted) verificationFailed();
-  await db
+  const [completed] = await db
     .update(authIdentityFlows)
     .set({ state: 'complete', completedAt: new Date(), updatedAt: new Date() })
-    .where(eq(authIdentityFlows.id, flow.id));
+    .where(
+      and(
+        eq(authIdentityFlows.id, flow.id),
+        isNull(authIdentityFlows.completedAt),
+        isNull(authIdentityFlows.terminalAt),
+        gt(authIdentityFlows.expiresAt, new Date()),
+      ),
+    )
+    .returning();
+
+  if (!completed) verificationFailed();
 
   return { flow, user };
 }
 
-export async function setUserPassword(userId: string, password: string): Promise<void> {
+export async function setUserPassword(userId: string, password: string): Promise<number> {
   const passwordHash = await hashPassword(password);
   const now = new Date();
   const [updated] = await db.transaction(async (tx) =>
@@ -1171,12 +1185,14 @@ export async function setUserPassword(userId: string, password: string): Promise
         updatedAt: now,
       })
       .where(eq(users.id, userId))
-      .returning({ id: users.id }),
+      .returning({ id: users.id, authVersion: users.authVersion }),
   );
 
   if (!updated) {
     throw new HttpError({ code: 'account_unavailable', message: 'The account is not available.', statusCode: 404 });
   }
+
+  return updated.authVersion;
 }
 
 export function generateRecoveryCode(): string {
@@ -1236,30 +1252,6 @@ export async function createOperationGrant(userId: string, purpose: string, sess
   });
 
   return id;
-}
-
-export async function consumeOperationGrant(
-  id: string,
-  userId: string,
-  purpose: string,
-  sessionBinding: string,
-): Promise<boolean> {
-  const [grant] = await db
-    .update(authOperationGrants)
-    .set({ consumedAt: new Date() })
-    .where(
-      and(
-        eq(authOperationGrants.id, id),
-        eq(authOperationGrants.userId, userId),
-        eq(authOperationGrants.purpose, purpose),
-        eq(authOperationGrants.sessionBinding, sessionBinding),
-        isNull(authOperationGrants.consumedAt),
-        gt(authOperationGrants.expiresAt, new Date()),
-      ),
-    )
-    .returning();
-
-  return Boolean(grant);
 }
 
 export async function verifyEmailOtp(flowId: string, pin: string, context: string): Promise<RestrictedIdentity> {

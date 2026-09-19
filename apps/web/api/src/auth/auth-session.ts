@@ -13,6 +13,17 @@ type FullAuthUser = Express.User & {
 };
 
 async function establishFullSession(req: Request, res: Response, user: FullAuthUser): Promise<void> {
+  if (
+    user.authenticationMethod === 'passkey' &&
+    req.isAuthenticated() &&
+    req.session.authority === 'full' &&
+    req.user?.authority === 'full' &&
+    req.user.id === user.id &&
+    req.user.accountId === user.accountId &&
+    req.user.authVersion === user.authVersion
+  ) {
+    return;
+  }
   await new Promise<void>((resolve, reject) => req.login(user, (error) => (error ? reject(error) : resolve())));
   req.session.authority = 'full';
   req.session.authenticationMethod = user.authenticationMethod;
@@ -23,5 +34,13 @@ async function establishFullSession(req: Request, res: Response, user: FullAuthU
   setSessionHintCookie(res);
 }
 
-export { establishFullSession };
+function refreshSessionAuthVersion(req: Request, authVersion: number): void {
+  if (req.user && req.session.passport?.user?.id === req.user.id) {
+    req.user.authVersion = authVersion;
+    req.session.passport.user.authVersion = authVersion;
+    req.session.authVersion = authVersion;
+  }
+}
+
+export { establishFullSession, refreshSessionAuthVersion };
 export type { FullAuthUser };

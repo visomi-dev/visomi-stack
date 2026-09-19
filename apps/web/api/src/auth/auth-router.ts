@@ -7,9 +7,9 @@ import { and, eq, gt, isNull, ne, sql } from 'drizzle-orm';
 import { getValidated, validateRequest } from '../shared/http/route-schemas';
 import { env } from '../shared/env';
 
-import { authed, authedRequest } from './auth-middleware';
+import { authed, authedRequest, authenticationVerification, restrictedOperation } from './auth-middleware';
 import { generateVerificationPin, hashSecret, verifySecret } from './auth-crypto';
-import { establishFullSession } from './auth-session';
+import { establishFullSession, refreshSessionAuthVersion } from './auth-session';
 import { sendRecoveryNotification } from './auth-mail';
 import {
   clientContextHash,
@@ -36,7 +36,6 @@ import {
   consumeRecoveryCode,
   replaceRecoveryCodes,
   createOperationGrant,
-  consumeOperationGrant,
 } from './auth-service';
 import {
   authOpenApiPaths,
@@ -768,15 +767,10 @@ router.post(
   ['/password/verify', '/sign-in/verify'],
   csrfProtection,
   validateRequest({ body: passwordVerifySchema }),
+  authenticationVerification('password'),
   async function passwordVerifyHandler(req, res) {
     const body = getValidated<{ body: typeof passwordVerifySchema }>(req).body!;
 
-    if (req.session.passwordFlowId !== body.flowId)
-      throw new HttpError({
-        code: 'password_flow_unavailable',
-        message: 'The password sign-in flow is unavailable.',
-        statusCode: 401,
-      });
     const result =
       body.kind === 'email'
         ? await verifyPasswordEmailOtp(body.flowId, body.code, requestContext(req), req.sessionID)
@@ -904,7 +898,7 @@ router.post(
         .set({ authVersion: sql`${users.authVersion} + 1`, updatedAt: new Date() })
         .where(eq(users.id, current.id));
     });
-    req.session.authVersion = (current.authVersion ?? 1) + 1;
+    refreshSessionAuthVersion(req, (current.authVersion ?? 1) + 1);
     const recoveryCodes = await replaceRecoveryCodes(current.id);
 
     delete req.session.passkeySecurityReauthenticatedAt;
@@ -915,13 +909,10 @@ router.post(
 router.post(
   '/totp/disable',
   csrfProtection,
-  authed({ authority: 'full' }),
   validateRequest({ body: operationGrantSchema }),
+  authed({ authority: 'full', operation: { purpose: 'totp_disable', grantSource: 'body' } }),
   async (req, res) => {
     const current = authedRequest(req).user;
-    const { grantId } = getValidated<{ body: typeof operationGrantSchema }>(req).body!;
-
-    await requireFullOperation(req, 'totp_disable', grantId);
     const [passkey] = await db
       .select({ id: accountPasskeyCredentials.id })
       .from(accountPasskeyCredentials)
@@ -964,13 +955,12 @@ router.post(
 router.post(
   '/google/link',
   csrfProtection,
-  authed({ authority: 'full' }),
   validateRequest({ body: googleLinkSchema }),
+  authed({ authority: 'full', operation: { purpose: 'google_link', grantSource: 'body' } }),
   async (req, res) => {
     const current = authedRequest(req).user;
     const body = getValidated<{ body: typeof googleLinkSchema }>(req).body!;
 
-    await requireFullOperation(req, 'google_link', body.grantId);
     if (!env.GOOGLE_AUTH_CLIENT_ID || !req.session.googleNonce)
       throw new HttpError({ code: 'google_disabled', message: 'Google linking is not configured.', statusCode: 404 });
     let payload;
@@ -1064,49 +1054,19 @@ router.post(
   '/password/set',
   csrfProtection,
   validateRequest({ body: passwordSetSchema }),
+  restrictedOperation('password:set'),
   async function passwordSetHandler(req, res) {
-    const restricted = req.session?.restrictedAuth;
-
-    if (
-      req.session?.authority !== 'restricted' ||
-      req.user?.authority !== 'restricted' ||
-      !restricted ||
-      restricted.expiresAt <= Date.now() ||
-      restricted.userId !== req.user.id ||
-      !restricted.allowedOperations.includes('password:set')
-    ) {
-      throw new HttpError({
-        code: 'restricted_session_required',
-        message: 'Verify an email code before setting a password.',
-        statusCode: 401,
-      });
-    }
-
     const { password } = getValidated<{ body: typeof passwordSetSchema }>(req).body!;
 
-    await setUserPassword(restricted.userId, password);
+    const authVersion = await setUserPassword(authedRequest(req).user.id, password);
+
+    refreshSessionAuthVersion(req, authVersion);
     httpResponse.json(res, {
       data: passwordSetResponseSchema.parse({ passwordSet: true }),
       message: 'Password set successfully.',
     });
   },
 );
-
-function requireFullOperation(req: Request, purpose: string, grantId: string): Promise<void> {
-  const current = authedRequest(req).user;
-
-  if (req.session.authority !== 'full')
-    throw new HttpError({ code: 'full_session_required', message: 'A full session is required.', statusCode: 403 });
-
-  return consumeOperationGrant(grantId, current.id, purpose, req.sessionID).then((valid) => {
-    if (!valid)
-      throw new HttpError({
-        code: 'reauthentication_required',
-        message: 'Reauthenticate before changing security settings.',
-        statusCode: 401,
-      });
-  });
-}
 
 router.post(
   '/reauth/start',
@@ -1119,6 +1079,7 @@ router.post(
     const grantId = await createOperationGrant(current.id, purpose, req.sessionID);
 
     req.session.reauthGrantId = grantId;
+    delete req.session.passkeySecurityReauthenticatedAt;
     if (purpose === 'google_link') req.session.googleNonce = randomUUID();
     httpResponse.json(res, {
       data: { grantId, methods: ['passkey', 'password', 'totp', 'recovery_code'] },
@@ -1133,16 +1094,11 @@ router.post(
   csrfProtection,
   authed({ authority: 'full' }),
   validateRequest({ body: reauthCompleteSchema }),
+  authenticationVerification('reauth'),
   async (req, res) => {
     const current = authedRequest(req).user;
     const body = getValidated<{ body: typeof reauthCompleteSchema }>(req).body!;
 
-    if (req.session.reauthGrantId !== body.grantId)
-      throw new HttpError({
-        code: 'reauthentication_required',
-        message: 'The reauthentication request is unavailable.',
-        statusCode: 401,
-      });
     let valid = Boolean(
       req.session.passkeySecurityReauthenticatedAt &&
       Date.now() - req.session.passkeySecurityReauthenticatedAt <= 10 * 60_000 &&
@@ -1187,11 +1143,13 @@ router.post(
       });
     const [grant] = await db
       .update(authOperationGrants)
-      .set({ createdAt: new Date() })
+      .set({ verifiedAt: new Date() })
       .where(
         and(
           eq(authOperationGrants.id, body.grantId),
           eq(authOperationGrants.userId, current.id),
+          eq(authOperationGrants.sessionBinding, req.sessionID),
+          isNull(authOperationGrants.verifiedAt),
           isNull(authOperationGrants.consumedAt),
           gt(authOperationGrants.expiresAt, new Date()),
         ),
@@ -1214,13 +1172,10 @@ router.post(
 router.post(
   '/recovery-codes/regenerate',
   csrfProtection,
-  authed({ authority: 'full' }),
   validateRequest({ body: operationGrantSchema }),
+  authed({ authority: 'full', operation: { purpose: 'recovery_codes_regenerate', grantSource: 'body' } }),
   async (req, res) => {
     const current = authedRequest(req).user;
-    const { grantId } = getValidated<{ body: typeof operationGrantSchema }>(req).body!;
-
-    await requireFullOperation(req, 'recovery_codes_regenerate', grantId);
     const recoveryCodes = await replaceRecoveryCodes(current.id);
 
     httpResponse.json(res, { data: { recoveryCodes }, message: 'Recovery codes regenerated.' });
@@ -1230,13 +1185,12 @@ router.post(
 router.post(
   '/password/change',
   csrfProtection,
-  authed({ authority: 'full' }),
   validateRequest({ body: passwordChangeSchema }),
+  authed({ authority: 'full', operation: { purpose: 'password_change', grantSource: 'session' } }),
   async (req, res) => {
     const current = authedRequest(req).user;
     const body = getValidated<{ body: typeof passwordChangeSchema }>(req).body!;
 
-    await requireFullOperation(req, 'password_change', req.session.reauthGrantId ?? '');
     const user = await findUserById(current.id);
 
     if (!user?.passwordHash || !(await verifyPassword(body.currentPassword, user.passwordHash)))
@@ -1249,12 +1203,11 @@ router.post(
 router.post(
   '/password/remove',
   csrfProtection,
-  authed({ authority: 'full' }),
   validateRequest({ body: passwordRemoveSchema }),
+  authed({ authority: 'full', operation: { purpose: 'password_remove', grantSource: 'session' } }),
   async (req, res) => {
     const current = authedRequest(req).user;
 
-    await requireFullOperation(req, 'password_remove', req.session.reauthGrantId ?? '');
     const user = await findUserById(current.id);
 
     if (!user?.passwordHash || !(await verifyPassword(req.body.currentPassword, user.passwordHash)))

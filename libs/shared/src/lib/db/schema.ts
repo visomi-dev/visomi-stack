@@ -162,6 +162,8 @@ const authOperationGrants = pgTable(
     sessionBinding: text('session_binding').notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    verifiedAt: timestamp('verified_at', { withTimezone: true }),
+    attemptCount: integer('attempt_count').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [index('auth_operation_grants_user_purpose_idx').on(table.userId, table.purpose, table.expiresAt)],

@@ -19,7 +19,8 @@ function createApp(accountId = 'account-a', userId = 'user-a') {
 
   app.use(json());
   app.use((req: Request, _res, next) => {
-    req.user = { id: userId, accountId, role: 'owner' } as Express.User;
+    req.user = { id: userId, accountId, role: 'owner', authority: 'full' } as Express.User;
+    Object.assign(req, { session: { authority: 'full' } });
     (req as unknown as { isAuthenticated: () => boolean }).isAuthenticated = () => true;
     next();
   });
