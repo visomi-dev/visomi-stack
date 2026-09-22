@@ -31,6 +31,9 @@ async function establishFullSession(req: Request, res: Response, user: FullAuthU
   req.session.authenticatedAt = Date.now();
   req.session.cookie.maxAge = env.SESSION_MAX_AGE_MS;
   delete req.session.secondFactor;
+  // Passport saves before this metadata is assigned. Persist the complete authority
+  // before the caller can finish its mutation and release the authorization lease.
+  await new Promise<void>((resolve, reject) => req.session.save((error) => (error ? reject(error) : resolve())));
   setSessionHintCookie(res);
 }
 

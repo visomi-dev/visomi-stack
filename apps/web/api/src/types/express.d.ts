@@ -56,6 +56,7 @@ declare module 'express-session' {
     secondFactor?: 'email' | 'totp' | 'recovery_code';
     authVersion?: number;
     passwordFlowId?: string;
+    passkeyEnrollmentFlowId?: string;
     passkeySecurityReauthenticatedAt?: number;
     reauthGrantId?: string;
     identityFlowId?: string;

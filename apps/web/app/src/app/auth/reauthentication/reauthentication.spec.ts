@@ -51,18 +51,12 @@ describe('Reauthentication', () => {
     fixture.detectChanges();
   });
 
-  it('performs an existing passkey ceremony without claiming a new credential', async () => {
-    const confirm = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Confirm with passkey'),
-    ) as HTMLButtonElement;
-
-    confirm.click();
+  it('does not authorize an arbitrary purpose when opened without an action', async () => {
     await fixture.whenStable();
 
-    expect(passkey.beginAuthentication).toHaveBeenCalledOnce();
-    expect(passkey.completeAuthentication).toHaveBeenCalledWith('challenge-1', { id: 'credential-1' });
-    expect(security.startReauthentication).toHaveBeenCalledWith('password_change');
-    expect(security.completeReauthentication).toHaveBeenCalledWith({ grantId: 'grant-1', method: 'passkey' });
-    expect(fixture.componentInstance.confirmed()).toBe(true);
+    expect(passkey.beginAuthentication).not.toHaveBeenCalled();
+    expect(security.startReauthentication).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('Choose an action in Security first');
+    expect(fixture.nativeElement.querySelector('a[href="/security"]')).not.toBeNull();
   });
 });

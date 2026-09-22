@@ -33,6 +33,7 @@ export const challengeSchema = z.object({
     'password_second_step',
     'password_signup',
     'password_reset',
+    'email_change',
   ]),
 });
 export type VerificationPurpose = z.infer<typeof challengeSchema>['purpose'];
@@ -155,6 +156,10 @@ export const reauthStartSchema = z
       'totp_disable',
       'recovery_codes_regenerate',
       'google_link',
+      'email_change',
+      'workspace_leave',
+      'sessions_revoke',
+      'passkey_enroll',
     ]),
   })
   .strict();
@@ -168,6 +173,39 @@ export const reauthCompleteSchema = z
   })
   .strict();
 export const operationGrantSchema = z.object({ grantId: identityFlowIdSchema }).strict();
+export const reauthStartResponseSchema = z
+  .object({
+    grantId: identityFlowIdSchema,
+    methods: z.array(z.enum(['passkey', 'google', 'password', 'totp', 'recovery_code'])),
+    google: z.object({ clientId: z.string(), nonce: z.string() }).strict().optional(),
+    expiresAt: z.string(),
+    passwordRequiresTotp: z.boolean(),
+  })
+  .strict();
+export const securityOverviewSchema = z
+  .object({
+    passwordEnabled: z.boolean(),
+    googleLinkEnabled: z.boolean(),
+    totpEnabled: z.boolean(),
+    recoveryCodesRemaining: z.number().int().nonnegative(),
+    passkeys: z.array(
+      z.object({ id: z.string(), label: z.string(), createdAt: z.string(), lastUsedAt: z.string().nullable() }),
+    ),
+    federatedIdentities: z.array(
+      z.object({
+        id: z.string(),
+        provider: z.string(),
+        emailAtLink: z.string(),
+        linkedAt: z.string(),
+        lastUsedAt: z.string().nullable(),
+      }),
+    ),
+    trustedDevices: z.array(
+      z.object({ id: z.string(), createdAt: z.string(), lastUsedAt: z.string().nullable(), expiresAt: z.string() }),
+    ),
+    recoveryEvents: z.array(z.object({ event: z.string(), outcome: z.string(), createdAt: z.string() })),
+  })
+  .strict();
 export const googleLinkSchema = z.object({ grantId: identityFlowIdSchema, idToken: z.string().min(1) }).strict();
 export const totpConfirmSchema = z
   .object({ enrollmentId: identityFlowIdSchema, code: z.string().regex(/^\d{6}$/) })
@@ -177,6 +215,20 @@ export const approvalCreateSchema = z.object({ accountId: z.string().min(1) }).s
 export const approvalIdSchema = z.object({ requestId: z.string().uuid() }).strict();
 export const approvalConsumeSchema = z
   .object({ requestId: z.string().uuid(), userCode: z.string().regex(/^\d{6}$/) })
+  .strict();
+export const approvalStatusSchema = z.enum(['pending', 'approved', 'denied', 'cancelled', 'consumed', 'expired']);
+export const approvalReviewSchema = z
+  .object({
+    requestId: z.string().uuid(),
+    status: approvalStatusSchema,
+    accountId: z.string(),
+    createdAt: z.string(),
+    expiresAt: z.string(),
+    requester: z.boolean(),
+  })
+  .strict();
+export const approvalTerminalSchema = z
+  .object({ requestId: z.string().uuid(), status: z.enum(['denied', 'cancelled']) })
   .strict();
 export const securityIdentityPathSchema = z.object({ identityId: z.string().min(1) }).strict();
 export const securityDevicePathSchema = z.object({ deviceId: z.string().min(1) }).strict();
@@ -353,10 +405,37 @@ export const authOpenApiPaths = {
       responses: { 204: { description: 'Password removed.' } },
     },
   },
+  '/auth/passkey/enrollment/identity': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: operationGrantSchema } } },
+      responses: { 200: { description: 'Verified identity authorizes passkey enrollment.' } },
+    },
+  },
+  '/auth/passkey/enrollment/start': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordRemoveSchema } } },
+      responses: { 202: { description: 'Password proof accepted; verify the server-selected factor.' } },
+    },
+  },
+  '/auth/passkey/enrollment/complete': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: passwordVerifySchema } } },
+      responses: { 200: { description: 'Session-bound first-passkey enrollment authorized.' } },
+    },
+  },
   '/auth/reauth/start': {
     post: {
       requestBody: { required: true, content: { 'application/json': { schema: reauthStartSchema } } },
-      responses: { 201: { description: 'Reauthentication started.' } },
+      responses: {
+        201: {
+          description: 'Reauthentication started.',
+          content: {
+            'application/json': {
+              schema: responseEnvelope(reauthStartResponseSchema, 'ReauthenticationStartEnvelope'),
+            },
+          },
+        },
+      },
     },
   },
   '/auth/reauth/complete': {
@@ -415,6 +494,43 @@ export const authOpenApiPaths = {
       responses: { 200: { description: 'Approval grant consumed.' } },
     },
   },
+  '/auth/device-approval/review': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: approvalIdSchema } } },
+      responses: {
+        200: {
+          description: 'Authorized approval review.',
+          content: { 'application/json': { schema: responseEnvelope(approvalReviewSchema, 'ApprovalReviewEnvelope') } },
+        },
+      },
+    },
+  },
+  '/auth/device-approval/cancel': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: approvalIdSchema } } },
+      responses: {
+        200: {
+          description: 'Requester cancelled approval.',
+          content: {
+            'application/json': { schema: responseEnvelope(approvalTerminalSchema, 'ApprovalCancelledEnvelope') },
+          },
+        },
+      },
+    },
+  },
+  '/auth/device-approval/deny': {
+    post: {
+      requestBody: { required: true, content: { 'application/json': { schema: approvalIdSchema } } },
+      responses: {
+        200: {
+          description: 'Approver denied approval.',
+          content: {
+            'application/json': { schema: responseEnvelope(approvalTerminalSchema, 'ApprovalDeniedEnvelope') },
+          },
+        },
+      },
+    },
+  },
   '/auth/device-approval/approve': {
     post: {
       requestBody: { required: true, content: { 'application/json': { schema: approvalIdSchema } } },
@@ -422,7 +538,16 @@ export const authOpenApiPaths = {
     },
   },
   '/auth/security/overview': {
-    get: { responses: { 200: { description: 'Security settings and recent security events.' } } },
+    get: {
+      responses: {
+        200: {
+          description: 'Security settings and recent security events.',
+          content: {
+            'application/json': { schema: responseEnvelope(securityOverviewSchema, 'SecurityOverviewEnvelope') },
+          },
+        },
+      },
+    },
   },
   '/auth/security/federated/{identityId}': {
     delete: { responses: { 204: { description: 'Federated identity revoked.' } } },

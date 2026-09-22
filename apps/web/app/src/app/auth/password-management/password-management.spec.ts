@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { PasswordAuth } from '../../shared/auth/password';
+import { Auth } from '../../shared/auth/auth';
 import { Passkey } from '../../shared/auth/passkey';
 import { SecurityAuth } from '../../shared/auth/security-auth';
 import { Settings } from '../../shared/settings';
@@ -31,6 +32,7 @@ describe('PasswordManagement', () => {
       imports: [PasswordManagement],
       providers: [
         provideRouter([]),
+        { provide: Auth, useValue: { ensureSessionLoaded: vi.fn(), isAuthenticated: () => true } },
         { provide: PasswordAuth, useValue: password },
         { provide: Passkey, useValue: passkey },
         {
@@ -65,6 +67,14 @@ describe('PasswordManagement', () => {
     setup.click();
     await fixture.whenStable();
     fixture.detectChanges();
+
+    expect(password.startTotpSetup).not.toHaveBeenCalled();
+    const confirm = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(
+      (button) => button.textContent?.includes('Continue with a passkey'),
+    )!;
+
+    confirm.click();
+    await fixture.whenStable();
 
     expect(password.startTotpSetup).toHaveBeenCalledOnce();
     expect(fixture.nativeElement.textContent).toContain('JBSWY3DPEHPK3PXP');

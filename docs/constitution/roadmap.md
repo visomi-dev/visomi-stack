@@ -1,5 +1,7 @@
 # Delivery Plan: Themis
 
+This is the historical Themis product roadmap. Reusable-template setup and maintenance are tracked separately in [Visomi Stack template readiness](../../plan/feature-template-readiness-1.md) and the [template guides](../template/getting-started.md).
+
 ## Suggested Phases
 
 ### Phase 1: Task Definition Core

@@ -26,6 +26,7 @@ import {
   authVerificationChallenges,
   authEmailChallenges,
   authIdentityFlows,
+  authEnrollmentGrants,
   userTotpEnrollments,
   userRecoveryCodes,
   authOperationGrants,
@@ -120,7 +121,7 @@ export async function findVerificationChallenge(id: string) {
     .where(eq(authVerificationChallenges.id, id))
     .limit(1);
 
-  return challenge;
+  return challenge?.purpose === 'email_change' ? undefined : challenge;
 }
 
 export async function getPrimaryMembership(userId: string) {
@@ -262,10 +263,294 @@ export async function createEmailChallenge(email: string): Promise<AuthChallenge
 export async function createRecoveryChallenge(
   user: typeof users.$inferSelect,
   flowId: ChallengeId,
+  sessionBinding: string,
 ): Promise<AuthChallengePayload> {
-  const challenge = await createChallenge(user, 'existing_account_recovery', flowId);
+  const pin = generateVerificationPin();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + env.PIN_EXPIRY_MINUTES * 60_000);
+  const pinHash = await hashSecret(recoveryProof(user, flowId, sessionBinding, pin));
+  const [primary] = await db
+    .select({ accountId: accountMemberships.accountId })
+    .from(accountMemberships)
+    .where(eq(accountMemberships.userId, user.id))
+    .orderBy(asc(accountMemberships.createdAt))
+    .limit(1);
 
-  return challenge;
+  await db.transaction(async (tx) => {
+    if (primary)
+      await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.id, primary.accountId)).for('update');
+    const [current] = await tx.select().from(users).where(eq(users.id, user.id)).for('update');
+    const [flow] = await tx.select().from(authIdentityFlows).where(eq(authIdentityFlows.id, flowId)).for('update');
+
+    if (
+      !current ||
+      current.authVersion !== user.authVersion ||
+      current.email !== user.email ||
+      !flow ||
+      flow.sessionBinding !== sessionBinding ||
+      flow.state !== 'authorize_existing_account' ||
+      flow.emailHash !== flowHash(current.email) ||
+      flow.expiresAt <= new Date() ||
+      flow.completedAt ||
+      flow.terminalAt
+    )
+      recoveryUnavailable();
+    const [membership] = await tx
+      .select()
+      .from(accountMemberships)
+      .where(eq(accountMemberships.userId, user.id))
+      .orderBy(asc(accountMemberships.createdAt))
+      .limit(1);
+
+    if (membership?.accountId !== primary?.accountId) recoveryUnavailable();
+    await tx
+      .update(authVerificationChallenges)
+      .set({ consumedAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(authVerificationChallenges.userId, user.id),
+          eq(authVerificationChallenges.purpose, 'existing_account_recovery'),
+          isNull(authVerificationChallenges.consumedAt),
+        ),
+      );
+    await tx
+      .update(authIdentityFlows)
+      .set({
+        intent: 'existing_account_recovery',
+        authorizationMethod: 'email_recovery',
+        userId: current.id,
+        userAuthVersion: current.authVersion,
+        accountId: membership?.accountId ?? null,
+        updatedAt: now,
+      })
+      .where(eq(authIdentityFlows.id, flowId));
+    await safeInsert(
+      () =>
+        tx.insert(authVerificationChallenges).values({
+          id: flowId,
+          userId: current.id,
+          email: current.email,
+          purpose: 'existing_account_recovery',
+          pinHash,
+          expiresAt,
+          lastSentAt: now,
+          createdAt: now,
+          updatedAt: now,
+        }),
+      'auth_verification_challenges_pkey',
+      {
+        code: 'challenge_already_exists',
+        message: 'A verification challenge with that id already exists.',
+        statusCode: 409,
+      },
+    );
+  });
+  await sendVerificationMessage({
+    challengeId: flowId,
+    email: user.email,
+    expiresAt,
+    pin,
+    purpose: 'existing_account_recovery',
+  });
+
+  return {
+    challengeId: flowId,
+    email: user.email,
+    expiresAt: expiresAt.toISOString(),
+    purpose: 'existing_account_recovery',
+  };
+}
+
+function recoveryUnavailable(): never {
+  throw new HttpError({
+    code: 'recovery_unavailable',
+    message: 'The recovery request could not be completed.',
+    statusCode: 401,
+  });
+}
+
+function recoveryProof(
+  user: { id: string; email: string; authVersion: number },
+  flowId: string,
+  sessionBinding: string,
+  pin: string,
+): string {
+  return JSON.stringify([
+    'existing_account_recovery',
+    flowId,
+    user.id,
+    user.email,
+    user.authVersion,
+    sessionBinding,
+    pin,
+  ]);
+}
+
+// Account -> user -> flow -> challenge/grant matches email-change's lock order.
+// Taking the account lock first also avoids FK key-share/user-lock deadlocks.
+// Never reload the user's current epoch after accepting a proof from an older one.
+export async function consumeRecoveryAuthorization(
+  flowId: string,
+  pin: string,
+  sessionBinding: string,
+  requesterSessionHash: string,
+) {
+  const [candidate] = await db
+    .select({ userId: authIdentityFlows.userId, accountId: authIdentityFlows.accountId })
+    .from(authIdentityFlows)
+    .where(eq(authIdentityFlows.id, flowId));
+
+  if (!candidate?.userId || !candidate.accountId) recoveryUnavailable();
+  const userId = candidate.userId;
+  const accountId = candidate.accountId;
+  const authorization = await db.transaction(async (tx) => {
+    await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.id, accountId)).for('update');
+    const [user] = await tx.select().from(users).where(eq(users.id, userId)).for('update');
+    const [flow] = await tx.select().from(authIdentityFlows).where(eq(authIdentityFlows.id, flowId)).for('update');
+    const [challenge] = await tx
+      .select()
+      .from(authVerificationChallenges)
+      .where(eq(authVerificationChallenges.id, flowId))
+      .for('update');
+
+    if (
+      !user ||
+      !flow ||
+      !challenge ||
+      flow.intent !== 'existing_account_recovery' ||
+      flow.state !== 'authorize_existing_account' ||
+      flow.authorizationMethod !== 'email_recovery' ||
+      flow.userId !== user.id ||
+      flow.accountId !== accountId ||
+      flow.sessionBinding !== sessionBinding ||
+      flow.userAuthVersion !== user.authVersion ||
+      flow.emailHash !== flowHash(user.email) ||
+      flow.expiresAt <= new Date() ||
+      flow.completedAt ||
+      flow.terminalAt ||
+      challenge.purpose !== 'existing_account_recovery' ||
+      challenge.userId !== user.id ||
+      challenge.email !== user.email ||
+      challenge.consumedAt ||
+      challenge.expiresAt <= new Date() ||
+      challenge.attemptCount >= MAX_CHALLENGE_ATTEMPTS
+    )
+      recoveryUnavailable();
+    if (!(await verifySecret(recoveryProof(user, flowId, sessionBinding, pin), challenge.pinHash))) {
+      await tx
+        .update(authVerificationChallenges)
+        .set({ attemptCount: challenge.attemptCount + 1, updatedAt: new Date() })
+        .where(eq(authVerificationChallenges.id, flowId));
+
+      return null; // Failed attempts must commit rather than disappear with a thrown rollback.
+    }
+    const memberships = await tx
+      .select()
+      .from(accountMemberships)
+      .where(eq(accountMemberships.userId, user.id))
+      .orderBy(asc(accountMemberships.createdAt));
+    const selected = memberships.find((membership) => membership.accountId === flow.accountId);
+
+    if (!selected) recoveryUnavailable();
+    const now = new Date();
+    const expiresAt = new Date(Math.min(flow.expiresAt.getTime(), now.getTime() + 15 * 60_000));
+
+    await tx
+      .update(authVerificationChallenges)
+      .set({ consumedAt: now, updatedAt: now })
+      .where(eq(authVerificationChallenges.id, flowId));
+    await tx
+      .update(authEnrollmentGrants)
+      .set({ revokedAt: now })
+      .where(
+        and(
+          eq(authEnrollmentGrants.userId, user.id),
+          eq(authEnrollmentGrants.accountId, selected.accountId),
+          isNull(authEnrollmentGrants.consumedAt),
+          isNull(authEnrollmentGrants.revokedAt),
+        ),
+      );
+    const [grant] = await tx
+      .insert(authEnrollmentGrants)
+      .values({
+        id: randomUUID(),
+        userId: user.id,
+        accountId: selected.accountId,
+        requesterSessionHash,
+        source: 'email_recovery',
+        expiresAt,
+        createdAt: now,
+      })
+      .returning();
+
+    await tx
+      .update(authIdentityFlows)
+      .set({ state: 'enroll_passkey', updatedAt: now })
+      .where(eq(authIdentityFlows.id, flowId));
+
+    return { user, memberships, selected, grant, flowId, sessionBinding, expiresAt: expiresAt.getTime() };
+  });
+
+  if (!authorization) recoveryUnavailable();
+
+  return authorization;
+}
+
+// Passport rotates the session ID during login. Rebind only the already-issued
+// grant, checking the original epoch again; this cannot recreate a revoked grant.
+export async function bindRecoveryEnrollmentSession(
+  authorization: Awaited<ReturnType<typeof consumeRecoveryAuthorization>>,
+  requesterSessionHash: string,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx
+      .select({ id: accounts.id })
+      .from(accounts)
+      .where(eq(accounts.id, authorization.selected.accountId))
+      .for('update');
+    const [user] = await tx.select().from(users).where(eq(users.id, authorization.user.id)).for('update');
+    const [flow] = await tx
+      .select()
+      .from(authIdentityFlows)
+      .where(eq(authIdentityFlows.id, authorization.flowId))
+      .for('update');
+
+    if (
+      !user ||
+      user.authVersion !== authorization.user.authVersion ||
+      user.email !== authorization.user.email ||
+      !flow ||
+      flow.userAuthVersion !== user.authVersion ||
+      flow.userId !== user.id ||
+      flow.intent !== 'existing_account_recovery' ||
+      flow.accountId !== authorization.selected.accountId ||
+      flow.state !== 'enroll_passkey' ||
+      flow.authorizationMethod !== 'email_recovery' ||
+      flow.sessionBinding !== authorization.sessionBinding ||
+      flow.terminalAt ||
+      flow.completedAt ||
+      flow.expiresAt <= new Date()
+    )
+      recoveryUnavailable();
+    const [bound] = await tx
+      .update(authEnrollmentGrants)
+      .set({ requesterSessionHash })
+      .where(
+        and(
+          eq(authEnrollmentGrants.id, authorization.grant.id),
+          eq(authEnrollmentGrants.requesterSessionHash, authorization.grant.requesterSessionHash),
+          eq(authEnrollmentGrants.userId, user.id),
+          eq(authEnrollmentGrants.source, 'email_recovery'),
+          eq(authEnrollmentGrants.accountId, authorization.selected.accountId),
+          isNull(authEnrollmentGrants.consumedAt),
+          isNull(authEnrollmentGrants.revokedAt),
+          gt(authEnrollmentGrants.expiresAt, new Date()),
+        ),
+      )
+      .returning();
+
+    if (!bound) recoveryUnavailable();
+  });
 }
 
 export async function findOrCreateUserByEmail(email: string): Promise<typeof users.$inferSelect> {
@@ -463,7 +748,7 @@ export async function resendChallenge(challengeId: string) {
     .where(eq(authVerificationChallenges.id, challengeId))
     .limit(1);
 
-  if (!challenge) {
+  if (!challenge || challenge.purpose === 'email_change') {
     throw new HttpError({
       code: 'challenge_not_found',
       message: 'The verification request could not be found.',
@@ -513,7 +798,7 @@ export async function consumeChallenge(challengeId: string, pin: string) {
     .where(eq(authVerificationChallenges.id, challengeId))
     .limit(1);
 
-  if (!challenge) {
+  if (!challenge || challenge.purpose === 'email_change') {
     throw new HttpError({
       code: 'challenge_not_found',
       message: 'The verification request could not be found.',

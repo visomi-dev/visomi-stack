@@ -1,9 +1,10 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { afterRenderEffect, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 
 import { Auth } from '../auth/auth';
+import { AccountProfile } from '../auth/account-profile';
 import { Settings } from '../settings';
 import { DASHBOARD_URL } from '../constants/routes';
 import { BottomNavigation, BottomNavigationItem } from '../ui/layout/bottom-navigation/bottom-navigation';
@@ -34,6 +35,7 @@ export class Layout {
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
   private readonly settings = inject(Settings);
+  private readonly accountProfile = inject(AccountProfile);
 
   private readonly navigationEnd = toSignal(
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)),
@@ -68,8 +70,14 @@ export class Layout {
 
   readonly showAppShell = computed(() => this.auth.isAuthenticated() && !this.hideAppShell());
 
-  readonly applyThemeEffect = effect(() => {
-    this.settings.applyTheme();
+  readonly applyThemeEffect = afterRenderEffect({
+    write: () => {
+      this.settings.applyTheme();
+      const userId = this.auth.isAuthenticated() ? (this.auth.user()?.id ?? null) : null;
+
+      if (!userId || this.showAppShell())
+        void this.accountProfile.synchronizePreferences(userId, () => this.router.url);
+    },
   });
 
   readonly bottomNavItems = BOTTOM_NAV_ITEMS;

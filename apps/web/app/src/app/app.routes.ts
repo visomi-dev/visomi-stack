@@ -2,6 +2,7 @@ import type { Route } from '@angular/router';
 
 import { anonymousGuard } from './shared/auth/anonymous-guard';
 import { authenticatedGuard } from './shared/auth/authenticated-guard';
+import { accountResolver } from './account/account.resolver';
 import { activatedGuard } from './shared/activation/activated-guard';
 import {
   ACTIVATION_PATH,
@@ -11,6 +12,7 @@ import {
   SIGN_IN_PATH,
   LEGACY_IDENTITY_PATH,
   SECURITY_PATH,
+  DEVICE_APPROVAL_PATH,
   SIGN_UP_PATH,
   EMAIL_VERIFICATION_PATH,
   PASSWORD_RESET_PATH,
@@ -21,6 +23,17 @@ import {
 } from './shared/constants/routes';
 
 export const appRoutes: Route[] = [
+  {
+    path: 'account',
+    canActivate: [authenticatedGuard],
+    resolve: { account: accountResolver },
+    loadComponent: () => import('./account/account').then((module) => module.Account),
+  },
+  {
+    path: 'security/sessions',
+    canActivate: [authenticatedGuard],
+    loadComponent: () => import('./security/sessions/sessions').then((module) => module.Sessions),
+  },
   {
     path: APP_PATH,
     pathMatch: 'full',
@@ -107,6 +120,12 @@ export const appRoutes: Route[] = [
     path: DASHBOARD_PATH,
     canActivate: [activatedGuard],
     loadComponent: () => import('./dashboard/dashboard').then((module) => module.Dashboard),
+  },
+  {
+    path: DEVICE_APPROVAL_PATH,
+    canActivate: [authenticatedGuard],
+    loadComponent: () =>
+      import('./security/device-approval/device-approval').then((module) => module.DeviceApprovalPage),
   },
   {
     path: SECURITY_PATH,

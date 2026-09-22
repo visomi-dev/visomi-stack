@@ -2,7 +2,7 @@ import { createHmac, randomUUID } from 'node:crypto';
 
 import { OAuth2Client } from 'google-auth-library';
 import { Router, type Request } from 'express';
-import { and, eq, gt, isNull, ne, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, isNotNull, lt, ne, sql } from 'drizzle-orm';
 
 import { getValidated, validateRequest } from '../shared/http/route-schemas';
 import { env } from '../shared/env';
@@ -10,6 +10,7 @@ import { env } from '../shared/env';
 import { authed, authedRequest, authenticationVerification, restrictedOperation } from './auth-middleware';
 import { generateVerificationPin, hashSecret, verifySecret } from './auth-crypto';
 import { establishFullSession, refreshSessionAuthVersion } from './auth-session';
+import { removeAccessMethod } from './access-methods';
 import { sendRecoveryNotification } from './auth-mail';
 import {
   clientContextHash,
@@ -18,13 +19,11 @@ import {
   resendEmailOtp,
   verifyEmailOtp,
   createRecoveryChallenge,
+  consumeRecoveryAuthorization,
+  bindRecoveryEnrollmentSession,
   normalizeEmail,
   findUserByEmail,
-  findOrCreateUserByEmail,
   resolveAuthUserForAccount,
-  consumeChallenge,
-  markChallengeConsumed,
-  listMembershipsForUser,
   startPasswordSignIn,
   startPasswordSignUp,
   verifyPasswordSignUp,
@@ -74,6 +73,8 @@ import {
   csrfProtection,
   emailOtpDeliveryRateLimit,
   emailOtpVerificationRateLimit,
+  authenticationRateLimit,
+  consumeEmailOtpDeliveryLimit,
 } from './passkey-security';
 import { clearSessionHintCookie, setSessionHintCookie } from './session-cookie';
 import { verifyPassword } from './password';
@@ -85,12 +86,12 @@ import {
   authAuditEvents,
   authIdentityFlows,
   userFederatedIdentities,
-  authVerificationChallenges,
   authDeviceApprovalRequests,
   authEnrollmentGrants,
   accountPasskeyCredentials,
   userDevices,
   userTotpEnrollments,
+  userRecoveryCodes,
   authOperationGrants,
   users,
   db,
@@ -98,6 +99,65 @@ import {
 
 const router = Router();
 const FLOW_TTL_MS = 15 * 60_000;
+
+function approvalStatus(request: typeof authDeviceApprovalRequests.$inferSelect) {
+  if (request.consumedAt) return 'consumed' as const;
+  if (request.cancelledAt) return 'cancelled' as const;
+  if (request.deniedAt) return 'denied' as const;
+  if (request.expiresAt <= new Date()) return 'expired' as const;
+
+  return request.approvedAt ? ('approved' as const) : ('pending' as const);
+}
+
+async function securityMethods(userId: string, accountId: string) {
+  const [user, passkeys, totp, recovery, google] = await Promise.all([
+    findUserById(userId),
+    db
+      .select({ id: accountPasskeyCredentials.id })
+      .from(accountPasskeyCredentials)
+      .where(
+        and(
+          eq(accountPasskeyCredentials.userId, userId),
+          eq(accountPasskeyCredentials.accountId, accountId),
+          eq(accountPasskeyCredentials.status, 'active'),
+          isNull(accountPasskeyCredentials.revokedAt),
+        ),
+      ),
+    db
+      .select({ id: userTotpEnrollments.id })
+      .from(userTotpEnrollments)
+      .where(and(eq(userTotpEnrollments.userId, userId), eq(userTotpEnrollments.status, 'active'))),
+    db
+      .select({ id: userRecoveryCodes.id })
+      .from(userRecoveryCodes)
+      .where(and(eq(userRecoveryCodes.userId, userId), isNull(userRecoveryCodes.usedAt))),
+    db
+      .select({ id: userFederatedIdentities.id })
+      .from(userFederatedIdentities)
+      .where(
+        and(
+          eq(userFederatedIdentities.userId, userId),
+          eq(userFederatedIdentities.provider, 'google'),
+          eq(userFederatedIdentities.issuer, 'https://accounts.google.com'),
+          isNull(userFederatedIdentities.revokedAt),
+        ),
+      ),
+  ]);
+  const methods: Array<'passkey' | 'google' | 'password' | 'totp' | 'recovery_code'> = [];
+
+  if (passkeys.length) methods.push('passkey');
+  if (env.GOOGLE_AUTH_CLIENT_ID && google.length) methods.push('google');
+  if (user?.passwordHash) methods.push('password');
+  if (totp.length) methods.push('totp');
+  if (recovery.length) methods.push('recovery_code');
+
+  return {
+    methods,
+    passwordEnabled: Boolean(user?.passwordHash),
+    totpEnabled: totp.length > 0,
+    recoveryCodesRemaining: recovery.length,
+  };
+}
 
 function flowHash(email: string): string {
   return createHmac('sha256', env.SESSION_SECRET).update(normalizeEmail(email)).digest('hex');
@@ -189,6 +249,7 @@ router.post(
   '/device-approval/request',
   csrfProtection,
   authed(),
+  authenticationRateLimit,
   validateRequest({ body: approvalCreateSchema }),
   async (req, res) => {
     const current = authedRequest(req).user;
@@ -230,11 +291,7 @@ router.post(
       .where(eq(authDeviceApprovalRequests.id, requestId))
       .limit(1);
 
-    if (
-      !request ||
-      request.requesterSessionHash !== clientContextHash(req.sessionID, req.get('user-agent')) ||
-      request.expiresAt <= new Date()
-    )
+    if (!request || request.requesterSessionHash !== clientContextHash(req.sessionID, req.get('user-agent')))
       throw new HttpError({
         code: 'approval_unavailable',
         message: 'The approval request is unavailable.',
@@ -243,13 +300,7 @@ router.post(
     httpResponse.json(res, {
       data: {
         requestId,
-        status: request.consumedAt
-          ? 'consumed'
-          : request.deniedAt
-            ? 'denied'
-            : request.approvedAt
-              ? 'approved'
-              : 'pending',
+        status: approvalStatus(request),
         expiresAt: request.expiresAt.toISOString(),
       },
       message: 'Device approval status retrieved.',
@@ -282,6 +333,11 @@ router.post(
         and(
           eq(authDeviceApprovalRequests.id, requestId),
           eq(authDeviceApprovalRequests.accountId, current.accountId),
+          eq(authDeviceApprovalRequests.userId, current.id),
+          ne(authDeviceApprovalRequests.requesterSessionHash, clientContextHash(req.sessionID, req.get('user-agent'))),
+          gt(authDeviceApprovalRequests.expiresAt, new Date()),
+          isNull(authDeviceApprovalRequests.deniedAt),
+          isNull(authDeviceApprovalRequests.cancelledAt),
           isNull(authDeviceApprovalRequests.approvedAt),
           isNull(authDeviceApprovalRequests.consumedAt),
         ),
@@ -308,22 +364,135 @@ router.post(
 );
 
 router.post(
-  '/device-approval/consume',
+  '/device-approval/review',
   csrfProtection,
-  validateRequest({ body: approvalConsumeSchema }),
+  authed({ authority: 'full' }),
+  validateRequest({ body: approvalIdSchema }),
   async (req, res) => {
-    const body = getValidated<{ body: typeof approvalConsumeSchema }>(req).body!;
+    const current = authedRequest(req).user;
+    const { requestId } = getValidated<{ body: typeof approvalIdSchema }>(req).body!;
     const [request] = await db
       .select()
       .from(authDeviceApprovalRequests)
       .where(
         and(
-          eq(authDeviceApprovalRequests.id, body.requestId),
-          eq(authDeviceApprovalRequests.requesterSessionHash, clientContextHash(req.sessionID, req.get('user-agent'))),
-          isNull(authDeviceApprovalRequests.consumedAt),
+          eq(authDeviceApprovalRequests.id, requestId),
+          eq(authDeviceApprovalRequests.userId, current.id),
+          eq(authDeviceApprovalRequests.accountId, current.accountId),
         ),
       )
       .limit(1);
+
+    if (!request)
+      throw new HttpError({
+        code: 'approval_unavailable',
+        message: 'The approval request is unavailable.',
+        statusCode: 404,
+      });
+    httpResponse.json(res, {
+      data: {
+        requestId,
+        status: approvalStatus(request),
+        accountId: current.accountId,
+        createdAt: request.createdAt.toISOString(),
+        expiresAt: request.expiresAt.toISOString(),
+        requester: request.requesterSessionHash === clientContextHash(req.sessionID, req.get('user-agent')),
+      },
+      message: 'Approval request reviewed.',
+    });
+  },
+);
+
+router.post(
+  '/device-approval/cancel',
+  csrfProtection,
+  validateRequest({ body: approvalIdSchema }),
+  async (req, res) => {
+    const { requestId } = getValidated<{ body: typeof approvalIdSchema }>(req).body!;
+    const [cancelled] = await db
+      .update(authDeviceApprovalRequests)
+      .set({ cancelledAt: new Date(), updatedAt: new Date() })
+      .where(
+        and(
+          eq(authDeviceApprovalRequests.id, requestId),
+          eq(authDeviceApprovalRequests.requesterSessionHash, clientContextHash(req.sessionID, req.get('user-agent'))),
+          isNull(authDeviceApprovalRequests.cancelledAt),
+          isNull(authDeviceApprovalRequests.deniedAt),
+          isNull(authDeviceApprovalRequests.consumedAt),
+          gt(authDeviceApprovalRequests.expiresAt, new Date()),
+        ),
+      )
+      .returning();
+
+    if (!cancelled)
+      throw new HttpError({
+        code: 'approval_unavailable',
+        message: 'The approval request is unavailable.',
+        statusCode: 409,
+      });
+    httpResponse.json(res, { data: { requestId, status: 'cancelled' }, message: 'Approval request cancelled.' });
+  },
+);
+
+router.post(
+  '/device-approval/deny',
+  csrfProtection,
+  authed({ authority: 'full' }),
+  validateRequest({ body: approvalIdSchema }),
+  async (req, res) => {
+    const { requestId } = getValidated<{ body: typeof approvalIdSchema }>(req).body!;
+    const current = authedRequest(req).user;
+    const [denied] = await db
+      .update(authDeviceApprovalRequests)
+      .set({ deniedAt: new Date(), updatedAt: new Date() })
+      .where(
+        and(
+          eq(authDeviceApprovalRequests.id, requestId),
+          eq(authDeviceApprovalRequests.userId, current.id),
+          eq(authDeviceApprovalRequests.accountId, current.accountId),
+          ne(authDeviceApprovalRequests.requesterSessionHash, clientContextHash(req.sessionID, req.get('user-agent'))),
+          isNull(authDeviceApprovalRequests.approvedAt),
+          isNull(authDeviceApprovalRequests.deniedAt),
+          isNull(authDeviceApprovalRequests.cancelledAt),
+          isNull(authDeviceApprovalRequests.consumedAt),
+          gt(authDeviceApprovalRequests.expiresAt, new Date()),
+        ),
+      )
+      .returning();
+
+    if (!denied)
+      throw new HttpError({
+        code: 'approval_unavailable',
+        message: 'The approval request is unavailable.',
+        statusCode: 409,
+      });
+    httpResponse.json(res, { data: { requestId, status: 'denied' }, message: 'Approval request denied.' });
+  },
+);
+
+router.post(
+  '/device-approval/consume',
+  csrfProtection,
+  authenticationRateLimit,
+  validateRequest({ body: approvalConsumeSchema }),
+  async (req, res) => {
+    const body = getValidated<{ body: typeof approvalConsumeSchema }>(req).body!;
+    const [request] = await db
+      .update(authDeviceApprovalRequests)
+      .set({ attemptCount: sql`${authDeviceApprovalRequests.attemptCount} + 1`, updatedAt: new Date() })
+      .where(
+        and(
+          eq(authDeviceApprovalRequests.id, body.requestId),
+          eq(authDeviceApprovalRequests.requesterSessionHash, clientContextHash(req.sessionID, req.get('user-agent'))),
+          isNull(authDeviceApprovalRequests.consumedAt),
+          isNull(authDeviceApprovalRequests.deniedAt),
+          isNull(authDeviceApprovalRequests.cancelledAt),
+          isNotNull(authDeviceApprovalRequests.approvedAt),
+          gt(authDeviceApprovalRequests.expiresAt, new Date()),
+          lt(authDeviceApprovalRequests.attemptCount, 5),
+        ),
+      )
+      .returning();
 
     if (
       !request ||
@@ -336,30 +505,42 @@ router.post(
         message: 'The approval request is unavailable.',
         statusCode: 401,
       });
-    const [consumed] = await db
-      .update(authDeviceApprovalRequests)
-      .set({ consumedAt: new Date(), updatedAt: new Date() })
-      .where(and(eq(authDeviceApprovalRequests.id, request.id), isNull(authDeviceApprovalRequests.consumedAt)))
-      .returning();
+    const grant = await db.transaction(async (tx) => {
+      const [consumed] = await tx
+        .update(authDeviceApprovalRequests)
+        .set({ consumedAt: new Date(), updatedAt: new Date() })
+        .where(
+          and(
+            eq(authDeviceApprovalRequests.id, request.id),
+            isNull(authDeviceApprovalRequests.consumedAt),
+            isNull(authDeviceApprovalRequests.deniedAt),
+            isNull(authDeviceApprovalRequests.cancelledAt),
+            gt(authDeviceApprovalRequests.expiresAt, new Date()),
+          ),
+        )
+        .returning();
 
-    if (!consumed)
-      throw new HttpError({
-        code: 'approval_replayed',
-        message: 'The approval request was already consumed.',
-        statusCode: 409,
-      });
-    const [grant] = await db
-      .insert(authEnrollmentGrants)
-      .values({
-        id: randomUUID(),
-        userId: request.userId,
-        accountId: request.accountId,
-        requesterSessionHash: request.requesterSessionHash,
-        source: 'device_approval',
-        expiresAt: new Date(Date.now() + FLOW_TTL_MS),
-        createdAt: new Date(),
-      })
-      .returning();
+      if (!consumed)
+        throw new HttpError({
+          code: 'approval_replayed',
+          message: 'The approval request was already consumed.',
+          statusCode: 409,
+        });
+      const [createdGrant] = await tx
+        .insert(authEnrollmentGrants)
+        .values({
+          id: randomUUID(),
+          userId: request.userId,
+          accountId: request.accountId,
+          requesterSessionHash: request.requesterSessionHash,
+          source: 'device_approval',
+          expiresAt: new Date(Date.now() + FLOW_TTL_MS),
+          createdAt: new Date(),
+        })
+        .returning();
+
+      return createdGrant;
+    });
 
     req.session.enrollmentGrantId = grant?.id;
     await db.insert(authAuditEvents).values({
@@ -433,16 +614,11 @@ router.post(
     const user = await findUserByEmail(body.email);
 
     if (user && flow.state === 'authorize_existing_account' && flow.emailHash === flowHash(body.email)) {
-      await createRecoveryChallenge(user, flow.id as `${string}-${string}-${string}-${string}-${string}`);
-      await db
-        .update(authIdentityFlows)
-        .set({
-          emailHash: flowHash(body.email),
-          state: 'authorize_existing_account',
-          authorizationMethod: 'email_recovery',
-          updatedAt: new Date(),
-        })
-        .where(eq(authIdentityFlows.id, flow.id));
+      await createRecoveryChallenge(
+        user,
+        flow.id as `${string}-${string}-${string}-${string}-${string}`,
+        req.sessionID,
+      );
     } else if (!user && flow.state === 'verify_new_email' && flow.emailHash === flowHash(body.email)) {
       await requestEmailOtp(
         body.email,
@@ -491,68 +667,28 @@ router.post(
 
       return;
     }
-    const [challenge] = await db
-      .select()
-      .from(authVerificationChallenges)
-      .where(and(eq(authVerificationChallenges.id, body.flowId), isNull(authVerificationChallenges.consumedAt)))
-      .limit(1);
-
-    if (
-      flow.state !== 'authorize_existing_account' ||
-      flow.authorizationMethod !== 'email_recovery' ||
-      !challenge ||
-      challenge.purpose !== 'existing_account_recovery'
-    )
-      throw new HttpError({
-        code: 'recovery_unavailable',
-        message: 'The recovery request could not be completed.',
-        statusCode: 401,
-      });
-    await consumeChallenge(body.flowId, body.pin);
-    await markChallengeConsumed(body.flowId);
-    if (!challenge.userId)
-      throw new HttpError({
-        code: 'recovery_unavailable',
-        message: 'The recovery request could not be completed.',
-        statusCode: 401,
-      });
-    const user = await findUserById(challenge.userId);
-
-    if (!user)
-      throw new HttpError({
-        code: 'recovery_unavailable',
-        message: 'The recovery request could not be completed.',
-        statusCode: 401,
-      });
-    const memberships = await listMembershipsForUser(user.id);
-    const selected = memberships[0];
-
-    if (!selected)
-      throw new HttpError({
-        code: 'recovery_unavailable',
-        message: 'The recovery request could not be completed.',
-        statusCode: 401,
-      });
+    const authorization = await consumeRecoveryAuthorization(
+      body.flowId,
+      body.pin,
+      req.sessionID,
+      clientContextHash(req.sessionID, req.get('user-agent')),
+    );
+    const { user, memberships, selected, grant, expiresAt } = authorization;
     const authUser = {
-      ...(await resolveAuthUserForAccount(user, selected.accountId)),
+      id: user.id,
+      email: user.email,
+      emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
+      accountId: selected.accountId,
+      role: selected.role,
+      authVersion: user.authVersion,
       authority: 'restricted' as const,
     };
-    const expiresAt = Date.now() + FLOW_TTL_MS;
-
-    await db
-      .update(authEnrollmentGrants)
-      .set({ revokedAt: new Date() })
-      .where(
-        and(
-          eq(authEnrollmentGrants.userId, user.id),
-          eq(authEnrollmentGrants.accountId, selected.accountId),
-          isNull(authEnrollmentGrants.consumedAt),
-          isNull(authEnrollmentGrants.revokedAt),
-        ),
-      );
 
     await new Promise<void>((resolve, reject) => req.login(authUser, (error) => (error ? reject(error) : resolve())));
+    await bindRecoveryEnrollmentSession(authorization, clientContextHash(req.sessionID, req.get('user-agent')));
     req.session.authority = 'restricted';
+    req.session.authVersion = user.authVersion;
+    req.session.cookie.maxAge = Math.max(0, expiresAt - Date.now());
     req.session.restrictedAuth = {
       allowedOperations: ['passkeys:enroll', 'passkeys:verify', 'password:set'],
       eligibleAccounts: memberships.map((membership) => ({
@@ -569,30 +705,7 @@ router.post(
       userId: user.id,
       verifiedEmail: user.email,
     };
-    const [grant] = await db
-      .insert(authEnrollmentGrants)
-      .values({
-        id: randomUUID(),
-        userId: user.id,
-        accountId: selected.accountId,
-        requesterSessionHash: clientContextHash(req.sessionID, req.get('user-agent')),
-        source: 'email_recovery',
-        expiresAt: new Date(Date.now() + FLOW_TTL_MS),
-        createdAt: new Date(),
-      })
-      .returning();
-
-    req.session.enrollmentGrantId = grant?.id;
-    await db
-      .update(authIdentityFlows)
-      .set({
-        state: 'enroll_passkey',
-        authorizationMethod: 'email_recovery',
-        userId: user.id,
-        accountId: selected?.accountId,
-        updatedAt: new Date(),
-      })
-      .where(eq(authIdentityFlows.id, flow.id));
+    req.session.enrollmentGrantId = grant.id;
     await db.insert(authAuditEvents).values({
       id: randomUUID(),
       event: 'email_recovery_verified',
@@ -1077,12 +1190,33 @@ router.post(
     const current = authedRequest(req).user;
     const { purpose } = getValidated<{ body: typeof reauthStartSchema }>(req).body!;
     const grantId = await createOperationGrant(current.id, purpose, req.sessionID);
+    const available = await securityMethods(current.id, current.accountId);
+    const [grant] = await db
+      .select({ expiresAt: authOperationGrants.expiresAt })
+      .from(authOperationGrants)
+      .where(eq(authOperationGrants.id, grantId));
 
     req.session.reauthGrantId = grantId;
+    const methods =
+      purpose === 'passkey_enroll'
+        ? available.methods.filter((method) => method === 'google' || method === 'passkey')
+        : available.methods;
+    const nonce = randomUUID();
+    const session = req.session as typeof req.session & {
+      reauthChallenge?: { grantId: string; purpose: string; methods: string[]; nonce: string };
+    };
+
+    session.reauthChallenge = { grantId, purpose, methods, nonce };
     delete req.session.passkeySecurityReauthenticatedAt;
     if (purpose === 'google_link') req.session.googleNonce = randomUUID();
     httpResponse.json(res, {
-      data: { grantId, methods: ['passkey', 'password', 'totp', 'recovery_code'] },
+      data: {
+        grantId,
+        methods,
+        ...(methods.includes('google') ? { google: { clientId: env.GOOGLE_AUTH_CLIENT_ID, nonce } } : {}),
+        expiresAt: grant.expiresAt.toISOString(),
+        passwordRequiresTotp: available.passwordEnabled && available.totpEnabled,
+      },
       status: 201,
       message: 'Reauthentication started.',
     });
@@ -1098,6 +1232,40 @@ router.post(
   async (req, res) => {
     const current = authedRequest(req).user;
     const body = getValidated<{ body: typeof reauthCompleteSchema }>(req).body!;
+    const session = req.session as typeof req.session & {
+      reauthChallenge?: { grantId: string; purpose: string; methods: string[]; nonce: string };
+    };
+    const challenge = session.reauthChallenge;
+    const [operation] = await db
+      .select()
+      .from(authOperationGrants)
+      .where(
+        and(
+          eq(authOperationGrants.id, body.grantId),
+          eq(authOperationGrants.userId, current.id),
+          eq(authOperationGrants.sessionBinding, req.sessionID),
+          isNull(authOperationGrants.verifiedAt),
+          isNull(authOperationGrants.consumedAt),
+          gt(authOperationGrants.expiresAt, new Date()),
+        ),
+      )
+      .limit(1);
+    const available = await securityMethods(current.id, current.accountId);
+
+    if (
+      !operation ||
+      !challenge ||
+      challenge.grantId !== operation.id ||
+      challenge.purpose !== operation.purpose ||
+      !challenge.methods.includes(body.method) ||
+      !available.methods.includes(body.method) ||
+      (operation.purpose === 'passkey_enroll' && body.method !== 'google' && body.method !== 'passkey')
+    )
+      throw new HttpError({
+        code: 'reauthentication_required',
+        message: 'The reauthentication request is unavailable.',
+        statusCode: 401,
+      });
 
     let valid = Boolean(
       req.session.passkeySecurityReauthenticatedAt &&
@@ -1107,6 +1275,41 @@ router.post(
     const user = await findUserById(current.id);
 
     if (!user) valid = false;
+    if (body.method === 'google' && body.idToken && env.GOOGLE_AUTH_CLIENT_ID) {
+      try {
+        const ticket = await new OAuth2Client(env.GOOGLE_AUTH_CLIENT_ID).verifyIdToken({
+          idToken: body.idToken,
+          audience: env.GOOGLE_AUTH_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+
+        if (
+          payload?.sub &&
+          payload.iss === 'https://accounts.google.com' &&
+          payload.email &&
+          payload.email_verified === true &&
+          payload.nonce === challenge.nonce
+        ) {
+          const [linked] = await db
+            .select({ id: userFederatedIdentities.id })
+            .from(userFederatedIdentities)
+            .where(
+              and(
+                eq(userFederatedIdentities.userId, current.id),
+                eq(userFederatedIdentities.provider, 'google'),
+                eq(userFederatedIdentities.issuer, payload.iss),
+                eq(userFederatedIdentities.subject, payload.sub),
+                isNull(userFederatedIdentities.revokedAt),
+              ),
+            )
+            .limit(1);
+
+          valid = Boolean(linked);
+        }
+      } catch {
+        valid = false;
+      }
+    }
     if (body.method === 'password' && body.password && user?.passwordHash)
       valid = await verifyPassword(body.password, user.passwordHash);
     if (body.method === 'password' && user) {
@@ -1162,6 +1365,7 @@ router.post(
         message: 'The reauthentication request is unavailable.',
         statusCode: 401,
       });
+    delete session.reauthChallenge;
     httpResponse.json(res, {
       data: { grantId: body.grantId, authenticated: true },
       message: 'Reauthentication completed.',
@@ -1201,6 +1405,144 @@ router.post(
 );
 
 router.post(
+  '/passkey/enrollment/identity',
+  csrfProtection,
+  validateRequest({ body: operationGrantSchema }),
+  authed({ authority: 'full', operation: { purpose: 'passkey_enroll', grantSource: 'body' } }),
+  async (req, res) => {
+    const current = authedRequest(req).user;
+    const grantId = randomUUID();
+
+    await db.insert(authEnrollmentGrants).values({
+      id: grantId,
+      userId: current.id,
+      accountId: current.accountId,
+      requesterSessionHash: clientContextHash(req.sessionID, req.get('user-agent')),
+      source: 'identity_enrollment',
+      expiresAt: new Date(Date.now() + 5 * 60_000),
+      createdAt: new Date(),
+    });
+    req.session.enrollmentGrantId = grantId;
+    httpResponse.json(res, { data: { authorized: true }, message: 'Passkey enrollment authorized.' });
+  },
+);
+
+router.post(
+  '/passkey/enrollment/start',
+  csrfProtection,
+  authed({ authority: 'full' }),
+  authenticationRateLimit,
+  validateRequest({ body: passwordRemoveSchema }),
+  async (req, res) => {
+    const current = authedRequest(req).user;
+    const available = await securityMethods(current.id, current.accountId);
+
+    if (available.methods.includes('passkey'))
+      throw new HttpError({
+        code: 'existing_passkey_required',
+        message: 'Confirm an existing passkey to add another.',
+        statusCode: 409,
+      });
+    if (!available.totpEnabled) {
+      const limit = consumeEmailOtpDeliveryLimit(req.ip, current.email);
+
+      if (!limit.allowed) {
+        res.setHeader('Retry-After', limit.retryAfter);
+        throw new HttpError({
+          code: 'rate_limited',
+          message: 'Wait before requesting another verification code.',
+          statusCode: 429,
+        });
+      }
+    }
+    if (req.session.passkeyEnrollmentFlowId)
+      await db
+        .update(authIdentityFlows)
+        .set({ terminalAt: new Date() })
+        .where(
+          and(eq(authIdentityFlows.id, req.session.passkeyEnrollmentFlowId), eq(authIdentityFlows.userId, current.id)),
+        );
+    const pending = await startPasswordSignIn(
+      current.email,
+      req.body.currentPassword,
+      requestContext(req),
+      req.sessionID,
+    );
+
+    await db
+      .update(authIdentityFlows)
+      .set({ intent: 'passkey_enroll', accountId: current.accountId })
+      .where(eq(authIdentityFlows.id, pending.flowId));
+    req.session.passkeyEnrollmentFlowId = pending.flowId;
+    httpResponse.json(res, {
+      data: pending,
+      status: 202,
+      message: 'Confirm the selected factor before enrolling your first passkey.',
+    });
+  },
+);
+
+router.post(
+  '/passkey/enrollment/complete',
+  csrfProtection,
+  authed({ authority: 'full' }),
+  authenticationRateLimit,
+  validateRequest({ body: passwordVerifySchema }),
+  async (req, res) => {
+    const current = authedRequest(req).user;
+    const body = getValidated<{ body: typeof passwordVerifySchema }>(req).body!;
+    const [flow] = await db
+      .select()
+      .from(authIdentityFlows)
+      .where(
+        and(
+          eq(authIdentityFlows.id, body.flowId),
+          eq(authIdentityFlows.userId, current.id),
+          eq(authIdentityFlows.accountId, current.accountId),
+          eq(authIdentityFlows.intent, 'passkey_enroll'),
+          eq(authIdentityFlows.sessionBinding, req.sessionID),
+          gt(authIdentityFlows.expiresAt, new Date()),
+          isNull(authIdentityFlows.completedAt),
+          isNull(authIdentityFlows.terminalAt),
+        ),
+      )
+      .limit(1);
+
+    if (!flow || req.session.passkeyEnrollmentFlowId !== body.flowId || flow.requiredFactor !== body.kind)
+      throw new HttpError({
+        code: 'verification_failed',
+        message: 'This enrollment verification is unavailable.',
+        statusCode: 401,
+      });
+    const verified =
+      body.kind === 'email'
+        ? await verifyPasswordEmailOtp(body.flowId, body.code, requestContext(req), req.sessionID)
+        : await verifyPasswordTotp(body.flowId, body.code, req.sessionID);
+
+    if (verified.user.id !== current.id || verified.user.authVersion !== current.authVersion)
+      throw new HttpError({
+        code: 'verification_failed',
+        message: 'Confirm your current identity again.',
+        statusCode: 401,
+      });
+    const grantId = randomUUID();
+
+    await db.insert(authEnrollmentGrants).values({
+      id: grantId,
+      userId: current.id,
+      accountId: current.accountId,
+      requesterSessionHash: clientContextHash(req.sessionID, req.get('user-agent')),
+      source: 'password_enrollment',
+      expiresAt: new Date(Date.now() + 5 * 60_000),
+      createdAt: new Date(),
+    });
+    req.session.enrollmentGrantId = grantId;
+    delete req.session.passkeyEnrollmentFlowId;
+    httpResponse.json(res, { data: { authorized: true }, message: 'First-passkey enrollment authorized.' });
+  },
+);
+
+router.post(
   '/password/remove',
   csrfProtection,
   validateRequest({ body: passwordRemoveSchema }),
@@ -1208,25 +1550,14 @@ router.post(
   async (req, res) => {
     const current = authedRequest(req).user;
 
-    const user = await findUserById(current.id);
-
-    if (!user?.passwordHash || !(await verifyPassword(req.body.currentPassword, user.passwordHash)))
-      throw new HttpError({ code: 'password_invalid', message: 'The current password is invalid.', statusCode: 401 });
-    await db
-      .update(users)
-      .set({
-        passwordHash: null,
-        passwordChangedAt: new Date(),
-        authVersion: sql`${users.authVersion} + 1`,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, current.id));
+    await removeAccessMethod(current, { kind: 'password', currentPassword: req.body.currentPassword });
     res.status(204).send();
   },
 );
 
 router.get('/security/overview', authed({ authority: 'full' }), async (req, res) => {
   const current = authedRequest(req).user;
+  const available = await securityMethods(current.id, current.accountId);
   const [credentials, federated, devices, audit] = await Promise.all([
     db
       .select()
@@ -1255,6 +1586,10 @@ router.get('/security/overview', authed({ authority: 'full' }), async (req, res)
 
   httpResponse.json(res, {
     data: {
+      passwordEnabled: available.passwordEnabled,
+      googleLinkEnabled: Boolean(env.GOOGLE_AUTH_CLIENT_ID),
+      totpEnabled: available.totpEnabled,
+      recoveryCodesRemaining: available.recoveryCodesRemaining,
       passkeys: credentials.map((item) => ({
         id: item.credentialId,
         label: item.label,
@@ -1284,38 +1619,14 @@ router.get('/security/overview', authed({ authority: 'full' }), async (req, res)
 
 router.delete(
   '/security/federated/:identityId',
+  csrfProtection,
   authed({ authority: 'full' }),
   validateRequest({ params: securityIdentityPathSchema }),
   async (req, res) => {
     const current = authedRequest(req).user;
     const identityId = typeof req.params.identityId === 'string' ? req.params.identityId : req.params.identityId[0];
-    const [revoked] = await db
-      .update(userFederatedIdentities)
-      .set({ revokedAt: new Date() })
-      .where(
-        and(
-          eq(userFederatedIdentities.id, identityId),
-          eq(userFederatedIdentities.userId, current.id),
-          isNull(userFederatedIdentities.revokedAt),
-        ),
-      )
-      .returning();
 
-    if (!revoked)
-      throw new HttpError({
-        code: 'federated_identity_not_found',
-        message: 'The federated identity was not found.',
-        statusCode: 404,
-      });
-    await db.insert(authAuditEvents).values({
-      id: randomUUID(),
-      event: 'federated_identity_revoked',
-      outcome: 'accepted',
-      userId: current.id,
-      accountId: current.accountId,
-      contextHash: requestContext(req),
-      createdAt: new Date(),
-    });
+    await removeAccessMethod(current, { kind: 'google', identityId });
     res.status(204).send();
   },
 );
@@ -1414,7 +1725,71 @@ router.post('/google/complete', csrfProtection, validateRequest({ body: googleCo
       message: 'This Google account must be explicitly linked from an authenticated session.',
       statusCode: 409,
     });
-  user ??= await findOrCreateUserByEmail(payload.email);
+  if (!linked) {
+    const email = normalizeEmail(payload.email);
+    const issuer = payload.iss;
+    const subject = payload.sub;
+
+    user = await db.transaction(async (tx) => {
+      const now = new Date();
+      // Only this insert may verify the primary email. Never adopt a concurrent email match.
+      const [created] = await tx
+        .insert(users)
+        .values({ id: randomUUID(), email, emailVerifiedAt: now, createdAt: now, updatedAt: now })
+        .onConflictDoNothing({ target: users.email })
+        .returning();
+
+      if (!created)
+        throw new HttpError({
+          code: 'google_link_required',
+          message: 'This Google account must be explicitly linked from an authenticated session.',
+          statusCode: 409,
+        });
+      const accountId = randomUUID();
+      const name = email.split('@')[0];
+      const baseSlug = name
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 80);
+
+      // Keep account, membership and identity creation in the same transaction as verified email ownership.
+      await tx.execute(sql`
+        with inserted as (
+          insert into accounts (id, name, slug, owner_user_id)
+          values (${accountId}, ${name}, ${baseSlug}, ${created.id})
+          on conflict (slug) do nothing
+          returning id
+        )
+        insert into accounts (id, name, slug, owner_user_id)
+        select ${accountId}, ${name}, ${`${baseSlug}-${accountId.slice(0, 8)}`}, ${created.id}
+        where not exists (select 1 from inserted)
+      `);
+      await tx.execute(sql`
+        insert into account_memberships (id, account_id, user_id, role)
+        values (${randomUUID()}, ${accountId}, ${created.id}, 'owner')
+      `);
+      const [identity] = await tx
+        .insert(userFederatedIdentities)
+        .values({ id: randomUUID(), provider: 'google', issuer, subject, userId: created.id, emailAtLink: email })
+        .onConflictDoNothing()
+        .returning();
+
+      if (!identity)
+        throw new HttpError({
+          code: 'google_link_required',
+          message: 'This Google account must be explicitly linked from an authenticated session.',
+          statusCode: 409,
+        });
+
+      return created;
+    });
+  }
+  if (!user)
+    throw new HttpError({
+      code: 'google_token_invalid',
+      message: 'Google sign-in could not be verified.',
+      statusCode: 401,
+    });
   const membership = await resolveAuthUserForAccount(user);
   const authUser = {
     ...membership,
@@ -1423,16 +1798,7 @@ router.post('/google/complete', csrfProtection, validateRequest({ body: googleCo
     authVersion: user.authVersion,
   };
 
-  if (!linked)
-    await db.insert(userFederatedIdentities).values({
-      id: randomUUID(),
-      provider: 'google',
-      issuer: payload.iss,
-      subject: payload.sub,
-      userId: user.id,
-      emailAtLink: normalizeEmail(payload.email),
-    });
-  else
+  if (linked)
     await db
       .update(userFederatedIdentities)
       .set({ lastUsedAt: new Date() })

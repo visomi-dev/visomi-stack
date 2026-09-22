@@ -2,11 +2,19 @@ import express, { json, type Request } from 'express';
 import request from 'supertest';
 
 import { authOpenApiPaths, authRouter } from './auth-router';
-import { setUserPassword } from './auth-service';
+import { setUserPassword, startPasswordSignIn } from './auth-service';
 
 jest.mock('./auth-service', () => ({
   ...jest.requireActual('./auth-service'),
   setUserPassword: jest.fn(),
+  startPasswordSignIn: jest.fn(),
+}));
+
+// These are routing-contract tests. Persisted credentials and rate limits are
+// exercised separately by auth-middleware.spec.ts and the real HTTP suites.
+jest.mock('./passkey-security', () => ({
+  ...jest.requireActual('./passkey-security'),
+  consumePasswordRateLimit: jest.fn(async () => ({ allowed: true, retryAfter: 1 })),
 }));
 
 jest.mock('otplib', () => ({
@@ -17,7 +25,7 @@ jest.mock('otplib', () => ({
   },
 }));
 
-import { errorHandler } from 'shared';
+import { errorHandler, HttpError } from 'shared';
 
 function createApp(): express.Express {
   const app = express();
@@ -68,7 +76,10 @@ function createRestrictedApp(expiresAt = Date.now() + 60_000): express.Express {
 }
 
 describe('password authentication routes', () => {
-  beforeEach(() => jest.mocked(setUserPassword).mockReset());
+  beforeEach(() => {
+    jest.mocked(setUserPassword).mockReset();
+    jest.mocked(startPasswordSignIn).mockReset();
+  });
 
   it('documents and completes password setup from a restricted recovery session', async () => {
     expect(authOpenApiPaths['/auth/password/set']).toEqual(expect.any(Object));
@@ -110,6 +121,11 @@ describe('password authentication routes', () => {
   });
 
   it('validates credentials without requiring a password feature flag', async () => {
+    jest
+      .mocked(startPasswordSignIn)
+      .mockRejectedValue(
+        new HttpError({ code: 'verification_failed', statusCode: 401, message: 'Verification failed.' }),
+      );
     const response = await request(createApp())
       .post('/auth/password/sign-in')
       .set('Origin', 'http://localhost:8080')
@@ -117,6 +133,12 @@ describe('password authentication routes', () => {
 
     expect(response.status).toBe(401);
     expect(response.body.code).toBe('verification_failed');
+    expect(startPasswordSignIn).toHaveBeenCalledWith(
+      'person@example.test',
+      'a secure password',
+      expect.any(String),
+      undefined,
+    );
   });
 
   it('validates password sign-in input before reaching the disabled guard', async () => {

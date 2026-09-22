@@ -81,6 +81,7 @@ test.describe('/app/auth/sign-in', () => {
       await route.continue();
     });
     await page.getByRole('button', { name: 'Confirm and add passkey' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Continue with a passkey' }).click();
 
     await expect(page.getByRole('heading', { name: 'Backup security key' })).toBeVisible();
   });

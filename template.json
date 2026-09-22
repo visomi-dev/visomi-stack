@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "initialized": false,
+  "template": {
+    "repository": "https://github.com/visomi-dev/visomi-stack",
+    "version": "0.1.0"
+  },
+  "project": {
+    "slug": "visomi-stack",
+    "name": "Visomi Stack",
+    "organization": "Visomi",
+    "publicOrigin": null,
+    "defaultLocale": "en"
+  },
+  "local": {
+    "origin": "http://localhost:8080",
+    "postgresPort": 5432,
+    "redisPort": 6379,
+    "demo": false,
+    "totp": true
+  }
+}

@@ -1,0 +1,96 @@
+<app-dialog [open]="!!action.pending()" ariaLabelledBy="security-confirmation-title" (closed)="action.cancel()">
+  <h2 id="security-confirmation-title" class="font-heading text-2xl font-bold" i18n="@@securityConfirmTitle">
+    Confirm your identity
+  </h2>
+  <p class="text-sm leading-6 text-zinc-600 dark:text-zinc-300">{{ action.pending()?.summary }}</p>
+  @if (action.error()) {
+    <p role="alert" class="text-sm text-red-700 dark:text-red-300">{{ action.error() }}</p>
+  }
+  @if (action.busy()) {
+    <p role="status" class="text-sm" i18n="@@securityConfirmBusy">Completing your request…</p>
+  }
+  @for (available of action.methods(); track available) {
+    @if (available !== 'google') {
+      <button
+        type="button"
+        class="min-h-11 rounded-md bg-zinc-100 px-4 text-sm font-semibold hover:bg-zinc-200 disabled:opacity-60 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+        [disabled]="action.busy()"
+        (click)="choose(available)"
+      >
+        {{ label(available) }}
+      </button>
+    }
+  }
+  @if (action.google() && action.methods().includes('google')) {
+    <div #googleButton [attr.inert]="action.busy() ? '' : null"></div>
+    @if (googleError()) {
+      <p role="alert" class="text-sm text-red-700 dark:text-red-300">{{ googleError() }}</p>
+      <button
+        type="button"
+        class="min-h-11 text-blue-600 underline dark:text-blue-400"
+        [disabled]="action.busy()"
+        (click)="action.retry()"
+        i18n="@@securityConfirmRetry"
+      >
+        Start a new confirmation
+      </button>
+    }
+  }
+  @if (method() !== 'passkey' && method() !== 'google' && action.methods().includes(method())) {
+    <app-form [form]="confirmation" (ngSubmit)="confirm()" class="grid gap-4">
+      @if (method() === 'password') {
+        <app-field
+          ><app-label for="security-confirm-password" i18n="@@securityCurrentPassword">Current password</app-label
+          ><app-password-input
+            [formField]="confirmation.password"
+            controlId="security-confirm-password"
+            autocomplete="current-password"
+            minLength="1"
+            pattern=""
+            required
+        /></app-field>
+      }
+      @if (method() !== 'password' || action.passwordRequiresTotp()) {
+        <app-field
+          ><app-label for="security-confirm-code" i18n="@@securityConfirmationCode"
+            >Verification or recovery code</app-label
+          ><app-input
+            [formField]="confirmation.code"
+            controlId="security-confirm-code"
+            autocomplete="one-time-code"
+            required
+        /></app-field>
+      }
+      <button
+        type="submit"
+        class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+        [disabled]="action.busy()"
+        i18n="@@securityConfirmContinue"
+      >
+        Confirm and continue
+      </button>
+    </app-form>
+  }
+  @if (!action.busy() && !action.methods().length) {
+    <p class="text-sm" i18n="@@securityConfirmNoMethods">
+      No confirmation method is available for this request. Try again or return to Security.
+    </p>
+    <button
+      type="button"
+      class="min-h-11 text-blue-600 underline dark:text-blue-400"
+      (click)="action.retry()"
+      i18n="@@securityConfirmRetry"
+    >
+      Start a new confirmation
+    </button>
+  }
+  <button
+    type="button"
+    class="min-h-11 rounded-md px-4 text-sm font-semibold disabled:opacity-60"
+    [disabled]="action.busy()"
+    (click)="action.cancel()"
+    i18n="@@securityCancelButton"
+  >
+    Cancel
+  </button>
+</app-dialog>

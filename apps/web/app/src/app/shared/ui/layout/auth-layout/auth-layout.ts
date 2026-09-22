@@ -4,14 +4,11 @@ import { RouterLink } from '@angular/router';
 import { LangSwitcher, type LanguageOption } from '../lang-switcher/lang-switcher';
 import { ThemeSwitcher } from '../../../layout/theme-switcher/theme-switcher';
 import { Logo } from '../../../layout/logo/logo';
+import { APP_NAME } from '../../../constants/brand';
 
 const DEFAULT_LANGUAGES: ReadonlyArray<LanguageOption> = Object.freeze([
   { code: 'EN', label: 'English' },
   { code: 'ES', label: 'Español' },
-  { code: 'PT-BR', label: 'Português (Brasil)' },
-  { code: 'JA', label: '日本語' },
-  { code: 'DE', label: 'Deutsch' },
-  { code: 'ZH', label: '中文' },
 ]);
 
 @Component({
@@ -25,5 +22,6 @@ const DEFAULT_LANGUAGES: ReadonlyArray<LanguageOption> = Object.freeze([
   styleUrl: './auth-layout.css',
 })
 export class AuthLayout {
+  protected readonly homeLabel = $localize`:@@templateHomeLabel:${APP_NAME}:APP_NAME: home`;
   readonly languages = DEFAULT_LANGUAGES;
 }

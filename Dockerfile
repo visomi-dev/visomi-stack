@@ -1,22 +1,28 @@
-FROM node:24-bookworm-slim AS base
+FROM node:24.14.1-bookworm-slim AS base
 
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 ENV NX_DAEMON=false
 
-RUN corepack enable && corepack prepare pnpm@11.3.0 --activate
+RUN corepack enable && corepack prepare pnpm@12.4.2 --activate
 
 FROM base AS deps
 
 WORKDIR /workspace
 
 COPY package.json pnpm-lock.yaml nx.json tsconfig.base.json pnpm-workspace.yaml ./
+COPY .node-version ./
+COPY libs/shared/package.json ./libs/shared/package.json
+COPY libs/projects/package.json ./libs/projects/package.json
+COPY libs/themis-workflow/package.json ./libs/themis-workflow/package.json
+COPY apps/cli/package.json ./apps/cli/package.json
 
 RUN pnpm install --frozen-lockfile
 
 FROM deps AS build
 
 WORKDIR /workspace
+ARG SITE_URL
 
 COPY . .
 
@@ -30,10 +36,16 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY libs/shared/package.json ./libs/shared/package.json
+COPY libs/projects/package.json ./libs/projects/package.json
+COPY libs/themis-workflow/package.json ./libs/themis-workflow/package.json
+COPY apps/cli/package.json ./apps/cli/package.json
 
 RUN pnpm install --frozen-lockfile --prod
 
 COPY --from=build /workspace/dist ./dist
+COPY --from=build /workspace/dist/libs/shared ./libs/shared
+COPY --from=build /workspace/dist/libs/projects ./libs/projects
 COPY --from=build /workspace/drizzle ./drizzle
 COPY --from=build /workspace/dist/apps/web/app ./dist/apps/web/app
 COPY --from=build /workspace/dist/apps/web/api ./dist/apps/web/api

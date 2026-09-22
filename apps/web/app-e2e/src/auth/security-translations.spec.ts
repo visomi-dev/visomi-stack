@@ -29,13 +29,13 @@ for (const action of ['add', 'revoke'] as const) {
     );
     await page.goto('/app/es/security');
     if (action === 'add') {
-      await page.getByRole('button', { name: 'Add passkey', exact: true }).click();
-      await page.getByRole('textbox', { name: 'Passkey name' }).fill('Backup');
+      await page.getByRole('button', { name: 'Añadir clave de acceso', exact: true }).click();
+      await page.getByRole('textbox', { name: 'Nombre de la clave de acceso' }).fill('Backup');
     } else {
-      await page.getByRole('button', { name: 'Revoke', exact: true }).first().click();
+      await page.getByRole('button', { name: 'Revocar', exact: true }).first().click();
     }
-    const idle = action === 'add' ? 'Confirm and add passkey' : 'Confirm passkey and revoke';
-    const busy = action === 'add' ? 'Waiting for confirmation...' : 'Confirming...';
+    const idle = action === 'add' ? 'Confirmar y añadir clave' : 'Confirmar clave y revocar';
+    const busy = action === 'add' ? 'Esperando confirmación…' : 'Confirmando…';
     const gate = Promise.withResolvers<void>();
 
     await page.route('**/api/auth/passkey/authentication/begin', async (route) => {
@@ -45,11 +45,13 @@ for (const action of ['add', 'revoke'] as const) {
     await expect(page.getByRole('button', { name: idle, exact: true })).toBeVisible();
     try {
       await page.getByRole('button', { name: idle, exact: true }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Continuar con una clave de acceso' }).click();
       await expect(page.getByRole('button', { name: busy, exact: true })).toBeDisabled();
       await expect(page.getByText('<x id=', { exact: false })).toHaveCount(0);
     } finally {
       gate.resolve();
     }
+    await page.getByRole('dialog').getByRole('button', { name: 'Cancelar', exact: true }).click();
     await expect(page.getByRole('button', { name: idle, exact: true })).toBeEnabled();
   });
 }

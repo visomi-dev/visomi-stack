@@ -10,7 +10,7 @@
             Secure account access
           </p>
           <h1 class="font-heading text-3xl leading-tight font-bold tracking-[-0.03em]" i18n="@@identityTitle">
-            Sign in to Visomi Stack
+            Sign in to {{ appName }}
           </h1>
           <p class="text-[0.9375rem] leading-6 text-slate-500 dark:text-slate-400" i18n="@@identityDescription">
             Use a passkey saved on this device, another device, or a security key.
@@ -169,7 +169,7 @@
           </p>
           <h1 class="font-heading mt-3 text-2xl font-bold" i18n="@@identityPasswordTitle">Sign in with password</h1>
           <p class="mt-3 text-base text-slate-500 dark:text-slate-400" i18n="@@identityPasswordDescription">
-            Password sign-in requires a verification code selected by the server.
+            After your password, we will ask for a code to confirm it is you.
           </p>
         </header>
         <app-form class="mt-6 grid gap-5" [form]="passwordForm" (ngSubmit)="signInWithPassword()">
@@ -229,6 +229,7 @@
             type="button"
             class="-ml-2 min-h-11 rounded-md px-2 text-sm font-semibold text-blue-600 dark:text-blue-400"
             (click)="showPassword()"
+            [disabled]="passwordSubmitting()"
             i18n="@@identityBackToPassword"
           >
             Back to password
@@ -279,7 +280,7 @@
           <button
             type="submit"
             class="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white"
-            [disabled]="passwordSubmitting()"
+            [disabled]="passwordSubmitting() || verificationRestartRequired()"
             i18n="@@identityPasswordVerify"
           >
             Verify and sign in
@@ -288,11 +289,28 @@
             <button
               type="button"
               class="min-h-11 rounded-md px-4 text-sm font-semibold text-blue-600 underline-offset-4 disabled:cursor-not-allowed disabled:opacity-60 dark:text-blue-400"
-              [disabled]="passwordSubmitting()"
+              [disabled]="passwordSubmitting() || resendSeconds() > 0 || verificationRestartRequired()"
               (click)="resendPasswordCode()"
-              i18n="@@identityPasswordResend"
             >
-              Resend code
+              @if (resendSeconds() > 0) {
+                <span i18n="@@accessResendCountdown">Resend code in {{ resendSeconds() }} seconds</span>
+              } @else {
+                <span i18n="@@identityPasswordResend">Resend code</span>
+              }
+            </button>
+          }
+          @if (verificationNotice()) {
+            <p role="status" class="text-sm text-green-700 dark:text-green-300">{{ verificationNotice() }}</p>
+          }
+          @if (verificationRestartRequired()) {
+            <button
+              type="button"
+              class="min-h-11 text-blue-600 underline dark:text-blue-400"
+              (click)="showPassword()"
+              [disabled]="passwordSubmitting()"
+              i18n="@@accessRestartVerification"
+            >
+              Start verification again
             </button>
           }
         </app-form>
@@ -348,6 +366,14 @@
           </button>
           <button
             type="button"
+            class="min-h-11 rounded-md px-4 text-sm font-semibold text-blue-600 underline dark:text-blue-400"
+            (click)="useAnotherMethod()"
+            i18n="@@accessUseAnotherMethod"
+          >
+            Use another method
+          </button>
+          <button
+            type="button"
             class="min-h-11 rounded-md px-4 text-sm font-semibold text-blue-600 underline-offset-4 dark:text-blue-400"
             (click)="showEmailRecovery()"
             i18n="@@identityErrorTryAnotherWay"
@@ -396,6 +422,7 @@
             type="submit"
             class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-400"
             i18n="@@identitySendCode"
+            [disabled]="recoverySubmitting()"
           >
             Send code
           </button>
@@ -403,6 +430,15 @@
       }
       @case ('otp') {
         <header>
+          <button
+            type="button"
+            class="mb-4 min-h-11 text-sm font-semibold text-blue-600 underline dark:text-blue-400"
+            (click)="changeRecoveryEmail()"
+            [disabled]="recoverySubmitting()"
+            i18n="@@accessChangeEmail"
+          >
+            Change email
+          </button>
           <p
             class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400"
             i18n="@@identityOtpEyebrow"
@@ -433,9 +469,21 @@
             type="submit"
             class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-400"
             i18n="@@identityVerifyEmail"
+            [disabled]="recoverySubmitting() || verificationRestartRequired()"
           >
             Verify email
           </button>
+          @if (verificationRestartRequired()) {
+            <button
+              type="button"
+              class="min-h-11 text-blue-600 underline dark:text-blue-400"
+              (click)="changeRecoveryEmail()"
+              [disabled]="recoverySubmitting()"
+              i18n="@@accessRestartVerification"
+            >
+              Start verification again
+            </button>
+          }
         </app-form>
       }
       @case ('account-choice') {
@@ -661,7 +709,7 @@
           role="status"
           i18n="@@identitySuccess"
         >
-          Passkey verified. Opening Visomi Stack...
+          Identity confirmed. Opening your account…
         </p>
       }
     }

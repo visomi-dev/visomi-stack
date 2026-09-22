@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   afterNextRender,
@@ -16,6 +17,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { email, form, maxLength, minLength, pattern, required, type FieldTree, validate } from '@angular/forms/signals';
 
 import { Auth } from '../../shared/auth/auth';
+import { APP_NAME } from '../../shared/constants/brand';
 import type { RestrictedAccount } from '../../shared/auth/auth.models';
 import { Passkey } from '../../shared/auth/passkey';
 import { GoogleIdentity } from '../../shared/auth/google-identity';
@@ -62,7 +64,10 @@ type EnrollmentModel = { label: string };
   styleUrl: './sign-in.css',
 })
 export class SignIn {
+  protected readonly appName = APP_NAME;
   private passwordAttempt = 0;
+  private recoveryAttempt = 0;
+  private readonly document = inject(DOCUMENT);
   private readonly auth = inject(Auth);
   private readonly passkey = inject(Passkey);
   private readonly router = inject(Router);
@@ -103,6 +108,31 @@ export class SignIn {
   readonly selectedAccount = signal<RestrictedAccount | null>(null);
   readonly flowId = signal('');
   readonly resendAvailableAt = signal('');
+  private readonly clock = signal(Date.now());
+  readonly resendSeconds = computed(() => {
+    const deadline = Date.parse(this.resendAvailableAt());
+
+    return Number.isFinite(deadline) ? Math.max(0, Math.ceil((deadline - this.clock()) / 1000)) : 0;
+  });
+  readonly verificationNotice = signal('');
+  readonly verificationRestartRequired = signal(false);
+  readonly recoverySubmitting = signal(false);
+  private readonly syncResendClock = afterRenderEffect((onCleanup) => {
+    if (this.state() !== 'password-factor' || this.passwordFactor() !== 'email' || !this.resendAvailableAt()) return;
+    const window = this.document.defaultView;
+
+    if (!window) return;
+    const update = () => this.clock.set(Date.now());
+
+    update();
+    const timer = window.setInterval(update, 1000);
+
+    this.document.addEventListener('visibilitychange', update);
+    onCleanup(() => {
+      window.clearInterval(timer);
+      this.document.removeEventListener('visibilitychange', update);
+    });
+  });
   readonly verificationChallengeId = signal('');
   readonly verificationOptions = signal<Record<string, unknown> | null>(null);
   readonly identityFlowId = signal('');
@@ -167,9 +197,15 @@ export class SignIn {
     afterNextRender(() => void this.suggestPasskey());
     this.destroyRef.onDestroy(() => {
       this.destroyed = true;
+      this.passwordAttempt += 1;
+      this.recoveryAttempt += 1;
+      this.otpModel.set({ pin: '' });
+      this.passwordModel.update((model) => ({ ...model, password: '' }));
+      this.passwordSetupModel.set({ password: '', confirmation: '' });
       this.cancelCredential();
     });
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      if (this.passwordSubmitting() && this.state() === 'password-factor') return;
       if (params.get('method') === 'password') {
         this.cancelCredential();
         this.closeMethods();
@@ -222,6 +258,14 @@ export class SignIn {
 
       return;
     }
+    this.showMethodSheet();
+  }
+
+  protected useAnotherMethod(): void {
+    if (this.passkeyVerifying()) return;
+    this.immediateOptions = undefined;
+    this.cancelCredential();
+    this.state.set('ready');
     this.showMethodSheet();
   }
 
@@ -360,7 +404,7 @@ export class SignIn {
       if (attempt !== this.credentialAttempt) return;
       this.failPasskey(
         error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError')
-          ? $localize`:@@identityPasskeyCancelled:Passkey sign-in was cancelled. No changes were made.`
+          ? $localize`:@@identityPasskeyIncomplete:Passkey sign-in was not completed. Try again or use another method.`
           : $localize`:@@identityPasskeyFailed:We could not verify that passkey.`,
       );
     } finally {
@@ -408,6 +452,7 @@ export class SignIn {
 
           return true;
         },
+        active,
       );
     } catch (error) {
       if (!active()) return;
@@ -433,11 +478,18 @@ export class SignIn {
   }
 
   protected showPassword(): void {
-    if (this.passkeyVerifying()) return;
+    if (this.passkeyVerifying() || this.passwordSubmitting()) return;
     this.cancelCredential();
     this.closeMethods();
     this.errorMessage.set('');
-    this.passwordModel.update((model) => ({ ...model, email: this.emailModel().email }));
+    this.passwordAttempt += 1;
+    this.flowId.set('');
+    this.passwordFlow.set(null);
+    this.passwordFactor.set(null);
+    this.otpModel.set({ pin: '' });
+    this.verificationRestartRequired.set(false);
+    this.verificationNotice.set('');
+    this.passwordModel.update((model) => ({ ...model, email: this.emailModel().email || model.email, password: '' }));
     this.state.set('password');
     void this.router.navigate([], {
       relativeTo: this.route,
@@ -469,6 +521,9 @@ export class SignIn {
       this.passwordFactor.set(pending.requiredFactor);
       this.flowId.set(pending.flowId);
       this.resendAvailableAt.set(pending.resendAvailableAt ?? '');
+      this.clock.set(Date.now());
+      this.verificationRestartRequired.set(false);
+      this.verificationNotice.set('');
       this.otpModel.set({ pin: '' });
       this.passwordModel.update((model) => ({ ...model, password: '' }));
       this.state.set('password-factor');
@@ -494,7 +549,15 @@ export class SignIn {
     const flowId = this.flowId();
     const factor = this.passwordFactor();
 
-    if (!flowId || !factor || this.otpForm().invalid() || this.passwordSubmitting()) return;
+    if (
+      !flowId ||
+      !factor ||
+      this.otpForm().invalid() ||
+      this.passwordSubmitting() ||
+      this.verificationRestartRequired()
+    )
+      return;
+    const attempt = this.passwordAttempt;
 
     this.errorMessage.set('');
     this.passwordSubmitting.set(true);
@@ -502,41 +565,69 @@ export class SignIn {
 
     try {
       await this.password.verify(flowId, this.otpForm.pin().value(), factor);
+      if (this.destroyed || attempt !== this.passwordAttempt) return;
       await this.auth.ensureSessionLoaded(true);
+      if (this.destroyed || attempt !== this.passwordAttempt) return;
       this.state.set('success');
       await this.router.navigateByUrl(this.destination());
     } catch (error) {
+      if (this.destroyed || attempt !== this.passwordAttempt) return;
       this.state.set('password-factor');
-      this.errorMessage.set(
-        this.safeError(error, $localize`:@@identityPasswordCodeFailed:That verification code is not valid. Try again.`),
-      );
+      this.errorMessage.set(this.verificationError(error));
     } finally {
-      this.passwordSubmitting.set(false);
+      if (attempt === this.passwordAttempt) this.passwordSubmitting.set(false);
     }
   }
 
   protected async resendPasswordCode(): Promise<void> {
     const flowId = this.flowId();
 
-    if (!flowId || this.passwordFactor() !== 'email' || this.passwordSubmitting()) return;
+    if (
+      !flowId ||
+      this.passwordFactor() !== 'email' ||
+      this.passwordSubmitting() ||
+      this.resendSeconds() > 0 ||
+      this.verificationRestartRequired()
+    )
+      return;
+    const attempt = this.passwordAttempt;
 
     this.errorMessage.set('');
+    this.verificationNotice.set('');
     this.passwordSubmitting.set(true);
 
     try {
       const response = await this.password.resend(flowId);
 
+      if (this.destroyed || attempt !== this.passwordAttempt) return;
       this.resendAvailableAt.set(response.resendAvailableAt ?? '');
+      this.clock.set(Date.now());
+      this.verificationNotice.set($localize`:@@accessCodeResent:We sent a new code. Check your email.`);
     } catch (error) {
+      if (this.destroyed || attempt !== this.passwordAttempt) return;
+      if (error instanceof HttpErrorResponse && error.status === 429) {
+        const retryAfter = error.headers.get('Retry-After');
+        const seconds = retryAfter === null ? NaN : Number(retryAfter);
+        const deadline = Number.isFinite(seconds)
+          ? Date.now() + Math.max(0, seconds) * 1000
+          : Date.parse(retryAfter ?? '');
+
+        if (Number.isFinite(deadline)) this.resendAvailableAt.set(new Date(deadline).toISOString());
+        this.clock.set(Date.now());
+      }
       this.errorMessage.set(
-        this.safeError(error, $localize`:@@identityPasswordResendFailed:We could not resend the verification code.`),
+        this.verificationError(
+          error,
+          $localize`:@@identityPasswordResendFailed:We could not resend the verification code.`,
+        ),
       );
     } finally {
-      this.passwordSubmitting.set(false);
+      if (attempt === this.passwordAttempt) this.passwordSubmitting.set(false);
     }
   }
 
   protected showReady(): void {
+    if (this.passwordSubmitting() || this.recoverySubmitting() || this.passkeyVerifying()) return;
     this.errorMessage.set('');
     this.passwordModel.update((model) => ({ ...model, password: '' }));
     this.state.set('ready');
@@ -554,44 +645,73 @@ export class SignIn {
   }
 
   private async sendEmailOtp(): Promise<void> {
+    if (this.recoverySubmitting()) return;
+    const attempt = ++this.recoveryAttempt;
+
+    this.recoverySubmitting.set(true);
     this.errorMessage.set('');
+    this.verificationRestartRequired.set(false);
 
     try {
       const email = this.emailForm.email().value();
-      const started = this.identityFlowId() ? null : await this.prepareIdentityFlow();
-      const flowId = started?.flowId ?? this.identityFlowId();
+      const started = await this.auth.startIdentityFlow();
+      const flowId = started.flowId;
 
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
       await this.auth.identifyIdentity(flowId, email);
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
       await this.auth.requestIdentityRecovery(flowId, email);
 
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
       this.identityFlowId.set(flowId);
       this.flowId.set(flowId);
       this.resendAvailableAt.set('');
       this.otpModel.set({ pin: '' });
       this.state.set('otp');
     } catch (error) {
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
       this.errorMessage.set(
         this.safeError(error, $localize`:@@identityEmailFailed:We could not send a code yet. Try again.`),
       );
+    } finally {
+      if (attempt === this.recoveryAttempt) this.recoverySubmitting.set(false);
     }
   }
 
-  protected async verifyCode(): Promise<void> {
-    if (this.otpForm().invalid() || !this.flowId()) return;
+  protected changeRecoveryEmail(): void {
+    if (this.recoverySubmitting()) return;
+    this.recoveryAttempt += 1;
+    this.identityFlowId.set('');
+    this.flowId.set('');
+    this.otpModel.set({ pin: '' });
+    this.errorMessage.set('');
+    this.verificationRestartRequired.set(false);
+    this.state.set('email');
+    afterNextRender(() => this.document.getElementById('identity-email')?.focus(), { injector: this.injector });
+  }
 
+  protected async verifyCode(): Promise<void> {
+    if (this.otpForm().invalid() || !this.flowId() || this.recoverySubmitting() || this.verificationRestartRequired())
+      return;
+    const attempt = this.recoveryAttempt;
+
+    this.recoverySubmitting.set(true);
     this.errorMessage.set('');
 
     try {
       await this.auth.verifyIdentityRecovery(this.flowId(), this.otpForm.pin().value());
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
 
       const accounts = await this.auth.getRestrictedAccounts();
 
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
       this.accounts.set(accounts);
       const selected = accounts.find((account) => account.selected) ?? null;
 
       this.selectedAccount.set(selected);
       this.state.set(selected ? 'password-setup' : 'account-choice');
     } catch (error) {
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
       const accounts = this.accountChoices(error);
 
       if (accounts) {
@@ -600,9 +720,9 @@ export class SignIn {
 
         return;
       }
-      this.errorMessage.set(
-        this.safeError(error, $localize`:@@identityOtpFailed:That code is not valid. Check it and try again.`),
-      );
+      this.errorMessage.set(this.verificationError(error));
+    } finally {
+      if (attempt === this.recoveryAttempt) this.recoverySubmitting.set(false);
     }
   }
 
@@ -710,9 +830,29 @@ export class SignIn {
   }
 
   private safeError(error: unknown, fallback: string): string {
-    return error instanceof HttpErrorResponse && typeof error.error?.message === 'string'
-      ? error.error.message
-      : fallback;
+    if (error instanceof HttpErrorResponse && error.status === 429)
+      return $localize`:@@accessRateLimited:Too many attempts. Wait a moment before trying again.`;
+
+    return fallback;
+  }
+
+  private verificationError(
+    error: unknown,
+    fallback = $localize`:@@identityOtpFailed:That code is not valid. Check it and try again.`,
+  ): string {
+    if (error instanceof HttpErrorResponse) {
+      const code: unknown = error.error?.code;
+
+      if (code === 'challenge_expired' || code === 'challenge_attempt_limit' || code === 'password_factor_invalid') {
+        this.verificationRestartRequired.set(true);
+
+        return $localize`:@@accessVerificationRestart:This verification can no longer continue. Start again to get a new code.`;
+      }
+      if (error.status === 0)
+        return $localize`:@@accessVerificationOffline:We could not connect. Check your connection and try again.`;
+    }
+
+    return this.safeError(error, fallback);
   }
 
   private accountChoices(error: unknown): RestrictedAccount[] | null {

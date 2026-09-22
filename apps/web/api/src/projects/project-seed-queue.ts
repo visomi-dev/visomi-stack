@@ -1,4 +1,4 @@
-import { HttpError } from 'shared';
+import { HttpError, correlateJob } from 'shared';
 import {
   createAsyncJob,
   getProject,
@@ -28,12 +28,15 @@ async function queueProjectSeed(context: ProjectSeedContext, projectId: string) 
     type: 'project_seed',
   });
 
-  await getProjectSeedQueue().add('project_seed', {
-    accountId: context.accountId,
-    jobId: job.id,
-    projectId,
-    userId: context.userId,
-  });
+  await getProjectSeedQueue().add(
+    'project_seed',
+    correlateJob({
+      accountId: context.accountId,
+      jobId: job.id,
+      projectId,
+      userId: context.userId,
+    }),
+  );
   await publishProjectAsyncJobEvent('job:queued', job, 'Project seed queued.');
 
   return job;

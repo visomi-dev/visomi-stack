@@ -1,11 +1,33 @@
+import type { PGlite } from '@electric-sql/pglite';
 import express, { json, type Request } from 'express';
+import session from 'express-session';
+import { Passport } from 'passport';
 import request from 'supertest';
 
 import { PASSKEY_ACCOUNT_UNAVAILABLE, passkeyOpenApiPaths, passkeyRouter } from './passkey-router';
 import { findUserByEmail } from './auth-service';
 import { resetPasskeySecurityState } from './passkey-security';
 
-import { errorHandler } from 'shared';
+import { db, errorHandler, ManagedMemorySessionStore } from 'shared';
+
+jest.mock('shared', () => {
+  const actual = jest.requireActual('shared');
+  const { PGlite } = jest.requireActual('@electric-sql/pglite');
+  const { drizzle } = jest.requireActual('drizzle-orm/pglite');
+
+  return { ...actual, db: drizzle(new PGlite(), { casing: 'snake_case' }) };
+});
+
+const database = (db as unknown as { $client: PGlite }).$client;
+
+beforeAll(async () => {
+  await database.exec(
+    "CREATE TABLE users (id text PRIMARY KEY, auth_version integer NOT NULL); INSERT INTO users VALUES ('user-1', 1)",
+  );
+}, 30000);
+afterAll(async () => {
+  await database.close();
+});
 
 jest.mock('./auth-service', () => ({
   findUserByEmail: jest.fn(async () => ({ email: 'person@example.test', emailVerifiedAt: null, id: 'user-1' })),
@@ -20,8 +42,21 @@ function createApp(
   reauthenticatedAt?: number,
 ): express.Express {
   const app = express();
+  const store = new ManagedMemorySessionStore();
+  const passport = new Passport();
 
-  app.use(json());
+  passport.deserializeUser<Express.User>((identity, done) => done(null, identity));
+
+  app.use(
+    json(),
+    session({
+      secret: 'passkey-router-test-secret',
+      resave: false,
+      saveUninitialized: false,
+      store,
+    }),
+    passport.initialize(),
+  );
   app.use((req: Request, _res, next) => {
     req.user = {
       accountId: 'account-1',
@@ -29,32 +64,32 @@ function createApp(
       email: 'person@example.test',
       emailVerifiedAt: null,
       id: 'user-1',
+      authVersion: 1,
       role: 'owner',
     };
     (req as unknown as { isAuthenticated: () => boolean }).isAuthenticated = () => authenticated;
-    Object.assign(req, {
-      session: {
-        authority,
-        ...(reauthenticatedAt === undefined ? {} : { passkeySecurityReauthenticatedAt: reauthenticatedAt }),
-        ...(isNewUser === undefined
-          ? {}
-          : {
-              restrictedAuth: {
-                allowedOperations: ['passkeys:enroll', 'passkeys:verify'],
-                eligibleAccounts: [{ accountId: 'account-1', name: 'Account', role: 'owner' }],
-                expiresAt: Date.now() + 60_000,
-                flowId: 'flow-1',
-                isNewUser,
-                issuedAt: Date.now(),
-                purpose: 'bootstrap_recovery' as const,
-                selectedAccountId: 'account-1',
-                userId: 'user-1',
-                verifiedEmail: 'person@example.test',
-              },
-            }),
-      },
+    Object.assign(req.session, {
+      passport: { user: req.user },
+      authority,
+      ...(reauthenticatedAt === undefined ? {} : { passkeySecurityReauthenticatedAt: reauthenticatedAt }),
+      ...(isNewUser === undefined
+        ? {}
+        : {
+            restrictedAuth: {
+              allowedOperations: ['passkeys:enroll', 'passkeys:verify'],
+              eligibleAccounts: [{ accountId: 'account-1', name: 'Account', role: 'owner' }],
+              expiresAt: Date.now() + 60_000,
+              flowId: 'flow-1',
+              isNewUser,
+              issuedAt: Date.now(),
+              purpose: 'bootstrap_recovery' as const,
+              selectedAccountId: 'account-1',
+              userId: 'user-1',
+              verifiedEmail: 'person@example.test',
+            },
+          }),
     });
-    next();
+    req.session.save(next);
   });
   app.use('/auth/passkey', passkeyRouter);
   app.use(errorHandler);
@@ -78,7 +113,7 @@ describe('passkey account ceremony router', () => {
   });
 
   it('rejects unverified email before any ceremony state is created', async () => {
-    const app = createApp(true);
+    const app = createApp(true, true);
     const response = await request(app)
       .post('/auth/passkey/authentication/begin')
       .set('Origin', 'http://localhost:8080')
@@ -137,6 +172,21 @@ describe('passkey account ceremony router', () => {
     expect(stale.status).toBe(401);
     expect(stale.body.code).toBe('reauthentication_required');
     expect(fresh.body.code).not.toBe('reauthentication_required');
+  });
+
+  it('rejects an old session epoch before registration dispatch through authoritative middleware', async () => {
+    await database.exec("UPDATE users SET auth_version = 2 WHERE id = 'user-1'");
+    try {
+      const response = await request(createApp(true, true))
+        .post('/auth/passkey/registration/begin')
+        .set('Origin', 'http://localhost:8080')
+        .send({ label: 'Laptop' });
+
+      expect(response.status).toBe(401);
+      expect(response.body.code).toBe('authentication_required');
+    } finally {
+      await database.exec("UPDATE users SET auth_version = 1 WHERE id = 'user-1'");
+    }
   });
 
   it('rejects malformed completion payloads and unauthenticated lifecycle access', async () => {

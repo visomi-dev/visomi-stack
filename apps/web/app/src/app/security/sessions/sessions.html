@@ -1,0 +1,67 @@
+<section class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 text-zinc-950 md:px-8 dark:text-white">
+  <a routerLink="/security" class="underline" i18n="@@sessionsBack">Back to security</a>
+  <h1 class="font-heading text-2xl font-semibold" i18n="@@sessionsTitle">Active sessions</h1>
+  <p i18n="@@sessionsDescription">Review your signed-in sessions and sign out sessions you no longer use.</p>
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+    <button type="button" (click)="load()" [disabled]="loading() || busy()" i18n="@@sessionsRetry">Retry</button>
+  }
+  @if (notice()) {
+    <p role="status">{{ notice() }}</p>
+  }
+  @if (loading()) {
+    <p role="status" i18n="@@sessionsLoading">Loading sessions...</p>
+  } @else if (!error()) {
+    <button
+      type="button"
+      class="w-full self-start rounded-md bg-zinc-950 px-4 py-2 text-white disabled:opacity-50 sm:w-auto dark:bg-white dark:text-zinc-950"
+      (click)="revoke()"
+      [disabled]="!hasOthers() || busy()"
+      i18n="@@sessionsRevokeOthers"
+    >
+      Sign out all other sessions
+    </button>
+    <ul class="flex flex-col gap-4">
+      @for (session of sessions(); track session.id) {
+        <li class="rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900">
+          <h2 class="font-semibold">{{ method(session) }}</h2>
+          @if (session.current) {
+            <p i18n="@@sessionsCurrent">Current session</p>
+          }
+          <dl class="my-3 grid grid-cols-2 gap-2 text-sm">
+            <dt i18n="@@sessionsStarted">Started</dt>
+            <dd>{{ session.startedAt | date: 'medium' }}</dd>
+            <dt i18n="@@sessionsLastActive">Last active</dt>
+            <dd>{{ session.lastActiveAt | date: 'medium' }}</dd>
+            <dt i18n="@@sessionsExpires">Expires</dt>
+            <dd>{{ session.expiresAt | date: 'medium' }}</dd>
+          </dl>
+          @if (session.current) {
+            <button
+              type="button"
+              class="rounded-md border border-zinc-950/10 px-3 py-2 disabled:opacity-50 dark:border-white/10"
+              (click)="signOut()"
+              [disabled]="busy()"
+              i18n="@@sessionsSignOutCurrent"
+            >
+              Sign out current session
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="rounded-md border border-zinc-950/10 px-3 py-2 disabled:opacity-50 dark:border-white/10"
+              (click)="revoke(session)"
+              [disabled]="busy()"
+              i18n="@@sessionsRevokeOne"
+            >
+              Sign out this session
+            </button>
+          }
+        </li>
+      } @empty {
+        <li i18n="@@sessionsEmpty">No active sessions found.</li>
+      }
+    </ul>
+  }
+</section>
+<app-security-confirmation />

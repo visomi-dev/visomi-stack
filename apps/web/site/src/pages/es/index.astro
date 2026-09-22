@@ -1,4 +1,5 @@
 ---
+import { APP_NAME } from '../../content/brand';
 import LandingPage from '../../components/landing-page.astro';
 import { getSiteContent } from '../../content/site-content';
 import BaseLayout from '../../layouts/base-layout.astro';
@@ -10,7 +11,7 @@ const copy = getSiteContent('es');
   lang="es"
   locale="es"
   page="home"
-  title="Visomi Stack | Un origen con límites explícitos de runtime y confianza"
+  title={`${APP_NAME} | Un origen con límites explícitos de runtime y confianza`}
   description={copy.description}
 >
   <LandingPage locale="es" />

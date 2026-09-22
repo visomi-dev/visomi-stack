@@ -33,3 +33,14 @@ export * from './lib/diagnostics';
 export * from './lib/redis/connection';
 export * from './lib/redis/pub-sub';
 export * from './lib/session';
+export {
+  correlateJob,
+  correlation,
+  observeProjectJob,
+  operationalMetrics,
+  requestId,
+  requestObservability,
+  setErrorReporter,
+  withCorrelation,
+} from './lib/observability';
+export type { CorrelatedJob } from './lib/observability';

@@ -16,7 +16,7 @@
       "!{projectRoot}/jest.config.[jt]s",
       "!{projectRoot}/test-setup.[jt]s"
     ],
-    "sharedGlobals": []
+    "sharedGlobals": ["{workspaceRoot}/template.json"]
   },
   "targetDefaults": {
     "@angular/build:application": {

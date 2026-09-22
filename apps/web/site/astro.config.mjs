@@ -2,9 +2,11 @@ import { defineConfig } from 'astro/config';
 import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite';
 
+import template from '../../../template.json' with { type: 'json' };
+
 const base = process.env.BASE_URL ?? '/';
 
-const site = process.env.SITE_URL ?? 'https://stack.visomi.dev';
+const site = process.env.SITE_URL || template.project.publicOrigin || template.local.origin;
 
 export default defineConfig({
   adapter: node({
@@ -18,7 +20,7 @@ export default defineConfig({
   site,
   trailingSlash: 'always',
   i18n: {
-    defaultLocale: 'en',
+    defaultLocale: template.project.defaultLocale,
     locales: ['en', 'es'],
     routing: 'manual',
   },

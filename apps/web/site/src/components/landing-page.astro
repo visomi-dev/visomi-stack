@@ -1,4 +1,5 @@
 ---
+import { APP_NAME, ORGANIZATION } from '../content/brand';
 import type { Locale } from '../content/site-content';
 import BrandMark from './brand-mark.astro';
 import LocaleSwitcher from './locale-switcher.astro';
@@ -9,10 +10,9 @@ const { locale } = Astro.props;
 const isEnglish = locale === 'en';
 const copy = isEnglish
   ? {
-      eyebrow: 'VISOMI STACK / MODULAR APPLICATION FOUNDATION',
+      eyebrow: `${APP_NAME.toUpperCase()} / MODULAR APPLICATION FOUNDATION`,
       headline: 'One public origin. Clear runtime and trust boundaries.',
-      intro:
-        'Visomi Stack composes a public site, authenticated product, API, worker, and realtime delivery behind one gateway. Themis adds a repository-local workflow for scoped execution, evidence, and review.',
+      intro: `${APP_NAME} composes a public site, authenticated product, API, worker, and realtime delivery behind one gateway. Themis adds a repository-local workflow for scoped execution, evidence, and review.`,
       primary: 'Open the app',
       secondary: 'See how it works',
       signal: 'Composed at the edge. Separated by authority.',
@@ -123,14 +123,13 @@ const copy = isEnglish
       finalTitle: 'Stop rebuilding the runway.',
       finalBody:
         'Adopt the boundaries that fit, inspect the documented tradeoffs, and build your product domain without hiding platform maturity.',
-      cta: 'Start with Visomi Stack',
-      footer: 'Visomi Stack / A reusable foundation for serious products.',
+      cta: `Start with ${APP_NAME}`,
+      footer: `${APP_NAME} / A reusable foundation for serious products.`,
     }
   : {
-      eyebrow: 'VISOMI STACK / BASE MODULAR PARA APLICACIONES',
+      eyebrow: `${APP_NAME.toUpperCase()} / BASE MODULAR PARA APLICACIONES`,
       headline: 'Un origen público. Límites claros de runtime y confianza.',
-      intro:
-        'Visomi Stack compone sitio público, producto autenticado, API, worker y realtime detrás de un gateway. Themis añade un workflow local al repositorio para ejecución acotada, evidencia y revisión.',
+      intro: `${APP_NAME} compone sitio público, producto autenticado, API, worker y realtime detrás de un gateway. Themis añade un workflow local al repositorio para ejecución acotada, evidencia y revisión.`,
       primary: 'Abrir la aplicación',
       secondary: 'Ver cómo funciona',
       signal: 'Compuesto en el edge. Separado por autoridad.',
@@ -237,62 +236,62 @@ const copy = isEnglish
       finalTitle: 'Deja de reconstruir la pista de despegue.',
       finalBody:
         'Adopta los límites que encajen, revisa los tradeoffs documentados y construye tu dominio sin ocultar la madurez de la plataforma.',
-      cta: 'Empezar con Visomi Stack',
-      footer: 'Visomi Stack / Una base reusable para productos serios.',
+      cta: `Empezar con ${APP_NAME}`,
+      footer: `${APP_NAME} / Una base reusable para productos serios.`,
     };
 ---
 
 <main class="min-h-screen overflow-hidden bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
-  <nav
-    class="site-nav sticky top-0 z-50 border-b border-zinc-950/10 bg-white/85 px-4 py-4 backdrop-blur-xl md:px-10 dark:border-white/10 dark:bg-zinc-950/85"
-  >
+  <nav class="site-nav sticky top-0 z-50 border-b border-zinc-950/10 bg-white/85 px-4 py-4 backdrop-blur-xl md:px-10 dark:border-white/10 dark:bg-zinc-950/85">
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-4">
       <a
         href={locale === 'en' ? '/en/' : '/es/'}
         class="group flex items-center gap-3 font-mono text-sm font-bold tracking-[0.18em] uppercase"
       >
         <BrandMark />
-        <span class="hidden sm:inline">visomi<span class="text-zinc-400">/</span>stack</span>
+        <span class="hidden sm:inline">
+          visomi<span class="text-zinc-400">/</span>stack
+        </span>
       </a>
       <div class="flex items-center gap-2 sm:gap-5">
         <a
           href="#architecture"
           class="hidden text-xs font-semibold text-zinc-600 transition-colors hover:text-blue-600 md:inline dark:text-zinc-400 dark:hover:text-blue-400"
-          >{isEnglish ? 'Architecture' : 'Arquitectura'}</a
         >
+          {isEnglish ? 'Architecture' : 'Arquitectura'}
+        </a>
         <a
           href="#capabilities"
           class="hidden text-xs font-semibold text-zinc-600 transition-colors hover:text-blue-600 md:inline dark:text-zinc-400 dark:hover:text-blue-400"
-          >{isEnglish ? 'Included' : 'Incluido'}</a
         >
+          {isEnglish ? 'Included' : 'Incluido'}
+        </a>
         <a
           href="/docs/"
           class="hidden text-xs font-semibold text-zinc-600 transition-colors hover:text-blue-600 lg:inline dark:text-zinc-400 dark:hover:text-blue-400"
-          >Docs</a
         >
+          Docs
+        </a>
         <LocaleSwitcher locale={locale} />
         <ThemeSwitcher />
         <a
           href={locale === 'en' ? '/app/en/' : '/app/es/'}
           class="rounded-md bg-blue-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:text-zinc-950 dark:hover:bg-blue-400"
-          >{copy.primary}</a
         >
+          {copy.primary}
+        </a>
       </div>
     </div>
   </nav>
 
-  <section
-    class="relative border-b border-zinc-950/10 px-4 py-20 md:px-10 md:py-16 lg:py-12 2xl:py-20 dark:border-white/10"
-  >
+  <section class="relative border-b border-zinc-950/10 px-4 py-20 md:px-10 md:py-16 lg:py-12 2xl:py-20 dark:border-white/10">
     <div class="hero-grid pointer-events-none absolute inset-0 opacity-50"></div>
     <div class="relative mx-auto grid max-w-7xl items-end gap-14 lg:grid-cols-[1.1fr_0.9fr]">
       <div class="reveal-up">
         <p class="mb-7 font-mono text-[0.65rem] font-bold tracking-[0.25em] text-blue-600 uppercase dark:text-blue-400">
           {copy.eyebrow}
         </p>
-        <h1
-          class="font-heading max-w-5xl text-5xl leading-[0.94] font-extrabold tracking-[-0.07em] text-zinc-950 md:text-7xl lg:text-[clamp(3rem,4.5vw,5rem)] dark:text-white"
-        >
+        <h1 class="font-heading max-w-5xl text-5xl leading-[0.94] font-extrabold tracking-[-0.07em] text-zinc-950 md:text-7xl lg:text-[clamp(3rem,4.5vw,5rem)] dark:text-white">
           {copy.headline}
         </h1>
         <p class="mt-8 max-w-2xl text-lg leading-8 text-zinc-600 md:text-xl dark:text-zinc-300">{copy.intro}</p>
@@ -300,43 +299,38 @@ const copy = isEnglish
           <a
             href={locale === 'en' ? '/app/en/' : '/app/es/'}
             class="rounded-md bg-blue-600 px-6 py-3 text-center text-sm font-bold text-white transition-transform hover:-translate-y-0.5 hover:bg-blue-700 dark:bg-blue-500 dark:text-zinc-950 dark:hover:bg-blue-400"
-            >{copy.primary} <span aria-hidden="true">↗</span></a
           >
+            {copy.primary} <span aria-hidden="true">↗</span>
+          </a>
           <a
             href="#architecture"
             class="rounded-md border border-zinc-950/15 px-6 py-3 text-center text-sm font-bold text-zinc-700 transition-colors hover:border-blue-600/70 hover:text-blue-700 dark:border-white/20 dark:text-zinc-200 dark:hover:border-blue-400/70 dark:hover:text-blue-300"
-            >{copy.secondary} <span aria-hidden="true">↓</span></a
           >
+            {copy.secondary} <span aria-hidden="true">↓</span>
+          </a>
         </div>
       </div>
 
       <div class="reveal-up relative lg:pb-3" style="animation-delay: 120ms">
         <div class="absolute -inset-5 bg-blue-500/10 blur-3xl"></div>
-        <div
-          class="relative rounded-lg border border-zinc-950/10 bg-zinc-50/90 p-5 shadow-2xl shadow-zinc-950/10 backdrop-blur-sm md:p-7 dark:border-white/15 dark:bg-zinc-900/90 dark:shadow-black/40"
-        >
-          <div
-            class="mb-10 flex items-center justify-between border-b border-zinc-950/10 pb-4 font-mono text-[0.65rem] tracking-[0.15em] text-zinc-500 uppercase dark:border-white/10"
-          >
-            <span>stack.signal</span><span class="text-blue-600 dark:text-blue-400">● online</span>
+        <div class="relative rounded-lg border border-zinc-950/10 bg-zinc-50/90 p-5 shadow-2xl shadow-zinc-950/10 backdrop-blur-sm md:p-7 dark:border-white/15 dark:bg-zinc-900/90 dark:shadow-black/40">
+          <div class="mb-10 flex items-center justify-between border-b border-zinc-950/10 pb-4 font-mono text-[0.65rem] tracking-[0.15em] text-zinc-500 uppercase dark:border-white/10">
+            <span>stack.signal</span>
+            <span class="text-blue-600 dark:text-blue-400">● online</span>
           </div>
-          <p
-            class="font-heading max-w-sm text-3xl leading-tight font-bold tracking-tight text-zinc-950 dark:text-white"
-          >
+          <p class="font-heading max-w-sm text-3xl leading-tight font-bold tracking-tight text-zinc-950 dark:text-white">
             {copy.signal}
           </p>
           <p class="mt-5 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{copy.signalBody}</p>
           <div class="mt-9 grid grid-cols-3 gap-3 border-t border-zinc-950/10 pt-5 dark:border-white/10">
-            {
-              copy.stats.map(([value, label]) => (
-                <div>
-                  <>
-                    <p class="font-mono text-2xl font-bold text-blue-600 dark:text-blue-400">{value}</p>
-                    <p class="mt-1 text-[0.6rem] leading-4 text-zinc-500 uppercase">{label}</p>
-                  </>
-                </div>
-              ))
-            }
+            {copy.stats.map(([value, label]) => (
+              <div>
+                <>
+                  <p class="font-mono text-2xl font-bold text-blue-600 dark:text-blue-400">{value}</p>
+                  <p class="mt-1 text-[0.6rem] leading-4 text-zinc-500 uppercase">{label}</p>
+                </>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -357,25 +351,21 @@ const copy = isEnglish
         </h2>
         <p class="mt-6 text-lg leading-8 text-zinc-600 dark:text-zinc-400">{copy.architectureBody}</p>
       </div>
-      <div
-        class="mt-14 grid gap-px overflow-hidden rounded-lg border border-zinc-950/10 bg-zinc-950/10 md:grid-cols-2 lg:grid-cols-4 dark:border-white/10 dark:bg-white/10"
-      >
-        {
-          copy.architectureCards.map(([label, technology, body], index) => (
-            <article class="bg-white p-6 transition-colors hover:bg-blue-50 md:p-8 dark:bg-zinc-950 dark:hover:bg-zinc-900">
-              <div class="flex items-center justify-between font-mono text-[0.62rem] tracking-[0.18em] text-zinc-500">
-                <>
-                  <span>0{index + 1}</span>
-                  <span>{label}</span>
-                </>
-              </div>
-              <h3 class="font-heading mt-14 text-3xl font-bold tracking-tight text-zinc-950 dark:text-white">
-                {technology}
-              </h3>
-              <p class="mt-4 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{body}</p>
-            </article>
-          ))
-        }
+      <div class="mt-14 grid gap-px overflow-hidden rounded-lg border border-zinc-950/10 bg-zinc-950/10 md:grid-cols-2 lg:grid-cols-4 dark:border-white/10 dark:bg-white/10">
+        {copy.architectureCards.map(([label, technology, body], index) => (
+          <article class="bg-white p-6 transition-colors hover:bg-blue-50 md:p-8 dark:bg-zinc-950 dark:hover:bg-zinc-900">
+            <div class="flex items-center justify-between font-mono text-[0.62rem] tracking-[0.18em] text-zinc-500">
+              <>
+                <span>0{index + 1}</span>
+                <span>{label}</span>
+              </>
+            </div>
+            <h3 class="font-heading mt-14 text-3xl font-bold tracking-tight text-zinc-950 dark:text-white">
+              {technology}
+            </h3>
+            <p class="mt-4 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{body}</p>
+          </article>
+        ))}
       </div>
     </div>
   </section>
@@ -386,28 +376,26 @@ const copy = isEnglish
         <div class="max-w-2xl">
           <p class="font-mono text-[0.65rem] font-bold tracking-[0.25em] text-blue-600 uppercase dark:text-blue-400">
             {copy.flowLabel}
-          </p><h2 class="font-heading mt-5 text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-5xl">
+          </p>
+          <h2 class="font-heading mt-5 text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-5xl">
             {copy.flowTitle}
           </h2>
         </div>
-        <span class="font-mono text-xs text-zinc-500">gateway → account plane → opaque transport → local authority</span
-        >
+        <span class="font-mono text-xs text-zinc-500">
+          gateway → account plane → opaque transport → local authority
+        </span>
       </div>
-      <div
-        class="mt-14 grid border-l border-blue-600/50 md:grid-cols-4 md:border-t md:border-l-0 dark:border-blue-400/50"
-      >
-        {
-          copy.flowSteps.map(([number, title, body]) => (
-            <article class="relative border-b border-zinc-950/10 py-6 pl-6 md:border-r md:border-b-0 md:px-6 md:pt-8 dark:border-white/10">
-              <span class="absolute top-8 -left-[5px] h-2 w-2 rounded-full bg-blue-600 md:-top-[5px] md:left-6 dark:bg-blue-400" />
-              <>
-                <p class="font-mono text-xs text-blue-600 dark:text-blue-400">{number}</p>
-                <h3 class="font-heading mt-7 text-xl font-bold text-zinc-950 dark:text-white">{title}</h3>
-                <p class="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{body}</p>
-              </>
-            </article>
-          ))
-        }
+      <div class="mt-14 grid border-l border-blue-600/50 md:grid-cols-4 md:border-t md:border-l-0 dark:border-blue-400/50">
+        {copy.flowSteps.map(([number, title, body]) => (
+          <article class="relative border-b border-zinc-950/10 py-6 pl-6 md:border-r md:border-b-0 md:px-6 md:pt-8 dark:border-white/10">
+            <span class="absolute top-8 -left-[5px] h-2 w-2 rounded-full bg-blue-600 md:-top-[5px] md:left-6 dark:bg-blue-400" />
+            <>
+              <p class="font-mono text-xs text-blue-600 dark:text-blue-400">{number}</p>
+              <h3 class="font-heading mt-7 text-xl font-bold text-zinc-950 dark:text-white">{title}</h3>
+              <p class="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{body}</p>
+            </>
+          </article>
+        ))}
       </div>
     </div>
   </section>
@@ -421,51 +409,45 @@ const copy = isEnglish
         <div>
           <p class="font-mono text-[0.65rem] font-bold tracking-[0.25em] text-blue-700 uppercase dark:text-blue-400">
             {copy.capabilitiesLabel}
-          </p><h2 class="font-heading mt-5 text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-6xl">
+          </p>
+          <h2 class="font-heading mt-5 text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-6xl">
             {copy.capabilitiesTitle}
-          </h2><p class="mt-6 text-lg leading-8 text-zinc-600 dark:text-zinc-400">{copy.capabilitiesBody}</p>
+          </h2>
+          <p class="mt-6 text-lg leading-8 text-zinc-600 dark:text-zinc-400">{copy.capabilitiesBody}</p>
         </div>
-        <div
-          class="grid gap-px overflow-hidden rounded-lg border border-zinc-950/10 bg-zinc-950/10 sm:grid-cols-2 dark:border-white/10 dark:bg-white/10"
-        >
-          {
-            copy.capabilities.map(([title, body], index) => (
-              <article class="bg-zinc-100 p-6 transition-colors hover:bg-white dark:bg-zinc-900 dark:hover:bg-zinc-800">
-                <>
-                  <p class="font-mono text-xs text-blue-700 dark:text-blue-400">0{index + 1}</p>
-                  <h3 class="font-heading mt-8 text-xl font-bold">{title}</h3>
-                  <p class="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{body}</p>
-                </>
-              </article>
-            ))
-          }
+        <div class="grid gap-px overflow-hidden rounded-lg border border-zinc-950/10 bg-zinc-950/10 sm:grid-cols-2 dark:border-white/10 dark:bg-white/10">
+          {copy.capabilities.map(([title, body], index) => (
+            <article class="bg-zinc-100 p-6 transition-colors hover:bg-white dark:bg-zinc-900 dark:hover:bg-zinc-800">
+              <>
+                <p class="font-mono text-xs text-blue-700 dark:text-blue-400">0{index + 1}</p>
+                <h3 class="font-heading mt-8 text-xl font-bold">{title}</h3>
+                <p class="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{body}</p>
+              </>
+            </article>
+          ))}
         </div>
       </div>
     </div>
   </section>
 
-  <section
-    class="border-b border-blue-700 bg-blue-600 px-4 py-20 text-white md:px-10 md:py-28 dark:border-blue-400/20 dark:bg-blue-500 dark:text-zinc-950"
-  >
+  <section class="border-b border-blue-700 bg-blue-600 px-4 py-20 text-white md:px-10 md:py-28 dark:border-blue-400/20 dark:bg-blue-500 dark:text-zinc-950">
     <div class="mx-auto grid max-w-7xl gap-12 md:grid-cols-[1.1fr_0.9fr] md:items-end">
       <div>
         <p class="font-mono text-[0.65rem] font-bold tracking-[0.25em] text-blue-100 uppercase dark:text-blue-950">
           {copy.securityLabel}
-        </p><h2
-          class="font-heading mt-5 max-w-3xl text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-6xl"
-        >
+        </p>
+        <h2 class="font-heading mt-5 max-w-3xl text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-6xl">
           {copy.securityTitle}
-        </h2><p class="mt-6 max-w-2xl text-lg leading-8 text-blue-50/85 dark:text-blue-950/80">{copy.securityBody}</p>
+        </h2>
+        <p class="mt-6 max-w-2xl text-lg leading-8 text-blue-50/85 dark:text-blue-950/80">{copy.securityBody}</p>
       </div>
       <ul class="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
-        {
-          copy.securityItems.map((item, index) => (
-            <li class="flex items-center gap-3 border-t border-white/25 py-3 text-sm font-bold dark:border-blue-950/20">
-              <span class="font-mono text-xs text-blue-100 dark:text-blue-950">0{index + 1}</span>
-              {item}
-            </li>
-          ))
-        }
+        {copy.securityItems.map((item, index) => (
+          <li class="flex items-center gap-3 border-t border-white/25 py-3 text-sm font-bold dark:border-blue-950/20">
+            <span class="font-mono text-xs text-blue-100 dark:text-blue-950">0{index + 1}</span>
+            {item}
+          </li>
+        ))}
       </ul>
     </div>
   </section>
@@ -475,29 +457,28 @@ const copy = isEnglish
       <div>
         <p class="font-mono text-[0.65rem] font-bold tracking-[0.25em] text-blue-600 uppercase dark:text-blue-400">
           {copy.workflowLabel}
-        </p><h2 class="font-heading mt-5 text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-6xl">
+        </p>
+        <h2 class="font-heading mt-5 text-4xl leading-tight font-extrabold tracking-[-0.05em] md:text-6xl">
           {copy.workflowTitle}
-        </h2><p class="mt-6 text-lg leading-8 text-zinc-600 dark:text-zinc-400">{copy.workflowBody}</p>
+        </h2>
+        <p class="mt-6 text-lg leading-8 text-zinc-600 dark:text-zinc-400">{copy.workflowBody}</p>
       </div>
-      <div
-        class="rounded-lg border border-zinc-950/10 bg-zinc-100 p-5 font-mono text-xs shadow-2xl shadow-zinc-950/10 md:p-8 dark:border-white/15 dark:bg-black/30 dark:shadow-black/20"
-      >
+      <div class="rounded-lg border border-zinc-950/10 bg-zinc-100 p-5 font-mono text-xs shadow-2xl shadow-zinc-950/10 md:p-8 dark:border-white/15 dark:bg-black/30 dark:shadow-black/20">
         <div class="mb-7 flex justify-between border-b border-zinc-950/10 pb-4 text-zinc-500 dark:border-white/10">
-          <span>.themis / delivery.log</span><span>tail -f</span>
+          <span>.themis / delivery.log</span>
+          <span>tail -f</span>
         </div>
         <div class="space-y-5">
-          {
-            copy.workflowCode.map(([command, result]) => (
-              <div class="grid gap-1 sm:grid-cols-[1fr_auto] sm:gap-5">
-                <>
-                  <span>
-                    <span class="text-blue-600 dark:text-blue-400">$</span> {command}
-                  </span>
-                  <span class="text-zinc-500">{result}</span>
-                </>
-              </div>
-            ))
-          }
+          {copy.workflowCode.map(([command, result]) => (
+            <div class="grid gap-1 sm:grid-cols-[1fr_auto] sm:gap-5">
+              <>
+                <span>
+                  <span class="text-blue-600 dark:text-blue-400">$</span> {command}
+                </span>
+                <span class="text-zinc-500">{result}</span>
+              </>
+            </div>
+          ))}
         </div>
         <div class="mt-8 border-t border-zinc-950/10 pt-5 text-blue-600 dark:border-white/10 dark:text-blue-400">
           ✓ evidence attached / review pending
@@ -511,21 +492,27 @@ const copy = isEnglish
     <div class="relative mx-auto max-w-4xl">
       <p class="font-mono text-[0.65rem] font-bold tracking-[0.25em] text-blue-600 uppercase dark:text-blue-400">
         {copy.finalKicker}
-      </p><h2 class="font-heading mt-6 text-5xl leading-[0.95] font-extrabold tracking-[-0.07em] md:text-8xl">
+      </p>
+      <h2 class="font-heading mt-6 text-5xl leading-[0.95] font-extrabold tracking-[-0.07em] md:text-8xl">
         {copy.finalTitle}
-      </h2><p class="mx-auto mt-7 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">{copy.finalBody}</p><a
+      </h2>
+      <p class="mx-auto mt-7 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">{copy.finalBody}</p>
+      <a
         href={locale === 'en' ? '/app/en/' : '/app/es/'}
         class="mt-10 inline-flex rounded-md bg-blue-600 px-7 py-3 text-sm font-bold text-white transition-transform hover:-translate-y-0.5 hover:bg-blue-700 dark:bg-blue-500 dark:text-zinc-950 dark:hover:bg-blue-400"
-        >{copy.cta} <span class="ml-2" aria-hidden="true">↗</span></a
       >
+        {copy.cta}{' '}
+        <span class="ml-2" aria-hidden="true">
+          ↗
+        </span>
+      </a>
     </div>
   </section>
 </main>
 
 <footer class="border-t border-zinc-950/10 bg-zinc-100 px-4 py-8 md:px-10 dark:border-white/10 dark:bg-zinc-950">
-  <div
-    class="mx-auto flex max-w-7xl flex-col gap-3 font-mono text-[0.65rem] tracking-[0.12em] text-zinc-500 uppercase sm:flex-row sm:items-center sm:justify-between"
-  >
-    <span>{copy.footer}</span><span>© 2026 Visomi</span>
+  <div class="mx-auto flex max-w-7xl flex-col gap-3 font-mono text-[0.65rem] tracking-[0.12em] text-zinc-500 uppercase sm:flex-row sm:items-center sm:justify-between">
+    <span>{copy.footer}</span>
+    <span>© 2026 {ORGANIZATION}</span>
   </div>
 </footer>

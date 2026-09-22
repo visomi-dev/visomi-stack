@@ -128,7 +128,7 @@ function provisionPostgres(cli: string): string {
     '--name',
     name,
     '--publish',
-    `${postgresPort}:5432`,
+    `127.0.0.1:${postgresPort}:5432`,
     '--env',
     `POSTGRES_DB=${postgresDatabase}`,
     '--env',
@@ -153,7 +153,7 @@ function provisionMinio(cli: string): string {
     '--name',
     name,
     '--publish',
-    `${minioPort}:9000`,
+    `127.0.0.1:${minioPort}:9000`,
     '--env',
     `MINIO_ROOT_USER=${minioAccessKey}`,
     '--env',
@@ -269,6 +269,7 @@ async function main(): Promise<void> {
       exitCode = await runJest(durableEnvironment, [
         '--runTestsByPath',
         'apps/web/api-e2e/src/api/sync-restart.spec.ts',
+        'apps/web/api-e2e/src/api/device-approval.spec.ts',
       ]);
   } else {
     exitCode = await runJest(requestedRestart ? durableEnvironment : memoryEnvironment, requestedArgs);

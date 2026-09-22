@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import type { ResponseEnvelope } from './auth.models';
+import type { PasswordSignInPending, PasswordSecondFactor } from './password';
 
 export type ReauthenticationPurpose =
   | 'password_change'
@@ -10,11 +11,27 @@ export type ReauthenticationPurpose =
   | 'totp_change'
   | 'totp_disable'
   | 'recovery_codes_regenerate'
-  | 'google_link';
+  | 'google_link'
+  | 'email_change'
+  | 'workspace_leave'
+  | 'sessions_revoke'
+  | 'passkey_enroll';
 
 export type ReauthenticationStart = {
   grantId: string;
-  methods: Array<'passkey' | 'password' | 'totp' | 'recovery_code'>;
+  methods: Array<'passkey' | 'google' | 'password' | 'totp' | 'recovery_code'>;
+  google?: { clientId: string; nonce: string };
+  expiresAt: string;
+  passwordRequiresTotp: boolean;
+};
+export type SecurityOverview = {
+  passwordEnabled: boolean;
+  googleLinkEnabled: boolean;
+  totpEnabled: boolean;
+  recoveryCodesRemaining: number;
+  federatedIdentities: Array<{ id: string; provider: string; emailAtLink: string; linkedAt: string }>;
+  trustedDevices: Array<{ id: string; createdAt: string; lastUsedAt: string | null; expiresAt: string }>;
+  recoveryEvents: Array<{ event: string; outcome: string; createdAt: string }>;
 };
 export type ReauthenticationComplete = { grantId: string; authenticated: true };
 export type IdentityProviders = {
@@ -25,6 +42,32 @@ export type IdentityProviders = {
 @Injectable({ providedIn: 'root' })
 export class SecurityAuth {
   private readonly http = inject(HttpClient);
+
+  async authorizeIdentityEnrollment(grantId: string): Promise<void> {
+    await firstValueFrom(this.http.post('/api/auth/passkey/enrollment/identity', { grantId }));
+  }
+
+  async startFirstPasskey(currentPassword: string): Promise<PasswordSignInPending> {
+    const response = await firstValueFrom(
+      this.http.post<ResponseEnvelope<PasswordSignInPending>>('/api/auth/passkey/enrollment/start', {
+        currentPassword,
+      }),
+    );
+
+    return response.data;
+  }
+
+  async completeFirstPasskey(flowId: string, code: string, kind: PasswordSecondFactor): Promise<void> {
+    await firstValueFrom(this.http.post('/api/auth/passkey/enrollment/complete', { flowId, code, kind }));
+  }
+
+  async overview(): Promise<SecurityOverview> {
+    const response = await firstValueFrom(
+      this.http.get<ResponseEnvelope<SecurityOverview>>('/api/auth/security/overview'),
+    );
+
+    return response.data;
+  }
 
   async startReauthentication(purpose: ReauthenticationPurpose): Promise<ReauthenticationStart> {
     const response = await firstValueFrom(

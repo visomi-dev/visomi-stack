@@ -1,21 +1,29 @@
 import { DatePipe } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { form, maxLength, required, minLength, pattern } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 
 import { Auth } from '../shared/auth/auth';
 import { Passkey, type PasskeyCredential } from '../shared/auth/passkey';
-import { DeviceApproval } from '../shared/auth/device-approval';
+import { SecurityAuth } from '../shared/auth/security-auth';
+import type { SecurityOverview } from '../shared/auth/security-auth';
+import type { PasswordSignInPending } from '../shared/auth/password';
+import { SecurityAction } from '../shared/auth/security-action';
+import { SecurityConfirmation } from '../shared/auth/security-confirmation/security-confirmation';
+import { Form } from '../shared/ui/forms/form/form';
+import { Field } from '../shared/ui/forms/field/field';
+import { Label } from '../shared/ui/forms/label/label';
+import { Input } from '../shared/ui/forms/input/input';
+import { PasswordInput } from '../shared/ui/forms/password-input/password-input';
+import { GOOGLE_LINK_PATH, PASSWORD_MANAGEMENT_PATH, RECOVERY_CODES_PATH } from '../shared/constants/routes';
 
 type View = 'list' | 'add' | 'name' | 'revoke';
-type SecurityOverview = {
-  federatedIdentities: Array<{ id: string; provider: string; emailAtLink: string; linkedAt: string }>;
-  trustedDevices: Array<{ id: string; createdAt: string; lastUsedAt: string | null; expiresAt: string }>;
-  recoveryEvents: Array<{ event: string; outcome: string; createdAt: string }>;
-};
 
 @Component({
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink, Form, Field, Label, Input, PasswordInput, SecurityConfirmation],
+  providers: [SecurityAction],
   selector: 'app-security',
   templateUrl: './security.html',
   styleUrl: './security.css',
@@ -24,19 +32,59 @@ export class Security {
   private readonly passkey = inject(Passkey);
   private readonly auth = inject(Auth);
   private readonly http = inject(HttpClient);
-  private readonly approval = inject(DeviceApproval);
+  private readonly security = inject(SecurityAuth);
+  private readonly action = inject(SecurityAction);
+  protected readonly passwordUrl = `/${PASSWORD_MANAGEMENT_PATH}`;
+  protected readonly recoveryUrl = `/${RECOVERY_CODES_PATH}`;
+  protected readonly googleUrl = `/${GOOGLE_LINK_PATH}`;
+  readonly overviewLoading = signal(true);
+  readonly overviewError = signal('');
+  readonly mutationBusy = signal(false);
+  readonly notice = signal('');
+  readonly firstPasskeyFlow = signal<PasswordSignInPending | null>(null);
+  readonly enrollmentAuthorized = signal(false);
+  readonly identityEnrollmentAvailable = computed(() =>
+    Boolean(
+      !this.credentials().length &&
+      this.overview()?.googleLinkEnabled &&
+      this.overview()?.federatedIdentities.some((identity) => identity.provider === 'google'),
+    ),
+  );
+  readonly enrollmentBusy = signal(false);
+  readonly enrollmentModel = signal({ password: '', code: '' });
+  readonly enrollmentForm = form(this.enrollmentModel, (path) => {
+    required(path.password, { when: () => !this.firstPasskeyFlow() });
+    required(path.code, { when: () => !!this.firstPasskeyFlow() });
+    minLength(path.code, 6, { when: () => !!this.firstPasskeyFlow() });
+    maxLength(path.code, 6);
+    pattern(path.code, /^\d*$/);
+  });
+  readonly pendingRemoval = signal<{ kind: 'federated' | 'device'; id: string } | null>(null);
   readonly loading = signal(true);
   readonly error = signal('');
   readonly credentials = signal<PasskeyCredential[]>([]);
   readonly view = signal<View>('list');
   readonly selected = signal<PasskeyCredential | null>(null);
-  readonly passkeyName = signal('');
+  readonly nameModel = signal({ name: '' });
+  readonly nameForm = form(this.nameModel, (path) => {
+    required(path.name);
+    maxLength(path.name, 64);
+  });
+  readonly passkeyName = computed(() => this.nameModel().name);
   readonly passkeyLoading = signal(true);
   readonly passkeySubmitting = signal(false);
+  protected readonly addSubmitLabel = computed(() =>
+    this.passkeySubmitting()
+      ? $localize`:@@securityWaitingConfirmation:Waiting for confirmation...`
+      : $localize`:@@securityConfirmAdd:Confirm and add passkey`,
+  );
+  protected readonly revokeSubmitLabel = computed(() =>
+    this.passkeySubmitting()
+      ? $localize`:@@securityConfirming:Confirming...`
+      : $localize`:@@securityConfirmRevoke:Confirm passkey and revoke`,
+  );
   readonly passkeyError = signal('');
   readonly overview = signal<SecurityOverview | null>(null);
-  readonly approvalRequest = signal<{ requestId: string; userCode: string; expiresAt: string } | null>(null);
-  readonly approvalStatus = signal('');
 
   constructor() {
     void this.loadCredentials();
@@ -44,82 +92,97 @@ export class Security {
   }
 
   async revokeFederatedIdentity(id: string): Promise<void> {
-    await firstValueFrom(this.http.delete(`/api/auth/security/federated/${encodeURIComponent(id)}`));
-    await this.loadOverview();
+    await this.runOverviewMutation(`/api/auth/security/federated/${encodeURIComponent(id)}`);
   }
 
   async revokeTrustedDevice(id: string): Promise<void> {
-    await firstValueFrom(this.http.delete(`/api/auth/security/devices/${encodeURIComponent(id)}`));
-    await this.loadOverview();
+    await this.runOverviewMutation(`/api/auth/security/devices/${encodeURIComponent(id)}`);
   }
 
-  async requestDeviceApproval(): Promise<void> {
-    const user = await this.currentUser();
-
-    if (!user) return;
-    const request = await this.approval.request(user.accountId);
-
-    this.approvalRequest.set({
-      requestId: request.requestId,
-      userCode: request.userCode ?? '',
-      expiresAt: request.expiresAt,
-    });
-    this.approvalStatus.set('Waiting for approval from another trusted device.');
-    void this.pollApproval(request.requestId);
+  protected requestRemoval(kind: 'federated' | 'device', id: string): void {
+    this.pendingRemoval.set({ kind, id });
   }
 
-  async approveDevice(requestId: string): Promise<void> {
-    await this.reauthenticateWithPasskey();
-    await this.approval.approve(requestId);
-    this.approvalStatus.set('Device approved.');
+  protected async confirmRemoval(): Promise<void> {
+    const selected = this.pendingRemoval();
+
+    if (!selected || this.mutationBusy()) return;
+    if (selected.kind === 'federated') await this.revokeFederatedIdentity(selected.id);
+    else await this.revokeTrustedDevice(selected.id);
+    this.pendingRemoval.set(null);
   }
 
-  private async pollApproval(requestId: string): Promise<void> {
-    for (let attempt = 0; attempt < 60; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      const status = await this.approval.poll(requestId);
-
-      if (status.status === 'approved') {
-        this.approvalStatus.set('Device approved. Enter the code on the new device.');
-
-        return;
-      }
-      if (status.status === 'denied' || status.status === 'consumed') return;
+  private async runOverviewMutation(url: string): Promise<void> {
+    if (this.mutationBusy()) return;
+    this.mutationBusy.set(true);
+    this.overviewError.set('');
+    this.notice.set('');
+    try {
+      await firstValueFrom(this.http.delete(url));
+      await this.loadOverview();
+      this.notice.set($localize`:@@securityAccessRemoved:Access through this method has been removed.`);
+    } catch (error) {
+      this.overviewError.set(
+        error instanceof HttpErrorResponse && error.error?.code === 'last_access_method'
+          ? $localize`:@@securityKeepAccessMethod:Set up and verify another sign-in method before removing this one.`
+          : $localize`:@@securityUpdateFailed:We could not update this access method. Check its current status before trying again.`,
+      );
+    } finally {
+      this.mutationBusy.set(false);
     }
-    this.approvalStatus.set('The approval request expired.');
   }
 
-  private async loadCredentials() {
+  protected recoveryEvent(event: string): string {
+    if (event === 'recovery_codes_regenerated') return $localize`:@@securityCodesReplaced:Recovery codes replaced`;
+    if (event === 'recovery_started') return $localize`:@@securityRecoveryStarted:Account recovery started`;
+
+    return $localize`:@@securityRecoveryActivity:Account recovery activity`;
+  }
+
+  protected methodStatus(enabled: boolean): string {
+    return enabled ? $localize`:@@securityEnabled:Enabled` : $localize`:@@securityNotConfigured:Not set up`;
+  }
+
+  async loadCredentials() {
+    this.passkeyLoading.set(true);
+    this.passkeyError.set('');
     try {
       this.credentials.set(await this.passkey.listCredentials());
     } catch {
-      this.passkeyError.set('Passkeys could not be loaded.');
+      this.passkeyError.set($localize`:@@securityPasskeysLoadFailed:Passkeys could not be loaded.`);
     } finally {
       this.passkeyLoading.set(false);
       this.loading.set(false);
     }
   }
 
-  private async loadOverview(): Promise<void> {
+  async loadOverview(): Promise<void> {
+    this.overviewLoading.set(true);
+    this.overviewError.set('');
     try {
-      const response = await firstValueFrom(this.http.get<{ data: SecurityOverview }>('/api/auth/security/overview'));
-
-      this.overview.set(response.data);
+      this.overview.set(await this.security.overview());
     } catch {
-      this.overview.set(null);
+      this.overviewError.set(
+        $localize`:@@securityOverviewUnavailable:We could not load your account overview. Your passkeys are still available.`,
+      );
+    } finally {
+      this.overviewLoading.set(false);
     }
   }
 
   showAdd() {
+    this.firstPasskeyFlow.set(null);
+    this.enrollmentAuthorized.set(false);
+    this.enrollmentModel.set({ password: '', code: '' });
     this.passkeyError.set('');
-    this.passkeyName.set('');
+    this.nameModel.set({ name: '' });
     this.view.set('add');
   }
 
   showRename(credential: PasskeyCredential) {
     this.passkeyError.set('');
     this.selected.set(credential);
-    this.passkeyName.set(credential.label);
+    this.nameModel.set({ name: credential.label });
     this.view.set('name');
   }
 
@@ -130,39 +193,39 @@ export class Security {
   }
 
   cancelPasskeyAction() {
+    this.enrollmentAuthorized.set(false);
+    this.firstPasskeyFlow.set(null);
+    this.enrollmentModel.set({ password: '', code: '' });
     this.selected.set(null);
     this.view.set('list');
-  }
-
-  setPasskeyName(event: Event) {
-    const input = event.target;
-
-    if (input instanceof HTMLInputElement) this.passkeyName.set(input.value);
   }
 
   async addPasskey() {
     const name = this.passkeyName().trim();
 
-    if (!name || this.passkeySubmitting()) return;
-    await this.runPasskeyMutation(async () => {
-      const user = await this.currentUser();
+    if (!name || this.passkeySubmitting() || (!this.credentials().length && !this.enrollmentAuthorized())) return;
+    await this.runPasskeyMutation(
+      'passkey_add',
+      $localize`:@@securityAddAction:Confirm your passkey to add a new sign-in method.`,
+      async () => {
+        const user = await this.currentUser();
 
-      if (!user) throw new Error('Sign in again before adding a passkey.');
-      await this.reauthenticateWithPasskey();
-      const registration = await this.passkey.beginRegistration(name);
-      const credential = await this.passkey.createCredential(registration.options!);
-      const completed = await this.passkey.completeRegistration(registration.challengeId!, credential);
-      const verification = completed.restrictedSession;
+        if (!user) throw new Error('Sign in again before adding a passkey.');
+        const registration = await this.passkey.beginRegistration(name);
+        const credential = await this.passkey.createCredential(registration.options!);
+        const completed = await this.passkey.completeRegistration(registration.challengeId!, credential);
+        const verification = completed.restrictedSession;
 
-      if (!verification?.verificationChallengeId || !verification.verificationOptions) {
-        throw new Error('Passkey verification options were not returned.');
-      }
-      const assertion = await this.passkey.getCredential(verification.verificationOptions);
+        if (!verification?.verificationChallengeId || !verification.verificationOptions) {
+          throw new Error('Passkey verification options were not returned.');
+        }
+        const assertion = await this.passkey.getCredential(verification.verificationOptions);
 
-      await this.passkey.verifyRegistration(verification.verificationChallengeId, assertion);
-      await this.loadCredentials();
-      this.cancelPasskeyAction();
-    });
+        await this.passkey.verifyRegistration(verification.verificationChallengeId, assertion);
+        await this.loadCredentials();
+        this.cancelPasskeyAction();
+      },
+    );
   }
 
   async renamePasskey() {
@@ -170,35 +233,31 @@ export class Security {
     const name = this.passkeyName().trim();
 
     if (!selected || !name || this.passkeySubmitting()) return;
-    await this.runPasskeyMutation(async () => {
-      await this.reauthenticateWithPasskey();
-      const updated = await this.passkey.renameCredential(selected.id, name);
+    await this.runPasskeyMutation(
+      'passkey_rename',
+      $localize`:@@securityRenameAction:Confirm your passkey to rename this sign-in method.`,
+      async () => {
+        const updated = await this.passkey.renameCredential(selected.id, name);
 
-      this.credentials.update((items) => items.map((item) => (item.id === updated.id ? updated : item)));
-      this.cancelPasskeyAction();
-    });
+        this.credentials.update((items) => items.map((item) => (item.id === updated.id ? updated : item)));
+        this.cancelPasskeyAction();
+      },
+    );
   }
 
   async revokePasskey() {
     const selected = this.selected();
 
     if (!selected || this.passkeySubmitting()) return;
-    await this.runPasskeyMutation(async () => {
-      await this.reauthenticateWithPasskey();
-      await this.passkey.revokeCredential(selected.id);
-      this.credentials.update((items) => items.filter((item) => item.id !== selected.id));
-      this.cancelPasskeyAction();
-    });
-  }
-
-  private async reauthenticateWithPasskey() {
-    const user = await this.currentUser();
-
-    if (!user) throw new Error('Sign in again before changing passkeys.');
-    const authentication = await this.passkey.beginAuthentication();
-    const credential = await this.passkey.getCredential(authentication.options!);
-
-    await this.passkey.completeAuthentication(authentication.challengeId!, credential);
+    await this.runPasskeyMutation(
+      'passkey_revoke',
+      $localize`:@@securityRevokeAction:Confirm your passkey to remove this sign-in method.`,
+      async () => {
+        await this.passkey.revokeCredential(selected.id);
+        this.credentials.update((items) => items.filter((item) => item.id !== selected.id));
+        this.cancelPasskeyAction();
+      },
+    );
   }
 
   private async currentUser() {
@@ -207,19 +266,91 @@ export class Security {
     return this.auth.user();
   }
 
-  private async runPasskeyMutation(mutation: () => Promise<void>) {
+  private async runPasskeyMutation(
+    purpose: 'passkey_add' | 'passkey_rename' | 'passkey_revoke',
+    summary: string,
+    mutation: () => Promise<void>,
+  ) {
     this.passkeySubmitting.set(true);
     this.passkeyError.set('');
     try {
-      await mutation();
+      if (purpose === 'passkey_add' && this.enrollmentAuthorized()) {
+        await mutation();
+      } else
+        await this.action.run(
+          {
+            authority: 'passkey',
+            purpose,
+            targetId: this.selected()?.id ?? 'new-passkey',
+            summary: `${summary} ${this.selected()?.label ?? this.passkeyName()}`,
+          },
+          mutation,
+        );
     } catch (error) {
       this.passkeyError.set(
-        error instanceof HttpErrorResponse
-          ? (error.error?.message ?? 'Passkey action failed.')
-          : 'Passkey action failed.',
+        error instanceof HttpErrorResponse && error.error?.code === 'last_access_method'
+          ? $localize`:@@securityKeepAccessMethod:Set up and verify another sign-in method before removing this one.`
+          : $localize`:@@securityPasskeyActionFailed:We could not complete this passkey action. Check its current status before trying again.`,
       );
     } finally {
       this.passkeySubmitting.set(false);
+    }
+  }
+
+  protected async authorizeFirstPasskey(): Promise<void> {
+    if (this.enrollmentBusy() || this.enrollmentForm().invalid()) return;
+    this.enrollmentBusy.set(true);
+    this.passkeyError.set('');
+    try {
+      const flow = this.firstPasskeyFlow();
+      const { password, code } = this.enrollmentModel();
+
+      if (!flow) this.firstPasskeyFlow.set(await this.security.startFirstPasskey(password));
+      else {
+        await this.security.completeFirstPasskey(flow.flowId, code, flow.requiredFactor);
+        this.enrollmentAuthorized.set(true);
+      }
+    } catch {
+      this.passkeyError.set(
+        $localize`:@@securityFirstPasskeyFailed:We could not confirm this enrollment. Check your password or verification code and try again.`,
+      );
+    } finally {
+      this.enrollmentModel.set({ password: '', code: '' });
+      this.enrollmentBusy.set(false);
+    }
+  }
+
+  protected restartFirstPasskey(): void {
+    if (this.enrollmentBusy() || this.passkeySubmitting()) return;
+    this.firstPasskeyFlow.set(null);
+    this.enrollmentAuthorized.set(false);
+    this.enrollmentModel.set({ password: '', code: '' });
+    this.passkeyError.set('');
+  }
+
+  protected async authorizeFirstPasskeyIdentity(): Promise<void> {
+    if (this.enrollmentBusy() || !this.identityEnrollmentAvailable()) return;
+    this.enrollmentBusy.set(true);
+    this.passkeyError.set('');
+    try {
+      await this.action.run(
+        {
+          authority: 'operation',
+          purpose: 'passkey_enroll',
+          targetId: 'new-passkey',
+          summary: $localize`:@@securityFirstPasskeyIdentity:Confirm your connected identity before creating your first passkey.`,
+        },
+        async (grantId) => {
+          await this.security.authorizeIdentityEnrollment(grantId);
+          this.enrollmentAuthorized.set(true);
+        },
+      );
+    } catch {
+      this.passkeyError.set(
+        $localize`:@@securityPasskeyActionFailed:We could not complete this passkey action. Check its current status before trying again.`,
+      );
+    } finally {
+      this.enrollmentBusy.set(false);
     }
   }
 }

@@ -4,50 +4,49 @@ import { firstValueFrom } from 'rxjs';
 
 import type { ResponseEnvelope } from './auth.models';
 
-export type DeviceApprovalRecord = {
-  requestId: string;
-  userCode?: string;
-  status?: 'pending' | 'approved' | 'consumed' | 'denied';
-  expiresAt: string;
-};
+export type ApprovalStatus = 'pending' | 'approved' | 'consumed' | 'denied' | 'cancelled' | 'expired';
+export type DeviceApprovalRequest = { requestId: string; userCode: string; expiresAt: string };
+export type DeviceApprovalRecord = { requestId: string; status: ApprovalStatus; expiresAt: string };
+export type DeviceApprovalReview = DeviceApprovalRecord & { accountId: string; createdAt: string; requester: boolean };
 
 @Injectable({ providedIn: 'root' })
 export class DeviceApproval {
   private readonly http = inject(HttpClient);
 
-  async request(accountId: string): Promise<DeviceApprovalRecord> {
-    const response = await firstValueFrom(
-      this.http.post<ResponseEnvelope<DeviceApprovalRecord>>('/api/auth/device-approval/request', { accountId }),
-    );
-
-    return response.data;
+  async request(accountId: string): Promise<DeviceApprovalRequest> {
+    return this.post<DeviceApprovalRequest>('request', { accountId });
   }
 
   async poll(requestId: string): Promise<DeviceApprovalRecord> {
-    const response = await firstValueFrom(
-      this.http.post<ResponseEnvelope<DeviceApprovalRecord>>('/api/auth/device-approval/status', { requestId }),
-    );
-
-    return response.data;
+    return this.post<DeviceApprovalRecord>('status', { requestId });
   }
 
-  async approve(requestId: string): Promise<DeviceApprovalRecord> {
-    const response = await firstValueFrom(
-      this.http.post<ResponseEnvelope<DeviceApprovalRecord>>('/api/auth/device-approval/approve', { requestId }),
-    );
+  async review(requestId: string): Promise<DeviceApprovalReview> {
+    return this.post<DeviceApprovalReview>('review', { requestId });
+  }
 
-    return response.data;
+  async approve(requestId: string): Promise<{ requestId: string; status: 'approved' }> {
+    return this.post('approve', { requestId });
+  }
+
+  async cancel(requestId: string): Promise<{ requestId: string; status: 'cancelled' }> {
+    return this.post('cancel', { requestId });
+  }
+
+  async deny(requestId: string): Promise<{ requestId: string; status: 'denied' }> {
+    return this.post('deny', { requestId });
   }
 
   async consume(
     requestId: string,
     userCode: string,
-  ): Promise<DeviceApprovalRecord & { accountId: string; grant: 'enrollment' }> {
+  ): Promise<{ requestId: string; accountId: string; userId: string; grant: 'enrollment' }> {
+    return this.post('consume', { requestId, userCode });
+  }
+
+  private async post<T>(operation: string, body: Record<string, string>): Promise<T> {
     const response = await firstValueFrom(
-      this.http.post<ResponseEnvelope<DeviceApprovalRecord & { accountId: string; grant: 'enrollment' }>>(
-        '/api/auth/device-approval/consume',
-        { requestId, userCode },
-      ),
+      this.http.post<ResponseEnvelope<T>>(`/api/auth/device-approval/${operation}`, body),
     );
 
     return response.data;

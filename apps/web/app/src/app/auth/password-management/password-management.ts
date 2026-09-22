@@ -1,8 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { form, maxLength, minLength, pattern, required, type FieldTree, validate } from '@angular/forms/signals';
 
-import { Passkey } from '../../shared/auth/passkey';
+import { SecurityAction } from '../../shared/auth/security-action';
+import { Auth } from '../../shared/auth/auth';
+import { SECURITY_URL, SIGN_IN_URL } from '../../shared/constants/routes';
+import { SecurityConfirmation } from '../../shared/auth/security-confirmation/security-confirmation';
 import { PasswordAuth } from '../../shared/auth/password';
 import { SecurityAuth } from '../../shared/auth/security-auth';
 import { ErrorMessage } from '../../shared/ui/forms/error-message/error-message';
@@ -18,14 +22,17 @@ type CodeModel = { code: string };
 type PasswordModel = { currentPassword: string; password: string; confirmation: string };
 
 @Component({
-  imports: [AppForm, AuthCard, AuthLayout, ErrorMessage, Field, Input, Label, PasswordInput],
+  imports: [AppForm, AuthCard, AuthLayout, ErrorMessage, Field, Input, Label, PasswordInput, SecurityConfirmation],
+  providers: [SecurityAction],
   selector: 'app-password-management',
   templateUrl: './password-management.html',
   styleUrl: './password-management.css',
 })
 export class PasswordManagement {
   private readonly password = inject(PasswordAuth);
-  private readonly passkey = inject(Passkey);
+  private readonly action = inject(SecurityAction);
+  private readonly auth = inject(Auth);
+  private readonly router = inject(Router);
   private readonly security = inject(SecurityAuth);
 
   readonly enrollmentId = signal('');
@@ -34,25 +41,32 @@ export class PasswordManagement {
   readonly enabled = signal(false);
   readonly recoveryCodes = signal<string[]>([]);
   readonly error = signal('');
+  readonly notice = signal('');
   readonly codeModel = signal<CodeModel>({ code: '' });
   readonly codeForm: FieldTree<CodeModel> = form(this.codeModel, (path) => {
-    required(path.code, { message: 'Enter the 6-digit authenticator code.' });
-    minLength(path.code, 6, { message: 'Enter all 6 digits.' });
-    maxLength(path.code, 6, { message: 'Enter all 6 digits.' });
-    pattern(path.code, /^\d{6}$/u, { message: 'Use digits from your authenticator app.' });
+    required(path.code, {
+      message: $localize`:@@passwordAuthenticatorCodeRequired:Enter the 6-digit authenticator code.`,
+    });
+    minLength(path.code, 6, { message: $localize`:@@identityOtpLength:Enter all 6 digits.` });
+    maxLength(path.code, 6, { message: $localize`:@@identityOtpLength:Enter all 6 digits.` });
+    pattern(path.code, /^\d{6}$/u, {
+      message: $localize`:@@passwordAuthenticatorDigits:Use digits from your authenticator app.`,
+    });
   });
   readonly codeError = computed(() => this.codeForm.code().errors()[0]?.message ?? '');
   readonly passwordModel = signal<PasswordModel>({ currentPassword: '', password: '', confirmation: '' });
   readonly passwordForm: FieldTree<PasswordModel> = form(this.passwordModel, (path) => {
-    required(path.currentPassword, { message: 'Enter your current password.' });
-    required(path.password, { message: 'Enter a new password.' });
-    minLength(path.password, 12, { message: 'Use at least 12 characters.' });
-    maxLength(path.password, 512, { message: 'Use 512 characters or fewer.' });
-    required(path.confirmation, { message: 'Confirm your new password.' });
+    required(path.currentPassword, { message: $localize`:@@passwordCurrentRequired:Enter your current password.` });
+    required(path.password, { message: $localize`:@@passwordNewRequired:Enter a new password.` });
+    minLength(path.password, 12, { message: $localize`:@@identityPasswordSetupLength:Use at least 12 characters.` });
+    maxLength(path.password, 512, {
+      message: $localize`:@@identityPasswordSetupMaxLength:Use 512 characters or fewer.`,
+    });
+    required(path.confirmation, { message: $localize`:@@passwordNewConfirmationRequired:Confirm your new password.` });
     validate(path.confirmation, ({ value, valueOf }) =>
       value() === valueOf(path.password)
         ? undefined
-        : { kind: 'password_mismatch', message: 'Passwords do not match.' },
+        : { kind: 'password_mismatch', message: $localize`:@@identityPasswordMismatch:Passwords do not match.` },
     );
   });
   readonly currentPasswordError = computed(() => this.passwordForm.currentPassword().errors()[0]?.message ?? '');
@@ -65,13 +79,24 @@ export class PasswordManagement {
     this.error.set('');
 
     try {
-      await this.reauthenticate('totp_change');
-      const setup = await this.password.startTotpSetup();
+      await this.action.run(
+        {
+          authority: 'operation',
+          purpose: 'totp_change',
+          targetId: 'authenticator',
+          summary: $localize`:@@securitySetupAuthenticator:Confirm your identity to set up your authenticator app.`,
+        },
+        async () => {
+          const setup = await this.password.startTotpSetup();
 
-      this.enrollmentId.set(setup.enrollmentId);
-      this.secret.set(setup.secret);
+          this.enrollmentId.set(setup.enrollmentId);
+          this.secret.set(setup.secret);
+        },
+      );
     } catch (error) {
-      this.error.set(this.message(error, 'Authenticator setup is not available right now.'));
+      this.error.set(
+        this.message(error, $localize`:@@passwordTotpUnavailable:Authenticator setup is not available right now.`),
+      );
     } finally {
       this.submitting.set(false);
     }
@@ -86,10 +111,11 @@ export class PasswordManagement {
       const confirmed = await this.password.confirmTotp(this.enrollmentId(), this.codeForm.code().value());
 
       this.enabled.set(true);
+      this.secret.set('');
       this.recoveryCodes.set(confirmed.recoveryCodes);
       this.codeModel.set({ code: '' });
     } catch (error) {
-      this.error.set(this.message(error, 'That authenticator code is not valid.'));
+      this.error.set(this.message(error, $localize`:@@passwordTotpInvalid:That authenticator code is not valid.`));
     } finally {
       this.submitting.set(false);
     }
@@ -124,30 +150,43 @@ export class PasswordManagement {
     this.submitting.set(true);
     this.error.set('');
     try {
-      await this.reauthenticate(purpose);
-      await mutation();
-      this.passwordModel.set({ currentPassword: '', password: '', confirmation: '' });
+      await this.action.run(
+        {
+          authority: 'operation',
+          purpose,
+          targetId: 'password',
+          summary:
+            purpose === 'password_change'
+              ? $localize`:@@securityChangePassword:Confirm your identity to change your password.`
+              : $localize`:@@securityRemovePassword:Confirm your identity to remove password access.`,
+        },
+        async () => {
+          await mutation();
+          this.notice.set($localize`:@@passwordSettingsUpdated:Password settings updated.`);
+          await this.auth.ensureSessionLoaded(true);
+          if (!this.auth.isAuthenticated())
+            await this.router.navigate([SIGN_IN_URL], { queryParams: { returnTo: SECURITY_URL } });
+        },
+      );
     } catch (error) {
-      this.error.set(this.message(error, 'Password settings could not be updated.'));
+      this.error.set(
+        this.message(
+          error,
+          $localize`:@@passwordSettingsFailed:Password settings could not be updated. Check the current state before trying again.`,
+        ),
+      );
     } finally {
+      this.passwordModel.set({ currentPassword: '', password: '', confirmation: '' });
       this.submitting.set(false);
     }
   }
 
-  private async reauthenticate(purpose: 'password_change' | 'password_remove' | 'totp_change'): Promise<void> {
-    const grant = await this.security.startReauthentication(purpose);
-    const authentication = await this.passkey.beginAuthentication();
-
-    if (!authentication.challengeId || !authentication.options) throw new Error('Passkey options were not returned.');
-    const credential = await this.passkey.getCredential(authentication.options);
-
-    await this.passkey.completeAuthentication(authentication.challengeId, credential);
-    await this.security.completeReauthentication({ grantId: grant.grantId, method: 'passkey' });
-  }
-
   private message(error: unknown, fallback: string): string {
-    return error instanceof HttpErrorResponse && typeof error.error?.message === 'string'
-      ? error.error.message
+    if (error instanceof HttpErrorResponse && error.error?.code === 'last_access_method')
+      return $localize`:@@securityKeepAccessMethod:Set up and verify another sign-in method before removing this one.`;
+
+    return error instanceof HttpErrorResponse && error.status === 429
+      ? $localize`:@@accessRateLimited:Too many attempts. Wait a moment before trying again.`
       : fallback;
   }
 }

@@ -30,7 +30,8 @@ export default [
         'error',
         {
           enforceBuildableLibDependency: true,
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
+          // template.json is a public workspace build input, not another domain's implementation.
+          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$', '^(?:\\.\\./)+template\\.json$'],
           depConstraints: [
             {
               sourceTag: '*',
@@ -54,6 +55,8 @@ export default [
     },
     settings: {
       'import-x/ignore': ['^astro:'],
+      // Keep workspace alias grouping independent of the lint cwd and generated resolver paths.
+      'import-x/internal-regex': '^(?:shared|projects|themis-workflow)(?:/|$)',
     },
     rules: {
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],

@@ -17,6 +17,7 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "paths": {
       "shared": ["./libs/shared/src/index.ts"],
       "projects": ["./libs/projects/src/index.ts"],

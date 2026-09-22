@@ -152,4 +152,121 @@ describe('SignIn', () => {
     expect(password.setPassword).toHaveBeenCalledWith({ password: 'a'.repeat(15) });
     expect(identity.state()).toBe('password-setup-success');
   });
+
+  it('prevents early resends and refreshes the deadline when the tab becomes visible', async () => {
+    const identity = fixture.componentInstance;
+    const password = TestBed.inject(PasswordAuth);
+    const now = Date.now();
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now);
+
+    try {
+      identity.state.set('password-factor');
+      identity.passwordFactor.set('email');
+      identity.flowId.set('flow-1');
+      identity.resendAvailableAt.set(new Date(now + 30_000).toISOString());
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const resend = () =>
+        Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find((button) =>
+          button.textContent?.includes('Resend code'),
+        )!;
+
+      expect(resend().disabled).toBe(true);
+      resend().click();
+      expect(password.resend).not.toHaveBeenCalled();
+      clock.mockReturnValue(now + 30_000);
+      document.dispatchEvent(new Event('visibilitychange'));
+      fixture.detectChanges();
+      expect(resend().disabled).toBe(false);
+      vi.mocked(password.resend).mockResolvedValue({
+        flowId: 'flow-1',
+        resendAvailableAt: new Date(now + 60_000).toISOString(),
+      });
+      resend().click();
+      await fixture.whenStable();
+      expect(password.resend).toHaveBeenCalledExactlyOnceWith('flow-1');
+      expect(resend().disabled).toBe(true);
+      expect(fixture.nativeElement.textContent).toContain('We sent a new code');
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
+  it('offers a restart for expired verification without exposing raw server text', async () => {
+    const identity = fixture.componentInstance;
+    const password = TestBed.inject(PasswordAuth);
+
+    identity.state.set('password-factor');
+    identity.passwordFactor.set('totp');
+    identity.flowId.set('flow-1');
+    identity.otpModel.set({ pin: '012345' });
+    vi.mocked(password.verify).mockRejectedValue(
+      new HttpErrorResponse({
+        status: 410,
+        error: { code: 'challenge_expired', message: 'Internal secret diagnostic' },
+      }),
+    );
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    await fixture.whenStable();
+
+    expect(identity.verificationRestartRequired()).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Start verification again');
+    expect(fixture.nativeElement.textContent).not.toContain('Internal secret diagnostic');
+    expect(fixture.nativeElement.textContent).not.toContain('Resend code');
+  });
+
+  it('opens alternatives after a passkey error without starting a new native request', async () => {
+    const identity = fixture.componentInstance;
+    const descriptor = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
+
+    Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+      configurable: true,
+      value: function (this: HTMLDialogElement) {
+        this.open = true;
+      },
+    });
+
+    identity.emailModel.set({ email: 'person@example.test' });
+    identity.state.set('passkey-error');
+    identity.errorMessage.set('Previous error');
+    fixture.detectChanges();
+    const alternate = Array.from(
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    ).find((button) => button.textContent?.includes('Use another method'))!;
+
+    try {
+      alternate.click();
+      await fixture.whenStable();
+      expect(identity.state()).toBe('ready');
+      expect(identity.methodsOpen()).toBe(true);
+      expect(identity.emailModel().email).toBe('person@example.test');
+      expect(fixture.nativeElement.querySelector('dialog')?.open).toBe(true);
+    } finally {
+      if (descriptor) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', descriptor);
+      else Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+    }
+  });
+
+  it('clears the old recovery challenge when changing the email', async () => {
+    const identity = fixture.componentInstance;
+
+    identity.state.set('otp');
+    identity.identityFlowId.set('old-flow');
+    identity.flowId.set('old-flow');
+    identity.otpModel.set({ pin: '012345' });
+    identity.emailModel.set({ email: 'person@example.test' });
+    fixture.detectChanges();
+    const change = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(
+      (button) => button.textContent?.includes('Change email'),
+    )!;
+
+    change.click();
+    await fixture.whenStable();
+    expect(identity.state()).toBe('email');
+    expect(identity.flowId()).toBe('');
+    expect(identity.identityFlowId()).toBe('');
+    expect(identity.otpModel().pin).toBe('');
+    expect(identity.emailModel().email).toBe('person@example.test');
+  });
 });

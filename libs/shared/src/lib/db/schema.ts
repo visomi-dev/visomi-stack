@@ -6,6 +6,12 @@ const users = pgTable(
   {
     id: text('id').primaryKey(),
     email: text('email').notNull(),
+    displayName: text('display_name').notNull().default(''),
+    preferencesConfigured: boolean('preferences_configured').notNull().default(false),
+    preferences: jsonb('preferences')
+      .$type<{ locale: 'en' | 'es'; theme: 'system' | 'light' | 'dark' }>()
+      .notNull()
+      .default({ locale: 'en', theme: 'system' }),
     emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
     passwordHash: text('password_hash'),
     authVersion: integer('auth_version').notNull().default(1),
@@ -52,6 +58,7 @@ const userSessions = pgTable('user_sessions', {
   sid: text('sid').primaryKey(),
   sess: jsonb('sess').notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
@@ -186,6 +193,7 @@ const authDeviceApprovalRequests = pgTable(
     approvalCredentialId: text('approval_credential_id'),
     approvedAt: timestamp('approved_at', { withTimezone: true }),
     deniedAt: timestamp('denied_at', { withTimezone: true }),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
     consumedAt: timestamp('consumed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

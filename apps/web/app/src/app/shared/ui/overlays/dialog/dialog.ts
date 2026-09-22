@@ -16,8 +16,14 @@ export class Dialog {
   readonly closed = output<void>();
   readonly open = input(false, { transform: booleanAttribute });
 
-  readonly scrollLockEffect = effect(() => {
-    this.document.body.classList.toggle('overflow-hidden', this.open());
+  readonly scrollLockEffect = effect((onCleanup) => {
+    if (!this.open()) return;
+    const alreadyLocked = this.document.body.classList.contains('overflow-hidden');
+
+    this.document.body.classList.add('overflow-hidden');
+    onCleanup(() => {
+      if (!alreadyLocked) this.document.body.classList.remove('overflow-hidden');
+    });
   });
 
   closeDialog(): void {

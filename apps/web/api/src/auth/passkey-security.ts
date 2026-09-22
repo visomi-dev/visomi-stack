@@ -42,6 +42,17 @@ export async function consumeAuthenticationVerificationLimit(
   return { allowed: result[0] <= maximum, retryAfter: Math.max(1, Math.ceil(result[1] / 1000)) };
 }
 
+export async function authenticationRateLimit(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const limit = await consumeAuthenticationVerificationLimit(req);
+
+  if (!limit.allowed) {
+    rateLimitResponse(res, limit.retryAfter);
+
+    return;
+  }
+  next();
+}
+
 function expectedOrigin(): string {
   return process.env.WEBAUTHN_ORIGIN ?? new URL(env.APP_BASE_URL).origin;
 }

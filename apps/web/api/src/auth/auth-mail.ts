@@ -4,6 +4,7 @@ import Mailgun from 'mailgun.js';
 import { env } from '../shared/env';
 
 import type { VerificationPurpose } from './auth-schemas';
+import { APP_NAME } from './auth-brand';
 
 import { HttpError } from 'shared';
 
@@ -46,12 +47,16 @@ export function getMailgunClient() {
 }
 
 export function createMessageBody(message: VerificationMessage) {
-  const intent = 'continue signing in or finish creating your account';
+  const intent =
+    message.purpose === 'email_change'
+      ? 'verify your new primary email address'
+      : 'continue signing in or finish creating your account';
+  const htmlName = APP_NAME.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   return {
-    html: `<p>Your Visomi Stack verification code is <strong>${message.pin}</strong>.</p><p>Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.</p>`,
-    subject: 'Your Visomi Stack verification code',
-    text: `Your Visomi Stack verification code is ${message.pin}. Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.`,
+    html: `<p>Your ${htmlName} verification code is <strong>${message.pin}</strong>.</p><p>Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.</p>`,
+    subject: `Your ${APP_NAME} verification code`,
+    text: `Your ${APP_NAME} verification code is ${message.pin}. Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.`,
   };
 }
 
@@ -79,9 +84,8 @@ export async function sendVerificationMessage(message: VerificationMessage) {
 }
 
 export async function sendRecoveryNotification(email: string): Promise<void> {
-  const subject = 'Your Visomi Stack account was recovered';
-  const text =
-    'A lower-assurance email recovery was completed for your Visomi Stack account. If you did not do this, secure your account immediately.';
+  const subject = `Your ${APP_NAME} account was recovered`;
+  const text = `A lower-assurance email recovery was completed for your ${APP_NAME} account. If you did not do this, secure your account immediately.`;
 
   if (env.MAIL_TRANSPORT === 'memory') {
     mailbox.push({
@@ -99,7 +103,7 @@ export async function sendRecoveryNotification(email: string): Promise<void> {
 
   await client.messages.create(env.MAILGUN_DOMAIN, {
     from: env.MAILGUN_FROM,
-    html: `<p>${text}</p>`,
+    html: `<p>${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`,
     subject,
     text,
     to: [email],
@@ -108,6 +112,27 @@ export async function sendRecoveryNotification(email: string): Promise<void> {
 
 export function listSentMessages() {
   return mailbox.map((message) => ({ ...message }));
+}
+
+export async function sendEmailChangeNotification(email: string): Promise<void> {
+  if (env.MAIL_TRANSPORT === 'memory') {
+    mailbox.push({
+      challengeId: 'email-change-notification',
+      email,
+      expiresAt: new Date(),
+      pin: '',
+      purpose: 'email_change',
+      sentAt: new Date(),
+    });
+
+    return;
+  }
+  await getMailgunClient().messages.create(env.MAILGUN_DOMAIN, {
+    from: env.MAILGUN_FROM,
+    to: [email],
+    subject: `Your ${APP_NAME} primary email changed`,
+    text: `Your ${APP_NAME} primary email address was changed after verification. All existing sessions have been invalidated. If you did not request this change, contact support and secure your account immediately.`,
+  });
 }
 
 export function clearMailbox() {

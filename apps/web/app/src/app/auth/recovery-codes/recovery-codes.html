@@ -1,10 +1,14 @@
+<app-security-confirmation />
 <app-auth-layout>
   <app-auth-card>
-    <p class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400">
+    <p
+      class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400"
+      i18n="@@recoverySecurityEyebrow"
+    >
       Account security
     </p>
-    <h1 class="font-heading mt-3 text-3xl font-bold">Recovery codes</h1>
-    <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+    <h1 class="font-heading mt-3 text-3xl font-bold" i18n="@@recoveryTitle">Recovery codes</h1>
+    <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400" i18n="@@recoveryDescription">
       Generate a new set of one-time codes for recovering access when your other factors are unavailable.
     </p>
     <button
@@ -13,13 +17,26 @@
       [disabled]="loading()"
       (click)="regenerate()"
     >
-      {{ loading() ? 'Confirming identity...' : 'Regenerate recovery codes' }}
+      @if (loading()) {
+        <span i18n="@@recoveryConfirming">Confirming identity...</span>
+      } @else {
+        <span i18n="@@recoveryRegenerate">Regenerate recovery codes</span>
+      }
     </button>
     @if (codes().length) {
-      <section class="mt-6 rounded-md border border-green-200 bg-green-50 p-4" aria-labelledby="codes-title">
-        <h2 id="codes-title" class="font-semibold">Your new recovery codes</h2>
-        <p class="mt-2 text-sm">Store these codes somewhere safe. The previous codes no longer work.</p>
-        <ul class="mt-4 grid grid-cols-2 gap-2 font-mono text-sm" aria-label="Recovery codes">
+      <section
+        class="mt-6 rounded-md bg-green-50 p-4 text-green-900 dark:bg-green-950 dark:text-green-200"
+        aria-labelledby="codes-title"
+      >
+        <h2 id="codes-title" class="font-semibold" i18n="@@recoveryNewCodes">Your new recovery codes</h2>
+        <p class="mt-2 text-sm" i18n="@@recoveryStoreCodes">
+          Store these codes somewhere safe. The previous codes no longer work.
+        </p>
+        <ul
+          class="mt-4 grid grid-cols-2 gap-2 font-mono text-sm"
+          aria-label="Recovery codes"
+          i18n-aria-label="@@recoveryCodesList"
+        >
           @for (code of codes(); track code) {
             <li>{{ code }}</li>
           }

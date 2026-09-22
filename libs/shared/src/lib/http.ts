@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import type { NextFunction, Request, Response } from 'express';
 
+import { logger } from './logger';
+
 export const errorEnvelopeSchema = z.object({
   code: z.string(),
   message: z.string(),
@@ -62,7 +64,14 @@ class HttpError extends Error {
 }
 
 export function errorHandler(error: unknown, _req: Request, res: Response, _next: NextFunction) {
-  console.error('[ error ] API request failed', redactedErrorDetails(error));
+  const details = redactedErrorDetails(error);
+
+  // Application error codes remain unchanged in responses, but may be arbitrary
+  // strings. Use a fixed operational category rather than logging that input.
+  logger.error(
+    { code: error instanceof HttpError ? 'http_error' : details.code, statusCode: details.statusCode },
+    'API request failed',
+  );
 
   if (error instanceof HttpError) {
     res.status(error.statusCode).send({

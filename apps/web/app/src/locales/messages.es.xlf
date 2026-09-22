@@ -2,6 +2,95 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file source-language="en-US" target-language="es" datatype="plaintext" original="ng2.template">
     <body>
+      <trans-unit id="accountTitle" datatype="html"><source>Your account</source><target>Tu cuenta</target></trans-unit>
+      <trans-unit id="accountSignIn" datatype="html"><source>Go to sign in</source><target>Ir a iniciar sesión</target></trans-unit>
+      <trans-unit id="accountProfileTitle" datatype="html"><source>Profile and preferences</source><target>Perfil y preferencias</target></trans-unit>
+      <trans-unit id="accountPreferencesHelp" datatype="html"><source> Saving applies these preferences now. Toolbar changes stay local and do not update your saved preferences. </source><target>Al guardar, estas preferencias se aplican de inmediato. Los cambios de la barra de herramientas son locales y no modifican tus preferencias guardadas.</target></trans-unit>
+      <trans-unit id="accountDisplayName" datatype="html"><source>Display name</source><target>Nombre para mostrar</target></trans-unit>
+      <trans-unit id="accountLocale" datatype="html"><source>Preferred language</source><target>Idioma preferido</target></trans-unit>
+      <trans-unit id="accountEnglish" datatype="html"><source>English</source><target>Inglés</target></trans-unit>
+      <trans-unit id="accountSpanish" datatype="html"><source>Spanish</source><target>Español</target></trans-unit>
+      <trans-unit id="accountTheme" datatype="html"><source>Preferred appearance</source><target>Apariencia preferida</target></trans-unit>
+      <trans-unit id="accountSystem" datatype="html"><source>System</source><target>Sistema</target></trans-unit>
+      <trans-unit id="accountLight" datatype="html"><source>Light</source><target>Clara</target></trans-unit>
+      <trans-unit id="accountDark" datatype="html"><source>Dark</source><target>Oscura</target></trans-unit>
+      <trans-unit id="accountSave" datatype="html"><source> Save profile </source><target>Guardar perfil</target></trans-unit>
+      <trans-unit id="accountEmailTitle" datatype="html"><source>Primary email</source><target>Correo electrónico principal</target></trans-unit>
+      <trans-unit id="accountEmailDescription" datatype="html"><source> Verify the new address before it becomes your primary email. We will notify your previous address and sign out your existing sessions. </source><target>Verifica la nueva dirección antes de que se convierta en tu correo principal. Avisaremos a tu dirección anterior y cerraremos tus sesiones existentes.</target></trans-unit>
+      <trans-unit id="accountNewEmail" datatype="html"><source>New email address</source><target>Nueva dirección de correo electrónico</target></trans-unit>
+      <trans-unit id="accountSendCode" datatype="html"><source> Send a new verification code </source><target>Enviar un nuevo código de verificación</target></trans-unit>
+      <trans-unit id="accountCodeDestination" datatype="html"><source>Code sent to <x id="INTERPOLATION" equiv-text="{{ challenge.email }}"/>.</source><target>Código enviado a <x id="INTERPOLATION" equiv-text="{{ challenge.email }}"/>.</target></trans-unit>
+      <trans-unit id="accountCodeLabel" datatype="html"><source>Verification code</source><target>Código de verificación</target></trans-unit>
+      <trans-unit id="accountVerifyEmail" datatype="html"><source> Verify and change email </source><target>Verificar y cambiar el correo</target></trans-unit>
+      <trans-unit id="accountExportTitle" datatype="html"><source> Export profile metadata </source><target>Exportar metadatos del perfil</target></trans-unit>
+      <trans-unit id="accountExportScope" datatype="html"><source> Includes your profile, saved preferences, and membership metadata. This is not a workspace or document backup. It excludes passwords, sessions, authenticator secrets, recovery codes, document contents, and client keys. </source><target>Incluye tu perfil, las preferencias guardadas y los metadatos de tus membresías. No es una copia de seguridad de espacios de trabajo ni de documentos. Excluye contraseñas, sesiones, secretos del autenticador, códigos de recuperación, contenido de documentos y claves del cliente.</target></trans-unit>
+      <trans-unit id="accountExport" datatype="html"><source> Download metadata </source><target>Descargar metadatos</target></trans-unit>
+      <trans-unit id="accountLeaveTitle" datatype="html"><source> Leave this workspace </source><target>Salir de este espacio de trabajo</target></trans-unit>
+      <trans-unit id="accountLeaveScope" datatype="html"><source> Leaving takes effect immediately and removes only your membership in this workspace. Your global identity and other memberships remain. The shared workspace and its records are preserved. This does not delete your account. </source><target>La salida es inmediata y solo elimina tu membresía en este espacio de trabajo. Tu identidad global y tus otras membresías se conservan. El espacio de trabajo compartido y sus registros se mantienen. Esto no elimina tu cuenta.</target></trans-unit>
+      <trans-unit id="accountTransferRequired" datatype="html"><source>Transfer ownership to another existing member before leaving.</source><target>Transfiere la propiedad a otro miembro existente antes de salir.</target></trans-unit>
+      <trans-unit id="accountTransferMember" datatype="html"><source>New workspace owner</source><target>Nuevo propietario del espacio de trabajo</target></trans-unit>
+      <trans-unit id="accountChooseMember" datatype="html"><source>Choose an existing member</source><target>Elige un miembro existente</target></trans-unit>
+      <trans-unit id="accountNoMembers" datatype="html"><source>Invite another person to this workspace before transferring ownership.</source><target>Invita a otra persona a este espacio de trabajo antes de transferir la propiedad.</target></trans-unit>
+      <trans-unit id="accountTransfer" datatype="html"><source> Transfer ownership </source><target>Transferir propiedad</target></trans-unit>
+      <trans-unit id="accountLeave" datatype="html"><source> Leave workspace immediately </source><target>Salir del espacio de trabajo inmediatamente</target></trans-unit>
+      <trans-unit id="accountNameLength" datatype="html"><source>Use 100 characters or fewer.</source><target>Usa 100 caracteres o menos.</target></trans-unit>
+      <trans-unit id="accountEmailRequired" datatype="html"><source>Enter your new email address.</source><target>Introduce tu nueva dirección de correo electrónico.</target></trans-unit>
+      <trans-unit id="accountEmailInvalid" datatype="html"><source>Enter a valid email address.</source><target>Introduce una dirección de correo electrónico válida.</target></trans-unit>
+      <trans-unit id="accountEmailLength" datatype="html"><source>Use 254 characters or fewer.</source><target>Usa 254 caracteres o menos.</target></trans-unit>
+      <trans-unit id="accountCodeInvalid" datatype="html"><source>Enter the 6-digit code sent to your new address.</source><target>Introduce el código de 6 dígitos enviado a tu nueva dirección.</target></trans-unit>
+      <trans-unit id="accountMemberRequired" datatype="html"><source>Choose an existing workspace member.</source><target>Elige un miembro existente del espacio de trabajo.</target></trans-unit>
+      <trans-unit id="accountProfileSaved" datatype="html"><source>Your profile and preferences were saved.</source><target>Se guardaron tu perfil y tus preferencias.</target></trans-unit>
+      <trans-unit id="accountPreferencesApplyFailed" datatype="html"><source>Your profile was saved, but the display preferences could not be applied. Reload this page to try again.</source><target>Se guardó tu perfil, pero no se pudieron aplicar las preferencias de visualización. Recarga esta página para volver a intentarlo.</target></trans-unit>
+      <trans-unit id="accountEmailConfirm" datatype="html"><source>Confirm your identity to request a new primary email address.</source><target>Confirma tu identidad para solicitar una nueva dirección de correo principal.</target></trans-unit>
+      <trans-unit id="accountEmailSent" datatype="html"><source>Check your new email address for a code. Your primary address has not changed yet.</source><target>Busca el código en tu nueva dirección de correo. Tu dirección principal todavía no ha cambiado.</target></trans-unit>
+      <trans-unit id="accountEmailChanged" datatype="html"><source>Your email was changed and your previous address was notified. Sign in again with your new address.</source><target>Se cambió tu correo y se avisó a tu dirección anterior. Vuelve a iniciar sesión con tu nueva dirección.</target></trans-unit>
+      <trans-unit id="accountEmailChangedNoticeFailed" datatype="html"><source>Your email was changed, but the notification to your previous address could not be sent. Sign in again with your new address.</source><target>Se cambió tu correo, pero no se pudo enviar el aviso a tu dirección anterior. Vuelve a iniciar sesión con tu nueva dirección.</target></trans-unit>
+      <trans-unit id="accountTransferConfirm" datatype="html"><source>Confirm the transfer of this workspace to the selected member. You will remain a member until you leave.</source><target>Confirma la transferencia de este espacio de trabajo al miembro seleccionado. Seguirás siendo miembro hasta que salgas.</target></trans-unit>
+      <trans-unit id="accountTransferred" datatype="html"><source>Ownership was transferred. You can now leave this workspace.</source><target>Se transfirió la propiedad. Ya puedes salir de este espacio de trabajo.</target></trans-unit>
+      <trans-unit id="accountLeaveConfirm" datatype="html"><source>Leave <x id="workspace" equiv-text="workspace.name"/> immediately? Your identity, other memberships, and the shared workspace will be preserved.</source><target>¿Salir de <x id="workspace" equiv-text="workspace.name"/> inmediatamente? Tu identidad, tus otras membresías y el espacio de trabajo compartido se conservarán.</target></trans-unit>
+      <trans-unit id="accountLeft" datatype="html"><source>You left this workspace. Sign in again to access your other workspaces.</source><target>Saliste de este espacio de trabajo. Vuelve a iniciar sesión para acceder a tus otros espacios de trabajo.</target></trans-unit>
+      <trans-unit id="accountLeftLast" datatype="html"><source>You left this workspace. Your identity is preserved, but you no longer have workspace access. Ask a workspace owner for an invitation.</source><target>Saliste de este espacio de trabajo. Tu identidad se conserva, pero ya no tienes acceso a ningún espacio de trabajo. Solicita una invitación a un propietario.</target></trans-unit>
+      <trans-unit id="accountExported" datatype="html"><source>Your profile and membership metadata export is ready.</source><target>Tu exportación de metadatos del perfil y de tus membresías está lista.</target></trans-unit>
+      <trans-unit id="accountRateLimited" datatype="html"><source>Too many attempts. Wait before trying again.</source><target>Demasiados intentos. Espera antes de volver a intentarlo.</target></trans-unit>
+      <trans-unit id="accountOwnerBlocked" datatype="html"><source>Transfer ownership to another workspace member before leaving.</source><target>Transfiere la propiedad a otro miembro del espacio de trabajo antes de salir.</target></trans-unit>
+      <trans-unit id="accountMemberInvalid" datatype="html"><source>Choose another existing member of this workspace.</source><target>Elige otro miembro existente de este espacio de trabajo.</target></trans-unit>
+      <trans-unit id="accountEmailUnavailable" datatype="html"><source>This email address is unavailable. Choose another address.</source><target>Esta dirección de correo no está disponible. Elige otra dirección.</target></trans-unit>
+      <trans-unit id="accountEmailUnchanged" datatype="html"><source>Enter a different email address.</source><target>Introduce una dirección de correo diferente.</target></trans-unit>
+      <trans-unit id="accountCodeMismatch" datatype="html"><source>That code is not valid. Check the message sent to your new address.</source><target>Ese código no es válido. Revisa el mensaje enviado a tu nueva dirección.</target></trans-unit>
+      <trans-unit id="accountCodeExpired" datatype="html"><source>This verification is no longer available. Request a new code.</source><target>Esta verificación ya no está disponible. Solicita un nuevo código.</target></trans-unit>
+      <trans-unit id="accountDeliveryFailed" datatype="html"><source>The code could not be sent. Your primary email has not changed.</source><target>No se pudo enviar el código. Tu correo principal no ha cambiado.</target></trans-unit>
+      <trans-unit id="accountSignInRequired" datatype="html"><source>Your session changed. Sign in again before continuing.</source><target>Tu sesión cambió. Vuelve a iniciar sesión antes de continuar.</target></trans-unit>
+      <trans-unit id="accountRequestFailed" datatype="html"><source>The request could not be completed. Check the current state before trying again.</source><target>No se pudo completar la solicitud. Comprueba el estado actual antes de volver a intentarlo.</target></trans-unit>
+      <trans-unit id="securityKeepAccessMethod" datatype="html"><source>Set up and verify another sign-in method before removing this one.</source><target>Configura y verifica otro método de inicio de sesión antes de eliminar este.</target></trans-unit>
+      <trans-unit id="securityManageSessions" datatype="html"><source>Manage active sessions</source><target>Administrar sesiones activas</target></trans-unit>
+      <trans-unit id="securityFirstPasskeyIntro" datatype="html"><source>Confirm your password and verification code before creating your first passkey.</source><target>Confirma tu contraseña y el código de verificación antes de crear tu primera clave de acceso.</target></trans-unit>
+      <trans-unit id="securityFirstPasskeyTotp" datatype="html"><source>Enter the code from your authenticator app.</source><target>Introduce el código de tu aplicación de autenticación.</target></trans-unit>
+      <trans-unit id="securityFirstPasskeyEmail" datatype="html"><source>Enter the code we sent to your verified email.</source><target>Introduce el código que enviamos a tu correo verificado.</target></trans-unit>
+      <trans-unit id="securityFirstPasskeyConfirm" datatype="html"><source>Confirm enrollment</source><target>Confirmar registro</target></trans-unit>
+      <trans-unit id="securityFirstPasskeyUnavailable" datatype="html"><source>Password verification is not available. Return to Security and configure an eligible recovery method.</source><target>La verificación con contraseña no está disponible. Vuelve a Seguridad y configura un método de recuperación compatible.</target></trans-unit>
+      <trans-unit id="securityFirstPasskeyFailed" datatype="html"><source>We could not confirm this enrollment. Check your password or verification code and try again.</source><target>No pudimos confirmar este registro. Revisa tu contraseña o el código de verificación e inténtalo de nuevo.</target></trans-unit>
+      <trans-unit id="layoutMenuAccount" datatype="html"><source>Account</source><target>Cuenta</target></trans-unit>
+      <trans-unit id="sessionsSignOutCurrent" datatype="html"><source> Sign out current session </source><target>Cerrar la sesión actual</target></trans-unit>
+      <trans-unit id="sessionsBack" datatype="html"><source>Back to security</source><target>Volver a seguridad</target></trans-unit>
+      <trans-unit id="sessionsTitle" datatype="html"><source>Active sessions</source><target>Sesiones activas</target></trans-unit>
+      <trans-unit id="sessionsDescription" datatype="html"><source>Review your signed-in sessions and sign out sessions you no longer use.</source><target>Revisa tus sesiones abiertas y cierra las que ya no uses.</target></trans-unit>
+      <trans-unit id="sessionsRetry" datatype="html"><source>Retry</source><target>Reintentar</target></trans-unit>
+      <trans-unit id="sessionsLoading" datatype="html"><source>Loading sessions...</source><target>Cargando sesiones...</target></trans-unit>
+      <trans-unit id="sessionsRevokeOthers" datatype="html"><source> Sign out all other sessions </source><target>Cerrar todas las demás sesiones</target></trans-unit>
+      <trans-unit id="sessionsCurrent" datatype="html"><source>Current session</source><target>Sesión actual</target></trans-unit>
+      <trans-unit id="sessionsStarted" datatype="html"><source>Started</source><target>Inicio</target></trans-unit>
+      <trans-unit id="sessionsLastActive" datatype="html"><source>Last active</source><target>Última actividad</target></trans-unit>
+      <trans-unit id="sessionsExpires" datatype="html"><source>Expires</source><target>Vencimiento</target></trans-unit>
+      <trans-unit id="sessionsRevokeOne" datatype="html"><source> Sign out this session </source><target>Cerrar esta sesión</target></trans-unit>
+      <trans-unit id="sessionsEmpty" datatype="html"><source>No active sessions found.</source><target>No se encontraron sesiones activas.</target></trans-unit>
+      <trans-unit id="sessionsLoadError" datatype="html"><source>Sessions could not be loaded. Try again.</source><target>No se pudieron cargar las sesiones. Inténtalo de nuevo.</target></trans-unit>
+      <trans-unit id="sessionsMethodPassword" datatype="html"><source>Password</source><target>Contraseña</target></trans-unit>
+      <trans-unit id="sessionsMethodPasskey" datatype="html"><source>Passkey</source><target>Clave de acceso</target></trans-unit>
+      <trans-unit id="sessionsMethodUnknown" datatype="html"><source>Not recorded</source><target>No registrado</target></trans-unit>
+      <trans-unit id="sessionsConfirmOne" datatype="html"><source>Sign out this session?</source><target>¿Cerrar esta sesión?</target></trans-unit>
+      <trans-unit id="sessionsConfirmOthers" datatype="html"><source>Sign out all other sessions? This session will stay signed in.</source><target>¿Cerrar todas las demás sesiones? Esta sesión permanecerá abierta.</target></trans-unit>
+      <trans-unit id="sessionsRevoked" datatype="html"><source>Session revocation completed.</source><target>Se completó el cierre de sesiones.</target></trans-unit>
+      <trans-unit id="sessionsRevokeError" datatype="html"><source>Sessions could not be revoked. Try again.</source><target>No se pudieron cerrar las sesiones. Inténtalo de nuevo.</target></trans-unit>
       <trans-unit id="signupPasswordMaximum" datatype="html"><source>Use 128 characters or fewer.</source><target>Usa 128 caracteres o menos.</target></trans-unit>
       <trans-unit id="signupFailed" datatype="html"><source>We could not create your account.</source><target>No pudimos crear tu cuenta.</target></trans-unit>
       <trans-unit id="signupCodeFailed" datatype="html"><source>That verification code is not valid.</source><target>Ese código de verificación no es válido.</target></trans-unit>
@@ -65,8 +154,8 @@
         <target> Acceso seguro a tu cuenta </target>
       </trans-unit>
       <trans-unit id="identityTitle" datatype="html">
-        <source> Sign in to Visomi Stack </source>
-        <target> Inicia sesión en Visomi Stack </target>
+        <source> Sign in to <x id="INTERPOLATION" equiv-text="{{ appName }}"/> </source>
+        <target> Inicia sesión en <x id="INTERPOLATION" equiv-text="{{ appName }}"/> </target>
       </trans-unit>
       <trans-unit id="identityDescription" datatype="html">
         <source> Use a passkey saved on this device, another device, or a security key. </source>
@@ -109,8 +198,8 @@
         <target> Iniciar sesión con contraseña </target>
       </trans-unit>
       <trans-unit id="identityPasswordDescription" datatype="html">
-        <source> Password sign-in requires a verification code selected by the server. </source>
-        <target> Para iniciar sesión con contraseña necesitas un código de verificación del método indicado para tu cuenta. </target>
+        <source> After your password, we will ask for a code to confirm it is you. </source>
+        <target> Después de tu contraseña, te pediremos un código para confirmar que eres tú. </target>
       </trans-unit>
       <trans-unit id="identityPasswordEmailLabel" datatype="html">
         <source>Email address</source>
@@ -345,8 +434,8 @@
         <target> Verificar clave de acceso </target>
       </trans-unit>
       <trans-unit id="identitySuccess" datatype="html">
-        <source> Passkey verified. Opening Visomi Stack... </source>
-        <target> Clave de acceso verificada. Abriendo Visomi Stack… </target>
+        <source> Identity confirmed. Opening your account… </source>
+        <target> Identidad confirmada. Abriendo tu cuenta… </target>
       </trans-unit>
       <trans-unit id="identityEmailRequired" datatype="html">
         <source>Enter an email you can verify.</source>
@@ -530,7 +619,7 @@
       </trans-unit>
       <trans-unit id="securityTitle" datatype="html">
         <source> Security </source>
-        <target> Security </target>
+        <target> Seguridad </target>
       </trans-unit>
       <trans-unit id="securitySubtitle" datatype="html">
         <source> Manage the devices and security keys that can sign in to your account. </source>
@@ -538,7 +627,7 @@
       </trans-unit>
       <trans-unit id="securityLoading" datatype="html">
         <source>Loading security settings...</source>
-        <target> Loading security settings... </target>
+        <target> Cargando los ajustes de seguridad… </target>
       </trans-unit>
       <trans-unit id="securityApproveDeviceTitle" datatype="html">
         <source>Approve a new device</source>
@@ -550,7 +639,7 @@
       </trans-unit>
       <trans-unit id="securityStartApproval" datatype="html">
         <source> Create approval request </source>
-        <target> Create approval request </target>
+        <target> Crear solicitud de aprobación </target>
       </trans-unit>
       <trans-unit id="securityApprovalRequestLabel" datatype="html">
         <source>Approval request ID</source>
@@ -566,7 +655,7 @@
       </trans-unit>
       <trans-unit id="securityNoFederated" datatype="html">
         <source>None linked.</source>
-        <target> None linked. </target>
+        <target> No hay cuentas conectadas. </target>
       </trans-unit>
       <trans-unit id="securityRevokeFederated" datatype="html">
         <source> Revoke </source>
@@ -578,7 +667,7 @@
       </trans-unit>
       <trans-unit id="securityNoTrusted" datatype="html">
         <source>None active.</source>
-        <target> None active. </target>
+        <target> No hay dispositivos activos. </target>
       </trans-unit>
       <trans-unit id="securityRevokeDevice" datatype="html">
         <source> Revoke </source>
@@ -586,15 +675,15 @@
       </trans-unit>
       <trans-unit id="securityRecoveryEvents" datatype="html">
         <source>Recovery activity</source>
-        <target> Recovery activity </target>
+        <target> Actividad de recuperación </target>
       </trans-unit>
       <trans-unit id="securityNoRecovery" datatype="html">
         <source>No recent recovery events.</source>
-        <target> No recent recovery events. </target>
+        <target> No hay actividad de recuperación reciente. </target>
       </trans-unit>
       <trans-unit id="securityPasskeysTitle" datatype="html">
         <source> Passkeys </source>
-        <target> Passkeys </target>
+        <target> Claves de acceso </target>
       </trans-unit>
       <trans-unit id="securityPasskeysSubtitle" datatype="html">
         <source> Devices and security keys that can sign in to your account. </source>
@@ -602,11 +691,11 @@
       </trans-unit>
       <trans-unit id="securityAddPasskey" datatype="html">
         <source> Add passkey </source>
-        <target> Add passkey </target>
+        <target> Añadir clave de acceso </target>
       </trans-unit>
       <trans-unit id="securityNoPasskeysTitle" datatype="html">
         <source>No passkeys yet</source>
-        <target> No passkeys yet </target>
+        <target> Aún no hay claves de acceso </target>
       </trans-unit>
       <trans-unit id="securityNoPasskeysBody" datatype="html">
         <source> Add a passkey to sign in without a password. Your passkey stays on your device. </source>
@@ -626,11 +715,11 @@
       </trans-unit>
       <trans-unit id="securityRenameButton" datatype="html">
         <source> Rename </source>
-        <target> Rename </target>
+        <target> Cambiar nombre </target>
       </trans-unit>
       <trans-unit id="securityRevokeButton" datatype="html">
         <source> Revoke </source>
-        <target> Revoke </target>
+        <target> Revocar </target>
       </trans-unit>
       <trans-unit id="securityAddPasskeyEyebrow" datatype="html">
         <source> New access method </source>
@@ -638,15 +727,15 @@
       </trans-unit>
       <trans-unit id="securityAddPasskeyTitle" datatype="html">
         <source>Add a passkey</source>
-        <target> Add a passkey </target>
+        <target> Añadir una clave de acceso </target>
       </trans-unit>
       <trans-unit id="securityAddPasskeyBody" datatype="html">
         <source> Confirm an existing passkey, then choose this device, another device, or a security key. </source>
-        <target> Confirm an existing passkey, then choose this device, another device, or a security key. </target>
+        <target> Confirma una clave existente y después elige este dispositivo, otro dispositivo o una llave de seguridad. </target>
       </trans-unit>
       <trans-unit id="securityAddPasskeyNameLabel" datatype="html">
         <source>Passkey name</source>
-        <target> Passkey name </target>
+        <target> Nombre de la clave de acceso </target>
       </trans-unit>
       <trans-unit id="securityAddPasskeyNameHelp" datatype="html">
         <source> Use a recognizable device name. </source>
@@ -658,11 +747,11 @@
       </trans-unit>
       <trans-unit id="securityCancelButton" datatype="html">
         <source> Cancel </source>
-        <target> Cancel </target>
+        <target> Cancelar </target>
       </trans-unit>
       <trans-unit id="securityRenameTitle" datatype="html">
         <source>Rename passkey</source>
-        <target> Rename passkey </target>
+        <target> Cambiar nombre de la clave </target>
       </trans-unit>
       <trans-unit id="securityRenameBody" datatype="html">
         <source> Only the account-local label changes. The passkey stays on the same device. </source>
@@ -674,7 +763,7 @@
       </trans-unit>
       <trans-unit id="securityRenameSave" datatype="html">
         <source> Save name </source>
-        <target> Save name </target>
+        <target> Guardar nombre </target>
       </trans-unit>
       <trans-unit id="securityRevokeEyebrow" datatype="html">
         <source> Permanent security change </source>
@@ -682,7 +771,7 @@
       </trans-unit>
       <trans-unit id="securityRevokeBody" datatype="html">
         <source> This passkey will stop signing in immediately and cannot be restored. </source>
-        <target> This passkey will stop signing in immediately and cannot be restored. </target>
+        <target> Esta clave dejará de permitir el acceso inmediatamente y no se podrá restaurar. </target>
       </trans-unit>
       <trans-unit id="securityRevokeProtection" datatype="html">
         <source>Access protection</source>
@@ -690,7 +779,7 @@
       </trans-unit>
       <trans-unit id="securityRevokeProtectionBody" datatype="html">
         <source>You must keep another active passkey.</source>
-        <target> You must keep another active passkey. </target>
+        <target> Debes conservar otra clave de acceso activa. </target>
       </trans-unit>
       <trans-unit id="securityRevokeSubmit" datatype="html">
         <source> <x id="INTERPOLATION" equiv-text="{{ passkeySubmitting() ? &apos;Confirming...&apos; : &apos;Confirm passkey and revoke&apos; }}"/> </source>
@@ -836,6 +925,164 @@
         <source>Estimated resistance to guessing, not a guarantee.</source>
         <target> Estimated resistance to guessing, not a guarantee. </target>
       </trans-unit>
+      <trans-unit id="accessResendCountdown" datatype="html"><source>Resend code in <x id="INTERPOLATION" equiv-text="resendSeconds()"/> seconds</source><target>Reenviar código en <x id="INTERPOLATION" equiv-text="resendSeconds()"/> segundos</target></trans-unit>
+      <trans-unit id="accessCodeResent" datatype="html"><source>We sent a new code. Check your email.</source><target>Te enviamos un nuevo código. Revisa tu correo.</target></trans-unit>
+      <trans-unit id="accessRestartVerification" datatype="html"><source>Start verification again</source><target>Reiniciar la verificación</target></trans-unit>
+      <trans-unit id="accessUseAnotherMethod" datatype="html"><source>Use another method</source><target>Usar otro método</target></trans-unit>
+      <trans-unit id="accessChangeEmail" datatype="html"><source>Change email</source><target>Cambiar correo</target></trans-unit>
+      <trans-unit id="accessRateLimited" datatype="html"><source>Too many attempts. Wait a moment before trying again.</source><target>Demasiados intentos. Espera un momento antes de volver a intentarlo.</target></trans-unit>
+      <trans-unit id="accessVerificationRestart" datatype="html"><source>This verification can no longer continue. Start again to get a new code.</source><target>Esta verificación ya no puede continuar. Empieza de nuevo para obtener otro código.</target></trans-unit>
+      <trans-unit id="accessVerificationOffline" datatype="html"><source>We could not connect. Check your connection and try again.</source><target>No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.</target></trans-unit>
+      <trans-unit id="identityPasskeyIncomplete" datatype="html"><source>Passkey sign-in was not completed. Try again or use another method.</source><target>No se completó el acceso con la clave. Inténtalo de nuevo o usa otro método.</target></trans-unit>
+      <trans-unit id="securityReplaceCodes" datatype="html"><source>Confirm your identity to replace your recovery codes. Previous codes will stop working.</source><target>Confirma tu identidad para reemplazar tus códigos de recuperación. Los anteriores dejarán de funcionar.</target></trans-unit>
+      <trans-unit id="securityRecoveryFailed" datatype="html"><source>Recovery codes could not be regenerated.</source><target>No se pudieron regenerar los códigos de recuperación.</target></trans-unit>
+      <trans-unit id="securitySetupAuthenticator" datatype="html"><source>Confirm your identity to set up your authenticator app.</source><target>Confirma tu identidad para configurar tu aplicación de autenticación.</target></trans-unit>
+      <trans-unit id="securityChangePassword" datatype="html"><source>Confirm your identity to change your password.</source><target>Confirma tu identidad para cambiar tu contraseña.</target></trans-unit>
+      <trans-unit id="securityRemovePassword" datatype="html"><source>Confirm your identity to remove password access.</source><target>Confirma tu identidad para eliminar el acceso con contraseña.</target></trans-unit>
+      <trans-unit id="securityConfirmTitle" datatype="html"><source>Confirm your identity</source><target>Confirma tu identidad</target></trans-unit>
+      <trans-unit id="securityChooseAction" datatype="html"><source>Choose an action in Security first. We will ask you to confirm your identity when that action needs it.</source><target>Primero elige una acción en Seguridad. Te pediremos confirmar tu identidad cuando sea necesario para esa acción.</target></trans-unit>
+      <trans-unit id="securityReturn" datatype="html"><source>Back to Security</source><target>Volver a Seguridad</target></trans-unit>
+      <trans-unit id="securityLinkGoogle" datatype="html"><source>Confirm your identity before connecting your Google account.</source><target>Confirma tu identidad antes de conectar tu cuenta de Google.</target></trans-unit>
+      <trans-unit id="securityGoogleLinkFailed" datatype="html"><source>Google linking could not be started.</source><target>No se pudo iniciar la conexión con Google.</target></trans-unit>
+      <trans-unit id="securityAccessRemoved" datatype="html"><source>Access through this method has been removed.</source><target>Se ha eliminado el acceso mediante este método.</target></trans-unit>
+      <trans-unit id="securityUpdateFailed" datatype="html"><source>We could not update this access method. Check its current status before trying again.</source><target>No pudimos actualizar este método de acceso. Comprueba su estado antes de volver a intentarlo.</target></trans-unit>
+      <trans-unit id="securityCodesReplaced" datatype="html"><source>Recovery codes replaced</source><target>Códigos de recuperación reemplazados</target></trans-unit>
+      <trans-unit id="securityRecoveryStarted" datatype="html"><source>Account recovery started</source><target>Recuperación de cuenta iniciada</target></trans-unit>
+      <trans-unit id="securityRecoveryActivity" datatype="html"><source>Account recovery activity</source><target>Actividad de recuperación de cuenta</target></trans-unit>
+      <trans-unit id="securityPasskeysLoadFailed" datatype="html"><source>Passkeys could not be loaded.</source><target>No se pudieron cargar las claves de acceso.</target></trans-unit>
+      <trans-unit id="securityOverviewUnavailable" datatype="html"><source>We could not load your account overview. Your passkeys are still available.</source><target>No pudimos cargar el resumen de tu cuenta. Tus claves de acceso siguen disponibles.</target></trans-unit>
+      <trans-unit id="securityAddAction" datatype="html"><source>Confirm your passkey to add a new sign-in method.</source><target>Confirma tu clave de acceso para añadir un nuevo método de inicio de sesión.</target></trans-unit>
+      <trans-unit id="securityRenameAction" datatype="html"><source>Confirm your passkey to rename this sign-in method.</source><target>Confirma tu clave de acceso para cambiar el nombre de este método.</target></trans-unit>
+      <trans-unit id="securityRevokeAction" datatype="html"><source>Confirm your passkey to remove this sign-in method.</source><target>Confirma tu clave de acceso para eliminar este método de inicio de sesión.</target></trans-unit>
+      <trans-unit id="securityKeepPasskey" datatype="html"><source>Keep another active passkey before removing this one.</source><target>Mantén otra clave de acceso activa antes de eliminar esta.</target></trans-unit>
+      <trans-unit id="securityPasskeyActionFailed" datatype="html"><source>We could not complete this passkey action. Check its current status before trying again.</source><target>No pudimos completar esta acción. Comprueba el estado de la clave antes de volver a intentarlo.</target></trans-unit>
+      <trans-unit id="securityAccountEyebrow" datatype="html"><source>Your account</source><target>Tu cuenta</target></trans-unit>
+      <trans-unit id="securityOverviewDescription" datatype="html"><source>Choose how you sign in and keep a way to recover access.</source><target>Elige cómo iniciar sesión y conserva una forma de recuperar el acceso.</target></trans-unit>
+      <trans-unit id="securitySignInMethods" datatype="html"><source>Sign-in methods</source><target>Métodos de inicio de sesión</target></trans-unit>
+      <trans-unit id="securityPasskeyStorage" datatype="html"><source>Your passkey is stored by your device or passkey provider and may sync across your devices.</source><target>Tu dispositivo o proveedor guarda la clave de acceso y puede sincronizarla entre tus dispositivos.</target></trans-unit>
+      <trans-unit id="securityRetryPasskeys" datatype="html"><source>Reload passkeys</source><target>Volver a cargar las claves</target></trans-unit>
+      <trans-unit id="securityPasskeyCreatedDate" datatype="html"><source>Created: <x id="INTERPOLATION"/></source><target>Creada: <x id="INTERPOLATION"/></target></trans-unit>
+      <trans-unit id="securityPasskeyUsedDate" datatype="html"><source>Last used: <x id="INTERPOLATION"/></source><target>Último uso: <x id="INTERPOLATION"/></target></trans-unit>
+      <trans-unit id="securityPasswordAuthenticator" datatype="html"><source>Password and authenticator</source><target>Contraseña y autenticador</target></trans-unit>
+      <trans-unit id="securityPasswordStatus" datatype="html"><source>Password: <x id="INTERPOLATION"/></source><target>Contraseña: <x id="INTERPOLATION"/></target></trans-unit>
+      <trans-unit id="securityAuthenticatorStatus" datatype="html"><source>Authenticator: <x id="INTERPOLATION"/></source><target>Autenticador: <x id="INTERPOLATION"/></target></trans-unit>
+      <trans-unit id="securityManagePassword" datatype="html"><source>Manage password and authenticator</source><target>Gestionar contraseña y autenticador</target></trans-unit>
+      <trans-unit id="securityConnectedAccounts" datatype="html"><source>Connected accounts</source><target>Cuentas conectadas</target></trans-unit>
+      <trans-unit id="securityConnectGoogle" datatype="html"><source>Connect Google</source><target>Conectar Google</target></trans-unit>
+      <trans-unit id="securityDisconnect" datatype="html"><source>Disconnect</source><target>Desconectar</target></trans-unit>
+      <trans-unit id="securityOverviewLoading" datatype="html"><source>Loading your account overview…</source><target>Cargando el resumen de tu cuenta…</target></trans-unit>
+      <trans-unit id="securityRetryOverview" datatype="html"><source>Reload account overview</source><target>Volver a cargar el resumen</target></trans-unit>
+      <trans-unit id="securityAccountRecovery" datatype="html"><source>Account recovery</source><target>Recuperación de la cuenta</target></trans-unit>
+      <trans-unit id="securityRecoveryCount" datatype="html"><source>Unused recovery codes: <x id="INTERPOLATION"/></source><target>Códigos de recuperación sin usar: <x id="INTERPOLATION"/></target></trans-unit>
+      <trans-unit id="securityManageRecovery" datatype="html"><source>Manage recovery codes</source><target>Gestionar códigos de recuperación</target></trans-unit>
+      <trans-unit id="securityDevicesActivity" datatype="html"><source>Trusted devices and activity</source><target>Dispositivos de confianza y actividad</target></trans-unit>
+      <trans-unit id="securityDevicesExplanation" datatype="html"><source>These are trusted-device records, not a list of your active sessions.</source><target>Estos son registros de dispositivos de confianza, no una lista de tus sesiones activas.</target></trans-unit>
+      <trans-unit id="securitySetupDevice" datatype="html"><source>Set up another device</source><target>Configurar otro dispositivo</target></trans-unit>
+      <trans-unit id="securityTrustedDeviceDate" datatype="html"><source>Trusted device added <x id="INTERPOLATION"/></source><target>Dispositivo de confianza añadido el <x id="INTERPOLATION"/></target></trans-unit>
+      <trans-unit id="securityDeviceExpiry" datatype="html"><source>Trust expires <x id="INTERPOLATION"/></source><target>La confianza vence el <x id="INTERPOLATION"/></target></trans-unit>
+      <trans-unit id="securityRemoveAccessTitle" datatype="html"><source>Remove this access method?</source><target>¿Eliminar este método de acceso?</target></trans-unit>
+      <trans-unit id="securityRemoveAccessBody" datatype="html"><source>This removes the connection or device trust in this account. It does not delete credentials from your external provider or close every active session.</source><target>Se eliminará la conexión o la confianza del dispositivo en esta cuenta. No se borrarán las credenciales de tu proveedor ni se cerrarán todas las sesiones activas.</target></trans-unit>
+      <trans-unit id="securityRemoveAccessConfirm" datatype="html"><source>Remove access</source><target>Eliminar acceso</target></trans-unit>
+      <trans-unit id="securityRevokeNamed" datatype="html"><source>Revoke “<x id="INTERPOLATION"/>”?</source><target>¿Revocar «<x id="INTERPOLATION"/>»?</target></trans-unit>
+      <trans-unit id="securityConfirmationUnavailable" datatype="html"><source>Confirmation is unavailable. Try again.</source><target>La confirmación no está disponible. Inténtalo de nuevo.</target></trans-unit>
+      <trans-unit id="securityConfirmationExpired" datatype="html"><source>Confirmation expired. Start a new confirmation to continue.</source><target>La confirmación venció. Inicia una nueva para continuar.</target></trans-unit>
+      <trans-unit id="securityConfirmationFailed" datatype="html"><source>Identity confirmation was not completed. Try again or choose another available method.</source><target>No se completó la confirmación de identidad. Inténtalo de nuevo o elige otro método disponible.</target></trans-unit>
+      <trans-unit id="securityConfirmPasskey" datatype="html"><source>Continue with a passkey</source><target>Continuar con una clave de acceso</target></trans-unit>
+      <trans-unit id="securityConfirmPassword" datatype="html"><source>Use password</source><target>Usar contraseña</target></trans-unit>
+      <trans-unit id="securityConfirmTotp" datatype="html"><source>Use authenticator code</source><target>Usar código del autenticador</target></trans-unit>
+      <trans-unit id="securityConfirmRecovery" datatype="html"><source>Use recovery code</source><target>Usar código de recuperación</target></trans-unit>
+      <trans-unit id="securityConfirmBusy" datatype="html"><source>Completing your request…</source><target>Completando tu solicitud…</target></trans-unit>
+      <trans-unit id="securityConfirmContinue" datatype="html"><source>Confirm and continue</source><target>Confirmar y continuar</target></trans-unit>
+      <trans-unit id="securityCurrentPassword" datatype="html"><source>Current password</source><target>Contraseña actual</target></trans-unit>
+      <trans-unit id="securityConfirmationCode" datatype="html"><source>Verification or recovery code</source><target>Código de verificación o recuperación</target></trans-unit>
+      <trans-unit id="securityConfirmNoMethods" datatype="html"><source>No confirmation method is available for this request. Try again or return to Security.</source><target>No hay un método de confirmación disponible para esta solicitud. Inténtalo de nuevo o vuelve a Seguridad.</target></trans-unit>
+      <trans-unit id="securityConfirmRetry" datatype="html"><source>Start a new confirmation</source><target>Iniciar una nueva confirmación</target></trans-unit>
+      <trans-unit id="approvalUnavailable" datatype="html"><source>This request is not available. Return to Security and start again.</source><target>Esta solicitud no está disponible. Vuelve a Seguridad y empieza de nuevo.</target></trans-unit>
+      <trans-unit id="approvalQrUnavailable" datatype="html"><source>The QR code is unavailable. Use the link instead.</source><target>El código QR no está disponible. Usa el enlace.</target></trans-unit>
+      <trans-unit id="approvalStartFailed" datatype="html"><source>We could not start this request. Check its current status before trying again.</source><target>No pudimos iniciar esta solicitud. Comprueba su estado antes de volver a intentarlo.</target></trans-unit>
+      <trans-unit id="approvalRefreshFailed" datatype="html"><source>We could not refresh the request. Check your connection; we will try again.</source><target>No pudimos actualizar la solicitud. Revisa tu conexión; volveremos a intentarlo.</target></trans-unit>
+      <trans-unit id="approvalActionFailed" datatype="html"><source>The request could not be updated. Reload its status before trying again.</source><target>No se pudo actualizar la solicitud. Consulta su estado antes de volver a intentarlo.</target></trans-unit>
+      <trans-unit id="approvalConsumeFailed" datatype="html"><source>Setup authorization could not be confirmed. Check the request status before starting again.</source><target>No se pudo confirmar la autorización de configuración. Comprueba el estado antes de empezar de nuevo.</target></trans-unit>
+      <trans-unit id="approvalEnrollmentFailed" datatype="html"><source>Passkey setup was not completed. Retry or start a new approval request if authorization expired.</source><target>No se completó la configuración de la clave. Reintenta o inicia otra solicitud si la autorización venció.</target></trans-unit>
+      <trans-unit id="approvalVerificationFailed" datatype="html"><source>Passkey verification was not completed. Try again.</source><target>No se completó la verificación de la clave. Inténtalo de nuevo.</target></trans-unit>
+      <trans-unit id="approvalLinkCopied" datatype="html"><source>Link copied.</source><target>Enlace copiado.</target></trans-unit>
+      <trans-unit id="approvalCopyFailed" datatype="html"><source>Select and copy the link below.</source><target>Selecciona y copia el enlace de abajo.</target></trans-unit>
+      <trans-unit id="approvalPending" datatype="html"><source>Waiting for approval</source><target>Esperando aprobación</target></trans-unit>
+      <trans-unit id="approvalApproved" datatype="html"><source>Approved for passkey setup</source><target>Aprobada para configurar la clave</target></trans-unit>
+      <trans-unit id="approvalDenied" datatype="html"><source>Request denied</source><target>Solicitud rechazada</target></trans-unit>
+      <trans-unit id="approvalCancelled" datatype="html"><source>Request cancelled</source><target>Solicitud cancelada</target></trans-unit>
+      <trans-unit id="approvalConsumed" datatype="html"><source>Setup authorization already used</source><target>Autorización de configuración ya utilizada</target></trans-unit>
+      <trans-unit id="approvalExpired" datatype="html"><source>Request expired</source><target>Solicitud vencida</target></trans-unit>
+      <trans-unit id="approvalTitle" datatype="html"><source>Device setup</source><target>Configuración del dispositivo</target></trans-unit>
+      <trans-unit id="approvalDescription" datatype="html"><source>Approve only a request you started on your other device. Approval allows that device to set up a passkey.</source><target>Aprueba solo solicitudes que hayas iniciado en tu otro dispositivo. La aprobación permite configurar una clave de acceso allí.</target></trans-unit>
+      <trans-unit id="approvalCreateTitle" datatype="html"><source>Create a passkey on this device</source><target>Crea una clave de acceso en este dispositivo</target></trans-unit>
+      <trans-unit id="approvalExpires" datatype="html"><source>Expires: <x id="INTERPOLATION"/></source><target>Vence: <x id="INTERPOLATION"/></target></trans-unit>
+      <trans-unit id="approvalLostCode" datatype="html"><source>This page was reloaded. Cancel this request and start a new one to continue securely.</source><target>Esta página se recargó. Cancela esta solicitud e inicia una nueva para continuar de forma segura.</target></trans-unit>
+      <trans-unit id="approvalShare" datatype="html"><source>Open this link on your other trusted device and confirm with an existing passkey.</source><target>Abre este enlace en tu otro dispositivo de confianza y confirma con una clave de acceso existente.</target></trans-unit>
+      <trans-unit id="approvalQrAlt" datatype="html"><source>Device approval link QR code</source><target>Código QR del enlace de aprobación</target></trans-unit>
+      <trans-unit id="approvalCopyLink" datatype="html"><source>Copy link</source><target>Copiar enlace</target></trans-unit>
+      <trans-unit id="approvalContinueSetup" datatype="html"><source>Continue passkey setup</source><target>Continuar configurando la clave</target></trans-unit>
+      <trans-unit id="approvalCancel" datatype="html"><source>Cancel request</source><target>Cancelar solicitud</target></trans-unit>
+      <trans-unit id="approvalStartNew" datatype="html"><source>Start a new request</source><target>Iniciar una nueva solicitud</target></trans-unit>
+      <trans-unit id="approvalConfirmApprove" datatype="html"><source>Confirm passkey and approve</source><target>Confirmar clave y aprobar</target></trans-unit>
+      <trans-unit id="approvalDeny" datatype="html"><source>Deny request</source><target>Rechazar solicitud</target></trans-unit>
+      <trans-unit id="approvalRefresh" datatype="html"><source>Refresh status</source><target>Actualizar estado</target></trans-unit>
+      <trans-unit id="securityApproveAction" datatype="html"><source>Confirm your passkey to approve this device setup request.</source><target>Confirma tu clave de acceso para aprobar esta solicitud de configuración.</target></trans-unit>
+      <trans-unit id="securityStandaloneConfirmTitle" datatype="html"><source>Confirm your identity</source><target>Confirma tu identidad</target></trans-unit>
+      <trans-unit id="securityEnabled" datatype="html"><source>Enabled</source><target>Activado</target></trans-unit>
+      <trans-unit id="securityNotConfigured" datatype="html"><source>Not set up</source><target>Sin configurar</target></trans-unit>
+      <trans-unit id="securityWaitingConfirmation" datatype="html"><source>Waiting for confirmation...</source><target>Esperando confirmación…</target></trans-unit>
+      <trans-unit id="securityConfirmAdd" datatype="html"><source>Confirm and add passkey</source><target>Confirmar y añadir clave</target></trans-unit>
+      <trans-unit id="securityConfirming" datatype="html"><source>Confirming...</source><target>Confirmando…</target></trans-unit>
+      <trans-unit id="securityConfirmRevoke" datatype="html"><source>Confirm passkey and revoke</source><target>Confirmar clave y revocar</target></trans-unit>
+      <trans-unit id="passwordAuthenticatorCodeRequired" datatype="html"><source>Enter the 6-digit authenticator code.</source><target>Introduce el código de seis dígitos del autenticador.</target></trans-unit>
+      <trans-unit id="passwordAuthenticatorDigits" datatype="html"><source>Use digits from your authenticator app.</source><target>Usa los dígitos de tu aplicación de autenticación.</target></trans-unit>
+      <trans-unit id="passwordCurrentRequired" datatype="html"><source>Enter your current password.</source><target>Introduce tu contraseña actual.</target></trans-unit>
+      <trans-unit id="passwordNewRequired" datatype="html"><source>Enter a new password.</source><target>Introduce una contraseña nueva.</target></trans-unit>
+      <trans-unit id="passwordNewConfirmationRequired" datatype="html"><source>Confirm your new password.</source><target>Confirma tu nueva contraseña.</target></trans-unit>
+      <trans-unit id="passwordTotpUnavailable" datatype="html"><source>Authenticator setup is not available right now.</source><target>La configuración del autenticador no está disponible ahora.</target></trans-unit>
+      <trans-unit id="passwordTotpInvalid" datatype="html"><source>That authenticator code is not valid.</source><target>Ese código del autenticador no es válido.</target></trans-unit>
+      <trans-unit id="passwordSettingsUpdated" datatype="html"><source>Password settings updated.</source><target>Ajustes de contraseña actualizados.</target></trans-unit>
+      <trans-unit id="passwordSettingsFailed" datatype="html"><source>Password settings could not be updated. Check the current state before trying again.</source><target>No se pudieron actualizar los ajustes de contraseña. Comprueba su estado antes de volver a intentarlo.</target></trans-unit>
+      <trans-unit id="passwordSecurityEyebrow" datatype="html"><source>Account security</source><target>Seguridad de la cuenta</target></trans-unit>
+      <trans-unit id="passwordPageTitle" datatype="html"><source>Password and authenticator</source><target>Contraseña y autenticador</target></trans-unit>
+      <trans-unit id="passwordAuthenticatorDescription" datatype="html"><source>Use a code from your authenticator app to confirm future password sign-ins.</source><target>Usa un código de tu aplicación de autenticación para confirmar futuros accesos con contraseña.</target></trans-unit>
+      <trans-unit id="passwordAuthenticatorEnabled" datatype="html"><source>Authenticator verification is enabled.</source><target>La verificación con autenticador está activada.</target></trans-unit>
+      <trans-unit id="passwordAuthenticatorKey" datatype="html"><source>Add this key to your authenticator</source><target>Añade esta clave a tu autenticador</target></trans-unit>
+      <trans-unit id="passwordSecretPrivate" datatype="html"><source>The secret is shown once. Keep it private.</source><target>La clave secreta se muestra una sola vez. Mantenla privada.</target></trans-unit>
+      <trans-unit id="passwordAuthenticatorCode" datatype="html"><source>Authenticator code</source><target>Código del autenticador</target></trans-unit>
+      <trans-unit id="passwordConfirmAuthenticator" datatype="html"><source>Confirm authenticator</source><target>Confirmar autenticador</target></trans-unit>
+      <trans-unit id="passwordSetupAuthenticator" datatype="html"><source>Set up authenticator</source><target>Configurar autenticador</target></trans-unit>
+      <trans-unit id="passwordSaveRecoveryCodes" datatype="html"><source>Save your recovery codes</source><target>Guarda tus códigos de recuperación</target></trans-unit>
+      <trans-unit id="passwordChangeOrRemove" datatype="html"><source>Change or remove password</source><target>Cambiar o eliminar contraseña</target></trans-unit>
+      <trans-unit id="passwordCurrentLabel" datatype="html"><source>Current password</source><target>Contraseña actual</target></trans-unit>
+      <trans-unit id="passwordNewLabel" datatype="html"><source>New password</source><target>Nueva contraseña</target></trans-unit>
+      <trans-unit id="passwordConfirmNewLabel" datatype="html"><source>Confirm new password</source><target>Confirmar nueva contraseña</target></trans-unit>
+      <trans-unit id="passwordChangeButton" datatype="html"><source>Change password</source><target>Cambiar contraseña</target></trans-unit>
+      <trans-unit id="passwordRemoveButton" datatype="html"><source>Remove password</source><target>Eliminar contraseña</target></trans-unit>
+      <trans-unit id="recoverySecurityEyebrow" datatype="html"><source>Account security</source><target>Seguridad de la cuenta</target></trans-unit>
+      <trans-unit id="recoveryTitle" datatype="html"><source>Recovery codes</source><target>Códigos de recuperación</target></trans-unit>
+      <trans-unit id="recoveryDescription" datatype="html"><source>Generate a new set of one-time codes for recovering access when your other factors are unavailable.</source><target>Genera nuevos códigos de un solo uso para recuperar el acceso cuando tus otros métodos no estén disponibles.</target></trans-unit>
+      <trans-unit id="recoveryConfirming" datatype="html"><source>Confirming identity...</source><target>Confirmando identidad…</target></trans-unit>
+      <trans-unit id="recoveryRegenerate" datatype="html"><source>Regenerate recovery codes</source><target>Regenerar códigos de recuperación</target></trans-unit>
+      <trans-unit id="recoveryNewCodes" datatype="html"><source>Your new recovery codes</source><target>Tus nuevos códigos de recuperación</target></trans-unit>
+      <trans-unit id="recoveryStoreCodes" datatype="html"><source>Store these codes somewhere safe. The previous codes no longer work.</source><target>Guarda estos códigos en un lugar seguro. Los anteriores ya no funcionan.</target></trans-unit>
+      <trans-unit id="recoveryCodesList" datatype="html"><source>Recovery codes</source><target>Códigos de recuperación</target></trans-unit>
+      <trans-unit id="googleLinkIdentityLinked" datatype="html"><source>Identity linked</source><target>Cuenta conectada</target></trans-unit>
+      <trans-unit id="googleLinkSuccess" datatype="html"><source>Google is linked</source><target>Google está conectado</target></trans-unit>
+      <trans-unit id="googleLinkSuccessDescription" datatype="html"><source>You can now use this Google identity to sign in.</source><target>Ahora puedes usar esta cuenta de Google para iniciar sesión.</target></trans-unit>
+      <trans-unit id="googleLinkTitle" datatype="html"><source>Link Google</source><target>Conectar Google</target></trans-unit>
+      <trans-unit id="googleLinkDescription" datatype="html"><source>Confirm your identity, then choose the Google account to connect.</source><target>Confirma tu identidad y después elige la cuenta de Google que quieres conectar.</target></trans-unit>
+      <trans-unit id="googleLinkLoading" datatype="html"><source>Preparing Google linking...</source><target>Preparando la conexión con Google…</target></trans-unit>
+      <trans-unit id="googleLinkStart" datatype="html"><source>Start Google linking</source><target>Conectar cuenta de Google</target></trans-unit>
+      <trans-unit id="securityDialogClose" datatype="html"><source>Close dialog</source><target>Cerrar diálogo</target></trans-unit>
+      <trans-unit id="templateHomeLabel" datatype="html"><source><x id="APP_NAME"/> home</source><target>Inicio de <x id="APP_NAME"/></target></trans-unit>
+      <trans-unit id="securityConfirmGoogle" datatype="html"><source>Continue with Google</source><target>Continuar con Google</target></trans-unit>
+      <trans-unit id="securityConfirmGoogleUnavailable" datatype="html"><source>Google confirmation could not be loaded. Try again.</source><target>No se pudo cargar la confirmación con Google. Inténtalo de nuevo.</target></trans-unit>
+      <trans-unit id="securityFirstPasskeyIdentity" datatype="html"><source>Confirm your connected identity before creating your first passkey.</source><target>Confirma tu identidad conectada antes de crear tu primera clave de acceso.</target></trans-unit>
+      <trans-unit id="securityFirstPasskeyGoogle" datatype="html"><source>Confirm with your connected Google account</source><target>Confirmar con tu cuenta de Google conectada</target></trans-unit>
+      <trans-unit id="securityFirstPasskeyCancel" datatype="html"><source>Cancel</source><target>Cancelar</target></trans-unit>
+      <trans-unit id="securityFirstPasskeyRestart" datatype="html"><source>Start a new confirmation</source><target>Iniciar una nueva confirmación</target></trans-unit>
     </body>
   </file>
 </xliff>

@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 
 import { Layout } from './shared/layout/layout';
+import { APP_NAME } from './shared/constants/brand';
 
 @Component({
   host: {
@@ -11,4 +13,10 @@ import { Layout } from './shared/layout/layout';
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App {}
+export class App {
+  private readonly title = inject(Title);
+
+  constructor() {
+    this.title.setTitle(APP_NAME);
+  }
+}

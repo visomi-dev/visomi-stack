@@ -1,8 +1,9 @@
 import express, { json, type Express } from 'express';
-import morgan from 'morgan';
 
 import { activationRouter } from './activation/activation-router';
 import { authRouter } from './auth/auth-router';
+import { accountRouter } from './account/account-router';
+import { sessionRouter } from './auth/session-router';
 import { passkeyRouter } from './auth/passkey-router';
 import { capabilityRouter } from './capabilities/capability-router';
 import './auth/passport';
@@ -13,7 +14,13 @@ import { env } from './shared/env';
 import { createOpenApiDocument } from './shared/http/openapi';
 import { testRouter } from './testing/test-router';
 
-import { createAuthRuntimeMiddleware, errorHandler, runMigrationsIfEnabled } from 'shared';
+import {
+  createAuthRuntimeMiddleware,
+  errorHandler,
+  logger,
+  requestObservability,
+  runMigrationsIfEnabled,
+} from 'shared';
 
 let embeddedAppPromise: Promise<Express> | undefined;
 
@@ -23,15 +30,13 @@ type CreateAppOptions = {
   mountAuthRuntime?: boolean;
 };
 
-const morganFormat = process.env['MORGAN_FORMAT'] ?? 'dev';
-
 async function buildApp({ mountAuthRuntime = true }: CreateAppOptions = {}) {
   await runMigrationsIfEnabled();
 
   const app = express();
 
+  app.use(requestObservability((event) => logger.info(event, 'HTTP request completed')));
   app.use(json());
-  app.use(morgan(morganFormat));
 
   if (mountAuthRuntime) {
     app.use(...createAuthRuntimeMiddleware());
@@ -90,6 +95,8 @@ async function buildApp({ mountAuthRuntime = true }: CreateAppOptions = {}) {
   });
 
   app.use('/auth', authRouter);
+  app.use('/auth/sessions', sessionRouter);
+  app.use('/account', accountRouter);
   app.use('/auth/passkey', passkeyRouter);
   app.use('/activation', activationRouter);
   app.use('/projects', projectsRouter);

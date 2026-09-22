@@ -80,6 +80,13 @@ describe('createGatewayApp', () => {
     expect(angularResponse.text).toContain('<app-root>');
   });
 
+  it('honors the configured default locale before delegating to Astro', async () => {
+    const response = await request(createGatewayApp({ ...createDeps(), defaultLocale: 'es' })).get('/');
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe('/es/');
+  });
+
   it('mounts the authenticated same-origin local-agent boundary without using the cloud API', async () => {
     const deps = createDeps();
     const localAgentHandler = express();

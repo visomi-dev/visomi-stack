@@ -5,6 +5,12 @@ import type { ZxcvbnFactory } from '@zxcvbn-ts/core';
 export class Deps {
   private passwordEstimator: Promise<ZxcvbnFactory> | undefined;
 
+  async approvalQr(text: string): Promise<string> {
+    const { default: encoder } = await import('qrcode');
+
+    return encoder.toDataURL(text, { width: 256, margin: 4, errorCorrectionLevel: 'M' });
+  }
+
   loadPasswordEstimator(): Promise<ZxcvbnFactory> {
     this.passwordEstimator ??= Promise.all([
       import('@zxcvbn-ts/core'),

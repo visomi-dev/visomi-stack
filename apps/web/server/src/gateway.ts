@@ -7,11 +7,12 @@ import express, {
 } from 'express';
 import helmet from 'helmet';
 
-import { logger } from 'shared';
+import { logger, requestObservability } from 'shared';
 
 type AstroRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<void> | void;
 
 type GatewayDeps = {
+  defaultLocale?: 'en' | 'es';
   apiHandler: RequestHandler;
   angularHandler: RequestHandler;
   astroClientFolder: string;
@@ -46,6 +47,7 @@ const gatewaySecurityHeaders = helmet({
 });
 
 function createGatewayApp({
+  defaultLocale = 'en',
   angularHandler,
   apiHandler,
   astroClientFolder,
@@ -57,6 +59,7 @@ function createGatewayApp({
 }: GatewayDeps) {
   const app = express();
 
+  app.use(requestObservability((event) => logger.info(event, 'HTTP request completed')));
   app.use(gatewaySecurityHeaders);
   app.use(...authRuntimeHandlers);
   app.get('/healthz', (_req, res) => {
@@ -72,7 +75,7 @@ function createGatewayApp({
     res.send({ status: 'ready' });
   });
   app.get('/', (_req, res) => {
-    res.redirect(302, '/en/');
+    res.redirect(302, `/${defaultLocale}/`);
   });
 
   // This same-origin route is the only browser path to protected local-agent

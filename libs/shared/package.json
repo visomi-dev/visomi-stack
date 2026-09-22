@@ -5,6 +5,17 @@
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./environment-schema": {
+      "visomi-source": "./src/lib/environment-schema.ts",
+      "types": "./src/lib/environment-schema.d.ts",
+      "default": "./src/lib/environment-schema.js"
+    }
+  },
   "dependencies": {
     "@electric-sql/pglite": "0.5.8",
     "dotenv": "^18.0.0",

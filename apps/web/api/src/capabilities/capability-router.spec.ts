@@ -1,12 +1,19 @@
 import { generateKeyPairSync, type KeyObject } from 'node:crypto';
 
-import express, { json, type Request } from 'express';
-import request from 'supertest';
+import { managedSessionFixture } from '../testing/managed-session-fixture';
 
 import { capabilityRouter, createLocalAgentProof, createWebSessionProof } from './capability-router';
 import { modeNegotiationRequestSchema } from './capability-schemas';
 
-import { deviceIdentityStore, errorHandler } from 'shared';
+import { deviceIdentityStore } from 'shared';
+
+jest.mock('shared', () => {
+  const actual = jest.requireActual('shared');
+  const { PGlite } = jest.requireActual('@electric-sql/pglite');
+  const { drizzle } = jest.requireActual('drizzle-orm/pglite');
+
+  return { ...actual, db: drizzle(new PGlite(), { casing: 'snake_case' }) };
+});
 
 jest.mock('projects', () => ({
   getProject: jest.fn(async (context: { accountId: string }, projectId: string) =>
@@ -14,20 +21,10 @@ jest.mock('projects', () => ({
   ),
 }));
 
+const authenticatedAgent = managedSessionFixture();
+
 function createApp(accountId = 'account-a', userId = 'user-a') {
-  const app = express();
-
-  app.use(json());
-  app.use((req: Request, _res, next) => {
-    req.user = { id: userId, accountId, role: 'owner', authority: 'full' } as Express.User;
-    Object.assign(req, { session: { authority: 'full' } });
-    (req as unknown as { isAuthenticated: () => boolean }).isAuthenticated = () => true;
-    next();
-  });
-  app.use('/capabilities', capabilityRouter);
-  app.use(errorHandler);
-
-  return app;
+  return authenticatedAgent('/capabilities', capabilityRouter, accountId, userId);
 }
 
 function negotiation(overrides: Record<string, unknown> = {}) {
@@ -112,7 +109,7 @@ afterEach(() => deviceIdentityStore.clear());
 
 describe('capability discovery and negotiation API', () => {
   it('discovers profiles only after workspace authorization', async () => {
-    const response = await request(createApp()).get('/capabilities/workspace-a');
+    const response = await (await createApp()).get('/capabilities/workspace-a');
 
     expect(response.status).toBe(200);
     expect(response.body.data.profiles).toEqual(
@@ -123,13 +120,13 @@ describe('capability discovery and negotiation API', () => {
 
   it('negotiates a compatible mode and rejects replay', async () => {
     const body = negotiation();
-    const app = createApp();
-    const response = await request(app).post('/capabilities/workspace-a').send(body);
+    const app = await createApp();
+    const response = await app.post('/capabilities/workspace-a').send(body);
 
     expect(response.status).toBe(200);
     expect(response.body.data.selectedMode).toBe('local-agent');
 
-    const replay = await request(app).post('/capabilities/workspace-a').send(body);
+    const replay = await app.post('/capabilities/workspace-a').send(body);
 
     expect(replay.status).toBe(409);
     expect(replay.body).toEqual({
@@ -151,7 +148,7 @@ describe('capability discovery and negotiation API', () => {
 
     body.claim.authenticator.proof = createLocalAgentProof(body.claim as never, device.privateKey);
 
-    const response = await request(createApp()).post('/capabilities/workspace-a').send(body);
+    const response = await (await createApp()).post('/capabilities/workspace-a').send(body);
 
     expect(response.status).toBe(200);
     expect(response.body.data.selectedMode).toBe('local-agent');
@@ -180,7 +177,7 @@ describe('capability discovery and negotiation API', () => {
     // the decoded signature unchanged and could incorrectly preserve a grant.
     body.claim.authenticator.proof = `ed25519:${encoded.slice(0, -1)}${alternateTrailingBits}`;
 
-    const response = await request(createApp()).post('/capabilities/workspace-a').send(body);
+    const response = await (await createApp()).post('/capabilities/workspace-a').send(body);
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
@@ -190,7 +187,9 @@ describe('capability discovery and negotiation API', () => {
   });
 
   it('rejects scalar JSON bodies instead of treating them as negotiation requests', async () => {
-    const response = await request(createApp())
+    const response = await (
+      await createApp()
+    )
       .post('/capabilities/workspace-a')
       .set('Content-Type', 'application/json')
       .send('0');
@@ -204,7 +203,9 @@ describe('capability discovery and negotiation API', () => {
   });
 
   it('rejects unknown request fields instead of stripping them', async () => {
-    const response = await request(createApp())
+    const response = await (
+      await createApp()
+    )
       .post('/capabilities/workspace-a')
       .send({ ...negotiation(), unexpected: true });
 
@@ -231,7 +232,7 @@ describe('capability discovery and negotiation API', () => {
       'capability_unsafe-downgrade',
     ],
   ] as const)('fails closed for %s', async (_name, overrides, code) => {
-    const response = await request(createApp()).post('/capabilities/workspace-a').send(negotiation(overrides));
+    const response = await (await createApp()).post('/capabilities/workspace-a').send(negotiation(overrides));
 
     expect(response.status).toBe(code === 'capability_unauthenticated' ? 401 : 409);
     expect(response.body).toEqual({ code, message: 'The capability negotiation request was rejected.' });
@@ -242,14 +243,14 @@ describe('capability discovery and negotiation API', () => {
 
     body.claim.authenticator.proof = 'hmac-sha256:tampered';
 
-    const response = await request(createApp()).post('/capabilities/workspace-a').send(body);
+    const response = await (await createApp()).post('/capabilities/workspace-a').send(body);
 
     expect(response.status).toBe(401);
     expect(response.body.code).toBe('capability_unauthenticated');
   });
 
   it('does not disclose whether another account owns a workspace', async () => {
-    const response = await request(createApp('account-b')).get('/capabilities/workspace-a');
+    const response = await (await createApp('account-b')).get('/capabilities/workspace-a');
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({
@@ -272,7 +273,7 @@ describe('capability discovery and negotiation API', () => {
     body.claim.authenticator.proof = createLocalAgentProof(body.claim as never, device.privateKey);
     deviceIdentityStore.revokeDevice('account-a', device.deviceId, new Date(), 'workspace-a');
 
-    const response = await request(createApp()).post('/capabilities/workspace-a').send(body);
+    const response = await (await createApp()).post('/capabilities/workspace-a').send(body);
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
@@ -302,7 +303,7 @@ describe('capability discovery and negotiation API', () => {
       otherAccountDevice.privateKey,
     );
 
-    const crossAccountResponse = await request(createApp()).post('/capabilities/workspace-a').send(crossAccount);
+    const crossAccountResponse = await (await createApp()).post('/capabilities/workspace-a').send(crossAccount);
 
     expect(crossAccountResponse.status).toBe(401);
 
@@ -326,7 +327,7 @@ describe('capability discovery and negotiation API', () => {
       otherWorkspaceDevice.privateKey,
     );
 
-    const crossWorkspaceResponse = await request(createApp()).post('/capabilities/workspace-a').send(crossWorkspace);
+    const crossWorkspaceResponse = await (await createApp()).post('/capabilities/workspace-a').send(crossWorkspace);
 
     expect(crossWorkspaceResponse.status).toBe(401);
   });

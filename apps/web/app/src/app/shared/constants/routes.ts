@@ -5,6 +5,7 @@ export const GALLERY_PATH = 'gallery';
 export const SIGN_IN_PATH = 'auth/sign-in';
 export const LEGACY_IDENTITY_PATH = 'auth/identity';
 export const SECURITY_PATH = 'security';
+export const DEVICE_APPROVAL_PATH = 'security/device-approval';
 export const SIGN_UP_PATH = 'auth/sign-up';
 export const EMAIL_VERIFICATION_PATH = 'auth/verify';
 export const PASSWORD_RESET_PATH = 'auth/password-reset';
@@ -19,9 +20,21 @@ export const ACTIVATION_URL = '/activation';
 export const GALLERY_URL = '/gallery';
 export const SIGN_IN_URL = '/auth/sign-in';
 export const SECURITY_URL = '/security';
+export const ACCOUNT_URL = '/account';
+export const SESSIONS_URL = '/security/sessions';
+export const DEVICE_APPROVAL_URL = '/security/device-approval';
 export const SIGN_UP_URL = '/auth/sign-up';
 export const EMAIL_VERIFICATION_URL = '/auth/verify';
 
 export function authDestination(value: string | null): string {
+  if (value === ACCOUNT_URL || value === SESSIONS_URL) return value;
+  if (
+    value &&
+    /^\/security\/device-approval(?:\?requestId=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?$/i.test(
+      value,
+    )
+  )
+    return value;
+
   return value && /^\/(?:dashboard|security|gallery|activation)$/.test(value) ? value : APP_URL;
 }

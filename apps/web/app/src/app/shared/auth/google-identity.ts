@@ -33,22 +33,29 @@ export class GoogleIdentity {
     onComplete: (user: AuthUser) => void,
     onError: (error: unknown) => void = () => undefined,
     isActive: () => boolean = () => true,
+    canRender: () => boolean = () => true,
   ): Promise<void> {
-    await this.render(element, clientId, nonce, async (credential) => {
-      if (!isActive()) return;
-      try {
-        const response = await firstValueFrom(
-          this.http.post<ResponseEnvelope<{ authenticated: true; user: AuthUser }>>('/api/auth/google/complete', {
-            flowId,
-            idToken: credential,
-          }),
-        );
+    await this.render(
+      element,
+      clientId,
+      nonce,
+      async (credential) => {
+        if (!isActive()) return;
+        try {
+          const response = await firstValueFrom(
+            this.http.post<ResponseEnvelope<{ authenticated: true; user: AuthUser }>>('/api/auth/google/complete', {
+              flowId,
+              idToken: credential,
+            }),
+          );
 
-        onComplete(response.data.user);
-      } catch (error) {
-        onError(error);
-      }
-    });
+          onComplete(response.data.user);
+        } catch (error) {
+          onError(error);
+        }
+      },
+      canRender,
+    );
   }
 
   async renderLinkButton(
@@ -57,11 +64,57 @@ export class GoogleIdentity {
     grantId: string,
     nonce: string,
     onComplete: () => void,
+    onError: (error: unknown) => void = () => undefined,
+    isActive: () => boolean = () => true,
+    onStart: () => void = () => undefined,
   ): Promise<void> {
-    await this.render(element, clientId, nonce, async (credential) => {
-      await firstValueFrom(this.http.post('/api/auth/google/link', { grantId, idToken: credential }));
-      onComplete();
-    });
+    let completing = false;
+
+    await this.render(
+      element,
+      clientId,
+      nonce,
+      async (credential) => {
+        if (completing || !isActive()) return;
+        completing = true;
+        onStart();
+        try {
+          await firstValueFrom(this.http.post('/api/auth/google/link', { grantId, idToken: credential }));
+          onComplete();
+        } catch (error) {
+          onError(error);
+        } finally {
+          completing = false;
+        }
+      },
+      isActive,
+    );
+  }
+
+  async renderReauthenticationButton(
+    element: HTMLElement,
+    clientId: string,
+    nonce: string,
+    onCredential: (idToken: string) => Promise<void>,
+    isActive: () => boolean,
+  ): Promise<void> {
+    let completing = false;
+
+    await this.render(
+      element,
+      clientId,
+      nonce,
+      async (credential) => {
+        if (completing || !isActive()) return;
+        completing = true;
+        try {
+          await onCredential(credential);
+        } finally {
+          completing = false;
+        }
+      },
+      isActive,
+    );
   }
 
   private async render(
@@ -69,11 +122,13 @@ export class GoogleIdentity {
     clientId: string,
     nonce: string,
     onCredential: (credential: string) => Promise<void>,
+    canRender: () => boolean = () => true,
   ): Promise<void> {
     const view = this.document.defaultView;
 
     if (!view) throw new Error('Google sign-in is unavailable during server rendering.');
     await this.loadScript();
+    if (!canRender()) return;
     const google = (view as Window & { google?: GoogleIdentityApi }).google;
 
     if (!google) throw new Error('Google sign-in could not be loaded.');

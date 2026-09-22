@@ -5,6 +5,8 @@ import { Router } from 'express';
 
 import { clearMailbox, listSentMessages } from '../auth/auth-mail';
 import { challengeSchema } from '../auth/auth-schemas';
+import { resetPasskeySecurityState } from '../auth/passkey-security';
+import { env } from '../shared/env';
 import {
   consumeChallenge,
   createChallenge,
@@ -63,6 +65,18 @@ const testOpenApiPaths = {
 };
 
 const testRouter = Router();
+
+// This router is mounted only with ENABLE_TEST_API. Reset only the isolated
+// in-memory fixture; production/durable rate limits are never changed here.
+testRouter.delete('/auth/rate-limits', (_req, res) => {
+  if (env.DATABASE_DRIVER !== 'memory') {
+    res.sendStatus(404);
+
+    return;
+  }
+  resetPasskeySecurityState();
+  res.sendStatus(204);
+});
 
 testRouter.post(
   '/auth/session',

@@ -10,6 +10,7 @@ import { getValidated, validateRequest } from '../shared/http/route-schemas';
 
 import { consumeChallenge, createEmailChallenge, findUserByEmail } from './auth-service';
 import { consumeEmailOtpDeliveryLimit } from './passkey-security';
+import { APP_NAME } from './auth-brand';
 import { passkeySignupBeginSchema, passkeySignupVerifySchema, registrationCompleteSchema } from './passkey-schemas';
 
 import {
@@ -56,7 +57,7 @@ passkeySignupRouter.post('/begin', validateRequest({ body: passkeySignupBeginSch
   await new Promise<void>((resolve, reject) => req.session.regenerate((error) => (error ? reject(error) : resolve())));
   const userId = randomUUID();
   const options = await generateRegistrationOptions({
-    rpName: 'Visomi Stack',
+    rpName: APP_NAME,
     rpID,
     userName: normalizedEmail,
     userID: Buffer.from(userId),
