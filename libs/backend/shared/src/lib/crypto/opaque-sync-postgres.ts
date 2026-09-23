@@ -5,13 +5,14 @@ import type { Pool, PoolClient } from 'pg';
 import { env } from '../env';
 import { getPool } from '../db/pool';
 
+import { RailwayS3ObjectStore, sha256, type OpaqueObjectStore } from './opaque-sync-object-store';
+
 import {
   deserializeEncryptedEnvelope,
   parseEncryptedEnvelope,
   serializeEncryptedEnvelope,
   type EncryptedEnvelope,
-} from './encrypted-envelope';
-import { RailwayS3ObjectStore, sha256, type OpaqueObjectStore } from './opaque-sync-object-store';
+} from 'shared-crypto';
 
 type DurableAppendResult = { cursor: number; duplicate: boolean; envelope: EncryptedEnvelope };
 type DurableCheckpoint = { checkpointId: string; cursor: number; revision: number; envelope: EncryptedEnvelope };

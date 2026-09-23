@@ -1,4 +1,4 @@
-import { parseEncryptedEnvelope, serializeEncryptedEnvelope, type EncryptedEnvelope } from './encrypted-envelope';
+import { parseEncryptedEnvelope, serializeEncryptedEnvelope, type EncryptedEnvelope } from 'shared-crypto';
 
 type StoredOpaqueEnvelope = {
   accountId: string;

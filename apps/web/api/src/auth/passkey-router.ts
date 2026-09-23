@@ -47,7 +47,7 @@ import {
   accountWebAuthnChallenges,
   authEnrollmentGrants,
   db,
-  HttpError,
+  fail,
   users,
 } from 'shared';
 
@@ -73,7 +73,7 @@ function credentialView(value: typeof accountPasskeyCredentials.$inferSelect) {
   };
 }
 function failure(code: string, statusCode: number, message = 'The passkey ceremony could not be completed.'): never {
-  throw new HttpError({ code, message, statusCode });
+  fail(code, message, statusCode);
 }
 function requireFreshSecurityReauthentication(req: Parameters<typeof authedRequest>[0]): void {
   const verifiedAt = req.session?.passkeySecurityReauthenticatedAt;

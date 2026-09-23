@@ -45,19 +45,23 @@ jobs:
       - name: Lint workspace
         run: |
           export NX_DAEMON=false
-          pnpm nx run-many -t lint --projects site,app,api,server,shared,template,site-e2e,app-e2e,api-e2e,server-e2e
+          pnpm nx run-many -t lint --projects site,app,api,server,shared,shared-crypto,frontend-shared,template,site-e2e,app-e2e,api-e2e,server-e2e
 
       - name: Typecheck site
         run: |
           export NX_DAEMON=false
           pnpm nx run site:typecheck
           pnpm nx run template:typecheck
+          pnpm nx run frontend-shared:typecheck
+          pnpm nx run frontend-shared:browser-build
 
       - name: Run tests
         run: |
           export NX_DAEMON=false
           pnpm nx run template:test
           pnpm nx run shared:test
+          pnpm nx run shared-crypto:test
+          pnpm nx run frontend-shared:test
           pnpm nx run site:test
           pnpm nx run app:vite:test
           pnpm nx run api:test

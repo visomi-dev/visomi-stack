@@ -4,6 +4,8 @@ import { env } from '../shared/env';
 
 import { setSessionHintCookie } from './session-cookie';
 
+import { saveSession } from 'shared';
+
 type FullAuthenticationMethod = 'google' | 'passkey';
 
 type FullAuthUser = Express.User & {
@@ -33,7 +35,7 @@ async function establishFullSession(req: Request, res: Response, user: FullAuthU
   delete req.session.secondFactor;
   // Passport saves before this metadata is assigned. Persist the complete authority
   // before the caller can finish its mutation and release the authorization lease.
-  await new Promise<void>((resolve, reject) => req.session.save((error) => (error ? reject(error) : resolve())));
+  await saveSession(req);
   setSessionHintCookie(res);
 }
 

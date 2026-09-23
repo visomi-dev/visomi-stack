@@ -20,7 +20,7 @@ test('clean-copy filtering excludes private environments without dropping schema
   for (const file of [
     '.env.example',
     'deploy/production.env.example',
-    'libs/shared/src/lib/env.ts',
+    'libs/backend/shared/src/lib/env.ts',
     'scripts/template/doctor.ts',
   ])
     assert.equal(isPrivateEnvironmentFile(file), false);
@@ -177,7 +177,13 @@ test('toolchain pins agree across the manifest, Node version file, CI, and Docke
   assert.equal(pkg.packageManager, `pnpm@${pkg.engines.pnpm}`);
   assert.ok(ci.includes('node-version-file: .node-version'));
   assert.ok(!ci.includes('version: 10'));
-  for (const workspace of ['libs/shared', 'libs/projects', 'libs/themis-workflow', 'apps/cli'])
+  for (const workspace of [
+    'libs/backend/shared',
+    'libs/shared/crypto',
+    'libs/projects',
+    'libs/themis-workflow',
+    'apps/cli',
+  ])
     assert.ok(docker.includes(`COPY ${workspace}/package.json`));
 });
 

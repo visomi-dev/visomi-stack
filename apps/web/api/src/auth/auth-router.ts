@@ -81,6 +81,7 @@ import { decryptTotpSecret, encryptTotpSecret, generateTotpSecret, verifyTotpCod
 import {
   HttpError,
   httpResponse,
+  regenerateSession,
   authAuditEvents,
   authIdentityFlows,
   userFederatedIdentities,
@@ -182,7 +183,7 @@ async function establishRestrictedSession(
   const issuedAt = Date.now();
   const expiresAt = issuedAt + 15 * 60_000;
 
-  await new Promise<void>((resolve, reject) => req.session.regenerate((error) => (error ? reject(error) : resolve())));
+  await regenerateSession(req);
   const restrictedAuth = {
     allowedOperations: ['accounts:read', 'accounts:select', 'passkeys:enroll', 'passkeys:verify', 'password:set'],
     eligibleAccounts: identity.accounts,
@@ -864,9 +865,7 @@ router.post(
     const { email, password } = getValidated<{ body: typeof passwordSignInSchema }>(req).body!;
     const pending = await startPasswordSignIn(email, password, requestContext(req), req.sessionID, req.ip);
 
-    await new Promise<void>((resolve, reject) =>
-      req.session.regenerate((error) => (error ? reject(error) : resolve())),
-    );
+    await regenerateSession(req);
     await db
       .update(authIdentityFlows)
       .set({ sessionBinding: req.sessionID, updatedAt: new Date() })
@@ -1817,7 +1816,7 @@ function requestContext(req: Request): string {
 }
 
 async function bindPasswordFlowToNewSession(req: Request, flowId: string): Promise<void> {
-  await new Promise<void>((resolve, reject) => req.session.regenerate((error) => (error ? reject(error) : resolve())));
+  await regenerateSession(req);
   await db
     .update(authIdentityFlows)
     .set({ sessionBinding: req.sessionID, updatedAt: new Date() })

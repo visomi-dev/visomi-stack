@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import {
   RailwayS3ObjectStore,
   type OpaqueObjectStore,
-} from '../../libs/shared/src/lib/crypto/opaque-sync-object-store.ts';
+} from '../../libs/backend/shared/src/lib/crypto/opaque-sync-object-store.ts';
 
 import { decryptCanary, encryptCanary, proveKeyBoundary } from './restore-crypto.ts';
 

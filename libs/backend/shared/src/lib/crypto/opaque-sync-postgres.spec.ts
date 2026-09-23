@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 describe('opaque sync durable contract', () => {
   it('defines transactional metadata-only tables and no payload or key columns', () => {
     const migration = readFileSync(
-      resolve(__dirname, '../../../../../drizzle/20260819210000_opaque_sync_durable/migration.sql'),
+      resolve(__dirname, '../../../../../../drizzle/20260819210000_opaque_sync_durable/migration.sql'),
       'utf8',
     );
 

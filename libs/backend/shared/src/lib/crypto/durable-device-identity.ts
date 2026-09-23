@@ -5,14 +5,15 @@ import type { Pool } from 'pg';
 import { env } from '../env';
 import { getPool } from '../db/pool';
 
+import { RailwayS3ObjectStore, sha256, type OpaqueObjectStore } from './opaque-sync-object-store';
+import { DeviceIdentityError, type DeviceAuditEvent, type DeviceIdentity } from './device-identity';
+
 import {
   deserializeEncryptedEnvelope,
   parseEncryptedEnvelope,
   serializeEncryptedEnvelope,
   type EncryptedEnvelope,
-} from './encrypted-envelope';
-import { RailwayS3ObjectStore, sha256, type OpaqueObjectStore } from './opaque-sync-object-store';
-import { DeviceIdentityError, type DeviceAuditEvent, type DeviceIdentity } from './device-identity';
+} from 'shared-crypto';
 
 type Grant = {
   deviceId: string;

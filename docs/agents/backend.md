@@ -15,9 +15,10 @@ These instructions apply to Node backend, API, worker, realtime, validation, con
 
 ## Shared Libraries
 
-- Cross-cutting runtime and platform code shared across backend runtimes belongs in `libs/shared`.
-- `libs/shared` is only for cross-cutting runtime concerns such as env loading, logger, database access, Redis connections, sessions, and generic transport primitives.
-- Feature-shared domain code must live in a dedicated feature library such as `libs/projects`, not in `libs/shared`.
+- Cross-cutting runtime and platform code shared across backend runtimes belongs in `libs/backend/shared`.
+- `libs/backend/shared` is only for cross-cutting backend runtime concerns such as env loading, logger, database access, Redis connections, sessions, and generic transport primitives. Browser applications must not import its runtime entry point.
+- Feature-shared domain code must live in a dedicated feature library such as `libs/projects`, not in `libs/backend/shared`.
+- Portable encrypted-envelope contracts and client synchronization live in `libs/shared/crypto` (`shared-crypto`). Backend code may depend on this neutral layer, but must not import `libs/frontend/shared`.
 - Do not deep-import another feature's private implementation details. Use shared contracts or feature libraries.
 
 ## Async And Realtime Files

@@ -10,7 +10,7 @@ import {
   authIdentityFlows,
   userTotpEnrollments,
   db,
-  HttpError,
+  fail,
   users,
 } from 'shared';
 
@@ -18,7 +18,7 @@ type Credential = typeof accountPasskeyCredentials.$inferSelect;
 type User = typeof users.$inferSelect;
 
 function unavailable(code = 'credential_not_found'): never {
-  throw new HttpError({ code, message: 'The passkey authorization is no longer available.', statusCode: 401 });
+  fail(code, 'The passkey authorization is no longer available.', 401);
 }
 
 /** Commit only the identity and credential epoch whose assertion was verified. */

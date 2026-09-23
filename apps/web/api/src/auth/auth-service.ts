@@ -32,6 +32,7 @@ import {
   userRecoveryCodes,
   authOperationGrants,
   db,
+  fail,
   HttpError,
   safeInsert,
   userDevices,
@@ -81,11 +82,7 @@ function pinMatches(expected: string, actual: string): boolean {
 }
 
 function verificationFailed(): never {
-  throw new HttpError({
-    code: 'verification_failed',
-    message: 'The verification request could not be completed.',
-    statusCode: 401,
-  });
+  fail('verification_failed', 'The verification request could not be completed.', 401);
 }
 
 export function normalizeEmail(email: string) {
@@ -366,11 +363,7 @@ export async function createRecoveryChallenge(
 }
 
 function recoveryUnavailable(): never {
-  throw new HttpError({
-    code: 'recovery_unavailable',
-    message: 'The recovery request could not be completed.',
-    statusCode: 401,
-  });
+  fail('recovery_unavailable', 'The recovery request could not be completed.', 401);
 }
 
 function recoveryProof(

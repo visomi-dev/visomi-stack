@@ -8,12 +8,13 @@ import {
   unwrapWorkspaceKey,
   wrapWorkspaceKey,
 } from './crypto-proof-harness';
+
 import {
   deserializeEncryptedEnvelope,
   parseEncryptedEnvelope,
   serializeEncryptedEnvelope,
   type EncryptedEnvelope,
-} from './encrypted-envelope';
+} from 'shared-crypto';
 
 const NONCE_BYTES = 12;
 const SALT_BYTES = 16;

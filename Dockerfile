@@ -12,7 +12,8 @@ WORKDIR /workspace
 
 COPY package.json pnpm-lock.yaml nx.json tsconfig.base.json pnpm-workspace.yaml ./
 COPY .node-version ./
-COPY libs/shared/package.json ./libs/shared/package.json
+COPY libs/backend/shared/package.json ./libs/backend/shared/package.json
+COPY libs/shared/crypto/package.json ./libs/shared/crypto/package.json
 COPY libs/projects/package.json ./libs/projects/package.json
 COPY libs/themis-workflow/package.json ./libs/themis-workflow/package.json
 COPY apps/cli/package.json ./apps/cli/package.json
@@ -36,7 +37,8 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY libs/shared/package.json ./libs/shared/package.json
+COPY libs/backend/shared/package.json ./libs/backend/shared/package.json
+COPY libs/shared/crypto/package.json ./libs/shared/crypto/package.json
 COPY libs/projects/package.json ./libs/projects/package.json
 COPY libs/themis-workflow/package.json ./libs/themis-workflow/package.json
 COPY apps/cli/package.json ./apps/cli/package.json
@@ -44,7 +46,8 @@ COPY apps/cli/package.json ./apps/cli/package.json
 RUN pnpm install --frozen-lockfile --prod
 
 COPY --from=build /workspace/dist ./dist
-COPY --from=build /workspace/dist/libs/shared ./libs/shared
+COPY --from=build /workspace/dist/libs/backend/shared ./libs/backend/shared
+COPY --from=build /workspace/dist/libs/shared/crypto ./libs/shared/crypto
 COPY --from=build /workspace/dist/libs/projects ./libs/projects
 COPY --from=build /workspace/drizzle ./drizzle
 COPY --from=build /workspace/dist/apps/web/app ./dist/apps/web/app

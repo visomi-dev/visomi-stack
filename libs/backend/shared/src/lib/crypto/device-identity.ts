@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-import { parseEncryptedEnvelope, type EncryptedEnvelope } from './encrypted-envelope';
+import { parseEncryptedEnvelope, type EncryptedEnvelope } from 'shared-crypto';
 
 export type DeviceStatus = 'active' | 'revoked';
 

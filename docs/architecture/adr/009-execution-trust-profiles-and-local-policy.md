@@ -8,7 +8,7 @@ Proposed; sandbox technology, consent UX, and durable policy state require secur
 
 The local agent evaluates execution requests before filesystem, network, secret-broker, or external-AI operations. A request must carry the exact scoped capability defined by ADR 008; cloud responses, MCP tool output, and external-AI output never create authority.
 
-The executable policy in `libs/shared/src/lib/crypto/execution-policy.ts` is a fail-closed policy seam and fixture set. It is not a sandbox runtime, provider integration, or cryptographic capability implementation.
+The executable policy in `libs/backend/shared/src/lib/crypto/execution-policy.ts` is a fail-closed policy seam and fixture set. It is not a sandbox runtime, provider integration, or cryptographic capability implementation.
 
 ### Trust profiles
 

@@ -15,16 +15,12 @@ import {
   authVerificationChallenges,
   db,
   env,
-  HttpError,
+  fail,
   users,
 } from 'shared';
 
 export type AccountContext = { userId: string; accountId: string; authVersion: number; sessionBinding: string };
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
-function fail(code: string, message: string, statusCode = 409): never {
-  throw new HttpError({ code, message, statusCode });
-}
 
 // All membership mutations serialize on the account before taking the user lock.
 async function lockContext(tx: Transaction, context: AccountContext) {

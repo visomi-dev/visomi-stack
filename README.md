@@ -52,19 +52,21 @@ The smoke command exports a clean copy without dependencies, caches, generated o
 
 ## Included runtimes
 
-| Path                                | Responsibility                                                    |
-| ----------------------------------- | ----------------------------------------------------------------- |
-| `apps/web/site`                     | Astro public website at `/`.                                      |
-| `apps/web/app`                      | Angular authenticated application at `/app`.                      |
-| `apps/web/api`                      | Express API and OpenAPI contracts at `/api`.                      |
-| `apps/web/server`                   | Unified gateway and runtime composition.                          |
-| `apps/web/realtime`                 | Socket.IO at `/socket.io`.                                        |
-| `apps/worker`                       | BullMQ background work.                                           |
-| `libs/shared`                       | Runtime configuration, database, sessions, transport, and crypto. |
-| `libs/projects`                     | Example project-domain contracts.                                 |
-| `libs/themis-workflow`, `.opencode` | Optional repository-local planning and delivery workflow.         |
-| `scripts/template`                  | Initialization, diagnostics, and clean-copy verification.         |
-| `apps/cli`                          | Example distribution CLI for OpenCode resources.                  |
+| Path                                | Responsibility                                                            |
+| ----------------------------------- | ------------------------------------------------------------------------- |
+| `apps/web/site`                     | Astro public website at `/`.                                              |
+| `apps/web/app`                      | Angular authenticated application at `/app`.                              |
+| `apps/web/api`                      | Express API and OpenAPI contracts at `/api`.                              |
+| `apps/web/server`                   | Unified gateway and runtime composition.                                  |
+| `apps/web/realtime`                 | Socket.IO at `/socket.io`.                                                |
+| `apps/worker`                       | BullMQ background work.                                                   |
+| `libs/backend/shared`               | Backend runtime configuration, database, sessions, transport, and crypto. |
+| `libs/frontend/shared`              | Framework-agnostic browser vault, IndexedDB, and WebAuthn PRF utilities.  |
+| `libs/shared/crypto`                | Portable encrypted-envelope contracts and client synchronization.         |
+| `libs/projects`                     | Example project-domain contracts.                                         |
+| `libs/themis-workflow`, `.opencode` | Optional repository-local planning and delivery workflow.                 |
+| `scripts/template`                  | Initialization, diagnostics, and clean-copy verification.                 |
+| `apps/cli`                          | Example distribution CLI for OpenCode resources.                          |
 
 The template contains sample product/domain content and zero-knowledge storage integration seams. Those examples are documented separately from the template bootstrap; enabling production protected-storage behavior requires its actual object-store and local-agent configuration.
 

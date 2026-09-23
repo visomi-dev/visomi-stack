@@ -54,7 +54,7 @@ These tests boot the real gateway (api + app + site + worker + realtime) and nee
   ```bash
   ps aux | grep "dist/apps" | grep -v grep | awk '{print $2}' | xargs -r kill -9
   ```
-- **Redis reachable at `redis://127.0.0.1:6379`.** `libs/shared/src/lib/env.ts` defaults `REDIS_URL` to that address. Without Redis the worker exits and the gateway shuts down. For local runs, a sidecar is enough:
+- **Redis reachable at `redis://127.0.0.1:6379`.** `libs/backend/shared/src/lib/env.ts` defaults `REDIS_URL` to that address. Without Redis the worker exits and the gateway shuts down. For local runs, a sidecar is enough:
   ```bash
   podman run -d --name themis-redis docker.io/library/redis:7-alpine
   ```

@@ -9,7 +9,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "{workspaceRoot}",
-        "command": "pnpm exec eslint libs/shared/src/lib/observability.ts libs/shared/src/lib/observability.spec.ts libs/shared/src/lib/logger.ts libs/shared/src/lib/logger.spec.ts libs/shared/src/lib/http.ts libs/shared/src/lib/http.spec.ts apps/web/server/src/gateway.ts apps/web/api/src/app.ts apps/web/api/src/app-observability.spec.ts apps/web/api/src/projects/project-seed-queue.ts apps/worker/src/projects/project-seed/worker.ts apps/worker/src/projects/project-seed/processor.ts apps/worker/src/projects/project-seed/processor.spec.ts scripts/template/restore*.ts scripts/template/main.ts scripts/template/smoke.ts"
+        "command": "pnpm exec eslint libs/backend/shared/src/lib/observability.ts libs/backend/shared/src/lib/observability.spec.ts libs/backend/shared/src/lib/logger.ts libs/backend/shared/src/lib/logger.spec.ts libs/backend/shared/src/lib/http.ts libs/backend/shared/src/lib/http.spec.ts apps/web/server/src/gateway.ts apps/web/api/src/app.ts apps/web/api/src/app-observability.spec.ts apps/web/api/src/projects/project-seed-queue.ts apps/worker/src/projects/project-seed/worker.ts apps/worker/src/projects/project-seed/processor.ts apps/worker/src/projects/project-seed/processor.spec.ts scripts/template/restore*.ts scripts/template/main.ts scripts/template/smoke.ts"
       }
     },
     "build": {
@@ -25,17 +25,26 @@
     "init": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
-      "options": { "cwd": "{workspaceRoot}", "command": "node dist/template/main.cjs init" }
+      "options": {
+        "cwd": "{workspaceRoot}",
+        "command": "node dist/template/main.cjs init"
+      }
     },
     "doctor": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
-      "options": { "cwd": "{workspaceRoot}", "command": "node dist/template/main.cjs doctor" }
+      "options": {
+        "cwd": "{workspaceRoot}",
+        "command": "node dist/template/main.cjs doctor"
+      }
     },
     "smoke": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
-      "options": { "cwd": "{workspaceRoot}", "command": "node dist/template/main.cjs smoke" }
+      "options": {
+        "cwd": "{workspaceRoot}",
+        "command": "node dist/template/main.cjs smoke"
+      }
     },
     "test": {
       "executor": "nx:run-commands",
@@ -47,7 +56,10 @@
     },
     "typecheck": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "{workspaceRoot}", "command": "pnpm exec tsc --noEmit -p scripts/template/tsconfig.json" }
+      "options": {
+        "cwd": "{workspaceRoot}",
+        "command": "pnpm exec tsc --noEmit -p scripts/template/tsconfig.json"
+      }
     }
   }
 }

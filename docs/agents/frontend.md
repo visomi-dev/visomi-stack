@@ -132,6 +132,7 @@ These instructions apply to Angular frontend work in Themis. Read them before ed
 - Constants live under `shared/constants/`.
 - Smart route components connect to services and routing. Reusable UI/layout components receive data via inputs and emit via outputs.
 - Keep one primary concept per file and colocate each component's TypeScript, template, styles, and tests.
+- Browser utilities shared by Angular and Astro belong in `libs/frontend/shared`; they must use framework-agnostic browser APIs. Keep Angular services and UI components in the app. Import portable crypto contracts from `shared-crypto`, never the backend `shared` runtime entry point.
 
 ## Component And Form Tests
 

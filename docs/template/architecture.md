@@ -4,7 +4,14 @@
 
 The gateway serves Astro at `/`, Angular at `/app`, Express at `/api`, and Socket.IO at `/socket.io`. It starts the worker runtime. PostgreSQL stores operational/account state; Redis supports queues and shared runtime behavior. `/healthz` is liveness; `/readyz` reports gateway bootstrap readiness. Doctor also checks PostgreSQL/Redis independently, so gateway readiness is not treated as a complete dependency audit.
 
-Authentication, sessions, middleware, input validation, and error contracts belong to the foundation. `libs/shared` owns cross-cutting runtime code; its `shared/environment-schema` public subpath exposes validation without loading `.env`, databases, or sessions. Template tooling bundles that source using the `visomi-source` export condition.
+Authentication, sessions, middleware, input validation, and error contracts belong to the foundation. `libs/backend/shared` owns cross-cutting runtime code; its `shared/environment-schema` public subpath exposes validation without loading `.env`, databases, or sessions. Template tooling bundles that source using the `visomi-source` export condition.
+
+`libs/frontend/shared` owns framework-agnostic browser utilities shared by Angular
+and Astro, including the IndexedDB/WebCrypto vault and WebAuthn PRF adapter. It
+does not depend on either framework or on the backend runtime. Portable envelope
+contracts and synchronization logic live in `libs/shared/crypto` (`shared-crypto`),
+which both platform layers can consume. Nx dependency boundaries enforce this
+direction; browser-only operations must be invoked on the client, not during SSR.
 
 Public application branding is read from `template.json` by the web surfaces. Never put secrets in that file: it is bundled into client-visible code. Internal package identities (`shared`, `projects`, and workflow packages), schema names, and migration history are stable implementation contracts, not branding fields.
 

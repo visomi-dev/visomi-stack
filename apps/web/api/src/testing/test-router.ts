@@ -18,7 +18,7 @@ import {
 } from '../auth/auth-service';
 import { emailSchema, getValidated, validateRequest, z } from '../shared/http/route-schemas';
 
-import { accountMemberships, db, users } from 'shared';
+import { accountMemberships, db, saveSession, users } from 'shared';
 
 const mailboxQuerySchema = z
   .object({
@@ -148,9 +148,7 @@ testRouter.post(
         };
         req.session.cookie.maxAge = 15 * 60_000;
 
-        await new Promise<void>((resolve, reject) => {
-          req.session.save((error) => (error ? reject(error) : resolve()));
-        });
+        await saveSession(req);
 
         res.status(200).send({ data: { accountId: authUser.accountId, userId: authUser.id } });
 
@@ -169,9 +167,7 @@ testRouter.post(
       // The deterministic test session represents a freshly reauthenticated test user.
       req.session.passkeySecurityReauthenticatedAt = Date.now();
 
-      await new Promise<void>((resolve, reject) => {
-        req.session.save((error) => (error ? reject(error) : resolve()));
-      });
+      await saveSession(req);
 
       res.status(200).send({ data: { accountId: authUser.accountId, userId: authUser.id } });
     } catch (error: unknown) {

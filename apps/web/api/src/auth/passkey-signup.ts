@@ -20,6 +20,8 @@ import {
   authVerificationChallenges,
   db,
   HttpError,
+  regenerateSession,
+  saveSession,
   users,
 } from 'shared';
 
@@ -37,10 +39,6 @@ function pendingSignup(req: Request) {
   return pending;
 }
 
-async function saveSession(req: Request): Promise<void> {
-  await new Promise<void>((resolve, reject) => req.session.save((error) => (error ? reject(error) : resolve())));
-}
-
 export const passkeySignupRouter = Router();
 
 passkeySignupRouter.post('/begin', validateRequest({ body: passkeySignupBeginSchema }), async (req, res) => {
@@ -54,7 +52,7 @@ passkeySignupRouter.post('/begin', validateRequest({ body: passkeySignupBeginSch
       statusCode: 409,
     });
   }
-  await new Promise<void>((resolve, reject) => req.session.regenerate((error) => (error ? reject(error) : resolve())));
+  await regenerateSession(req);
   const userId = randomUUID();
   const options = await generateRegistrationOptions({
     rpName: APP_NAME,

@@ -24,7 +24,7 @@ Use `shared/` only for cross-feature backend infrastructure:
 - `shared/db/`
 - `shared/http/`
 
-Use `libs/shared/` only for cross-runtime platform concerns:
+Use `libs/backend/shared/` only for cross-runtime platform concerns:
 
 - env loading
 - session helpers
@@ -138,7 +138,7 @@ API runtime:
 Worker runtime:
 
 - `apps/worker/src/main.ts` bootstraps feature workers
-- worker apps depend on shared runtime from `libs/shared` and feature libs such as `libs/projects`
+- worker apps depend on shared runtime from `libs/backend/shared` and feature libs such as `libs/projects`
 - worker apps do not expose HTTP routes
 
 Realtime feature code:
@@ -160,14 +160,14 @@ Server runtime:
 - do not add `buildXRouter` or `createXService` wrappers for normal feature modules
 - do not split schemas away from the feature they describe
 - do not redefine auth guards or account context logic in every feature
-- do not place feature-shared domain code in `libs/shared`
+- do not place feature-shared domain code in `libs/backend/shared`
 - do not create generic global `jobs`, `queues`, or `workers` buckets when the code belongs to a feature domain
 - do not use an in-process event emitter as a cross-runtime boundary
 
 ## Session And Runtime Notes
 
 - Do not depend on `connect-pg-simple` for session persistence. The shared runtime uses an in-repo Postgres-backed `express-session` store.
-- Keep shared runtime code in `libs/shared` lean and framework-agnostic enough to work in API, worker, realtime, and gateway builds.
+- Keep shared runtime code in `libs/backend/shared` lean and framework-agnostic enough to work in API, worker, realtime, and gateway builds.
 - Local, test, and production environments should all use shared DB-backed sessions for realtime socket auth.
 
 ## Tenancy Notes

@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 
 import type { Pool } from 'pg';
 
-import { parseEncryptedEnvelope, type EncryptedEnvelope } from './encrypted-envelope';
+import { parseEncryptedEnvelope, type EncryptedEnvelope } from 'shared-crypto';
 
 type LegacyProjectRecord = {
   activity?: unknown;

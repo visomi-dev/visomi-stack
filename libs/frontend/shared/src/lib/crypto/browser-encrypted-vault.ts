@@ -5,7 +5,7 @@ import {
   parseEncryptedEnvelope,
   serializeEncryptedEnvelope,
   type EncryptedEnvelope,
-} from './encrypted-envelope';
+} from 'shared-crypto';
 
 const ENVELOPE_VERSION = 1;
 const VAULT_SCHEMA_VERSION = 2;

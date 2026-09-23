@@ -1,6 +1,6 @@
 # Correlated operational telemetry
 
-`libs/shared/src/lib/observability.ts` owns an AsyncLocalStorage request context.
+`libs/backend/shared/src/lib/observability.ts` owns an AsyncLocalStorage request context.
 A versioned `globalThis[Symbol.for('visomi-stack.observability.v1')]` registry
 shares the context, counters, response ownership, and reporter across separately
 bundled copies in the same process. Separate processes still use explicit job
