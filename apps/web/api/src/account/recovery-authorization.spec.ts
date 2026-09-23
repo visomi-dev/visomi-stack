@@ -136,6 +136,9 @@ describe('recovery authorization persistence and epoch serialization', () => {
 
       expect(codes.filter((item) => item.usedAt)).toHaveLength(kind === 'recovery_code' ? 1 : 0);
     },
+    // Ten real scrypt hashes plus competing PGlite transactions can exceed Jest's
+    // five-second default when the CI workers share a small CPU allocation.
+    20_000,
   );
 
   it('rejects a fresh-flow cooldown bypass before invalidating the victim challenge or sending mail', async () => {
