@@ -1,3 +1,4 @@
+import { APP_BASE_HREF, PathLocationStrategy, LocationStrategy } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
@@ -19,6 +20,8 @@ describe('EmailVerification', () => {
       imports: [EmailVerification],
       providers: [
         provideRouter([]),
+        { provide: APP_BASE_HREF, useValue: '/app/es/' },
+        { provide: LocationStrategy, useClass: PathLocationStrategy },
         { provide: Auth, useValue: auth },
         {
           provide: Settings,
@@ -57,5 +60,10 @@ describe('EmailVerification', () => {
 
     expect(auth.verifyEmailOtp).toHaveBeenCalledWith({ flowId: 'flow-1', pin: '123456' });
     expect(fixture.componentInstance.complete()).toBe(true);
+    const link = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>).find(
+      (anchor) => anchor.textContent?.includes('Continue to sign in'),
+    )!;
+
+    expect(link.getAttribute('href')).toBe('/app/es/auth/sign-in');
   });
 });

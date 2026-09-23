@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { email, form, maxLength, minLength, pattern, required, type FieldTree } from '@angular/forms/signals';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { Auth } from '../../shared/auth/auth';
 import { APP_URL, SIGN_IN_URL } from '../../shared/constants/routes';
@@ -17,7 +17,7 @@ type EmailModel = { email: string };
 type CodeModel = { pin: string };
 
 @Component({
-  imports: [AppForm, AuthCard, AuthLayout, ErrorMessage, Field, Input, Label],
+  imports: [AppForm, AuthCard, AuthLayout, ErrorMessage, Field, Input, Label, RouterLink],
   selector: 'app-email-verification',
   templateUrl: './email-verification.html',
   styleUrl: './email-verification.css',

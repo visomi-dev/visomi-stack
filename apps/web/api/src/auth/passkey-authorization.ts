@@ -7,6 +7,8 @@ import {
   accountPasskeyEnrollments,
   accountWebAuthnChallenges,
   authEnrollmentGrants,
+  authIdentityFlows,
+  userTotpEnrollments,
   db,
   HttpError,
   users,
@@ -117,6 +119,40 @@ export async function authorizePasskeyAssertion(input: {
         (grant.consumedAt && !['device_approval', 'password_enrollment', 'identity_enrollment'].includes(grant.source))
       ) {
         unavailable('enrollment_grant_unavailable');
+      }
+      if (grant.source === 'email_recovery') {
+        const [proof] = await tx
+          .select()
+          .from(authIdentityFlows)
+          .where(eq(authIdentityFlows.id, grant.id))
+          .for('update');
+        const [factor] = await tx
+          .select()
+          .from(userTotpEnrollments)
+          .where(and(eq(userTotpEnrollments.userId, user.id), eq(userTotpEnrollments.status, 'active')))
+          .for('update');
+
+        if (
+          !proof ||
+          proof.intent !== 'existing_account_recovery' ||
+          proof.state !== 'enroll_passkey' ||
+          proof.userId !== user.id ||
+          proof.accountId !== account.id ||
+          proof.userAuthVersion !== user.authVersion ||
+          proof.terminalAt ||
+          proof.completedAt ||
+          proof.expiresAt <= now ||
+          (factor
+            ? proof.requiredFactor !== 'totp' ||
+              proof.factorEnrollmentId !== factor.id ||
+              proof.factorEnrollmentVersion !== user.authVersion
+            : proof.requiredFactor !== 'email')
+        )
+          unavailable('enrollment_grant_unavailable');
+        await tx
+          .update(authIdentityFlows)
+          .set({ state: 'complete', completedAt: now, updatedAt: now })
+          .where(eq(authIdentityFlows.id, proof.id));
       }
       await tx.update(authEnrollmentGrants).set({ consumedAt: now }).where(eq(authEnrollmentGrants.id, grant.id));
     }

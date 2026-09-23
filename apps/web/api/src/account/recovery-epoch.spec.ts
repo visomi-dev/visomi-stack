@@ -14,6 +14,7 @@ import { authRouter } from '../auth/auth-router';
 import * as recovery from '../auth/auth-service';
 import { clearMailbox, listSentMessages } from '../auth/auth-mail';
 import { verifySecret } from '../auth/auth-crypto';
+import { resetPasskeySecurityState } from '../auth/passkey-security';
 
 import { requestEmailChange, verifyEmailChange } from './account-service';
 import type { AccountContext } from './account-service';
@@ -38,7 +39,9 @@ jest.mock('shared', () => {
 
   return { ...actual, db: drizzle(new PGlite(), { casing: 'snake_case' }) };
 });
-jest.mock('../shared/env', () => ({ env: { ...jest.requireActual('../shared/env').env, MAIL_TRANSPORT: 'memory' } }));
+jest.mock('../shared/env', () => ({
+  env: { ...jest.requireActual('../shared/env').env, MAIL_TRANSPORT: 'memory', DATABASE_DRIVER: 'memory' },
+}));
 
 const store = new ManagedMemorySessionStore();
 const origin = new URL(env.APP_BASE_URL).origin;
@@ -66,6 +69,7 @@ afterAll(async () => {
   await (db as unknown as { $client: PGlite }).$client.close();
 });
 afterEach(() => {
+  resetPasskeySecurityState();
   jest.restoreAllMocks();
   clearMailbox();
   store.clear();

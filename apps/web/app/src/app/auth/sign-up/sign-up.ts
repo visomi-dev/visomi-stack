@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { PasswordAuth } from '../../shared/auth/password';
+import { validatePasswordLength } from '../../shared/auth/password-validation';
 import { Passkey } from '../../shared/auth/passkey';
 import { ErrorMessage } from '../../shared/ui/forms/error-message/error-message';
 import { Field } from '../../shared/ui/forms/field/field';
@@ -41,8 +42,7 @@ export class SignUp {
     required(path.email, { message: $localize`:@@signupEmailRequired:Enter your email address.` });
     email(path.email, { message: $localize`:@@signupEmailInvalid:Enter a valid email address.` });
     required(path.password, { message: $localize`:@@identityPasswordSetupRequired:Enter a password.` });
-    minLength(path.password, 12, { message: $localize`:@@identityPasswordSetupLength:Use at least 12 characters.` });
-    maxLength(path.password, 128, { message: $localize`:@@signupPasswordMaximum:Use 128 characters or fewer.` });
+    validatePasswordLength(path.password);
     required(path.confirmation, { message: $localize`:@@identityPasswordConfirmationRequired:Confirm your password.` });
     validate(path.confirmation, ({ value, valueOf }) =>
       value() === valueOf(path.password)

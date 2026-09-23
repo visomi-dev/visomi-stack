@@ -222,7 +222,7 @@ export async function smoke(
 
         container([
           'run',
-          '--pull=never',
+          options.restore ? '--pull=never' : '--pull=missing',
           '--detach',
           '--rm',
           '--name',
@@ -254,7 +254,7 @@ export async function smoke(
 
         container([
           'run',
-          '--pull=never',
+          options.restore ? '--pull=never' : '--pull=missing',
           '--detach',
           '--rm',
           '--name',
@@ -435,7 +435,9 @@ export async function smoke(
     };
     const email = `${prefix}@example.test`;
     const password = randomBytes(24).toString('base64url');
-    const signup = flowResponse.parse(await request('/api/auth/password/sign-up', { email, password }));
+    const signup = z
+      .object({ data: z.object({ flowId: z.string(), resendAvailableAt: z.iso.datetime() }) })
+      .parse(await request('/api/auth/password/sign-up', { email, password }));
     const signupCode = z
       .object({ pin: z.string() })
       .parse(await request(`/api/test/mailbox/latest?email=${encodeURIComponent(email)}&purpose=password_signup`));
@@ -469,6 +471,10 @@ export async function smoke(
       jar.clear();
       await startGateway();
     }
+    // Signup and sign-in share the destination cooldown; honor the server's deadline.
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.max(0, Date.parse(signup.data.resendAvailableAt) - Date.now())),
+    );
     const signin = flowResponse.parse(await request('/api/auth/password/sign-in', { email, password }));
     const signinCode = z
       .object({ pin: z.string() })

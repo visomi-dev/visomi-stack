@@ -234,7 +234,14 @@
           >
             Back to password
           </button>
-          @if (passwordFactor() === 'totp') {
+          @if (passwordFactor() === 'recovery_code') {
+            <h1 class="font-heading mt-3 text-2xl font-bold" i18n="@@identityRecoveryCodeTitle">
+              Enter a recovery code
+            </h1>
+            <p class="mt-3 text-base text-slate-500 dark:text-slate-400" i18n="@@identityRecoveryCodeDescription">
+              Use one of the unused recovery codes you saved when setting up your authenticator.
+            </p>
+          } @else if (passwordFactor() === 'totp') {
             <p
               class="mt-2 font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400"
               i18n="@@identityTotpEyebrow"
@@ -267,7 +274,7 @@
             >
             <app-input
               [formField]="otpForm.pin"
-              inputmode="numeric"
+              [inputmode]="passwordFactor() === 'recovery_code' ? 'text' : 'numeric'"
               autocomplete="one-time-code"
               controlId="identity-password-code"
               name="code"
@@ -296,6 +303,20 @@
                 <span i18n="@@accessResendCountdown">Resend code in {{ resendSeconds() }} seconds</span>
               } @else {
                 <span i18n="@@identityPasswordResend">Resend code</span>
+              }
+            </button>
+          }
+          @if (passwordFlow()?.requiredFactor === 'totp') {
+            <button
+              type="button"
+              class="min-h-11 rounded-md px-4 text-sm font-semibold text-blue-600 dark:text-blue-400"
+              [disabled]="passwordSubmitting()"
+              (click)="togglePasswordFactor()"
+            >
+              @if (passwordFactor() === 'recovery_code') {
+                <span i18n="@@identityUseAuthenticator">Use an authenticator code</span>
+              } @else {
+                <span i18n="@@identityUseRecoveryCode">Use a recovery code</span>
               }
             </button>
           }
@@ -465,6 +486,42 @@
               <app-error-message controlId="identity-pin-error">{{ otpError() }}</app-error-message>
             }
           </app-field>
+          <p
+            id="recovery-factor-help"
+            class="text-sm text-slate-500 dark:text-slate-400"
+            i18n="@@identityRecoveryFactorHelp"
+          >
+            If you set up an authenticator, also enter an authenticator or recovery code. Otherwise, leave this blank.
+          </p>
+          <app-field>
+            <label for="recovery-factor-kind" class="text-sm font-semibold" i18n="@@identityRecoveryFactorKind"
+              >Additional verification method</label
+            >
+            <select
+              id="recovery-factor-kind"
+              class="min-h-11 rounded-md border border-zinc-950/10 bg-white px-3 dark:border-white/10 dark:bg-zinc-900"
+              [value]="recoveryFactorModel().kind"
+              (change)="changeRecoveryFactor($event)"
+              [disabled]="recoverySubmitting()"
+            >
+              <option value="totp" i18n="@@identityAuthenticatorOption">Authenticator code</option>
+              <option value="recovery_code" i18n="@@identityRecoveryCodeOption">Recovery code</option>
+            </select>
+          </app-field>
+          <app-field>
+            <app-label for="recovery-factor-code" tone="plain" i18n="@@identityRecoveryFactorCode"
+              >Additional code (if configured)</app-label
+            >
+            <app-input
+              [formField]="recoveryFactorForm.code"
+              controlId="recovery-factor-code"
+              name="factorCode"
+              autocomplete="off"
+              [inputmode]="recoveryFactorModel().kind === 'totp' ? 'numeric' : 'text'"
+              ariaDescribedBy="recovery-factor-help"
+              [disabled]="recoverySubmitting()"
+            />
+          </app-field>
           <button
             type="submit"
             class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-400"
@@ -485,6 +542,21 @@
             </button>
           }
         </app-form>
+      }
+      @case ('accounts-loading') {
+        <h1 class="font-heading text-2xl font-bold" i18n="@@identityAccountsLoadingTitle">Email verified</h1>
+        @if (recoverySubmitting()) {
+          <p role="status" class="mt-4 text-sm" i18n="@@identityAccountsLoading">Loading your accounts…</p>
+        } @else {
+          <button
+            type="button"
+            class="mt-6 min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white"
+            (click)="loadRecoveryAccounts()"
+            i18n="@@identityAccountsRetry"
+          >
+            Try loading accounts again
+          </button>
+        }
       }
       @case ('account-choice') {
         <header>
@@ -536,9 +608,7 @@
               controlId="identity-password-setup"
               name="password"
               [loading]="passwordSetupSubmitting()"
-              minLength="12"
               showStrength
-              maxLength="512"
               required
             />
             @if (passwordSetupError()) {
@@ -557,8 +627,6 @@
               controlId="identity-password-confirmation"
               name="confirmation"
               [loading]="passwordSetupSubmitting()"
-              minLength="12"
-              maxLength="512"
               required
             />
             @if (passwordConfirmationError()) {

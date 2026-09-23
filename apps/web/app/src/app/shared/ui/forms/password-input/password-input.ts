@@ -16,6 +16,7 @@ import type { Field } from '@angular/forms/signals';
 import { Icon } from '../../media/icon/icon';
 import { PasswordStrength } from '../password-strength/password-strength';
 import { uiClass } from '../../classes';
+import { passwordLength } from '../../../auth/password-validation';
 
 type PasswordVariant = 'icon' | 'text';
 
@@ -42,11 +43,13 @@ export class PasswordInput {
   readonly loading = input(false, { transform: booleanAttribute });
   readonly showStrength = input(false, { transform: booleanAttribute });
   readonly meetsLength = computed(() => {
-    const length = Array.from(this.formField()().value().normalize('NFC')).length;
+    const length = passwordLength(this.formField()().value());
 
     return length >= 12 && length <= 128;
   });
-  readonly maxLength = input(512, { transform: numberAttribute });
+  readonly maxLength = input<number | null, unknown>(null, {
+    transform: (value) => (value == null ? null : numberAttribute(value)),
+  });
   readonly minLength = input(0, { transform: numberAttribute });
   readonly name = input<string | null>(null);
   readonly pattern = input<string | null>(null);

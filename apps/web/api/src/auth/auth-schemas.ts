@@ -70,7 +70,16 @@ export const restrictedAccountChoiceSchema = z
 export const identityFlowIdSchema = z.string().uuid();
 export const identityIdentifySchema = z.object({ flowId: identityFlowIdSchema, email: emailSchema }).strict();
 export const identityStatusSchema = z.object({ flowId: identityFlowIdSchema }).strict();
-export const recoveryVerifySchema = z.object({ flowId: identityFlowIdSchema, pin: pinSchema }).strict();
+export const recoveryVerifySchema = z
+  .object({
+    flowId: identityFlowIdSchema,
+    pin: pinSchema,
+    factor: z
+      .object({ kind: z.enum(['totp', 'recovery_code']), code: z.string().min(1).max(128) })
+      .strict()
+      .optional(),
+  })
+  .strict();
 export const googleCompleteSchema = z.object({ flowId: identityFlowIdSchema, idToken: z.string().min(1) }).strict();
 export const passwordSignInSchema = z
   .object({ email: emailSchema, password: z.string().min(1).max(512) })
@@ -156,6 +165,7 @@ export const reauthStartSchema = z
       'totp_disable',
       'recovery_codes_regenerate',
       'google_link',
+      'google_unlink',
       'email_change',
       'workspace_leave',
       'sessions_revoke',
@@ -458,6 +468,7 @@ export const authOpenApiPaths = {
   },
   '/auth/totp/setup': {
     post: {
+      requestBody: { required: true, content: { 'application/json': { schema: operationGrantSchema } } },
       responses: {
         201: { description: 'TOTP enrollment started.' },
         404: { description: 'TOTP enrollment disabled.' },
@@ -550,7 +561,10 @@ export const authOpenApiPaths = {
     },
   },
   '/auth/security/federated/{identityId}': {
-    delete: { responses: { 204: { description: 'Federated identity revoked.' } } },
+    delete: {
+      requestBody: { required: true, content: { 'application/json': { schema: operationGrantSchema } } },
+      responses: { 204: { description: 'Federated identity revoked.' } },
+    },
   },
   '/auth/security/devices/{deviceId}': { delete: { responses: { 204: { description: 'Trusted device revoked.' } } } },
   '/auth/email-otp/request': {

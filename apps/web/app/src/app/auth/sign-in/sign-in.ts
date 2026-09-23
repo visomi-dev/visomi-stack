@@ -22,6 +22,7 @@ import type { RestrictedAccount } from '../../shared/auth/auth.models';
 import { Passkey } from '../../shared/auth/passkey';
 import { GoogleIdentity } from '../../shared/auth/google-identity';
 import { PasswordAuth, type PasswordSecondFactor, type PasswordSignInPending } from '../../shared/auth/password';
+import { validatePasswordLength } from '../../shared/auth/password-validation';
 import { authDestination, EMAIL_VERIFICATION_URL } from '../../shared/constants/routes';
 import { AuthCard } from '../../shared/ui/layout/auth-card/auth-card';
 import { AuthLayout } from '../../shared/ui/layout/auth-layout/auth-layout';
@@ -40,6 +41,7 @@ type AccessState =
   | 'password-factor'
   | 'email'
   | 'otp'
+  | 'accounts-loading'
   | 'account-choice'
   | 'password-setup'
   | 'password-setup-loading'
@@ -117,6 +119,8 @@ export class SignIn {
   readonly verificationNotice = signal('');
   readonly verificationRestartRequired = signal(false);
   readonly recoverySubmitting = signal(false);
+  readonly recoveryFactorModel = signal<{ kind: 'totp' | 'recovery_code'; code: string }>({ kind: 'totp', code: '' });
+  readonly recoveryFactorForm = form(this.recoveryFactorModel);
   private readonly syncResendClock = afterRenderEffect((onCleanup) => {
     if (this.state() !== 'password-factor' || this.passwordFactor() !== 'email' || !this.resendAvailableAt()) return;
     const window = this.document.defaultView;
@@ -138,7 +142,7 @@ export class SignIn {
   readonly identityFlowId = signal('');
   readonly googleClientId = signal<string | null>(null);
   readonly passwordFlow = signal<PasswordSignInPending | null>(null);
-  readonly passwordFactor = signal<PasswordSecondFactor | null>(null);
+  readonly passwordFactor = signal<PasswordSecondFactor | 'recovery_code' | null>(null);
   readonly passwordSubmitting = signal(false);
   readonly passwordSetupSubmitting = signal(false);
 
@@ -151,9 +155,15 @@ export class SignIn {
   readonly otpModel = signal<OtpModel>({ pin: '' });
   readonly otpForm: FieldTree<OtpModel> = form(this.otpModel, (path) => {
     required(path.pin, { message: $localize`:@@identityOtpRequired:Enter the 6-digit code.` });
-    minLength(path.pin, 6, { message: $localize`:@@identityOtpLength:Enter all 6 digits.` });
-    maxLength(path.pin, 6, { message: $localize`:@@identityOtpLength:Enter all 6 digits.` });
-    pattern(path.pin, /^\d{6}$/, { message: $localize`:@@identityOtpDigits:Use the 6 digits from your email.` });
+
+    const numeric = () => this.state() !== 'password-factor' || this.passwordFactor() !== 'recovery_code';
+
+    minLength(path.pin, 6, { when: numeric, message: $localize`:@@identityOtpLength:Enter all 6 digits.` });
+    maxLength(path.pin, 6, { when: numeric, message: $localize`:@@identityOtpLength:Enter all 6 digits.` });
+    pattern(path.pin, /^\d{6}$/, {
+      when: numeric,
+      message: $localize`:@@identityOtpDigits:Use the 6 digits from your email.`,
+    });
   });
 
   readonly enrollmentModel = signal<EnrollmentModel>({ label: '' });
@@ -175,12 +185,7 @@ export class SignIn {
   readonly passwordSetupModel = signal<PasswordSetupModel>({ password: '', confirmation: '' });
   readonly passwordSetupForm: FieldTree<PasswordSetupModel> = form(this.passwordSetupModel, (path) => {
     required(path.password, { message: $localize`:@@identityPasswordSetupRequired:Enter a password.` });
-    minLength(path.password, 12, {
-      message: $localize`:@@identityPasswordSetupLength:Use at least 12 characters.`,
-    });
-    maxLength(path.password, 512, {
-      message: $localize`:@@identityPasswordSetupMaxLength:Use 512 characters or fewer.`,
-    });
+    validatePasswordLength(path.password);
     required(path.confirmation, { message: $localize`:@@identityPasswordConfirmationRequired:Confirm your password.` });
     validate(path.confirmation, ({ value, valueOf }) =>
       value() === valueOf(path.password)
@@ -579,6 +584,19 @@ export class SignIn {
     }
   }
 
+  protected togglePasswordFactor(): void {
+    if (this.passwordSubmitting() || this.passwordFlow()?.requiredFactor !== 'totp') return;
+    this.passwordFactor.set(this.passwordFactor() === 'recovery_code' ? 'totp' : 'recovery_code');
+    this.otpModel.set({ pin: '' });
+    this.errorMessage.set('');
+  }
+
+  protected changeRecoveryFactor(event: Event): void {
+    const kind = (event.target as HTMLSelectElement).value;
+
+    if (kind === 'totp' || kind === 'recovery_code') this.recoveryFactorModel.set({ kind, code: '' });
+  }
+
   protected async resendPasswordCode(): Promise<void> {
     const flowId = this.flowId();
 
@@ -668,6 +686,7 @@ export class SignIn {
       this.resendAvailableAt.set('');
       this.otpModel.set({ pin: '' });
       this.state.set('otp');
+      this.recoveryFactorModel.set({ kind: 'totp', code: '' });
     } catch (error) {
       if (this.destroyed || attempt !== this.recoveryAttempt) return;
       this.errorMessage.set(
@@ -691,7 +710,13 @@ export class SignIn {
   }
 
   protected async verifyCode(): Promise<void> {
-    if (this.otpForm().invalid() || !this.flowId() || this.recoverySubmitting() || this.verificationRestartRequired())
+    if (
+      this.state() !== 'otp' ||
+      this.otpForm().invalid() ||
+      !this.flowId() ||
+      this.recoverySubmitting() ||
+      this.verificationRestartRequired()
+    )
       return;
     const attempt = this.recoveryAttempt;
 
@@ -699,17 +724,17 @@ export class SignIn {
     this.errorMessage.set('');
 
     try {
-      await this.auth.verifyIdentityRecovery(this.flowId(), this.otpForm.pin().value());
+      const factor = this.recoveryFactorModel();
+
+      await this.auth.verifyIdentityRecovery(
+        this.flowId(),
+        this.otpForm.pin().value(),
+        factor.code.trim() ? { ...factor, code: factor.code.trim() } : undefined,
+      );
       if (this.destroyed || attempt !== this.recoveryAttempt) return;
-
-      const accounts = await this.auth.getRestrictedAccounts();
-
-      if (this.destroyed || attempt !== this.recoveryAttempt) return;
-      this.accounts.set(accounts);
-      const selected = accounts.find((account) => account.selected) ?? null;
-
-      this.selectedAccount.set(selected);
-      this.state.set(selected ? 'password-setup' : 'account-choice');
+      this.state.set('accounts-loading');
+      this.otpModel.set({ pin: '' });
+      this.recoveryFactorModel.set({ kind: 'totp', code: '' });
     } catch (error) {
       if (this.destroyed || attempt !== this.recoveryAttempt) return;
       const accounts = this.accountChoices(error);
@@ -721,6 +746,32 @@ export class SignIn {
         return;
       }
       this.errorMessage.set(this.verificationError(error));
+    } finally {
+      if (attempt === this.recoveryAttempt) this.recoverySubmitting.set(false);
+    }
+    if (this.state() === 'accounts-loading') await this.loadRecoveryAccounts();
+  }
+
+  protected async loadRecoveryAccounts(): Promise<void> {
+    if (this.state() !== 'accounts-loading' || this.recoverySubmitting()) return;
+    const attempt = this.recoveryAttempt;
+
+    this.recoverySubmitting.set(true);
+    this.errorMessage.set('');
+    try {
+      const accounts = await this.auth.getRestrictedAccounts();
+
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
+      this.accounts.set(accounts);
+      const selected = accounts.find((account) => account.selected) ?? null;
+
+      this.selectedAccount.set(selected);
+      this.state.set(selected ? 'password-setup' : 'account-choice');
+    } catch {
+      if (!this.destroyed && attempt === this.recoveryAttempt)
+        this.errorMessage.set(
+          $localize`:@@identityAccountsLoadFailed:Your email was verified, but we could not load your accounts. Try loading them again.`,
+        );
     } finally {
       if (attempt === this.recoveryAttempt) this.recoverySubmitting.set(false);
     }
@@ -842,6 +893,9 @@ export class SignIn {
   ): string {
     if (error instanceof HttpErrorResponse) {
       const code: unknown = error.error?.code;
+
+      if (code === 'recovery_unavailable')
+        return $localize`:@@identityRecoveryUnavailable:We could not verify recovery. Check your email code and, if you set up an authenticator, include an authenticator or recovery code.`;
 
       if (code === 'challenge_expired' || code === 'challenge_attempt_limit' || code === 'password_factor_invalid') {
         this.verificationRestartRequired.set(true);

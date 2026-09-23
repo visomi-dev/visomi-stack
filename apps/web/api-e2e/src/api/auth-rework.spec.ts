@@ -69,7 +69,15 @@ describe('auth rework API contracts', () => {
     const account = await createPasswordAccount('totp');
     const session = await axios.post('/test/auth/session', { email: account.email });
     const sessionCookie = toCookieHeader(session.headers['set-cookie']);
-    const setup = await axios.post('/auth/totp/setup', {}, cookieConfig(sessionCookie));
+    const reauth = await axios.post('/auth/reauth/start', { purpose: 'totp_change' }, cookieConfig(sessionCookie));
+    const grantId = reauth.data.data.grantId as string;
+
+    await axios.post(
+      '/auth/reauth/complete',
+      { grantId, method: 'password', password: account.password },
+      cookieConfig(sessionCookie),
+    );
+    const setup = await axios.post('/auth/totp/setup', { grantId }, cookieConfig(sessionCookie));
 
     await axios.post(
       '/auth/totp/confirm',

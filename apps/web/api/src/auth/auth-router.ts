@@ -71,10 +71,8 @@ import {
 import {
   consumePasswordRateLimit,
   csrfProtection,
-  emailOtpDeliveryRateLimit,
   emailOtpVerificationRateLimit,
   authenticationRateLimit,
-  consumeEmailOtpDeliveryLimit,
 } from './passkey-security';
 import { clearSessionHintCookie, setSessionHintCookie } from './session-cookie';
 import { verifyPassword } from './password';
@@ -202,17 +200,19 @@ async function establishRestrictedSession(
   if (selectedAccountId) {
     const user = await findUserById(identity.userId);
 
-    if (user) {
-      const authUser = {
-        ...(await resolveAuthUserForAccount(user, selectedAccountId)),
-        authority: 'restricted' as const,
-      };
-
-      await new Promise<void>((resolve, reject) => req.login(authUser, (error) => (error ? reject(error) : resolve())));
+    if (!user || user.authVersion !== identity.authVersion || user.email !== identity.email) {
+      throw new HttpError({ code: 'authentication_required', message: 'Verify your identity again.', statusCode: 401 });
     }
+    const authUser = {
+      ...(await resolveAuthUserForAccount(user, selectedAccountId)),
+      authority: 'restricted' as const,
+    };
+
+    await new Promise<void>((resolve, reject) => req.login(authUser, (error) => (error ? reject(error) : resolve())));
   }
   req.session.restrictedAuth = restrictedAuth;
   req.session.authority = 'restricted';
+  req.session.authVersion = identity.authVersion;
   req.session.cookie.maxAge = 15 * 60_000;
 
   return expiresAt;
@@ -618,12 +618,15 @@ router.post(
         user,
         flow.id as `${string}-${string}-${string}-${string}-${string}`,
         req.sessionID,
+        req.ip,
       );
     } else if (!user && flow.state === 'verify_new_email' && flow.emailHash === flowHash(body.email)) {
       await requestEmailOtp(
         body.email,
         requestContext(req),
         flow.id as `${string}-${string}-${string}-${string}-${string}`,
+        'bootstrap_recovery',
+        req.ip,
       );
     }
     httpResponse.json(res, {
@@ -672,6 +675,7 @@ router.post(
       body.pin,
       req.sessionID,
       clientContextHash(req.sessionID, req.get('user-agent')),
+      body.factor,
     );
     const { user, memberships, selected, grant, expiresAt } = authorization;
     const authUser = {
@@ -750,7 +754,7 @@ router.post(
   validateRequest({ body: passwordSignUpSchema }),
   async (req, res) => {
     const body = getValidated<{ body: typeof passwordSignUpSchema }>(req).body!;
-    const pending = await startPasswordSignUp(body.email, body.password, requestContext(req), req.sessionID);
+    const pending = await startPasswordSignUp(body.email, body.password, requestContext(req), req.sessionID, req.ip);
 
     await bindPasswordFlowToNewSession(req, pending.flowId);
     req.session.passwordFlowId = pending.flowId;
@@ -794,7 +798,7 @@ router.post(
   validateRequest({ body: passwordResetRequestSchema }),
   async (req, res) => {
     const body = getValidated<{ body: typeof passwordResetRequestSchema }>(req).body!;
-    const pending = await startPasswordReset(body.email, requestContext(req), req.sessionID);
+    const pending = await startPasswordReset(body.email, requestContext(req), req.sessionID, req.ip);
 
     await bindPasswordFlowToNewSession(req, pending.flowId);
     req.session.passwordFlowId = pending.flowId;
@@ -827,6 +831,7 @@ router.post(
       body.password,
       requestContext(req),
       req.sessionID,
+      req.ip,
     );
     delete req.session.passwordFlowId;
     httpResponse.json(res, { data: { passwordReset: true }, message: 'Password reset completed. Sign in again.' });
@@ -857,7 +862,7 @@ router.post(
         data: { retryAfter: passwordLimit.retryAfter },
       });
     const { email, password } = getValidated<{ body: typeof passwordSignInSchema }>(req).body!;
-    const pending = await startPasswordSignIn(email, password, requestContext(req), req.sessionID);
+    const pending = await startPasswordSignIn(email, password, requestContext(req), req.sessionID, req.ip);
 
     await new Promise<void>((resolve, reject) =>
       req.session.regenerate((error) => (error ? reject(error) : resolve())),
@@ -887,15 +892,7 @@ router.post(
     const result =
       body.kind === 'email'
         ? await verifyPasswordEmailOtp(body.flowId, body.code, requestContext(req), req.sessionID)
-        : body.kind === 'totp'
-          ? await verifyPasswordTotp(body.flowId, body.code, req.sessionID)
-          : (() => {
-              throw new HttpError({
-                code: 'password_factor_invalid',
-                message: 'The selected verification factor is not available.',
-                statusCode: 401,
-              });
-            })();
+        : await verifyPasswordTotp(body.flowId, body.code, req.sessionID, body.kind);
     const { flow, user } = result;
     const membership = await resolveAuthUserForAccount(user, flow.accountId ?? undefined);
     const authUser = {
@@ -922,39 +919,40 @@ router.post(
   },
 );
 
-router.post('/totp/setup', csrfProtection, authed({ authority: 'full' }), async function totpSetupHandler(req, res) {
-  if (!env.AUTH_TOTP_ENROLLMENT_ENABLED)
-    throw new HttpError({ code: 'totp_enrollment_disabled', message: 'TOTP enrollment is disabled.', statusCode: 404 });
-  const current = authedRequest(req).user;
+router.post(
+  '/totp/setup',
+  csrfProtection,
+  validateRequest({ body: operationGrantSchema }),
+  authed({ authority: 'full', operation: { purpose: 'totp_change', grantSource: 'body' } }),
+  async function totpSetupHandler(req, res) {
+    if (!env.AUTH_TOTP_ENROLLMENT_ENABLED)
+      throw new HttpError({
+        code: 'totp_enrollment_disabled',
+        message: 'TOTP enrollment is disabled.',
+        statusCode: 404,
+      });
+    const current = authedRequest(req).user;
 
-  if (
-    !req.session.passkeySecurityReauthenticatedAt ||
-    Date.now() - req.session.passkeySecurityReauthenticatedAt > 10 * 60_000
-  )
-    throw new HttpError({
-      code: 'reauthentication_required',
-      message: 'Reauthenticate before changing security settings.',
-      statusCode: 401,
+    const secret = generateTotpSecret();
+    const now = new Date();
+    const enrollmentId = randomUUID();
+
+    await db
+      .update(userTotpEnrollments)
+      .set({ status: 'revoked', updatedAt: now })
+      .where(and(eq(userTotpEnrollments.userId, current.id), eq(userTotpEnrollments.status, 'pending')));
+    await db.insert(userTotpEnrollments).values({
+      id: enrollmentId,
+      userId: current.id,
+      encryptedSecret: encryptTotpSecret(secret),
+      expiresAt: new Date(now.getTime() + 10 * 60_000),
+      createdAt: now,
+      updatedAt: now,
     });
-  const secret = generateTotpSecret();
-  const now = new Date();
-  const enrollmentId = randomUUID();
-
-  await db
-    .update(userTotpEnrollments)
-    .set({ status: 'revoked', updatedAt: now })
-    .where(and(eq(userTotpEnrollments.userId, current.id), eq(userTotpEnrollments.status, 'pending')));
-  await db.insert(userTotpEnrollments).values({
-    id: enrollmentId,
-    userId: current.id,
-    encryptedSecret: encryptTotpSecret(secret),
-    expiresAt: new Date(now.getTime() + 10 * 60_000),
-    createdAt: now,
-    updatedAt: now,
-  });
-  res.setHeader('Cache-Control', 'no-store');
-  httpResponse.json(res, { data: { enrollmentId, secret }, status: 201, message: 'TOTP enrollment started.' });
-});
+    res.setHeader('Cache-Control', 'no-store');
+    httpResponse.json(res, { data: { enrollmentId, secret }, status: 201, message: 'TOTP enrollment started.' });
+  },
+);
 
 router.post(
   '/totp/confirm',
@@ -992,6 +990,7 @@ router.post(
     if (!valid)
       throw new HttpError({ code: 'totp_code_invalid', message: 'The TOTP code is invalid.', statusCode: 401 });
     await db.transaction(async (tx) => {
+      await tx.select({ id: users.id }).from(users).where(eq(users.id, current.id)).for('update');
       await tx
         .update(userTotpEnrollments)
         .set({ status: 'active', confirmedAt: new Date(), updatedAt: new Date() })
@@ -1052,6 +1051,7 @@ router.post(
         statusCode: 409,
       });
     await db.transaction(async (tx) => {
+      await tx.select({ id: users.id }).from(users).where(eq(users.id, current.id)).for('update');
       await tx
         .update(userTotpEnrollments)
         .set({ status: 'revoked', updatedAt: new Date() })
@@ -1157,7 +1157,7 @@ router.post(
         message: 'Email verification is not available for this sign-in flow.',
         statusCode: 409,
       });
-    const challenge = await resendEmailOtp(flowId, requestContext(req));
+    const challenge = await resendEmailOtp(flowId, requestContext(req), req.ip);
 
     httpResponse.json(res, { data: challenge, status: 202, message: 'Password verification code resent.' });
   },
@@ -1443,18 +1443,14 @@ router.post(
         message: 'Confirm an existing passkey to add another.',
         statusCode: 409,
       });
-    if (!available.totpEnabled) {
-      const limit = consumeEmailOtpDeliveryLimit(req.ip, current.email);
+    const pending = await startPasswordSignIn(
+      current.email,
+      req.body.currentPassword,
+      requestContext(req),
+      req.sessionID,
+      req.ip,
+    );
 
-      if (!limit.allowed) {
-        res.setHeader('Retry-After', limit.retryAfter);
-        throw new HttpError({
-          code: 'rate_limited',
-          message: 'Wait before requesting another verification code.',
-          statusCode: 429,
-        });
-      }
-    }
     if (req.session.passkeyEnrollmentFlowId)
       await db
         .update(authIdentityFlows)
@@ -1462,12 +1458,6 @@ router.post(
         .where(
           and(eq(authIdentityFlows.id, req.session.passkeyEnrollmentFlowId), eq(authIdentityFlows.userId, current.id)),
         );
-    const pending = await startPasswordSignIn(
-      current.email,
-      req.body.currentPassword,
-      requestContext(req),
-      req.sessionID,
-    );
 
     await db
       .update(authIdentityFlows)
@@ -1620,8 +1610,8 @@ router.get('/security/overview', authed({ authority: 'full' }), async (req, res)
 router.delete(
   '/security/federated/:identityId',
   csrfProtection,
-  authed({ authority: 'full' }),
-  validateRequest({ params: securityIdentityPathSchema }),
+  validateRequest({ params: securityIdentityPathSchema, body: operationGrantSchema }),
+  authed({ authority: 'full', operation: { purpose: 'google_unlink', grantSource: 'body' } }),
   async (req, res) => {
     const current = authedRequest(req).user;
     const identityId = typeof req.params.identityId === 'string' ? req.params.identityId : req.params.identityId[0];
@@ -1884,11 +1874,10 @@ router.post(
   '/email-otp/request',
   csrfProtection,
   validateRequest({ body: emailOtpRequestSchema }),
-  emailOtpDeliveryRateLimit,
   async function requestEmailOtpHandler(req, res) {
     const { email } = getValidated<{ body: typeof emailOtpRequestSchema }>(req).body!;
 
-    const challenge = await requestEmailOtp(email, requestContext(req));
+    const challenge = await requestEmailOtp(email, requestContext(req), undefined, undefined, req.ip);
 
     httpResponse.json(res, {
       data: {
@@ -1940,20 +1929,30 @@ router.post(
       return;
     }
 
-    restricted.selectedAccountId = account.accountId;
+    const proofVersion = req.session.authVersion;
     const user = await findUserById(restricted.userId);
 
-    if (!user) {
-      throw new HttpError({ code: 'account_unavailable', message: 'The account is not available.', statusCode: 404 });
+    if (
+      !user ||
+      proofVersion === undefined ||
+      user.authVersion !== proofVersion ||
+      user.email !== restricted.verifiedEmail ||
+      req.session.authority !== 'restricted' ||
+      !restricted.allowedOperations.includes('accounts:select')
+    ) {
+      throw new HttpError({ code: 'authentication_required', message: 'Verify your identity again.', statusCode: 401 });
     }
+    restricted.selectedAccountId = account.accountId;
     const authUser = {
       ...(await resolveAuthUserForAccount(user, account.accountId)),
+      authVersion: proofVersion,
       authority: 'restricted' as const,
     };
 
     await new Promise<void>((resolve, reject) => req.login(authUser, (error) => (error ? reject(error) : resolve())));
     req.session.restrictedAuth = restricted;
     req.session.authority = 'restricted';
+    req.session.authVersion = proofVersion;
     req.session.cookie.maxAge = Math.max(0, restricted.expiresAt - Date.now());
     httpResponse.json(res, { data: { ...account, selected: true }, message: 'Account selected.' });
   },
@@ -1977,11 +1976,10 @@ router.post(
   '/email-otp/resend',
   csrfProtection,
   validateRequest({ body: emailOtpResendSchema }),
-  emailOtpDeliveryRateLimit,
   async function resendEmailOtpHandler(req, res) {
     const { flowId } = getValidated<{ body: typeof emailOtpResendSchema }>(req).body!;
 
-    const challenge = await resendEmailOtp(flowId, requestContext(req));
+    const challenge = await resendEmailOtp(flowId, requestContext(req), req.ip);
 
     httpResponse.json(res, {
       data: challenge,

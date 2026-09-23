@@ -127,11 +127,15 @@ describe('auth API', () => {
       expect.objectContaining({ residentKey: 'required', requireResidentKey: true, userVerification: 'required' }),
     );
 
-    const invalid = await axios.post('/auth/email-otp/request', { email: accountEmail }, csrfConfig);
+    const invalidEmail = `invalid-${Date.now()}@visomi-stack.dev`;
+    const invalid = await axios.post('/auth/email-otp/request', { email: invalidEmail }, csrfConfig);
+    const invalidMailbox = await axios.get('/test/mailbox/latest', {
+      params: { email: invalidEmail, purpose: 'bootstrap_recovery' },
+    });
 
     const invalidVerify = await axios.post(
       '/auth/email-otp/verify',
-      { flowId: invalid.data.data.flowId, pin: '000000' },
+      { flowId: invalid.data.data.flowId, pin: invalidMailbox.data.pin === '000000' ? '111111' : '000000' },
       { ...csrfConfig, validateStatus: () => true },
     );
 
@@ -153,7 +157,7 @@ describe('auth API', () => {
     const knownEmail = `known-${Date.now()}@visomi-stack.dev`;
     const unknownEmail = `unknown-${Date.now()}@visomi-stack.dev`;
 
-    await axios.post('/auth/email-otp/request', { email: knownEmail }, csrfConfig);
+    await axios.post('/test/auth/session', { email: knownEmail });
 
     const known = await axios.post('/auth/email-otp/request', { email: knownEmail }, csrfConfig);
     const unknown = await axios.post('/auth/email-otp/request', { email: unknownEmail }, csrfConfig);

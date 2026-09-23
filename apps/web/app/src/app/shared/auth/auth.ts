@@ -1,5 +1,6 @@
 import type { Signal } from '@angular/core';
 
+import type { PasswordResetFactor } from './password';
 import type {
   AuthUser,
   EmailOtpRequestPayload,
@@ -23,7 +24,11 @@ export abstract class Auth {
   abstract startIdentityFlow(): Promise<IdentityFlow>;
   abstract identifyIdentity(flowId: string, email: string): Promise<IdentityFlow>;
   abstract requestIdentityRecovery(flowId: string, email: string): Promise<IdentityFlow>;
-  abstract verifyIdentityRecovery(flowId: string, pin: string): Promise<RestrictedSession>;
+  abstract verifyIdentityRecovery(
+    flowId: string,
+    pin: string,
+    factor?: PasswordResetFactor,
+  ): Promise<RestrictedSession>;
   abstract ensureSessionLoaded(force?: boolean): Promise<void>;
   abstract requestEmailOtp(payload: EmailOtpRequestPayload): Promise<EmailOtpResponse['data']>;
   abstract verifyEmailOtp(payload: EmailOtpVerifyPayload): Promise<SessionUpgrade>;

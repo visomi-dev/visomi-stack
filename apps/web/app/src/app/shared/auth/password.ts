@@ -131,8 +131,10 @@ export class PasswordAuth {
     return response.data;
   }
 
-  async startTotpSetup(): Promise<TotpSetup> {
-    const response = await firstValueFrom(this.http.post<ResponseEnvelope<TotpSetup>>('/api/auth/totp/setup', {}));
+  async startTotpSetup(grantId: string): Promise<TotpSetup> {
+    const response = await firstValueFrom(
+      this.http.post<ResponseEnvelope<TotpSetup>>('/api/auth/totp/setup', { grantId }),
+    );
 
     return response.data;
   }

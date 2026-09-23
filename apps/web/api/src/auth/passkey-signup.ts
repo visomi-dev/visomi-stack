@@ -105,7 +105,7 @@ passkeySignupRouter.post('/complete', validateRequest({ body: registrationComple
     throw new HttpError({ code: 'passkey_invalid', message: 'We could not verify the passkey.', statusCode: 400 });
   }
   const { credential, credentialBackedUp, credentialDeviceType } = verified.registrationInfo;
-  const delivery = consumeEmailOtpDeliveryLimit(req.ip, pending.email, true);
+  const delivery = await consumeEmailOtpDeliveryLimit(req.ip, pending.email, true);
 
   if (!delivery.allowed) {
     res.setHeader('Retry-After', delivery.retryAfter);

@@ -77,6 +77,7 @@ describe('PasswordManagement', () => {
     await fixture.whenStable();
 
     expect(password.startTotpSetup).toHaveBeenCalledOnce();
+    expect(password.startTotpSetup).toHaveBeenCalledWith('grant-1');
     expect(fixture.nativeElement.textContent).toContain('JBSWY3DPEHPK3PXP');
   });
 

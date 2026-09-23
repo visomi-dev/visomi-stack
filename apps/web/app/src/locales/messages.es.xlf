@@ -2,6 +2,21 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file source-language="en-US" target-language="es" datatype="plaintext" original="ng2.template">
     <body>
+      <trans-unit id="securityGoogleUnlinkConfirm" datatype="html"><source>Confirm your identity to remove Google sign-in.</source><target>Confirma tu identidad para eliminar el inicio de sesión con Google.</target></trans-unit>
+      <trans-unit id="identityRecoveryCodeTitle" datatype="html"><source>Enter a recovery code</source><target>Introduce un código de recuperación</target></trans-unit>
+      <trans-unit id="identityRecoveryCodeDescription" datatype="html"><source>Use one of the unused recovery codes you saved when setting up your authenticator.</source><target>Usa uno de los códigos de recuperación sin usar que guardaste al configurar tu autenticador.</target></trans-unit>
+      <trans-unit id="identityUseAuthenticator" datatype="html"><source>Use an authenticator code</source><target>Usar un código del autenticador</target></trans-unit>
+      <trans-unit id="identityUseRecoveryCode" datatype="html"><source>Use a recovery code</source><target>Usar un código de recuperación</target></trans-unit>
+      <trans-unit id="identityRecoveryFactorHelp" datatype="html"><source>If you set up an authenticator, also enter an authenticator or recovery code. Otherwise, leave this blank.</source><target>Si configuraste un autenticador, introduce también un código del autenticador o de recuperación. De lo contrario, deja este campo en blanco.</target></trans-unit>
+      <trans-unit id="identityRecoveryFactorKind" datatype="html"><source>Additional verification method</source><target>Método de verificación adicional</target></trans-unit>
+      <trans-unit id="identityAuthenticatorOption" datatype="html"><source>Authenticator code</source><target>Código del autenticador</target></trans-unit>
+      <trans-unit id="identityRecoveryCodeOption" datatype="html"><source>Recovery code</source><target>Código de recuperación</target></trans-unit>
+      <trans-unit id="identityRecoveryFactorCode" datatype="html"><source>Additional code (if configured)</source><target>Código adicional (si lo configuraste)</target></trans-unit>
+      <trans-unit id="identityAccountsLoadingTitle" datatype="html"><source>Email verified</source><target>Correo verificado</target></trans-unit>
+      <trans-unit id="identityAccountsLoading" datatype="html"><source>Loading your accounts…</source><target>Cargando tus cuentas…</target></trans-unit>
+      <trans-unit id="identityAccountsRetry" datatype="html"><source>Try loading accounts again</source><target>Volver a cargar las cuentas</target></trans-unit>
+      <trans-unit id="identityAccountsLoadFailed" datatype="html"><source>Your email was verified, but we could not load your accounts. Try loading them again.</source><target>Tu correo se verificó, pero no pudimos cargar tus cuentas. Intenta cargarlas de nuevo.</target></trans-unit>
+      <trans-unit id="identityRecoveryUnavailable" datatype="html"><source>We could not verify recovery. Check your email code and, if you set up an authenticator, include an authenticator or recovery code.</source><target>No pudimos verificar la recuperación. Revisa el código de tu correo y, si configuraste un autenticador, incluye un código del autenticador o de recuperación.</target></trans-unit>
       <trans-unit id="accountTitle" datatype="html"><source>Your account</source><target>Tu cuenta</target></trans-unit>
       <trans-unit id="accountSignIn" datatype="html"><source>Go to sign in</source><target>Ir a iniciar sesión</target></trans-unit>
       <trans-unit id="accountProfileTitle" datatype="html"><source>Profile and preferences</source><target>Perfil y preferencias</target></trans-unit>

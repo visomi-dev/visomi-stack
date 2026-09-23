@@ -1,8 +1,30 @@
 import { randomUUID } from 'node:crypto';
+import { setTimeout as delay } from 'node:timers/promises';
 
 import { expect, test } from '@playwright/test';
 
 import { readLatestPin } from '../support/mailbox';
+
+for (const [description, password] of [
+  ['astral characters', '😀'.repeat(128)],
+  ['decomposed characters', 'e\u0301'.repeat(128)],
+]) {
+  test(`accepts 128 normalized code points without native truncation (${description})`, async ({ page }) => {
+    await page.goto('/app/en/auth/sign-up?method=password');
+    await page
+      .getByRole('textbox', { name: 'Email address', exact: true })
+      .fill(`unicode-${randomUUID()}@example.test`);
+    await page.getByLabel('Password', { exact: true }).fill(password);
+    await page.getByLabel('Confirm password', { exact: true }).fill(password);
+    await expect(page.getByLabel('Password', { exact: true })).toHaveValue(password);
+    await expect(page.getByText('Length requirement met (12–128 characters).')).toBeVisible();
+    const response = page.waitForResponse('**/api/auth/password/sign-up');
+
+    await page.getByRole('button', { name: 'Create account', exact: true }).click();
+    expect((await response).status()).toBe(202);
+    await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+  });
+}
 
 test('keeps email validation collapsed while typing and centers its icon after blur', async ({ page }) => {
   await page.goto('/app/en/auth/sign-up?method=password');
@@ -52,6 +74,7 @@ test('creates a password account with 12 characters and completes email and pass
   page,
   request,
 }) => {
+  test.setTimeout(120_000);
   const email = `password-${randomUUID()}@example.test`;
   const password = 'twelve chars';
 
@@ -67,13 +90,24 @@ test('creates a password account with 12 characters and completes email and pass
   await page.getByLabel('Confirm password', { exact: true }).fill(password);
   await expect(page.getByText('Length requirement met (12–128 characters).')).toBeVisible();
   await page.screenshot({ path: 'tmp/auth-captures/password-indicator.png', fullPage: true });
+  const signupResponse = page.waitForResponse('**/api/auth/password/sign-up');
+
   await page.getByRole('button', { name: 'Create account', exact: true }).click();
+  const signup = await signupResponse;
+
+  expect(signup.status()).toBe(202);
+  const delivery = (await signup.json()) as { data: { resendAvailableAt: string } };
+  const resendAvailableAt = Date.parse(delivery.data.resendAvailableAt);
+
+  expect(Number.isFinite(resendAvailableAt)).toBe(true);
   await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
   await page
     .getByRole('textbox', { name: 'Verification code' })
     .fill(await readLatestPin(request, email, 'password_signup'));
   await page.getByRole('button', { name: 'Verify email', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Your account is verified' })).toBeVisible();
+  // Signup and sign-in share the destination delivery cooldown on the real server.
+  await delay(Math.max(0, resendAvailableAt - Date.now()));
   await page.goto('/app/en/auth/sign-in?method=password');
   await page.getByRole('textbox', { name: 'Email address', exact: true }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);

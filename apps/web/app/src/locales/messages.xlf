@@ -601,47 +601,47 @@
         <source>Confirm new password</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.html</context>
-          <context context-type="linenumber">129,131</context>
+          <context context-type="linenumber">127,129</context>
         </context-group>
       </trans-unit>
       <trans-unit id="passwordChangeButton" datatype="html">
         <source> Change password </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.html</context>
-          <context context-type="linenumber">149,151</context>
+          <context context-type="linenumber">147,149</context>
         </context-group>
       </trans-unit>
       <trans-unit id="passwordRemoveButton" datatype="html">
         <source> Remove password </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.html</context>
-          <context context-type="linenumber">158,160</context>
+          <context context-type="linenumber">156,158</context>
         </context-group>
       </trans-unit>
       <trans-unit id="passwordAuthenticatorCodeRequired" datatype="html">
         <source>Enter the 6-digit authenticator code.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">48</context>
+          <context context-type="linenumber">49</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityOtpLength" datatype="html">
         <source>Enter all 6 digits.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">50</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
           <context context-type="linenumber">51</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">154</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
+          <context context-type="linenumber">52</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">155</context>
+          <context context-type="linenumber">159</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
+          <context context-type="linenumber">160</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
@@ -656,65 +656,39 @@
         <source>Use digits from your authenticator app.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">53</context>
+          <context context-type="linenumber">54</context>
         </context-group>
       </trans-unit>
       <trans-unit id="passwordCurrentRequired" datatype="html">
         <source>Enter your current password.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">59</context>
+          <context context-type="linenumber">60</context>
         </context-group>
       </trans-unit>
       <trans-unit id="passwordNewRequired" datatype="html">
         <source>Enter a new password.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">60</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="identityPasswordSetupLength" datatype="html">
-        <source>Use at least 12 characters.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
           <context context-type="linenumber">61</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">179</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
-          <context context-type="linenumber">44</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="identityPasswordSetupMaxLength" datatype="html">
-        <source>Use 512 characters or fewer.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">63</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">182</context>
         </context-group>
       </trans-unit>
       <trans-unit id="passwordNewConfirmationRequired" datatype="html">
         <source>Confirm your new password.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">65</context>
+          <context context-type="linenumber">63</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordMismatch" datatype="html">
         <source>Passwords do not match.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">69</context>
+          <context context-type="linenumber">67</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">188</context>
+          <context context-type="linenumber">191</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
@@ -725,63 +699,63 @@
         <source>Confirm your identity to set up your authenticator app.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">87</context>
+          <context context-type="linenumber">85</context>
         </context-group>
       </trans-unit>
       <trans-unit id="passwordTotpUnavailable" datatype="html">
         <source>Authenticator setup is not available right now.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">98</context>
+          <context context-type="linenumber">96</context>
         </context-group>
       </trans-unit>
       <trans-unit id="passwordTotpInvalid" datatype="html">
         <source>That authenticator code is not valid.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">118</context>
+          <context context-type="linenumber">116</context>
         </context-group>
       </trans-unit>
       <trans-unit id="passwordRemovalCurrentRequired" datatype="html">
         <source>Enter your current password before removing password access.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">136</context>
+          <context context-type="linenumber">134</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityChangePassword" datatype="html">
         <source>Confirm your identity to change your password.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">160</context>
+          <context context-type="linenumber">158</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityRemovePassword" datatype="html">
         <source>Confirm your identity to remove password access.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">161</context>
+          <context context-type="linenumber">159</context>
         </context-group>
       </trans-unit>
       <trans-unit id="passwordSettingsUpdated" datatype="html">
         <source>Password settings updated.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">165</context>
+          <context context-type="linenumber">163</context>
         </context-group>
       </trans-unit>
       <trans-unit id="passwordSettingsFailed" datatype="html">
         <source>Password settings could not be updated. Check the current state before trying again.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">175</context>
+          <context context-type="linenumber">173</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityKeepAccessMethod" datatype="html">
         <source>Set up and verify another sign-in method before removing this one.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">186</context>
+          <context context-type="linenumber">184</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.html</context>
@@ -789,22 +763,22 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">127</context>
+          <context context-type="linenumber">141</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">292</context>
+          <context context-type="linenumber">306</context>
         </context-group>
       </trans-unit>
       <trans-unit id="accessRateLimited" datatype="html">
         <source>Too many attempts. Wait a moment before trying again.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password-management/password-management.ts</context>
-          <context context-type="linenumber">189</context>
+          <context context-type="linenumber">187</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">834</context>
+          <context context-type="linenumber">883</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityStandaloneConfirmTitle" datatype="html">
@@ -1071,53 +1045,67 @@
           <context context-type="linenumber">235,237</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="identityRecoveryCodeTitle" datatype="html">
+        <source> Enter a recovery code </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">239,241</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityRecoveryCodeDescription" datatype="html">
+        <source> Use one of the unused recovery codes you saved when setting up your authenticator. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">242,244</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="identityTotpEyebrow" datatype="html">
         <source> Authenticator verification </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">242,244</context>
+          <context context-type="linenumber">249,251</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityTotpTitle" datatype="html">
         <source> Enter your authenticator code </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">245,247</context>
+          <context context-type="linenumber">252,254</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityTotpDescription" datatype="html">
         <source> Enter the 6-digit code from your authenticator app. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">248,250</context>
+          <context context-type="linenumber">255,257</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordEmailEyebrow" datatype="html">
         <source> Email verification </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">255,257</context>
+          <context context-type="linenumber">262,264</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordEmailTitle" datatype="html">
         <source>Check your email</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">257,258</context>
+          <context context-type="linenumber">264,265</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordEmailDescription" datatype="html">
         <source> Enter the code sent to <x id="INTERPOLATION" equiv-text="{{ passwordFlow()?.maskedEmail ?? &apos;your verified email&apos; }}"/>. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">259,261</context>
+          <context context-type="linenumber">266,268</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordCodeLabel" datatype="html">
         <source>Verification code</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">266,268</context>
+          <context context-type="linenumber">273,275</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.html</context>
@@ -1128,151 +1116,165 @@
         <source> Verify and sign in </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">286,288</context>
+          <context context-type="linenumber">293,295</context>
         </context-group>
       </trans-unit>
       <trans-unit id="accessResendCountdown" datatype="html">
         <source>Resend code in <x id="INTERPOLATION" equiv-text="{{ resendSeconds() }}"/> seconds</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">296,297</context>
+          <context context-type="linenumber">303,304</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordResend" datatype="html">
         <source>Resend code</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">298,300</context>
+          <context context-type="linenumber">305,307</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityUseAuthenticator" datatype="html">
+        <source>Use an authenticator code</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">317,319</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityUseRecoveryCode" datatype="html">
+        <source>Use a recovery code</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">319,321</context>
         </context-group>
       </trans-unit>
       <trans-unit id="accessRestartVerification" datatype="html">
         <source> Start verification again </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">313,315</context>
+          <context context-type="linenumber">334,336</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">484,486</context>
+          <context context-type="linenumber">541,543</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasskeyPromptEyebrow" datatype="html">
         <source> Passkey requested </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">324,326</context>
+          <context context-type="linenumber">345,347</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityCheckDevice" datatype="html">
         <source>Check your device</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">326,327</context>
+          <context context-type="linenumber">347,348</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityCheckDeviceDescription" datatype="html">
         <source> Follow your device&apos;s prompt to continue. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">328,331</context>
+          <context context-type="linenumber">349,352</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityWaitingPasskey" datatype="html">
         <source> Waiting for passkey </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">337,340</context>
+          <context context-type="linenumber">358,361</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasskeyErrorEyebrow" datatype="html">
         <source> Unable to continue </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">346,348</context>
+          <context context-type="linenumber">367,369</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasskeyErrorTitle" datatype="html">
         <source> Passkey sign-in did not finish. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">349,351</context>
+          <context context-type="linenumber">370,372</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityRetryPasskey" datatype="html">
         <source> Try passkey again </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">365,367</context>
+          <context context-type="linenumber">386,388</context>
         </context-group>
       </trans-unit>
       <trans-unit id="accessUseAnotherMethod" datatype="html">
         <source> Use another method </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">373,375</context>
+          <context context-type="linenumber">394,396</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityErrorTryAnotherWay" datatype="html">
         <source> Recover with email </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">381,383</context>
+          <context context-type="linenumber">402,404</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityBack" datatype="html">
         <source> Back </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">393,394</context>
+          <context context-type="linenumber">414,415</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityRecoveryEyebrow" datatype="html">
         <source> Recover account </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">399,401</context>
+          <context context-type="linenumber">420,422</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityRecoveryTitle" datatype="html">
         <source>Try another way</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">401,402</context>
+          <context context-type="linenumber">422,423</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityRecoveryDescription" datatype="html">
         <source> Enter an email you can verify. Email verification alone cannot sign you in. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">403,405</context>
+          <context context-type="linenumber">424,426</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityEmailLabel" datatype="html">
         <source>Email address</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">408,409</context>
+          <context context-type="linenumber">429,430</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identitySendCode" datatype="html">
         <source> Send code </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">427,428</context>
+          <context context-type="linenumber">448,449</context>
         </context-group>
       </trans-unit>
       <trans-unit id="accessChangeEmail" datatype="html">
         <source> Change email </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">440,442</context>
+          <context context-type="linenumber">461,463</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityOtpEyebrow" datatype="html">
         <source> Email verification </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">446,448</context>
+          <context context-type="linenumber">467,469</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.html</context>
@@ -1283,161 +1285,217 @@
         <source>Check for a 6-digit code</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">448,449</context>
+          <context context-type="linenumber">469,470</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityOtpDescription" datatype="html">
         <source> If you can use that email, check for a 6-digit code. Delivery can take a few minutes. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">450,452</context>
+          <context context-type="linenumber">471,473</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityOtpLabel" datatype="html">
         <source>Verification code</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">455,456</context>
+          <context context-type="linenumber">476,477</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityRecoveryFactorHelp" datatype="html">
+        <source> If you set up an authenticator, also enter an authenticator or recovery code. Otherwise, leave this blank. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">494,496</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityRecoveryFactorKind" datatype="html">
+        <source>Additional verification method</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">498,500</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityAuthenticatorOption" datatype="html">
+        <source>Authenticator code</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">507,508</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityRecoveryCodeOption" datatype="html">
+        <source>Recovery code</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">508,510</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityRecoveryFactorCode" datatype="html">
+        <source>Additional code (if configured)</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">513,515</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityVerifyEmail" datatype="html">
         <source> Verify email </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">474,476</context>
+          <context context-type="linenumber">531,533</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityAccountsLoadingTitle" datatype="html">
+        <source>Email verified</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">547,549</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityAccountsLoading" datatype="html">
+        <source>Loading your accounts…</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">549,551</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityAccountsRetry" datatype="html">
+        <source> Try loading accounts again </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
+          <context context-type="linenumber">557,559</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityVerifiedEyebrow" datatype="html">
         <source> Email verified </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">495,497</context>
+          <context context-type="linenumber">567,569</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityAccountTitle" datatype="html">
         <source> Choose the account you want to access. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">498,500</context>
+          <context context-type="linenumber">570,572</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordSetupEyebrow" datatype="html">
         <source> Optional account security </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">520,522</context>
+          <context context-type="linenumber">592,594</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordSetupTitle" datatype="html">
         <source>Set a password</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">522,523</context>
+          <context context-type="linenumber">594,595</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordSetupDescription" datatype="html">
         <source> Add a password for <x id="INTERPOLATION" equiv-text="{{ selectedAccount()?.name ?? &apos;your account&apos; }}"/>. You can skip this and create a passkey instead. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">524,526</context>
+          <context context-type="linenumber">596,598</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordSetupLabel" datatype="html">
         <source>Password</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">531,533</context>
+          <context context-type="linenumber">603,605</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordConfirmationLabel" datatype="html">
         <source>Confirm password</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">552,554</context>
+          <context context-type="linenumber">622,624</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identitySetPassword" datatype="html">
         <source> Set password </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">576,578</context>
+          <context context-type="linenumber">644,646</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identitySkipPassword" datatype="html">
         <source> Skip and create a passkey instead </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">585,587</context>
+          <context context-type="linenumber">653,655</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identitySettingPassword" datatype="html">
         <source>Setting your password</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">591,592</context>
+          <context context-type="linenumber">659,660</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identitySettingPasswordDescription" datatype="html">
         <source> Your password is being secured. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">593,596</context>
+          <context context-type="linenumber">661,664</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identitySavingPassword" datatype="html">
         <source> Saving password </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">602,605</context>
+          <context context-type="linenumber">670,673</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordSetupSuccess" datatype="html">
         <source>Password set successfully.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">607,610</context>
+          <context context-type="linenumber">675,678</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityContinuePasskeySetup" datatype="html">
         <source> Continue to passkey setup </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">615,618</context>
+          <context context-type="linenumber">683,686</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityEnrollmentEyebrow" datatype="html">
         <source> Final security step </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">624,626</context>
+          <context context-type="linenumber">692,694</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityEnrollmentTitle" datatype="html">
         <source> Create a passkey to finish. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">627,629</context>
+          <context context-type="linenumber">695,697</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityEnrollmentDescription" datatype="html">
         <source> Email verification alone cannot sign you in. Create and verify a passkey for <x id="INTERPOLATION" equiv-text="{{ selectedAccount()?.name ?? &apos;&apos; }}"/>. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">630,633</context>
+          <context context-type="linenumber">698,701</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasskeyLabel" datatype="html">
         <source>Passkey name</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">636,637</context>
+          <context context-type="linenumber">704,705</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityCreatePasskey" datatype="html">
         <source> Create passkey </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">654,656</context>
+          <context context-type="linenumber">722,724</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/device-approval/device-approval.html</context>
@@ -1448,43 +1506,43 @@
         <source>Create your passkey</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">660,661</context>
+          <context context-type="linenumber">728,729</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityCreatingPasskeyDescription" datatype="html">
         <source> Follow your device&apos;s prompt. You will verify the new passkey once more before entering Visomi Stack. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">662,665</context>
+          <context context-type="linenumber">730,733</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityWaitingSetup" datatype="html">
         <source> Waiting for your device </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">671,673</context>
+          <context context-type="linenumber">739,741</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityVerifyNewPasskey" datatype="html">
         <source>Verify your new passkey</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">676,677</context>
+          <context context-type="linenumber">744,745</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">692,693</context>
+          <context context-type="linenumber">760,761</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityVerifyNewPasskeyDescription" datatype="html">
         <source> Use the passkey you just created to finish signing in. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">678,681</context>
+          <context context-type="linenumber">746,749</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">694,697</context>
+          <context context-type="linenumber">762,765</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/device-approval/device-approval.html</context>
@@ -1495,14 +1553,14 @@
         <source> Waiting for verification </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">687,690</context>
+          <context context-type="linenumber">755,758</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityVerifyNewPasskeyAction" datatype="html">
         <source> Verify passkey </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">703,706</context>
+          <context context-type="linenumber">771,774</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/device-approval/device-approval.html</context>
@@ -1513,28 +1571,28 @@
         <source> Identity confirmed. Opening your account… </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.html</context>
-          <context context-type="linenumber">712,714</context>
+          <context context-type="linenumber">780,782</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityEmailRequired" datatype="html">
         <source>Enter an email you can verify.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">147</context>
+          <context context-type="linenumber">151</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityEmailInvalid" datatype="html">
         <source>Enter a valid email address.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">148</context>
+          <context context-type="linenumber">152</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityOtpRequired" datatype="html">
         <source>Enter the 6-digit code.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">153</context>
+          <context context-type="linenumber">157</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
@@ -1545,7 +1603,7 @@
         <source>Use the 6 digits from your email.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">156</context>
+          <context context-type="linenumber">163</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
@@ -1556,60 +1614,60 @@
         <source>Name this passkey.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">161</context>
+          <context context-type="linenumber">169</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasskeyLabelLength" datatype="html">
         <source>Use 64 characters or fewer.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">162</context>
+          <context context-type="linenumber">170</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordEmailRequired" datatype="html">
         <source>Enter your email address.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">168</context>
+          <context context-type="linenumber">176</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordEmailInvalid" datatype="html">
         <source>Enter a valid email address.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">169</context>
+          <context context-type="linenumber">177</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordRequired" datatype="html">
         <source>Enter your password.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">170</context>
+          <context context-type="linenumber">178</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordLength" datatype="html">
         <source>Use 512 characters or fewer.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">171</context>
+          <context context-type="linenumber">179</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordSetupRequired" datatype="html">
         <source>Enter a password.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">177</context>
+          <context context-type="linenumber">185</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
-          <context context-type="linenumber">43</context>
+          <context context-type="linenumber">44</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordConfirmationRequired" datatype="html">
         <source>Confirm your password.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">184</context>
+          <context context-type="linenumber">187</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
@@ -1620,106 +1678,120 @@
         <source>We could not verify that passkey.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">354</context>
+          <context context-type="linenumber">357</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">408</context>
+          <context context-type="linenumber">411</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasskeyUnsupported" datatype="html">
         <source>This browser cannot use a passkey here.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">374</context>
+          <context context-type="linenumber">377</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasskeyIncomplete" datatype="html">
         <source>Passkey sign-in was not completed. Try again or use another method.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">407</context>
+          <context context-type="linenumber">410</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityGoogleFailed" datatype="html">
         <source>Google sign-in is not available right now.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">447</context>
+          <context context-type="linenumber">450</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">460</context>
+          <context context-type="linenumber">463</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordFailed" datatype="html">
         <source>We could not sign in with that password.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">541</context>
+          <context context-type="linenumber">544</context>
         </context-group>
       </trans-unit>
       <trans-unit id="accessCodeResent" datatype="html">
         <source>We sent a new code. Check your email.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">605</context>
+          <context context-type="linenumber">621</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordResendFailed" datatype="html">
         <source>We could not resend the verification code.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">621</context>
+          <context context-type="linenumber">637</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityEmailFailed" datatype="html">
         <source>We could not send a code yet. Try again.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">674</context>
+          <context context-type="linenumber">691</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityAccountsLoadFailed" datatype="html">
+        <source>Your email was verified, but we could not load your accounts. Try loading them again.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
+          <context context-type="linenumber">771</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityPasswordSetupFailed" datatype="html">
         <source>We could not set your password. Try again.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">759</context>
+          <context context-type="linenumber">808</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityEnrollmentCancelled" datatype="html">
         <source>Passkey setup was cancelled. You can try again.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">800</context>
+          <context context-type="linenumber">849</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityEnrollmentFailed" datatype="html">
         <source>We could not create and verify that passkey.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">801</context>
+          <context context-type="linenumber">850</context>
         </context-group>
       </trans-unit>
       <trans-unit id="identityOtpFailed" datatype="html">
         <source>That code is not valid. Check it and try again.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">841</context>
+          <context context-type="linenumber">890</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityRecoveryUnavailable" datatype="html">
+        <source>We could not verify recovery. Check your email code and, if you set up an authenticator, include an authenticator or recovery code.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
+          <context context-type="linenumber">896</context>
         </context-group>
       </trans-unit>
       <trans-unit id="accessVerificationRestart" datatype="html">
         <source>This verification can no longer continue. Start again to get a new code.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">849</context>
+          <context context-type="linenumber">901</context>
         </context-group>
       </trans-unit>
       <trans-unit id="accessVerificationOffline" datatype="html">
         <source>We could not connect. Check your connection and try again.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-in/sign-in.ts</context>
-          <context context-type="linenumber">852</context>
+          <context context-type="linenumber">904</context>
         </context-group>
       </trans-unit>
       <trans-unit id="signupReady" datatype="html">
@@ -1843,7 +1915,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.html</context>
-          <context context-type="linenumber">187,191</context>
+          <context context-type="linenumber">185,189</context>
         </context-group>
       </trans-unit>
       <trans-unit id="signupPasswordEyebrow" datatype="html">
@@ -1871,36 +1943,25 @@
         <source>Confirm password</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.html</context>
-          <context context-type="linenumber">153,155</context>
+          <context context-type="linenumber">151,153</context>
         </context-group>
       </trans-unit>
       <trans-unit id="signupCreateAccount" datatype="html">
         <source>Create account</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.html</context>
-          <context context-type="linenumber">170,172</context>
+          <context context-type="linenumber">168,170</context>
         </context-group>
       </trans-unit>
       <trans-unit id="signupUsePasskey" datatype="html">
         <source>Use a passkey instead</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.html</context>
-          <context context-type="linenumber">180,183</context>
+          <context context-type="linenumber">178,181</context>
         </context-group>
       </trans-unit>
       <trans-unit id="signupEmailRequired" datatype="html">
         <source>Enter your email address.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
-          <context context-type="linenumber">35</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
-          <context context-type="linenumber">41</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="signupEmailInvalid" datatype="html">
-        <source>Enter a valid email address.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
           <context context-type="linenumber">36</context>
@@ -1910,11 +1971,15 @@
           <context context-type="linenumber">42</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="signupPasswordMaximum" datatype="html">
-        <source>Use 128 characters or fewer.</source>
+      <trans-unit id="signupEmailInvalid" datatype="html">
+        <source>Enter a valid email address.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
-          <context context-type="linenumber">45</context>
+          <context context-type="linenumber">37</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.ts</context>
+          <context context-type="linenumber">43</context>
         </context-group>
       </trans-unit>
       <trans-unit id="signupPasskeyUnsupported" datatype="html">
@@ -2556,7 +2621,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">341</context>
+          <context context-type="linenumber">355</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityRenameTitle" datatype="html">
@@ -2668,102 +2733,109 @@
         <source>Access through this method has been removed.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">123</context>
+          <context context-type="linenumber">124</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="securityGoogleUnlinkConfirm" datatype="html">
+        <source>Confirm your identity to remove Google sign-in.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
+          <context context-type="linenumber">133</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityUpdateFailed" datatype="html">
         <source>We could not update this access method. Check its current status before trying again.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">128</context>
+          <context context-type="linenumber">142</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityCodesReplaced" datatype="html">
         <source>Recovery codes replaced</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">136</context>
+          <context context-type="linenumber">150</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityRecoveryStarted" datatype="html">
         <source>Account recovery started</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">137</context>
+          <context context-type="linenumber">151</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityRecoveryActivity" datatype="html">
         <source>Account recovery activity</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">139</context>
+          <context context-type="linenumber">153</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityEnabled" datatype="html">
         <source>Enabled</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">143</context>
+          <context context-type="linenumber">157</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityNotConfigured" datatype="html">
         <source>Not set up</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">143</context>
+          <context context-type="linenumber">157</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityPasskeysLoadFailed" datatype="html">
         <source>Passkeys could not be loaded.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">152</context>
+          <context context-type="linenumber">166</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityOverviewUnavailable" datatype="html">
         <source>We could not load your account overview. Your passkeys are still available.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">166</context>
+          <context context-type="linenumber">180</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityAddAction" datatype="html">
         <source>Confirm your passkey to add a new sign-in method.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">209</context>
+          <context context-type="linenumber">223</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityRenameAction" datatype="html">
         <source>Confirm your passkey to rename this sign-in method.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">238</context>
+          <context context-type="linenumber">252</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityRevokeAction" datatype="html">
         <source>Confirm your passkey to remove this sign-in method.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">254</context>
+          <context context-type="linenumber">268</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityPasskeyActionFailed" datatype="html">
         <source>We could not complete this passkey action. Check its current status before trying again.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">293</context>
+          <context context-type="linenumber">307</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">350</context>
+          <context context-type="linenumber">364</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityFirstPasskeyFailed" datatype="html">
         <source>We could not confirm this enrollment. Check your password or verification code and try again.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/security.ts</context>
-          <context context-type="linenumber">315</context>
+          <context context-type="linenumber">329</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionsBack" datatype="html">
@@ -2915,6 +2987,20 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/security/sessions/sessions.ts</context>
           <context context-type="linenumber">91</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="identityPasswordSetupLength" datatype="html">
+        <source>Use at least 12 characters.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/shared/auth/password-validation.ts</context>
+          <context context-type="linenumber">12</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="signupPasswordMaximum" datatype="html">
+        <source>Use 128 characters or fewer.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/shared/auth/password-validation.ts</context>
+          <context context-type="linenumber">14</context>
         </context-group>
       </trans-unit>
       <trans-unit id="securityConfirmationUnavailable" datatype="html">

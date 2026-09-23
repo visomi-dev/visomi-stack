@@ -92,7 +92,7 @@ export class Security {
   }
 
   async revokeFederatedIdentity(id: string): Promise<void> {
-    await this.runOverviewMutation(`/api/auth/security/federated/${encodeURIComponent(id)}`);
+    await this.runOverviewMutation(`/api/auth/security/federated/${encodeURIComponent(id)}`, id);
   }
 
   async revokeTrustedDevice(id: string): Promise<void> {
@@ -112,15 +112,29 @@ export class Security {
     this.pendingRemoval.set(null);
   }
 
-  private async runOverviewMutation(url: string): Promise<void> {
+  private async runOverviewMutation(url: string, identityId?: string): Promise<void> {
     if (this.mutationBusy()) return;
     this.mutationBusy.set(true);
     this.overviewError.set('');
     this.notice.set('');
     try {
-      await firstValueFrom(this.http.delete(url));
-      await this.loadOverview();
-      this.notice.set($localize`:@@securityAccessRemoved:Access through this method has been removed.`);
+      const remove = async (grantId?: string) => {
+        await firstValueFrom(this.http.delete(url, { body: grantId ? { grantId } : undefined }));
+        await this.loadOverview();
+        this.notice.set($localize`:@@securityAccessRemoved:Access through this method has been removed.`);
+      };
+
+      if (identityId) {
+        await this.action.run(
+          {
+            authority: 'operation',
+            purpose: 'google_unlink',
+            targetId: identityId,
+            summary: $localize`:@@securityGoogleUnlinkConfirm:Confirm your identity to remove Google sign-in.`,
+          },
+          remove,
+        );
+      } else await remove();
     } catch (error) {
       this.overviewError.set(
         error instanceof HttpErrorResponse && error.error?.code === 'last_access_method'

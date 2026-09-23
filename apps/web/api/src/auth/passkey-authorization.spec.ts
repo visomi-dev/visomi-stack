@@ -15,6 +15,8 @@ import {
   accountPasskeyEnrollments,
   accountWebAuthnChallenges,
   authEnrollmentGrants,
+  authIdentityFlows,
+  userTotpEnrollments,
   db,
   users,
 } from 'shared';
@@ -67,6 +69,19 @@ async function fixture(source?: string) {
     .returning();
 
   if (source) {
+    if (source === 'email_recovery')
+      await db.insert(authIdentityFlows).values({
+        id: grantId,
+        userId: user.id,
+        accountId,
+        sessionBinding: 'session',
+        intent: 'existing_account_recovery',
+        state: 'enroll_passkey',
+        authorizationMethod: 'email_recovery',
+        requiredFactor: 'email',
+        userAuthVersion: user.authVersion,
+        expiresAt,
+      });
     await db.insert(accountPasskeyEnrollments).values({
       id: enrollmentId,
       accountId,
@@ -142,6 +157,42 @@ async function expectUnconsumed(input: Parameters<typeof authorizePasskeyAsserti
 }
 
 describe('atomic passkey authorization after assertion verification', () => {
+  it('rejects email-only recovery when TOTP is enrolled after authorization', async () => {
+    const current = await fixture('email_recovery');
+
+    await db.insert(userTotpEnrollments).values({
+      id: randomUUID(),
+      userId: current.input.user.id,
+      encryptedSecret: 'secret',
+      status: 'active',
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    await expect(current.authorize()).rejects.toMatchObject({ code: 'enrollment_grant_unavailable' });
+    await expectUnconsumed(current.input);
+  });
+
+  it('accepts factor-backed recovery and rejects a subsequently replaced factor', async () => {
+    for (const replace of [false, true]) {
+      const current = await fixture('email_recovery');
+      const factorId = randomUUID();
+
+      await db.insert(userTotpEnrollments).values({
+        id: replace ? randomUUID() : factorId,
+        userId: current.input.user.id,
+        encryptedSecret: 'secret',
+        status: 'active',
+        expiresAt: new Date(Date.now() + 60_000),
+      });
+      await db
+        .update(authIdentityFlows)
+        .set({ requiredFactor: 'totp', factorEnrollmentId: factorId, factorEnrollmentVersion: 1 })
+        .where(eq(authIdentityFlows.id, current.grantId));
+      if (replace) {
+        await expect(current.authorize()).rejects.toMatchObject({ code: 'enrollment_grant_unavailable' });
+        await expectUnconsumed(current.input);
+      } else await expect(current.authorize()).resolves.toMatchObject({ id: current.input.user.id });
+    }
+  });
   it.each(['email_recovery', 'device_approval', 'password_enrollment', 'identity_enrollment', 'bootstrap'])(
     'preserves fresh %s enrollment',
     async (source) => {

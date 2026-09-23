@@ -10,8 +10,10 @@ import {
   bindRecoveryEnrollmentSession,
   consumeRecoveryAuthorization,
   createRecoveryChallenge,
+  replaceRecoveryCodes,
 } from '../auth/auth-service';
 import { clearMailbox, listSentMessages } from '../auth/auth-mail';
+import { resetPasskeySecurityState } from '../auth/passkey-security';
 
 import { requestEmailChange, verifyEmailChange } from './account-service';
 
@@ -24,6 +26,8 @@ import {
   db,
   env,
   users,
+  userTotpEnrollments,
+  userRecoveryCodes,
 } from 'shared';
 
 jest.mock('shared', () => {
@@ -33,7 +37,14 @@ jest.mock('shared', () => {
 
   return { ...actual, db: drizzle(new PGlite(), { casing: 'snake_case' }) };
 });
-jest.mock('../shared/env', () => ({ env: { ...jest.requireActual('../shared/env').env, MAIL_TRANSPORT: 'memory' } }));
+jest.mock('../shared/env', () => ({
+  env: { ...jest.requireActual('../shared/env').env, MAIL_TRANSPORT: 'memory', DATABASE_DRIVER: 'memory' },
+}));
+jest.mock('../auth/totp', () => ({
+  decryptTotpSecret: () => 'test-secret',
+  verifyTotpCode: async (_secret: string, code: string) => code === '123456',
+  totpTimeStep: () => 1,
+}));
 
 beforeAll(async () => {
   await migrate(db as unknown as PgliteDatabase, { migrationsFolder: resolve(process.cwd(), 'drizzle') });
@@ -42,6 +53,7 @@ afterAll(async () => {
   await (db as unknown as { $client: PGlite }).$client.close();
 });
 afterEach(() => clearMailbox());
+beforeEach(() => resetPasskeySecurityState());
 
 async function fixture() {
   const [user] = await db
@@ -81,12 +93,86 @@ async function fixture() {
 }
 
 describe('recovery authorization persistence and epoch serialization', () => {
+  it.each(['totp', 'recovery_code'] as const)(
+    'requires the enrolled factor and preserves usable %s recovery',
+    async (kind) => {
+      const current = await fixture();
+      const enrollmentId = randomUUID();
+
+      await db.insert(userTotpEnrollments).values({
+        id: enrollmentId,
+        userId: current.user.id,
+        status: 'active',
+        encryptedSecret: 'secret',
+        expiresAt: new Date(Date.now() + 60_000),
+      });
+      const [code] = await replaceRecoveryCodes(current.user.id);
+
+      await expect(current.consume()).rejects.toMatchObject({ code: 'recovery_unavailable' });
+      expect(
+        await db.select().from(authEnrollmentGrants).where(eq(authEnrollmentGrants.userId, current.user.id)),
+      ).toHaveLength(0);
+      const results = await Promise.allSettled(
+        [0, 1].map(() =>
+          consumeRecoveryAuthorization(current.flowId, current.pin, current.sessionBinding, 'original-session-hash', {
+            kind,
+            code: kind === 'totp' ? '123456' : code,
+          }),
+        ),
+      );
+
+      expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+      const [flow] = await db.select().from(authIdentityFlows).where(eq(authIdentityFlows.id, current.flowId));
+
+      expect(flow).toMatchObject({
+        requiredFactor: 'totp',
+        factorEnrollmentId: enrollmentId,
+        factorEnrollmentVersion: current.user.authVersion,
+      });
+      const [enrollment] = await db.select().from(userTotpEnrollments).where(eq(userTotpEnrollments.id, enrollmentId));
+
+      expect(enrollment.status).toBe('active');
+      const codes = await db.select().from(userRecoveryCodes).where(eq(userRecoveryCodes.userId, current.user.id));
+
+      expect(codes.filter((item) => item.usedAt)).toHaveLength(kind === 'recovery_code' ? 1 : 0);
+    },
+  );
+
+  it('rejects a fresh-flow cooldown bypass before invalidating the victim challenge or sending mail', async () => {
+    const current = await fixture();
+    const nextFlowId = randomUUID();
+
+    await db.insert(authIdentityFlows).values({
+      id: nextFlowId,
+      sessionBinding: 'attacker-session',
+      state: 'authorize_existing_account',
+      emailHash: createHmac('sha256', env.SESSION_SECRET).update(current.user.email).digest('hex'),
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    const sent = listSentMessages().length;
+
+    await expect(
+      createRecoveryChallenge(current.user, nextFlowId, 'attacker-session', 'other-ip'),
+    ).rejects.toMatchObject({ code: 'rate_limited' });
+    expect(listSentMessages()).toHaveLength(sent);
+    const [challenge] = await db
+      .select()
+      .from(authVerificationChallenges)
+      .where(eq(authVerificationChallenges.id, current.flowId));
+
+    expect(challenge.consumedAt).toBeNull();
+    await expect(current.consume()).resolves.toMatchObject({ user: { id: current.user.id } });
+  });
+
   it('preserves the original challenge when a duplicate issuance is rejected', async () => {
     const current = await fixture();
 
+    // Reach the duplicate-insert boundary after the destination cooldown.
+    jest.spyOn(Date, 'now').mockReturnValue(Date.now() + env.PIN_RESEND_COOLDOWN_SECONDS * 1000);
     await expect(createRecoveryChallenge(current.user, current.flowId, current.sessionBinding)).rejects.toMatchObject({
       code: 'challenge_already_exists',
     });
+    jest.restoreAllMocks();
     await expect(current.consume()).resolves.toMatchObject({ user: { id: current.user.id, authVersion: 1 } });
   });
 

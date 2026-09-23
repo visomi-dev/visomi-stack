@@ -13,6 +13,24 @@ const otpDeliveryAttempts = new Map<string, { count: number; resetAt: number }>(
 const otpVerificationAttempts = new Map<string, { count: number; resetAt: number }>();
 const otpDeliveryCooldowns = new Map<string, number>();
 const authenticationVerificationAttempts = new Map<string, { count: number; resetAt: number }>();
+const factorAttempts = new Map<string, { count: number; resetAt: number }>();
+
+export async function consumeFactorVerificationLimit(userId: string, ip: string | undefined) {
+  const keys = [`auth:factor:user:${userId}`, `auth:factor:ip:${ip ?? 'unknown'}`];
+
+  if (env.DATABASE_DRIVER === 'memory') {
+    return keys.map((key) => consumeLimit(factorAttempts, key, 60_000, 30)).every((result) => result.allowed);
+  }
+  const result = await getRedis().eval(
+    "local allowed = 1; for _, key in ipairs(KEYS) do local count = redis.call('INCR', key); if count == 1 then redis.call('PEXPIRE', key, 60000) end; if count > 30 then allowed = 0 end end; return allowed",
+    keys.length,
+    ...keys,
+  );
+
+  if (result !== 0 && result !== 1) throw new Error('Authentication rate limiter unavailable.');
+
+  return result === 1;
+}
 
 export async function consumeAuthenticationVerificationLimit(
   req: Request,
@@ -104,6 +122,7 @@ function passkeyRateLimit(req: Request, res: Response, next: NextFunction): void
 }
 
 function resetPasskeySecurityState(): void {
+  factorAttempts.clear();
   authenticationVerificationAttempts.clear();
   attempts.clear();
   otpDeliveryAttempts.clear();
@@ -153,11 +172,11 @@ async function consumePasswordRateLimit(req: Request): Promise<{ allowed: boolea
   }
 }
 
-function emailOtpDeliveryRateLimit(req: Request, res: Response, next: NextFunction): void {
+async function emailOtpDeliveryRateLimit(req: Request, res: Response, next: NextFunction): Promise<void> {
   const email = typeof req.body?.email === 'string' ? req.body.email.normalize('NFKC').trim().toLowerCase() : undefined;
   const flowId = typeof req.body?.flowId === 'string' ? req.body.flowId : undefined;
   const destinationKey = email ?? flowId ?? 'invalid';
-  const result = consumeEmailOtpDeliveryLimit(req.ip, destinationKey);
+  const result = await consumeEmailOtpDeliveryLimit(req.ip, destinationKey, true);
 
   if (!result.allowed) {
     rateLimitResponse(res, result.retryAfter);
@@ -167,8 +186,36 @@ function emailOtpDeliveryRateLimit(req: Request, res: Response, next: NextFuncti
   next();
 }
 
-function consumeEmailOtpDeliveryLimit(ip: string | undefined, destination: string, enforceCooldown = false) {
+async function consumeEmailOtpDeliveryLimit(ip: string | undefined, destination: string, enforceCooldown = false) {
   const destinationKey = destination.normalize('NFKC').trim().toLowerCase();
+
+  if (env.DATABASE_DRIVER !== 'memory') {
+    const hash = createHmac('sha256', env.SESSION_SECRET).update(destinationKey).digest('hex');
+    const result = await getRedis().eval(
+      `local retry = 0
+       for i = 1, 2 do
+         local count = redis.call('INCR', KEYS[i])
+         if count == 1 then redis.call('PEXPIRE', KEYS[i], ARGV[1]) end
+         if count > tonumber(ARGV[i + 1]) then retry = math.max(retry, redis.call('PTTL', KEYS[i])) end
+       end
+       if tonumber(ARGV[4]) > 0 then retry = math.max(retry, redis.call('PTTL', KEYS[3])) end
+       if retry > 0 then return retry end
+       if tonumber(ARGV[4]) > 0 then redis.call('SET', KEYS[3], '1', 'PX', ARGV[4]) end
+       return 0`,
+      3,
+      `auth:delivery:ip:${ip ?? 'unknown'}`,
+      `auth:delivery:destination:${hash}`,
+      `auth:delivery:cooldown:${hash}`,
+      env.EMAIL_OTP_DELIVERY_WINDOW_MS,
+      env.EMAIL_OTP_DELIVERY_IP_MAX,
+      env.EMAIL_OTP_DELIVERY_EMAIL_MAX,
+      enforceCooldown ? env.PIN_RESEND_COOLDOWN_SECONDS * 1000 : 0,
+    );
+
+    if (typeof result !== 'number') throw new Error('Email delivery rate limiter unavailable.');
+
+    return { allowed: result === 0, retryAfter: Math.ceil(result / 1000) };
+  }
   const ipResult = consumeLimit(
     otpDeliveryAttempts,
     `ip:${ip}`,

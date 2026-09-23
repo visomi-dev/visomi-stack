@@ -27,6 +27,9 @@ describe('SignIn', () => {
             sessionLoaded: () => true,
             user: () => null,
             startIdentityFlow: vi.fn(),
+            verifyIdentityRecovery: vi.fn().mockResolvedValue({ kind: 'restricted' }),
+            getRestrictedAccounts: vi.fn(),
+            ensureSessionLoaded: vi.fn().mockResolvedValue(undefined),
           },
         },
         {
@@ -72,6 +75,84 @@ describe('SignIn', () => {
     expect(text).not.toContain('Continue with Google');
     expect(text).toContain('Choose how to continue');
     expect(text).not.toContain('Sign in with password');
+  });
+
+  it('retries account loading after successful recovery without resubmitting the consumed email code', async () => {
+    const auth = TestBed.inject(Auth);
+    const accounts = vi
+      .mocked(auth.getRestrictedAccounts)
+      .mockRejectedValueOnce(new HttpErrorResponse({ status: 503 }))
+      .mockResolvedValueOnce([{ accountId: 'account-1', name: 'Workspace', role: 'owner', selected: true }]);
+
+    fixture.componentInstance.state.set('otp');
+    fixture.componentInstance.flowId.set('recovery-flow');
+    fixture.componentInstance.otpModel.set({ pin: '123456' });
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('Your email was verified');
+    expect(fixture.nativeElement.querySelector('#identity-pin')).toBeNull();
+    const retry = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(
+      (button) => button.textContent?.includes('Try loading accounts again'),
+    )!;
+
+    retry.click();
+    await fixture.whenStable();
+    expect(accounts).toHaveBeenCalledTimes(2);
+    expect(auth.verifyIdentityRecovery).toHaveBeenCalledExactlyOnceWith('recovery-flow', '123456', undefined);
+    expect(fixture.componentInstance.state()).toBe('password-setup');
+  });
+
+  it.each(['totp', 'recovery_code'] as const)(
+    'submits optional %s proof without revealing accounts after rejected recovery',
+    async (kind) => {
+      const auth = TestBed.inject(Auth);
+
+      vi.mocked(auth.verifyIdentityRecovery).mockRejectedValue(
+        new HttpErrorResponse({ status: 401, error: { code: 'recovery_unavailable' } }),
+      );
+      fixture.componentInstance.state.set('otp');
+      fixture.componentInstance.flowId.set('recovery-flow');
+      fixture.componentInstance.otpModel.set({ pin: '123456' });
+      fixture.componentInstance.recoveryFactorModel.set({ kind, code: 'backup-code' });
+      fixture.detectChanges();
+      (fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+      await fixture.whenStable();
+
+      expect(auth.verifyIdentityRecovery).toHaveBeenCalledWith('recovery-flow', '123456', {
+        kind,
+        code: 'backup-code',
+      });
+      expect(auth.getRestrictedAccounts).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.state()).toBe('otp');
+      expect(fixture.nativeElement.textContent).toContain('if you set up an authenticator');
+    },
+  );
+
+  it('lets a password user choose and submit a nonnumeric recovery code for full sign-in', async () => {
+    const identity = fixture.componentInstance;
+    const password = TestBed.inject(PasswordAuth);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+    identity.state.set('password-factor');
+    identity.flowId.set('password-flow');
+    identity.passwordFlow.set({ flowId: 'password-flow', requiredFactor: 'totp', expiresAt: '' });
+    identity.passwordFactor.set('totp');
+    fixture.detectChanges();
+    const toggle = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(
+      (button) => button.textContent?.includes('Use a recovery code'),
+    )!;
+
+    toggle.click();
+    identity.otpModel.set({ pin: 'ABCD-EFGH-IJKL' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#identity-password-code').inputMode).toBe('text');
+    (fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    await fixture.whenStable();
+
+    expect(password.verify).toHaveBeenCalledWith('password-flow', 'ABCD-EFGH-IJKL', 'recovery_code');
+    expect(navigate).toHaveBeenCalled();
   });
 
   it('keeps email recovery as an explicit separate path', () => {

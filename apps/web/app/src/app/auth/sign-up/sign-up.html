@@ -142,8 +142,6 @@
             showStrength
             name="password"
             [loading]="submitting()"
-            minLength="12"
-            maxLength="128"
             required
           />
           <app-error-message controlId="sign-up-password-error">{{ passwordError() }}</app-error-message>

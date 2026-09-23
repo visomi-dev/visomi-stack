@@ -8,6 +8,7 @@ import { Auth } from '../../shared/auth/auth';
 import { SECURITY_URL, SIGN_IN_URL } from '../../shared/constants/routes';
 import { SecurityConfirmation } from '../../shared/auth/security-confirmation/security-confirmation';
 import { PasswordAuth } from '../../shared/auth/password';
+import { validatePasswordLength } from '../../shared/auth/password-validation';
 import { SecurityAuth } from '../../shared/auth/security-auth';
 import { ErrorMessage } from '../../shared/ui/forms/error-message/error-message';
 import { Field } from '../../shared/ui/forms/field/field';
@@ -58,10 +59,7 @@ export class PasswordManagement {
   readonly passwordForm: FieldTree<PasswordModel> = form(this.passwordModel, (path) => {
     required(path.currentPassword, { message: $localize`:@@passwordCurrentRequired:Enter your current password.` });
     required(path.password, { message: $localize`:@@passwordNewRequired:Enter a new password.` });
-    minLength(path.password, 12, { message: $localize`:@@identityPasswordSetupLength:Use at least 12 characters.` });
-    maxLength(path.password, 512, {
-      message: $localize`:@@identityPasswordSetupMaxLength:Use 512 characters or fewer.`,
-    });
+    validatePasswordLength(path.password);
     required(path.confirmation, { message: $localize`:@@passwordNewConfirmationRequired:Confirm your new password.` });
     validate(path.confirmation, ({ value, valueOf }) =>
       value() === valueOf(path.password)
@@ -86,8 +84,8 @@ export class PasswordManagement {
           targetId: 'authenticator',
           summary: $localize`:@@securitySetupAuthenticator:Confirm your identity to set up your authenticator app.`,
         },
-        async () => {
-          const setup = await this.password.startTotpSetup();
+        async (grantId) => {
+          const setup = await this.password.startTotpSetup(grantId);
 
           this.enrollmentId.set(setup.enrollmentId);
           this.secret.set(setup.secret);

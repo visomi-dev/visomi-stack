@@ -39,8 +39,13 @@ export function generateTotpSecret(): string {
   return generateSecret();
 }
 
-export function verifyTotpCode(secret: string, code: string): Promise<boolean> {
-  return verify({ secret, token: code, epochTolerance: 1 }).then((result) => result.valid);
+export function verifyTotpCode(secret: string, code: string, timeStep?: number): Promise<boolean> {
+  return verify({
+    secret,
+    token: code,
+    epochTolerance: timeStep === undefined ? 1 : 0,
+    ...(timeStep === undefined ? {} : { epoch: timeStep * PERIOD_SECONDS }),
+  }).then((result) => result.valid);
 }
 
 export function totpTimeStep(now = Date.now()): number {

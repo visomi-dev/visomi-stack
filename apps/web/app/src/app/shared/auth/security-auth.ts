@@ -12,6 +12,7 @@ export type ReauthenticationPurpose =
   | 'totp_disable'
   | 'recovery_codes_regenerate'
   | 'google_link'
+  | 'google_unlink'
   | 'email_change'
   | 'workspace_leave'
   | 'sessions_revoke'

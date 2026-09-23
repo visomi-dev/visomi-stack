@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 
 import { Auth } from '../shared/auth/auth';
 import { SecurityAction } from '../shared/auth/security-action';
+import { SecurityAuth } from '../shared/auth/security-auth';
 import { Passkey, type PasskeyCredential } from '../shared/auth/passkey';
 
 import { Security } from './security';
@@ -20,6 +21,48 @@ const activePasskey: PasskeyCredential = {
 };
 
 describe('Security', () => {
+  it.each([true, false])(
+    'only removes Google with an explicitly confirmed operation grant (confirm=%s)',
+    async (confirm) => {
+      const remove = vi.fn(() => of(null));
+      const securityAuth = {
+        overview: vi.fn().mockResolvedValue(null),
+        startReauthentication: vi.fn().mockResolvedValue({
+          grantId: 'unlink-grant',
+          methods: ['totp'],
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        }),
+        completeReauthentication: vi.fn().mockResolvedValue({ authenticated: true }),
+      };
+
+      TestBed.configureTestingModule({
+        providers: [
+          { provide: Passkey, useValue: { listCredentials: vi.fn().mockResolvedValue([]) } },
+          { provide: Auth, useValue: {} },
+          { provide: HttpClient, useValue: { delete: remove } },
+          { provide: SecurityAuth, useValue: securityAuth },
+          SecurityAction,
+        ],
+      });
+      const security = TestBed.runInInjectionContext(() => new Security());
+      const pending = security.revokeFederatedIdentity('google-identity');
+
+      await Promise.resolve();
+      expect(securityAuth.startReauthentication).toHaveBeenCalledWith('google_unlink');
+      expect(remove).not.toHaveBeenCalled();
+      if (confirm) await TestBed.inject(SecurityAction).confirm('totp', '', '123456');
+      else TestBed.inject(SecurityAction).cancel();
+      await pending;
+      if (confirm)
+        expect(remove).toHaveBeenCalledExactlyOnceWith('/api/auth/security/federated/google-identity', {
+          body: { grantId: 'unlink-grant' },
+        });
+      else {
+        expect(remove).not.toHaveBeenCalled();
+        expect(security.notice()).toBe('');
+      }
+    },
+  );
   it('reauthenticates, registers, and asserts the new passkey before listing it', async () => {
     const calls: string[] = [];
     const passkey = {

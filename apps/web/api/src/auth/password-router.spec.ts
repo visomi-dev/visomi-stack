@@ -138,6 +138,7 @@ describe('password authentication routes', () => {
       'a secure password',
       expect.any(String),
       undefined,
+      '::ffff:127.0.0.1',
     );
   });
 

@@ -7,6 +7,21 @@ import { AUTH_REQUEST_CONTEXT } from './auth-request-context.token';
 import { BrowserAuth } from './browser-auth';
 import { ServerAuth } from './server-auth';
 
+describe.each([BrowserAuth, ServerAuth])('%s recovery transport', (implementation) => {
+  it('includes the optional second factor in the bound recovery request', async () => {
+    TestBed.configureTestingModule({ providers: [implementation, provideHttpClient(), provideHttpClientTesting()] });
+    const http = TestBed.inject(HttpTestingController);
+    const factor = { kind: 'recovery_code' as const, code: 'ABCD-EFGH-IJKL' };
+    const pending = TestBed.inject(implementation).verifyIdentityRecovery('recovery-flow', '123456', factor);
+    const request = http.expectOne('/api/auth/identity/recovery/verify');
+
+    expect(request.request.body).toEqual({ flowId: 'recovery-flow', pin: '123456', factor });
+    request.flush({ data: { kind: 'restricted', authenticated: false, user: null } });
+    await expect(pending).resolves.toMatchObject({ kind: 'restricted', authenticated: false });
+    http.verify();
+  });
+});
+
 describe('BrowserAuth', () => {
   beforeEach(() => {
     sessionStorage.clear();

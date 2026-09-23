@@ -44,6 +44,15 @@ describe('PasswordAuth', () => {
     await expect(request).resolves.toEqual({ passwordSet: true });
   });
 
+  it('sends the confirmed operation grant when starting authenticator setup', async () => {
+    const pending = TestBed.inject(PasswordAuth).startTotpSetup('totp-grant');
+    const request = TestBed.inject(HttpTestingController).expectOne('/api/auth/totp/setup');
+
+    expect(request.request.body).toEqual({ grantId: 'totp-grant' });
+    request.flush({ data: { enrollmentId: 'enrollment', secret: 'secret' } });
+    await expect(pending).resolves.toMatchObject({ enrollmentId: 'enrollment' });
+  });
+
   it('starts and verifies password signup with the email code', async () => {
     const auth = TestBed.inject(PasswordAuth);
     const http = TestBed.inject(HttpTestingController);

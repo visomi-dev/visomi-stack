@@ -60,9 +60,17 @@ export class BrowserAuth extends Auth {
     return response.data;
   }
 
-  async verifyIdentityRecovery(flowId: string, pin: string): Promise<RestrictedSession> {
+  async verifyIdentityRecovery(
+    flowId: string,
+    pin: string,
+    factor?: { kind: 'totp' | 'recovery_code'; code: string },
+  ): Promise<RestrictedSession> {
     const response = await firstValueFrom(
-      this.http.post<ResponseEnvelope<RestrictedSession>>('/api/auth/identity/recovery/verify', { flowId, pin }),
+      this.http.post<ResponseEnvelope<RestrictedSession>>('/api/auth/identity/recovery/verify', {
+        flowId,
+        pin,
+        ...(factor ? { factor } : {}),
+      }),
     );
 
     return response.data;

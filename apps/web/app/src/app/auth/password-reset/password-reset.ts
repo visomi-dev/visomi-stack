@@ -4,6 +4,7 @@ import { email, form, maxLength, minLength, pattern, required, type FieldTree, v
 import { RouterLink } from '@angular/router';
 
 import { PasswordAuth, type PasswordResetRequestResponse } from '../../shared/auth/password';
+import { validatePasswordLength } from '../../shared/auth/password-validation';
 import { ErrorMessage } from '../../shared/ui/forms/error-message/error-message';
 import { Field } from '../../shared/ui/forms/field/field';
 import { Form as AppForm } from '../../shared/ui/forms/form/form';
@@ -48,8 +49,7 @@ export class PasswordReset {
     maxLength(path.emailCode, 6, { message: 'Enter all 6 digits.' });
     pattern(path.emailCode, /^\d{6}$/u, { message: 'Use the code from your email.' });
     required(path.password, { message: 'Enter a new password.' });
-    minLength(path.password, 12, { message: 'Use at least 12 characters.' });
-    maxLength(path.password, 128, { message: 'Use 128 characters or fewer.' });
+    validatePasswordLength(path.password);
     required(path.confirmation, { message: 'Confirm your new password.' });
     validate(path.confirmation, ({ value, valueOf }) =>
       value() === valueOf(path.password)
