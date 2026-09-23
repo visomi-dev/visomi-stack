@@ -55,12 +55,7 @@ export type EmailOtpRequestPayload = { email: string };
 export type EmailOtpVerifyPayload = { flowId: string; pin: string };
 export type EmailOtpResendPayload = { flowId: string };
 export type IdentityFlowState =
-  | 'passkey'
-  | 'identify'
-  | 'verify_new_email'
-  | 'authorize_existing_account'
-  | 'enroll_passkey'
-  | 'complete';
+  'passkey' | 'identify' | 'verify_new_email' | 'authorize_existing_account' | 'enroll_passkey' | 'complete';
 export type IdentityFlow = {
   flowId: string;
   state: IdentityFlowState;

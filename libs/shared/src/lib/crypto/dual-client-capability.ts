@@ -6,12 +6,7 @@ export type ClientMode = 'local-agent' | 'webcrypto';
 export type ClientCapability = 'vault-access' | 'unlock' | 'projection' | 'bridge' | 'sync' | 'recovery' | 'offline';
 
 export type ClientState =
-  | 'locked'
-  | 'unavailable'
-  | 'revoked'
-  | 'offline'
-  | 'incompatible-version'
-  | 'recovery-required';
+  'locked' | 'unavailable' | 'revoked' | 'offline' | 'incompatible-version' | 'recovery-required';
 
 export type CapabilityAuthenticator = Readonly<{
   scheme: 'web-session' | 'local-agent-signature';

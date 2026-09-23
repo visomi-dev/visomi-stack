@@ -71,8 +71,7 @@ export class LocalEncryptedVault {
     vault.createSchema();
 
     const existing = database.prepare('SELECT workspace_id FROM vault_meta LIMIT 1').get() as
-      | { workspace_id: string }
-      | undefined;
+      { workspace_id: string } | undefined;
 
     if (existing) {
       database.close();
@@ -98,8 +97,7 @@ export class LocalEncryptedVault {
 
     vault.createSchema();
     const metadata = database.prepare('SELECT * FROM vault_meta LIMIT 1').get() as
-      | { schema_version: number; workspace_id: string; salt: string; wrapped_workspace_key: string }
-      | undefined;
+      { schema_version: number; workspace_id: string; salt: string; wrapped_workspace_key: string } | undefined;
 
     if (!metadata || metadata.schema_version !== VAULT_SCHEMA_VERSION) {
       database.close();
@@ -192,8 +190,7 @@ export class LocalEncryptedVault {
   read<T>(envelopeId: string): T {
     const key = this.requireKey();
     const row = this.database.prepare('SELECT envelope FROM vault_records WHERE envelope_id = ?').get(envelopeId) as
-      | VaultRow
-      | undefined;
+      VaultRow | undefined;
 
     if (!row) {
       throw new Error('Vault record was not found.');

@@ -1,12 +1,5 @@
 type OperationalVisibility =
-  | 'visible'
-  | 'empty'
-  | 'locked'
-  | 'unavailable'
-  | 'stale'
-  | 'error'
-  | 'unauthorized'
-  | 'malformed';
+  'visible' | 'empty' | 'locked' | 'unavailable' | 'stale' | 'error' | 'unauthorized' | 'malformed';
 
 type OperationalAuthority = 'control-plane' | 'local-agent' | 'opaque-encrypted-source';
 

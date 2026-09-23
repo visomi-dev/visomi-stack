@@ -8,22 +8,24 @@ type Props = {
 const { locale } = Astro.props;
 ---
 
-<div
-  class="flex items-center gap-4 font-sans text-xs font-black tracking-widest text-zinc-500 uppercase dark:text-zinc-400"
->
+<div class="flex items-center gap-4 font-sans text-xs font-black tracking-widest text-zinc-500 uppercase dark:text-zinc-400">
   <a
     href="/en/"
     class:list={[
       'no-underline hover:text-blue-600 dark:hover:text-blue-400',
       locale === 'en' && 'font-extrabold text-zinc-950 dark:text-zinc-50',
-    ]}>EN</a
+    ]}
   >
+    EN
+  </a>
   <span class="opacity-30">/</span>
   <a
     href="/es/"
     class:list={[
       'no-underline hover:text-blue-600 dark:hover:text-blue-400',
       locale === 'es' && 'font-extrabold text-zinc-950 dark:text-zinc-50',
-    ]}>ES</a
+    ]}
   >
+    ES
+  </a>
 </div>
