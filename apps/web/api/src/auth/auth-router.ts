@@ -778,17 +778,25 @@ router.post(
         statusCode: 401,
       });
     const identity = await verifyPasswordSignUp(body.flowId, body.code, requestContext(req), req.sessionID);
-    const expiresAt = await establishRestrictedSession(req, body.flowId, identity);
+    const user = await findUserById(identity.userId);
+    const accountId = identity.accounts[0]?.accountId;
+
+    if (!user || !accountId) {
+      throw new HttpError({ code: 'signup_session_unavailable', message: 'Sign in to continue.', statusCode: 500 });
+    }
+    const authUser = {
+      ...(await resolveAuthUserForAccount(user, accountId)),
+      authority: 'full' as const,
+      authenticationMethod: 'password' as const,
+      authVersion: user.authVersion,
+    };
+
+    delete req.session.passwordFlowId;
+    await establishFullSession(req, res, authUser);
 
     httpResponse.json(res, {
-      data: {
-        authenticated: false,
-        kind: 'restricted',
-        expiresAt: new Date(expiresAt).toISOString(),
-        user: null,
-        verifiedEmail: identity.email,
-      },
-      message: 'Email verified. Your account is ready for secure setup.',
+      data: { authenticated: true, kind: 'full', user: authUser },
+      message: 'Email verified. Your account is ready.',
     });
   },
 );

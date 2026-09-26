@@ -114,6 +114,7 @@ describe('createGatewayApp', () => {
     expect(response.headers['content-security-policy']).toContain("connect-src 'self'");
     expect(response.headers['content-security-policy']).toContain("script-src 'self' 'unsafe-inline'");
     expect(response.headers['content-security-policy']).toContain("script-src-attr 'unsafe-inline'");
+    expect(response.headers['content-security-policy']).toContain('https://accounts.google.com/gsi/style');
     expect(response.headers['content-security-policy']).toContain("object-src 'none'");
     expect(response.headers['x-content-type-options']).toBe('nosniff');
   });

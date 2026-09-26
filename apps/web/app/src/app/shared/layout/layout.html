@@ -1,6 +1,6 @@
 @if (showAppShell()) {
   <div
-    class="flex h-dvh min-h-0 flex-col overflow-hidden bg-white text-slate-950 [--bottom-nav-height:4rem] [--topbar-height:4rem] md:[--bottom-nav-height:0] dark:bg-slate-950 dark:text-slate-50"
+    class="flex h-dvh min-h-0 flex-col overflow-hidden bg-white text-slate-950 [--bottom-nav-height:4rem] lg:[--bottom-nav-height:0] dark:bg-slate-950 dark:text-slate-50"
   >
     <div class="flex min-h-0 flex-1">
       <app-sidebar-menu
@@ -11,11 +11,9 @@
       />
 
       <section class="flex min-h-0 min-w-0 flex-1 flex-col">
-        <app-topbar (openMobileMenu)="openMobileMenu()" />
-
-        <main class="min-h-0 min-w-0 flex-1 overflow-y-auto bg-white px-4 py-4 md:px-8 md:py-6 dark:bg-slate-950">
+        <div class="min-h-0 min-w-0 flex-1 overflow-y-auto bg-white px-4 py-4 md:px-8 md:py-6 dark:bg-slate-950">
           <router-outlet />
-        </main>
+        </div>
 
         <app-bottom-navigation>
           @for (item of bottomNavItems; track item.url) {
@@ -23,6 +21,13 @@
               <app-icon data-slot="icon" [name]="item.icon" />
             </app-bottom-navigation-item>
           }
+          <app-bottom-navigation-action
+            ariaLabel="Open navigation"
+            i18n-ariaLabel="@@layoutOpenNavigation"
+            (pressed)="openMobileMenu()"
+          >
+            <app-icon data-slot="icon" name="bars" />
+          </app-bottom-navigation-action>
         </app-bottom-navigation>
       </section>
     </div>

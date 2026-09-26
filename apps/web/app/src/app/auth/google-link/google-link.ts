@@ -24,6 +24,7 @@ export class GoogleLink {
   private readonly button = viewChild<ElementRef<HTMLElement>>('googleButton');
   readonly loading = signal(false);
   readonly linking = signal(false);
+  readonly ready = signal(false);
   readonly linked = signal(false);
   readonly error = signal('');
 
@@ -35,7 +36,7 @@ export class GoogleLink {
   }
 
   protected async begin(): Promise<void> {
-    if (this.loading() || this.linking() || this.linked()) return;
+    if (this.loading() || this.ready() || this.linking() || this.linked()) return;
     const attempt = ++this.attempt;
     const active = () => !this.disposed && attempt === this.attempt && !this.linked();
 
@@ -68,12 +69,16 @@ export class GoogleLink {
             () => {
               if (active()) {
                 this.linking.set(false);
+                this.ready.set(false);
+                this.attempt += 1;
+                this.button()?.nativeElement.replaceChildren();
                 this.error.set($localize`:@@securityGoogleLinkFailed:Google linking could not be started.`);
               }
             },
             active,
             () => this.linking.set(true),
           );
+          if (active()) this.ready.set(true);
         },
       );
     } catch {

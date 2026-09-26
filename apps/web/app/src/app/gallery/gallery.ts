@@ -7,11 +7,13 @@ import { Avatar } from '../shared/ui/data/avatar/avatar';
 import { Badge } from '../shared/ui/data/badge/badge';
 import { Pagination } from '../shared/ui/data/pagination/pagination';
 import { Table } from '../shared/ui/data/table/table';
+import { Topbar } from '../shared/layout/topbar/topbar';
 import { Loader } from '../shared/ui/feedback/loader/loader';
 import { Checkbox } from '../shared/ui/forms/checkbox/checkbox';
 import { Input } from '../shared/ui/forms/input/input';
 import { RadioCard } from '../shared/ui/forms/radio-card/radio-card';
 import { RadioGroup, type RadioOption } from '../shared/ui/forms/radio-group/radio-group';
+import { RadioOptionTemplate } from '../shared/ui/forms/radio-group/radio-option-template';
 import { Select } from '../shared/ui/forms/select/select';
 import { Switch } from '../shared/ui/forms/switch/switch';
 import { Textarea } from '../shared/ui/forms/textarea/textarea';
@@ -61,9 +63,11 @@ const listboxFormModel = signal<ListboxForm>({ value: '' });
     Pagination,
     RadioCard,
     RadioGroup,
+    RadioOptionTemplate,
     Select,
     Switch,
     Table,
+    Topbar,
     Text,
     Textarea,
     Tooltip,

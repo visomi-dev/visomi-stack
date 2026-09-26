@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { authed, authedContext } from '../auth/auth-middleware';
+import { env } from '../shared/env';
 import { getValidated, validateRequest } from '../shared/http/route-schemas';
 
 import {
@@ -11,10 +12,17 @@ import {
 } from './activation-schemas';
 import { createApiKey, getActivationState, recordMilestone, revokeApiKey } from './activation-service';
 
-import { httpResponse } from 'shared';
+import { httpResponse, HttpError } from 'shared';
 
 const activationRouter = Router();
 
+activationRouter.use((_req, _res, next) => {
+  if (!env.ENABLE_LOCAL_ACTIVATION) {
+    throw new HttpError({ code: 'not_found', message: 'Not found.', statusCode: 404 });
+  }
+
+  next();
+});
 activationRouter.use(authed({ authority: 'full' }));
 
 activationRouter.get('/', async function activationStateHandler(req, res) {

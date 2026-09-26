@@ -51,12 +51,31 @@ jest.mock('shared', () => {
   const { PGlite } = jest.requireActual('@electric-sql/pglite');
   const { drizzle } = jest.requireActual('drizzle-orm/pglite');
 
-  return { ...actual, db: drizzle(new PGlite(), { casing: 'snake_case' }) };
+  return {
+    ...actual,
+    db: drizzle(new PGlite(), { casing: 'snake_case' }),
+    env: {
+      ...actual.env,
+      DATABASE_DRIVER: 'memory',
+      MAIL_TRANSPORT: 'memory',
+      AUTH_TOTP_ENROLLMENT_ENABLED: true,
+      OPAQUE_SYNC_STORAGE: 'memory',
+    },
+  };
 });
 jest.mock('../shared/env', () => {
   const actual = jest.requireActual('../shared/env');
 
-  return { ...actual, env: { ...actual.env, DATABASE_DRIVER: 'memory', AUTH_TOTP_ENROLLMENT_ENABLED: true } };
+  return {
+    ...actual,
+    env: {
+      ...actual.env,
+      DATABASE_DRIVER: 'memory',
+      MAIL_TRANSPORT: 'memory',
+      OPAQUE_SYNC_STORAGE: 'memory',
+      AUTH_TOTP_ENROLLMENT_ENABLED: true,
+    },
+  };
 });
 jest.mock('./totp', () => ({
   decryptTotpSecret: jest.fn(() => 'test-secret'),

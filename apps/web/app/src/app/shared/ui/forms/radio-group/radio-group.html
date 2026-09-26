@@ -30,17 +30,7 @@
           (blur)="onBlur()"
           (change)="selectValue(option.value)"
         />
-        @if (option.icon) {
-          <app-icon [name]="option.icon" class="shrink-0" aria-hidden="true" />
-        }
-        <span class="grid min-w-0 gap-1">
-          <span class="font-medium" [id]="name() + '-' + $index + '-label'">{{ option.label }}</span>
-          @if (option.description) {
-            <span class="text-slate-500 dark:text-slate-400" [id]="name() + '-' + $index + '-description'">{{
-              option.description
-            }}</span>
-          }
-        </span>
+        <ng-container *ngTemplateOutlet="optionTemplate().template; context: optionContext(option, $index)" />
       </label>
     }
   </div>

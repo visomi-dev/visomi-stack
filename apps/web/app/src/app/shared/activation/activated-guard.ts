@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, type ActivatedRouteSnapshot, type RouterStateSnapshot } from '@angular/router';
 
+import { environment } from '../../../environments/environment';
 import { Auth } from '../auth/auth';
 import { ACTIVATION_URL, SIGN_IN_URL } from '../constants/routes';
 
@@ -21,6 +22,8 @@ export async function activatedGuard(_route: ActivatedRouteSnapshot, _state: Rou
   if (!auth.isAuthenticated()) {
     return router.createUrlTree([SIGN_IN_URL]);
   }
+
+  if (!environment.activationEnabled) return true;
 
   const activationData = await activation.loadState();
 

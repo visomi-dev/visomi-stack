@@ -21,15 +21,17 @@
         <p class="mt-5" role="status" i18n="@@googleLinkLoading">Preparing Google linking...</p>
       }
       <div #googleButton class="mt-6 min-h-11"></div>
-      <button
-        type="button"
-        class="mt-4 min-h-11 w-full rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-        [disabled]="loading() || linking()"
-        (click)="begin()"
-        i18n="@@googleLinkStart"
-      >
-        Start Google linking
-      </button>
+      @if (!ready()) {
+        <button
+          type="button"
+          class="mt-4 min-h-11 w-full rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+          [disabled]="loading() || linking()"
+          (click)="begin()"
+          i18n="@@googleLinkStart"
+        >
+          Start Google linking
+        </button>
+      }
     }
     @if (error()) {
       <p class="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ error() }}</p>

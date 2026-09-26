@@ -136,13 +136,13 @@ test('doctor supports offline JSON without exposing configuration values', async
     const env = parse(await readFile(join(directory, '.env'), 'utf8'));
     const result = spawnSync(process.execPath, [cli, 'doctor', '--offline', '--json'], {
       cwd: directory,
-      env: { ...process.env, NODE_ENV: 'development' },
+      env: { ...process.env, ...env, ENABLE_LOCAL_ACTIVATION: 'false', NODE_ENV: 'development' },
       encoding: 'utf8',
       timeout: 15_000,
     });
     const report = JSON.parse(result.stdout) as { ok: boolean; checks: Array<{ id: string; status: string }> };
 
-    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
     assert.equal(report.ok, true);
     assert.ok(report.checks.some((check) => check.id === 'connectivity' && check.status === 'warn'));
     for (const key of ['SESSION_SECRET', 'POSTGRES_PASSWORD', 'AUTH_TOTP_ENCRYPTION_KEY'])
@@ -150,7 +150,12 @@ test('doctor supports offline JSON without exposing configuration values', async
     await writeFile(join(directory, '.env'), 'NODE_ENV=production\nSESSION_SECRET=DO_NOT_LEAK_THIS_VALUE\n');
     const invalid = spawnSync(process.execPath, [cli, 'doctor', '--offline', '--json', '--production'], {
       cwd: directory,
-      env: { ...process.env, NODE_ENV: 'production' },
+      env: {
+        ...process.env,
+        ENABLE_LOCAL_ACTIVATION: 'false',
+        NODE_ENV: 'production',
+        SESSION_SECRET: 'DO_NOT_LEAK_THIS_VALUE',
+      },
       encoding: 'utf8',
       timeout: 15_000,
     });

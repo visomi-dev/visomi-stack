@@ -39,27 +39,30 @@
   @if (method() !== 'passkey' && method() !== 'google' && action.methods().includes(method())) {
     <app-form [form]="confirmation" (ngSubmit)="confirm()" class="grid gap-4">
       @if (method() === 'password') {
-        <app-field
-          ><app-label for="security-confirm-password" i18n="@@securityCurrentPassword">Current password</app-label
-          ><app-password-input
+        <app-field>
+          <app-label for="security-confirm-password" i18n="@@securityCurrentPassword">Current password</app-label>
+          <app-password-input
             [formField]="confirmation.password"
             controlId="security-confirm-password"
             autocomplete="current-password"
             minLength="1"
             pattern=""
             required
-        /></app-field>
+          />
+        </app-field>
       }
       @if (method() !== 'password' || action.passwordRequiresTotp()) {
-        <app-field
-          ><app-label for="security-confirm-code" i18n="@@securityConfirmationCode"
-            >Verification or recovery code</app-label
-          ><app-input
+        <app-field>
+          <app-label for="security-confirm-code" i18n="@@securityConfirmationCode">
+            Verification or recovery code
+          </app-label>
+          <app-input
             [formField]="confirmation.code"
             controlId="security-confirm-code"
             autocomplete="one-time-code"
             required
-        /></app-field>
+          />
+        </app-field>
       }
       <button
         type="submit"

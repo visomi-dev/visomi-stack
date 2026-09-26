@@ -1809,14 +1809,14 @@
         </context-group>
       </trans-unit>
       <trans-unit id="signupVerifiedDescription" datatype="html">
-        <source> Your email is verified. You can now sign in with the method you just created. </source>
+         <source> Your email is verified. This browser is now signed in; continue to your workspace. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.html</context>
           <context context-type="linenumber">12,15</context>
         </context-group>
       </trans-unit>
       <trans-unit id="signupContinue" datatype="html">
-        <source>Continue to sign in</source>
+         <source>Continue to workspace</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.html</context>
           <context context-type="linenumber">19,21</context>

@@ -7,12 +7,15 @@ import { Auth } from '../auth/auth';
 import { AccountProfile } from '../auth/account-profile';
 import { Settings } from '../settings';
 import { DASHBOARD_URL } from '../constants/routes';
-import { BottomNavigation, BottomNavigationItem } from '../ui/layout/bottom-navigation/bottom-navigation';
+import {
+  BottomNavigation,
+  BottomNavigationItem,
+  BottomNavigationAction,
+} from '../ui/layout/bottom-navigation/bottom-navigation';
 import { Icon } from '../ui/media/icon/icon';
 import { type IconName } from '../ui/media/icon/icon-paths';
 
 import { SidebarMenu } from './sidebar-menu/sidebar-menu';
-import { Topbar } from './topbar/topbar';
 
 type BottomNavItem = {
   ariaLabel: string;
@@ -26,7 +29,15 @@ const BOTTOM_NAV_ITEMS: ReadonlyArray<BottomNavItem> = Object.freeze([
 ]);
 
 @Component({
-  imports: [BottomNavigation, BottomNavigationItem, Icon, RouterLink, RouterOutlet, SidebarMenu, Topbar],
+  imports: [
+    BottomNavigation,
+    BottomNavigationItem,
+    BottomNavigationAction,
+    Icon,
+    RouterLink,
+    RouterOutlet,
+    SidebarMenu,
+  ],
   selector: 'app-layout',
   templateUrl: './layout.html',
   styleUrl: './layout.css',

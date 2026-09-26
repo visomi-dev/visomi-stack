@@ -8,6 +8,7 @@ import { Settings } from '../../settings';
 import { Avatar } from '../../ui/data/avatar/avatar';
 import { Icon } from '../../ui/media/icon/icon';
 import { type IconName } from '../../ui/media/icon/icon-paths';
+import { LanguageSwitcher } from '../language-switcher/language-switcher';
 
 type LayoutNavItem = {
   children?: LayoutNavItem[];
@@ -23,7 +24,7 @@ type LayoutNavSection = {
 };
 
 @Component({
-  imports: [Avatar, Icon, RouterLink, RouterLinkActive],
+  imports: [Avatar, Icon, RouterLink, RouterLinkActive, LanguageSwitcher],
   selector: 'app-sidebar-menu',
   templateUrl: './sidebar-menu.html',
   styleUrl: './sidebar-menu.css',

@@ -13,13 +13,7 @@ export type PasswordSetRequest = { password: string };
 export type PasswordSetResponse = { passwordSet: true };
 export type PasswordSignUpRequest = { email: string; password: string };
 export type PasswordSignUpPending = { flowId: string; expiresAt: string; resendAvailableAt: string };
-export type PasswordSignUpVerification = {
-  authenticated: false;
-  kind: 'restricted';
-  expiresAt: string;
-  user: null;
-  verifiedEmail: string;
-};
+export type PasswordSignUpVerification = FullSession;
 export type PasswordResetRequestResponse = {
   flowId: string;
   requiredFactor: 'email' | 'totp_or_recovery';

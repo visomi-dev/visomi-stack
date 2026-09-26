@@ -40,7 +40,7 @@ const gatewaySecurityHeaders = helmet({
       objectSrc: ["'none'"],
       scriptSrc: ["'self'", "'unsafe-inline'", 'https://accounts.google.com'],
       scriptSrcAttr: ["'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/style'],
       upgradeInsecureRequests: null,
     },
   },

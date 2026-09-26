@@ -4,15 +4,16 @@ services:
   postgres:
     image: docker.io/library/postgres:16-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-visomi}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-development-only}
+      # podman-compose 1.3.0 does not interpolate variables in environment values.
+      POSTGRES_DB: visomi
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: local-development-only
     ports:
       - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d visomi']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -31,6 +32,41 @@ services:
       retries: 10
       start_period: 5s
 
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: ['server', '/data', '--address', ':9000', '--console-address', ':9001']
+    environment:
+      # podman-compose 1.3.0 does not interpolate variables in environment values.
+      MINIO_ROOT_USER: visomi_local
+      MINIO_ROOT_PASSWORD: visomi_local_minio_password
+    ports:
+      - '127.0.0.1:9000:9000'
+      - '127.0.0.1:9001:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl --fail --silent http://127.0.0.1:9000/minio/health/ready >/dev/null']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  minio-init:
+    image: docker.io/library/node:24.14.1-alpine
+    depends_on:
+      minio:
+        condition: service_healthy
+    working_dir: /workspace
+    command: ['node', '--experimental-strip-types', 'initialize-minio-bucket.ts']
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: visomi_local
+      MINIO_ROOT_PASSWORD: visomi_local_minio_password
+      OPAQUE_SYNC_S3_BUCKET: visomi-opaque-sync
+    volumes:
+      - ./scripts/initialize-minio-bucket.ts:/workspace/initialize-minio-bucket.ts:ro
+
 volumes:
   postgres-data:
   redis-data:
+  minio-data:

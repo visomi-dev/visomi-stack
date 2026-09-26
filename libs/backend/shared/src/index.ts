@@ -15,7 +15,6 @@ export * from './lib/crypto/dual-client-capability';
 export * from './lib/crypto/execution-policy';
 export * from './lib/crypto/secret-broker';
 export * from './lib/crypto/mcp-boundary';
-export * from './lib/crypto/local-encrypted-vault';
 export * from './lib/crypto/opaque-sync';
 export * from './lib/crypto/opaque-sync-object-store';
 export * from './lib/crypto/opaque-sync-postgres';

@@ -6,7 +6,7 @@ import { setSessionHintCookie } from './session-cookie';
 
 import { saveSession } from 'shared';
 
-type FullAuthenticationMethod = 'google' | 'passkey';
+type FullAuthenticationMethod = 'google' | 'passkey' | 'password';
 
 type FullAuthUser = Express.User & {
   authority: 'full';

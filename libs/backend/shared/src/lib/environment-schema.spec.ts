@@ -22,7 +22,31 @@ describe('side-effect-free runtime environment schema', () => {
 
     expect(result.NODE_ENV).toBe('development');
     expect(result.DATABASE_DRIVER).toBe('pg');
+    expect(result.DATABASE_URL).toBe('postgresql://postgres:local-development-only@127.0.0.1:5432/visomi');
     expect(result.ENABLE_TEST_API).toBe(false);
+    expect(result.ENABLE_LOCAL_ACTIVATION).toBe(false);
+  });
+
+  it('only permits local activation on a localhost development origin', () => {
+    expect(
+      environmentSchema.safeParse({
+        ENABLE_LOCAL_ACTIVATION: 'true',
+        HOST: '127.0.0.1',
+        APP_BASE_URL: 'http://localhost:8080/app',
+      }).success,
+    ).toBe(true);
+    expect(
+      environmentSchema.safeParse({
+        ENABLE_LOCAL_ACTIVATION: 'true',
+        HOST: '127.0.0.1',
+        APP_BASE_URL: 'https://example.test/app',
+      }).success,
+    ).toBe(false);
+    expect(
+      environmentSchema.safeParse({ ENABLE_LOCAL_ACTIVATION: 'true', APP_BASE_URL: 'http://localhost:8080/app' })
+        .success,
+    ).toBe(false);
+    expect(environmentSchema.safeParse({ ...production, ENABLE_LOCAL_ACTIVATION: 'true' }).success).toBe(false);
   });
 
   it('rejects a production deployment with fixture APIs enabled', () => {

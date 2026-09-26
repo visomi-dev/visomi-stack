@@ -112,7 +112,16 @@ const passkeyOpenApiPaths = {
   '/auth/passkey/sign-up/verify': {
     post: {
       requestBody: { required: true, content: { 'application/json': { schema: passkeySignupVerifySchema } } },
-      responses: { 201: { description: 'Verified account and passkey created atomically.' } },
+      responses: {
+        201: {
+          content: {
+            'application/json': {
+              schema: responseEnvelope(authenticatedPasskeySchema, 'PasskeySignUpVerifiedEnvelope'),
+            },
+          },
+          description: 'Verified account and passkey created with an authenticated session.',
+        },
+      },
     },
   },
   '/auth/passkey/registration/begin': {

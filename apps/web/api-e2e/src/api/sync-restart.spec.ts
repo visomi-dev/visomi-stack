@@ -36,6 +36,7 @@ function startGateway(): ChildProcess {
       DATABASE_AUTO_MIGRATE: 'true',
       DATABASE_DRIVER: 'pg',
       ENABLE_TEST_API: 'true',
+      ENABLE_LOCAL_ACTIVATION: 'false',
       GATEWAY_PORT: String(port),
       HOST: '127.0.0.1',
       MAIL_TRANSPORT: 'memory',

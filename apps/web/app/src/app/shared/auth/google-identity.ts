@@ -13,6 +13,7 @@ type GoogleIdentityApi = {
         callback: (response: { credential: string }) => void;
         nonce: string;
         use_fedcm_for_prompt?: boolean;
+        use_fedcm_for_button?: boolean;
       }): void;
       renderButton(parent: HTMLElement, options: Record<string, string>): void;
     };
@@ -136,6 +137,7 @@ export class GoogleIdentity {
       client_id: clientId,
       nonce,
       use_fedcm_for_prompt: true,
+      use_fedcm_for_button: true,
       callback: async ({ credential }) => {
         await onCredential(credential);
       },

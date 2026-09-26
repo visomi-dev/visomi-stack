@@ -1,10 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { email, form, maxLength, minLength, pattern, required, type FieldTree, validate } from '@angular/forms/signals';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { PasswordAuth } from '../../shared/auth/password';
+import { Auth } from '../../shared/auth/auth';
 import { validatePasswordLength } from '../../shared/auth/password-validation';
 import { Passkey } from '../../shared/auth/passkey';
 import { ErrorMessage } from '../../shared/ui/forms/error-message/error-message';
@@ -15,6 +16,7 @@ import { Label } from '../../shared/ui/forms/label/label';
 import { PasswordInput } from '../../shared/ui/forms/password-input/password-input';
 import { AuthCard } from '../../shared/ui/layout/auth-card/auth-card';
 import { AuthLayout } from '../../shared/ui/layout/auth-layout/auth-layout';
+import { APP_URL } from '../../shared/constants/routes';
 
 type SignUpModel = { email: string; password: string; confirmation: string };
 type CodeModel = { code: string };
@@ -29,6 +31,8 @@ export class SignUp {
   private readonly password = inject(PasswordAuth);
   private readonly passkey = inject(Passkey);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly auth = inject(Auth);
   private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   readonly passwordMode = computed(() => this.params().get('method') === 'password');
   readonly passkeyEmailModel = signal({ email: '' });
@@ -122,9 +126,18 @@ export class SignUp {
     this.submitting.set(true);
     this.error.set('');
     try {
-      if (this.passkeyEmailPending()) await this.passkey.verifySignUp(this.codeForm.code().value());
-      else await this.password.verifySignUp(this.flowId(), this.codeForm.code().value());
-      this.complete.set(true);
+      if (this.passkeyEmailPending()) {
+        await this.passkey.verifySignUp(this.codeForm.code().value());
+      } else {
+        await this.password.verifySignUp(this.flowId(), this.codeForm.code().value());
+      }
+      await this.auth.ensureSessionLoaded(true);
+
+      if (this.auth.isAuthenticated()) {
+        await this.router.navigateByUrl(APP_URL);
+      } else {
+        this.complete.set(true);
+      }
     } catch (error) {
       this.error.set(this.message(error, $localize`:@@signupCodeFailed:That verification code is not valid.`));
     } finally {

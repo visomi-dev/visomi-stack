@@ -347,7 +347,14 @@ export const authOpenApiPaths = {
   '/auth/password/sign-up/verify': {
     post: {
       requestBody: { required: true, content: { 'application/json': { schema: passwordSignUpVerifySchema } } },
-      responses: { 200: { description: 'Signup email verified; no full session is created.' } },
+      responses: {
+        200: {
+          content: {
+            'application/json': { schema: responseEnvelope(fullSessionSchema, 'PasswordSignUpVerifiedEnvelope') },
+          },
+          description: 'Signup email verified and full session created.',
+        },
+      },
     },
   },
   '/auth/password/reset/request': {

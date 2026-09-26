@@ -49,8 +49,9 @@
               queryParamsHandling="preserve"
               class="min-h-11 content-center text-center text-sm font-semibold text-blue-600 underline underline-offset-4 dark:text-blue-400"
               i18n="@@accessCreateAccount"
-              >Create an account</a
             >
+              Create an account
+            </a>
           }
         </div>
         <dialog
@@ -117,8 +118,9 @@
               <span
                 class="font-mono text-[0.6875rem] tracking-widest text-slate-400 uppercase"
                 i18n="@@identityOrSeparator"
-                >or</span
               >
+                or
+              </span>
               <span class="h-px flex-1 bg-slate-950/10 dark:bg-white/10"></span>
             </div>
             <button
@@ -144,8 +146,9 @@
                   queryParamsHandling="preserve"
                   class="min-h-11 content-center font-semibold text-blue-600 dark:text-blue-400"
                   i18n="@@accessCreateAccount"
-                  >Create an account</a
                 >
+                  Create an account
+                </a>
               </div>
             }
           </div>
@@ -174,9 +177,9 @@
         </header>
         <app-form class="mt-6 grid gap-5" [form]="passwordForm" (ngSubmit)="signInWithPassword()">
           <app-field>
-            <app-label for="identity-password-email" tone="plain" i18n="@@identityPasswordEmailLabel"
-              >Email address</app-label
-            >
+            <app-label for="identity-password-email" tone="plain" i18n="@@identityPasswordEmailLabel">
+              Email address
+            </app-label>
             <app-input
               [formField]="passwordForm.email"
               type="email"
@@ -186,9 +189,9 @@
               required
             />
             @if (passwordEmailError()) {
-              <app-error-message controlId="identity-password-email-error">{{
-                passwordEmailError()
-              }}</app-error-message>
+              <app-error-message controlId="identity-password-email-error">
+                {{ passwordEmailError() }}
+              </app-error-message>
             }
           </app-field>
           <app-field>
@@ -219,8 +222,9 @@
           <a
             routerLink="/auth/password-reset"
             class="text-center text-sm font-semibold text-blue-600 dark:text-blue-400"
-            >Forgot your password?</a
           >
+            Forgot your password?
+          </a>
         </app-form>
       }
       @case ('password-factor') {
@@ -269,9 +273,9 @@
         </header>
         <app-form class="mt-6 grid gap-5" [form]="otpForm" (ngSubmit)="verifyPassword()">
           <app-field>
-            <app-label for="identity-password-code" tone="plain" i18n="@@identityPasswordCodeLabel"
-              >Verification code</app-label
-            >
+            <app-label for="identity-password-code" tone="plain" i18n="@@identityPasswordCodeLabel">
+              Verification code
+            </app-label>
             <app-input
               [formField]="otpForm.pin"
               [inputmode]="passwordFactor() === 'recovery_code' ? 'text' : 'numeric'"
@@ -494,9 +498,9 @@
             If you set up an authenticator, also enter an authenticator or recovery code. Otherwise, leave this blank.
           </p>
           <app-field>
-            <label for="recovery-factor-kind" class="text-sm font-semibold" i18n="@@identityRecoveryFactorKind"
-              >Additional verification method</label
-            >
+            <label for="recovery-factor-kind" class="text-sm font-semibold" i18n="@@identityRecoveryFactorKind">
+              Additional verification method
+            </label>
             <select
               id="recovery-factor-kind"
               class="min-h-11 rounded-md border border-zinc-950/10 bg-white px-3 dark:border-white/10 dark:bg-zinc-900"
@@ -509,9 +513,9 @@
             </select>
           </app-field>
           <app-field>
-            <app-label for="recovery-factor-code" tone="plain" i18n="@@identityRecoveryFactorCode"
-              >Additional code (if configured)</app-label
-            >
+            <app-label for="recovery-factor-code" tone="plain" i18n="@@identityRecoveryFactorCode">
+              Additional code (if configured)
+            </app-label>
             <app-input
               [formField]="recoveryFactorForm.code"
               controlId="recovery-factor-code"
@@ -599,9 +603,9 @@
         </header>
         <app-form class="mt-6 grid gap-5" [form]="passwordSetupForm" (ngSubmit)="setPassword()">
           <app-field>
-            <app-label for="identity-password-setup" tone="plain" i18n="@@identityPasswordSetupLabel"
-              >Password</app-label
-            >
+            <app-label for="identity-password-setup" tone="plain" i18n="@@identityPasswordSetupLabel">
+              Password
+            </app-label>
             <app-password-input
               [formField]="passwordSetupForm.password"
               autocomplete="new-password"
@@ -612,15 +616,15 @@
               required
             />
             @if (passwordSetupError()) {
-              <app-error-message controlId="identity-password-setup-error">{{
-                passwordSetupError()
-              }}</app-error-message>
+              <app-error-message controlId="identity-password-setup-error">
+                {{ passwordSetupError() }}
+              </app-error-message>
             }
           </app-field>
           <app-field>
-            <app-label for="identity-password-confirmation" tone="plain" i18n="@@identityPasswordConfirmationLabel"
-              >Confirm password</app-label
-            >
+            <app-label for="identity-password-confirmation" tone="plain" i18n="@@identityPasswordConfirmationLabel">
+              Confirm password
+            </app-label>
             <app-password-input
               [formField]="passwordSetupForm.confirmation"
               autocomplete="new-password"
@@ -630,9 +634,9 @@
               required
             />
             @if (passwordConfirmationError()) {
-              <app-error-message controlId="identity-password-confirmation-error">{{
-                passwordConfirmationError()
-              }}</app-error-message>
+              <app-error-message controlId="identity-password-confirmation-error">
+                {{ passwordConfirmationError() }}
+              </app-error-message>
             }
           </app-field>
           <button

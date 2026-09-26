@@ -111,8 +111,8 @@
       <trans-unit id="signupCodeFailed" datatype="html"><source>That verification code is not valid.</source><target>Ese código de verificación no es válido.</target></trans-unit>
       <trans-unit id="signupReady" datatype="html"><source>Account ready</source><target>Cuenta lista</target></trans-unit>
       <trans-unit id="signupVerified" datatype="html"><source>Your account is verified</source><target>Tu cuenta está verificada</target></trans-unit>
-      <trans-unit id="signupVerifiedDescription" datatype="html"><source>Your email is verified. You can now sign in with the method you just created.</source><target>Tu correo está verificado. Ya puedes iniciar sesión con el método que acabas de crear.</target></trans-unit>
-      <trans-unit id="signupContinue" datatype="html"><source>Continue to sign in</source><target>Continuar al inicio de sesión</target></trans-unit>
+       <trans-unit id="signupVerifiedDescription" datatype="html"><source>Your email is verified. This browser is now signed in; continue to your workspace.</source><target>Tu correo está verificado. Esta sesión ya está iniciada en este navegador; continúa a tu espacio de trabajo.</target></trans-unit>
+       <trans-unit id="signupContinue" datatype="html"><source>Continue to workspace</source><target>Continuar al espacio de trabajo</target></trans-unit>
       <trans-unit id="signupCheckEmail" datatype="html"><source>Check your email</source><target>Revisa tu correo electrónico</target></trans-unit>
       <trans-unit id="signupCodeDescription" datatype="html"><source>Enter the 6-digit code sent to verify your new account.</source><target>Ingresa el código de 6 dígitos enviado para verificar tu nueva cuenta.</target></trans-unit>
       <trans-unit id="signupCodeLabel" datatype="html"><source>Verification code</source><target>Código de verificación</target></trans-unit>

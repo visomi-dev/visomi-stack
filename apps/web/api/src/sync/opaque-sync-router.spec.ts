@@ -9,7 +9,11 @@ jest.mock('shared', () => {
   const { PGlite } = jest.requireActual('@electric-sql/pglite');
   const { drizzle } = jest.requireActual('drizzle-orm/pglite');
 
-  return { ...actual, db: drizzle(new PGlite(), { casing: 'snake_case' }) };
+  return {
+    ...actual,
+    db: drizzle(new PGlite(), { casing: 'snake_case' }),
+    env: { ...actual.env, OPAQUE_SYNC_STORAGE: 'memory' },
+  };
 });
 
 jest.mock('projects', () => ({

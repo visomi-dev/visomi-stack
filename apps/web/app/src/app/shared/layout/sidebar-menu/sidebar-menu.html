@@ -9,9 +9,13 @@
 }
 
 <aside
-  class="shadow-panel fixed inset-y-0 left-0 z-50 flex min-h-dvh w-full max-w-120 shrink-0 flex-col bg-white p-6 text-slate-950 transition-all duration-200 lg:static lg:z-auto lg:translate-x-0 lg:bg-slate-100 lg:p-0 lg:shadow-none dark:bg-slate-800 dark:bg-slate-950 dark:text-slate-50"
+  tabindex="-1"
+  class="shadow-panel fixed inset-y-0 left-0 z-50 flex h-dvh w-full max-w-120 shrink-0 flex-col overflow-y-auto bg-white p-6 text-slate-950 transition-all duration-200 lg:static lg:z-auto lg:translate-x-0 lg:bg-slate-100 lg:p-0 lg:shadow-none dark:bg-slate-800 dark:bg-slate-950 dark:text-slate-50"
   [class.-translate-x-full]="!mobileMenuOpen()"
+  [class.invisible]="!mobileMenuOpen()"
+  [class.lg:visible]="!mobileMenuOpen()"
   [class.translate-x-0]="mobileMenuOpen()"
+  (keydown.escape)="closeMenu()"
   [class.lg:w-16]="collapsed()"
   [class.lg:w-60]="!collapsed()"
 >
@@ -38,10 +42,11 @@
   >
     <span
       class="flex h-12 w-12 items-center justify-center rounded-sm bg-slate-600 text-2xl font-bold text-white lg:hidden dark:bg-slate-500 dark:text-slate-950"
-      >T</span
     >
-    <span [class.lg:hidden]="collapsed()">{{ appName }}</span
-    ><span class="text-slate-600 dark:text-slate-400" [class.lg:hidden]="collapsed()">.</span>
+      T
+    </span>
+    <span [class.lg:hidden]="collapsed()">{{ appName }}</span>
+    <span class="text-slate-600 dark:text-slate-400" [class.lg:hidden]="collapsed()">.</span>
   </a>
 
   <button
@@ -113,6 +118,17 @@
     </div>
 
     <div class="mt-2 flex flex-col gap-1" [class.lg:items-center]="collapsed()">
+      <a
+        href="https://github.com/visomi-dev/visomi-stack#readme"
+        class="ui-focus-ring flex min-h-11 w-full items-center gap-2.5 rounded-sm px-2 py-2 text-sm text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
+        [class.lg:justify-center]="collapsed()"
+        aria-label="Help"
+        i18n-aria-label="@@layoutHelp"
+      >
+        <app-icon name="question-circle" class="shrink-0 text-base" />
+        <span [class.lg:hidden]="collapsed()" i18n="@@layoutHelp">Help</span>
+      </a>
+      <app-language-switcher [compact]="collapsed()" />
       <button
         type="button"
         class="flex w-full items-center gap-2.5 rounded-sm px-2 py-2.5 text-left text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-950 lg:py-2 dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"

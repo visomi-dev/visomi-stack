@@ -1,166 +1,174 @@
 <app-security-confirmation />
-<section class="mx-auto max-w-xl px-4 py-8 md:py-12" aria-labelledby="device-setup-title">
-  <a
-    [routerLink]="securityUrl"
-    class="inline-flex min-h-11 items-center text-sm text-blue-600 underline dark:text-blue-400"
-    i18n="@@securityReturn"
-    >Back to Security</a
-  >
-  <h1 id="device-setup-title" class="font-heading mt-5 text-3xl font-bold" i18n="@@approvalTitle">Device setup</h1>
-  <p class="mt-3 leading-7 text-zinc-600 dark:text-zinc-300" i18n="@@approvalDescription">
-    Approve only a request you started on your other device. Approval allows that device to set up a passkey.
-  </p>
-  @if (error()) {
-    <p role="alert" class="mt-5 text-sm text-red-700 dark:text-red-300">{{ error() }}</p>
-  }
-  @if (notice()) {
-    <p role="status" class="mt-5 text-sm">{{ notice() }}</p>
-  }
-  @if (busy()) {
-    <p role="status" class="mt-5 text-sm" i18n="@@securityConfirmBusy">Completing your request…</p>
-  }
-  @if (stage() === 'enroll') {
-    <h2 class="font-heading mt-7 text-xl font-bold" i18n="@@approvalCreateTitle">Create a passkey on this device</h2>
-    <app-form [form]="nameForm" (ngSubmit)="createPasskey()" class="mt-5 grid gap-4"
-      ><app-field
-        ><app-label for="approval-passkey-name" i18n="@@securityAddPasskeyNameLabel">Passkey name</app-label
-        ><app-input
-          [formField]="nameForm.name"
-          controlId="approval-passkey-name"
-          autocomplete="off"
-          maxLength="64"
-          required /></app-field
-      ><button
-        type="submit"
-        class="min-h-11 rounded-md bg-blue-600 px-4 font-semibold text-white disabled:opacity-60"
-        [disabled]="busy()"
-        i18n="@@identityCreatePasskey"
-      >
-        Create passkey
-      </button></app-form
+<div class="mx-auto max-w-xl px-4 py-8 md:py-12">
+  <header>
+    <a
+      [routerLink]="securityUrl"
+      class="inline-flex min-h-11 items-center text-sm text-blue-600 underline dark:text-blue-400"
+      i18n="@@securityReturn"
     >
-  } @else if (stage() === 'verify') {
-    <p class="mt-6 leading-7" i18n="@@identityVerifyNewPasskeyDescription">
-      Use the passkey you just created to finish signing in.
+      Back to Security
+    </a>
+    <h1 id="device-setup-title" class="font-heading mt-5 text-3xl font-bold" i18n="@@approvalTitle">Device setup</h1>
+  </header>
+  <main aria-labelledby="device-setup-title">
+    <p class="mt-3 leading-7 text-zinc-600 dark:text-zinc-300" i18n="@@approvalDescription">
+      Approve only a request you started on your other device. Approval allows that device to set up a passkey.
     </p>
-    <button
-      type="button"
-      class="mt-5 min-h-11 rounded-md bg-blue-600 px-4 font-semibold text-white disabled:opacity-60"
-      [disabled]="busy()"
-      (click)="verifyPasskey()"
-      i18n="@@identityVerifyNewPasskeyAction"
-    >
-      Verify passkey
-    </button>
-  } @else {
-    @if (record(); as request) {
-      <section class="mt-6 rounded-lg bg-zinc-50 p-5 dark:bg-zinc-900">
-        <h2 class="font-heading text-lg font-bold" role="status">{{ statusLabel(request.status) }}</h2>
-        <p class="mt-2 text-sm" i18n="@@approvalExpires">Expires: {{ request.expiresAt | date: 'medium' }}</p>
-      </section>
-      @if (request.requester) {
-        @if (lostCode()) {
-          <p class="mt-5 text-sm" i18n="@@approvalLostCode">
-            This page was reloaded. Cancel this request and start a new one to continue securely.
-          </p>
-        }
-        @if (link() && request.status === 'pending') {
-          <p class="mt-5 text-sm leading-6" i18n="@@approvalShare">
-            Open this link on your other trusted device and confirm with an existing passkey.
-          </p>
-          @if (qr()) {
-            <img
-              [src]="qr()"
-              width="256"
-              height="256"
-              alt="Device approval link QR code"
-              i18n-alt="@@approvalQrAlt"
-              class="mx-auto mt-5 max-w-full rounded-md"
-            />
-          }
-          <a [href]="link()" class="mt-4 block text-sm break-all text-blue-600 underline dark:text-blue-400">{{
-            link()
-          }}</a
-          ><button
-            type="button"
-            class="mt-3 min-h-11 text-blue-600 underline dark:text-blue-400"
-            (click)="copyLink()"
-            i18n="@@approvalCopyLink"
-          >
-            Copy link
-          </button>
-        }
-        @if (request.status === 'approved' && !lostCode()) {
-          <button
-            type="button"
-            class="mt-5 min-h-11 w-full rounded-md bg-blue-600 px-4 font-semibold text-white disabled:opacity-60"
-            [disabled]="busy()"
-            (click)="continueEnrollment()"
-            i18n="@@approvalContinueSetup"
-          >
-            Continue passkey setup
-          </button>
-        }
-        @if (request.status === 'pending' || request.status === 'approved') {
-          <button
-            type="button"
-            class="mt-4 min-h-11 px-3 text-red-700 underline dark:text-red-300"
-            [disabled]="busy()"
-            (click)="cancel()"
-            i18n="@@approvalCancel"
-          >
-            Cancel request
-          </button>
-        } @else {
-          <button
-            type="button"
-            class="mt-5 min-h-11 rounded-md bg-blue-600 px-4 text-white"
-            [disabled]="busy()"
-            (click)="start()"
-            i18n="@@approvalStartNew"
-          >
-            Start a new request
-          </button>
-        }
-      } @else if (request.status === 'pending') {
-        <div class="mt-6 grid gap-3">
-          <button
-            type="button"
-            class="min-h-11 rounded-md bg-blue-600 px-4 font-semibold text-white disabled:opacity-60"
-            [disabled]="busy()"
-            (click)="approve()"
-            i18n="@@approvalConfirmApprove"
-          >
-            Confirm passkey and approve</button
-          ><button
-            type="button"
-            class="min-h-11 px-4 text-red-700 underline dark:text-red-300"
-            [disabled]="busy()"
-            (click)="deny()"
-            i18n="@@approvalDeny"
-          >
-            Deny request
-          </button>
-        </div>
-      }
-      <button
-        type="button"
-        class="mt-5 min-h-11 px-3 text-blue-600 underline dark:text-blue-400"
-        [disabled]="busy()"
-        (click)="refresh()"
-        i18n="@@approvalRefresh"
-      >
-        Refresh status
-      </button>
-    } @else if (!busy()) {
-      <button
-        type="button"
-        class="mt-6 min-h-11 w-full rounded-md bg-blue-600 px-4 font-semibold text-white"
-        (click)="start()"
-        i18n="@@securityStartApproval"
-      >
-        Create approval request
-      </button>
+    @if (error()) {
+      <p role="alert" class="mt-5 text-sm text-red-700 dark:text-red-300">{{ error() }}</p>
     }
-  }
-</section>
+    @if (notice()) {
+      <p role="status" class="mt-5 text-sm">{{ notice() }}</p>
+    }
+    @if (busy()) {
+      <p role="status" class="mt-5 text-sm" i18n="@@securityConfirmBusy">Completing your request…</p>
+    }
+    @if (stage() === 'enroll') {
+      <h2 class="font-heading mt-7 text-xl font-bold" i18n="@@approvalCreateTitle">Create a passkey on this device</h2>
+      <app-form [form]="nameForm" (ngSubmit)="createPasskey()" class="mt-5 grid gap-4">
+        <app-field>
+          <app-label for="approval-passkey-name" i18n="@@securityAddPasskeyNameLabel">Passkey name</app-label>
+          <app-input
+            [formField]="nameForm.name"
+            controlId="approval-passkey-name"
+            autocomplete="off"
+            maxLength="64"
+            required
+          />
+        </app-field>
+        <button
+          type="submit"
+          class="min-h-11 rounded-md bg-blue-600 px-4 font-semibold text-white disabled:opacity-60"
+          [disabled]="busy()"
+          i18n="@@identityCreatePasskey"
+        >
+          Create passkey
+        </button>
+      </app-form>
+    } @else if (stage() === 'verify') {
+      <p class="mt-6 leading-7" i18n="@@identityVerifyNewPasskeyDescription">
+        Use the passkey you just created to finish signing in.
+      </p>
+      <button
+        type="button"
+        class="mt-5 min-h-11 rounded-md bg-blue-600 px-4 font-semibold text-white disabled:opacity-60"
+        [disabled]="busy()"
+        (click)="verifyPasskey()"
+        i18n="@@identityVerifyNewPasskeyAction"
+      >
+        Verify passkey
+      </button>
+    } @else {
+      @if (record(); as request) {
+        <section class="mt-6 rounded-lg bg-zinc-50 p-5 dark:bg-zinc-900">
+          <h2 class="font-heading text-lg font-bold" role="status">{{ statusLabel(request.status) }}</h2>
+          <p class="mt-2 text-sm" i18n="@@approvalExpires">Expires: {{ request.expiresAt | date: 'medium' }}</p>
+        </section>
+        @if (request.requester) {
+          @if (lostCode()) {
+            <p class="mt-5 text-sm" i18n="@@approvalLostCode">
+              This page was reloaded. Cancel this request and start a new one to continue securely.
+            </p>
+          }
+          @if (link() && request.status === 'pending') {
+            <p class="mt-5 text-sm leading-6" i18n="@@approvalShare">
+              Open this link on your other trusted device and confirm with an existing passkey.
+            </p>
+            @if (qr()) {
+              <img
+                [src]="qr()"
+                width="256"
+                height="256"
+                alt="Device approval link QR code"
+                i18n-alt="@@approvalQrAlt"
+                class="mx-auto mt-5 max-w-full rounded-md"
+              />
+            }
+            <a [href]="link()" class="mt-4 block text-sm break-all text-blue-600 underline dark:text-blue-400">
+              {{ link() }}
+            </a>
+            <button
+              type="button"
+              class="mt-3 min-h-11 text-blue-600 underline dark:text-blue-400"
+              (click)="copyLink()"
+              i18n="@@approvalCopyLink"
+            >
+              Copy link
+            </button>
+          }
+          @if (request.status === 'approved' && !lostCode()) {
+            <button
+              type="button"
+              class="mt-5 min-h-11 w-full rounded-md bg-blue-600 px-4 font-semibold text-white disabled:opacity-60"
+              [disabled]="busy()"
+              (click)="continueEnrollment()"
+              i18n="@@approvalContinueSetup"
+            >
+              Continue passkey setup
+            </button>
+          }
+          @if (request.status === 'pending' || request.status === 'approved') {
+            <button
+              type="button"
+              class="mt-4 min-h-11 px-3 text-red-700 underline dark:text-red-300"
+              [disabled]="busy()"
+              (click)="cancel()"
+              i18n="@@approvalCancel"
+            >
+              Cancel request
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="mt-5 min-h-11 rounded-md bg-blue-600 px-4 text-white"
+              [disabled]="busy()"
+              (click)="start()"
+              i18n="@@approvalStartNew"
+            >
+              Start a new request
+            </button>
+          }
+        } @else if (request.status === 'pending') {
+          <div class="mt-6 grid gap-3">
+            <button
+              type="button"
+              class="min-h-11 rounded-md bg-blue-600 px-4 font-semibold text-white disabled:opacity-60"
+              [disabled]="busy()"
+              (click)="approve()"
+              i18n="@@approvalConfirmApprove"
+            >
+              Confirm passkey and approve
+            </button>
+            <button
+              type="button"
+              class="min-h-11 px-4 text-red-700 underline dark:text-red-300"
+              [disabled]="busy()"
+              (click)="deny()"
+              i18n="@@approvalDeny"
+            >
+              Deny request
+            </button>
+          </div>
+        }
+        <button
+          type="button"
+          class="mt-5 min-h-11 px-3 text-blue-600 underline dark:text-blue-400"
+          [disabled]="busy()"
+          (click)="refresh()"
+          i18n="@@approvalRefresh"
+        >
+          Refresh status
+        </button>
+      } @else if (!busy()) {
+        <button
+          type="button"
+          class="mt-6 min-h-11 w-full rounded-md bg-blue-600 px-4 font-semibold text-white"
+          (click)="start()"
+          i18n="@@securityStartApproval"
+        >
+          Create approval request
+        </button>
+      }
+    }
+  </main>
+</div>

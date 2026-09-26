@@ -1,5 +1,7 @@
 import type { Route } from '@angular/router';
 
+import { environment } from '../environments/environment';
+
 import { anonymousGuard } from './shared/auth/anonymous-guard';
 import { authenticatedGuard } from './shared/auth/authenticated-guard';
 import { accountResolver } from './account/account.resolver';
@@ -132,11 +134,15 @@ export const appRoutes: Route[] = [
     canActivate: [authenticatedGuard],
     loadComponent: () => import('./security/security').then((module) => module.Security),
   },
-  {
-    path: ACTIVATION_PATH,
-    canActivate: [authenticatedGuard],
-    loadComponent: () => import('./activation/activation').then((module) => module.Activation),
-  },
+  ...(environment.activationEnabled
+    ? [
+        {
+          path: ACTIVATION_PATH,
+          canActivate: [authenticatedGuard],
+          loadComponent: () => import('./activation/activation').then((module) => module.Activation),
+        },
+      ]
+    : []),
   {
     path: GALLERY_PATH,
     canActivate: [authenticatedGuard],

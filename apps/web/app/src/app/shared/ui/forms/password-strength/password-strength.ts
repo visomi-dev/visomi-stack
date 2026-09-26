@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, resource, type Signal } from '@angular/core';
 
-import { uiClass } from '../../classes';
 import { Deps } from '../../../deps';
+import { uiClass } from '../../classes';
 
 export type PasswordStrengthLevel = 0 | 1 | 2 | 3 | 4;
 
@@ -67,7 +67,7 @@ export class PasswordStrength {
   readonly containerClasses = computed(() => 'space-y-1.5');
   readonly labelClasses = computed(() =>
     uiClass(
-      'text-slate-500 dark:text-slate-400 block text-xs font-medium tracking-wide',
+      'text-slate-500 dark:text-slate-400 block text-xs font-medium tracking-wide pt-1',
       !this.password()() ? 'opacity-0' : 'opacity-100',
     ),
   );

@@ -111,8 +111,12 @@ export class Passkey {
     );
   }
 
-  async verifySignUp(code: string): Promise<void> {
-    await firstValueFrom(this.http.post('/api/auth/passkey/sign-up/verify', { code }));
+  async verifySignUp(code: string): Promise<PasskeyComplete['data']> {
+    const response = await firstValueFrom(
+      this.http.post<PasskeyComplete>('/api/auth/passkey/sign-up/verify', { code }),
+    );
+
+    return response.data;
   }
 
   async completeAuthentication(challengeId: string, credential: Credential): Promise<PasskeyComplete['data']> {

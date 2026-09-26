@@ -151,6 +151,8 @@ describe('GoogleIdentity', () => {
       vi.fn(),
     );
 
-    expect(initialize).toHaveBeenCalledWith(expect.objectContaining({ nonce: 'google-nonce' }));
+    expect(initialize).toHaveBeenCalledWith(
+      expect.objectContaining({ nonce: 'google-nonce', use_fedcm_for_prompt: true, use_fedcm_for_button: true }),
+    );
   });
 });

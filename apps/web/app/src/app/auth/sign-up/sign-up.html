@@ -9,15 +9,16 @@
       </p>
       <h1 i18n="@@signupVerified" class="font-heading mt-3 text-3xl font-bold">Your account is verified</h1>
       <p i18n="@@signupVerifiedDescription" class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
-        Your email is verified. You can now sign in with the method you just created.
+        Your email is verified. This browser is now signed in; continue to your workspace.
       </p>
       <a
-        routerLink="/auth/sign-in"
+        routerLink="/"
         queryParamsHandling="preserve"
         i18n="@@signupContinue"
         class="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
-        >Continue to sign in</a
       >
+        Continue to workspace
+      </a>
     } @else if (flowId() || passkeyEmailPending()) {
       <p
         i18n="@@identityOtpEyebrow"
@@ -66,9 +67,9 @@
       </p>
       <app-form class="mt-6 grid gap-5" [form]="passkeyEmailForm" (ngSubmit)="createPasskey()">
         <app-field>
-          <app-label for="passkey-signup-email" tone="plain"
-            ><span i18n="@@signupPasskeyEmail">Email address</span></app-label
-          >
+          <app-label for="passkey-signup-email" tone="plain">
+            <span i18n="@@signupPasskeyEmail">Email address</span>
+          </app-label>
           <app-input
             [formField]="passkeyEmailForm.email"
             type="email"
@@ -78,9 +79,9 @@
             ariaDescribedBy="passkey-signup-email-error"
             required
           />
-          <app-error-message controlId="passkey-signup-email-error">{{
-            passkeyEmailForm.email().errors()[0]?.message
-          }}</app-error-message>
+          <app-error-message controlId="passkey-signup-email-error">
+            {{ passkeyEmailForm.email().errors()[0]?.message }}
+          </app-error-message>
         </app-field>
         <button
           type="submit"
@@ -102,12 +103,13 @@
         queryParamsHandling="merge"
         class="ui-focus-ring flex min-h-11 w-full items-center justify-center rounded-md border border-slate-950/10 px-4 text-center text-sm font-semibold text-blue-600 hover:bg-blue-600/10 dark:border-white/10 dark:text-blue-400"
         i18n="@@signupUsePassword"
-        >Use password instead</a
       >
+        Use password instead
+      </a>
       <p class="mt-5 text-center text-sm">
-        <a routerLink="/auth/sign-in" queryParamsHandling="preserve" i18n="@@signupExistingAccount"
-          >Already have an account? Sign in</a
-        >
+        <a routerLink="/auth/sign-in" queryParamsHandling="preserve" i18n="@@signupExistingAccount">
+          Already have an account? Sign in
+        </a>
       </p>
     } @else {
       <p
@@ -147,9 +149,9 @@
           <app-error-message controlId="sign-up-password-error">{{ passwordError() }}</app-error-message>
         </app-field>
         <app-field>
-          <app-label for="sign-up-confirmation" tone="plain"
-            ><span i18n="@@signupConfirmLabel">Confirm password</span></app-label
-          >
+          <app-label for="sign-up-confirmation" tone="plain">
+            <span i18n="@@signupConfirmLabel">Confirm password</span>
+          </app-label>
           <app-password-input
             [formField]="form.confirmation"
             autocomplete="new-password"
@@ -175,15 +177,17 @@
           queryParamsHandling="merge"
           class="mb-4 block font-semibold text-blue-600 dark:text-blue-400"
           i18n="@@signupUsePasskey"
-          >Use a passkey instead</a
         >
+          Use a passkey instead
+        </a>
         <a
           routerLink="/auth/sign-in"
           queryParamsHandling="preserve"
           class="font-semibold text-blue-600 dark:text-blue-400"
           i18n="@@signupExistingAccount"
-          >Already have an account? Sign in</a
         >
+          Already have an account? Sign in
+        </a>
       </p>
     }
     @if (error()) {

@@ -1,31 +1,29 @@
 <div class="bg-bg min-h-full text-slate-950 dark:text-slate-50">
-  <header class="border-border-subtle bg-panel sticky top-0 z-20 border-b">
-    <div
-      class="mx-auto flex max-w-screen-2xl flex-col gap-4 px-4 py-6 sm:px-6 md:flex-row md:items-center md:justify-between md:px-8"
-    >
-      <div class="min-w-0">
+  <div class="bg-panel sticky top-0 z-20">
+    <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 md:px-8">
+      <app-topbar>
         <h1 class="font-heading text-2xl font-bold tracking-tight md:text-3xl" data-od-id="gallery-title">
           Visomi Stack UI Gallery
         </h1>
-        <p class="text-muted-fg mt-1 text-sm md:text-base">
-          Live previews of every primitive in
-          <code class="rounded-sm bg-slate-100 px-1.5 py-0.5 font-mono text-xs dark:bg-slate-800">shared/ui</code>. Use
-          this to compose new screens without guessing the API.
-        </p>
-      </div>
-      <label class="flex shrink-0 items-center gap-2">
-        <span class="sr-only" i18n="@@galleryFilterLabel">Filter components</span>
-        <input
-          type="search"
-          class="ui-focus-ring bg-bg border-border-subtle w-full rounded-md border px-3 py-2 text-sm md:w-72"
-          [value]="filter()"
-          (input)="setFilter($any($event.target).value)"
-          placeholder="Filter by name, description, or selector"
-          i18n-placeholder="@@galleryFilterPlaceholder"
-        />
-      </label>
+        <label data-slot="search" class="flex shrink-0 items-center gap-2">
+          <span class="sr-only" i18n="@@galleryFilterLabel">Filter components</span>
+          <input
+            type="search"
+            class="ui-focus-ring bg-bg border-border-subtle w-full rounded-md border px-3 py-2 text-sm md:w-72"
+            [value]="filter()"
+            (input)="setFilter($any($event.target).value)"
+            placeholder="Filter by name, description, or selector"
+            i18n-placeholder="@@galleryFilterPlaceholder"
+          />
+        </label>
+      </app-topbar>
+      <p class="text-muted-fg mt-3 text-sm md:text-base">
+        Live previews of every primitive in
+        <code class="rounded-sm bg-slate-100 px-1.5 py-0.5 font-mono text-xs dark:bg-slate-800">shared/ui</code>
+        . Use this to compose new screens without guessing the API.
+      </p>
     </div>
-  </header>
+  </div>
 
   <div
     class="mx-auto flex max-w-screen-2xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 md:flex-row md:gap-10 md:px-8 md:py-10"
@@ -125,7 +123,21 @@
                         legend="Choose a plan"
                         [options]="radioOptions"
                         layout="responsive"
-                      />
+                      >
+                        <ng-template appRadioOption let-option let-labelId="labelId" let-descriptionId="descriptionId">
+                          @if (option.icon) {
+                            <app-icon [name]="option.icon" class="shrink-0" aria-hidden="true" />
+                          }
+                          <span class="grid min-w-0 gap-1">
+                            <span class="font-medium" [id]="labelId">{{ option.label }}</span>
+                            @if (option.description) {
+                              <span class="text-slate-500 dark:text-slate-400" [id]="descriptionId">
+                                {{ option.description }}
+                              </span>
+                            }
+                          </span>
+                        </ng-template>
+                      </app-radio-group>
                     }
                     @case ('radio-card') {
                       <div class="grid gap-3 sm:grid-cols-3">
@@ -223,12 +235,12 @@
                       </app-card>
                     }
                     @case ('alert') {
-                      <app-alert tone="info" variant="default"
-                        >Heads up — informational message with the default tone.</app-alert
-                      >
-                      <app-alert tone="danger" variant="default"
-                        >Something went wrong — make the message actionable.</app-alert
-                      >
+                      <app-alert tone="info" variant="default">
+                        Heads up — informational message with the default tone.
+                      </app-alert>
+                      <app-alert tone="danger" variant="default">
+                        Something went wrong — make the message actionable.
+                      </app-alert>
                     }
                     @case ('tooltip') {
                       <app-tooltip text="Copies the share link to your clipboard.">

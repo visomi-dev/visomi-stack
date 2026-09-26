@@ -3,13 +3,14 @@ import { z } from 'zod';
 export const environmentSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+    HOST: z.string().default('0.0.0.0'),
     MAIL_TRANSPORT: z.enum(['mailgun', 'memory']).optional(),
     MAILGUN_API_KEY: z.string().default(''),
     MAILGUN_DOMAIN: z.string().default(''),
     MAILGUN_FROM: z.string().default('Themis <no-reply@themis.local>'),
     MAILGUN_URL: z.string().optional(),
     API_INTERNAL_URL: z.string().default('http://127.0.0.1:3000'),
-    DATABASE_URL: z.string().default('postgresql://postgres:postgres@127.0.0.1:5432/themis'),
+    DATABASE_URL: z.string().default('postgresql://postgres:local-development-only@127.0.0.1:5432/visomi'),
     APP_BASE_URL: z.url().default('http://localhost:8080/app'),
     COOKIE_SECURE: z.enum(['true', 'false']).optional(),
     DATABASE_AUTO_MIGRATE: z.enum(['true', 'false']).optional(),
@@ -22,6 +23,10 @@ export const environmentSchema = z
       .enum(['true', 'false'])
       .optional()
       .transform((v) => v === 'true'),
+    ENABLE_LOCAL_ACTIVATION: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform((value) => value === 'true'),
     PIN_EXPIRY_MINUTES: z.coerce.number().default(10),
     PIN_RESEND_COOLDOWN_SECONDS: z.coerce.number().default(45),
     EMAIL_OTP_DELIVERY_WINDOW_MS: z.coerce
@@ -66,6 +71,18 @@ export const environmentSchema = z
     AUTH_PASSWORD_BLOCKLIST_PATH: z.string().default(''),
   })
   .superRefine((data, context) => {
+    if (
+      data.ENABLE_LOCAL_ACTIVATION &&
+      (data.NODE_ENV !== 'development' ||
+        !['localhost', '127.0.0.1', '::1'].includes(data.HOST) ||
+        !['localhost', '127.0.0.1', '::1'].includes(new URL(data.APP_BASE_URL).hostname))
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['ENABLE_LOCAL_ACTIVATION'],
+        message: 'Activation can only be enabled for a local development URL.',
+      });
+    }
     if (data.NODE_ENV !== 'production') return;
 
     if (data.ENABLE_TEST_API) {

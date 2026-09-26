@@ -1,5 +1,5 @@
 <span
-  class="contents"
+  class="inline-flex"
   cdkOverlayOrigin
   #origin="cdkOverlayOrigin"
   role="presentation"
@@ -14,10 +14,14 @@
   [cdkConnectedOverlayHasBackdrop]="true"
   [cdkConnectedOverlayOpen]="open()"
   [cdkConnectedOverlayOrigin]="origin"
+  [cdkConnectedOverlayPositions]="positions()"
+  [cdkConnectedOverlayViewportMargin]="8"
+  [cdkConnectedOverlayPush]="true"
+  cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
   (backdropClick)="close()"
   (detach)="close()"
 >
-  <div class="ui-panel-raised z-50 mt-2 min-w-56 p-1" role="menu" tabindex="-1" (keydown)="handleKeydown($event)">
+  <div class="ui-panel-raised min-w-40 p-1" role="menu" tabindex="-1" (keydown)="handleKeydown($event)">
     <ng-content />
   </div>
 </ng-template>

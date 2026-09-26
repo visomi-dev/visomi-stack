@@ -1,245 +1,432 @@
 <app-security-confirmation />
-<section class="mx-auto max-w-4xl py-4 md:py-8" aria-labelledby="security-title">
-  <p
-    class="font-mono text-xs font-semibold tracking-widest text-zinc-500 uppercase dark:text-zinc-400"
-    i18n="@@securityAccountEyebrow"
-  >
-    Your account
-  </p>
-  <h1 id="security-title" class="font-heading mt-2 text-3xl font-bold" i18n="@@securityTitle">Security</h1>
-  <a
-    routerLink="/security/sessions"
-    class="mt-3 inline-flex min-h-11 items-center text-blue-600 underline dark:text-blue-400"
-    i18n="@@securityManageSessions"
-    >Manage active sessions</a
-  >
-  <p class="mt-3 max-w-2xl leading-7 text-zinc-600 dark:text-zinc-300" i18n="@@securityOverviewDescription">
-    Choose how you sign in and keep a way to recover access.
-  </p>
-  @if (notice()) {
-    <p role="status" class="mt-5 text-sm text-green-700 dark:text-green-300">{{ notice() }}</p>
-  }
-  @if (passkeyError()) {
-    <p role="alert" class="mt-5 text-sm text-red-700 dark:text-red-300">{{ passkeyError() }}</p>
-  }
-  @if (view() === 'list') {
-    <section class="mt-8 rounded-lg bg-zinc-50 p-5 md:p-6 dark:bg-zinc-900" aria-labelledby="sign-in-methods-title">
-      <h2 id="sign-in-methods-title" class="font-heading text-xl font-bold" i18n="@@securitySignInMethods">
-        Sign-in methods
-      </h2>
-      <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 class="font-heading text-lg font-bold" i18n="@@securityPasskeysTitle">Passkeys</h3>
-          <p class="mt-2 max-w-xl text-sm leading-6 text-zinc-600 dark:text-zinc-300" i18n="@@securityPasskeyStorage">
-            Your passkey is stored by your device or passkey provider and may sync across your devices.
-          </p>
-        </div>
-        <button
-          type="button"
-          class="min-h-11 shrink-0 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white"
-          (click)="showAdd()"
-          i18n="@@securityAddPasskey"
-        >
-          Add passkey
-        </button>
-      </div>
-      @if (passkeyLoading()) {
-        <p class="mt-5" role="status" i18n="@@securityLoading">Loading security settings...</p>
-      } @else if (passkeyError()) {
-        <button
-          type="button"
-          class="mt-4 min-h-11 text-blue-600 underline dark:text-blue-400"
-          (click)="loadCredentials()"
-          i18n="@@securityRetryPasskeys"
-        >
-          Reload passkeys
-        </button>
-      } @else {
-        @for (credential of credentials(); track credential.id) {
-          <article
-            class="mt-5 flex flex-col gap-4 rounded-lg bg-white p-4 sm:flex-row sm:justify-between dark:bg-zinc-950"
+<div class="mx-auto max-w-4xl py-4 md:py-8">
+  <header>
+    <p
+      class="font-mono text-xs font-semibold tracking-widest text-zinc-500 uppercase dark:text-zinc-400"
+      i18n="@@securityAccountEyebrow"
+    >
+      Your account
+    </p>
+    <h1 id="security-title" class="font-heading mt-2 text-3xl font-bold" i18n="@@securityTitle">Security</h1>
+  </header>
+  <main aria-labelledby="security-title">
+    <a
+      routerLink="/security/sessions"
+      class="mt-3 inline-flex min-h-11 items-center text-blue-600 underline dark:text-blue-400"
+      i18n="@@securityManageSessions"
+    >
+      Manage active sessions
+    </a>
+    <p class="mt-3 max-w-2xl leading-7 text-zinc-600 dark:text-zinc-300" i18n="@@securityOverviewDescription">
+      Choose how you sign in and keep a way to recover access.
+    </p>
+    @if (notice()) {
+      <p role="status" class="mt-5 text-sm text-green-700 dark:text-green-300">{{ notice() }}</p>
+    }
+    @if (passkeyError()) {
+      <p role="alert" class="mt-5 text-sm text-red-700 dark:text-red-300">{{ passkeyError() }}</p>
+    }
+    @if (view() === 'list') {
+      <section class="mt-8 rounded-lg bg-zinc-50 p-5 md:p-6 dark:bg-zinc-900" aria-labelledby="sign-in-methods-title">
+        <h2 id="sign-in-methods-title" class="font-heading text-xl font-bold" i18n="@@securitySignInMethods">
+          Sign-in methods
+        </h2>
+        <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 class="font-heading text-lg font-bold" i18n="@@securityPasskeysTitle">Passkeys</h3>
+            <p class="mt-2 max-w-xl text-sm leading-6 text-zinc-600 dark:text-zinc-300" i18n="@@securityPasskeyStorage">
+              Your passkey is stored by your device or passkey provider and may sync across your devices.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="min-h-11 shrink-0 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white"
+            (click)="showAdd()"
+            i18n="@@securityAddPasskey"
           >
-            <div>
-              <h4 class="font-semibold">{{ credential.label }}</h4>
-              <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityPasskeyCreatedDate">
-                Created: {{ credential.createdAt | date: 'mediumDate' }}
-              </p>
-              <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityPasskeyUsedDate">
-                Last used: {{ credential.lastUsedAt ? (credential.lastUsedAt | date: 'medium') : '—' }}
-              </p>
-            </div>
-            <div class="flex flex-wrap items-start gap-2">
+            Add passkey
+          </button>
+        </div>
+        @if (passkeyLoading()) {
+          <p class="mt-5" role="status" i18n="@@securityLoading">Loading security settings...</p>
+        } @else if (passkeyError()) {
+          <button
+            type="button"
+            class="mt-4 min-h-11 text-blue-600 underline dark:text-blue-400"
+            (click)="loadCredentials()"
+            i18n="@@securityRetryPasskeys"
+          >
+            Reload passkeys
+          </button>
+        } @else {
+          @for (credential of credentials(); track credential.id) {
+            <article
+              class="mt-5 flex flex-col gap-4 rounded-lg bg-white p-4 sm:flex-row sm:justify-between dark:bg-zinc-950"
+            >
+              <div>
+                <h4 class="font-semibold">{{ credential.label }}</h4>
+                <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityPasskeyCreatedDate">
+                  Created: {{ credential.createdAt | date: 'mediumDate' }}
+                </p>
+                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityPasskeyUsedDate">
+                  Last used: {{ credential.lastUsedAt ? (credential.lastUsedAt | date: 'medium') : '—' }}
+                </p>
+              </div>
+              <div class="flex flex-wrap items-start gap-2">
+                <button
+                  type="button"
+                  class="min-h-11 px-3 text-sm font-semibold text-blue-600 underline dark:text-blue-400"
+                  (click)="showRename(credential)"
+                  i18n="@@securityRenameButton"
+                >
+                  Rename
+                </button>
+                <button
+                  type="button"
+                  class="min-h-11 px-3 text-sm font-semibold text-red-700 underline dark:text-red-300"
+                  (click)="showRevoke(credential)"
+                  i18n="@@securityRevokeButton"
+                >
+                  Revoke
+                </button>
+              </div>
+            </article>
+          } @empty {
+            <p class="mt-5 text-sm" i18n="@@securityNoPasskeysTitle">No passkeys yet</p>
+          }
+        }
+        @if (overview(); as details) {
+          <div class="mt-6 border-t border-zinc-950/10 pt-5 dark:border-white/10">
+            <h3 class="font-semibold" i18n="@@securityPasswordAuthenticator">Password and authenticator</h3>
+            <p class="mt-2 text-sm" i18n="@@securityPasswordStatus">
+              Password: {{ methodStatus(details.passwordEnabled) }}
+            </p>
+            <p class="mt-1 text-sm" i18n="@@securityAuthenticatorStatus">
+              Authenticator: {{ methodStatus(details.totpEnabled) }}
+            </p>
+            <a
+              [routerLink]="passwordUrl"
+              class="mt-2 inline-flex min-h-11 items-center text-sm text-blue-600 underline dark:text-blue-400"
+              i18n="@@securityManagePassword"
+            >
+              Manage password and authenticator
+            </a>
+            <h3 class="mt-5 font-semibold" i18n="@@securityConnectedAccounts">Connected accounts</h3>
+            @for (identity of details.federatedIdentities; track identity.id) {
+              <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                <span class="text-sm break-all">{{ identity.provider }} · {{ identity.emailAtLink }}</span>
+                <button
+                  type="button"
+                  class="min-h-11 px-3 text-sm text-red-700 underline dark:text-red-300"
+                  (click)="requestRemoval('federated', identity.id)"
+                  [disabled]="mutationBusy()"
+                  i18n="@@securityDisconnect"
+                >
+                  Disconnect
+                </button>
+              </div>
+            } @empty {
+              <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityNoFederated">None linked.</p>
+            }
+            @if (details.googleLinkEnabled) {
+              <a
+                [routerLink]="googleUrl"
+                class="inline-flex min-h-11 items-center text-sm text-blue-600 underline dark:text-blue-400"
+                i18n="@@securityConnectGoogle"
+              >
+                Connect Google
+              </a>
+            }
+          </div>
+        }
+      </section>
+      @if (overviewLoading()) {
+        <p role="status" class="mt-6" i18n="@@securityOverviewLoading">Loading your account overview…</p>
+      }
+      @if (overviewError()) {
+        <div class="mt-6 rounded-lg bg-zinc-50 p-5 dark:bg-zinc-900">
+          <p role="alert" class="text-sm">{{ overviewError() }}</p>
+          <button
+            type="button"
+            class="mt-3 min-h-11 text-blue-600 underline dark:text-blue-400"
+            (click)="loadOverview()"
+            [disabled]="overviewLoading()"
+            i18n="@@securityRetryOverview"
+          >
+            Reload account overview
+          </button>
+        </div>
+      }
+      @if (overview(); as details) {
+        <section class="mt-5 rounded-lg bg-zinc-50 p-5 md:p-6 dark:bg-zinc-900" aria-labelledby="recovery-title">
+          <h2 id="recovery-title" class="font-heading text-xl font-bold" i18n="@@securityAccountRecovery">
+            Account recovery
+          </h2>
+          <p class="mt-3 text-sm" i18n="@@securityRecoveryCount">
+            Unused recovery codes: {{ details.recoveryCodesRemaining }}
+          </p>
+          <a
+            [routerLink]="recoveryUrl"
+            class="mt-2 inline-flex min-h-11 items-center text-sm text-blue-600 underline dark:text-blue-400"
+            i18n="@@securityManageRecovery"
+          >
+            Manage recovery codes
+          </a>
+        </section>
+        <section class="mt-5 rounded-lg bg-zinc-50 p-5 md:p-6 dark:bg-zinc-900" aria-labelledby="devices-title">
+          <h2 id="devices-title" class="font-heading text-xl font-bold" i18n="@@securityDevicesActivity">
+            Trusted devices and activity
+          </h2>
+          <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityDevicesExplanation">
+            These are trusted-device records, not a list of your active sessions.
+          </p>
+          @for (device of details.trustedDevices; track device.id) {
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p class="text-sm" i18n="@@securityTrustedDeviceDate">
+                  Trusted device added {{ device.createdAt | date: 'mediumDate' }}
+                </p>
+                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityDeviceExpiry">
+                  Trust expires {{ device.expiresAt | date: 'mediumDate' }}
+                </p>
+              </div>
               <button
                 type="button"
-                class="min-h-11 px-3 text-sm font-semibold text-blue-600 underline dark:text-blue-400"
-                (click)="showRename(credential)"
-                i18n="@@securityRenameButton"
-              >
-                Rename</button
-              ><button
-                type="button"
-                class="min-h-11 px-3 text-sm font-semibold text-red-700 underline dark:text-red-300"
-                (click)="showRevoke(credential)"
+                class="min-h-11 px-3 text-sm text-red-700 underline dark:text-red-300"
+                (click)="requestRemoval('device', device.id)"
+                [disabled]="mutationBusy()"
                 i18n="@@securityRevokeButton"
               >
                 Revoke
               </button>
             </div>
-          </article>
-        } @empty {
-          <p class="mt-5 text-sm" i18n="@@securityNoPasskeysTitle">No passkeys yet</p>
-        }
-      }
-      @if (overview(); as details) {
-        <div class="mt-6 border-t border-zinc-950/10 pt-5 dark:border-white/10">
-          <h3 class="font-semibold" i18n="@@securityPasswordAuthenticator">Password and authenticator</h3>
-          <p class="mt-2 text-sm" i18n="@@securityPasswordStatus">
-            Password: {{ methodStatus(details.passwordEnabled) }}
-          </p>
-          <p class="mt-1 text-sm" i18n="@@securityAuthenticatorStatus">
-            Authenticator: {{ methodStatus(details.totpEnabled) }}
-          </p>
-          <a
-            [routerLink]="passwordUrl"
-            class="mt-2 inline-flex min-h-11 items-center text-sm text-blue-600 underline dark:text-blue-400"
-            i18n="@@securityManagePassword"
-            >Manage password and authenticator</a
-          >
-          <h3 class="mt-5 font-semibold" i18n="@@securityConnectedAccounts">Connected accounts</h3>
-          @for (identity of details.federatedIdentities; track identity.id) {
-            <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <span class="text-sm break-all">{{ identity.provider }} · {{ identity.emailAtLink }}</span
-              ><button
-                type="button"
-                class="min-h-11 px-3 text-sm text-red-700 underline dark:text-red-300"
-                (click)="requestRemoval('federated', identity.id)"
-                [disabled]="mutationBusy()"
-                i18n="@@securityDisconnect"
-              >
-                Disconnect
-              </button>
-            </div>
           } @empty {
-            <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityNoFederated">None linked.</p>
+            <p class="mt-4 text-sm" i18n="@@securityNoTrusted">None active.</p>
           }
-          @if (details.googleLinkEnabled) {
-            <a
-              [routerLink]="googleUrl"
-              class="inline-flex min-h-11 items-center text-sm text-blue-600 underline dark:text-blue-400"
-              i18n="@@securityConnectGoogle"
-              >Connect Google</a
-            >
+          <h3 class="mt-6 font-semibold" i18n="@@securityRecoveryEvents">Recovery activity</h3>
+          @for (event of details.recoveryEvents; track event.createdAt + event.event) {
+            <p class="mt-3 text-sm">
+              {{ recoveryEvent(event.event) }} ·
+              <time [attr.datetime]="event.createdAt">{{ event.createdAt | date: 'medium' }}</time>
+            </p>
+          } @empty {
+            <p class="mt-3 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityNoRecovery">
+              No recent recovery events.
+            </p>
           }
-        </div>
+          <a
+            routerLink="/security/device-approval"
+            class="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-blue-600 underline dark:text-blue-400"
+            i18n="@@securitySetupDevice"
+          >
+            Set up another device
+          </a>
+        </section>
       }
-    </section>
-    @if (overviewLoading()) {
-      <p role="status" class="mt-6" i18n="@@securityOverviewLoading">Loading your account overview…</p>
-    }
-    @if (overviewError()) {
-      <div class="mt-6 rounded-lg bg-zinc-50 p-5 dark:bg-zinc-900">
-        <p role="alert" class="text-sm">{{ overviewError() }}</p>
-        <button
-          type="button"
-          class="mt-3 min-h-11 text-blue-600 underline dark:text-blue-400"
-          (click)="loadOverview()"
-          [disabled]="overviewLoading()"
-          i18n="@@securityRetryOverview"
+      @if (pendingRemoval()) {
+        <section
+          class="mt-5 rounded-lg border border-zinc-950/10 p-5 dark:border-white/10"
+          aria-labelledby="remove-method-title"
         >
-          Reload account overview
-        </button>
-      </div>
-    }
-    @if (overview(); as details) {
-      <section class="mt-5 rounded-lg bg-zinc-50 p-5 md:p-6 dark:bg-zinc-900" aria-labelledby="recovery-title">
-        <h2 id="recovery-title" class="font-heading text-xl font-bold" i18n="@@securityAccountRecovery">
-          Account recovery
-        </h2>
-        <p class="mt-3 text-sm" i18n="@@securityRecoveryCount">
-          Unused recovery codes: {{ details.recoveryCodesRemaining }}
-        </p>
-        <a
-          [routerLink]="recoveryUrl"
-          class="mt-2 inline-flex min-h-11 items-center text-sm text-blue-600 underline dark:text-blue-400"
-          i18n="@@securityManageRecovery"
-          >Manage recovery codes</a
-        >
-      </section>
-      <section class="mt-5 rounded-lg bg-zinc-50 p-5 md:p-6 dark:bg-zinc-900" aria-labelledby="devices-title">
-        <h2 id="devices-title" class="font-heading text-xl font-bold" i18n="@@securityDevicesActivity">
-          Trusted devices and activity
-        </h2>
-        <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityDevicesExplanation">
-          These are trusted-device records, not a list of your active sessions.
-        </p>
-        @for (device of details.trustedDevices; track device.id) {
-          <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p class="text-sm" i18n="@@securityTrustedDeviceDate">
-                Trusted device added {{ device.createdAt | date: 'mediumDate' }}
-              </p>
-              <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityDeviceExpiry">
-                Trust expires {{ device.expiresAt | date: 'mediumDate' }}
-              </p>
-            </div>
+          <h2 id="remove-method-title" class="font-heading text-lg font-bold" i18n="@@securityRemoveAccessTitle">
+            Remove this access method?
+          </h2>
+          <p class="mt-2 text-sm" i18n="@@securityRemoveAccessBody">
+            This removes the connection or device trust in this account. It does not delete credentials from your
+            external provider or close every active session.
+          </p>
+          <div class="mt-4 flex gap-3">
             <button
               type="button"
-              class="min-h-11 px-3 text-sm text-red-700 underline dark:text-red-300"
-              (click)="requestRemoval('device', device.id)"
+              class="min-h-11 rounded-md bg-red-600 px-4 text-white"
               [disabled]="mutationBusy()"
-              i18n="@@securityRevokeButton"
+              (click)="confirmRemoval()"
+              i18n="@@securityRemoveAccessConfirm"
             >
-              Revoke
+              Remove access
+            </button>
+            <button
+              type="button"
+              class="min-h-11 px-4"
+              [disabled]="mutationBusy()"
+              (click)="pendingRemoval.set(null)"
+              i18n="@@securityCancelButton"
+            >
+              Cancel
             </button>
           </div>
-        } @empty {
-          <p class="mt-4 text-sm" i18n="@@securityNoTrusted">None active.</p>
+        </section>
+      }
+    } @else if (view() === 'add' || view() === 'name') {
+      <section class="mt-8 max-w-2xl rounded-lg bg-zinc-50 p-5 md:p-6 dark:bg-zinc-900">
+        @if (view() === 'add') {
+          <h2 class="font-heading text-2xl font-bold" i18n="@@securityAddPasskeyTitle">Add a passkey</h2>
+          @if (credentials().length) {
+            <p class="mt-3 text-sm leading-6" i18n="@@securityAddPasskeyBody">
+              Confirm an existing passkey, then choose this device, another device, or a security key.
+            </p>
+          } @else if (overview()?.passwordEnabled) {
+            <p class="mt-3 text-sm leading-6" i18n="@@securityFirstPasskeyIntro">
+              Confirm your password and verification code before creating your first passkey.
+            </p>
+          } @else {
+            <p class="mt-3 text-sm leading-6" i18n="@@securityFirstPasskeyIdentity">
+              Confirm your connected identity before creating your first passkey.
+            </p>
+          }
+        } @else {
+          <h2 class="font-heading text-2xl font-bold" i18n="@@securityRenameTitle">Rename passkey</h2>
         }
-        <h3 class="mt-6 font-semibold" i18n="@@securityRecoveryEvents">Recovery activity</h3>
-        @for (event of details.recoveryEvents; track event.createdAt + event.event) {
-          <p class="mt-3 text-sm">
-            {{ recoveryEvent(event.event) }} ·
-            <time [attr.datetime]="event.createdAt">{{ event.createdAt | date: 'medium' }}</time>
-          </p>
-        } @empty {
-          <p class="mt-3 text-sm text-zinc-600 dark:text-zinc-300" i18n="@@securityNoRecovery">
-            No recent recovery events.
-          </p>
-        }
-        <a
-          routerLink="/security/device-approval"
-          class="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-blue-600 underline dark:text-blue-400"
-          i18n="@@securitySetupDevice"
-          >Set up another device</a
-        >
-      </section>
-    }
-    @if (pendingRemoval()) {
-      <section
-        class="mt-5 rounded-lg border border-zinc-950/10 p-5 dark:border-white/10"
-        aria-labelledby="remove-method-title"
-      >
-        <h2 id="remove-method-title" class="font-heading text-lg font-bold" i18n="@@securityRemoveAccessTitle">
-          Remove this access method?
-        </h2>
-        <p class="mt-2 text-sm" i18n="@@securityRemoveAccessBody">
-          This removes the connection or device trust in this account. It does not delete credentials from your external
-          provider or close every active session.
-        </p>
-        <div class="mt-4 flex gap-3">
+        @if (view() === 'add' && !credentials().length && !enrollmentAuthorized()) {
+          @if (overview()?.passwordEnabled) {
+            <app-form [form]="enrollmentForm" (ngSubmit)="authorizeFirstPasskey()" class="mt-6 grid gap-4">
+              @if (firstPasskeyFlow(); as flow) {
+                @if (flow.requiredFactor === 'totp') {
+                  <p class="text-sm" i18n="@@securityFirstPasskeyTotp">Enter the code from your authenticator app.</p>
+                } @else {
+                  <p class="text-sm" i18n="@@securityFirstPasskeyEmail">
+                    Enter the code we sent to your verified email.
+                  </p>
+                }
+                <app-field>
+                  <app-label for="first-passkey-code" i18n="@@identityPasswordCodeLabel">Verification code</app-label>
+                  <app-input
+                    [formField]="enrollmentForm.code"
+                    controlId="first-passkey-code"
+                    autocomplete="one-time-code"
+                    inputmode="numeric"
+                    required
+                  />
+                </app-field>
+              } @else {
+                <app-field>
+                  <app-label for="first-passkey-password" i18n="@@passwordCurrentLabel">Current password</app-label>
+                  <app-password-input
+                    [formField]="enrollmentForm.password"
+                    controlId="first-passkey-password"
+                    autocomplete="current-password"
+                    minLength="1"
+                    pattern=""
+                    required
+                  />
+                </app-field>
+              }
+              <button
+                type="submit"
+                class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+                [disabled]="enrollmentBusy()"
+                i18n="@@securityFirstPasskeyConfirm"
+              >
+                Confirm enrollment
+              </button>
+            </app-form>
+          } @else if (!identityEnrollmentAvailable()) {
+            <p role="status" class="mt-5 text-sm" i18n="@@securityFirstPasskeyUnavailable">
+              Password verification is not available. Return to Security and configure an eligible recovery method.
+            </p>
+          }
+          @if (identityEnrollmentAvailable()) {
+            <button
+              type="button"
+              class="mt-4 min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+              [disabled]="enrollmentBusy()"
+              (click)="authorizeFirstPasskeyIdentity()"
+              i18n="@@securityFirstPasskeyGoogle"
+            >
+              Confirm with your connected Google account
+            </button>
+          }
           <button
             type="button"
-            class="min-h-11 rounded-md bg-red-600 px-4 text-white"
-            [disabled]="mutationBusy()"
-            (click)="confirmRemoval()"
-            i18n="@@securityRemoveAccessConfirm"
+            class="mt-4 min-h-11 px-4 text-sm"
+            [disabled]="enrollmentBusy()"
+            (click)="cancelPasskeyAction()"
+            i18n="@@securityFirstPasskeyCancel"
           >
-            Remove access</button
-          ><button
+            Cancel
+          </button>
+        } @else {
+          <app-form
+            [form]="nameForm"
+            (ngSubmit)="view() === 'add' ? addPasskey() : renamePasskey()"
+            class="mt-6 grid gap-4"
+          >
+            <app-field>
+              <app-label for="security-passkey-name" i18n="@@securityAddPasskeyNameLabel">Passkey name</app-label>
+              <app-input
+                [formField]="nameForm.name"
+                controlId="security-passkey-name"
+                autocomplete="off"
+                maxLength="64"
+                required
+              />
+            </app-field>
+            <div class="flex flex-col gap-3 sm:flex-row">
+              @if (view() === 'add') {
+                <button
+                  type="submit"
+                  class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+                  [disabled]="passkeySubmitting()"
+                >
+                  {{ addSubmitLabel() }}
+                </button>
+              } @else {
+                <button
+                  type="submit"
+                  class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+                  [disabled]="passkeySubmitting()"
+                  i18n="@@securityRenameSave"
+                >
+                  Save name
+                </button>
+              }
+              <button
+                type="button"
+                class="min-h-11 px-4 text-sm"
+                [disabled]="passkeySubmitting()"
+                (click)="cancelPasskeyAction()"
+                i18n="@@securityCancelButton"
+              >
+                Cancel
+              </button>
+            </div>
+          </app-form>
+        }
+        @if (view() === 'add' && !credentials().length && firstPasskeyFlow()) {
+          <button
             type="button"
-            class="min-h-11 px-4"
-            [disabled]="mutationBusy()"
-            (click)="pendingRemoval.set(null)"
+            class="mt-3 min-h-11 px-3 text-blue-600 underline dark:text-blue-400"
+            [disabled]="enrollmentBusy() || passkeySubmitting()"
+            (click)="restartFirstPasskey()"
+            i18n="@@securityFirstPasskeyRestart"
+          >
+            Start a new confirmation
+          </button>
+        }
+      </section>
+    } @else {
+      <section class="mt-8 max-w-2xl rounded-lg bg-zinc-50 p-5 md:p-6 dark:bg-zinc-900">
+        <h2 class="font-heading text-2xl font-bold" i18n="@@securityRevokeNamed">Revoke “{{ selected()?.label }}”?</h2>
+        <p class="mt-3 leading-6" i18n="@@securityRevokeBody">
+          This passkey will stop signing in immediately and cannot be restored.
+        </p>
+        <p class="mt-3 text-sm" i18n="@@securityKeepAccessMethod">
+          Set up and verify another sign-in method before removing this one.
+        </p>
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            class="min-h-11 rounded-md bg-red-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+            [disabled]="passkeySubmitting()"
+            (click)="revokePasskey()"
+          >
+            {{ revokeSubmitLabel() }}
+          </button>
+          <button
+            type="button"
+            class="min-h-11 px-4 text-sm"
+            [disabled]="passkeySubmitting()"
+            (click)="cancelPasskeyAction()"
             i18n="@@securityCancelButton"
           >
             Cancel
@@ -247,175 +434,5 @@
         </div>
       </section>
     }
-  } @else if (view() === 'add' || view() === 'name') {
-    <section class="mt-8 max-w-2xl rounded-lg bg-zinc-50 p-5 md:p-6 dark:bg-zinc-900">
-      @if (view() === 'add') {
-        <h2 class="font-heading text-2xl font-bold" i18n="@@securityAddPasskeyTitle">Add a passkey</h2>
-        @if (credentials().length) {
-          <p class="mt-3 text-sm leading-6" i18n="@@securityAddPasskeyBody">
-            Confirm an existing passkey, then choose this device, another device, or a security key.
-          </p>
-        } @else if (overview()?.passwordEnabled) {
-          <p class="mt-3 text-sm leading-6" i18n="@@securityFirstPasskeyIntro">
-            Confirm your password and verification code before creating your first passkey.
-          </p>
-        } @else {
-          <p class="mt-3 text-sm leading-6" i18n="@@securityFirstPasskeyIdentity">
-            Confirm your connected identity before creating your first passkey.
-          </p>
-        }
-      } @else {
-        <h2 class="font-heading text-2xl font-bold" i18n="@@securityRenameTitle">Rename passkey</h2>
-      }
-      @if (view() === 'add' && !credentials().length && !enrollmentAuthorized()) {
-        @if (overview()?.passwordEnabled) {
-          <app-form [form]="enrollmentForm" (ngSubmit)="authorizeFirstPasskey()" class="mt-6 grid gap-4">
-            @if (firstPasskeyFlow(); as flow) {
-              @if (flow.requiredFactor === 'totp') {
-                <p class="text-sm" i18n="@@securityFirstPasskeyTotp">Enter the code from your authenticator app.</p>
-              } @else {
-                <p class="text-sm" i18n="@@securityFirstPasskeyEmail">Enter the code we sent to your verified email.</p>
-              }
-              <app-field
-                ><app-label for="first-passkey-code" i18n="@@identityPasswordCodeLabel">Verification code</app-label
-                ><app-input
-                  [formField]="enrollmentForm.code"
-                  controlId="first-passkey-code"
-                  autocomplete="one-time-code"
-                  inputmode="numeric"
-                  required
-              /></app-field>
-            } @else {
-              <app-field
-                ><app-label for="first-passkey-password" i18n="@@passwordCurrentLabel">Current password</app-label
-                ><app-password-input
-                  [formField]="enrollmentForm.password"
-                  controlId="first-passkey-password"
-                  autocomplete="current-password"
-                  minLength="1"
-                  pattern=""
-                  required
-              /></app-field>
-            }
-            <button
-              type="submit"
-              class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-              [disabled]="enrollmentBusy()"
-              i18n="@@securityFirstPasskeyConfirm"
-            >
-              Confirm enrollment
-            </button>
-          </app-form>
-        } @else if (!identityEnrollmentAvailable()) {
-          <p role="status" class="mt-5 text-sm" i18n="@@securityFirstPasskeyUnavailable">
-            Password verification is not available. Return to Security and configure an eligible recovery method.
-          </p>
-        }
-        @if (identityEnrollmentAvailable()) {
-          <button
-            type="button"
-            class="mt-4 min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-            [disabled]="enrollmentBusy()"
-            (click)="authorizeFirstPasskeyIdentity()"
-            i18n="@@securityFirstPasskeyGoogle"
-          >
-            Confirm with your connected Google account
-          </button>
-        }
-        <button
-          type="button"
-          class="mt-4 min-h-11 px-4 text-sm"
-          [disabled]="enrollmentBusy()"
-          (click)="cancelPasskeyAction()"
-          i18n="@@securityFirstPasskeyCancel"
-        >
-          Cancel
-        </button>
-      } @else {
-        <app-form
-          [form]="nameForm"
-          (ngSubmit)="view() === 'add' ? addPasskey() : renamePasskey()"
-          class="mt-6 grid gap-4"
-        >
-          <app-field
-            ><app-label for="security-passkey-name" i18n="@@securityAddPasskeyNameLabel">Passkey name</app-label
-            ><app-input
-              [formField]="nameForm.name"
-              controlId="security-passkey-name"
-              autocomplete="off"
-              maxLength="64"
-              required
-          /></app-field>
-          <div class="flex flex-col gap-3 sm:flex-row">
-            @if (view() === 'add') {
-              <button
-                type="submit"
-                class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-                [disabled]="passkeySubmitting()"
-              >
-                {{ addSubmitLabel() }}
-              </button>
-            } @else {
-              <button
-                type="submit"
-                class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-                [disabled]="passkeySubmitting()"
-                i18n="@@securityRenameSave"
-              >
-                Save name
-              </button>
-            }
-            <button
-              type="button"
-              class="min-h-11 px-4 text-sm"
-              [disabled]="passkeySubmitting()"
-              (click)="cancelPasskeyAction()"
-              i18n="@@securityCancelButton"
-            >
-              Cancel
-            </button>
-          </div>
-        </app-form>
-      }
-      @if (view() === 'add' && !credentials().length && firstPasskeyFlow()) {
-        <button
-          type="button"
-          class="mt-3 min-h-11 px-3 text-blue-600 underline dark:text-blue-400"
-          [disabled]="enrollmentBusy() || passkeySubmitting()"
-          (click)="restartFirstPasskey()"
-          i18n="@@securityFirstPasskeyRestart"
-        >
-          Start a new confirmation
-        </button>
-      }
-    </section>
-  } @else {
-    <section class="mt-8 max-w-2xl rounded-lg bg-zinc-50 p-5 md:p-6 dark:bg-zinc-900">
-      <h2 class="font-heading text-2xl font-bold" i18n="@@securityRevokeNamed">Revoke “{{ selected()?.label }}”?</h2>
-      <p class="mt-3 leading-6" i18n="@@securityRevokeBody">
-        This passkey will stop signing in immediately and cannot be restored.
-      </p>
-      <p class="mt-3 text-sm" i18n="@@securityKeepAccessMethod">
-        Set up and verify another sign-in method before removing this one.
-      </p>
-      <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          class="min-h-11 rounded-md bg-red-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-          [disabled]="passkeySubmitting()"
-          (click)="revokePasskey()"
-        >
-          {{ revokeSubmitLabel() }}</button
-        ><button
-          type="button"
-          class="min-h-11 px-4 text-sm"
-          [disabled]="passkeySubmitting()"
-          (click)="cancelPasskeyAction()"
-          i18n="@@securityCancelButton"
-        >
-          Cancel
-        </button>
-      </div>
-    </section>
-  }
-</section>
+  </main>
+</div>

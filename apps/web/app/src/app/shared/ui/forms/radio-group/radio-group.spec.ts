@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { disabled, form, FormField, type FieldTree } from '@angular/forms/signals';
 
 import { RadioGroup, type RadioOption } from './radio-group';
+import { RadioOptionTemplate } from './radio-option-template';
 
 const options: readonly RadioOption[] = [
   { label: 'Standard', value: 'standard' },
@@ -11,8 +12,17 @@ const options: readonly RadioOption[] = [
 ];
 
 @Component({
-  imports: [FormField, RadioGroup],
-  template: '<app-radio-group [options]="options" [formField]="f.plan" [loading]="loading()" legend="Plan" />',
+  imports: [FormField, RadioGroup, RadioOptionTemplate],
+  template: `
+    <app-radio-group [options]="options" [formField]="f.plan" [loading]="loading()" legend="Plan" name="plan">
+      <ng-template appRadioOption let-option let-labelId="labelId" let-descriptionId="descriptionId">
+        <span [id]="labelId">{{ option.label }}</span>
+        @if (option.description) {
+          <span [id]="descriptionId">{{ option.description }}</span>
+        }
+      </ng-template>
+    </app-radio-group>
+  `,
 })
 class Host {
   readonly model = signal({ plan: 'pro' });
@@ -37,6 +47,8 @@ describe('RadioGroup', () => {
     expect(inputs[0]?.checked).toBe(false);
     expect(inputs[1]?.checked).toBe(true);
     expect(inputs[2]?.checked).toBe(false);
+    expect(fixture.nativeElement.querySelector('#plan-1-label')?.textContent).toBe('Pro');
+    expect(inputs[1]?.getAttribute('aria-labelledby')).toBe('plan-1-label');
   });
 
   it('selects an enabled option and marks the field touched on blur', () => {

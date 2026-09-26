@@ -74,15 +74,20 @@ describe('PasswordAuth', () => {
     expect(request.request.body).toEqual({ flowId: 'signup-flow', code: '123456' });
     request.flush({
       data: {
-        authenticated: false,
-        kind: 'restricted',
-        expiresAt: '2026-09-12T00:10:00.000Z',
-        user: null,
-        verifiedEmail: 'new@example.test',
+        authenticated: true,
+        kind: 'full',
+        user: {
+          accountId: 'account-1',
+          email: 'new@example.test',
+          emailVerifiedAt: '2026-09-12T00:00:00.000Z',
+          id: 'user-1',
+          role: 'owner',
+          authenticationMethod: 'password',
+        },
       },
-      message: 'Verified.',
+      message: 'Account verified and signed in.',
     });
-    await expect(verification).resolves.toMatchObject({ verifiedEmail: 'new@example.test' });
+    await expect(verification).resolves.toMatchObject({ authenticated: true, kind: 'full' });
   });
 
   it('requests and completes a password reset with its email code', async () => {

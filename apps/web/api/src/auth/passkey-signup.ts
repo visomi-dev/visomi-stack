@@ -8,7 +8,14 @@ import type { Request } from 'express';
 import { env } from '../shared/env';
 import { getValidated, validateRequest } from '../shared/http/route-schemas';
 
-import { consumeChallenge, createEmailChallenge, findUserByEmail } from './auth-service';
+import { establishFullSession } from './auth-session';
+import {
+  consumeChallenge,
+  createEmailChallenge,
+  findUserByEmail,
+  findUserById,
+  resolveAuthUserForAccount,
+} from './auth-service';
 import { consumeEmailOtpDeliveryLimit } from './passkey-security';
 import { APP_NAME } from './auth-brand';
 import { passkeySignupBeginSchema, passkeySignupVerifySchema, registrationCompleteSchema } from './passkey-schemas';
@@ -192,6 +199,18 @@ passkeySignupRouter.post('/verify', validateRequest({ body: passkeySignupVerifyS
     });
   });
   delete req.session.passkeySignup;
-  await saveSession(req);
-  res.status(201).json({ data: { verified: true } });
+  const user = await findUserById(pending.userId);
+
+  if (!user)
+    throw new HttpError({ code: 'signup_session_unavailable', message: 'Sign in to continue.', statusCode: 500 });
+  const authUser = {
+    ...(await resolveAuthUserForAccount(user, accountId)),
+    authority: 'full' as const,
+    authenticationMethod: 'passkey' as const,
+    authVersion: user.authVersion,
+    credentialId: credential.id,
+  };
+
+  await establishFullSession(req, res, authUser);
+  res.status(201).json({ data: { authenticated: true, user: authUser }, message: 'Account verified and signed in.' });
 });
