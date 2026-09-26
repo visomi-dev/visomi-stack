@@ -44,7 +44,7 @@ agent-mediated read and receive only an approved projection.
    path. Deletion must be account/project scoped and preserve no plaintext in
    logs, queue messages, error responses, or realtime payloads.
 
-The migration helper in `libs/shared/src/lib/crypto/encrypted-project-migration.ts`
+The migration helper in `libs/backend/shared/src/lib/crypto/encrypted-project-migration.ts`
 enforces the representative decision boundary. It deliberately accepts an agent
 encryption callback rather than selecting an algorithm or holding keys.
 

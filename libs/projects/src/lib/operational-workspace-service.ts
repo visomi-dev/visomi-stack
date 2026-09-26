@@ -1,5 +1,4 @@
 import { and, eq } from 'drizzle-orm';
-import { projects, withAccountContext } from 'shared';
 
 import type {
   OperationalCollection,
@@ -13,6 +12,8 @@ import type {
   OperationalWorkItem,
   OperationalWorkspaceReadModel,
 } from './contracts/operational-workspace';
+
+import { projects, withAccountContext } from 'shared';
 
 type OperationalFixtureState = 'visible' | 'empty' | 'locked' | 'unavailable' | 'stale' | 'error' | 'malformed';
 type OperationalWorkspaceContext = {

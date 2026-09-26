@@ -2,11 +2,13 @@ import { Component, computed, inject, input, output, signal } from '@angular/cor
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { Auth } from '../../auth/auth';
-import { APP_URL, SECURITY_URL, SIGN_IN_URL } from '../../constants/routes';
+import { APP_NAME } from '../../constants/brand';
+import { APP_URL, SIGN_IN_URL, SECURITY_URL, ACCOUNT_URL } from '../../constants/routes';
 import { Settings } from '../../settings';
 import { Avatar } from '../../ui/data/avatar/avatar';
 import { Icon } from '../../ui/media/icon/icon';
 import { type IconName } from '../../ui/media/icon/icon-paths';
+import { LanguageSwitcher } from '../language-switcher/language-switcher';
 
 type LayoutNavItem = {
   children?: LayoutNavItem[];
@@ -22,12 +24,13 @@ type LayoutNavSection = {
 };
 
 @Component({
-  imports: [Avatar, Icon, RouterLink, RouterLinkActive],
+  imports: [Avatar, Icon, RouterLink, RouterLinkActive, LanguageSwitcher],
   selector: 'app-sidebar-menu',
   templateUrl: './sidebar-menu.html',
   styleUrl: './sidebar-menu.css',
 })
 export class SidebarMenu {
+  protected readonly appName = APP_NAME;
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
   private readonly settings = inject(Settings);
@@ -60,6 +63,7 @@ export class SidebarMenu {
           url: APP_URL,
         },
         { exact: true, icon: 'circle-info', label: $localize`:@@layoutMenuSecurity:Security`, url: SECURITY_URL },
+        { exact: true, icon: 'circle-info', label: $localize`:@@layoutMenuAccount:Account`, url: ACCOUNT_URL },
       ],
     },
   ];

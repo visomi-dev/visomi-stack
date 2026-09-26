@@ -1,8 +1,9 @@
 import { Queue } from 'bullmq';
 import type { Redis } from 'ioredis';
-import { getRedis } from 'shared';
 
 import type { ProjectSeedJobInput } from '../contracts/project-seed';
+
+import { getRedis } from 'shared';
 
 const projectSeedQueueName = 'project-seed';
 

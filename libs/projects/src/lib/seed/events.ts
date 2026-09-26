@@ -1,6 +1,6 @@
-import { publishJson, subscribeToJson } from 'shared';
-
 import type { AsyncJobEvent, AsyncJobEventName, AsyncJobRecord } from '../contracts/async-jobs';
+
+import { publishJson, subscribeToJson } from 'shared';
 
 const projectAsyncJobEventsChannel = 'projects.async-job';
 

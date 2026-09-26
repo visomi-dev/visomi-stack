@@ -1,17 +1,18 @@
-<label [class]="classes()" tabindex="0" (keydown)="handleKeydown($event)">
+<label [class]="classes()" [attr.aria-busy]="loading()">
   <input
-    class="absolute inset-0 size-full opacity-0"
+    class="absolute inset-0 size-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
     data-slot="control"
     type="radio"
-    [attr.aria-invalid]="invalid()"
+    [attr.aria-invalid]="isInvalid()"
+    [attr.aria-describedby]="ariaDescribedBy()"
     [checked]="checked()"
-    [disabled]="disabled()"
+    [disabled]="isDisabled()"
     [id]="inputId()"
     [name]="name()"
     [required]="required()"
     [value]="optionValue()"
     (blur)="onBlur()"
-    (click)="select()"
+    (change)="select()"
   />
 
   <ng-content />

@@ -3,9 +3,15 @@ import axios from 'axios';
 jest.setTimeout(15000);
 
 describe('composition server', () => {
-  it('exposes passkey ceremony boundaries without bypassing email PIN gating', async () => {
+  it('rejects client-supplied proof flags after starting a pending signup', async () => {
     const email = `passkey-gateway-${Date.now()}@visomi-stack.test`;
-    const signUp = await axios.post('/api/auth/sign-up', { email, password: 'S3cureAuth!' });
+    const signUp = await axios.post(
+      '/api/auth/password/sign-up',
+      { email, password: 'gateway secure password 2026' },
+      {
+        headers: { Origin: 'http://localhost:8080' },
+      },
+    );
     const unverified = await axios.post(
       '/api/auth/passkey/authentication/begin',
       { email, pinVerified: true },
@@ -17,11 +23,19 @@ describe('composition server', () => {
       { headers: { Origin: 'http://localhost:8080' }, validateStatus: () => true },
     );
 
-    expect(signUp.status).toBe(201);
-    expect(unverified.status).toBe(403);
-    expect(unverified.data.code).toBe('email_unverified');
-    expect(fallback.status).toBe(403);
-    expect(fallback.data.code).toBe('email_unverified');
+    expect(signUp.status).toBe(202);
+    expect(signUp.data.data.flowId).toEqual(expect.any(String));
+    expect(unverified.status).toBe(400);
+    expect(unverified.data.code).toBe('invalid_request');
+    expect(fallback.status).toBe(400);
+    expect(fallback.data.code).toBe('invalid_request');
+    const session = await axios.get('/api/auth/session', {
+      headers: {
+        Cookie: (signUp.headers['set-cookie'] ?? []).map((cookie: string) => cookie.split(';')[0]).join('; '),
+      },
+    });
+
+    expect(session.data.data.authenticated).toBe(false);
     expect(JSON.stringify({ unverified: unverified.data, fallback: fallback.data })).not.toContain('prf');
     expect(JSON.stringify({ unverified: unverified.data, fallback: fallback.data })).not.toContain('vault');
   });
@@ -54,8 +68,8 @@ describe('composition server', () => {
     expect(response.data).toEqual({ message: 'Hello Visomi Stack API' });
   });
 
-  it('serves the Angular auth surface under /app', async () => {
-    const response = await axios.get('/app/en/sign-in', {
+  it('serves the Angular identity route under /app', async () => {
+    const response = await axios.get('/app/en/auth/identity', {
       headers: {
         Accept: 'text/html',
       },

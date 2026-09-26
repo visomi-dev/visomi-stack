@@ -1,4 +1,5 @@
 import {
+  afterNextRender,
   booleanAttribute,
   Component,
   computed,
@@ -7,6 +8,7 @@ import {
   input,
   numberAttribute,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import type { Field } from '@angular/forms/signals';
@@ -22,6 +24,8 @@ import { uiClass } from '../../classes';
   styleUrl: './input.css',
 })
 export class Input {
+  protected readonly ready = signal(false);
+  private readonly enableInputAfterRender = afterNextRender(() => this.ready.set(true));
   private readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('inputEl');
 
   readonly formField = input.required<Field<string>>();
@@ -30,6 +34,7 @@ export class Input {
   readonly controlId = input<string | null>(null);
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly invalid = input(false, { transform: booleanAttribute });
+  readonly inputmode = input<string | null>(null);
   readonly max = input<string | number | null>(null);
   readonly maxLength = input<string | number | null>(null, { transform: numberAttribute });
   readonly min = input<string | number | null>(null);

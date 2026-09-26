@@ -1,10 +1,14 @@
 <app-container size="lg">
   <div class="flex flex-col gap-6 py-4">
-    <app-heading i18n="@@dashboardWelcomeTitle" level="1" [text]="'dashboard works!'" />
-    <app-card padding="md" tone="raised">
-      <app-text i18n="@@dashboardWelcomeBody">
-        Welcome to your Visomi Stack workspace. This dashboard is ready for your product features.
-      </app-text>
-    </app-card>
+    <app-topbar>
+      <app-heading i18n="@@dashboardWelcomeTitle" level="1" [text]="'dashboard works!'" />
+    </app-topbar>
+    <main>
+      <app-card padding="md" tone="raised">
+        <app-text i18n="@@dashboardWelcomeBody">
+          Welcome to your Visomi Stack workspace. This dashboard is ready for your product features.
+        </app-text>
+      </app-card>
+    </main>
   </div>
 </app-container>

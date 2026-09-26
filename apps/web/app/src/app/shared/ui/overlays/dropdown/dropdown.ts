@@ -1,8 +1,10 @@
 import { OverlayModule } from '@angular/cdk/overlay';
+import type { ConnectedPosition } from '@angular/cdk/overlay';
 import {
   AfterContentInit,
   booleanAttribute,
   Component,
+  computed,
   ContentChild,
   DestroyRef,
   ElementRef,
@@ -22,6 +24,10 @@ import {
 })
 export class Dropdown implements AfterContentInit, OnDestroy {
   readonly align = input<'start' | 'end'>('start');
+  protected readonly positions = computed<ConnectedPosition[]>(() => [
+    { originX: this.align(), originY: 'bottom', overlayX: this.align(), overlayY: 'top', offsetY: 8 },
+    { originX: this.align(), originY: 'top', overlayX: this.align(), overlayY: 'bottom', offsetY: -8 },
+  ]);
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly openChange = output<boolean>();
 

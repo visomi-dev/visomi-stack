@@ -17,11 +17,13 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "esModuleInterop": true,
-    "baseUrl": ".",
+    "resolveJsonModule": true,
     "paths": {
-      "shared": ["libs/shared/src/index.ts"],
-      "projects": ["libs/projects/src/index.ts"],
-      "themis-workflow": ["libs/themis-workflow/src/index.ts"]
+      "shared": ["./libs/backend/shared/src/index.ts"],
+      "projects": ["./libs/projects/src/index.ts"],
+      "themis-workflow": ["./libs/themis-workflow/src/index.ts"],
+      "shared-crypto": ["./libs/shared/crypto/src/index.ts"],
+      "frontend-shared": ["./libs/frontend/shared/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

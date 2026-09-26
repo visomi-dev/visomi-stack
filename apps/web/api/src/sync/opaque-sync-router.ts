@@ -61,7 +61,7 @@ function nextDeviceError(next: NextFunction, error: unknown): void {
   );
 }
 
-opaqueSyncRouter.use(authed());
+opaqueSyncRouter.use(authed({ authority: 'full' }));
 
 opaqueSyncRouter.post(
   '/:workspaceId/devices',

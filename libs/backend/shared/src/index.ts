@@ -1,0 +1,43 @@
+export * from './lib/db/account-context';
+export * from './lib/db/client';
+export * from './lib/db/migrate';
+export * from './lib/db/pool';
+export * from './lib/db/safe-insert';
+export * from './lib/db/schema';
+export * from './lib/crypto/device-identity';
+export * from './lib/crypto/durable-device-identity';
+export * from './lib/crypto/local-agent-context';
+export * from './lib/crypto/local-agent-handshake';
+export * from './lib/crypto/local-agent-bridge';
+export * from './lib/crypto/capability-policy';
+export * from './lib/crypto/capability-issuer';
+export * from './lib/crypto/dual-client-capability';
+export * from './lib/crypto/execution-policy';
+export * from './lib/crypto/secret-broker';
+export * from './lib/crypto/mcp-boundary';
+export * from './lib/crypto/opaque-sync';
+export * from './lib/crypto/opaque-sync-object-store';
+export * from './lib/crypto/opaque-sync-postgres';
+export * from './lib/crypto/encrypted-project-migration';
+export * from './lib/crypto/project-sync-contract';
+export * from './lib/env';
+export * from './lib/http';
+export * from './lib/http/auth-runtime';
+export * from './lib/http/fail';
+export * from './lib/http/session';
+export * from './lib/logger';
+export * from './lib/diagnostics';
+export * from './lib/redis/connection';
+export * from './lib/redis/pub-sub';
+export * from './lib/session';
+export {
+  correlateJob,
+  correlation,
+  observeProjectJob,
+  operationalMetrics,
+  requestId,
+  requestObservability,
+  setErrorReporter,
+  withCorrelation,
+} from './lib/observability';
+export type { CorrelatedJob } from './lib/observability';

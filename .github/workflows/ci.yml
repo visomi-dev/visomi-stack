@@ -6,6 +6,9 @@ on:
       - main
       - develop
   pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 4 * * 1'
 
 permissions:
   actions: read
@@ -25,13 +28,11 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version-file: .node-version
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
 
@@ -42,16 +43,34 @@ jobs:
         run: pnpm exec prettier --check .
 
       - name: Lint workspace
-        run: pnpm nx run-many -t lint --projects site,app,api,server,site-e2e,app-e2e,api-e2e,server-e2e
+        run: |
+          export NX_DAEMON=false
+          pnpm nx run-many -t lint --projects site,app,api,server,shared,shared-crypto,frontend-shared,template,site-e2e,app-e2e,api-e2e,server-e2e
 
       - name: Typecheck site
-        run: pnpm nx run site:typecheck
+        run: |
+          export NX_DAEMON=false
+          pnpm nx run site:typecheck
+          pnpm nx run template:typecheck
+          pnpm nx run frontend-shared:typecheck
+          pnpm nx run frontend-shared:browser-build
 
       - name: Run tests
-        run: pnpm nx run site:test && pnpm nx run app:vite:test && pnpm nx run api:test && pnpm nx run server:test
+        run: |
+          export NX_DAEMON=false
+          pnpm nx run template:test
+          pnpm nx run shared:test
+          pnpm nx run shared-crypto:test
+          pnpm nx run frontend-shared:test
+          pnpm nx run site:test
+          pnpm nx run app:vite:test
+          pnpm nx run api:test
+          pnpm nx run server:test
 
       - name: Build composed runtime
-        run: pnpm nx run server:build
+        run: |
+          export NX_DAEMON=false
+          pnpm nx run server:build
 
       - name: Generate release inputs from the built runtime
         env:
@@ -93,3 +112,87 @@ jobs:
             echo 'release gate unexpectedly accepted protected plaintext'
             exit 1
           fi
+
+  template-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: template_smoke
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d template_smoke"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify a renamed clean copy with PostgreSQL
+        env:
+          SMOKE_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/template_smoke
+          SMOKE_REDIS_URL: redis://127.0.0.1:6379
+        run: |
+          export NX_DAEMON=false
+          pnpm template:smoke
+      - name: Retain redacted smoke results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: template-smoke-results
+          path: tmp/template-smoke-*/result.json
+          if-no-files-found: ignore
+
+  critical-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install critical browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Build gateway and run critical authentication journeys
+        run: |
+          export NX_DAEMON=false
+          pnpm nx run server:build:production
+          pnpm nx run app-e2e:e2e-ci--src/auth/signup-validation.spec.ts
+          pnpm nx run app-e2e:e2e-ci--src/auth/verification-feedback.spec.ts
+          pnpm nx run app-e2e:e2e-ci--src/auth/device-approval.spec.ts
+          pnpm nx run api-e2e:test
+          pnpm nx run server-e2e:e2e
+      - name: Install full browser matrix
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: pnpm exec playwright install --with-deps firefox webkit
+      - name: Run full browser and durable API matrix
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        env:
+          PZS005_ARTIFACT_DIR: tmp/scheduled-api-e2e
+        run: |
+          export NX_DAEMON=false
+          pnpm nx run app-e2e:e2e
+          pnpm nx run api-e2e:e2e

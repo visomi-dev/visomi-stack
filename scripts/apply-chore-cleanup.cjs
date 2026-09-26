@@ -1,5 +1,5 @@
-// Applies the chore/forms-i18n cleanup (NG8113 unused-import removal +
-// merge-i18n.cjs script) on top of the current branch. The chore's
+// Applies the chore/forms-i18n cleanup (NG8113 unused-import removal)
+// on top of the current branch. The chore's
 // messages.xlf is intentionally NOT applied (it is older than main's
 // current messages.xlf; we keep main's version).
 const fs = require('node:fs');

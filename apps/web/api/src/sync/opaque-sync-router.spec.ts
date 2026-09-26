@@ -1,9 +1,20 @@
-import express, { json, type Request } from 'express';
-import request from 'supertest';
+import { managedSessionFixture } from '../testing/managed-session-fixture';
 
 import { opaqueSyncRouter } from './opaque-sync-router';
 
-import { deviceIdentityStore, errorHandler, opaqueSyncStore } from 'shared';
+import { deviceIdentityStore, opaqueSyncStore } from 'shared';
+
+jest.mock('shared', () => {
+  const actual = jest.requireActual('shared');
+  const { PGlite } = jest.requireActual('@electric-sql/pglite');
+  const { drizzle } = jest.requireActual('drizzle-orm/pglite');
+
+  return {
+    ...actual,
+    db: drizzle(new PGlite(), { casing: 'snake_case' }),
+    env: { ...actual.env, OPAQUE_SYNC_STORAGE: 'memory' },
+  };
+});
 
 jest.mock('projects', () => ({
   getProject: jest.fn(async (context: { accountId: string }, projectId: string) =>
@@ -30,19 +41,10 @@ function createEnvelope(overrides: Record<string, unknown> = {}) {
   };
 }
 
+const authenticatedAgent = managedSessionFixture();
+
 function createApp(accountId = 'account-a') {
-  const app = express();
-
-  app.use(json());
-  app.use((req: Request, _res, next) => {
-    req.user = { id: 'user-1', accountId, role: 'owner' } as Express.User;
-    (req as unknown as { isAuthenticated: () => boolean }).isAuthenticated = () => true;
-    next();
-  });
-  app.use('/sync', opaqueSyncRouter);
-  app.use(errorHandler);
-
-  return app;
+  return authenticatedAgent('/sync', opaqueSyncRouter, accountId, 'user-1');
 }
 
 describe('opaque sync API', () => {
@@ -68,10 +70,14 @@ describe('opaque sync API', () => {
   it('round-trips opaque ciphertext and preserves client conflict inputs', async () => {
     const envelope = createEnvelope({ associatedData: { conflict: 'keep-local' }, metadata: { branch: 'local' } });
 
-    const appendResponse = await request(createApp())
+    const appendResponse = await (
+      await createApp()
+    )
       .post('/sync/workspace-a/envelopes')
       .send({ envelope, deviceId, enrollmentVersion });
-    const listResponse = await request(createApp())
+    const listResponse = await (
+      await createApp()
+    )
       .get('/sync/workspace-a/envelopes')
       .query({ deviceId, enrollmentVersion });
 
@@ -81,25 +87,25 @@ describe('opaque sync API', () => {
   });
 
   it('rejects malformed, replayed, and duplicate envelopes at the API boundary', async () => {
-    const app = createApp();
+    const app = await createApp();
     const envelope = createEnvelope();
 
-    expect(
-      (await request(app).post('/sync/workspace-a/envelopes').send({ envelope, deviceId, enrollmentVersion })).status,
-    ).toBe(201);
-    expect(
-      (await request(app).post('/sync/workspace-a/envelopes').send({ envelope, deviceId, enrollmentVersion })).status,
-    ).toBe(200);
+    expect((await app.post('/sync/workspace-a/envelopes').send({ envelope, deviceId, enrollmentVersion })).status).toBe(
+      201,
+    );
+    expect((await app.post('/sync/workspace-a/envelopes').send({ envelope, deviceId, enrollmentVersion })).status).toBe(
+      200,
+    );
     expect(
       (
-        await request(app)
+        await app
           .post('/sync/workspace-a/envelopes')
           .send({ envelope: { ...envelope, revision: 1, ciphertext: 'cmVwbGF5' }, deviceId, enrollmentVersion })
       ).status,
     ).toBe(409);
     expect(
       (
-        await request(app)
+        await app
           .post('/sync/workspace-a/envelopes')
           .send({ envelope: { ...envelope, envelopeId: 'bad', ciphertext: 'not valid!' }, deviceId, enrollmentVersion })
       ).status,
@@ -110,14 +116,18 @@ describe('opaque sync API', () => {
     const secret = 'do-not-log-this-ciphertext';
     const errorSpy = jest.spyOn(console, 'error').mockImplementation();
 
-    const response = await request(createApp('account-b'))
+    const response = await (
+      await createApp('account-b')
+    )
       .post('/sync/workspace-a/envelopes')
       .send({ envelope: createEnvelope({ ciphertext: secret }), deviceId, enrollmentVersion });
 
     expect(response.status).toBe(404);
     expect(JSON.stringify(response.body)).not.toContain(secret);
 
-    const inaccessible = await request(createApp())
+    const inaccessible = await (
+      await createApp()
+    )
       .get('/sync/workspace-b/envelopes')
       .query({ deviceId, enrollmentVersion });
 
@@ -130,7 +140,9 @@ describe('opaque sync API', () => {
 
   it('enforces device revocation at the HTTP sync boundary', async () => {
     deviceIdentityStore.revokeDevice('account-a', deviceId);
-    const response = await request(createApp())
+    const response = await (
+      await createApp()
+    )
       .get('/sync/workspace-a/envelopes')
       .query({ deviceId, enrollmentVersion });
 
@@ -139,15 +151,14 @@ describe('opaque sync API', () => {
   });
 
   it('stores a checkpoint and returns a bounded snapshot plus incremental recovery chain', async () => {
-    const app = createApp();
+    const app = await createApp();
     const first = createEnvelope({ envelopeId: 'recovery-first', revision: 1 });
     const second = createEnvelope({ envelopeId: 'recovery-second', revision: 2, metadata: { baseCursor: '1' } });
 
     expect(
-      (await request(app).post('/sync/workspace-a/envelopes').send({ envelope: first, deviceId, enrollmentVersion }))
-        .status,
+      (await app.post('/sync/workspace-a/envelopes').send({ envelope: first, deviceId, enrollmentVersion })).status,
     ).toBe(201);
-    const checkpoint = await request(app).post('/sync/workspace-a/checkpoints').send({
+    const checkpoint = await app.post('/sync/workspace-a/checkpoints').send({
       checkpointId: 'checkpoint-1',
       cursor: 1,
       revision: 1,
@@ -158,11 +169,10 @@ describe('opaque sync API', () => {
 
     expect(checkpoint.status).toBe(201);
     expect(
-      (await request(app).post('/sync/workspace-a/envelopes').send({ envelope: second, deviceId, enrollmentVersion }))
-        .status,
+      (await app.post('/sync/workspace-a/envelopes').send({ envelope: second, deviceId, enrollmentVersion })).status,
     ).toBe(201);
 
-    const recovery = await request(app).get('/sync/workspace-a/recovery').query({
+    const recovery = await app.get('/sync/workspace-a/recovery').query({
       checkpointId: 'checkpoint-1',
       afterCursor: 1,
       limit: 1,
@@ -178,17 +188,17 @@ describe('opaque sync API', () => {
   it('covers the device lifecycle HTTP paths and keeps approval workspace-scoped', async () => {
     opaqueSyncStore.clear();
     deviceIdentityStore.clear();
-    const app = createApp();
-    const ownerResponse = await request(app)
+    const app = await createApp();
+    const ownerResponse = await app
       .post('/sync/workspace-a/devices')
       .send({ publicKey: 'http-owner-key', label: 'HTTP owner' });
-    const replacementResponse = await request(app)
+    const replacementResponse = await app
       .post('/sync/workspace-a/devices')
       .send({ publicKey: 'http-replacement-key', label: 'HTTP replacement' });
-    const approverResponse = await request(app)
+    const approverResponse = await app
       .post('/sync/workspace-a/devices')
       .send({ publicKey: 'http-approver-key', label: 'HTTP approver' });
-    const targetResponse = await request(app)
+    const targetResponse = await app
       .post('/sync/workspace-a/devices')
       .send({ publicKey: 'http-target-key', label: 'HTTP target' });
     const ownerId = ownerResponse.body.data.deviceId as string;
@@ -198,41 +208,35 @@ describe('opaque sync API', () => {
 
     expect(ownerResponse.status).toBe(200);
     expect(
-      (await request(app).post(`/sync/workspace-a/devices/${deviceId}/approval`).send({ approverDeviceId: deviceId }))
-        .status,
+      (await app.post(`/sync/workspace-a/devices/${deviceId}/approval`).send({ approverDeviceId: deviceId })).status,
     ).toBe(409);
     expect(
-      (await request(app).post(`/sync/workspace-a/devices/${ownerId}/approval`).send({ approverDeviceId: ownerId }))
-        .status,
+      (await app.post(`/sync/workspace-a/devices/${ownerId}/approval`).send({ approverDeviceId: ownerId })).status,
     ).toBe(200);
 
-    const enrolled = await request(app)
-      .post(`/sync/workspace-a/devices/${targetId}/enroll`)
-      .send({
-        approverDeviceId: ownerId,
-        envelope: createEnvelope({
-          envelopeId: 'http-key-target',
-          recordType: 'workspace-key-distribution',
-          metadata: { recipientDeviceId: targetId },
-        }),
-      });
+    const enrolled = await app.post(`/sync/workspace-a/devices/${targetId}/enroll`).send({
+      approverDeviceId: ownerId,
+      envelope: createEnvelope({
+        envelopeId: 'http-key-target',
+        recordType: 'workspace-key-distribution',
+        metadata: { recipientDeviceId: targetId },
+      }),
+    });
 
     expect(enrolled.status).toBe(200);
-    const approverEnrollment = await request(app)
-      .post(`/sync/workspace-a/devices/${approverId}/enroll`)
-      .send({
-        approverDeviceId: ownerId,
-        envelope: createEnvelope({
-          envelopeId: 'http-key-approver',
-          recordType: 'workspace-key-distribution',
-          metadata: { recipientDeviceId: approverId },
-        }),
-      });
+    const approverEnrollment = await app.post(`/sync/workspace-a/devices/${approverId}/enroll`).send({
+      approverDeviceId: ownerId,
+      envelope: createEnvelope({
+        envelopeId: 'http-key-approver',
+        recordType: 'workspace-key-distribution',
+        metadata: { recipientDeviceId: approverId },
+      }),
+    });
 
     expect(approverEnrollment.status).toBe(200);
-    expect((await request(app).get('/sync/workspace-a/devices')).body.data.devices).toHaveLength(4);
+    expect((await app.get('/sync/workspace-a/devices')).body.data.devices).toHaveLength(4);
 
-    const auditResponse = await request(app).get('/sync/workspace-a/devices/audit');
+    const auditResponse = await app.get('/sync/workspace-a/devices/audit');
 
     expect(auditResponse.status).toBe(200);
     expect(auditResponse.body.data.events).toEqual(
@@ -242,9 +246,9 @@ describe('opaque sync API', () => {
       ]),
     );
 
-    expect((await request(app).post(`/sync/workspace-a/devices/${targetId}/revoke`)).status).toBe(200);
+    expect((await app.post(`/sync/workspace-a/devices/${targetId}/revoke`)).status).toBe(200);
 
-    const revokedAuditResponse = await request(app).get('/sync/workspace-a/devices/audit');
+    const revokedAuditResponse = await app.get('/sync/workspace-a/devices/audit');
 
     expect(revokedAuditResponse.body.data.events).toEqual(
       expect.arrayContaining([
@@ -252,29 +256,27 @@ describe('opaque sync API', () => {
       ]),
     );
 
-    const recovery = await request(app)
-      .post('/sync/workspace-a/devices/recover')
-      .send({
-        lostDeviceId: targetId,
-        replacementDeviceId: replacementId,
-        approverDeviceIds: [ownerId, approverId],
-        allDeviceLoss: false,
-        envelope: createEnvelope({
-          envelopeId: 'http-key-replacement',
-          recordType: 'workspace-key-distribution',
-          metadata: { recipientDeviceId: replacementId },
-        }),
-      });
+    const recovery = await app.post('/sync/workspace-a/devices/recover').send({
+      lostDeviceId: targetId,
+      replacementDeviceId: replacementId,
+      approverDeviceIds: [ownerId, approverId],
+      allDeviceLoss: false,
+      envelope: createEnvelope({
+        envelopeId: 'http-key-replacement',
+        recordType: 'workspace-key-distribution',
+        metadata: { recipientDeviceId: replacementId },
+      }),
+    });
 
     expect(recovery.status).toBe(200);
   });
 
   it('does not expose device audit events across workspaces or accounts', async () => {
-    const accountResponse = await request(createApp('account-b')).get('/sync/workspace-a/devices/audit');
+    const accountResponse = await (await createApp('account-b')).get('/sync/workspace-a/devices/audit');
 
     expect(accountResponse.status).toBe(404);
 
-    const workspaceResponse = await request(createApp()).get('/sync/workspace-b/devices/audit');
+    const workspaceResponse = await (await createApp()).get('/sync/workspace-b/devices/audit');
 
     expect(workspaceResponse.status).toBe(404);
     expect(JSON.stringify(workspaceResponse.body)).not.toContain('workspace-a');

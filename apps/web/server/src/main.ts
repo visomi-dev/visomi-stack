@@ -7,6 +7,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { Express, NextFunction, Request, RequestHandler, Response } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
+import template from '../../../../template.json';
+
 import { createGatewayApp } from './gateway';
 import { DurableReplayStore } from './durable-replay-store';
 import { createLocalAgentProxy, publicKeyFromPem } from './local-agent-proxy';
@@ -208,6 +210,7 @@ async function bootstrap() {
   const localAgentTarget = new URL(localAgentUrl);
 
   const app = createGatewayApp({
+    defaultLocale: template.project.defaultLocale === 'es' ? 'es' : 'en',
     apiHandler,
     angularHandler,
     astroClientFolder,

@@ -3,11 +3,14 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface User {
       accountId: string;
+      authority?: 'restricted' | 'full';
       email: string;
       emailVerifiedAt: string | null;
       id: string;
       role: string;
-      authenticationMethod?: 'passkey' | 'password';
+      authenticationMethod?: 'passkey' | 'google' | 'password';
+      secondFactor?: 'email' | 'totp' | 'recovery_code';
+      authVersion?: number;
       credentialId?: string;
     }
   }
@@ -19,24 +22,58 @@ declare module 'express-session' {
     passport?: {
       user?: {
         accountId: string;
+        authority?: 'restricted' | 'full';
         id: string;
+        authVersion?: number;
       };
     };
-    resetPassword?: {
-      challengeId: string;
-      email: string;
+    authority?: 'restricted' | 'full';
+    passkeySignup?: {
+      id: string;
       userId: string;
+      email: string;
+      challenge: string;
+      expiresAt: number;
+      emailChallengeId?: string;
+      credential?: {
+        id: string;
+        publicKey: string;
+        counter: number;
+        transports: string[];
+        backupEligible: boolean;
+        backupState: boolean;
+      };
     };
     passkeyRegistration?: {
+      accountId: string;
       challengeId: string;
       email: string;
       label: string;
-      pinVerified: true;
       enrollmentId?: string;
     };
     authenticatedAt?: number;
-    reauthenticatedAt?: number;
+    authenticationMethod?: 'passkey' | 'google' | 'password';
+    secondFactor?: 'email' | 'totp' | 'recovery_code';
+    authVersion?: number;
+    passwordFlowId?: string;
+    passkeyEnrollmentFlowId?: string;
     passkeySecurityReauthenticatedAt?: number;
+    reauthGrantId?: string;
+    identityFlowId?: string;
+    googleNonce?: string;
+    enrollmentGrantId?: string;
+    restrictedAuth?: {
+      allowedOperations: string[];
+      eligibleAccounts: Array<{ accountId: string; name: string; role: string }>;
+      expiresAt: number;
+      flowId: string;
+      issuedAt: number;
+      isNewUser: boolean;
+      purpose: 'bootstrap_recovery' | 'existing_account_recovery';
+      selectedAccountId?: string;
+      userId: string;
+      verifiedEmail: string;
+    };
   }
 }
 

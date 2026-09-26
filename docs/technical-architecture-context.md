@@ -111,10 +111,10 @@ The gateway starts this runtime as a child process. If the worker exits unexpect
 
 ## Shared Libraries
 
-### `libs/shared`
+### `libs/backend/shared`
 
 ```text
-libs/shared/src/lib/
+libs/backend/shared/src/lib/
 ├── db/
 │   ├── client.ts
 │   ├── pool.ts
@@ -148,7 +148,7 @@ TypeScript aliases are defined in `tsconfig.base.json`:
 
 ```json
 {
-  "shared": ["libs/shared/src/index.ts"],
+  "shared": ["libs/backend/shared/src/index.ts"],
   "projects": ["libs/projects/src/index.ts"]
 }
 ```
@@ -219,7 +219,7 @@ MAILGUN_URL
 ENABLE_TEST_API
 ```
 
-Configuration parsing and defaults are implemented in `libs/shared/src/lib/env.ts`.
+Configuration parsing and defaults are implemented in `libs/backend/shared/src/lib/env.ts`.
 
 ## Angular Architecture
 
@@ -357,10 +357,10 @@ apps/web/app/src/main.ts
 apps/web/app/src/app/app.routes.ts
 apps/web/site/astro.config.mjs
 
-libs/shared/src/lib/env.ts
-libs/shared/src/lib/db/client.ts
-libs/shared/src/lib/db/schema.ts
-libs/shared/src/lib/session.ts
-libs/shared/src/lib/redis/pub-sub.ts
+libs/backend/shared/src/lib/env.ts
+libs/backend/shared/src/lib/db/client.ts
+libs/backend/shared/src/lib/db/schema.ts
+libs/backend/shared/src/lib/session.ts
+libs/backend/shared/src/lib/redis/pub-sub.ts
 libs/projects/src/index.ts
 ```

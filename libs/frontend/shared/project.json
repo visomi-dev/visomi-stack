@@ -1,0 +1,23 @@
+{
+  "name": "frontend-shared",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frontend/shared/src",
+  "projectType": "library",
+  "tags": ["scope:frontend"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "pnpm exec tsc --noEmit -p libs/frontend/shared/tsconfig.lib.json" }
+    },
+    "browser-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec esbuild libs/frontend/shared/src/index.ts --bundle --platform=browser --format=esm --metafile=dist/frontend-shared-browser/meta.json --outfile=dist/frontend-shared-browser/index.js"
+      }
+    },
+    "browser-smoke": {
+      "executor": "nx:run-commands",
+      "options": { "command": "node --experimental-strip-types scripts/browser-vault-smoke.ts" }
+    }
+  }
+}

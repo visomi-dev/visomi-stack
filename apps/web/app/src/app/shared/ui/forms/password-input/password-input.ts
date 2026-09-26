@@ -1,4 +1,5 @@
 import {
+  afterNextRender,
   booleanAttribute,
   Component,
   computed,
@@ -13,7 +14,9 @@ import {
 import type { Field } from '@angular/forms/signals';
 
 import { Icon } from '../../media/icon/icon';
+import { PasswordStrength } from '../password-strength/password-strength';
 import { uiClass } from '../../classes';
+import { passwordLength } from '../../../auth/password-validation';
 
 type PasswordVariant = 'icon' | 'text';
 
@@ -21,12 +24,14 @@ type PasswordVariant = 'icon' | 'text';
   host: {
     class: /* tw */ 'block',
   },
-  imports: [Icon],
+  imports: [Icon, PasswordStrength],
   selector: 'app-password-input',
   templateUrl: './password-input.html',
   styleUrl: './password-input.css',
 })
 export class PasswordInput {
+  protected readonly ready = signal(false);
+  private readonly enableInputAfterRender = afterNextRender(() => this.ready.set(true));
   private readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('inputEl');
 
   readonly formField = input.required<Field<string>>();
@@ -36,10 +41,18 @@ export class PasswordInput {
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly invalid = input(false, { transform: booleanAttribute });
   readonly loading = input(false, { transform: booleanAttribute });
-  readonly maxLength = input(64, { transform: numberAttribute });
-  readonly minLength = input(8, { transform: numberAttribute });
+  readonly showStrength = input(false, { transform: booleanAttribute });
+  readonly meetsLength = computed(() => {
+    const length = passwordLength(this.formField()().value());
+
+    return length >= 12 && length <= 128;
+  });
+  readonly maxLength = input<number | null, unknown>(null, {
+    transform: (value) => (value == null ? null : numberAttribute(value)),
+  });
+  readonly minLength = input(0, { transform: numberAttribute });
   readonly name = input<string | null>(null);
-  readonly pattern = input("^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[._\\-'@$!%*#?&])[A-Za-z0-9._\\-'@$!%*#?&]{8,}$");
+  readonly pattern = input<string | null>(null);
   readonly placeholder = input('');
   readonly required = input(false, { transform: booleanAttribute });
   readonly variant = input<PasswordVariant>('text');

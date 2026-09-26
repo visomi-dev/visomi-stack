@@ -7,11 +7,12 @@ import express, {
 } from 'express';
 import helmet from 'helmet';
 
-import { logger } from 'shared';
+import { logger, requestObservability } from 'shared';
 
 type AstroRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<void> | void;
 
 type GatewayDeps = {
+  defaultLocale?: 'en' | 'es';
   apiHandler: RequestHandler;
   angularHandler: RequestHandler;
   astroClientFolder: string;
@@ -25,25 +26,28 @@ type GatewayDeps = {
 };
 
 const gatewaySecurityHeaders = helmet({
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       baseUri: ["'self'"],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", 'https://accounts.google.com'],
       fontSrc: ["'self'", 'data:'],
       formAction: ["'self'"],
       frameAncestors: ["'self'"],
+      frameSrc: ["'self'", 'https://accounts.google.com'],
       imgSrc: ["'self'", 'data:', 'blob:'],
       objectSrc: ["'none'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://accounts.google.com'],
       scriptSrcAttr: ["'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/style'],
       upgradeInsecureRequests: null,
     },
   },
 });
 
 function createGatewayApp({
+  defaultLocale = 'en',
   angularHandler,
   apiHandler,
   astroClientFolder,
@@ -55,6 +59,7 @@ function createGatewayApp({
 }: GatewayDeps) {
   const app = express();
 
+  app.use(requestObservability((event) => logger.info(event, 'HTTP request completed')));
   app.use(gatewaySecurityHeaders);
   app.use(...authRuntimeHandlers);
   app.get('/healthz', (_req, res) => {
@@ -70,7 +75,7 @@ function createGatewayApp({
     res.send({ status: 'ready' });
   });
   app.get('/', (_req, res) => {
-    res.redirect(302, '/en/');
+    res.redirect(302, `/${defaultLocale}/`);
   });
 
   // This same-origin route is the only browser path to protected local-agent

@@ -80,6 +80,13 @@ describe('createGatewayApp', () => {
     expect(angularResponse.text).toContain('<app-root>');
   });
 
+  it('honors the configured default locale before delegating to Astro', async () => {
+    const response = await request(createGatewayApp({ ...createDeps(), defaultLocale: 'es' })).get('/');
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe('/es/');
+  });
+
   it('mounts the authenticated same-origin local-agent boundary without using the cloud API', async () => {
     const deps = createDeps();
     const localAgentHandler = express();
@@ -107,6 +114,7 @@ describe('createGatewayApp', () => {
     expect(response.headers['content-security-policy']).toContain("connect-src 'self'");
     expect(response.headers['content-security-policy']).toContain("script-src 'self' 'unsafe-inline'");
     expect(response.headers['content-security-policy']).toContain("script-src-attr 'unsafe-inline'");
+    expect(response.headers['content-security-policy']).toContain('https://accounts.google.com/gsi/style');
     expect(response.headers['content-security-policy']).toContain("object-src 'none'");
     expect(response.headers['x-content-type-options']).toBe('nosniff');
   });

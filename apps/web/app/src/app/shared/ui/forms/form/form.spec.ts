@@ -16,7 +16,7 @@ class Host {
   readonly submitted = signal(false);
   readonly model = signal({ email: '' });
   readonly f: FieldTree<{ email: string }> = form(this.model, (p) => {
-    required(p.email);
+    required(p.email, { message: 'Enter your email address.' });
   });
   onSubmit(): void {
     // counted as an emission indicator; no DOM work required.
@@ -60,5 +60,34 @@ describe('Form', () => {
 
   it('forwards the novalidate attribute to the inner <form>', async () => {
     expect((fixture.nativeElement.querySelector('form') as HTMLFormElement).hasAttribute('novalidate')).toBe(true);
+  });
+
+  it('explains invalid submission, focuses the summary, and does not emit until valid', async () => {
+    const submit = vi.spyOn(fixture.componentInstance, 'onSubmit');
+    const innerForm = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+
+    innerForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    await fixture.whenStable();
+    expect(submit).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.f.email().touched()).toBe(true);
+    const summary = fixture.nativeElement.querySelector('[role="alert"]') as HTMLElement;
+
+    expect(summary.textContent).toContain('Enter your email address.');
+    expect(document.activeElement).toBe(summary);
+    fixture.componentInstance.model.set({ email: 'person@example.test' });
+    await fixture.whenStable();
+    innerForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    await fixture.whenStable();
+    expect(submit).toHaveBeenCalledOnce();
+    expect(fixture.nativeElement.querySelector('[role="alert"]')).toBeNull();
+    fixture.componentInstance.model.set({ email: '' });
+    await fixture.whenStable();
+    expect(fixture.componentInstance.submitted()).toBe(true);
+    expect(fixture.nativeElement.querySelector('[role="alert"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('app-form').hasAttribute('data-submitted')).toBe(false);
+    innerForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('[role="alert"]')).not.toBeNull();
+    expect(submit).toHaveBeenCalledOnce();
   });
 });

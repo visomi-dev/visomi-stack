@@ -15,7 +15,7 @@ import {
   type ClientCapabilityClaim,
   type ModeNegotiationRequest,
 } from 'shared';
-import { HttpError, deviceIdentityStore, env, getConfiguredDeviceIdentityStore, httpResponse } from 'shared';
+import { HttpError, deviceIdentityStore, env, fail, getConfiguredDeviceIdentityStore, httpResponse } from 'shared';
 import { getProject } from 'projects';
 
 const capabilityRouter = Router();
@@ -47,11 +47,7 @@ function rejectNegotiation(error: unknown): never {
   const code = error instanceof ClientCapabilityContractError ? error.code : 'malformed';
   const statusCode = code === 'unauthenticated' ? 401 : code === 'malformed' ? 400 : 409;
 
-  throw new HttpError({
-    code: `capability_${code}`,
-    message: 'The capability negotiation request was rejected.',
-    statusCode,
-  });
+  fail(`capability_${code}`, 'The capability negotiation request was rejected.', statusCode);
 }
 
 function canonicalize(value: unknown): string {
@@ -134,7 +130,7 @@ async function authorizeWorkspace(req: Parameters<typeof authedContext>[0], work
   return context;
 }
 
-capabilityRouter.use(authed());
+capabilityRouter.use(authed({ authority: 'full' }));
 
 capabilityRouter.get(
   '/:workspaceId',

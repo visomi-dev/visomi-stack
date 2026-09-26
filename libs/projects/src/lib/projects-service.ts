@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
 import { and, asc, eq } from 'drizzle-orm';
-import { asyncJobs, projectDocuments, projects, withAccountContext, HttpError } from 'shared';
 
 import { mapAsyncJob } from './records/async-job-records';
 import type {
@@ -13,6 +12,8 @@ import type {
   ProjectStatus,
   ProjectWithDocuments,
 } from './contracts/projects';
+
+import { asyncJobs, projectDocuments, projects, withAccountContext, HttpError } from 'shared';
 
 type ProjectsContext = {
   accountId: string;

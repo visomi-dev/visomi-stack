@@ -1,13 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "themis-coordinator",
-  "permission": {
-    "external_directory": {
-      "*": "allow",
-      "/home/visomi/.claude/skills/**": "deny",
-      "/home/visomi/.claude/skills/graphify/**": "allow",
-      "/home/visomi/.agents/skills/**": "deny"
-    }
-  },
   "mcp": {}
 }

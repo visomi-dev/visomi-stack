@@ -1,10 +1,10 @@
-import { HttpError } from 'shared';
-
 import type { ProjectSeedJobInput, ProjectSeedJobResult } from '../contracts/project-seed';
 import { findAsyncJobById, updateAsyncJob } from '../records/async-job-records';
 import { getProject } from '../projects-service';
 
 import { publishProjectAsyncJobEvent } from './events';
+
+import { HttpError } from 'shared';
 
 async function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

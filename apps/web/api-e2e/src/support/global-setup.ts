@@ -33,7 +33,7 @@ module.exports = async function () {
     await mkdir(dirname(resolve(process.env['PZS005_SERVER_LOG'])), { recursive: true });
   }
 
-  const serverProcess = spawn(process.execPath, [SERVER_ENTRYPOINT], {
+  const serverProcess = spawn(process.execPath, ['--experimental-vm-modules', SERVER_ENTRYPOINT], {
     detached: true,
     env: {
       ...process.env,
@@ -45,6 +45,10 @@ module.exports = async function () {
       DATABASE_DRIVER:
         process.env['OPAQUE_SYNC_STORAGE'] === 'durable' && process.env['DATABASE_DRIVER'] === 'pg' ? 'pg' : 'memory',
       ENABLE_TEST_API: 'true',
+      ENABLE_LOCAL_ACTIVATION: 'false',
+      GOOGLE_AUTH_CLIENT_ID: '',
+      AUTH_TOTP_ENROLLMENT_ENABLED: 'true',
+      AUTH_TOTP_ENCRYPTION_KEY: 'themis-api-e2e-dedicated-totp-key-2026',
       HOST: host,
       GATEWAY_PORT: String(port),
       MAIL_TRANSPORT: 'memory',

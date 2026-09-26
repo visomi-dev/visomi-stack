@@ -33,6 +33,10 @@ export async function verifySecret(secret: string, storedHash: string) {
   return timingSafeEqual(storedBuffer, derivedKey);
 }
 
+export function isLegacySecretHash(value: string): boolean {
+  return /^[0-9a-f]{32}:[0-9a-f]{64}$/.test(value);
+}
+
 export function hashUserDeviceToken(token: string) {
   return createHmac('sha256', env.SESSION_SECRET).update(token).digest('hex');
 }

@@ -7,11 +7,13 @@ import { Avatar } from '../shared/ui/data/avatar/avatar';
 import { Badge } from '../shared/ui/data/badge/badge';
 import { Pagination } from '../shared/ui/data/pagination/pagination';
 import { Table } from '../shared/ui/data/table/table';
+import { Topbar } from '../shared/layout/topbar/topbar';
 import { Loader } from '../shared/ui/feedback/loader/loader';
 import { Checkbox } from '../shared/ui/forms/checkbox/checkbox';
 import { Input } from '../shared/ui/forms/input/input';
 import { RadioCard } from '../shared/ui/forms/radio-card/radio-card';
-import { RadioGroup } from '../shared/ui/forms/radio-group/radio-group';
+import { RadioGroup, type RadioOption } from '../shared/ui/forms/radio-group/radio-group';
+import { RadioOptionTemplate } from '../shared/ui/forms/radio-group/radio-option-template';
 import { Select } from '../shared/ui/forms/select/select';
 import { Switch } from '../shared/ui/forms/switch/switch';
 import { Textarea } from '../shared/ui/forms/textarea/textarea';
@@ -61,9 +63,11 @@ const listboxFormModel = signal<ListboxForm>({ value: '' });
     Pagination,
     RadioCard,
     RadioGroup,
+    RadioOptionTemplate,
     Select,
     Switch,
     Table,
+    Topbar,
     Text,
     Textarea,
     Tooltip,
@@ -249,10 +253,16 @@ export class Gallery {
     { id: 3, name: 'Citadel', tone: 'danger', count: 0 },
   ];
 
-  readonly radioOptions = [
-    { value: 'starter', label: 'Starter', description: 'For solo founders and weekend builds.' },
-    { value: 'team', label: 'Team', description: 'For small product teams up to 10 people.' },
-    { value: 'enterprise', label: 'Enterprise', description: 'For organizations with audit and SSO requirements.' },
+  readonly radioOptions: readonly RadioOption[] = [
+    { value: 'starter', label: 'Starter', icon: 'folder', description: 'For solo founders and weekend builds.' },
+    { value: 'team', label: 'Team', icon: 'grid', description: 'For small product teams up to 10 people.' },
+    {
+      value: 'enterprise',
+      label: 'Enterprise',
+      icon: 'globe',
+      disabled: true,
+      description: 'Contact us to enable this plan.',
+    },
   ];
 
   readonly radioGroupValue = signal('team');

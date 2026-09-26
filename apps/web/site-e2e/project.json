@@ -5,6 +5,13 @@
   "sourceRoot": "apps/web/site-e2e/src",
   "implicitDependencies": ["server"],
   "targets": {
+    "landing": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/web/site-e2e",
+        "command": "playwright test --config landing.config.ts"
+      }
+    },
     "e2e": {
       "dependsOn": ["api:build", "app:build", "site:build", "worker:build", "realtime:build", "server:build"]
     },

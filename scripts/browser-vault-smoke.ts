@@ -1,18 +1,18 @@
 import { createServer } from 'node:http';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { chromium } from '@playwright/test';
 import { build } from 'esbuild';
 
-import type * as BrowserVaultModule from '../libs/shared/src/lib/crypto/browser-encrypted-vault';
+import type * as BrowserVaultModule from '../libs/frontend/shared/src/lib/crypto/browser-encrypted-vault';
 
-const artifactPath = 'artifacts/zk-018/run-080/native-browser-vault.json';
+const artifactPath = process.env['BROWSER_VAULT_ARTIFACT_PATH'] ?? 'tmp/browser-vault-smoke/result.json';
 const tempDirectory = await mkdtemp(join(tmpdir(), 'themis-browser-vault-'));
 const bundlePath = join(tempDirectory, 'vault.js');
 await build({
-  entryPoints: ['libs/shared/src/lib/crypto/browser-encrypted-vault.ts'],
+  entryPoints: ['libs/frontend/shared/src/lib/crypto/browser-encrypted-vault.ts'],
   bundle: true,
   format: 'iife',
   globalName: 'VaultModule',
@@ -278,7 +278,7 @@ try {
     return { lockedAfterReload, readAfterUnlock: value };
   }, observed.reloadId);
   const result = { ...observed, ...reloaded, otherOriginEmpty };
-  await mkdir('artifacts/zk-018/run-080', { recursive: true });
+  await mkdir(dirname(artifactPath), { recursive: true });
   await writeFile(artifactPath, `${JSON.stringify(result, null, 2)}\n`);
   if (
     result.containsPlaintext ||

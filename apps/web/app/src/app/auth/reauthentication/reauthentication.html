@@ -1,0 +1,15 @@
+<app-auth-layout>
+  <app-auth-card>
+    <h1 class="font-heading text-3xl font-bold" i18n="@@securityStandaloneConfirmTitle">Confirm your identity</h1>
+    <p class="mt-4 leading-7 text-zinc-600 dark:text-zinc-300" i18n="@@securityChooseAction">
+      Choose an action in Security first. We will ask you to confirm your identity when that action needs it.
+    </p>
+    <a
+      [routerLink]="securityUrl"
+      class="mt-6 inline-flex min-h-11 items-center text-blue-600 underline dark:text-blue-400"
+      i18n="@@securityReturn"
+    >
+      Back to Security
+    </a>
+  </app-auth-card>
+</app-auth-layout>

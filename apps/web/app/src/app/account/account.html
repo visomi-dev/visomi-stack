@@ -1,0 +1,189 @@
+<div class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 text-zinc-950 md:px-8 dark:text-white">
+  <header>
+    <h1 class="font-heading text-2xl font-semibold" i18n="@@accountTitle">Your account</h1>
+  </header>
+  <main class="flex flex-col gap-6">
+    @if (error()) {
+      <p role="alert">{{ error() }}</p>
+    }
+    @if (notice()) {
+      <p role="status">{{ notice() }}</p>
+    }
+    @if (finished()) {
+      <a [routerLink]="signInUrl" class="underline" i18n="@@accountSignIn">Go to sign in</a>
+    } @else {
+      <form [formRoot]="profileForm" class="flex flex-col gap-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900">
+        <h2 class="font-heading text-lg font-semibold" i18n="@@accountProfileTitle">Profile and preferences</h2>
+        <p i18n="@@accountPreferencesHelp">
+          Saving applies these preferences now. Toolbar changes stay local and do not update your saved preferences.
+        </p>
+        <label for="display-name" i18n="@@accountDisplayName">Display name</label>
+        <input
+          id="display-name"
+          autocomplete="nickname"
+          [formField]="profileForm.displayName"
+          aria-describedby="display-name-error"
+          class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
+        />
+        <p id="display-name-error">{{ profileForm.displayName().errors()[0]?.message }}</p>
+        <label for="profile-locale" i18n="@@accountLocale">Preferred language</label>
+        <select
+          id="profile-locale"
+          [formField]="profileForm.preferences.locale"
+          class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
+        >
+          <option value="en" i18n="@@accountEnglish">English</option>
+          <option value="es" i18n="@@accountSpanish">Spanish</option>
+        </select>
+        <label for="profile-theme" i18n="@@accountTheme">Preferred appearance</label>
+        <select
+          id="profile-theme"
+          [formField]="profileForm.preferences.theme"
+          class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
+        >
+          <option value="system" i18n="@@accountSystem">System</option>
+          <option value="light" i18n="@@accountLight">Light</option>
+          <option value="dark" i18n="@@accountDark">Dark</option>
+        </select>
+        <button
+          type="submit"
+          [disabled]="!interactive() || busy()"
+          class="w-full rounded-md bg-zinc-950 px-4 py-2 text-white disabled:opacity-50 sm:w-auto dark:bg-white dark:text-zinc-950"
+          i18n="@@accountSave"
+        >
+          Save profile
+        </button>
+      </form>
+      <section
+        class="flex flex-col gap-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900"
+        aria-labelledby="email-title"
+      >
+        <h2 id="email-title" class="font-heading text-lg font-semibold" i18n="@@accountEmailTitle">Primary email</h2>
+        <p>{{ data().profile.email }}</p>
+        <p i18n="@@accountEmailDescription">
+          Verify the new address before it becomes your primary email. We will notify your previous address and sign out
+          your existing sessions.
+        </p>
+        <form [formRoot]="emailForm" class="flex flex-col gap-3">
+          <label for="new-email" i18n="@@accountNewEmail">New email address</label>
+          <input
+            id="new-email"
+            type="email"
+            autocomplete="email"
+            [formField]="emailForm.email"
+            aria-describedby="new-email-error"
+            class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
+          />
+          <p id="new-email-error">{{ emailForm.email().touched() ? emailForm.email().errors()[0]?.message : '' }}</p>
+          <button
+            type="submit"
+            [disabled]="!interactive() || busy()"
+            class="rounded-md border border-zinc-950/10 px-3 py-2 disabled:opacity-50 dark:border-white/10"
+            i18n="@@accountSendCode"
+          >
+            Send a new verification code
+          </button>
+        </form>
+        @if (challenge(); as challenge) {
+          <p i18n="@@accountCodeDestination">Code sent to {{ challenge.email }}.</p>
+          <form [formRoot]="codeForm" class="flex flex-col gap-3">
+            <label for="email-code" i18n="@@accountCodeLabel">Verification code</label>
+            <input
+              id="email-code"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              [formField]="codeForm.pin"
+              aria-describedby="email-code-error"
+              class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
+            />
+            <p id="email-code-error">{{ codeForm.pin().touched() ? codeForm.pin().errors()[0]?.message : '' }}</p>
+            <button
+              type="submit"
+              [disabled]="!interactive() || busy()"
+              class="rounded-md bg-zinc-950 px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-zinc-950"
+              i18n="@@accountVerifyEmail"
+            >
+              Verify and change email
+            </button>
+          </form>
+        }
+      </section>
+      <section
+        class="flex flex-col gap-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900"
+        aria-labelledby="export-title"
+      >
+        <h2 id="export-title" class="font-heading text-lg font-semibold" i18n="@@accountExportTitle">
+          Export profile metadata
+        </h2>
+        <p i18n="@@accountExportScope">
+          Includes your profile, saved preferences, and membership metadata. This is not a workspace or document backup.
+          It excludes passwords, sessions, authenticator secrets, recovery codes, document contents, and client keys.
+        </p>
+        <button
+          type="button"
+          (click)="exportMetadata()"
+          [disabled]="!interactive() || busy()"
+          class="rounded-md border border-zinc-950/10 px-3 py-2 disabled:opacity-50 dark:border-white/10"
+          i18n="@@accountExport"
+        >
+          Download metadata
+        </button>
+      </section>
+      <section
+        class="flex flex-col gap-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900"
+        aria-labelledby="leave-title"
+      >
+        <h2 id="leave-title" class="font-heading text-lg font-semibold" i18n="@@accountLeaveTitle">
+          Leave this workspace
+        </h2>
+        <p class="font-semibold">{{ selectedWorkspace()?.name }}</p>
+        <p i18n="@@accountLeaveScope">
+          Leaving takes effect immediately and removes only your membership in this workspace. Your global identity and
+          other memberships remain. The shared workspace and its records are preserved. This does not delete your
+          account.
+        </p>
+        @if (data().isWorkspaceOwner) {
+          <p i18n="@@accountTransferRequired">Transfer ownership to another existing member before leaving.</p>
+          <form [formRoot]="transferForm" class="flex flex-col gap-3">
+            <label for="transfer-member" i18n="@@accountTransferMember">New workspace owner</label>
+            <select
+              id="transfer-member"
+              [formField]="transferForm.targetUserId"
+              aria-describedby="transfer-member-error"
+              class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
+            >
+              <option value="" i18n="@@accountChooseMember">Choose an existing member</option>
+              @for (member of data().ownershipCandidates; track member.userId) {
+                <option [value]="member.userId">{{ member.displayName || member.email }}</option>
+              }
+            </select>
+            @if (!data().ownershipCandidates.length) {
+              <p i18n="@@accountNoMembers">Invite another person to this workspace before transferring ownership.</p>
+            }
+            <p id="transfer-member-error">
+              {{ transferForm.targetUserId().touched() ? transferForm.targetUserId().errors()[0]?.message : '' }}
+            </p>
+            <button
+              type="submit"
+              [disabled]="!interactive() || busy()"
+              class="rounded-md border border-zinc-950/10 px-3 py-2 disabled:opacity-50 dark:border-white/10"
+              i18n="@@accountTransfer"
+            >
+              Transfer ownership
+            </button>
+          </form>
+        }
+        <button
+          type="button"
+          (click)="leaveWorkspace()"
+          [disabled]="!interactive() || busy() || data().isWorkspaceOwner"
+          class="rounded-md bg-red-700 px-4 py-2 text-white disabled:opacity-50"
+          i18n="@@accountLeave"
+        >
+          Leave workspace immediately
+        </button>
+      </section>
+    }
+  </main>
+</div>
+<app-security-confirmation />

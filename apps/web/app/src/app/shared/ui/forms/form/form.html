@@ -1,3 +1,18 @@
 <form class="contents" [formRoot]="form()" [attr.novalidate]="novalidate() ? '' : null" (submit)="onSubmit($event)">
+  @if (messages().length) {
+    <div
+      #errorSummary
+      tabindex="-1"
+      role="alert"
+      class="ui-focus-ring rounded-md border border-red-600 bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
+    >
+      <p class="font-semibold" i18n="@@formErrorSummary">Check the following before continuing:</p>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        @for (message of messages(); track message) {
+          <li>{{ message }}</li>
+        }
+      </ul>
+    </div>
+  }
   <ng-content />
 </form>

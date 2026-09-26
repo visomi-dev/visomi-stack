@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Component, computed, inject, input } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { Icon } from '../../ui/media/icon/icon';
 import { Dropdown } from '../../ui/overlays/dropdown/dropdown';
@@ -14,12 +14,13 @@ const ENGLISH_LOCALE_SEGMENT = 'en';
   host: {
     class: /* tw */ 'inline-block',
   },
-  imports: [Dropdown, Icon, RouterLink],
+  imports: [Dropdown, Icon],
   selector: 'app-language-switcher',
   templateUrl: './language-switcher.html',
   styleUrl: './language-switcher.css',
 })
 export class LanguageSwitcher {
+  readonly compact = input(false);
   private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
 

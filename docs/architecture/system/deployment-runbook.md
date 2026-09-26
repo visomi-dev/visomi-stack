@@ -28,13 +28,16 @@ For a local production-like run, use `cp deploy/production.env.example
 deploy/production.env`, replace every placeholder with the Railway variable
 values, and then run `podman compose --env-file deploy/production.env -f
 deploy/compose.production.yaml up --build`.
+Compose forwards `SITE_URL` from that environment file into the image build so
+Astro embeds the public canonical and Open Graph URLs. Changing the runtime
+variable alone does not update those built URLs; rebuild after an origin change.
 `pnpm release:gate` must verify the signed artifact, signed key catalogue,
 artifact hash, provenance metadata, and protected-plaintext scan before rollout.
 
 ## Release procedure
 
 1. Build with `pnpm exec nx run-many -t build --projects server,realtime,worker,api,app,site --configuration production`.
-2. Generate the immutable image with `docker build --target runtime --tag themis:<git-sha> .`.
+2. Generate the immutable image with `docker build --build-arg SITE_URL=https://your-public-origin.example --target runtime --tag themis:<git-sha> .`, using the actual public origin.
 3. Record the git SHA, image digest, dependency lockfile digest, SBOM, and
    signed release manifest. Verify the manifest and catalogue before promotion.
 4. In a disposable production-like environment, apply migrations explicitly

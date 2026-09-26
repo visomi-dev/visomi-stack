@@ -33,13 +33,23 @@ Preserve `/socket.io` as the public websocket path on the same HTTP server used 
 
 Replace the in-process realtime event bus with Redis pub/sub.
 
-Keep true cross-cutting runtime code in `libs/shared`:
+Keep true cross-cutting runtime code in `libs/backend/shared`:
 
 - `db/`
 - `redis/`
 - `session/`
 - `env.ts`
 - `logger.ts`
+
+Browser utilities shared by the Astro site and Angular app live in
+`libs/frontend/shared`. They use native browser APIs, with no framework or
+backend runtime dependency. IndexedDB, WebCrypto, and WebAuthn operations run
+only on the client. UI components and framework adapters remain in their apps.
+
+Platform-neutral crypto contracts and synchronization live in
+`libs/shared/crypto`. Both platform libraries may depend on this layer;
+it must not import either platform library. Nx lint constraints enforce these
+dependency directions, and CI bundles the frontend library for the browser.
 
 Move projects-domain shared code into `libs/projects`:
 

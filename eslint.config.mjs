@@ -30,8 +30,21 @@ export default [
         'error',
         {
           enforceBuildableLibDependency: true,
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
+          // template.json is a public workspace build input, not another domain's implementation.
+          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$', '^(?:\\.\\./)+template\\.json$'],
           depConstraints: [
+            {
+              sourceTag: 'scope:frontend',
+              onlyDependOnLibsWithTags: ['scope:frontend', 'scope:shared'],
+            },
+            {
+              sourceTag: 'scope:shared',
+              onlyDependOnLibsWithTags: ['scope:shared'],
+            },
+            {
+              sourceTag: 'scope:backend',
+              notDependOnLibsWithTags: ['scope:frontend'],
+            },
             {
               sourceTag: '*',
               onlyDependOnLibsWithTags: ['*'],
@@ -54,6 +67,8 @@ export default [
     },
     settings: {
       'import-x/ignore': ['^astro:'],
+      // Keep workspace alias grouping independent of the lint cwd and generated resolver paths.
+      'import-x/internal-regex': '^(?:shared|shared-crypto|frontend-shared|projects|themis-workflow)(?:/|$)',
     },
     rules: {
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
@@ -96,6 +111,23 @@ export default [
         'error',
         {
           ignore: ['^astro:'],
+        },
+      ],
+    },
+  },
+  {
+    files: ['libs/frontend/shared/src/**/*.ts', 'libs/shared/crypto/src/**/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['node:*', '@angular/*', 'astro', 'astro/*', '@astrojs/*'],
+              message: 'Shared browser and portable code must use framework-agnostic, browser-compatible APIs.',
+            },
+          ],
         },
       ],
     },

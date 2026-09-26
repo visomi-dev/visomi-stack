@@ -6,11 +6,7 @@ export type ResponseEnvelope<T> = {
 };
 
 export type ActivationMilestone =
-  | 'activation_completed'
-  | 'activation_skipped'
-  | 'api_key_created'
-  | 'config_copied'
-  | 'seed_prompt_copied';
+  'activation_completed' | 'activation_skipped' | 'api_key_created' | 'config_copied' | 'seed_prompt_copied';
 
 export type ActivationApiKey = {
   createdAt: string;

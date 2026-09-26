@@ -10,9 +10,9 @@ import {
   PostgresOpaqueSyncRepository,
   RailwayS3ObjectStore,
   migrateProjectRecord,
-  serializeEncryptedEnvelope,
   sha256,
 } from 'shared';
+import { serializeEncryptedEnvelope } from 'shared-crypto';
 
 const databaseUrl = process.env['DATABASE_URL'] ?? 'postgresql://postgres@127.0.0.1:5432/themis';
 const endpoint = process.env['OPAQUE_SYNC_S3_ENDPOINT'] ?? 'http://127.0.0.1:9000';

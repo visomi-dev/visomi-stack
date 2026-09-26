@@ -9,12 +9,7 @@ export async function assertOpenDesignChrome(page: Page): Promise<void> {
 }
 
 export type AuthRoute =
-  | 'sign-in'
-  | 'sign-up'
-  | 'forgotten-password'
-  | 'verify-email'
-  | 'verify-device'
-  | 'reset-password';
+  'sign-in' | 'sign-up' | 'forgotten-password' | 'verify-email' | 'verify-device' | 'reset-password';
 
 const OPEN_DESIGN_COPY: Readonly<Record<AuthRoute, Readonly<Record<string, string>>>> = Object.freeze({
   'sign-in': Object.freeze({

@@ -264,7 +264,7 @@ async function main(): Promise<void> {
       throw new Error('PZS-005 durable harness refuses memory database or object storage configuration.');
     }
     record(
-      `migration-config=DATABASE_URL:${sanitizedDatabaseUrl(durableEnvironment.DATABASE_URL)} schema:./libs/shared/src/lib/db/schema.ts out:./drizzle driver:postgresql`,
+      `migration-config=DATABASE_URL:${sanitizedDatabaseUrl(durableEnvironment.DATABASE_URL)} schema:./libs/backend/shared/src/lib/db/schema.ts out:./drizzle driver:postgresql`,
     );
     try {
       run(

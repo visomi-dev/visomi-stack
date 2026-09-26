@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 
 import { and, desc, eq } from 'drizzle-orm';
-import { asyncJobs, withAccountContext } from 'shared';
 
 import type { AsyncJobRecord, AsyncJobStatus, AsyncJobType } from '../contracts/async-jobs';
+
+import { asyncJobs, withAccountContext } from 'shared';
 
 type JobContext = {
   accountId: string;

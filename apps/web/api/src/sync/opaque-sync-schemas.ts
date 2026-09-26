@@ -1,6 +1,6 @@
 import { errorResponses, responseEnvelope, z } from '../shared/http/route-schemas';
 
-import { encryptedEnvelopeSchema } from 'shared';
+import { encryptedEnvelopeSchema } from 'shared-crypto';
 
 const opaqueSyncParamsSchema = z.object({ workspaceId: z.string().min(1).max(200) }).meta({ id: 'OpaqueSyncParams' });
 const opaqueSyncQuerySchema = z

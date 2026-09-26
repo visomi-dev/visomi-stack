@@ -1,11 +1,33 @@
+import type { PGlite } from '@electric-sql/pglite';
 import express, { json, type Request } from 'express';
+import session from 'express-session';
+import { Passport } from 'passport';
 import request from 'supertest';
 
 import { PASSKEY_ACCOUNT_UNAVAILABLE, passkeyOpenApiPaths, passkeyRouter } from './passkey-router';
 import { findUserByEmail } from './auth-service';
 import { resetPasskeySecurityState } from './passkey-security';
 
-import { errorHandler } from 'shared';
+import { db, errorHandler, ManagedMemorySessionStore } from 'shared';
+
+jest.mock('shared', () => {
+  const actual = jest.requireActual('shared');
+  const { PGlite } = jest.requireActual('@electric-sql/pglite');
+  const { drizzle } = jest.requireActual('drizzle-orm/pglite');
+
+  return { ...actual, db: drizzle(new PGlite(), { casing: 'snake_case' }) };
+});
+
+const database = (db as unknown as { $client: PGlite }).$client;
+
+beforeAll(async () => {
+  await database.exec(
+    "CREATE TABLE users (id text PRIMARY KEY, auth_version integer NOT NULL); INSERT INTO users VALUES ('user-1', 1)",
+  );
+}, 30000);
+afterAll(async () => {
+  await database.close();
+});
 
 jest.mock('./auth-service', () => ({
   findUserByEmail: jest.fn(async () => ({ email: 'person@example.test', emailVerifiedAt: null, id: 'user-1' })),
@@ -13,20 +35,61 @@ jest.mock('./auth-service', () => ({
   resolveAuthUser: jest.fn(),
 }));
 
-function createApp(authenticated = false): express.Express {
+function createApp(
+  authenticated = false,
+  isNewUser?: boolean,
+  authority: 'restricted' | 'full' = 'restricted',
+  reauthenticatedAt?: number,
+): express.Express {
   const app = express();
+  const store = new ManagedMemorySessionStore();
+  const passport = new Passport();
 
-  app.use(json());
+  passport.deserializeUser<Express.User>((identity, done) => done(null, identity));
+
+  app.use(
+    json(),
+    session({
+      secret: 'passkey-router-test-secret',
+      resave: false,
+      saveUninitialized: false,
+      store,
+    }),
+    passport.initialize(),
+  );
   app.use((req: Request, _res, next) => {
     req.user = {
       accountId: 'account-1',
+      authority,
       email: 'person@example.test',
       emailVerifiedAt: null,
       id: 'user-1',
+      authVersion: 1,
       role: 'owner',
     };
     (req as unknown as { isAuthenticated: () => boolean }).isAuthenticated = () => authenticated;
-    next();
+    Object.assign(req.session, {
+      passport: { user: req.user },
+      authority,
+      ...(reauthenticatedAt === undefined ? {} : { passkeySecurityReauthenticatedAt: reauthenticatedAt }),
+      ...(isNewUser === undefined
+        ? {}
+        : {
+            restrictedAuth: {
+              allowedOperations: ['passkeys:enroll', 'passkeys:verify'],
+              eligibleAccounts: [{ accountId: 'account-1', name: 'Account', role: 'owner' }],
+              expiresAt: Date.now() + 60_000,
+              flowId: 'flow-1',
+              isNewUser,
+              issuedAt: Date.now(),
+              purpose: 'bootstrap_recovery' as const,
+              selectedAccountId: 'account-1',
+              userId: 'user-1',
+              verifiedEmail: 'person@example.test',
+            },
+          }),
+    });
+    req.session.save(next);
   });
   app.use('/auth/passkey', passkeyRouter);
   app.use(errorHandler);
@@ -49,61 +112,81 @@ describe('passkey account ceremony router', () => {
     );
   });
 
-  it('accepts an unverified PIN state and returns pin_required from both begin ceremonies', async () => {
-    jest.mocked(findUserByEmail).mockResolvedValueOnce({
-      email: 'person@example.test',
-      emailVerifiedAt: new Date(),
-      id: 'user-1',
-    } as Awaited<ReturnType<typeof findUserByEmail>>);
-    jest.mocked(findUserByEmail).mockResolvedValueOnce({
-      email: 'person@example.test',
-      emailVerifiedAt: new Date(),
-      id: 'user-1',
-    } as Awaited<ReturnType<typeof findUserByEmail>>);
-    const app = createApp(true);
-    const registration = await request(app)
-      .post('/auth/passkey/registration/begin')
-      .set('Origin', 'http://localhost:8080')
-      .send({ email: 'person@example.test', label: 'Laptop', pinVerified: false });
-    const authentication = await request(app)
-      .post('/auth/passkey/authentication/begin')
-      .set('Origin', 'http://localhost:8080')
-      .send({ email: 'person@example.test', pinVerified: false });
-
-    expect(registration.status).toBe(403);
-    expect(authentication.status).toBe(403);
-    expect(registration.body.code).toBe('pin_required');
-    expect(authentication.body.code).toBe('pin_required');
-    expect(JSON.stringify({ registration: registration.body, authentication: authentication.body })).not.toMatch(
-      /password|challenge|credential/i,
-    );
-  });
-
   it('rejects unverified email before any ceremony state is created', async () => {
-    const app = createApp();
+    const app = createApp(true, true);
     const response = await request(app)
       .post('/auth/passkey/authentication/begin')
       .set('Origin', 'http://localhost:8080')
-      .send({ email: 'person@example.test', pinVerified: true });
+      .send({ email: 'person@example.test' });
 
     expect(response.status).toBe(403);
     expect(response.body.code).toBe('email_unverified');
   });
 
-  it('returns an explicit password fallback signal only after the verified-PIN gate', async () => {
-    jest.mocked(findUserByEmail).mockResolvedValueOnce({
-      email: 'person@example.test',
-      emailVerifiedAt: new Date(),
-      id: 'user-1',
-    } as Awaited<ReturnType<typeof findUserByEmail>>);
-    const app = createApp();
-    const response = await request(app)
-      .post('/auth/passkey/authentication/begin')
-      .set('Origin', 'http://localhost:8080')
-      .send({ email: 'person@example.test', explicitPassword: true, pinVerified: true });
+  it('rejects anonymous registration when no restricted session is present', async () => {
+    const app = express();
 
-    expect(response.status).toBe(200);
-    expect(response.body.data).toEqual({ attempt: 'password_fallback', challengeId: null, options: null });
+    app.use(json());
+    app.use((req: Request, _res, next) => {
+      req.user = undefined;
+      (req as unknown as { isAuthenticated: () => boolean }).isAuthenticated = () => false;
+      next();
+    });
+    app.use('/auth/passkey', passkeyRouter);
+    app.use(errorHandler);
+
+    const response = await request(app)
+      .post('/auth/passkey/registration/begin')
+      .set('Origin', 'http://localhost:8080')
+      .send({ label: 'Laptop' });
+
+    expect(response.status).toBe(401);
+    expect(response.body.code).toBe('restricted_session_required');
+  });
+
+  it('requires an enrollment grant for an existing account but preserves new-user bootstrap', async () => {
+    const existing = await request(createApp(true, false))
+      .post('/auth/passkey/registration/begin')
+      .set('Origin', 'http://localhost:8080')
+      .send({ label: 'Laptop' });
+    const bootstrap = await request(createApp(true, true))
+      .post('/auth/passkey/registration/begin')
+      .set('Origin', 'http://localhost:8080')
+      .send({ label: 'Laptop' });
+
+    expect(existing.status).toBe(401);
+    expect(existing.body.code).toBe('enrollment_grant_required');
+    expect(bootstrap.body.code).not.toBe('enrollment_grant_required');
+  });
+
+  it('requires fresh passkey reauthentication before a full session can register', async () => {
+    const stale = await request(createApp(true, undefined, 'full'))
+      .post('/auth/passkey/registration/begin')
+      .set('Origin', 'http://localhost:8080')
+      .send({ label: 'Laptop' });
+    const fresh = await request(createApp(true, undefined, 'full', Date.now()))
+      .post('/auth/passkey/registration/begin')
+      .set('Origin', 'http://localhost:8080')
+      .send({ label: 'Laptop' });
+
+    expect(stale.status).toBe(401);
+    expect(stale.body.code).toBe('reauthentication_required');
+    expect(fresh.body.code).not.toBe('reauthentication_required');
+  });
+
+  it('rejects an old session epoch before registration dispatch through authoritative middleware', async () => {
+    await database.exec("UPDATE users SET auth_version = 2 WHERE id = 'user-1'");
+    try {
+      const response = await request(createApp(true, true))
+        .post('/auth/passkey/registration/begin')
+        .set('Origin', 'http://localhost:8080')
+        .send({ label: 'Laptop' });
+
+      expect(response.status).toBe(401);
+      expect(response.body.code).toBe('authentication_required');
+    } finally {
+      await database.exec("UPDATE users SET auth_version = 1 WHERE id = 'user-1'");
+    }
   });
 
   it('rejects malformed completion payloads and unauthenticated lifecycle access', async () => {
@@ -119,12 +202,12 @@ describe('passkey account ceremony router', () => {
     const malformedBegin = await request(app)
       .post('/auth/passkey/authentication/begin')
       .set('Origin', 'http://localhost:8080')
-      .send({ email: 'person@example.test', pinVerified: 'false' });
+      .send({ email: 'person@example.test' });
     const credentials = await request(app).get('/auth/passkey/credentials');
 
     expect(registration.status).toBe(400);
     expect(authentication.status).toBe(400);
-    expect(malformedBegin.status).toBe(400);
+    expect(malformedBegin.status).toBe(403);
     expect(credentials.status).toBe(401);
     expect(JSON.stringify({ registration: registration.body, authentication: authentication.body })).not.toContain(
       'privateKey',
@@ -135,7 +218,7 @@ describe('passkey account ceremony router', () => {
     const response = await request(createApp())
       .post('/auth/passkey/authentication/begin')
       .set('Origin', 'https://evil.example.test')
-      .send({ email: 'person@example.test', pinVerified: true });
+      .send({ email: 'person@example.test' });
 
     expect(response.status).toBe(403);
     expect(response.body.code).toBe('csrf_origin_invalid');
@@ -148,13 +231,13 @@ describe('passkey account ceremony router', () => {
       await request(app)
         .post('/auth/passkey/authentication/begin')
         .set('Origin', 'http://localhost:8080')
-        .send({ email: 'rate@example.test', pinVerified: true });
+        .send({ email: 'rate@example.test' });
     }
 
     const response = await request(app)
       .post('/auth/passkey/authentication/begin')
       .set('Origin', 'http://localhost:8080')
-      .send({ email: 'rate@example.test', pinVerified: true });
+      .send({ email: 'rate@example.test' });
 
     expect(response.status).toBe(429);
     expect(response.headers['retry-after']).toBeDefined();
@@ -172,7 +255,7 @@ describe('passkey account ceremony router', () => {
     const unknown = await request(app)
       .post('/auth/passkey/authentication/begin')
       .set('Origin', 'http://localhost:8080')
-      .send({ email: 'unknown@example.test', pinVerified: true });
+      .send({ email: 'unknown@example.test' });
 
     expect(unknown.status).toBe(404);
     expect(unknown.body.code).toBe(PASSKEY_ACCOUNT_UNAVAILABLE);

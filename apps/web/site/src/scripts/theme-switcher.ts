@@ -1,95 +1,34 @@
+const THEME_KEY = 'themis.theme';
+
 const initThemeSwitcher = () => {
   const html = document.documentElement;
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.theme-switch-label');
 
-  const labels = document.querySelectorAll<HTMLElement>('.theme-switch-label');
+  const render = (isDark: boolean) => {
+    html.classList.toggle('dark', isDark);
+    html.style.colorScheme = isDark ? 'dark' : 'light';
 
-  const savedTheme = localStorage.getItem('theme');
+    buttons.forEach((button) => {
+      const lightIcon = button.querySelector<SVGElement>('.theme-icon-light');
+      const darkIcon = button.querySelector<SVGElement>('.theme-icon-dark');
 
-  const systemDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+      button.setAttribute('aria-pressed', String(isDark));
+      button.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
 
-  let isDark = false;
+      lightIcon?.classList.toggle('hidden', isDark);
+      darkIcon?.classList.toggle('hidden', !isDark);
+    });
+  };
 
-  if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
-    html.classList.add('dark');
-    isDark = true;
-  } else {
-    html.classList.remove('dark');
-    isDark = false;
-  }
+  render(html.classList.contains('dark'));
 
-  labels.forEach((label) => {
-    const input = label.querySelector<HTMLInputElement>('.theme-switch-input');
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const isDark = !html.classList.contains('dark');
 
-    const iconLight = label.querySelector<HTMLElement>('.theme-icon-light');
+      localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
 
-    const iconDark = label.querySelector<HTMLElement>('.theme-icon-dark');
-
-    if (!input || !iconLight || !iconDark) {
-      return;
-    }
-
-    if (isDark) {
-      input.checked = true;
-      iconDark.classList.remove('hidden', 'upward-enter', 'upward-leave');
-      iconLight.classList.add('hidden');
-    } else {
-      input.checked = false;
-      iconLight.classList.remove('hidden', 'upward-enter', 'upward-leave');
-      iconDark.classList.add('hidden');
-    }
-
-    function toggleTheme(event?: Event) {
-      if (event?.type === 'click') {
-        event.preventDefault();
-      }
-
-      isDark = !html.classList.contains('dark');
-      html.classList.toggle('dark', isDark);
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-
-      labels.forEach((currentLabel) => {
-        const currentInput = currentLabel.querySelector<HTMLInputElement>('.theme-switch-input');
-
-        const currentLightIcon = currentLabel.querySelector<HTMLElement>('.theme-icon-light');
-
-        const currentDarkIcon = currentLabel.querySelector<HTMLElement>('.theme-icon-dark');
-
-        if (!currentInput || !currentLightIcon || !currentDarkIcon) {
-          return;
-        }
-
-        currentInput.checked = isDark;
-
-        if (isDark) {
-          currentLightIcon.classList.remove('upward-enter');
-          currentLightIcon.classList.add('upward-leave');
-
-          window.setTimeout(() => {
-            currentLightIcon.classList.add('hidden');
-            currentDarkIcon.classList.remove('hidden', 'upward-leave');
-            currentDarkIcon.classList.add('upward-enter');
-          }, 350);
-
-          return;
-        }
-
-        currentDarkIcon.classList.remove('upward-enter');
-        currentDarkIcon.classList.add('upward-leave');
-
-        window.setTimeout(() => {
-          currentDarkIcon.classList.add('hidden');
-          currentLightIcon.classList.remove('hidden', 'upward-leave');
-          currentLightIcon.classList.add('upward-enter');
-        }, 350);
-      });
-    }
-
-    label.addEventListener('click', toggleTheme);
-    label.addEventListener('keyup', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        toggleTheme();
-      }
+      render(isDark);
     });
   });
 };

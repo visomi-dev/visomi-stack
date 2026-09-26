@@ -60,7 +60,7 @@ The cloud orchestrator is the existing composition of these runtime projects:
 | Seam                                 | Current repository owner | Current responsibility                                                            | Migration constraint                                                                                                  |
 | ------------------------------------ | ------------------------ | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | HTTP/auth                            | `apps/web/api`           | Express routers, sessions, tenant checks, project routes                          | Must validate account/device/capability metadata without becoming a plaintext reader                                  |
-| Persistence/runtime primitives       | `libs/shared`            | Drizzle schema, PostgreSQL/PGlite, Redis, sessions, env, HTTP helpers             | Shared infrastructure can transport opaque records; protected content must not remain in generic readable fields      |
+| Persistence/runtime primitives       | `libs/backend/shared`    | Drizzle schema, PostgreSQL/PGlite, Redis, sessions, env, HTTP helpers             | Shared infrastructure can transport opaque records; protected content must not remain in generic readable fields      |
 | Project domain contracts and records | `libs/projects`          | Project/document contracts, project service, async-job records, seed queue/events | This is the feature seam for versioned envelope and migration contracts; current records are readable text/state      |
 | Background execution                 | `apps/worker`            | BullMQ bootstrap and project-seed worker                                          | Workers must process opaque envelopes or explicitly mediated operations, not project plaintext                        |
 | Realtime delivery                    | `apps/web/realtime`      | Socket.IO auth, subscription, Redis-backed fanout                                 | Events and job payloads inherit the classification of their contents; sensitive narratives must be encrypted/redacted |
@@ -72,7 +72,7 @@ Current graph dependencies are: `api -> projects -> shared`, `app -> projects`, 
 
 ### Project foundation
 
-`libs/shared/src/lib/db/schema.ts` currently stores the following migration-relevant tables:
+`libs/backend/shared/src/lib/db/schema.ts` currently stores the following migration-relevant tables:
 
 - `projects`: account-scoped name, slug, summary, status, source, and creator.
 - `project_documents`: account/project-scoped title, type, status, and `content_markdown`.

@@ -2,6 +2,8 @@ import { createDocument } from 'zod-openapi';
 
 import { activationOpenApiPaths } from '../../activation/activation-router';
 import { authOpenApiPaths } from '../../auth/auth-router';
+import { accountPaths } from '../../account/account-schemas';
+import { sessionPaths } from '../../auth/session-schemas';
 import { passkeyOpenApiPaths } from '../../auth/passkey-router';
 import { capabilityOpenApiPaths } from '../../capabilities/capability-router';
 import { projectsOpenApiPaths } from '../../projects/projects-router';
@@ -13,11 +15,13 @@ function createOpenApiDocument() {
   const document = createDocument({
     openapi: '3.1.0',
     info: {
-      title: 'Themis API',
+      title: 'Visomi Stack API',
       version: '0.1.0',
     },
     paths: {
       ...authOpenApiPaths,
+      ...accountPaths,
+      ...sessionPaths,
       ...passkeyOpenApiPaths,
       ...activationOpenApiPaths,
       ...projectsOpenApiPaths,

@@ -26,7 +26,7 @@ import {
 
 const projectsRouter = Router();
 
-projectsRouter.use(authed());
+projectsRouter.use(authed({ authority: 'full' }));
 
 projectsRouter.get('/', async function listProjectsHandler(req, res) {
   const projects = await listProjects(authedContext(req));

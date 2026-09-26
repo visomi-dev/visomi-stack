@@ -29,7 +29,7 @@ describe('activatedGuard', () => {
     TestBed.inject(HttpTestingController).verify();
   });
 
-  it('redirects to /sign-in when no session is loaded and never hits the API', async () => {
+  it('redirects to /auth/identity when no session is loaded and never hits the API', async () => {
     const auth = TestBed.inject(Auth);
     const router = TestBed.inject(Router);
 
