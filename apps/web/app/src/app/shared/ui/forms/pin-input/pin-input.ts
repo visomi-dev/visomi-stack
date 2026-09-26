@@ -47,9 +47,6 @@ const navigationKeys = Object.freeze(['Backspace', 'ArrowLeft', 'ArrowRight', 'D
   styleUrl: './pin-input.css',
 })
 export class PinInput {
-  private readonly inputs = viewChildren<ElementRef<HTMLInputElement>>('inputs');
-
-  readonly formField = input.required<Field<string>>();
   readonly ariaDescribedBy = input<string | null>(null);
   readonly ariaLabel = input('Verification code');
   readonly digits = input(6, { transform: numberAttribute });
@@ -59,7 +56,6 @@ export class PinInput {
   readonly label = input('');
   readonly loading = input(false, { transform: booleanAttribute });
   readonly digitPattern = input('[0-9a-zA-Z]{1}');
-
   readonly completed = output<PinValue>();
   readonly valueChanges = output<PinValue>();
 
@@ -75,26 +71,9 @@ export class PinInput {
     ),
   );
 
-  private readonly syncEffect = effect(() => {
-    const value = this.formField()().value();
-    const normalized = this.normalizeValue(value);
+  readonly formField = input.required<Field<string>>();
 
-    untracked(() => {
-      const inputs = this.inputs();
-
-      for (let index = 0; index < inputs.length; index++) {
-        const cell = inputs[index];
-
-        if (!cell) {
-          continue;
-        }
-
-        cell.nativeElement.value = normalized[index] ?? '';
-      }
-
-      this.valueChanges.emit({ code: value });
-    });
-  });
+  private readonly inputs = viewChildren<ElementRef<HTMLInputElement>>('inputs');
 
   id(index: number): string {
     return `${this.idPrefix()}-${index + 1}`;
@@ -266,4 +245,25 @@ export class PinInput {
 
     return 6;
   }
+
+  private readonly syncEffect = effect(() => {
+    const value = this.formField()().value();
+    const normalized = this.normalizeValue(value);
+
+    untracked(() => {
+      const inputs = this.inputs();
+
+      for (let index = 0; index < inputs.length; index++) {
+        const cell = inputs[index];
+
+        if (!cell) {
+          continue;
+        }
+
+        cell.nativeElement.value = normalized[index] ?? '';
+      }
+
+      this.valueChanges.emit({ code: value });
+    });
+  });
 }

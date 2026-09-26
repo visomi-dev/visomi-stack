@@ -7,9 +7,9 @@ import { Directive, ElementRef, inject, output } from '@angular/core';
   selector: '[appClickOutside]',
 })
 export class ClickOutside {
-  private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
-
   readonly clickOutside = output<PointerEvent>();
+
+  private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
 
   onPointerDown(event: PointerEvent): void {
     if (!this.elementRef.nativeElement.contains(event.target as Node)) {

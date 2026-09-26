@@ -23,20 +23,21 @@ import {
   styleUrl: './dropdown.css',
 })
 export class Dropdown implements AfterContentInit, OnDestroy {
+  private readonly destroyRef = inject(DestroyRef);
+
   readonly align = input<'start' | 'end'>('start');
-  protected readonly positions = computed<ConnectedPosition[]>(() => [
-    { originX: this.align(), originY: 'bottom', overlayX: this.align(), overlayY: 'top', offsetY: 8 },
-    { originX: this.align(), originY: 'top', overlayX: this.align(), overlayY: 'bottom', offsetY: -8 },
-  ]);
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly openChange = output<boolean>();
 
   readonly open = signal(false);
 
+  protected readonly positions = computed<ConnectedPosition[]>(() => [
+    { originX: this.align(), originY: 'bottom', overlayX: this.align(), overlayY: 'top', offsetY: 8 },
+    { originX: this.align(), originY: 'top', overlayX: this.align(), overlayY: 'bottom', offsetY: -8 },
+  ]);
+
   @ContentChild('[data-slot=trigger]', { descendants: true, read: ElementRef, static: true })
   private readonly triggerRef?: ElementRef<HTMLElement>;
-
-  private readonly destroyRef = inject(DestroyRef);
 
   constructor() {
     this.destroyRef.onDestroy(() => this.detachTriggerListeners());
@@ -56,10 +57,6 @@ export class Dropdown implements AfterContentInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.detachTriggerListeners();
-  }
-
-  private detachTriggerListeners(): void {
-    this.triggerRef?.nativeElement.removeEventListener('keydown', this.onTriggerKeydown);
   }
 
   toggle(): void {
@@ -99,16 +96,20 @@ export class Dropdown implements AfterContentInit, OnDestroy {
     }
   }
 
+  handleKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.close();
+    }
+  }
+
+  private detachTriggerListeners(): void {
+    this.triggerRef?.nativeElement.removeEventListener('keydown', this.onTriggerKeydown);
+  }
+
   private readonly onTriggerKeydown = (event: KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       this.toggle();
     }
   };
-
-  handleKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      this.close();
-    }
-  }
 }

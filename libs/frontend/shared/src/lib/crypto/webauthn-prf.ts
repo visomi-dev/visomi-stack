@@ -167,8 +167,9 @@ export class RecoveryMaterialStore {
 }
 
 export class WebAuthnPrfAuthenticator implements BrowserVaultAuthenticator {
-  private capability: WebAuthnCapability = 'unavailable';
   private readonly recovery = new RecoveryMaterialStore();
+
+  private capability: WebAuthnCapability = 'unavailable';
 
   constructor(
     private readonly ceremony: WebAuthnCeremony,

@@ -10,6 +10,7 @@ import { Input } from './input';
 })
 class Host {
   readonly model = signal({ name: 'Ada' });
+
   readonly f: FieldTree<{ name: string }> = form(this.model, () => undefined);
 }
 

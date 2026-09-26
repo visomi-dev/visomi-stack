@@ -267,67 +267,6 @@ export class ProjectWorkflowStore {
     return { projectId, name, status };
   }
 
-  private assertHealthy(): void {
-    try {
-      readState(this.directory);
-    } catch {
-      throw new WorkflowError(`Corrupt project store for ${this.registration.projectId}`, 'CORRUPT_STORE');
-    }
-  }
-
-  private scopedEntity(entityId: string, kind: string): void {
-    const state = readState(this.directory);
-    const projectId = this.registration.projectId;
-    const matches =
-      (kind === 'project' && state.projects.some((project) => project.id === entityId && project.id === projectId)) ||
-      (kind === 'epic' && state.epics.some((epic) => epic.id === entityId && epic.projectId === projectId)) ||
-      (kind === 'workItem' && state.workItems.some((item) => item.id === entityId && item.projectId === projectId)) ||
-      (kind === 'sprint' && state.sprints.some((sprint) => sprint.id === entityId && sprint.projectId === projectId)) ||
-      (kind === 'run' &&
-        state.runs.some(
-          (run) =>
-            run.id === entityId &&
-            state.workItems.some((item) => item.id === run.workItemId && item.projectId === projectId),
-        )) ||
-      (kind === 'review' &&
-        state.reviews.some(
-          (review) =>
-            review.id === entityId &&
-            state.workItems.some((item) => item.id === review.workItemId && item.projectId === projectId),
-        ));
-    if (!matches) throw new WorkflowError(`${kind} is outside project ${projectId}`, 'UNKNOWN_PROJECT');
-  }
-
-  private scopedState(): ThemisState {
-    const state = readState(this.directory);
-    const projectId = this.registration.projectId;
-    const projectIds = new Set([projectId]);
-    const epics = state.epics.filter((epic) => epic.projectId === projectId);
-    const workItems = state.workItems.filter((item) => item.projectId === projectId);
-    const sprints = state.sprints.filter((sprint) => sprint.projectId === projectId);
-    const workItemIds = new Set(workItems.map((item) => item.id));
-    const sprintIds = new Set(sprints.map((sprint) => sprint.id));
-    const runIds = new Set(state.runs.filter((run) => workItemIds.has(run.workItemId)).map((run) => run.id));
-    return {
-      ...state,
-      projects: state.projects.filter((project) => projectIds.has(project.id)),
-      epics,
-      workItems,
-      dependencies: state.dependencies.filter(
-        (dependency) => workItemIds.has(dependency.from) && workItemIds.has(dependency.to),
-      ),
-      sprints,
-      sprintItems: state.sprintItems.filter(
-        (membership) => sprintIds.has(membership.sprintId) && workItemIds.has(membership.workItemId),
-      ),
-      revisions: state.revisions.filter((revision) => revision.projectId === projectId),
-      runs: state.runs.filter((run) => runIds.has(run.id)),
-      evidence: state.evidence.filter((evidence) => runIds.has(evidence.runId)),
-      sprintEvidence: state.sprintEvidence.filter((evidence) => sprintIds.has(evidence.sprintId)),
-      reviews: state.reviews.filter((review) => workItemIds.has(review.workItemId) && runIds.has(review.runId)),
-    };
-  }
-
   append(type: string, actor: string, payload: Record<string, unknown>): WorkflowEvent {
     const key = this.registration.projectId;
     return withFilesystemLock(join(this.directory, '.project.lock'), () => {
@@ -548,6 +487,67 @@ export class ProjectWorkflowStore {
         healthy();
         return workspaceStatus(root);
       },
+    };
+  }
+
+  private assertHealthy(): void {
+    try {
+      readState(this.directory);
+    } catch {
+      throw new WorkflowError(`Corrupt project store for ${this.registration.projectId}`, 'CORRUPT_STORE');
+    }
+  }
+
+  private scopedEntity(entityId: string, kind: string): void {
+    const state = readState(this.directory);
+    const projectId = this.registration.projectId;
+    const matches =
+      (kind === 'project' && state.projects.some((project) => project.id === entityId && project.id === projectId)) ||
+      (kind === 'epic' && state.epics.some((epic) => epic.id === entityId && epic.projectId === projectId)) ||
+      (kind === 'workItem' && state.workItems.some((item) => item.id === entityId && item.projectId === projectId)) ||
+      (kind === 'sprint' && state.sprints.some((sprint) => sprint.id === entityId && sprint.projectId === projectId)) ||
+      (kind === 'run' &&
+        state.runs.some(
+          (run) =>
+            run.id === entityId &&
+            state.workItems.some((item) => item.id === run.workItemId && item.projectId === projectId),
+        )) ||
+      (kind === 'review' &&
+        state.reviews.some(
+          (review) =>
+            review.id === entityId &&
+            state.workItems.some((item) => item.id === review.workItemId && item.projectId === projectId),
+        ));
+    if (!matches) throw new WorkflowError(`${kind} is outside project ${projectId}`, 'UNKNOWN_PROJECT');
+  }
+
+  private scopedState(): ThemisState {
+    const state = readState(this.directory);
+    const projectId = this.registration.projectId;
+    const projectIds = new Set([projectId]);
+    const epics = state.epics.filter((epic) => epic.projectId === projectId);
+    const workItems = state.workItems.filter((item) => item.projectId === projectId);
+    const sprints = state.sprints.filter((sprint) => sprint.projectId === projectId);
+    const workItemIds = new Set(workItems.map((item) => item.id));
+    const sprintIds = new Set(sprints.map((sprint) => sprint.id));
+    const runIds = new Set(state.runs.filter((run) => workItemIds.has(run.workItemId)).map((run) => run.id));
+    return {
+      ...state,
+      projects: state.projects.filter((project) => projectIds.has(project.id)),
+      epics,
+      workItems,
+      dependencies: state.dependencies.filter(
+        (dependency) => workItemIds.has(dependency.from) && workItemIds.has(dependency.to),
+      ),
+      sprints,
+      sprintItems: state.sprintItems.filter(
+        (membership) => sprintIds.has(membership.sprintId) && workItemIds.has(membership.workItemId),
+      ),
+      revisions: state.revisions.filter((revision) => revision.projectId === projectId),
+      runs: state.runs.filter((run) => runIds.has(run.id)),
+      evidence: state.evidence.filter((evidence) => runIds.has(evidence.runId)),
+      sprintEvidence: state.sprintEvidence.filter((evidence) => sprintIds.has(evidence.sprintId)),
+      reviews: state.reviews.filter((review) => workItemIds.has(review.workItemId) && runIds.has(review.runId)),
     };
   }
 }

@@ -20,9 +20,6 @@ import { uiClass } from '../../classes';
   styleUrl: './textarea.css',
 })
 export class Textarea {
-  private readonly textareaRef = viewChild<ElementRef<HTMLTextAreaElement>>('textareaEl');
-
-  readonly formField = input.required<Field<string>>();
   readonly ariaDescribedBy = input<string | null>(null);
   readonly controlId = input<string | null>(null);
   readonly disabled = input(false, { transform: booleanAttribute });
@@ -43,14 +40,9 @@ export class Textarea {
     ),
   );
 
-  private readonly syncEffect = effect(() => {
-    const ref = this.textareaRef();
-    const value = this.formField()().value();
+  readonly formField = input.required<Field<string>>();
 
-    if (ref) {
-      ref.nativeElement.value = value ?? '';
-    }
-  });
+  private readonly textareaRef = viewChild<ElementRef<HTMLTextAreaElement>>('textareaEl');
 
   onInput(event: Event): void {
     const nextValue = (event.target as HTMLTextAreaElement).value;
@@ -62,4 +54,13 @@ export class Textarea {
   onBlur(): void {
     this.formField()().markAsTouched();
   }
+
+  private readonly syncEffect = effect(() => {
+    const ref = this.textareaRef();
+    const value = this.formField()().value();
+
+    if (ref) {
+      ref.nativeElement.value = value ?? '';
+    }
+  });
 }

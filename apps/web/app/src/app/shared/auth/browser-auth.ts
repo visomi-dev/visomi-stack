@@ -30,8 +30,9 @@ export class BrowserAuth extends Auth {
   private readonly $emailOtpSubmitting = signal(false);
   private readonly $passkeySubmitting = signal(false);
 
-  readonly emailOtpSubmitting = this.$emailOtpSubmitting.asReadonly();
   readonly isAuthenticated = computed(() => this.$user() !== null);
+
+  readonly emailOtpSubmitting = this.$emailOtpSubmitting.asReadonly();
   readonly passkeySubmitting = this.$passkeySubmitting.asReadonly();
   readonly sessionLoaded = this.$sessionLoaded.asReadonly();
   readonly user = this.$user.asReadonly();

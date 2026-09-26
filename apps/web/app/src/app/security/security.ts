@@ -34,31 +34,15 @@ export class Security {
   private readonly http = inject(HttpClient);
   private readonly security = inject(SecurityAuth);
   private readonly action = inject(SecurityAction);
-  protected readonly passwordUrl = `/${PASSWORD_MANAGEMENT_PATH}`;
-  protected readonly recoveryUrl = `/${RECOVERY_CODES_PATH}`;
-  protected readonly googleUrl = `/${GOOGLE_LINK_PATH}`;
+
   readonly overviewLoading = signal(true);
   readonly overviewError = signal('');
   readonly mutationBusy = signal(false);
   readonly notice = signal('');
   readonly firstPasskeyFlow = signal<PasswordSignInPending | null>(null);
   readonly enrollmentAuthorized = signal(false);
-  readonly identityEnrollmentAvailable = computed(() =>
-    Boolean(
-      !this.credentials().length &&
-      this.overview()?.googleLinkEnabled &&
-      this.overview()?.federatedIdentities.some((identity) => identity.provider === 'google'),
-    ),
-  );
   readonly enrollmentBusy = signal(false);
   readonly enrollmentModel = signal({ password: '', code: '' });
-  readonly enrollmentForm = form(this.enrollmentModel, (path) => {
-    required(path.password, { when: () => !this.firstPasskeyFlow() });
-    required(path.code, { when: () => !!this.firstPasskeyFlow() });
-    minLength(path.code, 6, { when: () => !!this.firstPasskeyFlow() });
-    maxLength(path.code, 6);
-    pattern(path.code, /^\d*$/);
-  });
   readonly pendingRemoval = signal<{ kind: 'federated' | 'device'; id: string } | null>(null);
   readonly loading = signal(true);
   readonly error = signal('');
@@ -66,13 +50,31 @@ export class Security {
   readonly view = signal<View>('list');
   readonly selected = signal<PasskeyCredential | null>(null);
   readonly nameModel = signal({ name: '' });
+  readonly passkeyLoading = signal(true);
+  readonly passkeySubmitting = signal(false);
+  readonly passkeyError = signal('');
+  readonly overview = signal<SecurityOverview | null>(null);
+
+  readonly enrollmentForm = form(this.enrollmentModel, (path) => {
+    required(path.password, { when: () => !this.firstPasskeyFlow() });
+    required(path.code, { when: () => !!this.firstPasskeyFlow() });
+    minLength(path.code, 6, { when: () => !!this.firstPasskeyFlow() });
+    maxLength(path.code, 6);
+    pattern(path.code, /^\d*$/);
+  });
   readonly nameForm = form(this.nameModel, (path) => {
     required(path.name);
     maxLength(path.name, 64);
   });
+
+  readonly identityEnrollmentAvailable = computed(() =>
+    Boolean(
+      !this.credentials().length &&
+      this.overview()?.googleLinkEnabled &&
+      this.overview()?.federatedIdentities.some((identity) => identity.provider === 'google'),
+    ),
+  );
   readonly passkeyName = computed(() => this.nameModel().name);
-  readonly passkeyLoading = signal(true);
-  readonly passkeySubmitting = signal(false);
   protected readonly addSubmitLabel = computed(() =>
     this.passkeySubmitting()
       ? $localize`:@@securityWaitingConfirmation:Waiting for confirmation...`
@@ -83,8 +85,10 @@ export class Security {
       ? $localize`:@@securityConfirming:Confirming...`
       : $localize`:@@securityConfirmRevoke:Confirm passkey and revoke`,
   );
-  readonly passkeyError = signal('');
-  readonly overview = signal<SecurityOverview | null>(null);
+
+  protected readonly passwordUrl = `/${PASSWORD_MANAGEMENT_PATH}`;
+  protected readonly recoveryUrl = `/${RECOVERY_CODES_PATH}`;
+  protected readonly googleUrl = `/${GOOGLE_LINK_PATH}`;
 
   constructor() {
     void this.loadCredentials();
@@ -97,64 +101,6 @@ export class Security {
 
   async revokeTrustedDevice(id: string): Promise<void> {
     await this.runOverviewMutation(`/api/auth/security/devices/${encodeURIComponent(id)}`);
-  }
-
-  protected requestRemoval(kind: 'federated' | 'device', id: string): void {
-    this.pendingRemoval.set({ kind, id });
-  }
-
-  protected async confirmRemoval(): Promise<void> {
-    const selected = this.pendingRemoval();
-
-    if (!selected || this.mutationBusy()) return;
-    if (selected.kind === 'federated') await this.revokeFederatedIdentity(selected.id);
-    else await this.revokeTrustedDevice(selected.id);
-    this.pendingRemoval.set(null);
-  }
-
-  private async runOverviewMutation(url: string, identityId?: string): Promise<void> {
-    if (this.mutationBusy()) return;
-    this.mutationBusy.set(true);
-    this.overviewError.set('');
-    this.notice.set('');
-    try {
-      const remove = async (grantId?: string) => {
-        await firstValueFrom(this.http.delete(url, { body: grantId ? { grantId } : undefined }));
-        await this.loadOverview();
-        this.notice.set($localize`:@@securityAccessRemoved:Access through this method has been removed.`);
-      };
-
-      if (identityId) {
-        await this.action.run(
-          {
-            authority: 'operation',
-            purpose: 'google_unlink',
-            targetId: identityId,
-            summary: $localize`:@@securityGoogleUnlinkConfirm:Confirm your identity to remove Google sign-in.`,
-          },
-          remove,
-        );
-      } else await remove();
-    } catch (error) {
-      this.overviewError.set(
-        error instanceof HttpErrorResponse && error.error?.code === 'last_access_method'
-          ? $localize`:@@securityKeepAccessMethod:Set up and verify another sign-in method before removing this one.`
-          : $localize`:@@securityUpdateFailed:We could not update this access method. Check its current status before trying again.`,
-      );
-    } finally {
-      this.mutationBusy.set(false);
-    }
-  }
-
-  protected recoveryEvent(event: string): string {
-    if (event === 'recovery_codes_regenerated') return $localize`:@@securityCodesReplaced:Recovery codes replaced`;
-    if (event === 'recovery_started') return $localize`:@@securityRecoveryStarted:Account recovery started`;
-
-    return $localize`:@@securityRecoveryActivity:Account recovery activity`;
-  }
-
-  protected methodStatus(enabled: boolean): string {
-    return enabled ? $localize`:@@securityEnabled:Enabled` : $localize`:@@securityNotConfigured:Not set up`;
   }
 
   async loadCredentials() {
@@ -274,41 +220,28 @@ export class Security {
     );
   }
 
-  private async currentUser() {
-    await this.auth.ensureSessionLoaded();
-
-    return this.auth.user();
+  protected requestRemoval(kind: 'federated' | 'device', id: string): void {
+    this.pendingRemoval.set({ kind, id });
   }
 
-  private async runPasskeyMutation(
-    purpose: 'passkey_add' | 'passkey_rename' | 'passkey_revoke',
-    summary: string,
-    mutation: () => Promise<void>,
-  ) {
-    this.passkeySubmitting.set(true);
-    this.passkeyError.set('');
-    try {
-      if (purpose === 'passkey_add' && this.enrollmentAuthorized()) {
-        await mutation();
-      } else
-        await this.action.run(
-          {
-            authority: 'passkey',
-            purpose,
-            targetId: this.selected()?.id ?? 'new-passkey',
-            summary: `${summary} ${this.selected()?.label ?? this.passkeyName()}`,
-          },
-          mutation,
-        );
-    } catch (error) {
-      this.passkeyError.set(
-        error instanceof HttpErrorResponse && error.error?.code === 'last_access_method'
-          ? $localize`:@@securityKeepAccessMethod:Set up and verify another sign-in method before removing this one.`
-          : $localize`:@@securityPasskeyActionFailed:We could not complete this passkey action. Check its current status before trying again.`,
-      );
-    } finally {
-      this.passkeySubmitting.set(false);
-    }
+  protected async confirmRemoval(): Promise<void> {
+    const selected = this.pendingRemoval();
+
+    if (!selected || this.mutationBusy()) return;
+    if (selected.kind === 'federated') await this.revokeFederatedIdentity(selected.id);
+    else await this.revokeTrustedDevice(selected.id);
+    this.pendingRemoval.set(null);
+  }
+
+  protected recoveryEvent(event: string): string {
+    if (event === 'recovery_codes_regenerated') return $localize`:@@securityCodesReplaced:Recovery codes replaced`;
+    if (event === 'recovery_started') return $localize`:@@securityRecoveryStarted:Account recovery started`;
+
+    return $localize`:@@securityRecoveryActivity:Account recovery activity`;
+  }
+
+  protected methodStatus(enabled: boolean): string {
+    return enabled ? $localize`:@@securityEnabled:Enabled` : $localize`:@@securityNotConfigured:Not set up`;
   }
 
   protected async authorizeFirstPasskey(): Promise<void> {
@@ -365,6 +298,77 @@ export class Security {
       );
     } finally {
       this.enrollmentBusy.set(false);
+    }
+  }
+
+  private async runOverviewMutation(url: string, identityId?: string): Promise<void> {
+    if (this.mutationBusy()) return;
+    this.mutationBusy.set(true);
+    this.overviewError.set('');
+    this.notice.set('');
+    try {
+      const remove = async (grantId?: string) => {
+        await firstValueFrom(this.http.delete(url, { body: grantId ? { grantId } : undefined }));
+        await this.loadOverview();
+        this.notice.set($localize`:@@securityAccessRemoved:Access through this method has been removed.`);
+      };
+
+      if (identityId) {
+        await this.action.run(
+          {
+            authority: 'operation',
+            purpose: 'google_unlink',
+            targetId: identityId,
+            summary: $localize`:@@securityGoogleUnlinkConfirm:Confirm your identity to remove Google sign-in.`,
+          },
+          remove,
+        );
+      } else await remove();
+    } catch (error) {
+      this.overviewError.set(
+        error instanceof HttpErrorResponse && error.error?.code === 'last_access_method'
+          ? $localize`:@@securityKeepAccessMethod:Set up and verify another sign-in method before removing this one.`
+          : $localize`:@@securityUpdateFailed:We could not update this access method. Check its current status before trying again.`,
+      );
+    } finally {
+      this.mutationBusy.set(false);
+    }
+  }
+
+  private async currentUser() {
+    await this.auth.ensureSessionLoaded();
+
+    return this.auth.user();
+  }
+
+  private async runPasskeyMutation(
+    purpose: 'passkey_add' | 'passkey_rename' | 'passkey_revoke',
+    summary: string,
+    mutation: () => Promise<void>,
+  ) {
+    this.passkeySubmitting.set(true);
+    this.passkeyError.set('');
+    try {
+      if (purpose === 'passkey_add' && this.enrollmentAuthorized()) {
+        await mutation();
+      } else
+        await this.action.run(
+          {
+            authority: 'passkey',
+            purpose,
+            targetId: this.selected()?.id ?? 'new-passkey',
+            summary: `${summary} ${this.selected()?.label ?? this.passkeyName()}`,
+          },
+          mutation,
+        );
+    } catch (error) {
+      this.passkeyError.set(
+        error instanceof HttpErrorResponse && error.error?.code === 'last_access_method'
+          ? $localize`:@@securityKeepAccessMethod:Set up and verify another sign-in method before removing this one.`
+          : $localize`:@@securityPasskeyActionFailed:We could not complete this passkey action. Check its current status before trying again.`,
+      );
+    } finally {
+      this.passkeySubmitting.set(false);
     }
   }
 }

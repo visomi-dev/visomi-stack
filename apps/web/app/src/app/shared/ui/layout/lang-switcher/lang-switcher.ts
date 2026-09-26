@@ -17,11 +17,12 @@ const DEFAULT_LANG_STORAGE_KEY = 'tm-lang';
 })
 export class LangSwitcher {
   readonly default = input<string>('EN');
-  readonly options = input.required<ReadonlyArray<LanguageOption>>();
   readonly storageKey = input<string>(DEFAULT_LANG_STORAGE_KEY);
 
   readonly current = signal<string>('');
   readonly open = signal(false);
+
+  readonly options = input.required<ReadonlyArray<LanguageOption>>();
 
   readonly labelFor = computed(() => {
     const code = this.current();

@@ -14,6 +14,7 @@ export type VerifiedLocalAgentContext = Readonly<{
 export class LocalAgentContextAuthority {
   private readonly revokedSessions = new Set<string>();
   private readonly sessions = new Map<string, VerifiedLocalAgentContext>();
+
   private locked = false;
 
   public constructor(private readonly devices: DeviceIdentityStore) {}

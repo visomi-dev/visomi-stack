@@ -11,12 +11,6 @@ export class BrowserClipboard extends Clipboard {
 
   readonly available = this.$available.asReadonly();
 
-  readonly resolveAvailability = afterNextRender(() => {
-    const clipboard = this.document.defaultView?.navigator?.clipboard;
-
-    this.$available.set(typeof clipboard?.writeText === 'function');
-  });
-
   async writeText(value: string): Promise<boolean> {
     const clipboard = this.document.defaultView?.navigator?.clipboard;
 
@@ -32,4 +26,10 @@ export class BrowserClipboard extends Clipboard {
       return false;
     }
   }
+
+  readonly resolveAvailability = afterNextRender(() => {
+    const clipboard = this.document.defaultView?.navigator?.clipboard;
+
+    this.$available.set(typeof clipboard?.writeText === 'function');
+  });
 }

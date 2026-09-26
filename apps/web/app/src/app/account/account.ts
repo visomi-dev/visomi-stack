@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { afterNextRender, Component, computed, inject, signal } from '@angular/core';
-import { disabled, FormField, FormRoot, email, form, maxLength, pattern, required } from '@angular/forms/signals';
+import { disabled, email, form, maxLength, pattern, required } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AccountProfile } from '../shared/auth/account-profile';
@@ -10,10 +10,17 @@ import { SecurityAction } from '../shared/auth/security-action';
 import { SecurityConfirmation } from '../shared/auth/security-confirmation/security-confirmation';
 import { Auth } from '../shared/auth/auth';
 import { SIGN_IN_URL } from '../shared/constants/routes';
+import { Form } from '../shared/ui/forms/form/form';
+import { Field } from '../shared/ui/forms/field/field';
+import { Input } from '../shared/ui/forms/input/input';
+import { Select } from '../shared/ui/forms/select/select';
+import { Label } from '../shared/ui/forms/label/label';
+import { ErrorMessage } from '../shared/ui/forms/error-message/error-message';
+import { Button } from '../shared/ui/actions/button/button';
 
 @Component({
   selector: 'app-account',
-  imports: [FormField, FormRoot, RouterLink, SecurityConfirmation],
+  imports: [Form, Field, Input, Select, Label, ErrorMessage, Button, RouterLink, SecurityConfirmation],
   providers: [SecurityAction],
   templateUrl: './account.html',
   styleUrl: './account.css',
@@ -24,19 +31,13 @@ export class Account {
   private readonly auth = inject(Auth);
   private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
+
   protected readonly data = signal(inject(ActivatedRoute).snapshot.data['account'] as AccountProfileData);
-  protected readonly selectedWorkspace = computed(() =>
-    this.data().memberships.find((membership) => membership.accountId === this.data().selectedAccountId),
-  );
   protected readonly busy = signal(false);
   protected readonly interactive = signal(false);
-  // Signal Forms attach their native listeners in the browser. Keep SSR controls
-  // disabled until that render completes so hydration cannot discard early edits.
-  private readonly enableFormsAfterRender = afterNextRender(() => this.interactive.set(true));
   protected readonly error = signal('');
   protected readonly notice = signal('');
   protected readonly finished = signal(false);
-  protected readonly signInUrl = SIGN_IN_URL;
   protected readonly challenge = signal<EmailChangeChallenge | null>(null);
   protected readonly profileModel = signal<ProfileUpdate>({
     displayName: this.data().profile.displayName,
@@ -50,10 +51,14 @@ export class Account {
             : 'en',
     },
   });
+  protected readonly emailModel = signal({ email: '' });
+  protected readonly codeModel = signal({ pin: '' });
+  protected readonly transferModel = signal({ targetUserId: '' });
+
   protected readonly profileForm = form(
     this.profileModel,
     (path) => {
-      disabled(path, () => !this.interactive());
+      disabled(path, { when: () => !this.interactive() });
       maxLength(path.displayName, 100, { message: $localize`:@@accountNameLength:Use 100 characters or fewer.` });
     },
     {
@@ -64,11 +69,10 @@ export class Account {
       },
     },
   );
-  protected readonly emailModel = signal({ email: '' });
   protected readonly emailForm = form(
     this.emailModel,
     (path) => {
-      disabled(path, () => !this.interactive());
+      disabled(path, { when: () => !this.interactive() });
       required(path.email, { message: $localize`:@@accountEmailRequired:Enter your new email address.` });
       email(path.email, { message: $localize`:@@accountEmailInvalid:Enter a valid email address.` });
       maxLength(path.email, 254, { message: $localize`:@@accountEmailLength:Use 254 characters or fewer.` });
@@ -81,11 +85,10 @@ export class Account {
       },
     },
   );
-  protected readonly codeModel = signal({ pin: '' });
   protected readonly codeForm = form(
     this.codeModel,
     (path) => {
-      disabled(path, () => !this.interactive());
+      disabled(path, { when: () => !this.interactive() });
       pattern(path.pin, /^\d{6}$/, {
         message: $localize`:@@accountCodeInvalid:Enter the 6-digit code sent to your new address.`,
       });
@@ -101,11 +104,10 @@ export class Account {
       },
     },
   );
-  protected readonly transferModel = signal({ targetUserId: '' });
   protected readonly transferForm = form(
     this.transferModel,
     (path) => {
-      disabled(path, () => !this.interactive());
+      disabled(path, { when: () => !this.interactive() });
       required(path.targetUserId, {
         message: $localize`:@@accountMemberRequired:Choose an existing workspace member.`,
       });
@@ -118,6 +120,58 @@ export class Account {
       },
     },
   );
+
+  protected readonly selectedWorkspace = computed(() =>
+    this.data().memberships.find((membership) => membership.accountId === this.data().selectedAccountId),
+  );
+
+  protected readonly signInUrl = SIGN_IN_URL;
+
+  protected async leaveWorkspace(): Promise<void> {
+    const workspace = this.selectedWorkspace();
+
+    if (!workspace) return;
+    await this.perform(async () => {
+      await this.action.run(
+        {
+          authority: 'operation',
+          purpose: 'workspace_leave',
+          targetId: workspace.accountId,
+          summary: $localize`:@@accountLeaveConfirm:Leave ${workspace.name}:workspace: immediately? Your identity, other memberships, and the shared workspace will be preserved.`,
+        },
+        async (grantId) => {
+          const result = await this.api.leave(grantId);
+
+          this.finished.set(true);
+          this.notice.set(
+            result.hasRemainingMemberships
+              ? $localize`:@@accountLeft:You left this workspace. Sign in again to access your other workspaces.`
+              : $localize`:@@accountLeftLast:You left this workspace. Your identity is preserved, but you no longer have workspace access. Ask a workspace owner for an invitation.`,
+          );
+          await this.refreshEndedSession();
+        },
+      );
+    });
+  }
+
+  protected async exportMetadata(): Promise<void> {
+    await this.perform(async () => {
+      const data = await this.api.exportMetadata();
+      const view = this.document.defaultView;
+
+      if (!view) return;
+      const url = view.URL.createObjectURL(
+        new view.Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }),
+      );
+      const link = this.document.createElement('a');
+
+      link.href = url;
+      link.download = 'profile-membership-metadata.json';
+      link.click();
+      view.setTimeout(() => view.URL.revokeObjectURL(url), 1000);
+      this.notice.set($localize`:@@accountExported:Your profile and membership metadata export is ready.`);
+    });
+  }
 
   private async perform(operation: () => Promise<void>): Promise<void> {
     if (!this.interactive() || this.busy() || this.finished()) return;
@@ -213,33 +267,6 @@ export class Account {
     });
   }
 
-  protected async leaveWorkspace(): Promise<void> {
-    const workspace = this.selectedWorkspace();
-
-    if (!workspace) return;
-    await this.perform(async () => {
-      await this.action.run(
-        {
-          authority: 'operation',
-          purpose: 'workspace_leave',
-          targetId: workspace.accountId,
-          summary: $localize`:@@accountLeaveConfirm:Leave ${workspace.name}:workspace: immediately? Your identity, other memberships, and the shared workspace will be preserved.`,
-        },
-        async (grantId) => {
-          const result = await this.api.leave(grantId);
-
-          this.finished.set(true);
-          this.notice.set(
-            result.hasRemainingMemberships
-              ? $localize`:@@accountLeft:You left this workspace. Sign in again to access your other workspaces.`
-              : $localize`:@@accountLeftLast:You left this workspace. Your identity is preserved, but you no longer have workspace access. Ask a workspace owner for an invitation.`,
-          );
-          await this.refreshEndedSession();
-        },
-      );
-    });
-  }
-
   private async refreshEndedSession(): Promise<void> {
     // The mutation is durable. A refresh failure must not be shown as a mutation failure.
     try {
@@ -247,25 +274,6 @@ export class Account {
     } catch {
       /* The sign-in link remains available. */
     }
-  }
-
-  protected async exportMetadata(): Promise<void> {
-    await this.perform(async () => {
-      const data = await this.api.exportMetadata();
-      const view = this.document.defaultView;
-
-      if (!view) return;
-      const url = view.URL.createObjectURL(
-        new view.Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }),
-      );
-      const link = this.document.createElement('a');
-
-      link.href = url;
-      link.download = 'profile-membership-metadata.json';
-      link.click();
-      view.setTimeout(() => view.URL.revokeObjectURL(url), 1000);
-      this.notice.set($localize`:@@accountExported:Your profile and membership metadata export is ready.`);
-    });
   }
 
   private failureMessage(error: unknown): string {
@@ -293,4 +301,8 @@ export class Account {
 
     return $localize`:@@accountRequestFailed:The request could not be completed. Check the current state before trying again.`;
   }
+
+  // Signal Forms attach their native listeners in the browser. Keep SSR controls
+  // disabled until that render completes so hydration cannot discard early edits.
+  private readonly enableFormsAfterRender = afterNextRender(() => this.interactive.set(true));
 }

@@ -4,8 +4,9 @@ type DurableReplayStoreOptions = { tableName?: string };
 
 class DurableReplayStore {
   private readonly tableName: string;
-  private ready: Promise<void> | undefined;
   private readonly fallback = new Set<string>();
+
+  private ready: Promise<void> | undefined;
 
   constructor(options: DurableReplayStoreOptions = {}) {
     this.tableName = options.tableName ?? 'themis_handshake_replays';

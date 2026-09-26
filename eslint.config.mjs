@@ -3,6 +3,8 @@ import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import { importX } from 'eslint-plugin-import-x';
 import * as tsParser from '@typescript-eslint/parser';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+import perfectionist from 'eslint-plugin-perfectionist';
+import stylistic from '@stylistic/eslint-plugin';
 import globals from 'globals';
 
 const importXFiles = ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'];
@@ -64,6 +66,8 @@ export default [
     },
     plugins: {
       unicorn: eslintPluginUnicorn,
+      perfectionist,
+      '@stylistic': stylistic,
     },
     settings: {
       'import-x/ignore': ['^astro:'],
@@ -72,6 +76,84 @@ export default [
     },
     rules: {
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+      '@stylistic/lines-between-class-members': 'off',
+      'perfectionist/sort-classes': [
+        'error',
+        {
+          // Group members without alphabetizing or discarding initialization dependencies.
+          type: 'unsorted',
+          // Keep fields compact within groups and separate behavioral members.
+          newlinesBetween: 1,
+          newlinesInside: 0,
+          newlinesBetweenOverloadSignatures: 0,
+          groups: [
+            'index-signature',
+            'static-property',
+            { group: 'static-block', newlinesInside: 1 },
+            'injected-dependencies',
+            'angular-bindings',
+            'angular-state',
+            'angular-forms',
+            'angular-computed',
+            'public-readonly-property',
+            'protected-readonly-property',
+            'private-readonly-property',
+            'public-property',
+            'protected-property',
+            'private-property',
+            'constructor',
+            {
+              group: ['public-get-method', 'public-set-method', 'public-method', 'public-function-property'],
+              newlinesInside: 1,
+            },
+            {
+              group: [
+                'protected-get-method',
+                'protected-set-method',
+                'protected-method',
+                'protected-function-property',
+              ],
+              newlinesInside: 1,
+            },
+            {
+              group: ['private-get-method', 'private-set-method', 'private-method', 'private-function-property'],
+              newlinesInside: 1,
+            },
+            'unknown',
+            { group: 'angular-effects', newlinesInside: 1 },
+          ],
+          customGroups: [
+            { groupName: 'static-property', selector: 'property', modifiers: ['static'] },
+            {
+              groupName: 'injected-dependencies',
+              selector: 'property',
+              elementValuePattern: '^inject(?:<[^>]*>)?\\s*\\(',
+            },
+            {
+              groupName: 'angular-bindings',
+              selector: 'property',
+              elementValuePattern:
+                '^(?:input|output|model|viewChild|viewChildren|contentChild|contentChildren)(?:\\.required)?(?:<[^>]*>)?\\s*\\(',
+            },
+            {
+              groupName: 'angular-state',
+              selector: 'property',
+              elementValuePattern: '^(?:signal|linkedSignal)(?:<[^>]*>)?\\s*\\(',
+            },
+            { groupName: 'angular-forms', selector: 'property', elementValuePattern: '^form(?:<[^>]*>)?\\s*\\(' },
+            {
+              groupName: 'angular-computed',
+              selector: 'property',
+              elementValuePattern: '^computed(?:<[^>]*>)?\\s*\\(',
+            },
+            {
+              groupName: 'angular-effects',
+              selector: 'property',
+              elementValuePattern: '^(?:effect|afterRenderEffect|afterNextRender|afterEveryRender)\\s*\\(',
+            },
+          ],
+        },
+      ],
       '@typescript-eslint/no-unused-vars': [
         'error',
         {

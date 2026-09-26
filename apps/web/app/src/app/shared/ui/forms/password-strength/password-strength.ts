@@ -15,7 +15,7 @@ export type PasswordStrengthLevel = 0 | 1 | 2 | 3 | 4;
 })
 export class PasswordStrength {
   private readonly deps = inject(Deps);
-  readonly password = input.required<Signal<string>>();
+
   readonly id = input<string>('password-strength');
   readonly describedBy = input<string | null>(null);
 
@@ -30,7 +30,10 @@ export class PasswordStrength {
       return estimator.check(params).score;
     },
   });
+
   readonly level = computed<PasswordStrengthLevel>(() => (this.estimate.hasValue() ? (this.estimate.value() ?? 0) : 0));
+
+  readonly password = input.required<Signal<string>>();
   readonly label = computed(() => {
     if (!this.password()()) return '—';
     if (this.estimate.error()) return $localize`:@@passwordEstimateUnavailable:Strength estimate unavailable.`;
@@ -51,6 +54,13 @@ export class PasswordStrength {
       : $localize`:@@passwordStrengthEstimateNote:Estimated resistance to guessing, not a guarantee.`,
   );
   readonly percent = computed(() => (this.level() / 4) * 100);
+  readonly containerClasses = computed(() => 'space-y-1.5');
+  readonly labelClasses = computed(() =>
+    uiClass(
+      'text-slate-500 dark:text-slate-400 block text-xs font-medium tracking-wide pt-1',
+      !this.password()() ? 'opacity-0' : 'opacity-100',
+    ),
+  );
 
   readonly barClasses = (current: number) =>
     uiClass(
@@ -63,12 +73,4 @@ export class PasswordStrength {
             : 'bg-emerald-500/70 dark:bg-emerald-400/70'
         : 'bg-slate-100 dark:bg-slate-800',
     );
-
-  readonly containerClasses = computed(() => 'space-y-1.5');
-  readonly labelClasses = computed(() =>
-    uiClass(
-      'text-slate-500 dark:text-slate-400 block text-xs font-medium tracking-wide pt-1',
-      !this.password()() ? 'opacity-0' : 'opacity-100',
-    ),
-  );
 }

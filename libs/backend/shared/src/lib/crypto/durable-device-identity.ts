@@ -215,6 +215,7 @@ export class DurableDeviceIdentityStore {
 
     return grant;
   }
+
   async authorizeLocalAgent(accountId: string, deviceId: string, workspaceId: string): Promise<Grant> {
     return this.authorizeSync(
       accountId,
@@ -223,6 +224,7 @@ export class DurableDeviceIdentityStore {
       (await this.getGrant(accountId, deviceId, workspaceId))?.enrollmentVersion ?? -1,
     );
   }
+
   async recoverDevice(
     accountId: string,
     lost: string,
@@ -265,6 +267,7 @@ export class DurableDeviceIdentityStore {
 
     return grant;
   }
+
   async auditEvents(accountId: string): Promise<DeviceAuditEvent[]> {
     const rows = await this.pool.query<Record<string, unknown>>(
       `SELECT account_id AS "accountId", at, device_id AS "deviceId", kind, workspace_id AS "workspaceId" FROM sync_device_audit WHERE account_id=$1 ORDER BY at`,
@@ -284,6 +287,7 @@ export class DurableDeviceIdentityStore {
 
     return result.rows[0] as DeviceIdentity;
   }
+
   private async requireActive(accountId: string, deviceId: string): Promise<DeviceIdentity> {
     const device = await this.requireDevice(accountId, deviceId);
 
@@ -291,6 +295,7 @@ export class DurableDeviceIdentityStore {
 
     return device;
   }
+
   private async getGrant(accountId: string, deviceId: string, workspaceId: string): Promise<Grant | undefined> {
     const result = await this.pool.query<Record<string, unknown>>(
       `SELECT enrollment_version AS "enrollmentVersion", enrolled_at AS "enrolledAt", object_key AS "objectKey" FROM sync_device_grants WHERE account_id=$1 AND workspace_id=$2 AND device_id=$3 AND revoked_at IS NULL`,
@@ -320,6 +325,7 @@ export class DurableDeviceIdentityStore {
 
     return Boolean(result.rowCount);
   }
+
   private async audit(
     accountId: string,
     deviceId: string,

@@ -32,7 +32,7 @@ These instructions apply to Angular frontend work in Themis. Read them before ed
 - Use `input()`, `model()`, and `output()` signal functions. Do not use `@Input()` or `@Output()`.
 - Use self-closing tags for components without projected content, such as `<app-navbar />` and `<router-outlet />`.
 - Each component must keep companion `.html` and `.css` files with the same base name, even when the CSS file is empty.
-- Group Angular-specific class fields near the top: injected dependencies, queries, inputs, models, outputs, and signals before methods.
+- Follow `perfectionist/sort-classes`: injected dependencies; Angular inputs/models/outputs/queries; writable state (`signal`, `linkedSignal`); forms (`form`); derived state (`computed`); readonly fields (public, protected, private); mutable fields (public, protected, private); constructor; methods/accessors (public, protected, private); effect/render registrations last. Static fields/blocks precede instance fields. Keep fields adjacent within each group, with one blank line between groups, methods, and effect/render registrations (overload signatures stay together). Preserve source order inside each group; initialization dependencies take precedence over group order.
 - Use `protected` for members consumed only by the template. Keep implementation-only members `private`.
 - Name event handlers for the action they perform, such as `saveProject()`, not for the event, such as `handleClick()`.
 - Keep lifecycle hooks short, delegate to well-named methods, and implement the corresponding Angular lifecycle interface when a hook is required.
@@ -77,11 +77,13 @@ These instructions apply to Angular frontend work in Themis. Read them before ed
 - Define a typed plain model, store it in a `signal()`, and create a typed `FieldTree<T>` with `form(model, schema, options?)`.
 - Import and use `FormField` for `[formField]` bindings and `FormRoot` for `[formRoot]` bindings or the shared `<app-form>` wrapper.
 - Define validation centrally in the Signal Forms schema with rules such as `required`, `email`, `minLength`, `maxLength`, `pattern`, and `validate`.
+- Configure conditional disabled state with `disabled(path, { when: () => condition })`. Passing a function or string directly as the second argument is deprecated.
 - Put cross-field validation on the dependent field with `validate` and `valueOf`; do not reintroduce group-level Reactive Forms validators.
 - Keep validation messages in `$localize` strings with custom IDs. Read field errors from the field tree instead of duplicating validation conditionals in templates.
 - Use Signal Forms `submission.action` for async submission and return field/server errors through the Signal Forms submission contract when applicable.
 - Shared custom controls accept typed `Field<T>` inputs and keep value, touched, disabled, invalid, and accessibility state synchronized with the field.
 - Use shared form primitives under `shared/ui/forms/` for repeated labels, help text, controls, and error presentation.
+- Route forms must compose `Form`, `Field`, `Label`, `Input`/`Select`/`Checkbox` and `ErrorMessage`, with shared action buttons. Do not rebuild these controls with route-local HTML and utility classes. Use `controlId` for the inner native control and translate projected text on a child element. Native controls are appropriate only when no shared equivalent supports their value contract, such as a `FileList` input; document that exception beside the control.
 - Keep form accessibility stable: explicit labels, correct descriptions, stable button names, straightforward headings, focus handling, and errors associated with their controls.
 
 ## Templates
@@ -109,6 +111,7 @@ These instructions apply to Angular frontend work in Themis. Read them before ed
 
 ## Internationalization
 
+- Derive display locales from Angular's configured `LOCALE_ID` when using Luxon or `Intl`; never hardcode a display locale. Use Luxon with explicit domain timezones for application calendar calculations and keep serialized date contracts as ISO strings. Format money using the entity's configured currency (or its owning scope when explicitly inherited), never a locale-derived or fixed currency. Preserve exact minor-unit arithmetic.
 - Use Angular built-in `i18n` attributes for template translation markers.
 - Always use custom IDs with the `@@` prefix. Do not rely on auto-generated IDs.
 - Use `i18n-{attribute}` for translatable attributes.
@@ -133,6 +136,15 @@ These instructions apply to Angular frontend work in Themis. Read them before ed
 - Smart route components connect to services and routing. Reusable UI/layout components receive data via inputs and emit via outputs.
 - Keep one primary concept per file and colocate each component's TypeScript, template, styles, and tests.
 - Browser utilities shared by Angular and Astro belong in `libs/frontend/shared`; they must use framework-agnostic browser APIs. Keep Angular services and UI components in the app. Import portable crypto contracts from `shared-crypto`, never the backend `shared` runtime entry point.
+
+## Class Layout Tooling
+
+The root `eslint.config.mjs` configures class layout after the Prettier compatibility config:
+
+- `@stylistic/lines-between-class-members` is disabled so it does not force blank lines within compact field groups.
+- `perfectionist/sort-classes` owns ordering and spacing: adjacent fields within groups, one blank line between groups and between methods or effect registrations, and adjacent overload signatures. Angular groups recognize `inject`, signal bindings/queries, writable state, forms, computed fields, and effect/render initializers. No alphabetical sorting is enforced inside a group.
+
+Initialization dependencies take precedence over group order. Use `pnpm nx run app:lint --fix` or `pnpm nx run-many -t lint --fix` with `NX_DAEMON=false`; do not manually alphabetize fields. `template:test` covers dependency ordering, stable autofixes, comments, overloads, and Prettier compatibility.
 
 ## Component And Form Tests
 

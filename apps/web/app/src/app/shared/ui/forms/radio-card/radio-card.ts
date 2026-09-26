@@ -16,7 +16,6 @@ import { uiClass } from '../../classes';
   styleUrl: './radio-card.css',
 })
 export class RadioCard {
-  readonly formField = input.required<Field<string>>();
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly loading = input(false, { transform: booleanAttribute });
   readonly ariaDescribedBy = input<string | null>(null);
@@ -27,11 +26,12 @@ export class RadioCard {
   readonly required = input(false, { transform: booleanAttribute });
   readonly valueChange = output<string>();
 
+  readonly formField = input.required<Field<string>>();
+
   readonly value = computed(() => this.formField()().value() ?? '');
   readonly checked = computed(() => this.value() === this.optionValue());
   readonly isDisabled = computed(() => this.disabled() || this.loading() || this.formField()().disabled());
   readonly isInvalid = computed(() => this.invalid() || (this.formField()().touched() && this.formField()().invalid()));
-
   readonly classes = computed(() =>
     uiClass(
       'relative flex min-h-24 cursor-pointer flex-col rounded-[var(--radius-panel)] border bg-slate-50 dark:bg-slate-900 p-4 pr-12 text-slate-950 dark:text-slate-50 transition has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-blue-600',

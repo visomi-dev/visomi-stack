@@ -9,25 +9,14 @@ import type { AsyncJobEvent } from './realtime.models';
 @Injectable({ providedIn: 'root' })
 export class BrowserRealtime extends Realtime {
   private readonly auth = inject(Auth);
+
   private readonly $connected: WritableSignal<boolean> = signal(false);
   private readonly $lastEvent: WritableSignal<AsyncJobEvent | null> = signal<AsyncJobEvent | null>(null);
-
-  private socket: Socket | null = null;
 
   readonly connected: Signal<boolean> = this.$connected.asReadonly();
   readonly lastEvent: Signal<AsyncJobEvent | null> = this.$lastEvent.asReadonly();
 
-  readonly authEffect = effect(() => {
-    const user = this.auth.user();
-
-    if (!user) {
-      this.disconnect();
-
-      return;
-    }
-
-    this.connect();
-  });
+  private socket: Socket | null = null;
 
   private connect(): void {
     if (this.socket?.connected) {
@@ -61,4 +50,16 @@ export class BrowserRealtime extends Realtime {
     this.$connected.set(false);
     this.$lastEvent.set(null);
   }
+
+  readonly authEffect = effect(() => {
+    const user = this.auth.user();
+
+    if (!user) {
+      this.disconnect();
+
+      return;
+    }
+
+    this.connect();
+  });
 }

@@ -498,19 +498,18 @@
             If you set up an authenticator, also enter an authenticator or recovery code. Otherwise, leave this blank.
           </p>
           <app-field>
-            <label for="recovery-factor-kind" class="text-sm font-semibold" i18n="@@identityRecoveryFactorKind">
-              Additional verification method
-            </label>
-            <select
-              id="recovery-factor-kind"
-              class="min-h-11 rounded-md border border-zinc-950/10 bg-white px-3 dark:border-white/10 dark:bg-zinc-900"
-              [value]="recoveryFactorModel().kind"
-              (change)="changeRecoveryFactor($event)"
+            <app-label for="recovery-factor-kind" tone="plain">
+              <span i18n="@@identityRecoveryFactorKind">Additional verification method</span>
+            </app-label>
+            <app-select
+              controlId="recovery-factor-kind"
+              [formField]="recoveryFactorForm.kind"
+              (valueChange)="changeRecoveryFactor($event)"
               [disabled]="recoverySubmitting()"
             >
               <option value="totp" i18n="@@identityAuthenticatorOption">Authenticator code</option>
               <option value="recovery_code" i18n="@@identityRecoveryCodeOption">Recovery code</option>
-            </select>
+            </app-select>
           </app-field>
           <app-field>
             <app-label for="recovery-factor-code" tone="plain" i18n="@@identityRecoveryFactorCode">

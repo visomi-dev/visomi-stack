@@ -19,14 +19,17 @@ export class GoogleLink {
   private readonly google = inject(GoogleIdentity);
   private readonly action = inject(SecurityAction);
   private readonly destroyRef = inject(DestroyRef);
-  private attempt = 0;
-  private disposed = false;
-  private readonly button = viewChild<ElementRef<HTMLElement>>('googleButton');
+
   readonly loading = signal(false);
   readonly linking = signal(false);
   readonly ready = signal(false);
   readonly linked = signal(false);
   readonly error = signal('');
+
+  private readonly button = viewChild<ElementRef<HTMLElement>>('googleButton');
+
+  private attempt = 0;
+  private disposed = false;
 
   constructor() {
     this.destroyRef.onDestroy(() => {

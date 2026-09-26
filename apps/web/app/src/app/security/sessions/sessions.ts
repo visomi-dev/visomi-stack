@@ -21,11 +21,13 @@ export class Sessions {
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
   protected readonly action = inject(SecurityAction);
+
   protected readonly sessions = signal<ActiveSession[]>([]);
   protected readonly loading = signal(true);
   protected readonly busy = signal(false);
   protected readonly error = signal('');
   protected readonly notice = signal('');
+
   protected readonly hasOthers = computed(() => this.sessions().some((session) => !session.current));
 
   constructor() {

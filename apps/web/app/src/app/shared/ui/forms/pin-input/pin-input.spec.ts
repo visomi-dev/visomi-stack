@@ -10,6 +10,7 @@ import { PinInput } from './pin-input';
 })
 class Host {
   readonly model = signal({ pin: '123456' });
+
   readonly f: FieldTree<{ pin: string }> = form(this.model, () => undefined);
 }
 

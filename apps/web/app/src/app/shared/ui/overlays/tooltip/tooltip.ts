@@ -17,6 +17,7 @@ export class Tooltip {
   readonly text = input.required<string>();
 
   readonly active = signal(false);
+
   readonly panelClasses = computed(() =>
     uiClass(
       'absolute z-30 w-52 rounded-[var(--radius-panel)] bg-slate-100 dark:bg-slate-800 p-3 text-sm font-normal text-slate-950 dark:text-slate-50 shadow-panel after:absolute after:left-1/2 after:-translate-x-1/2 after:border-x-8 after:border-x-transparent',

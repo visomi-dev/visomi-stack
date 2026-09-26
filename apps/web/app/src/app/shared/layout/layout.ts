@@ -48,15 +48,15 @@ export class Layout {
   private readonly settings = inject(Settings);
   private readonly accountProfile = inject(AccountProfile);
 
+  readonly mobileMenuOpen = signal(false);
+  readonly sidebarCollapsed = signal(false);
+
   private readonly navigationEnd = toSignal(
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)),
     {
       initialValue: null,
     },
   );
-
-  readonly mobileMenuOpen = signal(false);
-  readonly sidebarCollapsed = signal(false);
 
   readonly hideAppShell = computed(() => {
     this.navigationEnd();
@@ -78,18 +78,7 @@ export class Layout {
 
     return mergedData['hideAppShell'] === true;
   });
-
   readonly showAppShell = computed(() => this.auth.isAuthenticated() && !this.hideAppShell());
-
-  readonly applyThemeEffect = afterRenderEffect({
-    write: () => {
-      this.settings.applyTheme();
-      const userId = this.auth.isAuthenticated() ? (this.auth.user()?.id ?? null) : null;
-
-      if (!userId || this.showAppShell())
-        void this.accountProfile.synchronizePreferences(userId, () => this.router.url);
-    },
-  });
 
   readonly bottomNavItems = BOTTOM_NAV_ITEMS;
 
@@ -104,4 +93,14 @@ export class Layout {
   toggleSidebarCollapsed() {
     this.sidebarCollapsed.update((collapsed) => !collapsed);
   }
+
+  readonly applyThemeEffect = afterRenderEffect({
+    write: () => {
+      this.settings.applyTheme();
+      const userId = this.auth.isAuthenticated() ? (this.auth.user()?.id ?? null) : null;
+
+      if (!userId || this.showAppShell())
+        void this.accountProfile.synchronizePreferences(userId, () => this.router.url);
+    },
+  });
 }

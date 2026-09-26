@@ -1,8 +1,9 @@
 <select
   #selectEl
+  [disabled]="disabled() || formField()().disabled()"
   [attr.aria-describedby]="ariaDescribedBy()"
-  [attr.aria-invalid]="invalid()"
-  [attr.id]="id()"
+  [attr.aria-invalid]="invalid() || (formField()().touched() && formField()().invalid())"
+  [attr.id]="controlId()"
   [attr.name]="name()"
   [attr.required]="required() ? '' : null"
   [class]="classes()"
@@ -11,4 +12,5 @@
   (change)="onChangeEvent($event)"
 >
   <ng-content />
+  <ng-container [ngTemplateOutlet]="options()?.template ?? null" />
 </select>

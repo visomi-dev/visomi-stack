@@ -10,6 +10,7 @@ import { Switch } from './switch';
 })
 class Host {
   readonly model = signal({ darkMode: true });
+
   readonly f: FieldTree<{ darkMode: boolean }> = form(this.model, () => undefined);
 }
 

@@ -27,7 +27,6 @@ export type RadioOption = {
 })
 export class RadioGroup {
   protected readonly optionTemplate = contentChild.required(RadioOptionTemplate);
-  readonly formField = input.required<Field<string>>();
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly loading = input(false, { transform: booleanAttribute });
   readonly ariaDescribedBy = input<string | null>(null);
@@ -39,10 +38,11 @@ export class RadioGroup {
   readonly required = input(false, { transform: booleanAttribute });
   readonly valueChange = output<string>();
 
+  readonly formField = input.required<Field<string>>();
+
   readonly value = computed(() => this.formField()().value() ?? '');
   readonly isDisabled = computed(() => this.disabled() || this.loading() || this.formField()().disabled());
   readonly isInvalid = computed(() => this.invalid() || (this.formField()().touched() && this.formField()().invalid()));
-
   readonly optionClasses = computed(() =>
     uiClass(
       'relative flex min-h-11 cursor-pointer items-start gap-3 rounded-md border border-slate-950/10 bg-slate-50 p-3 text-sm text-slate-950 transition-colors dark:border-white/10 dark:bg-slate-900 dark:text-slate-50',
@@ -50,16 +50,6 @@ export class RadioGroup {
       'has-disabled:cursor-not-allowed has-disabled:opacity-50',
     ),
   );
-
-  protected optionContext(option: RadioOption, index: number): RadioOptionTemplateContext {
-    return {
-      $implicit: option,
-      descriptionId: `${this.name()}-${index}-description`,
-      index,
-      labelId: `${this.name()}-${index}-label`,
-      selected: this.value() === option.value,
-    };
-  }
 
   selectValue(optionValue: string): void {
     if (this.isDisabled() || !this.options().some((option) => option.value === optionValue && !option.disabled)) return;
@@ -69,5 +59,15 @@ export class RadioGroup {
 
   onBlur(): void {
     this.formField()().markAsTouched();
+  }
+
+  protected optionContext(option: RadioOption, index: number): RadioOptionTemplateContext {
+    return {
+      $implicit: option,
+      descriptionId: `${this.name()}-${index}-description`,
+      index,
+      labelId: `${this.name()}-${index}-label`,
+      selected: this.value() === option.value,
+    };
   }
 }

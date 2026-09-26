@@ -12,48 +12,48 @@
     @if (finished()) {
       <a [routerLink]="signInUrl" class="underline" i18n="@@accountSignIn">Go to sign in</a>
     } @else {
-      <form [formRoot]="profileForm" class="flex flex-col gap-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900">
+      <app-form [form]="profileForm" class="flex flex-col gap-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900">
         <h2 class="font-heading text-lg font-semibold" i18n="@@accountProfileTitle">Profile and preferences</h2>
         <p i18n="@@accountPreferencesHelp">
           Saving applies these preferences now. Toolbar changes stay local and do not update your saved preferences.
         </p>
-        <label for="display-name" i18n="@@accountDisplayName">Display name</label>
-        <input
-          id="display-name"
-          autocomplete="nickname"
-          [formField]="profileForm.displayName"
-          aria-describedby="display-name-error"
-          class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
-        />
-        <p id="display-name-error">{{ profileForm.displayName().errors()[0]?.message }}</p>
-        <label for="profile-locale" i18n="@@accountLocale">Preferred language</label>
-        <select
-          id="profile-locale"
-          [formField]="profileForm.preferences.locale"
-          class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
-        >
-          <option value="en" i18n="@@accountEnglish">English</option>
-          <option value="es" i18n="@@accountSpanish">Spanish</option>
-        </select>
-        <label for="profile-theme" i18n="@@accountTheme">Preferred appearance</label>
-        <select
-          id="profile-theme"
-          [formField]="profileForm.preferences.theme"
-          class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
-        >
-          <option value="system" i18n="@@accountSystem">System</option>
-          <option value="light" i18n="@@accountLight">Light</option>
-          <option value="dark" i18n="@@accountDark">Dark</option>
-        </select>
-        <button
-          type="submit"
-          [disabled]="!interactive() || busy()"
-          class="w-full rounded-md bg-zinc-950 px-4 py-2 text-white disabled:opacity-50 sm:w-auto dark:bg-white dark:text-zinc-950"
-          i18n="@@accountSave"
-        >
-          Save profile
-        </button>
-      </form>
+        <app-field>
+          <app-label for="display-name" tone="plain"><span i18n="@@accountDisplayName">Display name</span></app-label>
+          <app-input
+            controlId="display-name"
+            autocomplete="nickname"
+            [formField]="profileForm.displayName"
+            ariaDescribedBy="display-name-error"
+          />
+          @if (profileForm.displayName().touched() && profileForm.displayName().invalid()) {
+            <app-error-message controlId="display-name-error">
+              {{ profileForm.displayName().errors()[0]?.message }}
+            </app-error-message>
+          }
+        </app-field>
+        <app-field>
+          <app-label for="profile-locale" tone="plain">
+            <span i18n="@@accountLocale">Preferred language</span>
+          </app-label>
+          <app-select controlId="profile-locale" [formField]="profileForm.preferences.locale">
+            <option value="en" i18n="@@accountEnglish">English</option>
+            <option value="es" i18n="@@accountSpanish">Spanish</option>
+          </app-select>
+        </app-field>
+        <app-field>
+          <app-label for="profile-theme" tone="plain">
+            <span i18n="@@accountTheme">Preferred appearance</span>
+          </app-label>
+          <app-select controlId="profile-theme" [formField]="profileForm.preferences.theme">
+            <option value="system" i18n="@@accountSystem">System</option>
+            <option value="light" i18n="@@accountLight">Light</option>
+            <option value="dark" i18n="@@accountDark">Dark</option>
+          </app-select>
+        </app-field>
+        <app-button type="submit" tone="blue" [disabled]="!interactive() || busy()">
+          <span i18n="@@accountSave">Save profile</span>
+        </app-button>
+      </app-form>
       <section
         class="flex flex-col gap-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900"
         aria-labelledby="email-title"
@@ -64,48 +64,50 @@
           Verify the new address before it becomes your primary email. We will notify your previous address and sign out
           your existing sessions.
         </p>
-        <form [formRoot]="emailForm" class="flex flex-col gap-3">
-          <label for="new-email" i18n="@@accountNewEmail">New email address</label>
-          <input
-            id="new-email"
-            type="email"
-            autocomplete="email"
-            [formField]="emailForm.email"
-            aria-describedby="new-email-error"
-            class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
-          />
-          <p id="new-email-error">{{ emailForm.email().touched() ? emailForm.email().errors()[0]?.message : '' }}</p>
-          <button
-            type="submit"
-            [disabled]="!interactive() || busy()"
-            class="rounded-md border border-zinc-950/10 px-3 py-2 disabled:opacity-50 dark:border-white/10"
-            i18n="@@accountSendCode"
-          >
-            Send a new verification code
-          </button>
-        </form>
+        <app-form [form]="emailForm" class="flex flex-col gap-4">
+          <app-field>
+            <app-label for="new-email" tone="plain"><span i18n="@@accountNewEmail">New email address</span></app-label>
+            <app-input
+              controlId="new-email"
+              type="email"
+              autocomplete="email"
+              [formField]="emailForm.email"
+              ariaDescribedBy="new-email-error"
+            />
+            @if (emailForm.email().touched() && emailForm.email().invalid()) {
+              <app-error-message controlId="new-email-error">
+                {{ emailForm.email().errors()[0]?.message }}
+              </app-error-message>
+            }
+          </app-field>
+          <app-button type="submit" variant="outline" [disabled]="!interactive() || busy()">
+            <span i18n="@@accountSendCode">Send a new verification code</span>
+          </app-button>
+        </app-form>
         @if (challenge(); as challenge) {
           <p i18n="@@accountCodeDestination">Code sent to {{ challenge.email }}.</p>
-          <form [formRoot]="codeForm" class="flex flex-col gap-3">
-            <label for="email-code" i18n="@@accountCodeLabel">Verification code</label>
-            <input
-              id="email-code"
-              inputmode="numeric"
-              autocomplete="one-time-code"
-              [formField]="codeForm.pin"
-              aria-describedby="email-code-error"
-              class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
-            />
-            <p id="email-code-error">{{ codeForm.pin().touched() ? codeForm.pin().errors()[0]?.message : '' }}</p>
-            <button
-              type="submit"
-              [disabled]="!interactive() || busy()"
-              class="rounded-md bg-zinc-950 px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-zinc-950"
-              i18n="@@accountVerifyEmail"
-            >
-              Verify and change email
-            </button>
-          </form>
+          <app-form [form]="codeForm" class="flex flex-col gap-4">
+            <app-field>
+              <app-label for="email-code" tone="plain">
+                <span i18n="@@accountCodeLabel">Verification code</span>
+              </app-label>
+              <app-input
+                controlId="email-code"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                [formField]="codeForm.pin"
+                ariaDescribedBy="email-code-error"
+              />
+              @if (codeForm.pin().touched() && codeForm.pin().invalid()) {
+                <app-error-message controlId="email-code-error">
+                  {{ codeForm.pin().errors()[0]?.message }}
+                </app-error-message>
+              }
+            </app-field>
+            <app-button type="submit" tone="blue" [disabled]="!interactive() || busy()">
+              <span i18n="@@accountVerifyEmail">Verify and change email</span>
+            </app-button>
+          </app-form>
         }
       </section>
       <section
@@ -144,34 +146,34 @@
         </p>
         @if (data().isWorkspaceOwner) {
           <p i18n="@@accountTransferRequired">Transfer ownership to another existing member before leaving.</p>
-          <form [formRoot]="transferForm" class="flex flex-col gap-3">
-            <label for="transfer-member" i18n="@@accountTransferMember">New workspace owner</label>
-            <select
-              id="transfer-member"
-              [formField]="transferForm.targetUserId"
-              aria-describedby="transfer-member-error"
-              class="rounded-md border border-zinc-950/10 px-3 py-2 dark:border-white/10"
-            >
-              <option value="" i18n="@@accountChooseMember">Choose an existing member</option>
-              @for (member of data().ownershipCandidates; track member.userId) {
-                <option [value]="member.userId">{{ member.displayName || member.email }}</option>
+          <app-form [form]="transferForm" class="flex flex-col gap-4">
+            <app-field>
+              <app-label for="transfer-member" tone="plain">
+                <span i18n="@@accountTransferMember">New workspace owner</span>
+              </app-label>
+              <app-select
+                controlId="transfer-member"
+                [formField]="transferForm.targetUserId"
+                ariaDescribedBy="transfer-member-error"
+              >
+                <option value="" i18n="@@accountChooseMember">Choose an existing member</option>
+                @for (member of data().ownershipCandidates; track member.userId) {
+                  <option [value]="member.userId">{{ member.displayName || member.email }}</option>
+                }
+              </app-select>
+              @if (!data().ownershipCandidates.length) {
+                <p i18n="@@accountNoMembers">Invite another person to this workspace before transferring ownership.</p>
               }
-            </select>
-            @if (!data().ownershipCandidates.length) {
-              <p i18n="@@accountNoMembers">Invite another person to this workspace before transferring ownership.</p>
-            }
-            <p id="transfer-member-error">
-              {{ transferForm.targetUserId().touched() ? transferForm.targetUserId().errors()[0]?.message : '' }}
-            </p>
-            <button
-              type="submit"
-              [disabled]="!interactive() || busy()"
-              class="rounded-md border border-zinc-950/10 px-3 py-2 disabled:opacity-50 dark:border-white/10"
-              i18n="@@accountTransfer"
-            >
-              Transfer ownership
-            </button>
-          </form>
+              @if (transferForm.targetUserId().touched() && transferForm.targetUserId().invalid()) {
+                <app-error-message controlId="transfer-member-error">
+                  {{ transferForm.targetUserId().errors()[0]?.message }}
+                </app-error-message>
+              }
+            </app-field>
+            <app-button type="submit" variant="outline" [disabled]="!interactive() || busy()">
+              <span i18n="@@accountTransfer">Transfer ownership</span>
+            </app-button>
+          </app-form>
         }
         <button
           type="button"

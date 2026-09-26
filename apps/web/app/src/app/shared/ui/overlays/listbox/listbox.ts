@@ -22,8 +22,6 @@ let listboxCounter = 0;
 })
 export class Listbox implements ControlValueAccessor {
   private readonly cdkListbox = viewChild(CdkListbox);
-  readonly generatedId = `app-listbox-${++listboxCounter}`;
-
   readonly ariaLabel = input('Options');
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly options = input<readonly ListboxOption[]>([]);
@@ -32,8 +30,7 @@ export class Listbox implements ControlValueAccessor {
   private readonly lastWrittenValue = signal<string | null>(null);
   private readonly isSyncing = signal(false);
 
-  private onChange: (value: string) => void = () => undefined;
-  private onTouched: () => void = () => undefined;
+  readonly generatedId = `app-listbox-${++listboxCounter}`;
 
   writeValue(value: string | null): void {
     this.lastWrittenValue.set(value ?? null);
@@ -75,6 +72,22 @@ export class Listbox implements ControlValueAccessor {
     this.onTouched();
   }
 
+  optionClasses(value: string, option: ListboxOption): string {
+    const listbox = this.cdkListbox();
+    const isSelected = listbox ? listbox.isValueSelected(value) : false;
+
+    return uiClass(
+      'cursor-default rounded-[var(--radius-control)] px-3 py-2 text-sm outline-none',
+      isSelected && 'bg-accent text-accent-fg',
+      !isSelected && 'text-slate-950 dark:text-slate-50',
+      option.disabled && 'pointer-events-none opacity-50',
+    );
+  }
+
+  private onChange: (value: string) => void = () => undefined;
+
+  private onTouched: () => void = () => undefined;
+
   readonly syncCdkStateEffect = effect(() => {
     const listbox = this.cdkListbox();
     const written = this.lastWrittenValue();
@@ -103,16 +116,4 @@ export class Listbox implements ControlValueAccessor {
       this.isSyncing.set(false);
     });
   });
-
-  optionClasses(value: string, option: ListboxOption): string {
-    const listbox = this.cdkListbox();
-    const isSelected = listbox ? listbox.isValueSelected(value) : false;
-
-    return uiClass(
-      'cursor-default rounded-[var(--radius-control)] px-3 py-2 text-sm outline-none',
-      isSelected && 'bg-accent text-accent-fg',
-      !isSelected && 'text-slate-950 dark:text-slate-50',
-      option.disabled && 'pointer-events-none opacity-50',
-    );
-  }
 }

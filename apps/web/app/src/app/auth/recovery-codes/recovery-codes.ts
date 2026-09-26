@@ -16,6 +16,7 @@ import { AuthLayout } from '../../shared/ui/layout/auth-layout/auth-layout';
 export class RecoveryCodes {
   private readonly action = inject(SecurityAction);
   private readonly security = inject(SecurityAuth);
+
   readonly loading = signal(false);
   readonly codes = signal<string[]>([]);
   readonly error = signal('');

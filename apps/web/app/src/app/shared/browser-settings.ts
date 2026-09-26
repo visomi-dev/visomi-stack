@@ -11,8 +11,10 @@ const LOCALE_IDENTITY_KEY = 'themis.preferences.locale-identity';
 export class BrowserSettings extends Settings {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+
   private readonly media = this.document.defaultView?.matchMedia?.('(prefers-color-scheme: dark)');
   private readonly systemDark = signal(this.media?.matches ?? false);
+
   private toolbarOverride = this.localOverride();
   private readonly preference = signal<ThemePreference>(this.toolbarOverride ?? 'system');
 

@@ -35,16 +35,7 @@ export class DeviceApprovalPage {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-  private activeId = '';
-  private userCode = '';
-  private timer?: number;
-  private expiryTimer?: number;
-  private generation = 0;
-  private disposed = false;
-  private polling = false;
-  private verification?: { id: string; options: Record<string, unknown> };
-  private controller?: AbortController;
-  protected readonly securityUrl = SECURITY_URL;
+
   readonly record = signal<DeviceApprovalReview | null>(null);
   readonly busy = signal(false);
   readonly error = signal('');
@@ -54,10 +45,23 @@ export class DeviceApprovalPage {
   readonly lostCode = signal(false);
   readonly stage = signal<'request' | 'enroll' | 'verify' | 'done'>('request');
   readonly nameModel = signal({ name: '' });
+
   readonly nameForm = form(this.nameModel, (path) => {
     required(path.name);
     maxLength(path.name, 64);
   });
+
+  protected readonly securityUrl = SECURITY_URL;
+
+  private activeId = '';
+  private userCode = '';
+  private timer?: number;
+  private expiryTimer?: number;
+  private generation = 0;
+  private disposed = false;
+  private polling = false;
+  private verification?: { id: string; options: Record<string, unknown> };
+  private controller?: AbortController;
 
   constructor() {
     afterNextRender(() => {
@@ -82,44 +86,6 @@ export class DeviceApprovalPage {
       this.userCode = '';
       this.verification = undefined;
     });
-  }
-
-  private async load(id: string | null): Promise<void> {
-    this.stopPolling();
-    if (this.expiryTimer !== undefined) this.document.defaultView?.clearTimeout(this.expiryTimer);
-    this.busy.set(false);
-    this.error.set('');
-    this.activeId = id ?? '';
-    this.userCode = '';
-    this.record.set(null);
-    this.link.set('');
-    this.qr.set('');
-    this.lostCode.set(false);
-    this.stage.set('request');
-    if (!id) return;
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
-      this.error.set(
-        $localize`:@@approvalUnavailable:This request is not available. Return to Security and start again.`,
-      );
-
-      return;
-    }
-    this.busy.set(true);
-    try {
-      const reviewed = await this.approval.review(id);
-
-      if (this.disposed || this.activeId !== id) return;
-      this.record.set(reviewed);
-      this.scheduleExpiration();
-      this.lostCode.set(reviewed.requester && ['pending', 'approved'].includes(reviewed.status));
-    } catch {
-      if (this.disposed || this.activeId !== id) return;
-      this.error.set(
-        $localize`:@@approvalUnavailable:This request is not available. Return to Security and start again.`,
-      );
-    } finally {
-      if (!this.disposed && this.activeId === id) this.busy.set(false);
-    }
   }
 
   protected async start(): Promise<void> {
@@ -179,110 +145,12 @@ export class DeviceApprovalPage {
     }
   }
 
-  private stopPolling(): void {
-    this.generation += 1;
-    if (this.timer !== undefined) this.document.defaultView?.clearTimeout(this.timer);
-    this.timer = undefined;
-  }
-
-  private scheduleExpiration(): void {
-    const window = this.document.defaultView;
-    const record = this.record();
-
-    if (this.expiryTimer !== undefined) window?.clearTimeout(this.expiryTimer);
-    if (!window || !record || !['pending', 'approved'].includes(record.status)) return;
-    const remaining = Date.parse(record.expiresAt) - Date.now();
-
-    if (!Number.isFinite(remaining)) return;
-    this.expiryTimer = window.setTimeout(
-      () => {
-        if (
-          this.disposed ||
-          this.record()?.requestId !== record.requestId ||
-          !['pending', 'approved'].includes(this.record()!.status)
-        )
-          return;
-        if (Date.parse(record.expiresAt) > Date.now()) {
-          this.scheduleExpiration();
-
-          return;
-        }
-        this.stopPolling();
-        this.userCode = '';
-        this.record.update((current) => current && { ...current, status: 'expired' });
-      },
-      Math.min(2_147_483_647, Math.max(0, remaining)),
-    );
-  }
-
-  private schedulePoll(delay = 0): void {
-    const record = this.record();
-    const window = this.document.defaultView;
-
-    if (
-      !window ||
-      this.disposed ||
-      this.document.hidden ||
-      !record?.requester ||
-      record.status !== 'pending' ||
-      !this.userCode ||
-      this.polling
-    )
-      return;
-    const generation = this.generation;
-
-    if (this.timer !== undefined) window.clearTimeout(this.timer);
-    this.timer = window.setTimeout(() => void this.poll(record.requestId, generation), delay);
-  }
-
-  private async poll(id: string, generation: number): Promise<void> {
-    if (this.polling || this.disposed || generation !== this.generation || this.record()?.status !== 'pending') return;
-    this.polling = true;
-    try {
-      const state = await this.approval.poll(id);
-
-      if (this.disposed || generation !== this.generation) return;
-      this.record.update((record) => record && { ...record, ...state });
-      this.error.set('');
-    } catch {
-      if (generation !== this.generation || this.disposed) return;
-      this.error.set(
-        $localize`:@@approvalRefreshFailed:We could not refresh the request. Check your connection; we will try again.`,
-      );
-    } finally {
-      this.polling = false;
-      this.schedulePoll(5000);
-    }
-  }
-
   protected async cancel(): Promise<void> {
     await this.changeStatus('cancel');
   }
+
   protected async deny(): Promise<void> {
     await this.changeStatus('deny');
-  }
-
-  private async changeStatus(operation: 'cancel' | 'deny'): Promise<void> {
-    const record = this.record();
-
-    if (!record || this.busy()) return;
-    this.busy.set(true);
-    this.stopPolling();
-    try {
-      const response = await this.approval[operation](record.requestId);
-
-      this.record.set({ ...record, ...response });
-      this.userCode = '';
-      this.link.set('');
-      this.qr.set('');
-    } catch {
-      this.error.set(
-        $localize`:@@approvalActionFailed:The request could not be updated. Reload its status before trying again.`,
-      );
-      await this.refresh();
-    } finally {
-      this.busy.set(false);
-    }
   }
 
   protected async refresh(): Promise<void> {
@@ -425,6 +293,143 @@ export class DeviceApprovalPage {
         return $localize`:@@approvalConsumed:Setup authorization already used`;
       case 'expired':
         return $localize`:@@approvalExpired:Request expired`;
+    }
+  }
+
+  private async load(id: string | null): Promise<void> {
+    this.stopPolling();
+    if (this.expiryTimer !== undefined) this.document.defaultView?.clearTimeout(this.expiryTimer);
+    this.busy.set(false);
+    this.error.set('');
+    this.activeId = id ?? '';
+    this.userCode = '';
+    this.record.set(null);
+    this.link.set('');
+    this.qr.set('');
+    this.lostCode.set(false);
+    this.stage.set('request');
+    if (!id) return;
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      this.error.set(
+        $localize`:@@approvalUnavailable:This request is not available. Return to Security and start again.`,
+      );
+
+      return;
+    }
+    this.busy.set(true);
+    try {
+      const reviewed = await this.approval.review(id);
+
+      if (this.disposed || this.activeId !== id) return;
+      this.record.set(reviewed);
+      this.scheduleExpiration();
+      this.lostCode.set(reviewed.requester && ['pending', 'approved'].includes(reviewed.status));
+    } catch {
+      if (this.disposed || this.activeId !== id) return;
+      this.error.set(
+        $localize`:@@approvalUnavailable:This request is not available. Return to Security and start again.`,
+      );
+    } finally {
+      if (!this.disposed && this.activeId === id) this.busy.set(false);
+    }
+  }
+
+  private stopPolling(): void {
+    this.generation += 1;
+    if (this.timer !== undefined) this.document.defaultView?.clearTimeout(this.timer);
+    this.timer = undefined;
+  }
+
+  private scheduleExpiration(): void {
+    const window = this.document.defaultView;
+    const record = this.record();
+
+    if (this.expiryTimer !== undefined) window?.clearTimeout(this.expiryTimer);
+    if (!window || !record || !['pending', 'approved'].includes(record.status)) return;
+    const remaining = Date.parse(record.expiresAt) - Date.now();
+
+    if (!Number.isFinite(remaining)) return;
+    this.expiryTimer = window.setTimeout(
+      () => {
+        if (
+          this.disposed ||
+          this.record()?.requestId !== record.requestId ||
+          !['pending', 'approved'].includes(this.record()!.status)
+        )
+          return;
+        if (Date.parse(record.expiresAt) > Date.now()) {
+          this.scheduleExpiration();
+
+          return;
+        }
+        this.stopPolling();
+        this.userCode = '';
+        this.record.update((current) => current && { ...current, status: 'expired' });
+      },
+      Math.min(2_147_483_647, Math.max(0, remaining)),
+    );
+  }
+
+  private schedulePoll(delay = 0): void {
+    const record = this.record();
+    const window = this.document.defaultView;
+
+    if (
+      !window ||
+      this.disposed ||
+      this.document.hidden ||
+      !record?.requester ||
+      record.status !== 'pending' ||
+      !this.userCode ||
+      this.polling
+    )
+      return;
+    const generation = this.generation;
+
+    if (this.timer !== undefined) window.clearTimeout(this.timer);
+    this.timer = window.setTimeout(() => void this.poll(record.requestId, generation), delay);
+  }
+
+  private async poll(id: string, generation: number): Promise<void> {
+    if (this.polling || this.disposed || generation !== this.generation || this.record()?.status !== 'pending') return;
+    this.polling = true;
+    try {
+      const state = await this.approval.poll(id);
+
+      if (this.disposed || generation !== this.generation) return;
+      this.record.update((record) => record && { ...record, ...state });
+      this.error.set('');
+    } catch {
+      if (generation !== this.generation || this.disposed) return;
+      this.error.set(
+        $localize`:@@approvalRefreshFailed:We could not refresh the request. Check your connection; we will try again.`,
+      );
+    } finally {
+      this.polling = false;
+      this.schedulePoll(5000);
+    }
+  }
+
+  private async changeStatus(operation: 'cancel' | 'deny'): Promise<void> {
+    const record = this.record();
+
+    if (!record || this.busy()) return;
+    this.busy.set(true);
+    this.stopPolling();
+    try {
+      const response = await this.approval[operation](record.requestId);
+
+      this.record.set({ ...record, ...response });
+      this.userCode = '';
+      this.link.set('');
+      this.qr.set('');
+    } catch {
+      this.error.set(
+        $localize`:@@approvalActionFailed:The request could not be updated. Reload its status before trying again.`,
+      );
+      await this.refresh();
+    } finally {
+      this.busy.set(false);
     }
   }
 }

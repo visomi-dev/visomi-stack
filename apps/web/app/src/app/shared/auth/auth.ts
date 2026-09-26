@@ -22,19 +22,29 @@ export abstract class Auth {
   abstract readonly user: Signal<AuthUser | null>;
 
   abstract startIdentityFlow(): Promise<IdentityFlow>;
+
   abstract identifyIdentity(flowId: string, email: string): Promise<IdentityFlow>;
+
   abstract requestIdentityRecovery(flowId: string, email: string): Promise<IdentityFlow>;
+
   abstract verifyIdentityRecovery(
     flowId: string,
     pin: string,
     factor?: PasswordResetFactor,
   ): Promise<RestrictedSession>;
+
   abstract ensureSessionLoaded(force?: boolean): Promise<void>;
+
   abstract requestEmailOtp(payload: EmailOtpRequestPayload): Promise<EmailOtpResponse['data']>;
+
   abstract verifyEmailOtp(payload: EmailOtpVerifyPayload): Promise<SessionUpgrade>;
+
   abstract getRestrictedAccounts(): Promise<RestrictedAccount[]>;
+
   abstract resendEmailOtp(payload: EmailOtpResendPayload): Promise<EmailOtpResponse['data']>;
+
   abstract selectRestrictedAccount(accountId: string): Promise<RestrictedAccount>;
+
   abstract signOut(): Promise<void>;
 }
 

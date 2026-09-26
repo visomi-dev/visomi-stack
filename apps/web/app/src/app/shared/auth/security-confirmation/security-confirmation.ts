@@ -29,42 +29,15 @@ import { GoogleIdentity } from '../google-identity';
 export class SecurityConfirmation {
   protected readonly action = inject(SecurityAction);
   private readonly injector = inject(Injector);
-  private readonly googleButton = viewChild<ElementRef<HTMLElement>>('googleButton');
+
   protected readonly googleError = signal('');
-  private readonly renderGoogleButton = afterRenderEffect({
-    write: () => {
-      const challenge = this.action.google();
-      const element = this.googleButton()?.nativeElement;
-
-      this.googleError.set('');
-      if (!challenge || !element) return;
-      const isActive = () =>
-        this.action.google() === challenge && this.googleButton()?.nativeElement === element && !this.action.busy();
-
-      element.replaceChildren();
-      void this.injector
-        .get(GoogleIdentity)
-        .renderReauthenticationButton(
-          element,
-          challenge.clientId,
-          challenge.nonce,
-          (idToken) => this.action.confirmGoogle(idToken, challenge),
-          isActive,
-        )
-        .catch(() => {
-          if (isActive())
-            this.googleError.set(
-              $localize`:@@securityConfirmGoogleUnavailable:Google confirmation could not be loaded. Try again.`,
-            );
-        });
-    },
-  });
   protected readonly method = signal<ConfirmationMethod>('passkey');
   protected readonly model = linkedSignal(() => {
     this.action.pending();
 
     return { password: '', code: '' };
   });
+
   protected readonly confirmation = form(this.model, (path) => {
     required(path.password, { when: () => this.method() === 'password' });
     required(path.code, {
@@ -74,6 +47,8 @@ export class SecurityConfirmation {
         (this.method() === 'password' && this.action.passwordRequiresTotp()),
     });
   });
+
+  private readonly googleButton = viewChild<ElementRef<HTMLElement>>('googleButton');
 
   protected label(method: ConfirmationMethod): string {
     switch (method) {
@@ -104,4 +79,33 @@ export class SecurityConfirmation {
     this.model.set({ password: '', code: '' });
     await this.action.confirm(this.method(), password, code);
   }
+
+  private readonly renderGoogleButton = afterRenderEffect({
+    write: () => {
+      const challenge = this.action.google();
+      const element = this.googleButton()?.nativeElement;
+
+      this.googleError.set('');
+      if (!challenge || !element) return;
+      const isActive = () =>
+        this.action.google() === challenge && this.googleButton()?.nativeElement === element && !this.action.busy();
+
+      element.replaceChildren();
+      void this.injector
+        .get(GoogleIdentity)
+        .renderReauthenticationButton(
+          element,
+          challenge.clientId,
+          challenge.nonce,
+          (idToken) => this.action.confirmGoogle(idToken, challenge),
+          isActive,
+        )
+        .catch(() => {
+          if (isActive())
+            this.googleError.set(
+              $localize`:@@securityConfirmGoogleUnavailable:Google confirmation could not be loaded. Try again.`,
+            );
+        });
+    },
+  });
 }

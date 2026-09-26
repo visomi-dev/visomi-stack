@@ -16,6 +16,7 @@ type ThemeSwitcherVariant = 'toggle' | 'dropdown';
 })
 export class ThemeSwitcher {
   readonly settings = inject(Settings);
+
   readonly variant = input<ThemeSwitcherVariant>('dropdown');
 
   readonly iconName = computed(() => (this.settings.isDark() ? 'sun' : 'moon'));

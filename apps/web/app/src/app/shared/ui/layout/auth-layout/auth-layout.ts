@@ -22,6 +22,7 @@ const DEFAULT_LANGUAGES: ReadonlyArray<LanguageOption> = Object.freeze([
   styleUrl: './auth-layout.css',
 })
 export class AuthLayout {
-  protected readonly homeLabel = $localize`:@@templateHomeLabel:${APP_NAME}:APP_NAME: home`;
   readonly languages = DEFAULT_LANGUAGES;
+
+  protected readonly homeLabel = $localize`:@@templateHomeLabel:${APP_NAME}:APP_NAME: home`;
 }

@@ -26,12 +26,14 @@ import { FormRoot, type FieldTree } from '@angular/forms/signals';
 })
 export class Form {
   private readonly injector = inject(Injector);
-  private readonly errorSummary = viewChild<ElementRef<HTMLElement>>('errorSummary');
-  readonly form = input.required<FieldTree<unknown>>();
+
   readonly submitted = model(false);
-  protected readonly validationFeedback = linkedSignal(() => this.submitted());
   readonly novalidate = input(true, { transform: booleanAttribute });
   readonly ngSubmit = output<void>();
+
+  protected readonly validationFeedback = linkedSignal(() => this.submitted());
+
+  readonly form = input.required<FieldTree<unknown>>();
   protected readonly messages = computed(() =>
     this.validationFeedback()
       ? [
@@ -43,6 +45,8 @@ export class Form {
         ]
       : [],
   );
+
+  private readonly errorSummary = viewChild<ElementRef<HTMLElement>>('errorSummary');
 
   onSubmit(event: Event): void {
     event.preventDefault();

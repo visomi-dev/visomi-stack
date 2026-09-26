@@ -24,11 +24,6 @@ import { uiClass } from '../../classes';
   styleUrl: './input.css',
 })
 export class Input {
-  protected readonly ready = signal(false);
-  private readonly enableInputAfterRender = afterNextRender(() => this.ready.set(true));
-  private readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('inputEl');
-
-  readonly formField = input.required<Field<string>>();
   readonly ariaDescribedBy = input<string | null>(null);
   readonly autocomplete = input<string | null>(null);
   readonly controlId = input<string | null>(null);
@@ -44,7 +39,10 @@ export class Input {
   readonly placeholder = input('');
   readonly required = input(false, { transform: booleanAttribute });
   readonly type = input('text');
+  readonly spellcheck = input<boolean | null>(null);
   readonly valueChange = output<string>();
+
+  protected readonly ready = signal(false);
 
   readonly classes = computed(() =>
     uiClass(
@@ -53,14 +51,9 @@ export class Input {
     ),
   );
 
-  private readonly syncEffect = effect(() => {
-    const ref = this.inputRef();
-    const value = this.formField()().value();
+  readonly formField = input.required<Field<string>>();
 
-    if (ref) {
-      ref.nativeElement.value = value ?? '';
-    }
-  });
+  private readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('inputEl');
 
   onInput(event: Event): void {
     const nextValue = (event.target as HTMLInputElement).value;
@@ -72,4 +65,15 @@ export class Input {
   onBlur(): void {
     this.formField()().markAsTouched();
   }
+
+  private readonly enableInputAfterRender = afterNextRender(() => this.ready.set(true));
+
+  private readonly syncEffect = effect(() => {
+    const ref = this.inputRef();
+    const value = this.formField()().value();
+
+    if (ref) {
+      ref.nativeElement.value = value ?? '';
+    }
+  });
 }

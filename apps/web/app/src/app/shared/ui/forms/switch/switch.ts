@@ -15,7 +15,6 @@ import { uiClass } from '../../classes';
   styleUrl: './switch.css',
 })
 export class Switch {
-  readonly formField = input.required<Field<boolean>>();
   readonly ariaDescribedBy = input<string | null>(null);
   readonly ariaLabel = input<string | null>(null);
   readonly disabled = input(false, { transform: booleanAttribute });
@@ -24,8 +23,9 @@ export class Switch {
   readonly required = input(false, { transform: booleanAttribute });
   readonly checkedChange = output<boolean>();
 
-  readonly checked = computed(() => this.formField()().value() === true);
+  readonly formField = input.required<Field<boolean>>();
 
+  readonly checked = computed(() => this.formField()().value() === true);
   readonly classes = computed(() =>
     uiClass(
       'ui-focus-ring relative inline-flex h-7 w-12 items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-50',

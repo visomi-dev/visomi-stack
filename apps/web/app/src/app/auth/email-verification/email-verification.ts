@@ -28,23 +28,27 @@ export class EmailVerification {
   private readonly router = inject(Router);
 
   readonly emailModel = signal<EmailModel>({ email: this.route.snapshot.queryParamMap.get('email') ?? '' });
+  readonly codeModel = signal<CodeModel>({ pin: '' });
+  readonly flowId = signal('');
+  readonly submitting = signal(false);
+  readonly error = signal('');
+  readonly complete = signal(false);
+
   readonly emailForm: FieldTree<EmailModel> = form(this.emailModel, (path) => {
     required(path.email, { message: 'Enter your email address.' });
     email(path.email, { message: 'Enter a valid email address.' });
   });
-  readonly codeModel = signal<CodeModel>({ pin: '' });
   readonly codeForm: FieldTree<CodeModel> = form(this.codeModel, (path) => {
     required(path.pin, { message: 'Enter the 6-digit code.' });
     minLength(path.pin, 6, { message: 'Enter all 6 digits.' });
     maxLength(path.pin, 6, { message: 'Enter all 6 digits.' });
     pattern(path.pin, /^\d{6}$/u, { message: 'Use the 6 digits from your email.' });
   });
-  readonly flowId = signal('');
-  readonly submitting = signal(false);
-  readonly error = signal('');
-  readonly complete = signal(false);
+
   readonly emailError = computed(() => this.emailForm.email().errors()[0]?.message ?? '');
   readonly codeError = computed(() => this.codeForm.pin().errors()[0]?.message ?? '');
+
+  protected readonly signInUrl = SIGN_IN_URL;
 
   protected async requestVerification(): Promise<void> {
     if (this.emailForm().invalid() || this.submitting()) return;
@@ -79,8 +83,6 @@ export class EmailVerification {
       this.submitting.set(false);
     }
   }
-
-  protected readonly signInUrl = SIGN_IN_URL;
 
   private message(error: unknown, fallback: string): string {
     return error instanceof HttpErrorResponse && typeof error.error?.message === 'string'

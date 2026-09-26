@@ -79,7 +79,6 @@ export class Button {
   readonly variant = input<ButtonVariant>('solid');
 
   readonly hostClass = computed(() => (this.fullWidth() ? 'block w-full' : 'inline-block'));
-
   readonly classes = computed(() => {
     const variant = this.variant();
     const tone = resolveTone(this.tone());

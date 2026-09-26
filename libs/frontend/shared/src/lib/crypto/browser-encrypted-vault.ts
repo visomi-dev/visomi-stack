@@ -277,10 +277,12 @@ export class BrowserEncryptedVault {
   async rawRecords(): Promise<VaultRecord[]> {
     return this.storage.listRecords();
   }
+
   close(): void {
     this.lock();
     this.storage.close();
   }
+
   private requireKey(): CryptoKey {
     if (!this.workspaceKey) throw new BrowserVaultLockedError();
     return this.workspaceKey;

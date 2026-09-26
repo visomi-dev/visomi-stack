@@ -10,6 +10,7 @@ import { PasswordInput } from './password-input';
 })
 class Host {
   readonly model = signal({ password: 'secret123!' });
+
   readonly f: FieldTree<{ password: string }> = form(this.model, () => undefined);
 }
 

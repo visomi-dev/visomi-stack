@@ -10,12 +10,13 @@ import { Listbox, type ListboxOption } from './listbox';
   template: '<app-listbox [options]="options" (valueChange)="selected.set($event)" />',
 })
 class Host {
+  readonly selected = signal('');
+
   readonly options: ListboxOption[] = [
     { label: 'First', value: 'first' },
     { label: 'Second', value: 'second' },
     { label: 'Third', value: 'third' },
   ];
-  readonly selected = signal('');
 }
 
 describe('Listbox', () => {

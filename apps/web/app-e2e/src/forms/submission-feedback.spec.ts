@@ -38,9 +38,9 @@ test('separates password length compliance from estimated resistance to guessing
   await expect(page.getByText('Length requirement met (12–128 characters).')).toBeVisible();
   const estimate = page.locator('[data-slot="password-strength-label"]');
 
-  await expect(estimate).toHaveText(/^(Very weak|Weak|Fair)$/);
+  await expect(estimate).toHaveText(/^\s*(Very weak|Weak|Fair)\s*$/);
   await expect(page.getByText('Try several unrelated words.', { exact: false })).toBeVisible();
   await page.getByLabel('Password', { exact: true }).fill('cobalt hammock orchard lantern');
-  await expect(estimate).toHaveText(/^(Strong|Very strong)$/);
+  await expect(estimate).toHaveText(/^\s*(Strong|Very strong)\s*$/);
   await page.screenshot({ path: 'tmp/auth-captures/password-estimate.png', fullPage: true });
 });

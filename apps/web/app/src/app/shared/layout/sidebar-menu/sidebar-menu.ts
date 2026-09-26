@@ -30,28 +30,27 @@ type LayoutNavSection = {
   styleUrl: './sidebar-menu.css',
 })
 export class SidebarMenu {
-  protected readonly appName = APP_NAME;
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
   private readonly settings = inject(Settings);
 
   readonly collapsed = input(false);
-  readonly APP_URL = APP_URL;
   readonly mobileMenuOpen = input(false);
   readonly closed = output<void>();
   readonly toggleCollapsed = output<void>();
-  readonly signingOut = signal(false);
-  readonly isDark = this.settings.isDark;
-  readonly user = this.auth.user;
 
+  readonly signingOut = signal(false);
+
+  readonly user = this.auth.user;
   readonly userInitials = computed(() => {
     const email = this.user()?.email ?? 'T';
 
     return email.slice(0, 2).toUpperCase();
   });
-
   readonly userEmail = computed(() => this.user()?.email ?? '');
 
+  readonly APP_URL = APP_URL;
+  readonly isDark = this.settings.isDark;
   readonly navSections: LayoutNavSection[] = [
     {
       label: $localize`:@@layoutWorkspaceTitle:Workspace`,
@@ -67,6 +66,8 @@ export class SidebarMenu {
       ],
     },
   ];
+
+  protected readonly appName = APP_NAME;
 
   closeMenu() {
     this.closed.emit();

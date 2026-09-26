@@ -60,6 +60,16 @@ export class Activation implements OnInit {
   private readonly router = inject(Router);
 
   readonly apiKeyModel = signal<ApiKeyModel>({ label: 'Primary workspace key' });
+  readonly activationData = signal<ActivationState | null>(null);
+  readonly continuing = signal(false);
+  readonly copyMessage = signal('');
+  readonly creatingKey = signal(false);
+  readonly errorMessage = signal('');
+  readonly generatedKey = signal<CreatedApiKey | null>(null);
+  readonly loading = signal(true);
+  readonly revokingKeyId = signal('');
+  readonly selectedConfigTab = signal<ConfigTab>('themis');
+  readonly labelManualError = signal<string | null>(null);
 
   readonly apiKeyForm: FieldTree<ApiKeyModel> = form(
     this.apiKeyModel,
@@ -76,47 +86,10 @@ export class Activation implements OnInit {
     },
   );
 
-  readonly activationData = signal<ActivationState | null>(null);
-  readonly continuing = signal(false);
-  readonly copyMessage = signal('');
-  readonly creatingKey = signal(false);
-  readonly errorMessage = signal('');
-  readonly generatedKey = signal<CreatedApiKey | null>(null);
-  readonly loading = signal(true);
-  readonly revokingKeyId = signal('');
-  readonly selectedConfigTab = signal<ConfigTab>('themis');
-  readonly labelManualError = signal<string | null>(null);
-
   readonly labelError = computed(() => this.apiKeyForm.label().errors()[0]?.message ?? this.labelManualError() ?? '');
 
   async ngOnInit() {
     await this.loadActivationState();
-  }
-
-  private async createApiKey(field: FieldTree<ApiKeyModel>): Promise<void> {
-    if (this.creatingKey()) {
-      return;
-    }
-
-    this.creatingKey.set(true);
-    this.errorMessage.set('');
-    this.labelManualError.set(null);
-
-    try {
-      const createdKey = await this.activation.createApiKey(field().value());
-
-      this.generatedKey.set(createdKey);
-      await this.loadActivationState();
-    } catch (error) {
-      this.errorMessage.set(
-        error instanceof HttpErrorResponse
-          ? (error.error?.message ?? 'The API key could not be created.')
-          : 'The API key could not be created.',
-      );
-      this.labelManualError.set('The API key could not be created.');
-    } finally {
-      this.creatingKey.set(false);
-    }
   }
 
   async copyGeneratedKey() {
@@ -255,6 +228,32 @@ export class Activation implements OnInit {
 
   hasMilestone(milestone: ActivationMilestone) {
     return this.activationData()?.milestones.includes(milestone) ?? false;
+  }
+
+  private async createApiKey(field: FieldTree<ApiKeyModel>): Promise<void> {
+    if (this.creatingKey()) {
+      return;
+    }
+
+    this.creatingKey.set(true);
+    this.errorMessage.set('');
+    this.labelManualError.set(null);
+
+    try {
+      const createdKey = await this.activation.createApiKey(field().value());
+
+      this.generatedKey.set(createdKey);
+      await this.loadActivationState();
+    } catch (error) {
+      this.errorMessage.set(
+        error instanceof HttpErrorResponse
+          ? (error.error?.message ?? 'The API key could not be created.')
+          : 'The API key could not be created.',
+      );
+      this.labelManualError.set('The API key could not be created.');
+    } finally {
+      this.creatingKey.set(false);
+    }
   }
 
   private async loadActivationState() {

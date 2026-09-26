@@ -142,10 +142,6 @@ export class CapabilityPolicy {
     this.requests = new Set(state?.requests ?? []);
   }
 
-  private persist(): void {
-    this.persistence?.save({ revoked: [...this.revoked], requests: [...this.requests] });
-  }
-
   revoke(capabilityId: string): void {
     this.revoked.add(capabilityId);
     this.persist();
@@ -211,5 +207,9 @@ export class CapabilityPolicy {
     this.persist();
 
     return { allowed: true, capabilityId: capability.id };
+  }
+
+  private persist(): void {
+    this.persistence?.save({ revoked: [...this.revoked], requests: [...this.requests] });
   }
 }

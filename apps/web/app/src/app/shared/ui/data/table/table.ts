@@ -20,14 +20,12 @@ type TableRow = Record<string, unknown> & {
   styleUrl: './table.css',
 })
 export class Table<T extends TableRow = TableRow> {
-  readonly templates = contentChildren<TableCell<T>>(TableCell);
-
-  readonly columns = input<readonly TableColumn<T>[]>([]);
   readonly data = input<readonly T[]>([]);
   readonly dense = input(false, { transform: booleanAttribute });
   readonly mobileCards = input(false, { transform: booleanAttribute });
   readonly stickyHeaders = input(false, { transform: booleanAttribute });
 
+  readonly columns = input<readonly TableColumn<T>[]>([]);
   readonly declarative = computed(() => this.columns().length > 0);
   readonly tableClasses = computed(() =>
     uiClass('min-w-full text-left text-sm text-slate-950 dark:text-slate-50', this.dense() && 'text-xs'),
@@ -44,6 +42,8 @@ export class Table<T extends TableRow = TableRow> {
         : 'hover:bg-slate-100 dark:bg-slate-800',
     ),
   );
+
+  readonly templates = contentChildren<TableCell<T>>(TableCell);
   readonly templatesMap = computed(() => {
     const map = new Map<Extract<keyof T, string>, TableCell<T>['template']>();
 

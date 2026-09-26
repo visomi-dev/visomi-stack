@@ -55,7 +55,6 @@ export class Alert {
 
     return uiClass(base, alertTones[variant][tone]);
   });
-
   readonly iconName = computed(() => alertIcons[this.tone()]);
   readonly role = computed(() => (this.tone() === 'danger' ? 'alert' : 'status'));
   readonly showIcon = computed(() => this.variant() === 'auth');

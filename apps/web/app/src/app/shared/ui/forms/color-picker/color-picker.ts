@@ -29,7 +29,6 @@ const defaultOptions: readonly ColorPickerOption[] = Object.freeze([
   styleUrl: './color-picker.css',
 })
 export class ColorPicker {
-  readonly formField = input.required<Field<string>>();
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly label = input('');
   readonly name = input('color');
@@ -37,8 +36,9 @@ export class ColorPicker {
   readonly required = input(false, { transform: booleanAttribute });
   readonly valueChange = output<string>();
 
-  readonly value = computed(() => this.formField()().value() ?? '');
+  readonly formField = input.required<Field<string>>();
 
+  readonly value = computed(() => this.formField()().value() ?? '');
   readonly groupClasses = computed(() => uiClass('flex items-center gap-2', this.disabled() && 'opacity-50'));
 
   optionClasses(option: ColorPickerOption): string {

@@ -6,8 +6,8 @@ import type { ProfilePreferences, Theme } from './settings';
 @Injectable()
 export class ServerSettings extends Settings {
   private readonly $theme = signal<Theme>('light');
-
   readonly isDark = signal(false).asReadonly();
+
   readonly theme = this.$theme.asReadonly();
 
   applyTheme(): void {

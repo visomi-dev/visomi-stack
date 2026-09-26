@@ -30,11 +30,6 @@ type PasswordVariant = 'icon' | 'text';
   styleUrl: './password-input.css',
 })
 export class PasswordInput {
-  protected readonly ready = signal(false);
-  private readonly enableInputAfterRender = afterNextRender(() => this.ready.set(true));
-  private readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('inputEl');
-
-  readonly formField = input.required<Field<string>>();
   readonly ariaDescribedBy = input<string | null>(null);
   readonly autocomplete = input<string | null>(null);
   readonly controlId = input<string | null>(null);
@@ -42,11 +37,6 @@ export class PasswordInput {
   readonly invalid = input(false, { transform: booleanAttribute });
   readonly loading = input(false, { transform: booleanAttribute });
   readonly showStrength = input(false, { transform: booleanAttribute });
-  readonly meetsLength = computed(() => {
-    const length = passwordLength(this.formField()().value());
-
-    return length >= 12 && length <= 128;
-  });
   readonly maxLength = input<number | null, unknown>(null, {
     transform: (value) => (value == null ? null : numberAttribute(value)),
   });
@@ -58,15 +48,20 @@ export class PasswordInput {
   readonly variant = input<PasswordVariant>('text');
   readonly valueChange = output<string>();
 
+  protected readonly ready = signal(false);
   readonly type = signal<'password' | 'text'>('password');
-
-  readonly isTextVariant = computed(() => this.variant() === 'text');
-  readonly isVisible = computed(() => this.type() === 'text');
   readonly isFilled = signal(false);
 
+  readonly formField = input.required<Field<string>>();
+  readonly meetsLength = computed(() => {
+    const length = passwordLength(this.formField()().value());
+
+    return length >= 12 && length <= 128;
+  });
+  readonly isTextVariant = computed(() => this.variant() === 'text');
+  readonly isVisible = computed(() => this.type() === 'text');
   readonly ariaLabel = computed(() => (this.isVisible() ? 'Hide password' : 'Show password'));
   readonly toggleLabel = computed(() => (this.isVisible() ? 'Hide' : 'Show'));
-
   readonly inputClasses = computed(() =>
     uiClass(
       'ui-focus-ring w-full rounded-[var(--radius-control)] border bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-950 dark:text-slate-50 placeholder:text-slate-500 dark:text-slate-400 disabled:cursor-not-allowed disabled:opacity-50',
@@ -75,7 +70,6 @@ export class PasswordInput {
       this.loading() && 'pointer-events-none !text-transparent',
     ),
   );
-
   readonly toggleClasses = computed(() => {
     if (this.isTextVariant()) {
       return uiClass(
@@ -90,15 +84,7 @@ export class PasswordInput {
     );
   });
 
-  private readonly syncEffect = effect(() => {
-    const ref = this.inputRef();
-    const value = this.formField()().value();
-
-    if (ref) {
-      ref.nativeElement.value = value ?? '';
-      this.isFilled.set((value ?? '').length > 0);
-    }
-  });
+  private readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('inputEl');
 
   onInput(event: Event): void {
     const nextValue = (event.target as HTMLInputElement).value;
@@ -114,4 +100,16 @@ export class PasswordInput {
   onBlur(): void {
     this.formField()().markAsTouched();
   }
+
+  private readonly enableInputAfterRender = afterNextRender(() => this.ready.set(true));
+
+  private readonly syncEffect = effect(() => {
+    const ref = this.inputRef();
+    const value = this.formField()().value();
+
+    if (ref) {
+      ref.nativeElement.value = value ?? '';
+      this.isFilled.set((value ?? '').length > 0);
+    }
+  });
 }

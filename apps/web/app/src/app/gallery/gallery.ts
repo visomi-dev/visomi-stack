@@ -79,6 +79,8 @@ const listboxFormModel = signal<ListboxForm>({ value: '' });
 export class Gallery {
   readonly filter = signal('');
   readonly activeSection = signal<string | null>(null);
+  readonly radioGroupValue = signal('team');
+  readonly dialogOpen = signal(false);
 
   readonly inputForm = form(textFormModel);
   readonly textareaForm = form(textFormModel);
@@ -235,40 +237,6 @@ export class Gallery {
       .filter((section) => section.examples.length > 0);
   });
 
-  readonly listboxOptions: ListboxOption[] = [
-    { label: 'Active projects', value: 'active' },
-    { label: 'Archived projects', value: 'archived' },
-    { label: 'All projects', value: 'all' },
-  ];
-
-  readonly selectOptions: ListboxOption[] = [
-    { label: 'Active projects', value: 'active' },
-    { label: 'Archived projects', value: 'archived' },
-    { label: 'All projects', value: 'all' },
-  ];
-
-  readonly tableRows = [
-    { id: 1, name: 'Atlas', tone: 'success', count: 12 },
-    { id: 2, name: 'Beacon', tone: 'accent', count: 4 },
-    { id: 3, name: 'Citadel', tone: 'danger', count: 0 },
-  ];
-
-  readonly radioOptions: readonly RadioOption[] = [
-    { value: 'starter', label: 'Starter', icon: 'folder', description: 'For solo founders and weekend builds.' },
-    { value: 'team', label: 'Team', icon: 'grid', description: 'For small product teams up to 10 people.' },
-    {
-      value: 'enterprise',
-      label: 'Enterprise',
-      icon: 'globe',
-      disabled: true,
-      description: 'Contact us to enable this plan.',
-    },
-  ];
-
-  readonly radioGroupValue = signal('team');
-
-  readonly dialogOpen = signal(false);
-
   readonly iconNames = [
     'angle-down',
     'angle-left',
@@ -300,6 +268,39 @@ export class Gallery {
 
   readonly filteredIconNames: Signal<readonly string[]> = computed(() => this.iconNames);
 
+  readonly listboxOptions: ListboxOption[] = [
+    { label: 'Active projects', value: 'active' },
+    { label: 'Archived projects', value: 'archived' },
+    { label: 'All projects', value: 'all' },
+  ];
+  readonly selectOptions: ListboxOption[] = [
+    { label: 'Active projects', value: 'active' },
+    { label: 'Archived projects', value: 'archived' },
+    { label: 'All projects', value: 'all' },
+  ];
+  readonly tableRows = [
+    { id: 1, name: 'Atlas', tone: 'success', count: 12 },
+    { id: 2, name: 'Beacon', tone: 'accent', count: 4 },
+    { id: 3, name: 'Citadel', tone: 'danger', count: 0 },
+  ];
+  readonly radioOptions: readonly RadioOption[] = [
+    { value: 'starter', label: 'Starter', icon: 'folder', description: 'For solo founders and weekend builds.' },
+    { value: 'team', label: 'Team', icon: 'grid', description: 'For small product teams up to 10 people.' },
+    {
+      value: 'enterprise',
+      label: 'Enterprise',
+      icon: 'globe',
+      disabled: true,
+      description: 'Contact us to enable this plan.',
+    },
+  ];
+  readonly inputField = this.inputForm.value;
+  readonly textareaField = this.textareaForm.value;
+  readonly selectField = this.selectForm.value;
+  readonly checkboxField = this.checkboxForm.value;
+  readonly switchField = this.switchForm.value;
+  readonly radioField = this.radioForm.value;
+
   setFilter(value: string): void {
     this.filter.set(value);
   }
@@ -321,11 +322,4 @@ export class Gallery {
   closeDialog() {
     this.dialogOpen.set(false);
   }
-
-  readonly inputField = this.inputForm.value;
-  readonly textareaField = this.textareaForm.value;
-  readonly selectField = this.selectForm.value;
-  readonly checkboxField = this.checkboxForm.value;
-  readonly switchField = this.switchForm.value;
-  readonly radioField = this.radioForm.value;
 }

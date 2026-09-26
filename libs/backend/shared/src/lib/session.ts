@@ -395,25 +395,6 @@ export class PostgresSessionStore extends Store {
       .catch((error) => callback(error));
   }
 
-  private async ensureTable() {
-    await this.pool.query(
-      `SELECT sid, sess, expires_at, created_at, updated_at, revoked_at FROM ${this.tableName} LIMIT 0`,
-    );
-  }
-
-  private async activeRows(scope: SessionScope) {
-    await this.ensureTablePromise;
-    const result = await this.pool.query<SessionRow>(
-      `SELECT sid, sess, expires_at, created_at, updated_at
-      FROM ${this.tableName} WHERE revoked_at IS NULL AND expires_at > NOW()
-      AND sess->'passport'->'user'->>'id' = $1
-      AND sess->'passport'->'user'->'authVersion' = $2::jsonb AND sess->>'authority' = 'full'`,
-      [scope.userId, JSON.stringify(scope.authVersion)],
-    );
-
-    return result.rows;
-  }
-
   async listManagedSessions(scope: SessionScope): Promise<ManagedSession[]> {
     return (await this.activeRows(scope)).flatMap((row) => {
       const item = managed(row, scope);
@@ -464,6 +445,25 @@ export class PostgresSessionStore extends Store {
 
       return operation();
     });
+  }
+
+  private async ensureTable() {
+    await this.pool.query(
+      `SELECT sid, sess, expires_at, created_at, updated_at, revoked_at FROM ${this.tableName} LIMIT 0`,
+    );
+  }
+
+  private async activeRows(scope: SessionScope) {
+    await this.ensureTablePromise;
+    const result = await this.pool.query<SessionRow>(
+      `SELECT sid, sess, expires_at, created_at, updated_at
+      FROM ${this.tableName} WHERE revoked_at IS NULL AND expires_at > NOW()
+      AND sess->'passport'->'user'->>'id' = $1
+      AND sess->'passport'->'user'->'authVersion' = $2::jsonb AND sess->>'authority' = 'full'`,
+      [scope.userId, JSON.stringify(scope.authVersion)],
+    );
+
+    return result.rows;
   }
 }
 

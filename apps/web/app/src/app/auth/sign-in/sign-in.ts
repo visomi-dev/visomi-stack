@@ -32,6 +32,7 @@ import { Form as AppForm } from '../../shared/ui/forms/form/form';
 import { Input } from '../../shared/ui/forms/input/input';
 import { Label } from '../../shared/ui/forms/label/label';
 import { PasswordInput } from '../../shared/ui/forms/password-input/password-input';
+import { Select } from '../../shared/ui/forms/select/select';
 
 type AccessState =
   | 'ready'
@@ -60,15 +61,12 @@ type EnrollmentModel = { label: string };
 
 @Component({
   host: { class: /* tw */ 'block min-h-full w-full' },
-  imports: [AppForm, AuthCard, AuthLayout, ErrorMessage, Field, Input, Label, PasswordInput, RouterLink],
+  imports: [AppForm, AuthCard, AuthLayout, ErrorMessage, Field, Input, Label, PasswordInput, Select, RouterLink],
   selector: 'app-sign-in',
   templateUrl: './sign-in.html',
   styleUrl: './sign-in.css',
 })
 export class SignIn {
-  protected readonly appName = APP_NAME;
-  private passwordAttempt = 0;
-  private recoveryAttempt = 0;
   private readonly document = inject(DOCUMENT);
   private readonly auth = inject(Auth);
   private readonly passkey = inject(Passkey);
@@ -76,34 +74,11 @@ export class SignIn {
   private readonly route = inject(ActivatedRoute);
   private readonly google = inject(GoogleIdentity);
   private readonly password = inject(PasswordAuth);
-  private readonly googleButton = viewChild<ElementRef<HTMLElement>>('googleButton');
-  private readonly methodDialog = viewChild<ElementRef<HTMLDialogElement>>('methodDialog');
-  private readonly continueButton = viewChild<ElementRef<HTMLButtonElement>>('continueButton');
   private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
-  private googleAttempt = 0;
-  private credentialController?: AbortController;
-  private credentialAttempt = 0;
-  private identityPreparation?: ReturnType<Auth['startIdentityFlow']>;
-  private immediateOptions?: { challengeId: string; options: Record<string, unknown>; expiresAt: number };
-  private destroyed = false;
+
   readonly methodsOpen = signal(false);
-  private destination(): string {
-    return authDestination(this.route.snapshot.queryParamMap.get('returnTo'));
-  }
   readonly passkeyVerifying = signal(false);
-
-  private readonly syncMethodDialog = afterRenderEffect(() => {
-    const dialog = this.methodDialog()?.nativeElement;
-
-    if (!dialog) return;
-    if (this.methodsOpen() && !dialog.open) dialog.showModal();
-    else if (!this.methodsOpen() && dialog.open) {
-      dialog.close();
-      this.continueButton()?.nativeElement.focus();
-    }
-  });
-
   readonly state = signal<AccessState>('ready');
   readonly errorMessage = signal('');
   readonly accounts = signal<RestrictedAccount[]>([]);
@@ -111,48 +86,28 @@ export class SignIn {
   readonly flowId = signal('');
   readonly resendAvailableAt = signal('');
   private readonly clock = signal(Date.now());
-  readonly resendSeconds = computed(() => {
-    const deadline = Date.parse(this.resendAvailableAt());
-
-    return Number.isFinite(deadline) ? Math.max(0, Math.ceil((deadline - this.clock()) / 1000)) : 0;
-  });
   readonly verificationNotice = signal('');
   readonly verificationRestartRequired = signal(false);
   readonly recoverySubmitting = signal(false);
   readonly recoveryFactorModel = signal<{ kind: 'totp' | 'recovery_code'; code: string }>({ kind: 'totp', code: '' });
-  readonly recoveryFactorForm = form(this.recoveryFactorModel);
-  private readonly syncResendClock = afterRenderEffect((onCleanup) => {
-    if (this.state() !== 'password-factor' || this.passwordFactor() !== 'email' || !this.resendAvailableAt()) return;
-    const window = this.document.defaultView;
-
-    if (!window) return;
-    const update = () => this.clock.set(Date.now());
-
-    update();
-    const timer = window.setInterval(update, 1000);
-
-    this.document.addEventListener('visibilitychange', update);
-    onCleanup(() => {
-      window.clearInterval(timer);
-      this.document.removeEventListener('visibilitychange', update);
-    });
-  });
   readonly verificationChallengeId = signal('');
-  readonly verificationOptions = signal<Record<string, unknown> | null>(null);
   readonly identityFlowId = signal('');
   readonly googleClientId = signal<string | null>(null);
   readonly passwordFlow = signal<PasswordSignInPending | null>(null);
   readonly passwordFactor = signal<PasswordSecondFactor | 'recovery_code' | null>(null);
   readonly passwordSubmitting = signal(false);
   readonly passwordSetupSubmitting = signal(false);
-
   readonly emailModel = signal<EmailModel>({ email: '' });
+  readonly otpModel = signal<OtpModel>({ pin: '' });
+  readonly enrollmentModel = signal<EnrollmentModel>({ label: '' });
+  readonly passwordModel = signal<PasswordModel>({ email: '', password: '' });
+  readonly passwordSetupModel = signal<PasswordSetupModel>({ password: '', confirmation: '' });
+
+  readonly recoveryFactorForm = form(this.recoveryFactorModel);
   readonly emailForm: FieldTree<EmailModel> = form(this.emailModel, (path) => {
     required(path.email, { message: $localize`:@@identityEmailRequired:Enter an email you can verify.` });
     email(path.email, { message: $localize`:@@identityEmailInvalid:Enter a valid email address.` });
   });
-
-  readonly otpModel = signal<OtpModel>({ pin: '' });
   readonly otpForm: FieldTree<OtpModel> = form(this.otpModel, (path) => {
     required(path.pin, { message: $localize`:@@identityOtpRequired:Enter the 6-digit code.` });
 
@@ -165,24 +120,16 @@ export class SignIn {
       message: $localize`:@@identityOtpDigits:Use the 6 digits from your email.`,
     });
   });
-
-  readonly enrollmentModel = signal<EnrollmentModel>({ label: '' });
   readonly enrollmentForm: FieldTree<EnrollmentModel> = form(this.enrollmentModel, (path) => {
     required(path.label, { message: $localize`:@@identityPasskeyLabelRequired:Name this passkey.` });
     maxLength(path.label, 64, { message: $localize`:@@identityPasskeyLabelLength:Use 64 characters or fewer.` });
   });
-
-  readonly emailError = computed(() => this.emailForm.email().errors()[0]?.message ?? '');
-  readonly passwordModel = signal<PasswordModel>({ email: '', password: '' });
   readonly passwordForm: FieldTree<PasswordModel> = form(this.passwordModel, (path) => {
     required(path.email, { message: $localize`:@@identityPasswordEmailRequired:Enter your email address.` });
     email(path.email, { message: $localize`:@@identityPasswordEmailInvalid:Enter a valid email address.` });
     required(path.password, { message: $localize`:@@identityPasswordRequired:Enter your password.` });
     maxLength(path.password, 512, { message: $localize`:@@identityPasswordLength:Use 512 characters or fewer.` });
   });
-  readonly passwordEmailError = computed(() => this.passwordForm.email().errors()[0]?.message ?? '');
-  readonly passwordError = computed(() => this.passwordForm.password().errors()[0]?.message ?? '');
-  readonly passwordSetupModel = signal<PasswordSetupModel>({ password: '', confirmation: '' });
   readonly passwordSetupForm: FieldTree<PasswordSetupModel> = form(this.passwordSetupModel, (path) => {
     required(path.password, { message: $localize`:@@identityPasswordSetupRequired:Enter a password.` });
     validatePasswordLength(path.password);
@@ -193,10 +140,36 @@ export class SignIn {
         : { kind: 'password_mismatch', message: $localize`:@@identityPasswordMismatch:Passwords do not match.` },
     );
   });
+
+  readonly resendSeconds = computed(() => {
+    const deadline = Date.parse(this.resendAvailableAt());
+
+    return Number.isFinite(deadline) ? Math.max(0, Math.ceil((deadline - this.clock()) / 1000)) : 0;
+  });
+  readonly emailError = computed(() => this.emailForm.email().errors()[0]?.message ?? '');
+  readonly passwordEmailError = computed(() => this.passwordForm.email().errors()[0]?.message ?? '');
+  readonly passwordError = computed(() => this.passwordForm.password().errors()[0]?.message ?? '');
   readonly passwordSetupError = computed(() => this.passwordSetupForm.password().errors()[0]?.message ?? '');
   readonly passwordConfirmationError = computed(() => this.passwordSetupForm.confirmation().errors()[0]?.message ?? '');
   readonly otpError = computed(() => this.otpForm.pin().errors()[0]?.message ?? '');
   readonly labelError = computed(() => this.enrollmentForm.label().errors()[0]?.message ?? '');
+
+  readonly verificationOptions = signal<Record<string, unknown> | null>(null);
+
+  protected readonly appName = APP_NAME;
+
+  private readonly googleButton = viewChild<ElementRef<HTMLElement>>('googleButton');
+  private readonly methodDialog = viewChild<ElementRef<HTMLDialogElement>>('methodDialog');
+  private readonly continueButton = viewChild<ElementRef<HTMLButtonElement>>('continueButton');
+
+  private passwordAttempt = 0;
+  private recoveryAttempt = 0;
+  private googleAttempt = 0;
+  private credentialController?: AbortController;
+  private credentialAttempt = 0;
+  private identityPreparation?: ReturnType<Auth['startIdentityFlow']>;
+  private immediateOptions?: { challengeId: string; options: Record<string, unknown>; expiresAt: number };
+  private destroyed = false;
 
   constructor() {
     afterNextRender(() => void this.suggestPasskey());
@@ -230,27 +203,6 @@ export class SignIn {
     });
   }
 
-  private cancelCredential(): void {
-    this.credentialAttempt += 1;
-    this.credentialController?.abort();
-    this.credentialController = undefined;
-  }
-
-  private prepareIdentityFlow(): ReturnType<Auth['startIdentityFlow']> {
-    this.identityPreparation ??= this.auth
-      .startIdentityFlow()
-      .then((flow) => {
-        this.identityFlowId.set(flow.flowId);
-
-        return flow;
-      })
-      .finally(() => {
-        this.identityPreparation = undefined;
-      });
-
-    return this.identityPreparation;
-  }
-
   protected openMethods(): void {
     if (this.passkeyVerifying()) return;
     const immediate = this.immediateOptions;
@@ -274,96 +226,10 @@ export class SignIn {
     this.showMethodSheet();
   }
 
-  private async authenticateImmediately(begin: {
-    challengeId: string;
-    options: Record<string, unknown>;
-  }): Promise<void> {
-    const attempt = this.credentialAttempt;
-
-    try {
-      // Called directly by the click handler with prepared options to retain transient activation.
-      const credential = await this.passkey.getImmediateCredential(begin.options);
-
-      if (this.destroyed || attempt !== this.credentialAttempt) return;
-      await this.passkey.completeAuthentication(begin.challengeId, credential);
-      await this.auth.ensureSessionLoaded(true);
-      if (!this.destroyed && attempt === this.credentialAttempt) await this.router.navigateByUrl(this.destination());
-    } catch {
-      if (!this.destroyed && attempt === this.credentialAttempt) this.showMethodSheet();
-    } finally {
-      this.passkeyVerifying.set(false);
-    }
-  }
-
-  private showMethodSheet(): void {
-    this.methodsOpen.set(true);
-    this.errorMessage.set('');
-    afterNextRender(
-      () => {
-        if (this.methodsOpen()) void this.showGoogle();
-      },
-      { injector: this.injector },
-    );
-  }
-
   protected closeMethods(): void {
     if (this.passkeyVerifying()) return;
     this.googleAttempt += 1;
     this.methodsOpen.set(false);
-  }
-
-  private async suggestPasskey(): Promise<void> {
-    if (this.destroyed || this.state() !== 'ready' || this.methodsOpen() || this.passkeyVerifying()) return;
-    const attempt = ++this.credentialAttempt;
-
-    const [conditional, immediate] = await Promise.all([
-      this.passkey.supportsConditionalAuthentication(),
-      this.passkey.supportsImmediateAuthentication(),
-    ]);
-
-    if ((!conditional && !immediate) || attempt !== this.credentialAttempt) return;
-    const controller = new AbortController();
-
-    this.credentialController = controller;
-    let credentialSelected = false;
-
-    try {
-      await this.prepareIdentityFlow();
-      if (attempt !== this.credentialAttempt) return;
-      const begin = await this.passkey.beginAuthentication();
-
-      if (attempt !== this.credentialAttempt || !begin.options || !begin.challengeId) return;
-      if (immediate && begin.expiresAt) {
-        this.immediateOptions = {
-          challengeId: begin.challengeId,
-          options: begin.options,
-          expiresAt: Date.parse(begin.expiresAt),
-        };
-      }
-      if (!conditional) return;
-      const credential = await this.passkey.getCredential(begin.options, {
-        mediation: 'conditional',
-        signal: controller.signal,
-      });
-
-      if (attempt !== this.credentialAttempt) return;
-      this.immediateOptions = undefined;
-      credentialSelected = true;
-      this.passkeyVerifying.set(true);
-      await this.passkey.completeAuthentication(begin.challengeId, credential);
-      await this.auth.ensureSessionLoaded(true);
-      if (!this.destroyed) await this.router.navigateByUrl(this.destination());
-    } catch {
-      // Discovery may end silently, but a selected credential needs visible verification feedback.
-      if (credentialSelected && !this.destroyed && attempt === this.credentialAttempt) {
-        this.failPasskey($localize`:@@identityPasskeyFailed:We could not verify that passkey.`);
-      }
-    } finally {
-      if (attempt === this.credentialAttempt) {
-        this.passkeyVerifying.set(false);
-        this.credentialController = undefined;
-      }
-    }
   }
 
   protected async authenticateWithPasskey(): Promise<void> {
@@ -591,9 +457,7 @@ export class SignIn {
     this.errorMessage.set('');
   }
 
-  protected changeRecoveryFactor(event: Event): void {
-    const kind = (event.target as HTMLSelectElement).value;
-
+  protected changeRecoveryFactor(kind: string): void {
     if (kind === 'totp' || kind === 'recovery_code') this.recoveryFactorModel.set({ kind, code: '' });
   }
 
@@ -660,41 +524,6 @@ export class SignIn {
     if (this.emailForm().invalid()) return;
 
     await this.sendEmailOtp();
-  }
-
-  private async sendEmailOtp(): Promise<void> {
-    if (this.recoverySubmitting()) return;
-    const attempt = ++this.recoveryAttempt;
-
-    this.recoverySubmitting.set(true);
-    this.errorMessage.set('');
-    this.verificationRestartRequired.set(false);
-
-    try {
-      const email = this.emailForm.email().value();
-      const started = await this.auth.startIdentityFlow();
-      const flowId = started.flowId;
-
-      if (this.destroyed || attempt !== this.recoveryAttempt) return;
-      await this.auth.identifyIdentity(flowId, email);
-      if (this.destroyed || attempt !== this.recoveryAttempt) return;
-      await this.auth.requestIdentityRecovery(flowId, email);
-
-      if (this.destroyed || attempt !== this.recoveryAttempt) return;
-      this.identityFlowId.set(flowId);
-      this.flowId.set(flowId);
-      this.resendAvailableAt.set('');
-      this.otpModel.set({ pin: '' });
-      this.state.set('otp');
-      this.recoveryFactorModel.set({ kind: 'totp', code: '' });
-    } catch (error) {
-      if (this.destroyed || attempt !== this.recoveryAttempt) return;
-      this.errorMessage.set(
-        this.safeError(error, $localize`:@@identityEmailFailed:We could not send a code yet. Try again.`),
-      );
-    } finally {
-      if (attempt === this.recoveryAttempt) this.recoverySubmitting.set(false);
-    }
   }
 
   protected changeRecoveryEmail(): void {
@@ -875,6 +704,152 @@ export class SignIn {
     }
   }
 
+  private destination(): string {
+    return authDestination(this.route.snapshot.queryParamMap.get('returnTo'));
+  }
+
+  private cancelCredential(): void {
+    this.credentialAttempt += 1;
+    this.credentialController?.abort();
+    this.credentialController = undefined;
+  }
+
+  private prepareIdentityFlow(): ReturnType<Auth['startIdentityFlow']> {
+    this.identityPreparation ??= this.auth
+      .startIdentityFlow()
+      .then((flow) => {
+        this.identityFlowId.set(flow.flowId);
+
+        return flow;
+      })
+      .finally(() => {
+        this.identityPreparation = undefined;
+      });
+
+    return this.identityPreparation;
+  }
+
+  private async authenticateImmediately(begin: {
+    challengeId: string;
+    options: Record<string, unknown>;
+  }): Promise<void> {
+    const attempt = this.credentialAttempt;
+
+    try {
+      // Called directly by the click handler with prepared options to retain transient activation.
+      const credential = await this.passkey.getImmediateCredential(begin.options);
+
+      if (this.destroyed || attempt !== this.credentialAttempt) return;
+      await this.passkey.completeAuthentication(begin.challengeId, credential);
+      await this.auth.ensureSessionLoaded(true);
+      if (!this.destroyed && attempt === this.credentialAttempt) await this.router.navigateByUrl(this.destination());
+    } catch {
+      if (!this.destroyed && attempt === this.credentialAttempt) this.showMethodSheet();
+    } finally {
+      this.passkeyVerifying.set(false);
+    }
+  }
+
+  private showMethodSheet(): void {
+    this.methodsOpen.set(true);
+    this.errorMessage.set('');
+    afterNextRender(
+      () => {
+        if (this.methodsOpen()) void this.showGoogle();
+      },
+      { injector: this.injector },
+    );
+  }
+
+  private async suggestPasskey(): Promise<void> {
+    if (this.destroyed || this.state() !== 'ready' || this.methodsOpen() || this.passkeyVerifying()) return;
+    const attempt = ++this.credentialAttempt;
+
+    const [conditional, immediate] = await Promise.all([
+      this.passkey.supportsConditionalAuthentication(),
+      this.passkey.supportsImmediateAuthentication(),
+    ]);
+
+    if ((!conditional && !immediate) || attempt !== this.credentialAttempt) return;
+    const controller = new AbortController();
+
+    this.credentialController = controller;
+    let credentialSelected = false;
+
+    try {
+      await this.prepareIdentityFlow();
+      if (attempt !== this.credentialAttempt) return;
+      const begin = await this.passkey.beginAuthentication();
+
+      if (attempt !== this.credentialAttempt || !begin.options || !begin.challengeId) return;
+      if (immediate && begin.expiresAt) {
+        this.immediateOptions = {
+          challengeId: begin.challengeId,
+          options: begin.options,
+          expiresAt: Date.parse(begin.expiresAt),
+        };
+      }
+      if (!conditional) return;
+      const credential = await this.passkey.getCredential(begin.options, {
+        mediation: 'conditional',
+        signal: controller.signal,
+      });
+
+      if (attempt !== this.credentialAttempt) return;
+      this.immediateOptions = undefined;
+      credentialSelected = true;
+      this.passkeyVerifying.set(true);
+      await this.passkey.completeAuthentication(begin.challengeId, credential);
+      await this.auth.ensureSessionLoaded(true);
+      if (!this.destroyed) await this.router.navigateByUrl(this.destination());
+    } catch {
+      // Discovery may end silently, but a selected credential needs visible verification feedback.
+      if (credentialSelected && !this.destroyed && attempt === this.credentialAttempt) {
+        this.failPasskey($localize`:@@identityPasskeyFailed:We could not verify that passkey.`);
+      }
+    } finally {
+      if (attempt === this.credentialAttempt) {
+        this.passkeyVerifying.set(false);
+        this.credentialController = undefined;
+      }
+    }
+  }
+
+  private async sendEmailOtp(): Promise<void> {
+    if (this.recoverySubmitting()) return;
+    const attempt = ++this.recoveryAttempt;
+
+    this.recoverySubmitting.set(true);
+    this.errorMessage.set('');
+    this.verificationRestartRequired.set(false);
+
+    try {
+      const email = this.emailForm.email().value();
+      const started = await this.auth.startIdentityFlow();
+      const flowId = started.flowId;
+
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
+      await this.auth.identifyIdentity(flowId, email);
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
+      await this.auth.requestIdentityRecovery(flowId, email);
+
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
+      this.identityFlowId.set(flowId);
+      this.flowId.set(flowId);
+      this.resendAvailableAt.set('');
+      this.otpModel.set({ pin: '' });
+      this.state.set('otp');
+      this.recoveryFactorModel.set({ kind: 'totp', code: '' });
+    } catch (error) {
+      if (this.destroyed || attempt !== this.recoveryAttempt) return;
+      this.errorMessage.set(
+        this.safeError(error, $localize`:@@identityEmailFailed:We could not send a code yet. Try again.`),
+      );
+    } finally {
+      if (attempt === this.recoveryAttempt) this.recoverySubmitting.set(false);
+    }
+  }
+
   private failPasskey(message: string): void {
     this.errorMessage.set(message);
     this.state.set('passkey-error');
@@ -916,4 +891,32 @@ export class SignIn {
 
     return Array.isArray(accounts) ? accounts : null;
   }
+
+  private readonly syncMethodDialog = afterRenderEffect(() => {
+    const dialog = this.methodDialog()?.nativeElement;
+
+    if (!dialog) return;
+    if (this.methodsOpen() && !dialog.open) dialog.showModal();
+    else if (!this.methodsOpen() && dialog.open) {
+      dialog.close();
+      this.continueButton()?.nativeElement.focus();
+    }
+  });
+
+  private readonly syncResendClock = afterRenderEffect((onCleanup) => {
+    if (this.state() !== 'password-factor' || this.passwordFactor() !== 'email' || !this.resendAvailableAt()) return;
+    const window = this.document.defaultView;
+
+    if (!window) return;
+    const update = () => this.clock.set(Date.now());
+
+    update();
+    const timer = window.setInterval(update, 1000);
+
+    this.document.addEventListener('visibilitychange', update);
+    onCleanup(() => {
+      window.clearInterval(timer);
+      this.document.removeEventListener('visibilitychange', update);
+    });
+  });
 }

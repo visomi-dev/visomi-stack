@@ -33,15 +33,20 @@ export class SignUp {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(Auth);
-  private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
-  readonly passwordMode = computed(() => this.params().get('method') === 'password');
+
   readonly passkeyEmailModel = signal({ email: '' });
+  readonly passkeyEmailPending = signal(false);
+  readonly model = signal<SignUpModel>({ email: '', password: '', confirmation: '' });
+  readonly codeModel = signal<CodeModel>({ code: '' });
+  readonly flowId = signal('');
+  readonly submitting = signal(false);
+  readonly error = signal('');
+  readonly complete = signal(false);
+
   readonly passkeyEmailForm = form(this.passkeyEmailModel, (path) => {
     required(path.email, { message: $localize`:@@signupEmailRequired:Enter your email address.` });
     email(path.email, { message: $localize`:@@signupEmailInvalid:Enter a valid email address.` });
   });
-  readonly passkeyEmailPending = signal(false);
-  readonly model = signal<SignUpModel>({ email: '', password: '', confirmation: '' });
   readonly form: FieldTree<SignUpModel> = form(this.model, (path) => {
     required(path.email, { message: $localize`:@@signupEmailRequired:Enter your email address.` });
     email(path.email, { message: $localize`:@@signupEmailInvalid:Enter a valid email address.` });
@@ -54,17 +59,15 @@ export class SignUp {
         : { kind: 'password_mismatch', message: $localize`:@@identityPasswordMismatch:Passwords do not match.` },
     );
   });
-  readonly codeModel = signal<CodeModel>({ code: '' });
   readonly codeForm: FieldTree<CodeModel> = form(this.codeModel, (path) => {
     required(path.code, { message: $localize`:@@identityOtpRequired:Enter the 6-digit code.` });
     minLength(path.code, 6, { message: $localize`:@@identityOtpLength:Enter all 6 digits.` });
     maxLength(path.code, 6, { message: $localize`:@@identityOtpLength:Enter all 6 digits.` });
     pattern(path.code, /^\d{6}$/u, { message: $localize`:@@identityOtpDigits:Use the 6 digits from your email.` });
   });
-  readonly flowId = signal('');
-  readonly submitting = signal(false);
-  readonly error = signal('');
-  readonly complete = signal(false);
+
+  private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
+  readonly passwordMode = computed(() => this.params().get('method') === 'password');
   readonly emailError = computed(() => this.form.email().errors()[0]?.message ?? '');
   readonly passwordError = computed(() => this.form.password().errors()[0]?.message ?? '');
   readonly confirmationError = computed(() => this.form.confirmation().errors()[0]?.message ?? '');

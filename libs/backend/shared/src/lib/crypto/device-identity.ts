@@ -234,6 +234,19 @@ export class DeviceIdentityStore {
     return grant;
   }
 
+  auditEvents(accountId: string): DeviceAuditEvent[] {
+    return this.audit.filter((event) => event.accountId === accountId).map((event) => ({ ...event }));
+  }
+
+  clear(): void {
+    this.devices.clear();
+    this.grants.clear();
+    this.workspaceVersions.clear();
+    this.workspaceApprovals.clear();
+    this.workspaceAuthorizations.clear();
+    this.audit.length = 0;
+  }
+
   private requireRecoveryQuorum(
     accountId: string,
     workspaceId: string,
@@ -265,19 +278,6 @@ export class DeviceIdentityStore {
         throw new DeviceIdentityError('Recovery quorum is not authorized for this workspace.');
       }
     }
-  }
-
-  auditEvents(accountId: string): DeviceAuditEvent[] {
-    return this.audit.filter((event) => event.accountId === accountId).map((event) => ({ ...event }));
-  }
-
-  clear(): void {
-    this.devices.clear();
-    this.grants.clear();
-    this.workspaceVersions.clear();
-    this.workspaceApprovals.clear();
-    this.workspaceAuthorizations.clear();
-    this.audit.length = 0;
   }
 
   private requireDevice(accountId: string, deviceId: string): DeviceIdentity {

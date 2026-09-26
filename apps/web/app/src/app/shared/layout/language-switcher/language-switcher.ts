@@ -20,9 +20,12 @@ const ENGLISH_LOCALE_SEGMENT = 'en';
   styleUrl: './language-switcher.css',
 })
 export class LanguageSwitcher {
-  readonly compact = input(false);
   private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
+
+  readonly compact = input(false);
+
+  readonly currentLocaleSignal = computed(() => this.currentLocale());
 
   currentLocale() {
     return this.document.documentElement.lang.startsWith('es') ? 'es' : 'en';
@@ -43,6 +46,4 @@ export class LanguageSwitcher {
   currentLocaleLabel() {
     return this.currentLocale().toUpperCase();
   }
-
-  readonly currentLocaleSignal = computed(() => this.currentLocale());
 }

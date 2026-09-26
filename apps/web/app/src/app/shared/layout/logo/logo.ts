@@ -14,6 +14,7 @@ type LogoVariant = 'isotype' | 'wordmark' | 'mark' | 'mark-name';
   styleUrl: './logo.css',
 })
 export class Logo {
-  protected readonly appName = APP_NAME;
   readonly variant = input<LogoVariant>('isotype');
+
+  protected readonly appName = APP_NAME;
 }

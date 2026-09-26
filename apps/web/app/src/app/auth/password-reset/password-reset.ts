@@ -11,6 +11,7 @@ import { Form as AppForm } from '../../shared/ui/forms/form/form';
 import { Input } from '../../shared/ui/forms/input/input';
 import { Label } from '../../shared/ui/forms/label/label';
 import { PasswordInput } from '../../shared/ui/forms/password-input/password-input';
+import { Select } from '../../shared/ui/forms/select/select';
 import { AuthCard } from '../../shared/ui/layout/auth-card/auth-card';
 import { AuthLayout } from '../../shared/ui/layout/auth-layout/auth-layout';
 
@@ -24,24 +25,30 @@ type ResetModel = {
 };
 
 @Component({
-  imports: [AppForm, AuthCard, AuthLayout, ErrorMessage, Field, Input, Label, PasswordInput, RouterLink],
+  imports: [AppForm, AuthCard, AuthLayout, ErrorMessage, Field, Input, Label, PasswordInput, Select, RouterLink],
   selector: 'app-password-reset',
   templateUrl: './password-reset.html',
   styleUrl: './password-reset.css',
 })
 export class PasswordReset {
   private readonly password = inject(PasswordAuth);
+
   readonly emailModel = signal<EmailModel>({ email: '' });
-  readonly emailForm: FieldTree<EmailModel> = form(this.emailModel, (path) => {
-    required(path.email, { message: 'Enter your email address.' });
-    email(path.email, { message: 'Enter a valid email address.' });
-  });
   readonly resetModel = signal<ResetModel>({
     emailCode: '',
     factorCode: '',
     factorKind: 'totp',
     password: '',
     confirmation: '',
+  });
+  readonly flow = signal<PasswordResetRequestResponse | null>(null);
+  readonly submitting = signal(false);
+  readonly error = signal('');
+  readonly complete = signal(false);
+
+  readonly emailForm: FieldTree<EmailModel> = form(this.emailModel, (path) => {
+    required(path.email, { message: 'Enter your email address.' });
+    email(path.email, { message: 'Enter a valid email address.' });
   });
   readonly resetForm: FieldTree<ResetModel> = form(this.resetModel, (path) => {
     required(path.emailCode, { message: 'Enter the 6-digit email code.' });
@@ -57,10 +64,7 @@ export class PasswordReset {
         : { kind: 'password_mismatch', message: 'Passwords do not match.' },
     );
   });
-  readonly flow = signal<PasswordResetRequestResponse | null>(null);
-  readonly submitting = signal(false);
-  readonly error = signal('');
-  readonly complete = signal(false);
+
   readonly emailError = computed(() => this.emailForm.email().errors()[0]?.message ?? '');
   readonly emailCodeError = computed(() => this.resetForm.emailCode().errors()[0]?.message ?? '');
   readonly passwordError = computed(() => this.resetForm.password().errors()[0]?.message ?? '');
@@ -107,9 +111,7 @@ export class PasswordReset {
     }
   }
 
-  protected changeFactorKind(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-
+  protected changeFactorKind(value: string): void {
     if (value === 'totp' || value === 'recovery_code')
       this.resetModel.update((model) => ({ ...model, factorKind: value }));
   }

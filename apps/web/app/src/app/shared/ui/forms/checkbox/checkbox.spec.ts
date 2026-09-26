@@ -11,6 +11,7 @@ import { Checkbox } from './checkbox';
 class Host {
   readonly model = signal({ remember: true });
   readonly disabled = signal(false);
+
   readonly f: FieldTree<{ remember: boolean }> = form(this.model, () => undefined);
 }
 

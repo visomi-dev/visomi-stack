@@ -15,9 +15,11 @@ import { Form } from './form';
 class Host {
   readonly submitted = signal(false);
   readonly model = signal({ email: '' });
+
   readonly f: FieldTree<{ email: string }> = form(this.model, (p) => {
     required(p.email, { message: 'Enter your email address.' });
   });
+
   onSubmit(): void {
     // counted as an emission indicator; no DOM work required.
   }

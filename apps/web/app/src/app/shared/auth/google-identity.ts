@@ -24,6 +24,7 @@ type GoogleIdentityApi = {
 export class GoogleIdentity {
   private readonly document = inject(DOCUMENT);
   private readonly http = inject(HttpClient);
+
   private scriptPromise?: Promise<void>;
 
   async renderButton(

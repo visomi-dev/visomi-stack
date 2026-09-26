@@ -10,6 +10,7 @@ import { ColorPicker } from './color-picker';
 })
 class Host {
   readonly model = signal({ color: 'PINK' });
+
   readonly f: FieldTree<{ color: string }> = form(this.model, () => undefined);
 }
 

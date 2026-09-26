@@ -17,23 +17,26 @@ export class SecurityAction {
   private readonly security = inject(SecurityAuth);
   private readonly passkey = inject(Passkey);
   private readonly destroyRef = inject(DestroyRef);
+
   private readonly pendingState = signal<SecurityActionContext | null>(null);
   private readonly busyState = signal(false);
   private readonly errorState = signal('');
   private readonly methodsState = signal<ConfirmationMethod[]>([]);
   private readonly totpState = signal(false);
   private readonly googleState = signal<ReauthenticationStart['google']>(undefined);
-  private grant: ReauthenticationStart | null = null;
-  private attempt = 0;
-  private controller?: AbortController;
-  private execute?: (grantId: string) => Promise<void>;
-  private dismiss?: () => void;
+
   readonly pending = this.pendingState.asReadonly();
   readonly busy = this.busyState.asReadonly();
   readonly error = this.errorState.asReadonly();
   readonly methods = this.methodsState.asReadonly();
   readonly passwordRequiresTotp = this.totpState.asReadonly();
   readonly google = this.googleState.asReadonly();
+
+  private grant: ReauthenticationStart | null = null;
+  private attempt = 0;
+  private controller?: AbortController;
+  private execute?: (grantId: string) => Promise<void>;
+  private dismiss?: () => void;
 
   constructor() {
     this.destroyRef.onDestroy(() => this.dispose());
@@ -69,30 +72,6 @@ export class SecurityAction {
 
   async retry(): Promise<void> {
     if (!this.busy() && this.pending()) await this.prepare(this.attempt);
-  }
-
-  private async prepare(attempt: number): Promise<void> {
-    const action = this.pending();
-
-    if (!action) return;
-    this.busyState.set(true);
-    this.errorState.set('');
-    this.methodsState.set([]);
-    this.googleState.set(undefined);
-    try {
-      const grant = action.authority === 'operation' ? await this.security.startReauthentication(action.purpose) : null;
-
-      if (attempt !== this.attempt) return;
-      this.grant = grant;
-      this.methodsState.set(grant ? grant.methods : ['passkey']);
-      this.totpState.set(grant?.passwordRequiresTotp ?? false);
-      this.googleState.set(grant?.google);
-    } catch {
-      if (attempt === this.attempt)
-        this.errorState.set($localize`:@@securityConfirmationUnavailable:Confirmation is unavailable. Try again.`);
-    } finally {
-      if (attempt === this.attempt) this.busyState.set(false);
-    }
   }
 
   async confirmGoogle(idToken: string, challenge: NonNullable<ReauthenticationStart['google']>): Promise<void> {
@@ -147,6 +126,30 @@ export class SecurityAction {
       this.errorState.set(
         $localize`:@@securityConfirmationFailed:Identity confirmation was not completed. Try again or choose another available method.`,
       );
+    } finally {
+      if (attempt === this.attempt) this.busyState.set(false);
+    }
+  }
+
+  private async prepare(attempt: number): Promise<void> {
+    const action = this.pending();
+
+    if (!action) return;
+    this.busyState.set(true);
+    this.errorState.set('');
+    this.methodsState.set([]);
+    this.googleState.set(undefined);
+    try {
+      const grant = action.authority === 'operation' ? await this.security.startReauthentication(action.purpose) : null;
+
+      if (attempt !== this.attempt) return;
+      this.grant = grant;
+      this.methodsState.set(grant ? grant.methods : ['passkey']);
+      this.totpState.set(grant?.passwordRequiresTotp ?? false);
+      this.googleState.set(grant?.google);
+    } catch {
+      if (attempt === this.attempt)
+        this.errorState.set($localize`:@@securityConfirmationUnavailable:Confirmation is unavailable. Try again.`);
     } finally {
       if (attempt === this.attempt) this.busyState.set(false);
     }

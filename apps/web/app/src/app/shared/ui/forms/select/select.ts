@@ -1,21 +1,33 @@
-import { booleanAttribute, Component, computed, effect, ElementRef, input, output, viewChild } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import {
+  afterEveryRender,
+  booleanAttribute,
+  Component,
+  computed,
+  contentChild,
+  ElementRef,
+  input,
+  output,
+  viewChild,
+} from '@angular/core';
 import type { Field } from '@angular/forms/signals';
 
 import { uiClass } from '../../classes';
 
+import { SelectOptions } from './select-options';
+
 @Component({
   host: { class: /* tw */ 'block' },
+  imports: [NgTemplateOutlet],
   selector: 'app-select',
   templateUrl: './select.html',
   styleUrl: './select.css',
 })
-export class Select {
-  private readonly selectRef = viewChild<ElementRef<HTMLSelectElement>>('selectEl');
-
-  readonly formField = input.required<Field<string>>();
+export class Select<T extends string = string> {
+  protected readonly options = contentChild(SelectOptions);
   readonly ariaDescribedBy = input<string | null>(null);
   readonly disabled = input(false, { transform: booleanAttribute });
-  readonly id = input<string | null>(null);
+  readonly controlId = input<string | null>(null);
   readonly invalid = input(false, { transform: booleanAttribute });
   readonly name = input<string | null>(null);
   readonly required = input(false, { transform: booleanAttribute });
@@ -28,23 +40,30 @@ export class Select {
     ),
   );
 
-  private readonly syncEffect = effect(() => {
-    const ref = this.selectRef();
-    const value = this.formField()().value();
+  readonly formField = input.required<Field<T>>();
 
-    if (ref) {
-      ref.nativeElement.value = value ?? '';
-    }
-  });
+  private readonly selectRef = viewChild<ElementRef<HTMLSelectElement>>('selectEl');
 
   onChangeEvent(event: Event): void {
     const nextValue = (event.target as HTMLSelectElement).value;
 
-    this.formField()().value.set(nextValue);
+    this.formField()().value.set(nextValue as T);
     this.valueChange.emit(nextValue);
   }
 
   onBlur(): void {
     this.formField()().markAsTouched();
   }
+
+  // Options can arrive from a parent view without changing the field value.
+  private readonly syncEffect = afterEveryRender({
+    write: () => {
+      const ref = this.selectRef();
+      const value = this.formField()().value();
+
+      if (ref && ref.nativeElement.value !== value) {
+        ref.nativeElement.value = value ?? '';
+      }
+    },
+  });
 }

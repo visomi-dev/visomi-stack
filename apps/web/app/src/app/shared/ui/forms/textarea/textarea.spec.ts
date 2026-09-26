@@ -10,6 +10,7 @@ import { Textarea } from './textarea';
 })
 class Host {
   readonly model = signal({ summary: 'A short summary.' });
+
   readonly f: FieldTree<{ summary: string }> = form(this.model, () => undefined);
 }
 

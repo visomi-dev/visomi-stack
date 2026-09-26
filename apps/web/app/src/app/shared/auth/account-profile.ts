@@ -36,6 +36,7 @@ export type ProfileExport = {
 export class AccountProfile {
   private readonly http = inject(HttpClient);
   private readonly settings = inject(Settings);
+
   private synchronizedUser: string | null | undefined;
   private preferencesRevision = 0;
 

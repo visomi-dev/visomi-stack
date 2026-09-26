@@ -38,9 +38,6 @@ export class Combobox implements ControlValueAccessor {
   });
   readonly activeId = computed(() => `combobox-option-${this.activeIndex()}`);
 
-  private onChange: (value: string) => void = () => undefined;
-  private onTouched: () => void = () => undefined;
-
   writeValue(value: string | null): void {
     this.value.set(value ?? '');
     this.query.set(this.selectedLabel());
@@ -127,4 +124,8 @@ export class Combobox implements ControlValueAccessor {
   markTouched(): void {
     this.onTouched();
   }
+
+  private onChange: (value: string) => void = () => undefined;
+
+  private onTouched: () => void = () => undefined;
 }

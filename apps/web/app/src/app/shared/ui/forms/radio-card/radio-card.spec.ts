@@ -11,7 +11,10 @@ import { RadioCard } from './radio-card';
 class Host {
   readonly model = signal({ plan: 'standard' });
   readonly locked = signal(false);
-  readonly f: FieldTree<{ plan: string }> = form(this.model, (path) => disabled(path.plan, () => this.locked()));
+
+  readonly f: FieldTree<{ plan: string }> = form(this.model, (path) =>
+    disabled(path.plan, { when: () => this.locked() }),
+  );
 }
 
 describe('RadioCard', () => {

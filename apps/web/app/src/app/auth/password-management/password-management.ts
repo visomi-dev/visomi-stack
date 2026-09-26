@@ -44,6 +44,8 @@ export class PasswordManagement {
   readonly error = signal('');
   readonly notice = signal('');
   readonly codeModel = signal<CodeModel>({ code: '' });
+  readonly passwordModel = signal<PasswordModel>({ currentPassword: '', password: '', confirmation: '' });
+
   readonly codeForm: FieldTree<CodeModel> = form(this.codeModel, (path) => {
     required(path.code, {
       message: $localize`:@@passwordAuthenticatorCodeRequired:Enter the 6-digit authenticator code.`,
@@ -54,8 +56,6 @@ export class PasswordManagement {
       message: $localize`:@@passwordAuthenticatorDigits:Use digits from your authenticator app.`,
     });
   });
-  readonly codeError = computed(() => this.codeForm.code().errors()[0]?.message ?? '');
-  readonly passwordModel = signal<PasswordModel>({ currentPassword: '', password: '', confirmation: '' });
   readonly passwordForm: FieldTree<PasswordModel> = form(this.passwordModel, (path) => {
     required(path.currentPassword, { message: $localize`:@@passwordCurrentRequired:Enter your current password.` });
     required(path.password, { message: $localize`:@@passwordNewRequired:Enter a new password.` });
@@ -67,6 +67,8 @@ export class PasswordManagement {
         : { kind: 'password_mismatch', message: $localize`:@@identityPasswordMismatch:Passwords do not match.` },
     );
   });
+
+  readonly codeError = computed(() => this.codeForm.code().errors()[0]?.message ?? '');
   readonly currentPasswordError = computed(() => this.passwordForm.currentPassword().errors()[0]?.message ?? '');
   readonly newPasswordError = computed(() => this.passwordForm.password().errors()[0]?.message ?? '');
   readonly confirmationError = computed(() => this.passwordForm.confirmation().errors()[0]?.message ?? '');
