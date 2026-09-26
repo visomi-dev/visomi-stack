@@ -50,6 +50,7 @@ export default defineConfig({
       AUTH_TOTP_ENCRYPTION_KEY: 'themis-app-e2e-dedicated-totp-key-2026',
       HOST: gatewayHost,
       COOKIE_SECURE: 'false',
+      ENABLE_LOCAL_ACTIVATION: 'true',
       MAIL_TRANSPORT: 'memory',
       LOCAL_AGENT_URL: localAgentUrl,
       LOCAL_AGENT_PUBLIC_KEY: LOCAL_AGENT_FIXTURE_PUBLIC_KEY,

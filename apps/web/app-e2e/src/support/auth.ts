@@ -188,12 +188,16 @@ export const registerAndAuthenticate = async (
     .getByRole('textbox', { name: 'Verification code' })
     .fill(await readLatestPin(request, email, 'bootstrap_recovery'));
   await page.getByRole('button', { name: 'Verify email', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Your account is verified' })).toBeVisible();
+  await expect
+    .poll(async () => (await (await page.request.get('/api/auth/session')).json()).data.authenticated)
+    .toBe(true);
   // A saved credential must work even after the browser's anonymous/signup session has disappeared.
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page).toHaveURL(signInUrlPattern);
   await page.context().clearCookies();
+  await page.goto(signInRoute);
   const prepared = options.immediate ? page.waitForResponse('**/api/auth/passkey/authentication/begin') : null;
 
-  await page.getByRole('link', { name: 'Continue to sign in' }).click();
   if (prepared) {
     const response = await prepared;
 
