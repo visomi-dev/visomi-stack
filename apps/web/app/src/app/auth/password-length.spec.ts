@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { Auth } from '../shared/auth/auth';
 import { PasswordAuth } from '../shared/auth/password';
 import { Passkey } from '../shared/auth/passkey';
 
@@ -10,7 +11,12 @@ import { PasswordReset } from './password-reset/password-reset';
 describe('New password form validation', () => {
   beforeEach(() =>
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: PasswordAuth, useValue: {} }, { provide: Passkey, useValue: {} }],
+      providers: [
+        provideRouter([]),
+        { provide: Auth, useValue: {} },
+        { provide: PasswordAuth, useValue: {} },
+        { provide: Passkey, useValue: {} },
+      ],
     }),
   );
 

@@ -105,9 +105,12 @@ test('creates a password account with 12 characters and completes email and pass
     .getByRole('textbox', { name: 'Verification code' })
     .fill(await readLatestPin(request, email, 'password_signup'));
   await page.getByRole('button', { name: 'Verify email', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Your account is verified' })).toBeVisible();
+  await expect
+    .poll(async () => (await (await page.request.get('/api/auth/session')).json()).data.authenticated)
+    .toBe(true);
   // Signup and sign-in share the destination delivery cooldown on the real server.
   await delay(Math.max(0, resendAvailableAt - Date.now()));
+  await page.context().clearCookies();
   await page.goto('/app/en/auth/sign-in?method=password');
   await page.getByRole('textbox', { name: 'Email address', exact: true }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
@@ -161,7 +164,9 @@ for (const expiredAssertion of [false, true]) {
     await expect(page.getByRole('alert').filter({ hasText: 'The verification code is invalid.' })).toBeVisible();
     await page.getByRole('textbox', { name: 'Verification code' }).fill(pin);
     await page.getByRole('button', { name: 'Verify email', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Your account is verified' })).toBeVisible();
+    await expect
+      .poll(async () => (await (await page.request.get('/api/auth/session')).json()).data.authenticated)
+      .toBe(true);
     const replay = await page.request.post('/api/auth/passkey/sign-up/verify', {
       data: { code: pin },
       headers: { Origin: new URL(page.url()).origin },
@@ -169,6 +174,7 @@ for (const expiredAssertion of [false, true]) {
 
     expect(replay.status()).toBe(410);
     await page.context().clearCookies();
+    await page.goto('/app/en/auth/sign-in');
     if (expiredAssertion) {
       await page.route(
         '**/api/auth/passkey/authentication/complete',
@@ -180,7 +186,6 @@ for (const expiredAssertion of [false, true]) {
         { times: 1 },
       );
     }
-    await page.getByRole('link', { name: 'Continue to sign in' }).click();
     if (expiredAssertion) {
       await expect(page.getByRole('heading', { name: 'Passkey sign-in did not finish.' })).toBeVisible();
       expect((await (await page.request.get('/api/auth/session')).json()).data.authenticated).toBe(false);
