@@ -195,7 +195,7 @@
                 class="min-h-11 px-3 text-sm text-red-700 underline dark:text-red-300"
                 (click)="requestRemoval('device', device.id)"
                 [disabled]="mutationBusy()"
-                i18n="@@securityRevokeButton"
+                i18n="@@SecurityDuplicate1"
               >
                 Revoke
               </button>
@@ -385,7 +385,7 @@
                 class="min-h-11 px-4 text-sm"
                 [disabled]="passkeySubmitting()"
                 (click)="cancelPasskeyAction()"
-                i18n="@@securityCancelButton"
+                i18n="@@SecurityDuplicate2"
               >
                 Cancel
               </button>
@@ -427,7 +427,7 @@
             class="min-h-11 px-4 text-sm"
             [disabled]="passkeySubmitting()"
             (click)="cancelPasskeyAction()"
-            i18n="@@securityCancelButton"
+            i18n="@@SecurityDuplicate3"
           >
             Cancel
           </button>

@@ -1098,6 +1098,130 @@
       <trans-unit id="securityFirstPasskeyGoogle" datatype="html"><source>Confirm with your connected Google account</source><target>Confirmar con tu cuenta de Google conectada</target></trans-unit>
       <trans-unit id="securityFirstPasskeyCancel" datatype="html"><source>Cancel</source><target>Cancelar</target></trans-unit>
       <trans-unit id="securityFirstPasskeyRestart" datatype="html"><source>Start a new confirmation</source><target>Iniciar una nueva confirmación</target></trans-unit>
+
+      <trans-unit id="ActivationTemplateText20" datatype="html"><source> v1.0.2_stable </source><target> v1.0.2_stable </target></trans-unit>
+      <trans-unit id="ActivationTemplateText19" datatype="html"><source> Configure your API key and local workspace settings before entering the workspace. </source><target> Configura tu clave de API y los ajustes del espacio de trabajo local antes de entrar al espacio de trabajo. </target></trans-unit>
+      <trans-unit id="ActivationTemplateText18" datatype="html"><source> Loading activation settings... </source><target> Cargando la configuración de activación... </target></trans-unit>
+      <trans-unit id="ActivationTemplateText17" datatype="html"><source>Production workspace key</source><target>Clave del espacio de trabajo de producción</target></trans-unit>
+      <trans-unit id="ActivationTemplateText16" datatype="html"><source> Generate key </source><target> Generar clave </target></trans-unit>
+      <trans-unit id="ActivationTemplateText15" datatype="html"><source> <x id="INTERPOLATION" equiv-text="{{ apiKey.tokenPrefix }}"/>... created <x id="INTERPOLATION_1" equiv-text="{{ keyCreatedAtLabel(apiKey) }}"/> </source><target> <x id="INTERPOLATION" equiv-text="{{ apiKey.tokenPrefix }}"/>... creada <x id="INTERPOLATION_1" equiv-text="{{ keyCreatedAtLabel(apiKey) }}"/> </target></trans-unit>
+      <trans-unit id="ActivationTemplateText14" datatype="html"><source> Copy key </source><target> Copiar clave </target></trans-unit>
+      <trans-unit id="ActivationTemplateText13" datatype="html"><source> Revoke </source><target>Revoke</target></trans-unit>
+      <trans-unit id="ActivationTemplateText12" datatype="html"><source> Caution </source><target> Precaución </target></trans-unit>
+      <trans-unit id="ActivationTemplateText11" datatype="html"><source> Each key is displayed only once. Copy it immediately before leaving this screen. </source><target> Cada clave se muestra una sola vez. Cópiala inmediatamente antes de salir de esta pantalla. </target></trans-unit>
+      <trans-unit id="ActivationTemplateText10" datatype="html"><source> ~/.config/themis/core.json </source><target> ~/.config/themis/core.json </target></trans-unit>
+      <trans-unit id="ActivationTemplateText9" datatype="html"><source> ~/.config/opencode/opencode.json </source><target> ~/.config/opencode/opencode.json </target></trans-unit>
+      <trans-unit id="ActivationTemplateText8" datatype="html"><source> .env.production </source><target> .env.production </target></trans-unit>
+      <trans-unit id="ActivationTemplateText7" datatype="html"><source> Copy config </source><target> Copiar configuración </target></trans-unit>
+      <trans-unit id="ActivationTemplateText6" datatype="html"><source> System seed prompt </source><target> Prompt inicial del sistema </target></trans-unit>
+      <trans-unit id="ActivationTemplateText5" datatype="html"><source> Use this prompt inside OpenCode to analyze the repository and seed the first project context into Themis. </source><target> Usa este prompt en OpenCode para analizar el repositorio y añadir el contexto inicial del proyecto a Themis. </target></trans-unit>
+      <trans-unit id="ActivationTemplateText4" datatype="html"><source> Copy prompt </source><target> Copiar prompt </target></trans-unit>
+      <trans-unit id="ActivationTemplateText3" datatype="html"><source><x id="START_BLOCK_IF" equiv-text="@if (hasMilestone(&apos;activation_completed&apos;)) {"/> Activation completed <x id="CLOSE_BLOCK_IF" equiv-text="}"/><x id="START_BLOCK_ELSE_IF" equiv-text="@else if (hasMilestone(&apos;activation_skipped&apos;)) {"/> Activation skipped once <x id="CLOSE_BLOCK_ELSE_IF" equiv-text="}"/><x id="START_BLOCK_ELSE" equiv-text="@else {"/> Pending secure initialization <x id="CLOSE_BLOCK_ELSE" equiv-text="}"/></source><target><x id="START_BLOCK_IF" equiv-text="@if (hasMilestone(&apos;activation_completed&apos;)) {"/> Activación completada <x id="CLOSE_BLOCK_IF" equiv-text="}"/><x id="START_BLOCK_ELSE_IF" equiv-text="@else if (hasMilestone(&apos;activation_skipped&apos;)) {"/> Activación omitida una vez <x id="CLOSE_BLOCK_ELSE_IF" equiv-text="}"/><x id="START_BLOCK_ELSE" equiv-text="@else {"/> Inicialización segura pendiente <x id="CLOSE_BLOCK_ELSE" equiv-text="}"/></target></trans-unit>
+      <trans-unit id="ActivationTemplateText2" datatype="html"><source> Skip for now </source><target> Omitir por ahora </target></trans-unit>
+      <trans-unit id="ActivationTemplateText1" datatype="html"><source> Continue to workspace </source><target>Continuar al espacio de trabajo</target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText12" datatype="html"><source> Email verified </source><target>Correo verificado</target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText11" datatype="html"><source> Your email is verified </source><target> Tu correo electrónico está verificado </target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText10" datatype="html"><source> Email verification alone does not sign you in. Continue with a passkey to access your account. </source><target> Verificar el correo electrónico no inicia tu sesión. Continúa con una clave de acceso para acceder a tu cuenta. </target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText9" datatype="html"><source> Continue to sign in </source><target> Continuar para iniciar sesión </target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText8" datatype="html"><source>Check your email</source><target>Revisa tu correo electrónico</target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText7" datatype="html"><source> Enter the 6-digit code sent to your email. </source><target> Introduce el código de 6 dígitos que enviamos a tu correo electrónico. </target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText6" datatype="html"><source> Verification code </source><target>Código de verificación</target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText5" datatype="html"><source> Verify email </source><target>Verificar correo</target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText4" datatype="html"><source>Verify your email</source><target>Verifica tu correo electrónico</target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText3" datatype="html"><source> We will send a one-time code. Email verification does not replace passkey sign-in. </source><target> Enviaremos un código de un solo uso. La verificación del correo electrónico no sustituye el inicio de sesión con clave de acceso. </target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText2" datatype="html"><source> Email address </source><target>Correo electrónico</target></trans-unit>
+      <trans-unit id="EmailVerificationTemplateText1" datatype="html"><source> Send verification code </source><target> Enviar código de verificación </target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText20" datatype="html"><source> Password reset </source><target> Restablecimiento de contraseña </target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText19" datatype="html"><source>Password updated</source><target>Contraseña actualizada</target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText18" datatype="html"><source> Your password has been reset. Sign in again with your new password. </source><target> Se restableció tu contraseña. Inicia sesión de nuevo con tu nueva contraseña. </target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText17" datatype="html"><source> Return to sign in </source><target> Volver al inicio de sesión </target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText16" datatype="html"><source> Email verification </source><target>Verificación de correo electrónico</target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText15" datatype="html"><source>Reset your password</source><target>Restablece tu contraseña</target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText14" datatype="html"><source> Enter the code sent to your email and choose a new password. </source><target> Introduce el código que enviamos a tu correo electrónico y elige una contraseña nueva. </target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText13" datatype="html"><source> Email verification code </source><target> Código de verificación del correo electrónico </target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText12" datatype="html"><source>Authenticator code</source><target>Código del autenticador</target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText11" datatype="html"><source>Recovery code</source><target>Código de recuperación</target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText10" datatype="html"><source> Authenticator or recovery code </source><target> Código del autenticador o de recuperación </target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText9" datatype="html"><source>New password</source><target>Nueva contraseña</target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText8" datatype="html"><source> Confirm new password </source><target>Confirmar nueva contraseña</target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText7" datatype="html"><source> Reset password </source><target> Restablecer contraseña </target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText6" datatype="html"><source> Account recovery </source><target>Recuperación de la cuenta</target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText5" datatype="html"><source>Forgot your password?</source><target>¿Olvidaste tu contraseña?</target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText4" datatype="html"><source> We will send a verification code to your account email. </source><target> Enviaremos un código de verificación al correo electrónico de tu cuenta. </target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText3" datatype="html"><source>Email address</source><target>Correo electrónico</target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText2" datatype="html"><source> Send reset code </source><target> Enviar código de restablecimiento </target></trans-unit>
+      <trans-unit id="PasswordResetTemplateText1" datatype="html"><source> Return to sign in </source><target> Volver al inicio de sesión </target></trans-unit>
+      <trans-unit id="SignInDuplicate1" datatype="html"><source> Create an account </source><target>Crear una cuenta</target></trans-unit>
+      <trans-unit id="SignInDuplicate2" datatype="html"><source>Email address</source><target>Correo electrónico</target></trans-unit>
+      <trans-unit id="SignInTemplateText2" datatype="html"><source> Forgot your password? </source><target> ¿Olvidaste tu contraseña? </target></trans-unit>
+      <trans-unit id="SignInDuplicate3" datatype="html"><source> Start verification again </source><target>Reiniciar la verificación</target></trans-unit>
+      <trans-unit id="SignInDuplicate4" datatype="html"><source>Verify your new passkey</source><target>Verifica tu nueva clave de acceso</target></trans-unit>
+      <trans-unit id="SignInDuplicate5" datatype="html"><source> Use the passkey you just created to finish signing in. </source><target>Usa la clave de acceso que acabas de crear para terminar de iniciar sesión.</target></trans-unit>
+      <trans-unit id="SignUpDuplicate1" datatype="html"><source>Create your account</source><target>Crea tu cuenta</target></trans-unit>
+      <trans-unit id="SignUpDuplicate2" datatype="html"><source>Email address</source><target>Correo electrónico</target></trans-unit>
+      <trans-unit id="SignUpDuplicate3" datatype="html"><source> Already have an account? Sign in </source><target>¿Ya tienes una cuenta? Inicia sesión</target></trans-unit>
+      <trans-unit id="GalleryTemplateText44" datatype="html"><source> Visomi Stack UI Gallery </source><target> Galería de interfaz de Visomi Stack </target></trans-unit>
+      <trans-unit id="galleryIntroductionBeforeCode" datatype="html"><source>Live previews of every primitive in</source><target>Vistas previas en vivo de todos los componentes básicos de</target></trans-unit>
+      <trans-unit id="GalleryTemplateText43" datatype="html"><source> shared/ui </source><target> shared/ui </target></trans-unit>
+      <trans-unit id="galleryIntroductionAfterCode" datatype="html"><source>. Use this to compose new screens without guessing the API.</source><target>. Usa esta galería para crear pantallas sin tener que adivinar la API.</target></trans-unit>
+      <trans-unit id="GalleryTemplateText42" datatype="html"><source>Save changes</source><target>Guardar cambios</target></trans-unit>
+      <trans-unit id="GalleryTemplateText41" datatype="html"><source>Cancel</source><target>Cancelar</target></trans-unit>
+      <trans-unit id="GalleryTemplateText40" datatype="html"><source>Learn more</source><target>Más información</target></trans-unit>
+      <trans-unit id="GalleryTemplateText39" datatype="html"><source>Delete</source><target>Eliminar</target></trans-unit>
+      <trans-unit id="GalleryTemplateText38" datatype="html"><source>Disabled</source><target>Deshabilitado</target></trans-unit>
+      <trans-unit id="GalleryTemplateText37" datatype="html"><source>Edit</source><target>Editar</target></trans-unit>
+      <trans-unit id="GalleryTemplateText36" datatype="html"><source>Delete</source><target>Eliminar</target></trans-unit>
+      <trans-unit id="GalleryTemplateText35" datatype="html"><source>Settings</source><target>Configuración</target></trans-unit>
+      <trans-unit id="GalleryTemplateText34" datatype="html"><source>Go to dashboard</source><target>Ir al panel</target></trans-unit>
+      <trans-unit id="GalleryTemplateText33" datatype="html"><source>View projects</source><target>Ver proyectos</target></trans-unit>
+      <trans-unit id="GalleryTemplateText32" datatype="html"><source>Type something...</source><target>Escribe algo...</target></trans-unit>
+      <trans-unit id="GalleryTemplateText31" datatype="html"><source>Write a description...</source><target>Escribe una descripción...</target></trans-unit>
+      <trans-unit id="GalleryTemplateText30" datatype="html"><source> Accept terms and conditions </source><target> Aceptar los términos y condiciones </target></trans-unit>
+      <trans-unit id="GalleryTemplateText29" datatype="html"><source> Enable notifications </source><target> Activar notificaciones </target></trans-unit>
+      <trans-unit id="GalleryTemplateText28" datatype="html"><source>Choose a plan</source><target>Elige un plan</target></trans-unit>
+      <trans-unit id="GalleryTemplateText27" datatype="html"><source>Section filter</source><target>Filtro de sección</target></trans-unit>
+      <trans-unit id="GalleryTemplateText26" datatype="html"><source> Open menu </source><target> Abrir menú </target></trans-unit>
+      <trans-unit id="GalleryTemplateText25" datatype="html"><source>Dropdown options</source><target>Opciones del menú desplegable</target></trans-unit>
+      <trans-unit id="GalleryTemplateText24" datatype="html"><source>In review</source><target>En revisión</target></trans-unit>
+      <trans-unit id="GalleryTemplateText23" datatype="html"><source>Shipped</source><target>Enviado</target></trans-unit>
+      <trans-unit id="GalleryTemplateText22" datatype="html"><source>Blocked</source><target>Bloqueado</target></trans-unit>
+      <trans-unit id="GalleryTemplateText21" datatype="html"><source>At risk</source><target>En riesgo</target></trans-unit>
+      <trans-unit id="GalleryTemplateText20" datatype="html"><source>Archived</source><target>Archivado</target></trans-unit>
+      <trans-unit id="GalleryTemplateText19" datatype="html"><source>Section heading</source><target>Título de sección</target></trans-unit>
+      <trans-unit id="GalleryTemplateText18" datatype="html"><source>Body text under the heading.</source><target>Texto del cuerpo debajo del título.</target></trans-unit>
+      <trans-unit id="GalleryTemplateText17" datatype="html"><source>Default text</source><target>Texto predeterminado</target></trans-unit>
+      <trans-unit id="GalleryTemplateText16" datatype="html"><source>Muted text</source><target>Texto atenuado</target></trans-unit>
+      <trans-unit id="GalleryTemplateText15" datatype="html"><source>Small text</source><target>Texto pequeño</target></trans-unit>
+      <trans-unit id="GalleryTemplateText14" datatype="html"><source>Large text</source><target>Texto grande</target></trans-unit>
+      <trans-unit id="GalleryTemplateText13" datatype="html"><source>Above the divider</source><target>Encima del separador</target></trans-unit>
+      <trans-unit id="GalleryTemplateText12" datatype="html"><source>Below the divider</source><target>Debajo del separador</target></trans-unit>
+      <trans-unit id="GalleryTemplateText11" datatype="html"><source>Card title</source><target>Título de la tarjeta</target></trans-unit>
+      <trans-unit id="GalleryTemplateText10" datatype="html"><source> Card description and content. </source><target> Descripción y contenido de la tarjeta. </target></trans-unit>
+      <trans-unit id="GalleryTemplateText9" datatype="html"><source> Heads up — informational message with the default tone. </source><target> Aviso: mensaje informativo con el tono predeterminado. </target></trans-unit>
+      <trans-unit id="GalleryTemplateText8" datatype="html"><source> Something went wrong — make the message actionable. </source><target> Algo salió mal: haz que el mensaje indique cómo solucionarlo. </target></trans-unit>
+      <trans-unit id="GalleryTemplateText7" datatype="html"><source>Copies the share link to your clipboard.</source><target>Copia el enlace para compartir en el portapapeles.</target></trans-unit>
+      <trans-unit id="GalleryTemplateText6" datatype="html"><source>Hover or focus me</source><target>Pasa el cursor o enfoca aquí</target></trans-unit>
+      <trans-unit id="GalleryTemplateText5" datatype="html"><source>Open dialog</source><target>Abrir diálogo</target></trans-unit>
+      <trans-unit id="GalleryTemplateText4" datatype="html"><source>Confirm action</source><target>Confirmar acción</target></trans-unit>
+      <trans-unit id="GalleryTemplateText3" datatype="html"><source> The dialog traps focus and closes on Escape or backdrop click. </source><target> El diálogo mantiene el foco dentro y se cierra con Escape o al hacer clic en el fondo. </target></trans-unit>
+      <trans-unit id="GalleryTemplateText2" datatype="html"><source> Cancel </source><target>Cancelar</target></trans-unit>
+      <trans-unit id="GalleryTemplateText1" datatype="html"><source>Confirm</source><target>Confirmar</target></trans-unit>
+      <trans-unit id="SecurityDuplicate1" datatype="html"><source> Revoke </source><target>Revoke</target></trans-unit>
+      <trans-unit id="SecurityDuplicate2" datatype="html"><source> Cancel </source><target>Cancelar</target></trans-unit>
+      <trans-unit id="SecurityDuplicate3" datatype="html"><source> Cancel </source><target>Cancelar</target></trans-unit>
+      <trans-unit id="SecurityConfirmationDuplicate1" datatype="html"><source> Start a new confirmation </source><target>Iniciar una nueva confirmación</target></trans-unit>
+      <trans-unit id="SidebarMenuDuplicate1" datatype="html"><source>Close navigation</source><target>Cerrar navegación</target></trans-unit>
+      <trans-unit id="SidebarMenuTemplateText1" datatype="html"><source> T </source><target> T </target></trans-unit>
+      <trans-unit id="SidebarMenuDuplicate2" datatype="html"><source>Help</source><target>Ayuda</target></trans-unit>
+      <trans-unit id="SidebarMenuDuplicate3" datatype="html"><source>Sign out</source><target>Cerrar sesión</target></trans-unit>
+      <trans-unit id="ThemeSwitcherTemplateText1" datatype="html"><source>Toggle light/dark theme</source><target>Alternar entre el tema claro y oscuro</target></trans-unit>
+      <trans-unit id="PaginationTemplateText4" datatype="html"><source>Pagination</source><target>Paginación</target></trans-unit>
+      <trans-unit id="PaginationTemplateText3" datatype="html"><source> Previous </source><target> Anterior </target></trans-unit>
+      <trans-unit id="PaginationTemplateText2" datatype="html"><source> Page <x id="INTERPOLATION" equiv-text="{{ page() }}"/> of <x id="INTERPOLATION_1" equiv-text="{{ pageCount() }}"/> </source><target> Página <x id="INTERPOLATION" equiv-text="{{ page() }}"/> de <x id="INTERPOLATION_1" equiv-text="{{ pageCount() }}"/> </target></trans-unit>
+      <trans-unit id="PaginationTemplateText1" datatype="html"><source> Next </source><target> Siguiente </target></trans-unit>
+      <trans-unit id="LoaderTemplateText1" datatype="html"><source>Loading</source><target>Cargando</target></trans-unit>
+      <trans-unit id="BottomNavigationTemplateText1" datatype="html"><source>Bottom navigation</source><target>Navegación inferior</target></trans-unit>
+      <trans-unit id="LangSwitcherTemplateText1" datatype="html"><source>Language</source><target>Idioma</target></trans-unit>
     </body>
   </file>
 </xliff>

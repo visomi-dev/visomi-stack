@@ -1,27 +1,35 @@
 <app-auth-layout>
   <app-auth-card>
     @if (complete()) {
-      <p class="font-mono text-xs font-semibold tracking-widest text-green-700 uppercase dark:text-green-400">
+      <p
+        i18n="@@EmailVerificationTemplateText12"
+        class="font-mono text-xs font-semibold tracking-widest text-green-700 uppercase dark:text-green-400"
+      >
         Email verified
       </p>
-      <h1 class="font-heading mt-3 text-3xl font-bold">Your email is verified</h1>
-      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+      <h1 i18n="@@EmailVerificationTemplateText11" class="font-heading mt-3 text-3xl font-bold">
+        Your email is verified
+      </h1>
+      <p i18n="@@EmailVerificationTemplateText10" class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
         Email verification alone does not sign you in. Continue with a passkey to access your account.
       </p>
       <a
+        i18n="@@EmailVerificationTemplateText9"
         [routerLink]="signInUrl"
         class="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
       >
         Continue to sign in
       </a>
     } @else if (flowId()) {
-      <h1 class="font-heading text-3xl font-bold">Check your email</h1>
-      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+      <h1 i18n="@@EmailVerificationTemplateText8" class="font-heading text-3xl font-bold">Check your email</h1>
+      <p i18n="@@EmailVerificationTemplateText7" class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
         Enter the 6-digit code sent to your email.
       </p>
       <app-form class="mt-6 grid gap-5" [form]="codeForm" (ngSubmit)="verifyEmail()">
         <app-field>
-          <app-label for="email-verification-code" tone="plain">Verification code</app-label>
+          <app-label i18n="@@EmailVerificationTemplateText6" for="email-verification-code" tone="plain">
+            Verification code
+          </app-label>
           <app-input
             [formField]="codeForm.pin"
             inputmode="numeric"
@@ -35,6 +43,7 @@
           }
         </app-field>
         <button
+          i18n="@@EmailVerificationTemplateText5"
           type="submit"
           class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
           [disabled]="submitting()"
@@ -43,13 +52,15 @@
         </button>
       </app-form>
     } @else {
-      <h1 class="font-heading text-3xl font-bold">Verify your email</h1>
-      <p class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+      <h1 i18n="@@EmailVerificationTemplateText4" class="font-heading text-3xl font-bold">Verify your email</h1>
+      <p i18n="@@EmailVerificationTemplateText3" class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
         We will send a one-time code. Email verification does not replace passkey sign-in.
       </p>
       <app-form class="mt-6 grid gap-5" [form]="emailForm" (ngSubmit)="requestVerification()">
         <app-field>
-          <app-label for="email-verification-email" tone="plain">Email address</app-label>
+          <app-label i18n="@@EmailVerificationTemplateText2" for="email-verification-email" tone="plain">
+            Email address
+          </app-label>
           <app-input
             [formField]="emailForm.email"
             type="email"
@@ -63,6 +74,7 @@
           }
         </app-field>
         <button
+          i18n="@@EmailVerificationTemplateText1"
           type="submit"
           class="min-h-11 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
           [disabled]="submitting()"

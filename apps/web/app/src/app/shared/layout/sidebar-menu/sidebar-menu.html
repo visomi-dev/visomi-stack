@@ -27,7 +27,7 @@
       type="button"
       class="flex h-9 w-9 items-center justify-center rounded-sm text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:bg-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:text-slate-400 dark:hover:bg-slate-200"
       aria-label="Close navigation"
-      i18n-aria-label="@@layoutCloseNavigation"
+      i18n-aria-label="@@SidebarMenuDuplicate1"
       (click)="closeMenu()"
     >
       <app-icon name="close" />
@@ -41,6 +41,7 @@
     (click)="closeMenu()"
   >
     <span
+      i18n="@@SidebarMenuTemplateText1"
       class="flex h-12 w-12 items-center justify-center rounded-sm bg-slate-600 text-2xl font-bold text-white lg:hidden dark:bg-slate-500 dark:text-slate-950"
     >
       T
@@ -126,7 +127,7 @@
         i18n-aria-label="@@layoutHelp"
       >
         <app-icon name="question-circle" class="shrink-0 text-base" />
-        <span [class.lg:hidden]="collapsed()" i18n="@@layoutHelp">Help</span>
+        <span [class.lg:hidden]="collapsed()" i18n="@@SidebarMenuDuplicate2">Help</span>
       </a>
       <app-language-switcher [compact]="collapsed()" />
       <button
@@ -168,7 +169,7 @@
         } @else {
           <app-icon name="sign-out" class="shrink-0 text-base" />
         }
-        <span [class.lg:hidden]="collapsed()" i18n="@@layoutSignOutLabel">Sign out</span>
+        <span [class.lg:hidden]="collapsed()" i18n="@@SidebarMenuDuplicate3">Sign out</span>
       </button>
     </div>
   </div>

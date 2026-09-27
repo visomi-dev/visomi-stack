@@ -1,11 +1,17 @@
 <app-container size="lg">
   <div class="flex flex-col gap-8 py-4">
     <header class="flex flex-col gap-3">
-      <p class="font-mono text-xs font-semibold tracking-widest text-slate-600 uppercase dark:text-slate-500">
+      <p
+        i18n="@@ActivationTemplateText20"
+        class="font-mono text-xs font-semibold tracking-widest text-slate-600 uppercase dark:text-slate-500"
+      >
         v1.0.2_stable
       </p>
       <app-heading i18n="@@activationTitle" level="1" [text]="'System activation'" />
-      <p class="max-w-2xl text-sm leading-relaxed text-slate-500 md:text-base dark:text-slate-400">
+      <p
+        i18n="@@ActivationTemplateText19"
+        class="max-w-2xl text-sm leading-relaxed text-slate-500 md:text-base dark:text-slate-400"
+      >
         Configure your API key and local workspace settings before entering the workspace.
       </p>
     </header>
@@ -23,7 +29,9 @@
         <app-card padding="md" tone="raised">
           <div class="flex items-center gap-4">
             <app-loader />
-            <p class="text-sm text-slate-500 dark:text-slate-400">Loading activation settings...</p>
+            <p i18n="@@ActivationTemplateText18" class="text-sm text-slate-500 dark:text-slate-400">
+              Loading activation settings...
+            </p>
           </div>
         </app-card>
       } @else {
@@ -47,13 +55,16 @@
                     controlId="activation-api-key-label"
                     name="label"
                     placeholder="Production workspace key"
+                    i18n-placeholder="@@ActivationTemplateText17"
                   />
                   <app-error-message controlId="activation-api-key-label-error" i18n="@@activationApiKeyRequiredError">
                     {{ labelError() }}
                   </app-error-message>
                 </app-field>
 
-                <app-button tone="accent" type="submit" [loading]="creatingKey()">Generate key</app-button>
+                <app-button i18n="@@ActivationTemplateText16" tone="accent" type="submit" [loading]="creatingKey()">
+                  Generate key
+                </app-button>
               </app-form>
 
               <div class="mt-5 grid gap-3">
@@ -77,7 +88,10 @@
                             {{ plaintextTokenFor(apiKey) }}
                           </p>
                         } @else {
-                          <p class="mt-1 font-mono text-xs text-slate-500 dark:text-slate-400">
+                          <p
+                            i18n="@@ActivationTemplateText15"
+                            class="mt-1 font-mono text-xs text-slate-500 dark:text-slate-400"
+                          >
                             {{ apiKey.tokenPrefix }}... created {{ keyCreatedAtLabel(apiKey) }}
                           </p>
                         }
@@ -85,10 +99,18 @@
 
                       <div class="flex shrink-0 flex-col gap-3 sm:flex-row md:gap-4">
                         @if (plaintextTokenFor(apiKey)) {
-                          <app-button type="button" variant="outline" (click)="copyGeneratedKey()">Copy key</app-button>
+                          <app-button
+                            i18n="@@ActivationTemplateText14"
+                            type="button"
+                            variant="outline"
+                            (click)="copyGeneratedKey()"
+                          >
+                            Copy key
+                          </app-button>
                         }
 
                         <app-button
+                          i18n="@@ActivationTemplateText13"
                           tone="danger"
                           type="button"
                           variant="outline"
@@ -104,10 +126,16 @@
 
                 <div class="border-l-2 border-red-600 bg-red-600/5 px-4 py-3 dark:border-red-500 dark:bg-red-500/10">
                   <div class="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
-                    <p class="shrink-0 text-xs font-black tracking-widest text-slate-950 uppercase dark:text-slate-50">
+                    <p
+                      i18n="@@ActivationTemplateText12"
+                      class="shrink-0 text-xs font-black tracking-widest text-slate-950 uppercase dark:text-slate-50"
+                    >
                       Caution
                     </p>
-                    <p class="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                    <p
+                      i18n="@@ActivationTemplateText11"
+                      class="text-sm leading-relaxed text-slate-500 dark:text-slate-400"
+                    >
                       Each key is displayed only once. Copy it immediately before leaving this screen.
                     </p>
                   </div>
@@ -132,6 +160,7 @@
                 class="flex flex-wrap border-b border-slate-950/10 bg-slate-50 dark:border-white/10 dark:bg-slate-900"
               >
                 <button
+                  i18n="@@ActivationTemplateText10"
                   type="button"
                   role="tab"
                   id="config-tab-themis"
@@ -147,6 +176,7 @@
                   ~/.config/themis/core.json
                 </button>
                 <button
+                  i18n="@@ActivationTemplateText9"
                   type="button"
                   role="tab"
                   id="config-tab-opencode"
@@ -162,6 +192,7 @@
                   ~/.config/opencode/opencode.json
                 </button>
                 <button
+                  i18n="@@ActivationTemplateText8"
                   type="button"
                   role="tab"
                   id="config-tab-env"
@@ -186,7 +217,14 @@
               >
                 <div class="flex items-center justify-between gap-4">
                   <p class="font-mono text-xs text-slate-500 dark:text-slate-400">{{ currentConfigPath() }}</p>
-                  <app-button type="button" variant="outline" (click)="copySelectedConfig()">Copy config</app-button>
+                  <app-button
+                    i18n="@@ActivationTemplateText7"
+                    type="button"
+                    variant="outline"
+                    (click)="copySelectedConfig()"
+                  >
+                    Copy config
+                  </app-button>
                 </div>
 
                 <pre
@@ -203,10 +241,16 @@
             </div>
 
             <app-card padding="md" tone="default">
-              <p class="font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400">
+              <p
+                i18n="@@ActivationTemplateText6"
+                class="font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400"
+              >
                 System seed prompt
               </p>
-              <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+              <p
+                i18n="@@ActivationTemplateText5"
+                class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500 dark:text-slate-400"
+              >
                 Use this prompt inside OpenCode to analyze the repository and seed the first project context into
                 Themis.
               </p>
@@ -216,7 +260,9 @@
                 >{{ activationData()?.seedPrompt }}</pre>
 
               <div class="mt-5 flex justify-end">
-                <app-button type="button" variant="outline" (click)="copySeedPrompt()">Copy prompt</app-button>
+                <app-button i18n="@@ActivationTemplateText4" type="button" variant="outline" (click)="copySeedPrompt()">
+                  Copy prompt
+                </app-button>
               </div>
             </app-card>
           </section>
@@ -226,7 +272,10 @@
           >
             <div class="flex items-center gap-3">
               <span class="h-2 w-2 rounded-full bg-amber-600 dark:bg-amber-500"></span>
-              <span class="font-mono text-xs tracking-widest text-slate-500 uppercase dark:text-slate-400">
+              <span
+                i18n="@@ActivationTemplateText3"
+                class="font-mono text-xs tracking-widest text-slate-500 uppercase dark:text-slate-400"
+              >
                 @if (hasMilestone('activation_completed')) {
                   Activation completed
                 } @else if (hasMilestone('activation_skipped')) {
@@ -238,10 +287,22 @@
             </div>
 
             <div class="flex flex-col gap-3 sm:flex-row">
-              <app-button type="button" variant="outline" [loading]="continuing()" (click)="skipForNow()">
+              <app-button
+                i18n="@@ActivationTemplateText2"
+                type="button"
+                variant="outline"
+                [loading]="continuing()"
+                (click)="skipForNow()"
+              >
                 Skip for now
               </app-button>
-              <app-button tone="accent" type="button" [loading]="continuing()" (click)="continueToWorkspace()">
+              <app-button
+                i18n="@@ActivationTemplateText1"
+                tone="accent"
+                type="button"
+                [loading]="continuing()"
+                (click)="continueToWorkspace()"
+              >
                 Continue to workspace
               </app-button>
             </div>

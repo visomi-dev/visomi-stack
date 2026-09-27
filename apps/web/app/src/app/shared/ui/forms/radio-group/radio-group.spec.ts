@@ -14,7 +14,14 @@ const options: readonly RadioOption[] = [
 @Component({
   imports: [FormField, RadioGroup, RadioOptionTemplate],
   template: `
-    <app-radio-group [options]="options" [formField]="f.plan" [loading]="loading()" legend="Plan" name="plan">
+    <app-radio-group
+      [options]="options"
+      [formField]="f.plan"
+      [loading]="loading()"
+      legend="Plan"
+      i18n-legend="@@RadioGroupSpecTemplateText1"
+      name="plan"
+    >
       <ng-template appRadioOption let-option let-labelId="labelId" let-descriptionId="descriptionId">
         <span [id]="labelId">{{ option.label }}</span>
         @if (option.description) {

@@ -2,7 +2,11 @@
   <div class="bg-panel sticky top-0 z-20">
     <div class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 md:px-8">
       <app-topbar>
-        <h1 class="font-heading text-2xl font-bold tracking-tight md:text-3xl" data-od-id="gallery-title">
+        <h1
+          i18n="@@GalleryTemplateText44"
+          class="font-heading text-2xl font-bold tracking-tight md:text-3xl"
+          data-od-id="gallery-title"
+        >
           Visomi Stack UI Gallery
         </h1>
         <label data-slot="search" class="flex shrink-0 items-center gap-2">
@@ -18,9 +22,14 @@
         </label>
       </app-topbar>
       <p class="text-muted-fg mt-3 text-sm md:text-base">
-        Live previews of every primitive in
-        <code class="rounded-sm bg-slate-100 px-1.5 py-0.5 font-mono text-xs dark:bg-slate-800">shared/ui</code>
-        . Use this to compose new screens without guessing the API.
+        <span i18n="@@galleryIntroductionBeforeCode">Live previews of every primitive in</span>
+        <code
+          i18n="@@GalleryTemplateText43"
+          class="rounded-sm bg-slate-100 px-1.5 py-0.5 font-mono text-xs dark:bg-slate-800"
+        >
+          shared/ui
+        </code>
+        <span i18n="@@galleryIntroductionAfterCode">. Use this to compose new screens without guessing the API.</span>
       </p>
     </div>
   </div>
@@ -77,31 +86,48 @@
                   @switch (example.host) {
                     @case ('button') {
                       <div class="flex flex-wrap items-center gap-3">
-                        <app-button>Save changes</app-button>
-                        <app-button variant="outline">Cancel</app-button>
-                        <app-button variant="plain">Learn more</app-button>
-                        <app-button tone="red">Delete</app-button>
-                        <app-button [disabled]="true">Disabled</app-button>
+                        <app-button i18n="@@GalleryTemplateText42">Save changes</app-button>
+                        <app-button i18n="@@GalleryTemplateText41" variant="outline">Cancel</app-button>
+                        <app-button i18n="@@GalleryTemplateText40" variant="plain">Learn more</app-button>
+                        <app-button i18n="@@GalleryTemplateText39" tone="red">Delete</app-button>
+                        <app-button i18n="@@GalleryTemplateText38" [disabled]="true">Disabled</app-button>
                       </div>
                     }
                     @case ('icon-button') {
                       <div class="flex flex-wrap items-center gap-3">
-                        <app-icon-button ariaLabel="Edit" />
-                        <app-icon-button ariaLabel="Delete" tone="red" />
-                        <app-icon-button ariaLabel="Settings" variant="outline" />
+                        <app-icon-button ariaLabel="Edit" i18n-ariaLabel="@@GalleryTemplateText37" />
+                        <app-icon-button ariaLabel="Delete" i18n-ariaLabel="@@GalleryTemplateText36" tone="red" />
+                        <app-icon-button
+                          ariaLabel="Settings"
+                          i18n-ariaLabel="@@GalleryTemplateText35"
+                          variant="outline"
+                        />
                       </div>
                     }
                     @case ('link-button') {
                       <div class="flex flex-wrap items-center gap-3">
-                        <app-link-button text="Go to dashboard" href="/dashboard" />
-                        <app-link-button text="View projects" href="/projects" variant="outline" />
+                        <app-link-button text="Go to dashboard" i18n-text="@@GalleryTemplateText34" href="/dashboard" />
+                        <app-link-button
+                          text="View projects"
+                          i18n-text="@@GalleryTemplateText33"
+                          href="/projects"
+                          variant="outline"
+                        />
                       </div>
                     }
                     @case ('input') {
-                      <app-input [formField]="inputForm.value" placeholder="Type something..." />
+                      <app-input
+                        [formField]="inputForm.value"
+                        placeholder="Type something..."
+                        i18n-placeholder="@@GalleryTemplateText32"
+                      />
                     }
                     @case ('textarea') {
-                      <app-textarea [formField]="textareaForm.value" placeholder="Write a description..." />
+                      <app-textarea
+                        [formField]="textareaForm.value"
+                        placeholder="Write a description..."
+                        i18n-placeholder="@@GalleryTemplateText31"
+                      />
                     }
                     @case ('select') {
                       <app-select [formField]="selectForm.value">
@@ -111,16 +137,21 @@
                       </app-select>
                     }
                     @case ('checkbox') {
-                      <app-checkbox [formField]="checkboxForm.value">Accept terms and conditions</app-checkbox>
+                      <app-checkbox i18n="@@GalleryTemplateText30" [formField]="checkboxForm.value">
+                        Accept terms and conditions
+                      </app-checkbox>
                     }
                     @case ('switch') {
-                      <app-switch [formField]="switchForm.value">Enable notifications</app-switch>
+                      <app-switch i18n="@@GalleryTemplateText29" [formField]="switchForm.value">
+                        Enable notifications
+                      </app-switch>
                     }
                     @case ('radio-group') {
                       <app-radio-group
                         [formField]="radioForm.value"
                         name="plan"
                         legend="Choose a plan"
+                        i18n-legend="@@GalleryTemplateText28"
                         [options]="radioOptions"
                         layout="responsive"
                       >
@@ -155,18 +186,27 @@
                       </div>
                     }
                     @case ('listbox') {
-                      <app-listbox ariaLabel="Section filter" [options]="listboxOptions" />
+                      <app-listbox
+                        ariaLabel="Section filter"
+                        i18n-ariaLabel="@@GalleryTemplateText27"
+                        [options]="listboxOptions"
+                      />
                     }
                     @case ('dropdown') {
                       <app-dropdown>
                         <button
+                          i18n="@@GalleryTemplateText26"
                           data-slot="trigger"
                           type="button"
                           class="ui-focus-ring bg-bg border-border-subtle rounded-md border px-3 py-2 text-sm font-medium"
                         >
                           Open menu
                         </button>
-                        <app-listbox ariaLabel="Dropdown options" [options]="listboxOptions" />
+                        <app-listbox
+                          ariaLabel="Dropdown options"
+                          i18n-ariaLabel="@@GalleryTemplateText25"
+                          [options]="listboxOptions"
+                        />
                       </app-dropdown>
                     }
                     @case ('avatar') {
@@ -178,11 +218,11 @@
                     }
                     @case ('badge') {
                       <div class="flex flex-wrap items-center gap-2">
-                        <app-badge tone="accent">In review</app-badge>
-                        <app-badge tone="success">Shipped</app-badge>
-                        <app-badge tone="danger">Blocked</app-badge>
-                        <app-badge tone="warning">At risk</app-badge>
-                        <app-badge>Archived</app-badge>
+                        <app-badge i18n="@@GalleryTemplateText24" tone="accent">In review</app-badge>
+                        <app-badge i18n="@@GalleryTemplateText23" tone="success">Shipped</app-badge>
+                        <app-badge i18n="@@GalleryTemplateText22" tone="danger">Blocked</app-badge>
+                        <app-badge i18n="@@GalleryTemplateText21" tone="warning">At risk</app-badge>
+                        <app-badge i18n="@@GalleryTemplateText20">Archived</app-badge>
                       </div>
                     }
                     @case ('pagination') {
@@ -214,49 +254,53 @@
                       </div>
                     }
                     @case ('heading') {
-                      <app-heading text="Section heading" level="2" />
-                      <app-text tone="muted">Body text under the heading.</app-text>
+                      <app-heading text="Section heading" i18n-text="@@GalleryTemplateText19" level="2" />
+                      <app-text i18n="@@GalleryTemplateText18" tone="muted">Body text under the heading.</app-text>
                     }
                     @case ('text') {
-                      <app-text>Default text</app-text>
-                      <app-text tone="muted">Muted text</app-text>
-                      <app-text size="sm">Small text</app-text>
-                      <app-text size="lg">Large text</app-text>
+                      <app-text i18n="@@GalleryTemplateText17">Default text</app-text>
+                      <app-text i18n="@@GalleryTemplateText16" tone="muted">Muted text</app-text>
+                      <app-text i18n="@@GalleryTemplateText15" size="sm">Small text</app-text>
+                      <app-text i18n="@@GalleryTemplateText14" size="lg">Large text</app-text>
                     }
                     @case ('divider') {
-                      <app-text>Above the divider</app-text>
+                      <app-text i18n="@@GalleryTemplateText13">Above the divider</app-text>
                       <app-divider />
-                      <app-text>Below the divider</app-text>
+                      <app-text i18n="@@GalleryTemplateText12">Below the divider</app-text>
                     }
                     @case ('card') {
                       <app-card>
-                        <h3 class="font-heading text-base font-semibold">Card title</h3>
-                        <p class="text-muted-fg text-sm">Card description and content.</p>
+                        <h3 i18n="@@GalleryTemplateText11" class="font-heading text-base font-semibold">Card title</h3>
+                        <p i18n="@@GalleryTemplateText10" class="text-muted-fg text-sm">
+                          Card description and content.
+                        </p>
                       </app-card>
                     }
                     @case ('alert') {
-                      <app-alert tone="info" variant="default">
+                      <app-alert i18n="@@GalleryTemplateText9" tone="info" variant="default">
                         Heads up — informational message with the default tone.
                       </app-alert>
-                      <app-alert tone="danger" variant="default">
+                      <app-alert i18n="@@GalleryTemplateText8" tone="danger" variant="default">
                         Something went wrong — make the message actionable.
                       </app-alert>
                     }
                     @case ('tooltip') {
-                      <app-tooltip text="Copies the share link to your clipboard.">
-                        <app-button variant="plain">Hover or focus me</app-button>
+                      <app-tooltip text="Copies the share link to your clipboard." i18n-text="@@GalleryTemplateText7">
+                        <app-button i18n="@@GalleryTemplateText6" variant="plain">Hover or focus me</app-button>
                       </app-tooltip>
                     }
                     @case ('dialog') {
-                      <app-button (click)="openDialog()">Open dialog</app-button>
+                      <app-button i18n="@@GalleryTemplateText5" (click)="openDialog()">Open dialog</app-button>
                       <app-dialog [open]="dialogOpen()" (closed)="closeDialog()">
-                        <h2 class="font-heading text-lg font-semibold">Confirm action</h2>
-                        <p class="text-muted-fg text-sm">
+                        <h2 i18n="@@GalleryTemplateText4" class="font-heading text-lg font-semibold">Confirm action</h2>
+                        <p i18n="@@GalleryTemplateText3" class="text-muted-fg text-sm">
                           The dialog traps focus and closes on Escape or backdrop click.
                         </p>
                         <div class="flex justify-end gap-2">
-                          <app-button variant="plain" (click)="closeDialog()">Cancel</app-button>
-                          <app-button (click)="closeDialog()">Confirm</app-button>
+                          <app-button i18n="@@GalleryTemplateText2" variant="plain" (click)="closeDialog()">
+                            Cancel
+                          </app-button>
+                          <app-button i18n="@@GalleryTemplateText1" (click)="closeDialog()">Confirm</app-button>
                         </div>
                       </app-dialog>
                     }

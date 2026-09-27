@@ -118,13 +118,13 @@
       >
         Password signup
       </p>
-      <h1 i18n="@@signupPasskeyHeading" class="font-heading mt-3 text-3xl font-bold">Create your account</h1>
+      <h1 i18n="@@SignUpDuplicate1" class="font-heading mt-3 text-3xl font-bold">Create your account</h1>
       <p i18n="@@signupPasswordDescription" class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
         Use an email you can verify and a password of at least 12 characters.
       </p>
       <app-form class="mt-6 grid gap-5" [form]="form" (ngSubmit)="signUp()">
         <app-field>
-          <app-label for="sign-up-email" tone="plain"><span i18n="@@signupPasskeyEmail">Email address</span></app-label>
+          <app-label for="sign-up-email" tone="plain"><span i18n="@@SignUpDuplicate2">Email address</span></app-label>
           <app-input
             [formField]="form.email"
             type="email"
@@ -184,7 +184,7 @@
           routerLink="/auth/sign-in"
           queryParamsHandling="preserve"
           class="font-semibold text-blue-600 dark:text-blue-400"
-          i18n="@@signupExistingAccount"
+          i18n="@@SignUpDuplicate3"
         >
           Already have an account? Sign in
         </a>

@@ -8,9 +8,9 @@ import { SelectOptions } from './select-options';
 @Component({
   imports: [Select],
   template: `
-    <label for="role-select">Role</label>
+    <label i18n="@@SelectSpecTemplateText2" for="role-select">Role</label>
     <app-select controlId="role-select" [formField]="f.role">
-      <option value="">Choose a role</option>
+      <option i18n="@@SelectSpecTemplateText1" value="">Choose a role</option>
       @for (role of roles(); track role) {
         <option [value]="role">{{ role }}</option>
       }

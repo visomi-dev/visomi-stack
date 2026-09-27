@@ -6,7 +6,8 @@ import { RadioCard } from './radio-card';
 
 @Component({
   imports: [FormField, RadioCard],
-  template: '<app-radio-card optionValue="standard" [formField]="f.plan">Standard</app-radio-card>',
+  template:
+    '<app-radio-card i18n="@@RadioCardSpecTemplateText1" optionValue="standard" [formField]="f.plan">Standard</app-radio-card>',
 })
 class Host {
   readonly model = signal({ plan: 'standard' });

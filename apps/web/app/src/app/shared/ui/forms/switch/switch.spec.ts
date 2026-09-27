@@ -6,7 +6,8 @@ import { Switch } from './switch';
 
 @Component({
   imports: [FormField, Switch],
-  template: '<app-switch id="dark-mode" ariaLabel="Dark mode" [formField]="f.darkMode" />',
+  template:
+    '<app-switch id="dark-mode" ariaLabel="Dark mode" i18n-ariaLabel="@@SwitchSpecTemplateText1" [formField]="f.darkMode" />',
 })
 class Host {
   readonly model = signal({ darkMode: true });

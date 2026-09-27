@@ -2,6 +2,7 @@
   @if (mobileMenuOpen()) {
     <button
       aria-label="Close navigation"
+      i18n-aria-label="@@AppShellTemplateText1"
       class="fixed inset-0 z-30 bg-black/40 lg:hidden"
       type="button"
       (click)="mobileMenuClose.emit()"
