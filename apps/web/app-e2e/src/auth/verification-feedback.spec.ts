@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 
+// Keep verification HTTP mocks observable; the PWA suite exercises the real worker.
+test.use({ serviceWorkers: 'block' });
+
 test('keeps recovery private and retries account loading without replaying verified codes', async ({ page }) => {
   let verifications = 0;
   let accountLoads = 0;
@@ -45,9 +48,11 @@ test('keeps recovery private and retries account loading without replaying verif
         });
   });
   await page.goto('/app/en/auth/sign-in');
-  await page.getByRole('textbox', { name: 'Email address' }).fill('person@example.test');
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(page.getByRole('textbox')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Use another method', exact: true }).click();
   await page.getByRole('button', { name: 'Recover with email', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('person@example.test');
+  await page.getByRole('button', { name: 'Send code', exact: true }).click();
   await page.getByRole('textbox', { name: 'Verification code', exact: true }).fill('123456');
   await page.getByRole('button', { name: 'Verify email', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('if you set up an authenticator');
@@ -133,16 +138,20 @@ test('returns from a passkey failure to the full selector with keyboard focus an
     return route.fulfill({ status: 400, json: { code: 'platform_error' } });
   });
   await page.goto('/app/en/auth/sign-in');
+  await expect(page.getByRole('textbox')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Use another method', exact: true }).click();
+  await page.getByRole('button', { name: 'Recover with email', exact: true }).click();
   await page.getByRole('textbox', { name: 'Email address' }).fill('person@example.test');
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await page.getByRole('button', { name: 'Continue with a passkey' }).click();
+  await expect(page.getByRole('heading', { name: 'Passkey sign-in did not finish.' })).toBeVisible();
   await page.getByRole('button', { name: 'Use another method' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   expect(attempts).toBe(1);
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeFocused();
-  await expect(page.getByRole('textbox', { name: 'Email address' })).toHaveValue('person@example.test');
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Use another method', exact: true })).toBeFocused();
+  await expect(page.getByRole('textbox')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Use another method', exact: true }).click();
   await page.getByRole('button', { name: 'Use password instead' }).click();
   await expect(page.getByRole('textbox', { name: 'Email address', exact: true })).toHaveValue('person@example.test');
 });

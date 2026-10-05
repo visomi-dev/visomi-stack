@@ -6,7 +6,7 @@ import { uiClass } from '../../classes';
 @Component({
   host: {
     class:
-      /* tw */ 'block shrink-0 border-t border-slate-950/10 dark:border-white/10 bg-white dark:bg-slate-950/95 backdrop-blur lg:hidden',
+      /* tw */ 'block shrink-0 border-t border-slate-950/10 dark:border-white/10 bg-white dark:bg-slate-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden',
   },
   selector: 'app-bottom-navigation',
   templateUrl: './bottom-navigation.html',
@@ -33,6 +33,8 @@ export class BottomNavigationItem {
       'ui-focus-ring flex min-h-12 min-w-12 items-center justify-center rounded-[var(--radius-control)] p-2 text-slate-500 dark:text-slate-400 transition aria-[current=page]:bg-slate-100 aria-[current=page]:text-slate-600 aria-[current=page]:dark:bg-slate-800 aria-[current=page]:dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-950 dark:text-slate-50 [&_[data-slot=icon]]:size-6',
     ),
   );
+
+  readonly queryParams = input<Record<string, string> | null>(null);
 }
 
 @Component({

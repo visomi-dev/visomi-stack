@@ -1,9 +1,12 @@
 import { authDestination } from './routes';
 
 describe('authDestination', () => {
-  it.each(['/dashboard', '/security', '/gallery', '/activation'])('preserves the internal destination %s', (value) => {
-    expect(authDestination(value)).toBe(value);
-  });
+  it.each(['/dashboard', '/security', '/gallery', '/activation', '/notifications'])(
+    'preserves the internal destination %s',
+    (value) => {
+      expect(authDestination(value)).toBe(value);
+    },
+  );
 
   it.each([
     null,
@@ -13,6 +16,7 @@ describe('authDestination', () => {
     '/auth/sign-in',
     '/%2fexample.test',
     '/security?returnTo=https://example.test',
+    '/notifications?returnTo=https://example.test',
     '/security/device-approval?requestId=invalid',
     '/security/device-approval?requestId=12345678-1234-4234-8234-123456789abc&returnTo=https://example.test',
   ])('rejects unsafe or unsupported destination %s', (value) => {

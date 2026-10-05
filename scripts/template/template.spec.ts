@@ -8,11 +8,32 @@ import { parse } from 'dotenv';
 import { parse as parseYaml } from 'yaml';
 
 import { initializeTemplate, readTemplate } from './template-config.ts';
-import { isPrivateEnvironmentFile } from './smoke.ts';
+import { isPrivateEnvironmentFile, smokeEnvironment } from './smoke.ts';
 
 const root = process.cwd();
 const cli = resolve(root, 'dist/template/main.cjs');
 const settings = { name: 'Acme App', slug: 'acme-app', organization: 'Acme', demo: true };
+
+test('clean-copy commands preserve resource directories without inheriting secrets or enabling the Nx daemon', () => {
+  const environment = smokeEnvironment({
+    PATH: '/synthetic/bin',
+    TMPDIR: '/synthetic/temp',
+    NODE_COMPILE_CACHE: '/synthetic/node-cache',
+    NX_SOCKET_DIR: '/synthetic/sockets',
+    NX_DAEMON: 'true',
+    NODE_ENV: 'production',
+    SESSION_SECRET: 'must-not-be-inherited',
+    DATABASE_URL: 'must-not-be-inherited',
+  });
+
+  assert.equal(environment.TMPDIR, '/synthetic/temp');
+  assert.equal(environment.NODE_COMPILE_CACHE, '/synthetic/node-cache');
+  assert.equal(environment.NX_SOCKET_DIR, '/synthetic/sockets');
+  assert.equal(environment.NX_DAEMON, 'false');
+  assert.equal(environment.NODE_ENV, 'development');
+  assert.equal('SESSION_SECRET' in environment, false);
+  assert.equal('DATABASE_URL' in environment, false);
+});
 
 test('clean-copy filtering excludes private environments without dropping schema source or examples', () => {
   for (const file of ['.env', '.env.local', 'deploy/production.env', 'secrets/service.env.production'])
@@ -52,6 +73,46 @@ test('dry run does not create secrets or change files', async () => {
     assert.equal(result.changed.length, 4);
     assert.equal(await readFile(join(directory, 'template.json'), 'utf8'), before);
     await assert.rejects(lstat(join(directory, '.env')));
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('PWA assets use initialized branding and deterministic generic PNG icons without copying secrets', async () => {
+  const directory = await fixture();
+
+  try {
+    await initializeTemplate(directory, settings);
+    const generated = spawnSync(
+      process.execPath,
+      ['--experimental-strip-types', resolve(root, 'scripts/build-pwa-assets.ts')],
+      { cwd: directory, encoding: 'utf8' },
+    );
+
+    assert.equal(generated.status, 0, generated.stderr);
+    const path = join(directory, 'dist/pwa-assets/manifest.webmanifest');
+    const raw = await readFile(path, 'utf8');
+    const manifest = JSON.parse(raw) as { name: string; short_name: string; id: string; icons: { src: string }[] };
+
+    assert.equal(manifest.name, 'Acme App');
+    assert.equal(manifest.short_name, 'Acme App');
+    assert.equal(manifest.id, '/app/');
+    assert.equal(raw.includes('SESSION_SECRET'), false);
+    assert.equal(raw.includes('Nive'), false);
+    const png = await readFile(join(directory, 'dist/pwa-assets', manifest.icons[0].src));
+
+    assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+    assert.equal(png.readUInt32BE(16), 192);
+    assert.equal(png.readUInt32BE(20), 192);
+    const rerun = spawnSync(
+      process.execPath,
+      ['--experimental-strip-types', resolve(root, 'scripts/build-pwa-assets.ts')],
+      { cwd: directory, encoding: 'utf8' },
+    );
+
+    assert.equal(rerun.status, 0, rerun.stderr);
+    assert.equal(await readFile(path, 'utf8'), raw);
+    assert.deepEqual(await readFile(join(directory, 'dist/pwa-assets', manifest.icons[0].src)), png);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
@@ -210,7 +271,7 @@ test('rejects command-specific options instead of silently ignoring deployment i
   }
 });
 
-test('CI defines real PostgreSQL clean-copy verification and critical auth journeys', async () => {
+test('CI defines PostgreSQL clean-copy verification and consumer-aware E2E without dropping full scheduled coverage', async () => {
   const workflow = parseYaml(await readFile(join(root, '.github/workflows/ci.yml'), 'utf8')) as {
     on: Record<string, unknown>;
     jobs: Record<string, { services?: Record<string, { image: string }>; steps: Array<{ run?: string; if?: string }> }>;
@@ -220,11 +281,44 @@ test('CI defines real PostgreSQL clean-copy verification and critical auth journ
   assert.ok('schedule' in workflow.on);
   assert.ok(workflow.jobs['template-smoke'].services?.['postgres'].image.startsWith('postgres:16'));
   assert.ok(workflow.jobs['template-smoke'].steps.some((step) => step.run?.includes('pnpm template:smoke')));
-  for (const scenario of ['signup-validation', 'verification-feedback', 'device-approval'])
-    assert.ok(workflow.jobs['critical-e2e'].steps.some((step) => step.run?.includes(`${scenario}.spec.ts`)));
+  const affected = workflow.jobs['critical-e2e'].steps.find((step) => step.run?.includes('affected.ts range'));
+
+  assert.ok(affected?.run?.includes('"$NX_BASE" "$NX_HEAD" e2e'));
+  assert.ok(affected?.run?.includes("--exclude='*,!api-e2e'"));
+  assert.ok(affected?.if?.includes("github.event_name != 'schedule'"));
   assert.ok(
     workflow.jobs['critical-e2e'].steps.some(
       (step) => step.if?.includes('schedule') && step.run?.includes('api-e2e:e2e'),
     ),
   );
+  assert.ok(
+    workflow.jobs['critical-e2e'].steps.some(
+      (step) => step.if?.includes('schedule') && step.run?.includes('server-e2e:e2e'),
+    ),
+  );
+});
+
+test('CI uses complete history, Nx base/head and isolated unit/integration jobs', async () => {
+  const workflow = parseYaml(await readFile(join(root, '.github/workflows/ci.yml'), 'utf8')) as {
+    jobs: Record<
+      string,
+      { steps: Array<{ uses?: string; with?: Record<string, unknown>; run?: string; if?: string }> }
+    >;
+  };
+
+  for (const name of ['verify', 'critical-e2e']) {
+    const steps = workflow.jobs[name].steps;
+
+    assert.equal(steps.find((step) => step.uses === 'actions/checkout@v4')?.with?.['fetch-depth'], 0);
+    assert.ok(steps.some((step) => step.uses === 'nrwl/nx-set-shas@v5'));
+  }
+  const steps = workflow.jobs['verify'].steps;
+
+  assert.ok(steps.some((step) => step.run?.includes('test vite:test --exclude-e2e')));
+  assert.ok(steps.some((step) => step.run?.includes('affected.ts range "$NX_BASE" "$NX_HEAD" lint')));
+  assert.ok(steps.some((step) => step.run?.includes('affected.ts range "$NX_BASE" "$NX_HEAD" format:check')));
+  assert.ok(steps.some((step) => step.run?.includes('affected -t typecheck browser-build')));
+  for (const step of steps.filter((step) => step.run?.includes('"$RELEASE_DIR/themis-server.tgz"'))) {
+    assert.equal(step.if, "steps.runtime.outputs.affected == 'true'");
+  }
 });

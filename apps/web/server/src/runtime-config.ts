@@ -14,4 +14,15 @@ function resolveGatewayPort(environment: NodeJS.ProcessEnv = process.env): numbe
   return port;
 }
 
-export { resolveGatewayPort };
+function resolveTrustProxyHops(environment: NodeJS.ProcessEnv = process.env): number {
+  const configuredHops = environment.TRUST_PROXY_HOPS ?? '0';
+  const hops = Number(configuredHops);
+
+  if (!Number.isSafeInteger(hops) || hops < 0) {
+    throw new Error('TRUST_PROXY_HOPS must be a nonnegative integer.');
+  }
+
+  return hops;
+}
+
+export { resolveGatewayPort, resolveTrustProxyHops };

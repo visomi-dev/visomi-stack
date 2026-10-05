@@ -2,10 +2,10 @@ import express, { json, type Request } from 'express';
 import request from 'supertest';
 
 import { authOpenApiPaths, authRouter } from './auth-router';
-import { setUserPassword, startPasswordSignIn } from './auth-service';
+import { setUserPassword, startPasswordSignIn } from './password-session';
 
-jest.mock('./auth-service', () => ({
-  ...jest.requireActual('./auth-service'),
+jest.mock('./password-session', () => ({
+  ...jest.requireActual('./password-session'),
   setUserPassword: jest.fn(),
   startPasswordSignIn: jest.fn(),
 }));

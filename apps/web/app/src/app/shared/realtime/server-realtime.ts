@@ -10,4 +10,12 @@ export class ServerRealtime extends Realtime {
 
   readonly connected: Signal<boolean> = this.$connected.asReadonly();
   readonly lastEvent: Signal<AsyncJobEvent | null> = this.$lastEvent.asReadonly();
+
+  watchOperation(): () => void {
+    return () => undefined;
+  }
+
+  watchNotifications(): () => void {
+    return () => undefined;
+  }
 }

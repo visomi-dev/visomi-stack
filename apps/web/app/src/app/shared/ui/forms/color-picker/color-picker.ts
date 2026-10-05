@@ -11,11 +11,36 @@ export type ColorPickerOption = {
 };
 
 const defaultOptions: readonly ColorPickerOption[] = Object.freeze([
-  { class: /* tw */ 'bg-slate-500', label: 'Blue', selectedClass: /* tw */ 'ring-slate-500', value: 'BLUE' },
-  { class: /* tw */ 'bg-pink-500', label: 'Pink', selectedClass: /* tw */ 'ring-pink-500', value: 'PINK' },
-  { class: /* tw */ 'bg-purple-500', label: 'Purple', selectedClass: /* tw */ 'ring-purple-500', value: 'PURPLE' },
-  { class: /* tw */ 'bg-green-500', label: 'Green', selectedClass: /* tw */ 'ring-green-500', value: 'GREEN' },
-  { class: /* tw */ 'bg-yellow-500', label: 'Yellow', selectedClass: /* tw */ 'ring-yellow-500', value: 'YELLOW' },
+  {
+    class: /* tw */ 'bg-slate-500',
+    label: $localize`:@@colorBlue:Blue`,
+    selectedClass: /* tw */ 'ring-slate-500',
+    value: 'BLUE',
+  },
+  {
+    class: /* tw */ 'bg-pink-500',
+    label: $localize`:@@colorPink:Pink`,
+    selectedClass: /* tw */ 'ring-pink-500',
+    value: 'PINK',
+  },
+  {
+    class: /* tw */ 'bg-purple-500',
+    label: $localize`:@@colorPurple:Purple`,
+    selectedClass: /* tw */ 'ring-purple-500',
+    value: 'PURPLE',
+  },
+  {
+    class: /* tw */ 'bg-green-500',
+    label: $localize`:@@colorGreen:Green`,
+    selectedClass: /* tw */ 'ring-green-500',
+    value: 'GREEN',
+  },
+  {
+    class: /* tw */ 'bg-yellow-500',
+    label: $localize`:@@colorYellow:Yellow`,
+    selectedClass: /* tw */ 'ring-yellow-500',
+    value: 'YELLOW',
+  },
 ]);
 
 @Component({

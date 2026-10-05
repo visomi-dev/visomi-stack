@@ -4,10 +4,12 @@ import { clearMailbox } from '../support/mailbox';
 import { signInRoute } from '../support/routes';
 
 test.describe('password fallback', () => {
+  // Keep provider HTTP mocks observable; the PWA suite exercises the real worker.
+  test.use({ serviceWorkers: 'block' });
   test('keeps password access available on Firefox/Linux-compatible browsers', async ({ page, request }) => {
     await clearMailbox(request);
     await page.goto(signInRoute);
-    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await page.getByRole('button', { name: 'Use another method', exact: true }).click();
     await page.getByRole('button', { name: 'Use password instead' }).click();
 
     await expect(page.getByRole('heading', { name: 'Sign in with password' })).toBeVisible();
@@ -29,7 +31,7 @@ test.describe('password fallback', () => {
       }),
     );
     await page.goto(signInRoute);
-    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await page.getByRole('button', { name: 'Use another method', exact: true }).click();
     await expect(page.getByRole('dialog').getByRole('alert')).toContainText(
       'Google sign-in is not available right now.',
     );

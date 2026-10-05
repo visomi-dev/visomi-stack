@@ -1,0 +1,31 @@
+{
+  "footer": "Este es un mensaje automático de seguridad de tu cuenta. No respondas con contraseñas, códigos de verificación ni claves de recuperación.",
+  "verification": {
+    "subject": "Tu código de verificación",
+    "preview": "Usa este código para continuar de forma segura.",
+    "title": "Tu código de verificación",
+    "body": "Introduce este código en la página donde lo solicitaste para iniciar sesión o terminar de crear tu cuenta.",
+    "emailChangeBody": "Introduce este código para verificar tu nueva dirección de correo principal.",
+    "codeLabel": "Código de verificación",
+    "expiresLabel": "Caduca:",
+    "safety": "No compartas este código. Si no lo solicitaste, puedes ignorar este correo."
+  },
+  "recovery-notice": {
+    "subject": "Se ha recuperado tu cuenta",
+    "preview": "Revisa este cambio reciente en tu cuenta.",
+    "title": "Se ha recuperado tu cuenta",
+    "body": "Tu cuenta se ha recuperado mediante verificación por correo, un método con menor garantía que tus métodos habituales de acceso.",
+    "action": "Revisar la seguridad de la cuenta",
+    "linkHelp": "También puedes abrir este enlace:",
+    "safety": "Si no has realizado esta acción, protege tu cuenta inmediatamente. Recuperar la cuenta no recupera las claves del vault cifrado."
+  },
+  "email-change-notice": {
+    "subject": "Ha cambiado tu correo principal",
+    "preview": "Se han cerrado tus sesiones anteriores.",
+    "title": "Ha cambiado tu dirección de correo",
+    "body": "Tu dirección de correo principal ha cambiado tras la verificación. Se han cerrado todas las sesiones existentes. Inicia sesión de nuevo con tu nueva dirección de correo.",
+    "action": "Iniciar sesión",
+    "linkHelp": "También puedes abrir este enlace:",
+    "safety": "Si no solicitaste este cambio, contacta con soporte y protege tu cuenta inmediatamente."
+  }
+}

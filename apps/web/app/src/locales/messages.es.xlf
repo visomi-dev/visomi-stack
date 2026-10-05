@@ -2,6 +2,20 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file source-language="en-US" target-language="es" datatype="plaintext" original="ng2.template">
     <body>
+      <trans-unit id="notificationsTitle" datatype="html"><source>Notifications</source><target>Notificaciones</target></trans-unit>
+      <trans-unit id="layoutMenuNotifications" datatype="html"><source>Notifications</source><target>Notificaciones</target></trans-unit>
+      <trans-unit id="notificationsDescription" datatype="html"><source>Updates for your current account, without private content.</source><target>Novedades de tu cuenta actual, sin contenido privado.</target></trans-unit>
+      <trans-unit id="notificationsRefresh" datatype="html"><source>Refresh</source><target>Actualizar</target></trans-unit>
+      <trans-unit id="notificationsLoading" datatype="html"><source>Loading notifications...</source><target>Cargando notificaciones...</target></trans-unit>
+      <trans-unit id="notificationsLoadError" datatype="html"><source>Notifications could not be loaded. Refresh to try again.</source><target>No se pudieron cargar las notificaciones. Actualiza para volver a intentarlo.</target></trans-unit>
+      <trans-unit id="notificationsReadError" datatype="html"><source>The notification could not be updated. Try again.</source><target>No se pudo actualizar la notificación. Inténtalo de nuevo.</target></trans-unit>
+      <trans-unit id="notificationsSecurityUpdate" datatype="html"><source>Security update</source><target>Novedad de seguridad</target></trans-unit>
+      <trans-unit id="notificationsServiceUpdate" datatype="html"><source>Account activity completed</source><target>Actividad de la cuenta completada</target></trans-unit>
+      <trans-unit id="notificationsRead" datatype="html"><source>Read</source><target>Leída</target></trans-unit>
+      <trans-unit id="notificationsUnread" datatype="html"><source>Unread</source><target>Sin leer</target></trans-unit>
+      <trans-unit id="notificationsMarkRead" datatype="html"><source>Mark as read</source><target>Marcar como leída</target></trans-unit>
+      <trans-unit id="notificationsEmpty" datatype="html"><source>You are all caught up. New account updates will appear here.</source><target>Estás al día. Las nuevas novedades de tu cuenta aparecerán aquí.</target></trans-unit>
+      <trans-unit id="notificationsPushUnavailable" datatype="html"><source>Device push notifications are not available yet. Your inbox remains available here.</source><target>Las notificaciones push del dispositivo aún no están disponibles. Puedes consultar tu bandeja aquí.</target></trans-unit>
       <trans-unit id="securityGoogleUnlinkConfirm" datatype="html"><source>Confirm your identity to remove Google sign-in.</source><target>Confirma tu identidad para eliminar el inicio de sesión con Google.</target></trans-unit>
       <trans-unit id="identityRecoveryCodeTitle" datatype="html"><source>Enter a recovery code</source><target>Introduce un código de recuperación</target></trans-unit>
       <trans-unit id="identityRecoveryCodeDescription" datatype="html"><source>Use one of the unused recovery codes you saved when setting up your authenticator.</source><target>Usa uno de los códigos de recuperación sin usar que guardaste al configurar tu autenticador.</target></trans-unit>
@@ -1222,6 +1236,186 @@
       <trans-unit id="LoaderTemplateText1" datatype="html"><source>Loading</source><target>Cargando</target></trans-unit>
       <trans-unit id="BottomNavigationTemplateText1" datatype="html"><source>Bottom navigation</source><target>Navegación inferior</target></trans-unit>
       <trans-unit id="LangSwitcherTemplateText1" datatype="html"><source>Language</source><target>Idioma</target></trans-unit>
+          <trans-unit id="activationDefaultApiKeyLabel" datatype="html"><source>Primary workspace key</source><target>Clave principal del espacio de trabajo</target></trans-unit>
+      <trans-unit id="activationApiKeyLabelRequired" datatype="html"><source>Enter a label for the API key.</source><target>Introduce una etiqueta para la clave de API.</target></trans-unit>
+      <trans-unit id="activationApiKeyLabelMaxLength" datatype="html"><source>Use 80 characters or fewer.</source><target>Usa 80 caracteres o menos.</target></trans-unit>
+      <trans-unit id="emailVerificationEmailRequired" datatype="html"><source>Enter your email address.</source><target>Introduce tu dirección de correo electrónico.</target></trans-unit>
+      <trans-unit id="emailVerificationEmailInvalid" datatype="html"><source>Enter a valid email address.</source><target>Introduce una dirección de correo electrónico válida.</target></trans-unit>
+      <trans-unit id="emailVerificationCodeRequired" datatype="html"><source>Enter the 6-digit code.</source><target>Introduce el código de 6 dígitos.</target></trans-unit>
+      <trans-unit id="emailVerificationCodeMinLength" datatype="html"><source>Enter all 6 digits.</source><target>Introduce los 6 dígitos.</target></trans-unit>
+      <trans-unit id="emailVerificationCodeMaxLength" datatype="html"><source>Enter all 6 digits.</source><target>Introduce los 6 dígitos.</target></trans-unit>
+      <trans-unit id="emailVerificationCodePattern" datatype="html"><source>Use the 6 digits from your email.</source><target>Usa los 6 dígitos que recibiste por correo electrónico.</target></trans-unit>
+      <trans-unit id="passwordResetEmailRequired" datatype="html"><source>Enter your email address.</source><target>Introduce tu dirección de correo electrónico.</target></trans-unit>
+      <trans-unit id="passwordResetEmailInvalid" datatype="html"><source>Enter a valid email address.</source><target>Introduce una dirección de correo electrónico válida.</target></trans-unit>
+      <trans-unit id="passwordResetCodeRequired" datatype="html"><source>Enter the 6-digit email code.</source><target>Introduce el código de 6 dígitos del correo electrónico.</target></trans-unit>
+      <trans-unit id="passwordResetCodeMinLength" datatype="html"><source>Enter all 6 digits.</source><target>Introduce los 6 dígitos.</target></trans-unit>
+      <trans-unit id="passwordResetCodeMaxLength" datatype="html"><source>Enter all 6 digits.</source><target>Introduce los 6 dígitos.</target></trans-unit>
+      <trans-unit id="passwordResetCodePattern" datatype="html"><source>Use the code from your email.</source><target>Usa el código que recibiste por correo electrónico.</target></trans-unit>
+      <trans-unit id="passwordResetPasswordRequired" datatype="html"><source>Enter a new password.</source><target>Introduce una contraseña nueva.</target></trans-unit>
+      <trans-unit id="passwordResetConfirmationRequired" datatype="html"><source>Confirm your new password.</source><target>Confirma tu nueva contraseña.</target></trans-unit>
+      <trans-unit id="passwordResetPasswordsMismatch" datatype="html"><source>Passwords do not match.</source><target>Las contraseñas no coinciden.</target></trans-unit>
+      <trans-unit id="passwordResetFactorRequired" datatype="html"><source>Enter your authenticator or recovery code.</source><target>Introduce el código del autenticador o de recuperación.</target></trans-unit>
+      <trans-unit id="galleryActiveProjects" datatype="html"><source>Active projects</source><target>Proyectos activos</target></trans-unit>
+      <trans-unit id="galleryArchivedProjects" datatype="html"><source>Archived projects</source><target>Proyectos archivados</target></trans-unit>
+      <trans-unit id="galleryAllProjects" datatype="html"><source>All projects</source><target>Todos los proyectos</target></trans-unit>
+      <trans-unit id="galleryStarterPlan" datatype="html"><source>Starter</source><target>Inicial</target></trans-unit>
+      <trans-unit id="galleryStarterPlanDescription" datatype="html"><source>For solo founders and weekend builds.</source><target>Para fundadores en solitario y proyectos de fin de semana.</target></trans-unit>
+      <trans-unit id="galleryTeamPlan" datatype="html"><source>Team</source><target>Equipo</target></trans-unit>
+      <trans-unit id="galleryTeamPlanDescription" datatype="html"><source>For small product teams up to 10 people.</source><target>Para equipos de producto pequeños de hasta 10 personas.</target></trans-unit>
+      <trans-unit id="galleryEnterprisePlan" datatype="html"><source>Enterprise</source><target>Empresarial</target></trans-unit>
+      <trans-unit id="galleryEnterprisePlanDescription" datatype="html"><source>Contact us to enable this plan.</source><target>Contáctanos para habilitar este plan.</target></trans-unit>
+      <trans-unit id="languageEnglish" datatype="html"><source>English</source><target>Inglés</target></trans-unit>
+      <trans-unit id="languageSpanish" datatype="html"><source>Spanish</source><target>Español</target></trans-unit>
+      <trans-unit id="layoutUpdateReady" datatype="html">
+        <source>An application update is ready. Reload when you have saved your work.</source>
+        <target>Hay una actualización disponible. Recarga cuando hayas guardado tu trabajo.</target>
+      </trans-unit>
+      <trans-unit id="layoutUpdateReload" datatype="html">
+        <source>Reload application</source>
+        <target>Recargar aplicación</target>
+      </trans-unit>
+      <trans-unit id="notificationsPreferencesTitle" datatype="html">
+        <source>Delivery preferences</source>
+        <target>Preferencias de entrega</target>
+      </trans-unit>
+      <trans-unit id="notificationsServicePushPreference" datatype="html">
+        <source>Allow device alerts for account activity</source>
+        <target>Permitir alertas del dispositivo sobre la actividad de la cuenta</target>
+      </trans-unit>
+      <trans-unit id="notificationsPreferencesHelp" datatype="html">
+        <source>This preference is saved for your current account. Delivery remains unavailable until device push is enabled. Your inbox is not affected.</source>
+        <target>Esta preferencia se guarda para tu cuenta actual. La entrega seguirá sin estar disponible hasta que se habiliten las notificaciones del dispositivo. Tu bandeja de entrada no se ve afectada.</target>
+      </trans-unit>
+      <trans-unit id="notificationsSavePreferences" datatype="html">
+        <source>Save preferences</source>
+        <target>Guardar preferencias</target>
+      </trans-unit>
+      <trans-unit id="notificationsPreferencesSaved" datatype="html">
+        <source>Delivery preferences saved.</source>
+        <target>Preferencias de entrega guardadas.</target>
+      </trans-unit>
+      <trans-unit id="notificationsPreferencesError" datatype="html">
+        <source>Delivery preferences could not be saved. Try again.</source>
+        <target>No se pudieron guardar las preferencias de entrega. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="notificationsDeviceTitle" datatype="html">
+        <source>This device</source><target>Este dispositivo</target>
+      </trans-unit>
+      <trans-unit id="notificationsDeviceUnsupported" datatype="html">
+        <source>Device alerts require a supported browser and the installed app service worker.</source>
+        <target>Las alertas del dispositivo requieren un navegador compatible y el service worker de la aplicación instalado.</target>
+      </trans-unit>
+      <trans-unit id="notificationsDeviceLoading" datatype="html">
+        <source>Checking device alerts...</source><target>Comprobando las alertas del dispositivo...</target>
+      </trans-unit>
+      <trans-unit id="notificationsDeviceLoadError" datatype="html">
+        <source>Device alert settings could not be loaded.</source><target>No se pudo cargar la configuración de alertas del dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="notificationsDeviceRegistered" datatype="html">
+        <source>Device alerts are registered for your current session and account.</source>
+        <target>Las alertas del dispositivo están registradas para tu sesión y cuenta actuales.</target>
+      </trans-unit>
+      <trans-unit id="notificationsDeviceRemove" datatype="html">
+        <source>Remove device alerts</source><target>Eliminar alertas del dispositivo</target>
+      </trans-unit>
+      <trans-unit id="notificationsDeviceConsent" datatype="html">
+        <source>Enable generic alerts on this device. Your browser will ask for permission. Account activity alerts also require the delivery preference above.</source>
+        <target>Activa alertas genéricas en este dispositivo. Tu navegador solicitará permiso. Las alertas de actividad de la cuenta también requieren la preferencia de entrega anterior.</target>
+      </trans-unit>
+      <trans-unit id="notificationsDeviceEnable" datatype="html">
+        <source>Enable device alerts</source><target>Activar alertas del dispositivo</target>
+      </trans-unit>
+      <trans-unit id="notificationsDeviceError" datatype="html">
+        <source>Device alerts could not be updated. Check browser permissions and try again.</source>
+        <target>No se pudieron actualizar las alertas del dispositivo. Comprueba los permisos del navegador e inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="notificationsPreferencesEnabledHelp" datatype="html">
+        <source>This preference is saved for your current account. Device alerts also require registration on each device. Your inbox is not affected.</source>
+        <target>Esta preferencia se guarda para tu cuenta actual. Las alertas del dispositivo también requieren registrarse en cada dispositivo. Tu bandeja de entrada no se ve afectada.</target>
+      </trans-unit>
+      <trans-unit id="vaultTitle" datatype="html"><source>Encrypted vault</source><target>Bóveda cifrada</target></trans-unit>
+      <trans-unit id="vaultDescription" datatype="html"><source>Signing in does not unlock your encryption key. Your PIN and recovery key never leave this browser.</source><target>Iniciar sesión no desbloquea tu clave de cifrado. Tu PIN y tu clave de recuperación nunca salen de este navegador.</target></trans-unit>
+      <trans-unit id="vaultUnlocked" datatype="html"><source>Vault unlocked. It locks after fifteen minutes of inactivity, session changes or leaving this browser page.</source><target>Bóveda desbloqueada. Se bloquea tras quince minutos de inactividad, cambios de sesión o al salir de esta página del navegador.</target></trans-unit>
+      <trans-unit id="vaultLock" datatype="html"><source>Lock vault</source><target>Bloquear bóveda</target></trans-unit>
+      <trans-unit id="vaultLocked" datatype="html"><source>Vault locked</source><target>Bóveda bloqueada</target></trans-unit>
+      <trans-unit id="vaultRecoveryLabel" datatype="html"><source>Vault recovery key</source><target>Clave de recuperación de la bóveda</target></trans-unit>
+      <trans-unit id="vaultRecoveryUnlock" datatype="html"><source>Unlock with recovery key</source><target>Desbloquear con clave de recuperación</target></trans-unit>
+      <trans-unit id="vaultPinTitle" datatype="html"><source>Browser PIN</source><target>PIN del navegador</target></trans-unit>
+      <trans-unit id="vaultPinHelp" datatype="html"><source>This browser stores only a PIN-encrypted key. Online attempts are limited across devices; this does not prevent offline attacks on stolen browser storage.</source><target>Este navegador guarda únicamente una clave cifrada con el PIN. Los intentos en línea se limitan entre dispositivos; esto no impide ataques sin conexión contra el almacenamiento robado del navegador.</target></trans-unit>
+      <trans-unit id="vaultPinLabel" datatype="html"><source>Six-digit vault PIN</source><target>PIN de seis dígitos de la bóveda</target></trans-unit>
+      <trans-unit id="vaultPinEnroll" datatype="html"><source>Save PIN on this browser</source><target>Guardar PIN en este navegador</target></trans-unit>
+      <trans-unit id="vaultPinChange" datatype="html"><source>Change vault PIN</source><target>Cambiar PIN de la bóveda</target></trans-unit>
+      <trans-unit id="vaultPinUnlock" datatype="html"><source>Unlock with browser PIN</source><target>Desbloquear con PIN del navegador</target></trans-unit>
+      <trans-unit id="vaultCreate" datatype="html"><source>Create a new vault</source><target>Crear una bóveda nueva</target></trans-unit>
+      <trans-unit id="vaultCreateHelp" datatype="html"><source>Create a vault only for an account without an existing vault PIN. Recover an existing key instead of replacing it. A changed PIN revokes older browser enrollments.</source><target>Crea una bóveda solo para una cuenta sin un PIN de bóveda existente. Recupera una clave existente en vez de reemplazarla. Cambiar el PIN revoca los registros anteriores del navegador.</target></trans-unit>
+      <trans-unit id="vaultPinRemove" datatype="html"><source>Revoke vault PIN</source><target>Revocar PIN de la bóveda</target></trans-unit>
+      <trans-unit id="vaultRecoveryTitle" datatype="html"><source>Recovery key</source><target>Clave de recuperación</target></trans-unit>
+      <trans-unit id="vaultRecoveryWarning" datatype="html"><source>Anyone with this key can decrypt your vault. Save it offline. Account recovery cannot restore a lost encryption key.</source><target>Cualquier persona con esta clave puede descifrar tu bóveda. Guárdala sin conexión. La recuperación de la cuenta no puede restaurar una clave de cifrado perdida.</target></trans-unit>
+      <trans-unit id="vaultRecoveryExport" datatype="html"><source>Reveal recovery key</source><target>Mostrar clave de recuperación</target></trans-unit>
+      <trans-unit id="vaultRecoveryHide" datatype="html"><source>Hide recovery key</source><target>Ocultar clave de recuperación</target></trans-unit>
+      <trans-unit id="vaultRecoveryRequired" datatype="html"><source>Enter your vault recovery key.</source><target>Introduce la clave de recuperación de tu bóveda.</target></trans-unit>
+      <trans-unit id="vaultPinRequired" datatype="html"><source>Enter your vault PIN.</source><target>Introduce el PIN de tu bóveda.</target></trans-unit>
+      <trans-unit id="vaultPinPolicy" datatype="html"><source>Use six digits, without repeated digits or a consecutive sequence.</source><target>Usa seis dígitos, sin repetir un mismo dígito ni usar una secuencia consecutiva.</target></trans-unit>
+      <trans-unit id="vaultPinConfirm" datatype="html"><source>Confirm your identity to set up or change your vault PIN.</source><target>Confirma tu identidad para configurar o cambiar el PIN de tu bóveda.</target></trans-unit>
+      <trans-unit id="vaultPinSaved" datatype="html"><source>Vault PIN saved on this browser. Export and store your recovery key safely.</source><target>PIN de la bóveda guardado en este navegador. Exporta y guarda tu clave de recuperación de forma segura.</target></trans-unit>
+      <trans-unit id="vaultPinRemoveConfirm" datatype="html"><source>Confirm your identity to revoke the vault PIN on all browsers.</source><target>Confirma tu identidad para revocar el PIN de la bóveda en todos los navegadores.</target></trans-unit>
+      <trans-unit id="vaultRecoveryConfirm" datatype="html"><source>Confirm your identity to reveal your vault recovery key.</source><target>Confirma tu identidad para mostrar la clave de recuperación de tu bóveda.</target></trans-unit>
+      <trans-unit id="vaultActionError" datatype="html"><source>Vault action failed. Check your recovery key, PIN, browser support or cooldown before trying again.</source><target>La acción de la bóveda falló. Comprueba tu clave de recuperación, PIN, compatibilidad del navegador o tiempo de espera antes de intentarlo de nuevo.</target></trans-unit>
+      <trans-unit id="securityVault" datatype="html"><source>Manage encrypted vault</source><target>Administrar bóveda cifrada</target></trans-unit>
+      <trans-unit id="vaultPasskeyTitle" datatype="html"><source>Passkey vault unlock</source><target>Desbloqueo de bóveda con clave de acceso</target></trans-unit>
+      <trans-unit id="vaultPasskeyHelp" datatype="html"><source>Use an existing PRF-capable passkey to unlock the same encryption key. Signing in with a passkey does not automatically unlock your vault.</source><target>Usa una clave de acceso existente compatible con PRF para desbloquear la misma clave de cifrado. Iniciar sesión con una clave de acceso no desbloquea automáticamente tu bóveda.</target></trans-unit>
+      <trans-unit id="vaultPasskeyUnlock" datatype="html"><source>Unlock with passkey</source><target>Desbloquear con clave de acceso</target></trans-unit>
+      <trans-unit id="vaultPasskeyRevoke" datatype="html"><source>Revoke passkey vault unlock</source><target>Revocar desbloqueo de bóveda con clave de acceso</target></trans-unit>
+      <trans-unit id="vaultPasskeyEmpty" datatype="html"><source>No passkey is enrolled for vault unlock.</source><target>No hay claves de acceso registradas para desbloquear la bóveda.</target></trans-unit>
+      <trans-unit id="vaultPasskeyEnroll" datatype="html"><source>Enable passkey vault unlock</source><target>Habilitar desbloqueo de bóveda con clave de acceso</target></trans-unit>
+      <trans-unit id="vaultPasskeyUnavailable" datatype="html"><source>Passkey vault unlock is unavailable on this server. Browser PIN and recovery remain separate options.</source><target>El desbloqueo con clave de acceso no está disponible en este servidor. El PIN del navegador y la recuperación siguen siendo opciones independientes.</target></trans-unit>
+      <trans-unit id="vaultPasskeyRefresh" datatype="html"><source>Refresh passkey methods</source><target>Actualizar métodos de clave de acceso</target></trans-unit>
+      <trans-unit id="vaultPasskeyUnnamed" datatype="html"><source>Enrolled passkey</source><target>Clave de acceso registrada</target></trans-unit>
+      <trans-unit id="vaultPasskeyLoadError" datatype="html"><source>Passkey methods could not be loaded. Retry before making changes.</source><target>No se pudieron cargar los métodos de clave de acceso. Reintenta antes de realizar cambios.</target></trans-unit>
+      <trans-unit id="vaultPasskeyEnrollConfirm" datatype="html"><source>Confirm your identity to let this passkey unlock your vault.</source><target>Confirma tu identidad para permitir que esta clave de acceso desbloquee tu bóveda.</target></trans-unit>
+      <trans-unit id="vaultPasskeySaved" datatype="html"><source>Passkey vault unlock saved. Keep your recovery key safely offline.</source><target>Desbloqueo con clave de acceso guardado. Conserva tu clave de recuperación de forma segura sin conexión.</target></trans-unit>
+      <trans-unit id="vaultPasskeyRevokeConfirm" datatype="html"><source>Confirm your identity to revoke this passkey's vault unlock. Account sign-in is unaffected.</source><target>Confirma tu identidad para revocar el desbloqueo de bóveda de esta clave de acceso. El inicio de sesión de la cuenta no cambia.</target></trans-unit>
+      <trans-unit id="vaultPasskeyRevoked" datatype="html"><source>Passkey vault unlock revoked. Previously downloaded keys cannot be recalled.</source><target>Desbloqueo con clave de acceso revocado. No se pueden retirar las claves descargadas anteriormente.</target></trans-unit>
+      <trans-unit id="vaultPasskeyError" datatype="html"><source>Passkey vault unlock failed. Use a PRF-capable passkey, your browser PIN or your recovery key. No weaker fallback was used.</source><target>El desbloqueo con clave de acceso falló. Usa una clave de acceso compatible con PRF, el PIN del navegador o tu clave de recuperación. No se utilizó ninguna alternativa más débil.</target></trans-unit>
+      <trans-unit id="vaultBrowserTitle" datatype="html"><source>Connect another browser</source><target>Conectar otro navegador</target></trans-unit>
+      <trans-unit id="vaultBrowserHelp" datatype="html"><source>Sign in to the same account in both browsers. Start a request on the new browser, then compare its complete code on your unlocked trusted browser. Only an encrypted key is relayed.</source><target>Inicia sesión en la misma cuenta en ambos navegadores. Inicia una solicitud en el navegador nuevo y compara su código completo en tu navegador confiable desbloqueado. Solo se transmite una clave cifrada.</target></trans-unit>
+      <trans-unit id="vaultBrowserRequestId" datatype="html"><source>Browser request ID</source><target>ID de solicitud del navegador</target></trans-unit>
+      <trans-unit id="vaultBrowserComparisonCode" datatype="html"><source>Browser comparison code</source><target>Código de comparación del navegador</target></trans-unit>
+      <trans-unit id="vaultBrowserExpiry" datatype="html"><source>This request expires within ten minutes. Cancel it if you did not initiate the connection.</source><target>Esta solicitud caduca en diez minutos. Cancélala si no has iniciado la conexión.</target></trans-unit>
+      <trans-unit id="vaultBrowserReceive" datatype="html"><source>Receive vault key</source><target>Recibir clave de la bóveda</target></trans-unit>
+      <trans-unit id="vaultBrowserCancel" datatype="html"><source>Cancel browser request</source><target>Cancelar solicitud del navegador</target></trans-unit>
+      <trans-unit id="vaultBrowserBegin" datatype="html"><source>Request vault key from trusted browser</source><target>Solicitar clave al navegador confiable</target></trans-unit>
+      <trans-unit id="vaultBrowserApprove" datatype="html"><source>Approve browser connection</source><target>Aprobar conexión del navegador</target></trans-unit>
+      <trans-unit id="vaultBrowserUnavailable" datatype="html"><source>Browser key delivery is unavailable on this server. Use your browser PIN, passkey or recovery key.</source><target>La entrega de claves entre navegadores no está disponible en este servidor. Usa el PIN del navegador, una clave de acceso o tu clave de recuperación.</target></trans-unit>
+      <trans-unit id="vaultBrowserRefresh" datatype="html"><source>Refresh browser delivery availability</source><target>Actualizar disponibilidad de entrega entre navegadores</target></trans-unit>
+      <trans-unit id="vaultBrowserRequestRequired" datatype="html"><source>Enter the request ID from the new browser.</source><target>Introduce el ID de solicitud del navegador nuevo.</target></trans-unit>
+      <trans-unit id="vaultBrowserCodeRequired" datatype="html"><source>Enter the comparison code from the new browser.</source><target>Introduce el código de comparación del navegador nuevo.</target></trans-unit>
+      <trans-unit id="vaultBrowserRequestInvalid" datatype="html"><source>Use the complete request ID from the new browser.</source><target>Usa el ID de solicitud completo del navegador nuevo.</target></trans-unit>
+      <trans-unit id="vaultBrowserReceived" datatype="html"><source>Vault unlocked on this browser. Set up a local PIN or passkey separately if you want to unlock again after reloading.</source><target>Bóveda desbloqueada en este navegador. Configura por separado un PIN local o una clave de acceso si quieres volver a desbloquearla después de recargar.</target></trans-unit>
+      <trans-unit id="vaultBrowserApproveConfirm" datatype="html"><source>Allow the browser with this code to open your vault. Compare the complete code on both browsers before confirming.</source><target>Permite que el navegador con este código abra tu bóveda. Compara el código completo en ambos navegadores antes de confirmar.</target></trans-unit>
+      <trans-unit id="vaultBrowserApproved" datatype="html"><source>Connection approved. Return to the new browser and receive the vault key.</source><target>Conexión aprobada. Vuelve al navegador nuevo y recibe la clave de la bóveda.</target></trans-unit>
+      <trans-unit id="vaultBrowserFailed" datatype="html"><source>Could not connect this browser. Check approval, both codes and expiry, or use your recovery key.</source><target>No se pudo conectar este navegador. Comprueba la aprobación, ambos códigos y la caducidad, o usa tu clave de recuperación.</target></trans-unit>
+      <trans-unit id="vaultSyncTitle" datatype="html"><source>Encrypted workspace synchronization</source><target>Sincronización cifrada del espacio de trabajo</target></trans-unit>
+      <trans-unit id="vaultSyncHelp" datatype="html"><source>Connect a workspace and device that are already enrolled. Only encrypted changes leave this browser. Decrypted projections are cleared when the vault locks.</source><target>Conecta un espacio de trabajo y un dispositivo ya registrados. Solo salen cambios cifrados de este navegador. Las proyecciones descifradas se borran al bloquear la bóveda.</target></trans-unit>
+      <trans-unit id="vaultSyncLocked" datatype="html"><source>Unlock your vault before connecting encrypted workspace data.</source><target>Desbloquea tu bóveda antes de conectar datos cifrados del espacio de trabajo.</target></trans-unit>
+      <trans-unit id="vaultSyncWorkspace" datatype="html"><source>Enrolled workspace ID</source><target>ID del espacio de trabajo registrado</target></trans-unit>
+      <trans-unit id="vaultSyncDevice" datatype="html"><source>Enrolled device ID</source><target>ID del dispositivo registrado</target></trans-unit>
+      <trans-unit id="vaultSyncVersion" datatype="html"><source>Device enrollment version</source><target>Versión de registro del dispositivo</target></trans-unit>
+      <trans-unit id="vaultSyncWorkspaceRequired" datatype="html"><source>Enter an enrolled workspace ID.</source><target>Introduce el ID de un espacio de trabajo registrado.</target></trans-unit>
+      <trans-unit id="vaultSyncDeviceRequired" datatype="html"><source>Enter the enrolled device ID.</source><target>Introduce el ID del dispositivo registrado.</target></trans-unit>
+      <trans-unit id="vaultSyncVersionInvalid" datatype="html"><source>Enter a positive enrollment version.</source><target>Introduce una versión de registro positiva.</target></trans-unit>
+      <trans-unit id="vaultSyncConnect" datatype="html"><source>Connect enrolled workspace</source><target>Conectar espacio de trabajo registrado</target></trans-unit>
+      <trans-unit id="vaultSyncOffline" datatype="html"><source>Waiting for synchronization. Your encrypted queue is retained.</source><target>Esperando la sincronización. Tu cola cifrada se conserva.</target></trans-unit>
+      <trans-unit id="vaultSyncReady" datatype="html"><source>Encrypted workspace connected.</source><target>Espacio de trabajo cifrado conectado.</target></trans-unit>
+      <trans-unit id="vaultSyncProjectionCount" datatype="html"><source>Local projections:</source><target>Proyecciones locales:</target></trans-unit>
+      <trans-unit id="vaultSyncRetry" datatype="html"><source>Synchronize now</source><target>Sincronizar ahora</target></trans-unit>
+      <trans-unit id="vaultSyncDisconnect" datatype="html"><source>Disconnect workspace</source><target>Desconectar espacio de trabajo</target></trans-unit>
+      <trans-unit id="vaultSyncPending" datatype="html"><source>Encrypted upload pending.</source><target>Envío cifrado pendiente.</target></trans-unit>
+      <trans-unit id="vaultSyncBlocked" datatype="html"><source>Upload blocked. Review workspace or device access before creating a new revision.</source><target>Envío bloqueado. Revisa el acceso al espacio de trabajo o al dispositivo antes de crear una revisión nueva.</target></trans-unit>
+      <trans-unit id="vaultSyncConflict" datatype="html"><source>Revision conflict. Keep the local encrypted projection and review the cloud version before creating a new revision.</source><target>Conflicto de revisión. Conserva la proyección cifrada local y revisa la versión de la nube antes de crear una revisión nueva.</target></trans-unit>
+      <trans-unit id="vaultSyncDiscardHelp" datatype="html"><source>Discard stops only this rejected upload. It does not delete your local encrypted projection or other revisions.</source><target>Descartar detiene solo este envío rechazado. No elimina tu proyección cifrada local ni otras revisiones.</target></trans-unit>
+      <trans-unit id="vaultSyncDiscard" datatype="html"><source>Discard this rejected upload</source><target>Descartar este envío rechazado</target></trans-unit>
+      <trans-unit id="vaultSyncFailed" datatype="html"><source>Synchronization could not finish. Local encrypted changes are retained. Check your connection and workspace enrollment before retrying.</source><target>No se pudo completar la sincronización. Los cambios cifrados locales se conservan. Comprueba tu conexión y el registro del espacio de trabajo antes de reintentarlo.</target></trans-unit>
     </body>
   </file>
 </xliff>

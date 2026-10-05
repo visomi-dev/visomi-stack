@@ -324,8 +324,11 @@ describe('SignIn', () => {
       expect(identity.emailModel().email).toBe('person@example.test');
       expect(fixture.nativeElement.querySelector('dialog')?.open).toBe(true);
     } finally {
-      if (descriptor) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', descriptor);
-      else Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+      if (descriptor) {
+        Object.defineProperty(HTMLDialogElement.prototype, 'showModal', descriptor);
+      } else {
+        Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+      }
     }
   });
 

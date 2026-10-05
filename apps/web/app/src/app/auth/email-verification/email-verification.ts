@@ -35,14 +35,16 @@ export class EmailVerification {
   readonly complete = signal(false);
 
   readonly emailForm: FieldTree<EmailModel> = form(this.emailModel, (path) => {
-    required(path.email, { message: 'Enter your email address.' });
-    email(path.email, { message: 'Enter a valid email address.' });
+    required(path.email, { message: $localize`:@@emailVerificationEmailRequired:Enter your email address.` });
+    email(path.email, { message: $localize`:@@emailVerificationEmailInvalid:Enter a valid email address.` });
   });
   readonly codeForm: FieldTree<CodeModel> = form(this.codeModel, (path) => {
-    required(path.pin, { message: 'Enter the 6-digit code.' });
-    minLength(path.pin, 6, { message: 'Enter all 6 digits.' });
-    maxLength(path.pin, 6, { message: 'Enter all 6 digits.' });
-    pattern(path.pin, /^\d{6}$/u, { message: 'Use the 6 digits from your email.' });
+    required(path.pin, { message: $localize`:@@emailVerificationCodeRequired:Enter the 6-digit code.` });
+    minLength(path.pin, 6, { message: $localize`:@@emailVerificationCodeMinLength:Enter all 6 digits.` });
+    maxLength(path.pin, 6, { message: $localize`:@@emailVerificationCodeMaxLength:Enter all 6 digits.` });
+    pattern(path.pin, /^\d{6}$/u, {
+      message: $localize`:@@emailVerificationCodePattern:Use the 6 digits from your email.`,
+    });
   });
 
   readonly emailError = computed(() => this.emailForm.email().errors()[0]?.message ?? '');

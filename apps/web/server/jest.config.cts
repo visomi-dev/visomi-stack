@@ -1,7 +1,7 @@
 module.exports = {
   displayName: 'server',
   preset: '../../../jest.preset.js',
-  testEnvironment: 'node',
+  testEnvironment: '<rootDir>/../../../tools/testing/database-environment.cjs',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },

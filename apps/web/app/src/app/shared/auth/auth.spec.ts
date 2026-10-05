@@ -88,12 +88,17 @@ describe('BrowserAuth', () => {
     await expect(verifyRecovery).resolves.toMatchObject({ kind: 'restricted' });
   });
 
-  it('skips the session request when the hasSession cookie is absent', async () => {
+  it('checks the authoritative session when the hint cookie is absent', async () => {
     const auth = TestBed.inject(Auth);
+    const pending = auth.ensureSessionLoaded();
 
-    await auth.ensureSessionLoaded();
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/auth/session')
+      .flush({
+        data: { authenticated: false, kind: 'anonymous', user: null },
+      });
+    await pending;
 
-    TestBed.inject(HttpTestingController).expectNone('/api/auth/session');
     expect(auth.sessionLoaded()).toBe(true);
     expect(auth.user()).toBeNull();
   });
@@ -147,7 +152,10 @@ describe('BrowserAuth', () => {
     const auth = TestBed.inject(Auth);
     const http = TestBed.inject(HttpTestingController);
 
-    await auth.ensureSessionLoaded();
+    const initial = auth.ensureSessionLoaded();
+
+    http.expectOne('/api/auth/session').flush({ data: { authenticated: false, kind: 'anonymous', user: null } });
+    await initial;
     const refresh = auth.ensureSessionLoaded(true);
 
     http.expectOne('/api/auth/session').flush({

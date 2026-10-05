@@ -28,6 +28,8 @@ describe('Checkbox', () => {
     const input = fixture.nativeElement.querySelector('input[type="checkbox"]') as HTMLInputElement;
 
     expect(input.checked).toBe(true);
+    expect(input.classList.contains('appearance-auto')).toBe(true);
+    expect(input.classList.contains('appearance-none')).toBe(false);
   });
 
   it('updates the signal form value when toggled', () => {

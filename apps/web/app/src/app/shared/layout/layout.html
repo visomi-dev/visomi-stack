@@ -10,7 +10,25 @@
         (toggleCollapsed)="toggleSidebarCollapsed()"
       />
 
-      <section class="flex min-h-0 min-w-0 flex-1 flex-col">
+      <section class="flex min-h-0 min-w-0 flex-1 flex-col" [attr.inert]="mobileMenuOpen() ? '' : null">
+        @if (pageTitles.template(); as title) {
+          <header class="shrink-0 px-4 pt-4 md:px-8 md:pt-6" data-slot="page-title">
+            <ng-container [ngTemplateOutlet]="title" />
+          </header>
+        }
+        @if (appUpdates.ready()) {
+          <aside
+            class="flex flex-wrap items-center justify-between gap-3 bg-slate-100 px-4 py-3 text-sm dark:bg-slate-800"
+            role="status"
+          >
+            <span i18n="@@layoutUpdateReady">
+              An application update is ready. Reload when you have saved your work.
+            </span>
+            <app-button (click)="appUpdates.reload()">
+              <span i18n="@@layoutUpdateReload">Reload application</span>
+            </app-button>
+          </aside>
+        }
         <div class="min-h-0 min-w-0 flex-1 overflow-y-auto bg-white px-4 py-4 md:px-8 md:py-6 dark:bg-slate-950">
           <router-outlet />
         </div>

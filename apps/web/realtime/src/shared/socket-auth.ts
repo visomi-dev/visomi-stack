@@ -1,6 +1,13 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import { createSessionMiddleware, createSessionStore, env, getPool } from 'shared';
+import {
+  createSessionMiddleware,
+  createSessionStore,
+  env,
+  getPool,
+  revokeSessionPushSubscriptions,
+  revokeSessionVaultCustody,
+} from 'shared';
 
 function createRealtimeSessionMiddleware() {
   const sessionConfig = {
@@ -8,6 +15,10 @@ function createRealtimeSessionMiddleware() {
     databaseDriver: env.DATABASE_DRIVER,
     sessionMaxAgeMs: env.SESSION_MAX_AGE_MS,
     sessionSecret: env.SESSION_SECRET,
+    onSessionRevoked: async (sid: string) => {
+      await revokeSessionPushSubscriptions(sid);
+      await revokeSessionVaultCustody(sid);
+    },
   };
 
   const store = createSessionStore(sessionConfig, env.DATABASE_DRIVER === 'pg' ? getPool() : undefined);

@@ -21,6 +21,23 @@ export function isPrivateEnvironmentFile(path: string): boolean {
   return /(^|\/)[^/]*\.env(?:\.[^/]*)?$/.test(path) && !path.endsWith('.env.example');
 }
 
+export function smokeEnvironment(environment: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  return {
+    PATH: environment.PATH,
+    HOME: environment.HOME,
+    XDG_RUNTIME_DIR: environment.XDG_RUNTIME_DIR,
+    COREPACK_HOME: environment.COREPACK_HOME,
+    PNPM_HOME: environment.PNPM_HOME,
+    TMPDIR: environment.TMPDIR,
+    NODE_COMPILE_CACHE: environment.NODE_COMPILE_CACHE,
+    NX_SOCKET_DIR: environment.NX_SOCKET_DIR,
+    NX_DAEMON: 'false',
+    NX_INTERACTIVE: 'false',
+    CI: 'true',
+    NODE_ENV: 'development',
+  };
+}
+
 async function freePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createServer();
@@ -159,17 +176,7 @@ export async function smoke(
     accessKey: randomBytes(12).toString('hex'),
     secretKey: randomBytes(32).toString('hex'),
   };
-  const env: NodeJS.ProcessEnv = {
-    PATH: process.env.PATH,
-    HOME: process.env.HOME,
-    XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR,
-    COREPACK_HOME: process.env.COREPACK_HOME,
-    PNPM_HOME: process.env.PNPM_HOME,
-    NX_DAEMON: 'false',
-    NX_INTERACTIVE: 'false',
-    CI: 'true',
-    NODE_ENV: 'development',
-  };
+  const env = smokeEnvironment();
   let engine: string | undefined;
   const containers: string[] = [];
   let redisProcess: ChildProcess | undefined;

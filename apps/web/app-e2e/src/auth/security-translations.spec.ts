@@ -2,6 +2,9 @@ import { expect, test } from '@playwright/test';
 
 import { authenticateViaDeterministicTestSession, createCredentials } from '../support/auth';
 
+// Keep presentation HTTP mocks observable; the PWA suite exercises the real worker.
+test.use({ serviceWorkers: 'block' });
+
 for (const action of ['add', 'revoke'] as const) {
   test(`preserves the Spanish ${action} passkey button interpolation while submitting`, async ({ page, request }) => {
     const credentials = createCredentials();

@@ -5,7 +5,41 @@
   "projectType": "library",
   "tags": ["scope:backend"],
   "targets": {
+    "test": {
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js",
+        "{workspaceRoot}/drizzle/**/*",
+        { "externalDependencies": ["jest", "@nx/jest", "ts-jest"] },
+        { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }
+      ],
+      "options": {
+        "command": "node --experimental-vm-modules ../../../node_modules/jest/bin/jest.js"
+      }
+    },
+    "emails-build": {
+      "executor": "nx:run-commands",
+      "options": { "command": "node --experimental-strip-types scripts/build-email-templates.ts" }
+    },
+    "emails-preview": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["emails-build"],
+      "options": {
+        "commands": [
+          "pnpm exec esbuild scripts/preview-email-templates.ts --bundle --platform=node --format=cjs --outfile=dist/email-previews/preview.cjs",
+          "node dist/email-previews/preview.cjs"
+        ],
+        "parallel": false
+      }
+    },
+    "emails-check": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["emails-preview"],
+      "options": { "command": "node --experimental-strip-types scripts/check-email-previews.ts" }
+    },
     "build": {
+      "dependsOn": ["emails-build", "^build"],
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {

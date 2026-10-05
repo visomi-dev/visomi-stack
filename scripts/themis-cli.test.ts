@@ -4,8 +4,10 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 const roots: string[] = [];
+const cliPath = fileURLToPath(new URL('./themis-cli.ts', import.meta.url));
 afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
 });
@@ -13,7 +15,7 @@ afterEach(() => {
 const runCli = (root: string, args: string[]): { status: number | null; stdout: string; stderr: string } => {
   const result = spawnSync(
     process.execPath,
-    ['--experimental-strip-types', 'scripts/themis-cli.ts', ...args, '--root', root, '--json'],
+    ['--experimental-strip-types', cliPath, ...args, '--root', root, '--json'],
     { cwd: process.cwd(), encoding: 'utf8' },
   );
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };

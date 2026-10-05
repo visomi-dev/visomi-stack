@@ -16,7 +16,14 @@
         "bundle": false,
         "main": "apps/web/realtime/src/main.ts",
         "tsConfig": "apps/web/realtime/tsconfig.app.json",
-        "assets": ["apps/web/realtime/src/assets"],
+        "assets": [
+          "apps/web/realtime/src/assets",
+          {
+            "input": "libs/backend/shared/src/lib/notifications",
+            "glob": "push-copy.json",
+            "output": "libs/backend/shared/src/lib/notifications"
+          }
+        ],
         "generatePackageJson": true,
         "esbuildOptions": {
           "sourcemap": true,

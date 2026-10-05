@@ -17,17 +17,6 @@
           </p>
         </header>
         <div class="mt-7 grid gap-4">
-          <app-field>
-            <app-label for="access-email" tone="plain" i18n="@@identityPasswordEmailLabel">Email address</app-label>
-            <app-input
-              [formField]="emailForm.email"
-              controlId="access-email"
-              name="username"
-              type="email"
-              autocomplete="username webauthn"
-              [disabled]="passkeyVerifying()"
-            />
-          </app-field>
           <button
             type="button"
             class="min-h-12 rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 disabled:opacity-60 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
@@ -37,6 +26,16 @@
             i18n="@@accessContinue"
           >
             Continue
+          </button>
+          <button
+            type="button"
+            class="min-h-11 rounded-md px-4 text-sm font-semibold text-blue-600 underline disabled:opacity-60 dark:text-blue-400"
+            [disabled]="passkeyVerifying()"
+            (click)="useAnotherMethod()"
+            i18n="@@accessUseAnotherMethod"
+            #methodOpener
+          >
+            Use another method
           </button>
           <p class="text-center text-sm leading-6 text-zinc-500 dark:text-zinc-400" i18n="@@accessSuggestion">
             Your browser can suggest a saved passkey. You can also choose another way to sign in.
@@ -352,14 +351,16 @@
             Follow your device's prompt to continue.
           </p>
         </header>
-        <button
-          type="button"
-          class="mt-7 inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500"
-          disabled
-          i18n="@@identityWaitingPasskey"
+        <p
+          role="status"
+          class="mt-7 flex min-h-11 items-center justify-center gap-3 text-sm text-slate-500 dark:text-slate-400"
         >
-          Waiting for passkey
-        </button>
+          <span
+            aria-hidden="true"
+            class="size-4 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"
+          ></span>
+          <span i18n="@@identityWaitingPasskey">Waiting for passkey</span>
+        </p>
       }
       @case ('passkey-error') {
         <header>
@@ -775,11 +776,14 @@
       }
       @case ('success') {
         <p
-          class="text-center text-sm font-semibold text-green-700 dark:text-green-400"
+          class="flex min-h-11 items-center justify-center gap-3 text-center text-sm text-slate-500 dark:text-slate-400"
           role="status"
-          i18n="@@identitySuccess"
         >
-          Identity confirmed. Opening your account…
+          <span
+            aria-hidden="true"
+            class="size-4 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"
+          ></span>
+          <span i18n="@@identitySuccess">Identity confirmed. Opening your account…</span>
         </p>
       }
     }

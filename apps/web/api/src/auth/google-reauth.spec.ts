@@ -15,7 +15,8 @@ import { passkeyRouter } from './passkey-router';
 import { authed } from './auth-middleware';
 import { establishFullSession } from './auth-session';
 import { passport } from './passport';
-import { findOrCreateUserByEmail, resolveAuthUserForAccount, setUserPassword } from './auth-service';
+import { findOrCreateUserByEmail, resolveAuthUserForAccount } from './auth-identity';
+import { setUserPassword } from './password-session';
 import { resetPasskeySecurityState } from './passkey-security';
 
 import {
