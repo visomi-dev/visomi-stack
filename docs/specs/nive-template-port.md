@@ -32,6 +32,22 @@ The incremental verification follow-up explicitly imports later tooling commits
 
 ## Provenance and adaptations
 
+### Draft publication and generated-email follow-up
+
+The integrated branch was pushed and draft PR
+[#2](https://github.com/visomi-dev/visomi-stack/pull/2) targets `main` directly.
+Commits `32df7f5` (implementation) and `ed93734` (gate evidence) both passed
+their normal hooks before push. The draft lists remaining work explicitly and
+does not claim whole-port completion or deployment certification.
+
+Synchronize the generated email resource with the MJML source after the gate's
+formatter added whitespace inside Handlebars expressions. Compare committed and
+regenerated source after normalizing only equivalent `{{ expression }}` spacing;
+the sources match exactly after that normalization, so no template/copy/markup
+change is hidden in this follow-up. The generated-resource follow-up must pass
+its own normal pre-commit gate before push. Its evidence log is
+`tmp/relocated-email-generation-commit.log`.
+
 ### Integrated progress committed after the complete pre-commit gate
 
 Commit `32df7f5` (`feat(platform): port reusable Nive capabilities into stack`)
