@@ -32,6 +32,55 @@ The incremental verification follow-up explicitly imports later tooling commits
 
 ## Provenance and adaptations
 
+### Sync HTTP and durable-matrix boundaries completed
+
+Close two of the seven oversized modules recorded at the draft checkpoint:
+`apps/web/api-e2e/src/api/sync.spec.ts` and `pzs-005-real.spec.ts`.
+Keep the other five open: auth middleware integration, OpenAPI runner, frontend
+sign-in, shared DB schema and legacy workflow internals. This is incremental
+progress, not whole-port completion or global strict-rule activation.
+
+- Move the unchanged session, same-account member, cookie and envelope fixtures
+  into `src/support/sync-fixture.ts`. Move the revocation, quorum recovery,
+  all-device-loss, re-enrollment and anti-rollback scenario into
+  `src/api/sync-device-lifecycle.spec.ts`. Each scenario still creates its own
+  authenticated accounts/project/devices through HTTP; no suite-order state is
+  introduced. Assign the tombstone and first-append responses before asserting.
+- Move PZS-005 observation capture, run/stream identity, status/code matrix
+  validation, report serialization and artifact fingerprinting into
+  `src/support/pzs-005-evidence.ts`. Keep the complete durable scenario in one
+  test and one owned API/PostgreSQL/MinIO invocation. The status helper awaits
+  the request and asserts before the next case; requests are not parallelized.
+  Assign artifact bytes before hashing, preserving exact byte-sensitive hashes.
+- Enable snapshot strict rules for both suites and their new support modules.
+  All are below 500 counted lines. No rule exceptions, assertions, expected
+  negative codes, evidence files or timeout budgets are removed.
+
+Fresh focused verification, before the publication hook:
+
+- `tmp/sync-boundaries-tests.log`: six sync HTTP scenarios passed across the two
+  suites through `api-e2e:test`, with `--skip-nx-cache`. Build and native-fixture
+  prerequisites also ran fresh.
+- `tmp/sync-boundaries-parity.log`: all six scenario names, per-scenario HTTP
+  request ASTs, assertion matchers/expected values and timeouts match the baseline;
+  all five extracted fixture initializer/body ASTs match. Assertion subjects for
+  the two assigned append responses were also inspected in the diff.
+- `tmp/sync-matrix-boundaries-e2e.log`: the single durable scenario passed all
+  23 cases through `api-e2e:e2e` with `PZS005_REAL=true` and `--skip-nx-cache`.
+  Invocation-owned PostgreSQL/MinIO were provisioned and removed. Artifacts are
+  retained locally at `tmp/sync-matrix-boundaries-evidence`, not published.
+- `tmp/sync-matrix-boundaries-parity.log`: all 23 observed request ASTs preserve
+  membership, order and arguments; all 21 formerly embedded status assertions
+  preserve their case and expected code. Identity, expected matrix status/code,
+  HAR, JUnit, raw HTTP, OpenAPI and evidence-file initializers match baseline ASTs.
+- `tmp/sync-matrix-boundaries-lint.log`: project lint passed after strict-rule
+  activation; formatting and `git diff --check` passed.
+
+Publish only after the normal pre-commit gate. Record that gate separately in
+`tmp/sync-boundaries-commit.log`; focused verification above is not a substitute.
+Keep PR #2 draft with the five remaining boundaries and final source-inventory,
+restore, whole-port verification and external certification gaps visible.
+
 ### Draft publication and generated-email follow-up
 
 The integrated branch was pushed and draft PR
