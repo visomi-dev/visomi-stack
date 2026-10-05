@@ -191,6 +191,7 @@ export default [
   {
     // Roll out source-snapshot limits only after a module's compatible extraction.
     // Native Node entry points and Angular route loaders keep their required extensions.
+    basePath: import.meta.dirname,
     files: [
       'apps/web/api/src/auth/auth-route-session.ts',
       'apps/web/api/src/auth/auth-router.ts',
@@ -213,6 +214,9 @@ export default [
       'apps/web/api/src/auth/auth-identity.ts',
       'apps/web/api/src/auth/auth-devices.ts',
       'apps/web/api/src/auth/auth-service.ts',
+      'apps/web/api/src/auth/auth-middleware*.ts',
+      'apps/web/api/src/auth/password-authority.spec.ts',
+      'apps/web/api/src/auth/reauth-session-authority.spec.ts',
       'apps/web/api-e2e/src/support/report-sanitization.ts',
       'apps/web/api-e2e/src/support/report-sanitization.spec.ts',
       'apps/web/api-e2e/src/support/sync-fixture.ts',
@@ -220,12 +224,17 @@ export default [
       'apps/web/api-e2e/src/api/sync-device-lifecycle.spec.ts',
       'apps/web/api-e2e/src/api/pzs-005-real.spec.ts',
       'apps/web/api-e2e/src/support/pzs-005-evidence.ts',
+      'apps/web/api-e2e/src/support/openapi-contract*.ts',
+      'apps/web/api-e2e/src/support/run-openapi-contract.ts',
       'scripts/themis-cli.ts',
       'scripts/themis-cli-context.ts',
       'scripts/themis-cli-storage.ts',
       'scripts/themis-project-migration*.ts',
       'scripts/themis-adapter*.ts',
       'libs/themis-workflow/src/lib/project-workflow*.ts',
+      'libs/backend/shared/src/lib/db/schema*.ts',
+      'libs/themis-workflow/src/lib/legacy-workflow*.ts',
+      'apps/web/app/src/app/auth/sign-in/sign-in*.ts',
     ],
     rules: {
       'import-x/extensions': ['error', 'never', { checkTypeImports: true, ignorePackages: true }],
@@ -259,13 +268,17 @@ export default [
   },
   {
     // These modules also execute directly with native Node TypeScript resolution.
+    basePath: import.meta.dirname,
     files: [
       'scripts/themis-cli.ts',
+      'apps/web/api-e2e/src/support/openapi-contract*.ts',
+      'apps/web/api-e2e/src/support/run-openapi-contract.ts',
       'scripts/themis-cli-context.ts',
       'scripts/themis-cli-storage.ts',
       'scripts/themis-project-migration*.ts',
       'scripts/themis-adapter*.ts',
       'libs/themis-workflow/src/lib/project-workflow*.ts',
+      'libs/themis-workflow/src/lib/legacy-workflow*.ts',
     ],
     rules: {
       'import-x/extensions': ['error', 'always', { checkTypeImports: true, ignorePackages: true }],

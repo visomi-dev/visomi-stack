@@ -140,7 +140,13 @@ export async function startPasswordReset(email: string, context: string, session
     requiredFactor = totp ? 'totp' : 'email';
     factorEnrollmentId = totp?.id ?? null;
   }
-  const membership = user ? await getPrimaryMembership(user.id) : undefined;
+  let membership: Awaited<ReturnType<typeof getPrimaryMembership>> | undefined;
+
+  if (user) {
+    const primaryMembership = await getPrimaryMembership(user.id);
+
+    membership = primaryMembership;
+  }
 
   await db.insert(authIdentityFlows).values({
     id: flowId,

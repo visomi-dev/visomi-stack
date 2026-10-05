@@ -32,6 +32,95 @@ The incremental verification follow-up explicitly imports later tooling commits
 
 ## Provenance and adaptations
 
+### Remaining five boundaries extracted; global strict rollout remains open
+
+Complete the five oversized modules identified after `cfbb4fa` without importing
+Nive product functionality. This is another implementation increment, not final
+whole-port completion. The PR remains draft.
+
+- Split the shared DB schema into auth, sync/project, activity and vault modules.
+  Keep `schema.ts` as the existing Drizzle discovery entry point and preserve the
+  exact 43 exported table instances. Initializer AST parity confirms unchanged
+  columns, defaults, checks, indexes, foreign-key targets and deletion policies.
+  New tests exercise discovery identity, reference resolution and membership/
+  credential cascade boundaries.
+- Split legacy workflow contracts, storage/transaction helpers, work items,
+  sprint lifecycle, queries and execution/review into dependency-acyclic modules.
+  Preserve the native Node `.ts` imports and the existing public entry point.
+  All 79 declaration ASTs match after equivalent single-statement brace
+  normalization; the change does not alter persisted events or transitions.
+- Split auth middleware integration tests into password-authority, middleware
+  and reauthentication suites. Each Jest sandbox owns its original PGlite,
+  session store, migration/setup and teardown; no cross-suite runtime sharing is
+  introduced. Production TypeScript excludes the two test-only support modules.
+  Keep short-circuit grant validation and verification exception boundaries when
+  assigning awaited values. Registration middleware is still registered once in
+  the same position, with the same restricted-session path classification.
+- Split the OpenAPI native runner into context, HTTP observations, fixtures,
+  sync evidence, passkey flows, schema generation and reports. The entry point
+  retains process ownership, signals, readiness, cleanup and Schemathesis options.
+  Shared report arrays and prepared passkey examples remain single instances.
+  Request AST parity preserves the ordered 13 bootstrap, 16 fixture-boundary,
+  23 sync-observation and 28 passkey request/observation calls; all 20 passkey
+  observation assertions retain identical ASTs. Four new transport regressions
+  cover redaction, cookies, malformed JSON, status rejection and shared evidence.
+  Native support tests remain excluded from Jest discovery, not from verification.
+- Split sign-in into route-owned form state and password, recovery, enrollment
+  and passkey coordinators. These are plain per-route objects, not root services
+  or hidden initialization components. Keep the existing template, signal/form
+  identities, attempt invalidation, destruction clearing, credential cancellation,
+  prepared-options click activation and DOM focus/render ownership. Date parsing
+  now uses Luxon for ISO deadlines and HTTP/ISO Retry-After values.
+
+Fix a strict-lint configuration defect discovered during this extraction: the
+root-relative rollout patterns now declare the workspace root as `basePath`, so
+project-local inferred lint targets actually enforce them. This exposes existing
+unbraced/embedded-await code that previously appeared green. Address the exposed
+errors in the completed boundaries without disabling rules or changing budgets.
+
+Focused verification (2026-10-05):
+
+- `tmp/schema-boundaries-tests.log`, `tmp/schema-boundaries-build.log` and
+  `tmp/schema-boundaries-parity.log`: schema regressions, shared build and all 43
+  initializer AST comparisons passed.
+- `tmp/legacy-boundaries-tests.log`, `tmp/legacy-boundaries-typecheck.log`,
+  `tmp/legacy-boundaries-build.log` and `tmp/legacy-boundaries-consumers.log`:
+  workflow tests, installed TypeScript typecheck, build and native CLI/core/
+  migration/adapter consumers passed. Root-exact lint also passed after spacing
+  autofixes; the project-specific lint target intentionally disables that spacing
+  rule and is not the sole evidence for exact-file hooks.
+- `tmp/remaining-boundaries-api-tests.log`: all 31 enabled suites/243 tests passed
+  afresh; two infrastructure suites/nine tests remain explicitly skipped in memory
+  mode. A preceding invocation exceeded its two-minute harness timeout and is not
+  counted as passing evidence.
+- `tmp/sign-in-boundaries-tests.log`: complete app run passed afresh, 261 tests and
+  one intentional skip, after Luxon adaptation. `tmp/sign-in-boundaries-build.log`
+  and `tmp/remaining-boundaries-build.log` record successful production builds.
+  The initial backend build exposed test-only support discovery and failed; the
+  repeat after explicit production exclusions passed.
+- `tmp/openapi-boundaries-fixture-tests.log`: all 17 native fixture tests passed,
+  including the four new observation-module regressions.
+- `tmp/openapi-boundaries-native.log`: real owned-gateway passkey smoke and
+  deterministic Schemathesis examples passed. Builds and HTTP checks ran with
+  explicit memory storage and invocation-owned Redis on isolated ports. Redis and
+  gateway were stopped after the run; this is not durable-storage certification.
+- `tmp/remaining-boundaries-parity.log`: all workflow declaration and OpenAPI
+  request/assertion parity checks above passed.
+
+The fresh inventory uses only tracked and non-ignored untracked source files,
+not generated Playwright caches or Astro declarations. At this checkpoint,
+`tmp/tracked-strict-inventory-summary.log` inspected 726 files and found no module
+above the current 500-counted-line limit. **Global strict lint is still not green:**
+the broader audit reports 990 brace violations and 661 embedded awaits, plus
+spacing/order and minor baseline issues. Those rules must be adapted globally and
+the inventory repeated after formatting/braces expansion; the absence of oversized
+files today is not proof of completed enforcement.
+
+Publication must still pass the normal pre-commit gate. Record that invocation in
+`tmp/remaining-boundaries-commit.log`. Do not push a failed gate or mark the PR ready.
+Next: complete broader strict adaptation, reconcile independently reusable source
+inventory, repeat whole-port E2E and refresh the clean-copy PostgreSQL restore.
+
 ### Sync HTTP and durable-matrix boundaries completed
 
 Close two of the seven oversized modules recorded at the draft checkpoint:

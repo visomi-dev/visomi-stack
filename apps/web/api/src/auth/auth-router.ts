@@ -128,7 +128,7 @@ router.post(
       .update(authIdentityFlows)
       .set({ emailHash: flowHash(body.email), state, updatedAt: now })
       .where(eq(authIdentityFlows.id, flow.id));
-    if (user)
+    if (user) {
       await db.insert(authAuditEvents).values({
         id: randomUUID(),
         event: 'identity_email_requested',
@@ -138,6 +138,7 @@ router.post(
         contextHash: requestContext(req),
         createdAt: now,
       });
+    }
     httpResponse.json(res, {
       data: { flowId: flow.id, state: 'identify' as const },
       status: 202,
@@ -202,12 +203,13 @@ router.post(
     if (flow.state === 'verify_new_email') {
       const identity = await verifyEmailOtp(body.flowId, body.pin, requestContext(req));
 
-      if (!identity.isNewUser)
+      if (!identity.isNewUser) {
         throw new HttpError({
           code: 'recovery_unavailable',
           message: 'The recovery request could not be completed.',
           statusCode: 401,
         });
+      }
       const expiresAt = await establishRestrictedSession(req, body.flowId, identity);
 
       httpResponse.json(res, {

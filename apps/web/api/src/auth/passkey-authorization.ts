@@ -1,4 +1,7 @@
 import { and, eq } from 'drizzle-orm';
+import type { RequestHandler } from 'express';
+
+import { restrictedOperation } from './auth-middleware';
 
 import {
   accounts,
@@ -16,6 +19,13 @@ import {
 
 type Credential = typeof accountPasskeyCredentials.$inferSelect;
 type User = typeof users.$inferSelect;
+
+export const authorizePasskeyRegistration: RequestHandler = (req, res, next) => {
+  if (req.isAuthenticated?.() && req.user?.authority === 'restricted') {
+    return restrictedOperation(req.path === '/verify' ? 'passkeys:verify' : 'passkeys:enroll')(req, res, next);
+  }
+  next();
+};
 
 function unavailable(code = 'credential_not_found'): never {
   fail(code, 'The passkey authorization is no longer available.', 401);

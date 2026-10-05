@@ -100,10 +100,19 @@ export function authed(options?: AuthenticatedOptions): RequestHandler {
         const grantId: unknown =
           options.operation.grantSource === 'body' ? req.body?.grantId : req.session.reauthGrantId;
 
-        if (
-          typeof grantId !== 'string' ||
-          !(await consumeOperationGrant(grantId, req.user.id, options.operation.purpose, req.sessionID))
-        ) {
+        let consumed = false;
+
+        if (typeof grantId === 'string') {
+          const consumedGrant = await consumeOperationGrant(
+            grantId,
+            req.user.id,
+            options.operation.purpose,
+            req.sessionID,
+          );
+
+          consumed = consumedGrant;
+        }
+        if (!consumed) {
           throw new HttpError({
             code: 'reauthentication_required',
             message: 'Reauthenticate before changing security settings.',
@@ -121,7 +130,9 @@ export function authed(options?: AuthenticatedOptions): RequestHandler {
     }
     if (options?.operation || !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
       await withMutationLease(req, res, proceed);
-    } else await proceed();
+    } else {
+      await proceed();
+    }
   };
 }
 
@@ -191,7 +202,9 @@ async function withMutationLease(req: Request, res: Response, proceed: () => Pro
           if (!req.isAuthenticated?.() || !current || current.id !== user.id) {
             throw new HttpError({ code: 'authentication_required', message: 'Sign in again.', statusCode: 401 });
           }
-          if (current.authority === 'restricted') requireRestrictedAuthority(req);
+          if (current.authority === 'restricted') {
+            requireRestrictedAuthority(req);
+          }
           const [fresh] = await db.select({ authVersion: users.authVersion }).from(users).where(eq(users.id, user.id));
 
           if (!fresh || !hasCurrentAuthVersion(current.authVersion, fresh.authVersion)) {
@@ -217,7 +230,9 @@ async function withMutationLease(req: Request, res: Response, proceed: () => Pro
         // End-of-handler boundary, not socket lifetime. A disconnected client's handler may still commit.
         // Handlers must await all mutations before ending their response; never detach protected work.
         const end: Response['end'] = function (this: Response, ...args: unknown[]) {
-          if (ending) return this;
+          if (ending) {
+            return this;
+          }
           ending = true;
           const finish = (error?: unknown) => {
             res.end = originalEnd;
@@ -236,8 +251,11 @@ async function withMutationLease(req: Request, res: Response, proceed: () => Pro
 
           // express-session's end returns before its asynchronous save completes.
           // Save first while authority is held, including rotated/restricted sessions.
-          if (req.session) req.session.save(finish);
-          else finish();
+          if (req.session) {
+            req.session.save(finish);
+          } else {
+            finish();
+          }
 
           return this;
         };
@@ -249,7 +267,9 @@ async function withMutationLease(req: Request, res: Response, proceed: () => Pro
           await ended;
         } finally {
           leasedRequests.delete(req);
-          if (res.end === end) res.end = originalEnd;
+          if (res.end === end) {
+            res.end = originalEnd;
+          }
         }
       },
     );
@@ -295,7 +315,9 @@ export function authenticationVerification(kind: 'password' | 'reauth'): Request
     let limit;
 
     try {
-      limit = await consumeAuthenticationVerificationLimit(req);
+      const verificationLimit = await consumeAuthenticationVerificationLimit(req);
+
+      limit = verificationLimit;
     } catch {
       throw new HttpError({
         code: 'auth_limiter_unavailable',
@@ -345,12 +367,13 @@ export function authenticationVerification(kind: 'password' | 'reauth'): Request
         )
         .returning();
 
-      if (!grant)
+      if (!grant) {
         throw new HttpError({
           code: 'reauthentication_required',
           message: 'The reauthentication request is unavailable.',
           statusCode: 401,
         });
+      }
     }
     next();
   };

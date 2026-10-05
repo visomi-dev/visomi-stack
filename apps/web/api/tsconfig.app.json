@@ -12,6 +12,8 @@
     "src/**/*.spec.ts",
     "src/**/*.test.ts",
     "src/testing/managed-session-fixture.ts",
-    "src/testing/database-lifecycle.ts"
+    "src/testing/database-lifecycle.ts",
+    "src/auth/auth-middleware-fixture.ts",
+    "src/auth/auth-middleware-setup.ts"
   ]
 }

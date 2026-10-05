@@ -449,7 +449,9 @@ describe('PZS-005 real durable HTTP evidence', () => {
         objectRows.map(async (row: { object_key: string; ciphertext_sha256?: string }) => {
           const bytes = await objects.get(row.object_key);
 
-          if (bytes === undefined) throw new Error(`MinIO object missing for ${row.object_key}.`);
+          if (bytes === undefined) {
+            throw new Error(`MinIO object missing for ${row.object_key}.`);
+          }
 
           return {
             objectKey: row.object_key,

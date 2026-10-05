@@ -276,7 +276,7 @@ async function main(): Promise<void> {
   } else if (fullRun) {
     exitCode = await runJest(memoryEnvironment, [
       // CLI ignore patterns replace the config list, so retain the separately tested native fixtures.
-      '--testPathIgnorePatterns=sync-restart.spec.ts|durable/|pzs-005-real.spec.ts|support/(gateway-process|report-sanitization).spec.ts',
+      '--testPathIgnorePatterns=sync-restart.spec.ts|durable/|pzs-005-real.spec.ts|support/(gateway-process|report-sanitization|openapi-contract).spec.ts',
     ]);
     if (exitCode === 0)
       exitCode = await runJest(durableEnvironment, [

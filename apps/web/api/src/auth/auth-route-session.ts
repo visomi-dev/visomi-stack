@@ -16,12 +16,18 @@ export function requestContext(req: Request): string {
 export async function identityFlow(req: Request, id: string) {
   const [flow] = await db.select().from(authIdentityFlows).where(eq(authIdentityFlows.id, id)).limit(1);
 
-  if (!flow || flow.sessionBinding !== req.sessionID || flow.expiresAt <= DateTime.utc().toJSDate() || flow.terminalAt)
+  if (
+    !flow ||
+    flow.sessionBinding !== req.sessionID ||
+    flow.expiresAt <= DateTime.utc().toJSDate() ||
+    flow.terminalAt
+  ) {
     throw new HttpError({
       code: 'identity_flow_unavailable',
       message: 'The identity flow is no longer available.',
       statusCode: 410,
     });
+  }
 
   return flow;
 }
@@ -38,7 +44,9 @@ export function restrictedSession(req: Request) {
   const restricted = req.session?.restrictedAuth;
 
   if (!restricted || restricted.expiresAt <= DateTime.utc().toMillis()) {
-    if (restricted) delete req.session.restrictedAuth;
+    if (restricted) {
+      delete req.session.restrictedAuth;
+    }
     throw new HttpError({
       code: 'restricted_session_required',
       message: 'Verify an email code before continuing.',

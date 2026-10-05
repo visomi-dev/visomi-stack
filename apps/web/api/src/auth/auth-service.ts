@@ -150,6 +150,8 @@ export async function createEmailChallenge(email: string): Promise<AuthChallenge
   const expiresAt = new Date(now.getTime() + env.PIN_EXPIRY_MINUTES * 60 * 1000);
   const challengeId = randomUUID();
 
+  const pinHash = await hashSecret(pin);
+
   await db.insert(authVerificationChallenges).values({
     attemptCount: 0,
     createdAt: now,
@@ -157,7 +159,7 @@ export async function createEmailChallenge(email: string): Promise<AuthChallenge
     expiresAt,
     id: challengeId,
     lastSentAt: now,
-    pinHash: await hashSecret(pin),
+    pinHash,
     purpose: 'bootstrap_recovery',
     updatedAt: now,
     userId: null,
@@ -376,13 +378,14 @@ export async function requestEmailOtp(
 export async function requireEmailDelivery(email: string, ip?: string): Promise<void> {
   const limit = await consumeEmailOtpDeliveryLimit(ip, email, true);
 
-  if (!limit.allowed)
+  if (!limit.allowed) {
     throw new HttpError({
       code: 'rate_limited',
       message: 'Wait before requesting another verification code.',
       statusCode: 429,
       data: { retryAfter: limit.retryAfter },
     });
+  }
 }
 
 export async function resendEmailOtp(flowId: string, context: string, ip?: string): Promise<EmailOtpDelivery> {
@@ -398,19 +401,23 @@ export async function resendEmailOtp(flowId: string, context: string, ip?: strin
     )
     .limit(1);
 
-  if (!challenge || challenge.clientContextHash !== context)
+  if (!challenge || challenge.clientContextHash !== context) {
     return { flowId, resendAvailableAt: new Date(Date.now() + env.PIN_RESEND_COOLDOWN_SECONDS * 1000).toISOString() };
-  if (Date.now() < challenge.lastSentAt.getTime() + env.PIN_RESEND_COOLDOWN_SECONDS * 1000)
+  }
+  if (Date.now() < challenge.lastSentAt.getTime() + env.PIN_RESEND_COOLDOWN_SECONDS * 1000) {
     throw new HttpError({
       code: 'rate_limited',
       message: 'Wait before requesting another verification code.',
       statusCode: 429,
     });
+  }
 
   if (challenge.purpose.startsWith('password_')) {
     const [flow] = await db.select().from(authIdentityFlows).where(eq(authIdentityFlows.id, flowId));
 
-    if (!flow || flow.expiresAt <= new Date() || flow.completedAt || flow.terminalAt) verificationFailed();
+    if (!flow || flow.expiresAt <= new Date() || flow.completedAt || flow.terminalAt) {
+      verificationFailed();
+    }
   }
 
   return deliverEmailOtp(flowId, challenge.normalizedEmail, context, challenge.purpose as VerificationPurpose, ip);
@@ -449,8 +456,9 @@ export async function verifyEmailOtp(flowId: string, pin: string, context: strin
     challenge.clientContextHash !== context ||
     challenge.expiresAt <= new Date() ||
     challenge.attemptCount >= MAX_CHALLENGE_ATTEMPTS
-  )
+  ) {
     verificationFailed();
+  }
   if (!pinMatches(challenge.pinHash, hashPin(flowId, challenge.normalizedEmail, context, pin))) {
     await db
       .update(authEmailChallenges)
@@ -477,7 +485,9 @@ export async function verifyEmailOtp(flowId: string, pin: string, context: strin
       )
       .returning();
 
-    if (!consumed) return null;
+    if (!consumed) {
+      return null;
+    }
     const [created] = await tx
       .insert(users)
       .values({
@@ -489,11 +499,17 @@ export async function verifyEmailOtp(flowId: string, pin: string, context: strin
       })
       .onConflictDoNothing({ target: users.email })
       .returning();
-    let [user] = created
-      ? [created]
-      : await tx.select().from(users).where(eq(users.email, challenge.normalizedEmail)).limit(1);
+    let user = created;
 
-    if (!user) throw new Error('Verified email identity could not be resolved.');
+    if (!user) {
+      const [existingUser] = await tx.select().from(users).where(eq(users.email, challenge.normalizedEmail)).limit(1);
+
+      user = existingUser;
+    }
+
+    if (!user) {
+      throw new Error('Verified email identity could not be resolved.');
+    }
     if (!user.emailVerifiedAt) {
       const [verifiedUser] = await tx
         .update(users)
@@ -534,7 +550,9 @@ export async function verifyEmailOtp(flowId: string, pin: string, context: strin
     };
   });
 
-  if (!identity || !identity.accounts.length) verificationFailed();
+  if (!identity || !identity.accounts.length) {
+    verificationFailed();
+  }
 
   return identity;
 }

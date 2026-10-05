@@ -7,7 +7,7 @@
     "fixture-test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm exec esbuild apps/web/api-e2e/src/support/gateway-process.spec.ts apps/web/api-e2e/src/support/report-sanitization.spec.ts --bundle --platform=node --format=cjs --packages=external --outdir=dist/api-e2e-fixture --out-extension:.js=.cjs && node --test dist/api-e2e-fixture/gateway-process.spec.cjs dist/api-e2e-fixture/report-sanitization.spec.cjs"
+        "command": "pnpm exec esbuild apps/web/api-e2e/src/support/gateway-process.spec.ts apps/web/api-e2e/src/support/report-sanitization.spec.ts apps/web/api-e2e/src/support/openapi-contract.spec.ts --bundle --platform=node --format=cjs --packages=external --outdir=dist/api-e2e-fixture --out-extension:.js=.cjs && node --test dist/api-e2e-fixture/gateway-process.spec.cjs dist/api-e2e-fixture/report-sanitization.spec.cjs dist/api-e2e-fixture/openapi-contract.spec.cjs"
       }
     },
     "test": {

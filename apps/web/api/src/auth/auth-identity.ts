@@ -157,7 +157,13 @@ export async function createPasskeyEnrollment(
   accountId: string,
   existingUser?: typeof users.$inferSelect,
 ) {
-  const user = existingUser ?? (await findOrCreateUserByEmail(email));
+  let user = existingUser;
+
+  if (user == null) {
+    const createdUser = await findOrCreateUserByEmail(email);
+
+    user = createdUser;
+  }
   const [membership] = await db
     .select()
     .from(accountMemberships)

@@ -13,6 +13,7 @@ export default {
     '<rootDir>/src/support/gateway-process.spec.ts',
     // Native fixture suites run through the required fixture-test dependency, not Jest.
     '<rootDir>/src/support/report-sanitization.spec.ts',
+    '<rootDir>/src/support/openapi-contract.spec.ts',
   ],
   testEnvironment: 'node',
   transform: {

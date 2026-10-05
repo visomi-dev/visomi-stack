@@ -32,7 +32,9 @@ export async function observe(caseId: string, config: AxiosRequestConfig): Promi
   const params = new URLSearchParams();
 
   for (const [key, value] of Object.entries(response.config.params ?? {})) {
-    if (value !== undefined) params.set(key, String(value));
+    if (value !== undefined) {
+      params.set(key, String(value));
+    }
   }
   requestUrl.search = params.toString();
   const path = requestUrl.pathname;
@@ -118,7 +120,9 @@ export async function writeEvidenceReports(): Promise<void> {
     expect(observation.response.status).toBe(expectedStatuses[observation.caseId]);
     const expectedCode = expectedCodes[observation.caseId];
 
-    if (expectedCode !== undefined) expect(observation.response.code).toBe(expectedCode);
+    if (expectedCode !== undefined) {
+      expect(observation.response.code).toBe(expectedCode);
+    }
     if (observation.response.status === 409 && expectedCode === undefined) {
       throw new Error(`Durable PZS-005 case ${observation.caseId} maps HTTP 409 without an expected negative code.`);
     }

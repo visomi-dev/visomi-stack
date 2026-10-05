@@ -88,9 +88,13 @@ export async function startPasswordSignIn(
     createdAt: now.toJSDate(),
     updatedAt: now.toJSDate(),
   });
-  const delivery = activeTotp
-    ? undefined
-    : await requestEmailOtp(normalizedEmail, context, flowId, PASSWORD_OTP_PURPOSE, ip);
+  let delivery: Awaited<ReturnType<typeof requestEmailOtp>> | undefined;
+
+  if (!activeTotp) {
+    const emailDelivery = await requestEmailOtp(normalizedEmail, context, flowId, PASSWORD_OTP_PURPOSE, ip);
+
+    delivery = emailDelivery;
+  }
 
   return {
     flowId,
