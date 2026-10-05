@@ -32,6 +32,77 @@ The incremental verification follow-up explicitly imports later tooling commits
 
 ## Provenance and adaptations
 
+### Boundary publication and reusable-source reconciliation follow-up
+
+Publish the remaining five boundary extractions in `f2bcb12`. The initial
+`tmp/remaining-boundaries-commit.log` invocation passed the entire code gate but
+commitlint rejected an overlong body line. The corrected message repeated normal
+hooks in `tmp/remaining-boundaries-commit-retry.log` and succeeded before push.
+No hooks were bypassed. PR #2 remains draft and its remaining-boundary checklist
+now records these five extractions as complete.
+
+The first code-gate invocation passed all six E2E projects: app 87 Chromium cases
+with one intentional skip; API 24 memory plus four durable/restart/device-approval
+cases; gateway five; site seven; realtime and worker one each. Preserve the local
+logs' fresh-versus-cache distinction; a subsequent successful commit is not a
+second certification of every cached prerequisite. Task-owned Redis/gateway/local
+agent listeners on 27379/18083/14318 were stopped and the checkout was clean after
+publication.
+
+Review remaining same-path absences using `git show 070ec99:<path>`, rather than
+copying the mutable sibling checkout. `tmp/reusable-source-path-inventory.log`
+and `tmp/reusable-source-domain-inventory.log` retain the reviewed path inventory.
+Missing filenames are not proof of missing behavior:
+
+- Source split DB, auth/proof, workflow/CLI/migration and operation/notification
+  modules have adapted target boundaries. Do not add duplicate implementations
+  merely to match the source's extraction names.
+- Smoke process ownership, timeout, interruption and private-env filtering remain
+  in `scripts/template/smoke.ts`; the source's separate `smoke-process.ts` is a
+  structural difference, not a missing protection.
+- PIN verifier logic is integrated into DEK-encrypted `vault-pin-profile.ts`.
+  Source tests requiring no vault deployment switches are deliberately not copied:
+  they contradict the agreed independently disabled-by-default PRF/browser gates.
+- Source browser transfer/storage paths hardcode financial state/documents and
+  family sharing. Their generic encrypted queue, revision conflict, cross-tab
+  lock and transport semantics are adapted in portable sync/IndexedDB consumers;
+  financial endpoints and household-sharing contracts remain excluded.
+- Source family invitations, reminders/mail windows, finance navigation,
+  intake/Gmail collection, financial device grants and automation commands are
+  excluded. Source personal-runtime recipient-delivery primitives have already
+  been adapted without its finance client or exported persistent key references.
+
+Two independently reusable details need explicit resolution rather than blanket
+exclusion of their surrounding product modules:
+
+1. Source operation HTTP catch-up bounds every read to ten seconds. Stack already
+   bounded the entire operation ticket, but a stalled HTTP read prevented further
+   catch-up until that whole-ticket deadline. Add `timeout(10_000)` to each read;
+   existing transient-error retry, live-watch continuity, ticket expiry and
+   cancellation semantics remain intact. New fake-time regressions prove retry
+   after a stalled read and cancellation of the stalled retry/timeout on live
+   completion. `tmp/operation-timeout-tests.log` passed all 263 app tests and one
+   intentional skip; `tmp/operation-timeout-lint.log` passed.
+2. The source extractor manifest and container sandbox have potentially reusable
+   image pinning, no-network/no-secret policy, resource/input/output/deadline
+   bounds and named-container cleanup. Only its proposal parser is financial.
+   This neutral boundary remains to be adapted or explicitly dispositioned;
+   no source plugin image/container was executed during inventory review.
+
+Adapt the source import-path regression instead of copying its `tsx` runner
+assumption. `scripts/template/import-paths.spec.ts` checks that strict rules are
+identical from workspace/project directories, unresolved relative imports and
+reexports cannot evade extension restrictions, and required native Node `.ts`
+imports do not weaken awaited-value checks. It is part of `template:test`.
+`tmp/import-paths-template-tests.log` passed all 69 template tests afresh and
+`tmp/import-paths-template-lint.log` passed. This closes the missing rule-regression
+coverage, not global strict adaptation.
+
+The operation-timeout/rule-regression increment must pass its own normal hook
+before publication; its evidence log is `tmp/operation-timeout-commit.log`.
+Global strict adaptation, extractor-boundary disposition, final source reconciliation
+and fresh whole-port E2E/clean-copy restore remain open.
+
 ### Remaining five boundaries extracted; global strict rollout remains open
 
 Complete the five oversized modules identified after `cfbb4fa` without importing

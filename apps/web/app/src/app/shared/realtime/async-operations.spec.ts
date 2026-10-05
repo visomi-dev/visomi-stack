@@ -83,6 +83,40 @@ describe('AsyncOperations', () => {
     expect(unwatch).toHaveBeenCalledOnce();
   });
 
+  it('cancels a stalled HTTP read after ten seconds and retries without losing its live watch', async () => {
+    vi.useFakeTimers();
+    const result = TestBed.inject(AsyncOperations).wait(ticket());
+    const http = TestBed.inject(HttpTestingController);
+    const stalled = http.expectOne(`/api/operations/${operationId}`);
+
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(stalled.cancelled).toBe(true);
+    expect(unwatch).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(2000);
+    http.expectOne(`/api/operations/${operationId}`).flush({
+      data: { operationId, status: 'completed', result: { jobId: operationId } },
+    });
+    await expect(result).resolves.toEqual({ jobId: operationId });
+    expect(unwatch).toHaveBeenCalledOnce();
+  });
+
+  it('cancels a stalled retry and its timeout when live completion arrives', async () => {
+    vi.useFakeTimers();
+    const result = TestBed.inject(AsyncOperations).wait(ticket());
+    const http = TestBed.inject(HttpTestingController);
+
+    http.expectOne(`/api/operations/${operationId}`);
+    await vi.advanceTimersByTimeAsync(12_000);
+    const retry = http.expectOne(`/api/operations/${operationId}`);
+
+    receive({ operationId, status: 'completed', result: { jobId: operationId } });
+    await expect(result).resolves.toEqual({ jobId: operationId });
+    expect(retry.cancelled).toBe(true);
+    await vi.advanceTimersByTimeAsync(20_000);
+    http.expectNone(`/api/operations/${operationId}`);
+    expect(unwatch).toHaveBeenCalledOnce();
+  });
+
   it('rejects malformed, expired and cross-operation HTTP responses', async () => {
     await expect(
       TestBed.inject(AsyncOperations).wait({ operationId, expiresAt: DateTime.utc().minus({ seconds: 1 }).toISO()! }),

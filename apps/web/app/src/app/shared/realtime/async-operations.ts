@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DestroyRef, inject, Service } from '@angular/core';
 import { DateTime } from 'luxon';
+import { timeout } from 'rxjs';
 import type { Subscription } from 'rxjs';
 
 import { Realtime } from './realtime';
@@ -65,25 +66,28 @@ export class AsyncOperations {
       }, remaining);
       const fetch = () => {
         if (done) return;
-        request = this.http.get<unknown>(`/api/operations/${ticket.operationId}`).subscribe({
-          next: (input) => {
-            const envelope = typeof input === 'object' && input !== null && 'data' in input ? input.data : null;
-            const parsed = operationEventSchema.safeParse(envelope);
+        request = this.http
+          .get<unknown>(`/api/operations/${ticket.operationId}`)
+          .pipe(timeout(10_000))
+          .subscribe({
+            next: (input) => {
+              const envelope = typeof input === 'object' && input !== null && 'data' in input ? input.data : null;
+              const parsed = operationEventSchema.safeParse(envelope);
 
-            if (parsed.success && parsed.data.operationId === ticket.operationId) receive(parsed.data);
-            else {
-              cleanup();
-              reject(new Error('operation_response_invalid'));
-            }
-            if (!done) poll = setTimeout(fetch, 1000);
-          },
-          error: (error: unknown) => {
-            if (error instanceof HttpErrorResponse && [401, 403, 404].includes(error.status)) {
-              cleanup();
-              reject(new Error('operation_unavailable'));
-            } else if (!done) poll = setTimeout(fetch, 2000);
-          },
-        });
+              if (parsed.success && parsed.data.operationId === ticket.operationId) receive(parsed.data);
+              else {
+                cleanup();
+                reject(new Error('operation_response_invalid'));
+              }
+              if (!done) poll = setTimeout(fetch, 1000);
+            },
+            error: (error: unknown) => {
+              if (error instanceof HttpErrorResponse && [401, 403, 404].includes(error.status)) {
+                cleanup();
+                reject(new Error('operation_unavailable'));
+              } else if (!done) poll = setTimeout(fetch, 2000);
+            },
+          });
       };
 
       try {

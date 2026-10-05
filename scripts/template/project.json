@@ -70,7 +70,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "{workspaceRoot}",
-        "command": "pnpm exec esbuild scripts/template/template.spec.ts scripts/template/infrastructure.spec.ts scripts/template/restore.spec.ts scripts/template/restore-crypto.spec.ts scripts/template/restore-objects.spec.ts scripts/template/class-layout.spec.ts scripts/template/pre-commit.spec.ts scripts/template/affected-checks.spec.ts scripts/template/affected-runner.spec.ts --bundle --platform=node --format=cjs --packages=external --outdir=dist/template/tests --out-extension:.js=.cjs && node --test dist/template/tests/*.cjs"
+        "command": "pnpm exec esbuild scripts/template/template.spec.ts scripts/template/infrastructure.spec.ts scripts/template/restore.spec.ts scripts/template/restore-crypto.spec.ts scripts/template/restore-objects.spec.ts scripts/template/class-layout.spec.ts scripts/template/import-paths.spec.ts scripts/template/pre-commit.spec.ts scripts/template/affected-checks.spec.ts scripts/template/affected-runner.spec.ts --bundle --platform=node --format=cjs --packages=external --outdir=dist/template/tests --out-extension:.js=.cjs && node --test dist/template/tests/*.cjs"
       }
     },
     "typecheck": {
