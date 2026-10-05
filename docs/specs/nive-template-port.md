@@ -32,6 +32,54 @@ The incremental verification follow-up explicitly imports later tooling commits
 
 ## Provenance and adaptations
 
+### Integrated progress committed after the complete pre-commit gate
+
+Commit `32df7f5` (`feat(platform): port reusable Nive capabilities into stack`)
+captures the integrated progress authorized by the user, including the preserved
+local UI/i18n work. The real pre-commit gate passed without bypasses. Its final
+log is `tmp/relocated-port-commit.log`; failed attempts remain separate evidence,
+not successful verification. Push and draft PR creation follow this checkpoint.
+
+The final gate ran staged lint/formatting, affected unit suites and all six
+affected E2E projects: API, application, realtime, gateway/server, site and worker.
+The application E2E executed 87 Chromium scenarios with one intentional skip;
+API E2E passed 24 memory scenarios plus four durable/restart/device-approval
+scenarios against invocation-owned PostgreSQL/MinIO. Gateway/server passed five,
+site passed seven, and realtime and worker each passed one E2E scenario.
+Some unit/build prerequisites replayed local Nx cache; E2E scenarios executed
+afresh. Memory API units retain nine infrastructure-gated skips, shared-library
+tests retain seven gated skips, and Angular retains one intentional skip.
+This does not certify every optional durable matrix or browser/OS/provider mode.
+
+Additional real-gate corrections, all included in the integrated commit:
+
+- Keep report sanitization as a native Node fixture suite, executed by the
+  required `api-e2e:fixture-test` dependency. Exclude it from Jest discovery,
+  including the full runner's CLI ignore-list override, which replaces config
+  patterns rather than extending them. No sanitization tests are dropped.
+- Projects tests need PGlite's VM-module support and the existing database
+  environment that drains initialization before runtime teardown. Configure both
+  in the owning project; its five tests pass without asynchronous-import errors.
+- Declare a workspace-root-prefixed output for the site's inferred Vitest target
+  and keep its coverage directory inside the repository, not the parent folder.
+- Invocation-owned MinIO must use the generated bucket and fixture credentials.
+  Inheriting the developer bucket produced a real durable enrollment `409`;
+  fix fixture isolation rather than weakening authorization or retry assertions.
+  External bucket/credential overrides require `API_E2E_EXTERNAL_SERVICES=true`.
+
+All invocation-owned Redis, gateway, local-agent, PostgreSQL and MinIO resources
+were stopped; unrelated Nive containers remain untouched. Temporary full-run
+server diagnostics are retained locally, not published. Email build regeneration
+after staged formatting changed only whitespace inside Handlebars expressions
+in the generated resource module; inspect that residual generated diff before
+the next implementation commit. Do not discard unrelated work to clean status.
+
+**The full port is still incomplete.** Seven oversized modules, source-inventory
+reconciliation, global strict enforcement, refreshed final clean-copy restore
+after the last implementation, and the previously listed deployment/provider/OS
+certifications remain open. The PR must stay draft until those implementation
+and applicable verification gaps are closed.
+
 ### Relocated workspace and incremental draft PR authorization
 
 Resume from the canonical workspace at
