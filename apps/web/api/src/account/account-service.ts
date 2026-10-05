@@ -114,7 +114,7 @@ export async function requestEmailChange(context: AccountContext, email: string)
   const pinHash = await hashSecret(emailChangeProof(context, id, pendingEmail, pin));
   const expiresAt = new Date(Date.now() + env.PIN_EXPIRY_MINUTES * 60_000);
 
-  await db.transaction(async (tx) => {
+  const locale = await db.transaction(async (tx) => {
     const { user } = await lockContext(tx, context);
 
     if (user.email === pendingEmail) fail('email_unchanged', 'Choose a different email address.');
@@ -163,9 +163,19 @@ export async function requestEmailChange(context: AccountContext, email: string)
       expiresAt,
       lastSentAt: now,
     });
+
+    return user.preferences.locale;
   });
+
   try {
-    await sendVerificationMessage({ challengeId: id, email: pendingEmail, expiresAt, pin, purpose: 'email_change' });
+    await sendVerificationMessage({
+      challengeId: id,
+      email: pendingEmail,
+      expiresAt,
+      pin,
+      purpose: 'email_change',
+      locale,
+    });
   } catch {
     await db
       .update(authIdentityFlows)
@@ -297,7 +307,7 @@ export async function verifyEmailChange(context: AccountContext, flowId: string,
         .set({ consumedAt: now, updatedAt: now })
         .where(eq(authVerificationChallenges.id, flowId));
 
-      return { oldEmail: user.email };
+      return { oldEmail: user.email, locale: user.preferences.locale };
     })
     .catch((error: unknown) => {
       // The unique index is the final arbiter if two users verify the same address concurrently.
@@ -312,7 +322,7 @@ export async function verifyEmailChange(context: AccountContext, flowId: string,
   let notification: 'sent' | 'failed' = 'sent';
 
   try {
-    await sendEmailChangeNotification(result.oldEmail);
+    await sendEmailChangeNotification(result.oldEmail, result.locale);
   } catch {
     notification = 'failed';
   }

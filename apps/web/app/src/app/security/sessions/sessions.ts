@@ -8,10 +8,11 @@ import { SecurityAction } from '../../shared/auth/security-action';
 import { SecurityConfirmation } from '../../shared/auth/security-confirmation/security-confirmation';
 import { Auth } from '../../shared/auth/auth';
 import { SIGN_IN_PATH } from '../../shared/constants/routes';
+import { PageTitle } from '../../shared/layout/page-title';
 
 @Component({
   selector: 'app-sessions',
-  imports: [DatePipe, RouterLink, SecurityConfirmation],
+  imports: [DatePipe, RouterLink, SecurityConfirmation, PageTitle],
   providers: [SecurityAction],
   templateUrl: './sessions.html',
   styleUrl: './sessions.css',

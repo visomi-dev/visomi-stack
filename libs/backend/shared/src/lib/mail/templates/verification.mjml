@@ -1,0 +1,10 @@
+<mj-text font-size="14px" padding-bottom="8px">{{ copy.codeLabel }}</mj-text>
+<mj-text
+  font-family="monospace"
+  font-size="32px"
+  font-weight="700"
+  container-background-color="#eff6ff"
+  padding="16px 24px"
+  >{{ code }}</mj-text
+>
+<mj-text font-size="14px" color="#52525b" padding-top="20px">{{ copy.expiresLabel }} {{ expiresAt }}</mj-text>

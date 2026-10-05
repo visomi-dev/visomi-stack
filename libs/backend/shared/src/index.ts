@@ -5,6 +5,7 @@ export * from './lib/db/pool';
 export * from './lib/db/safe-insert';
 export * from './lib/db/schema';
 export * from './lib/crypto/device-identity';
+export * from './lib/crypto/vault-session-cleanup';
 export * from './lib/crypto/durable-device-identity';
 export * from './lib/crypto/local-agent-context';
 export * from './lib/crypto/local-agent-handshake';
@@ -41,3 +42,13 @@ export {
   withCorrelation,
 } from './lib/observability';
 export type { CorrelatedJob } from './lib/observability';
+export * from './lib/mail/render-mail';
+export * from './lib/operations/contract';
+export * from './lib/operations/store';
+export * from './lib/notifications/contract';
+export * from './lib/notifications/store';
+export * from './lib/notifications/push-contract';
+export * from './lib/notifications/subscriptions';
+export * from './lib/notifications/processor';
+export * from './lib/notifications/push-transport';
+export * from './lib/notifications/push-configuration';

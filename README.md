@@ -46,6 +46,8 @@ The smoke command exports a clean copy without dependencies, caches, generated o
 
 - [Getting started and troubleshooting](docs/template/getting-started.md)
 - [Local and production configuration](docs/template/configuration.md)
+- [Railway deployment and trusted ingress](docs/operations/railway.md)
+- [Nive upstream port status and remaining blocks](docs/specs/nive-template-port.md)
 - [Architecture and optional Themis integration](docs/template/architecture.md)
 - [Versioning and updates for derived projects](docs/template/maintenance.md)
 - [Implementation and verification tracking](plan/feature-template-readiness-1.md)

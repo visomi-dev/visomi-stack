@@ -25,6 +25,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve affected commit range
+        uses: nrwl/nx-set-shas@v5
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -40,39 +45,35 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check formatting
-        run: pnpm exec prettier --check .
-
-      - name: Lint workspace
         run: |
           export NX_DAEMON=false
-          pnpm nx run-many -t lint --projects site,app,api,server,shared,shared-crypto,frontend-shared,template,site-e2e,app-e2e,api-e2e,server-e2e
+          pnpm exec node --experimental-strip-types scripts/template/checks/affected.ts range "$NX_BASE" "$NX_HEAD" format:check
 
-      - name: Typecheck site
+      - name: Lint affected files and rule consumers
         run: |
           export NX_DAEMON=false
-          pnpm nx run site:typecheck
-          pnpm nx run template:typecheck
-          pnpm nx run frontend-shared:typecheck
-          pnpm nx run frontend-shared:browser-build
+          pnpm exec node --experimental-strip-types scripts/template/checks/affected.ts range "$NX_BASE" "$NX_HEAD" lint
+
+      - name: Typecheck affected projects
+        run: |
+          export NX_DAEMON=false
+          pnpm nx affected -t typecheck browser-build --base="$NX_BASE" --head="$NX_HEAD"
 
       - name: Run tests
         run: |
           export NX_DAEMON=false
-          pnpm nx run template:test
-          pnpm nx run shared:test
-          pnpm nx run shared-crypto:test
-          pnpm nx run frontend-shared:test
-          pnpm nx run site:test
-          pnpm nx run app:vite:test
-          pnpm nx run api:test
-          pnpm nx run server:test
+          pnpm exec node --experimental-strip-types scripts/template/checks/affected.ts range "$NX_BASE" "$NX_HEAD" test vite:test --exclude-e2e
 
       - name: Build composed runtime
+        id: runtime
         run: |
           export NX_DAEMON=false
-          pnpm nx run server:build
+          pnpm nx affected -t build --base="$NX_BASE" --head="$NX_HEAD" --exclude='*,!server'
+          pnpm nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --json > "$RUNNER_TEMP/affected.json"
+          node -e "const fs=require('fs');const names=JSON.parse(fs.readFileSync(process.argv[1]));fs.appendFileSync(process.env.GITHUB_OUTPUT, 'affected='+names.includes('server')+'\\n')" "$RUNNER_TEMP/affected.json"
 
       - name: Generate release inputs from the built runtime
+        if: steps.runtime.outputs.affected == 'true'
         env:
           RELEASE_DIR: ${{ runner.temp }}/themis-release
         run: |
@@ -82,6 +83,7 @@ jobs:
             "$RELEASE_DIR/themis-server.tgz" "$RELEASE_DIR"
 
       - name: Run release gate on generated inputs
+        if: steps.runtime.outputs.affected == 'true'
         env:
           RELEASE_DIR: ${{ runner.temp }}/themis-release
         run: |
@@ -96,6 +98,7 @@ jobs:
             "$RELEASE_DIR/telemetry.json"
 
       - name: Verify release gate fails closed for tampered generated input
+        if: steps.runtime.outputs.affected == 'true'
         env:
           RELEASE_DIR: ${{ runner.temp }}/themis-release
         run: |
@@ -159,6 +162,8 @@ jobs:
   critical-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      API_E2E_MINIO_IMAGE: visomi-minio-e2e:07c3a429
     services:
       redis:
         image: redis:7-alpine
@@ -168,31 +173,34 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: nrwl/nx-set-shas@v5
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Install critical browser
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Build gateway and run critical authentication journeys
+      - name: Install browser matrix
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - name: Build pinned object-storage fixture
         run: |
           export NX_DAEMON=false
-          pnpm nx run server:build:production
-          pnpm nx run app-e2e:e2e-ci--src/auth/signup-validation.spec.ts
-          pnpm nx run app-e2e:e2e-ci--src/auth/verification-feedback.spec.ts
-          pnpm nx run app-e2e:e2e-ci--src/auth/device-approval.spec.ts
-          pnpm nx run api-e2e:test
-          pnpm nx run server-e2e:e2e
-      - name: Install full browser matrix
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-        run: pnpm exec playwright install --with-deps firefox webkit
+          pnpm nx run template:minio-fixture
+      - name: Run affected E2E projects and related browser specs
+        if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+        run: |
+          export NX_DAEMON=false
+          pnpm exec node --experimental-strip-types scripts/template/checks/affected.ts range "$NX_BASE" "$NX_HEAD" e2e
+          pnpm nx affected -t test --base="$NX_BASE" --head="$NX_HEAD" --exclude='*,!api-e2e'
       - name: Run full browser and durable API matrix
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         env:
           PZS005_ARTIFACT_DIR: tmp/scheduled-api-e2e
         run: |
           export NX_DAEMON=false
+          pnpm nx run server:build:production
           pnpm nx run app-e2e:e2e
           pnpm nx run api-e2e:e2e
+          pnpm nx run server-e2e:e2e

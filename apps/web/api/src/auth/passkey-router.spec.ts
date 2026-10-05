@@ -5,7 +5,7 @@ import { Passport } from 'passport';
 import request from 'supertest';
 
 import { PASSKEY_ACCOUNT_UNAVAILABLE, passkeyOpenApiPaths, passkeyRouter } from './passkey-router';
-import { findUserByEmail } from './auth-service';
+import { findUserByEmail } from './auth-identity';
 import { resetPasskeySecurityState } from './passkey-security';
 
 import { db, errorHandler, ManagedMemorySessionStore } from 'shared';
@@ -29,7 +29,7 @@ afterAll(async () => {
   await database.close();
 });
 
-jest.mock('./auth-service', () => ({
+jest.mock('./auth-identity', () => ({
   findUserByEmail: jest.fn(async () => ({ email: 'person@example.test', emailVerifiedAt: null, id: 'user-1' })),
   getPrimaryMembership: jest.fn(async () => ({ accountId: 'account-1', role: 'owner', userId: 'user-1' })),
   resolveAuthUser: jest.fn(),

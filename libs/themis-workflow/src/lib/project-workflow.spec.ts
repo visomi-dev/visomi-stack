@@ -5,18 +5,16 @@ import { spawn, spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { test } from 'node:test';
 
-import {
-  ProjectWorkflowStore,
-  WorkspaceRegistry,
-  WorkflowError,
-  redactPortable,
-  translateEvent,
-} from './project-workflow.ts';
+import { ProjectWorkflowStore, WorkspaceRegistry } from './project-workflow.ts';
+import { WorkflowError } from './project-workflow-contract.ts';
+import { redactPortable, translateEvent } from './project-workflow-portable.ts';
 
 test('registry is explicit, redacts locators, and isolates project stores', () => {
   const root = mkdtempSync(join(tmpdir(), 'themis-workflow-'));
+
   try {
     const registry = new WorkspaceRegistry(root);
+
     registry.register('one', 'One', root);
     registry.register('two', 'Two', root);
     assert.deepEqual(registry.list(), [
@@ -26,6 +24,7 @@ test('registry is explicit, redacts locators, and isolates project stores', () =
     const one = new ProjectWorkflowStore(registry, 'one');
     const two = new ProjectWorkflowStore(registry, 'two');
     const event = one.append('workitem.created', 'agent:test', { title: 'One' });
+
     assert.equal(one.cursor().sequence, 1);
     assert.equal(two.cursor().sequence, 0);
     assert.equal(translateEvent(event).activityType, 'workitem_created');
@@ -45,8 +44,10 @@ test('registry is explicit, redacts locators, and isolates project stores', () =
 
 test('unknown and disabled projects fail with bounded errors', () => {
   const root = mkdtempSync(join(tmpdir(), 'themis-workflow-errors-'));
+
   try {
     const registry = new WorkspaceRegistry(root);
+
     assert.throws(
       () => new ProjectWorkflowStore(registry, 'missing'),
       (error: unknown) => error instanceof WorkflowError && error.code === 'UNKNOWN_PROJECT',
@@ -65,9 +66,11 @@ test('unknown and disabled projects fail with bounded errors', () => {
 test('registry supports update, disable, include-disabled listing, and removal', () => {
   const root = mkdtempSync(join(tmpdir(), 'themis-workflow-registry-'));
   const projectRoot = join(root, 'project-root');
+
   mkdirSync(projectRoot);
   try {
     const registry = new WorkspaceRegistry(root);
+
     registry.register('one', 'One', projectRoot);
     assert.deepEqual(registry.update('one', { name: 'Renamed' }), {
       projectId: 'one',
@@ -91,9 +94,11 @@ test('registry supports update, disable, include-disabled listing, and removal',
 test('moved roots fail closed instead of opening a stale registration', () => {
   const root = mkdtempSync(join(tmpdir(), 'themis-workflow-moved-'));
   const projectRoot = join(root, 'project-root');
+
   mkdirSync(projectRoot);
   try {
     const registry = new WorkspaceRegistry(root);
+
     registry.register('one', 'One', projectRoot);
     rmSync(projectRoot, { recursive: true, force: true });
     assert.throws(
@@ -107,10 +112,13 @@ test('moved roots fail closed instead of opening a stale registration', () => {
 
 test('corrupt project state returns a bounded corruption error', () => {
   const root = mkdtempSync(join(tmpdir(), 'themis-workflow-corrupt-'));
+
   try {
     const registry = new WorkspaceRegistry(root);
+
     registry.register('one', 'One', root);
     const store = new ProjectWorkflowStore(registry, 'one');
+
     store.domain().createProject({ id: 'one', name: 'One', summary: 'One' });
     writeFileSync(join(root, '.themis', 'projects', 'one', '.themis', 'state.json'), '{not-json', 'utf8');
     assert.throws(
@@ -124,8 +132,10 @@ test('corrupt project state returns a bounded corruption error', () => {
 
 test('migration fencing rejects legacy global state before project activation', () => {
   const root = mkdtempSync(join(tmpdir(), 'themis-workflow-fence-'));
+
   try {
     const registry = new WorkspaceRegistry(root);
+
     registry.register('one', 'One', root);
     writeFileSync(join(root, '.themis', 'state.json'), JSON.stringify({ schemaVersion: 2 }), 'utf8');
     assert.throws(
@@ -139,8 +149,10 @@ test('migration fencing rejects legacy global state before project activation', 
 
 test('rejects traversal ids before deriving a project store path', () => {
   const root = mkdtempSync(join(tmpdir(), 'themis-workflow-path-'));
+
   try {
     const registry = new WorkspaceRegistry(root);
+
     assert.throws(
       () => registry.register('../../escape', 'Escape', root),
       (error: unknown) => error instanceof WorkflowError && error.code === 'INVALID_PROJECT_ID',
@@ -154,12 +166,15 @@ test('rejects traversal ids before deriving a project store path', () => {
 
 test('complete domain operations remain isolated behind the registered store', () => {
   const root = mkdtempSync(join(tmpdir(), 'themis-workflow-domain-'));
+
   try {
     const registry = new WorkspaceRegistry(root);
+
     registry.register('one', 'One', root);
     registry.register('two', 'Two', root);
     const one = new ProjectWorkflowStore(registry, 'one').domain();
     const two = new ProjectWorkflowStore(registry, 'two').domain();
+
     one.createProject({ id: 'one', name: 'One', summary: 'One' });
     two.createProject({ id: 'two', name: 'Two', summary: 'Two' });
     const item = one.createWorkItem({
@@ -170,6 +185,7 @@ test('complete domain operations remain isolated behind the registered store', (
       scopeOut: [],
       verificationStrategy: [],
     });
+
     assert.equal(two.listWorkItems().length, 0);
     assert.throws(() => two.updateWorkItem(item.id, { title: 'cross-project' }));
     assert.equal(one.listProjects()[0]?.id, 'one');
@@ -189,12 +205,15 @@ test('complete domain operations remain isolated behind the registered store', (
 
 test('every complete-domain operation rejects foreign project identifiers', () => {
   const root = mkdtempSync(join(tmpdir(), 'themis-workflow-domain-adversarial-'));
+
   try {
     const registry = new WorkspaceRegistry(root);
+
     registry.register('one', 'One', root);
     registry.register('two', 'Two', root);
     const one = new ProjectWorkflowStore(registry, 'one').domain();
     const two = new ProjectWorkflowStore(registry, 'two').domain();
+
     one.createProject({ id: 'one', name: 'One', summary: 'One' });
     two.createProject({ id: 'two', name: 'Two', summary: 'Two' });
     const itemOne = one.createWorkItem({
@@ -216,6 +235,7 @@ test('every complete-domain operation rejects foreign project identifiers', () =
       verificationStrategy: ['test'],
     });
     const epicTwo = two.createEpic({ id: 'EPIC-TWO', projectId: 'two', title: 'Two epic', summary: '', goal: '' });
+
     two.transitionWorkItem(itemTwo.id, 'ready');
     const revisionTwo = two.proposeSprint({
       projectId: 'two',
@@ -229,8 +249,10 @@ test('every complete-domain operation rejects foreign project identifiers', () =
       definitionOfDone: ['done'],
       verificationStrategy: ['test'],
     });
+
     two.claimWorkItem(itemTwo.id, 'agent:two');
     const runTwo = two.startRun(itemTwo.id, 'agent:two');
+
     two.finishRun(runTwo.id, 'completed', 'done');
     two.addEvidence(runTwo.id, 'verification', 'done', 'done');
     two.addEvidence(runTwo.id, 'implementation-diff', 'done', 'done');
@@ -269,8 +291,10 @@ test('every complete-domain operation rejects foreign project identifiers', () =
       () => one.transitionWorkItem(itemTwo.id, 'ready'),
       () => one.updateWorkItem(itemTwo.id, { title: 'foreign' }),
     ];
-    for (const operation of rejects)
+
+    for (const operation of rejects) {
       assert.throws(operation, (error: unknown) => error instanceof WorkflowError && error.code === 'UNKNOWN_PROJECT');
+    }
 
     assert.deepEqual(one.listEpics(), []);
     assert.deepEqual(one.listSprints(), []);
@@ -311,10 +335,13 @@ test('every complete-domain operation rejects foreign project identifiers', () =
 
 test('lock contention across runtimes fails with a bounded actionable error', () => {
   const root = mkdtempSync(join(tmpdir(), 'themis-workflow-lock-'));
+
   try {
     const registry = new WorkspaceRegistry(root);
+
     registry.register('one', 'One', root);
     const lock = join(root, '.themis', 'projects', 'one', '.project.lock');
+
     mkdirSync(join(root, '.themis', 'projects', 'one'), { recursive: true });
     writeFileSync(lock, 'held-by-test\n', 'utf8');
     const modulePath = resolve('libs/themis-workflow/src/lib/project-workflow.ts');
@@ -327,6 +354,7 @@ test('lock contention across runtimes fails with a bounded actionable error', ()
         encoding: 'utf8',
       },
     );
+
     assert.equal(result.status, 2);
     assert.match(result.stdout, /LOCKED/);
     rmSync(lock, { force: true });
@@ -337,8 +365,10 @@ test('lock contention across runtimes fails with a bounded actionable error', ()
 
 test('serializes appends from separate runtimes with a filesystem lock', async () => {
   const root = mkdtempSync(join(tmpdir(), 'themis-workflow-concurrency-'));
+
   try {
     const registry = new WorkspaceRegistry(root);
+
     registry.register('one', 'One', root);
     const modulePath = resolve('libs/themis-workflow/src/lib/project-workflow.ts');
     const source = `import { WorkspaceRegistry, ProjectWorkflowStore } from ${JSON.stringify(modulePath)}; const registry = new WorkspaceRegistry(process.argv[1]); new ProjectWorkflowStore(registry, 'one').append('concurrent.append', process.argv[2], {});`;
@@ -352,11 +382,16 @@ test('serializes appends from separate runtimes with a filesystem lock', async (
             stdio: 'ignore',
           },
         );
+
         child.once('error', reject);
         child.once('exit', (code) => resolvePromise(code ?? 1));
       });
-    assert.deepEqual(await Promise.all([run('a'), run('b')]), [0, 0]);
+
+    const results = await Promise.all([run('a'), run('b')]);
+
+    assert.deepEqual(results, [0, 0]);
     const events = new ProjectWorkflowStore(registry, 'one').events();
+
     assert.deepEqual(
       events.map((event) => event.sequence),
       [1, 2],

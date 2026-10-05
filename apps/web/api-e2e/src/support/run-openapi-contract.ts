@@ -1,11 +1,14 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash, createHmac, generateKeyPairSync, randomBytes, sign } from 'node:crypto';
-import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { waitForPortOpen } from '@nx/node/utils';
-
 import { createAuthenticationResponse, createRegistrationFixture } from './webauthn-fixture.ts';
+import { gatewayStorageEnvironment } from './gateway-environment.ts';
+import { requireFreeGatewayPort, waitForGateway } from './gateway-process.ts';
+import { createVerifiedPasswordAccount } from './password-fixture.ts';
+import { requireObservedSmokeResults } from './smoke-assertions.ts';
+import { captureOutput, sanitizeJson, sanitizeReports, sanitizeText } from './report-sanitization.ts';
 
 const host = process.env.HOST ?? 'localhost';
 const port = Number(process.env.GATEWAY_PORT ?? 8080);
@@ -28,13 +31,6 @@ const syncOnly = process.env['PZS005_SYNC_ONLY'] === 'true';
 const passkeyOnly = includePathRegex?.startsWith('^/auth/passkey/') ?? false;
 const phases = process.env.SCHEMATHESIS_PHASES ?? (passkeyOnly ? 'examples' : 'examples,coverage');
 let activeServerPid: number | undefined;
-
-type ChallengeResponse = {
-  data?: {
-    challengeId?: string;
-    user?: { id?: string; accountId?: string };
-  };
-};
 
 type Fixture = {
   cookie: string;
@@ -117,49 +113,6 @@ const syncCaseObservations: Array<{
 
 let passkeyExamples: PasskeyExamples | undefined;
 
-const sensitiveKeys =
-  /password|pin|token|cookie|authorization|challenge|credential|privatekey|publickey|signature|clientdata|attestation|authenticator|userhandle|proof|session/i;
-
-function sanitizeText(value: string, redactLongMaterial = false): string {
-  const ansiPattern = new RegExp(`${String.fromCharCode(27)}\\[[0-?]*[ -/]*[@-~]`, 'g');
-  const sanitized = value
-    .replace(ansiPattern, '')
-    .replace(/\r/g, '')
-    .replaceAll(resolve(process.cwd(), 'dist'), '[REPORT_ROOT]')
-    .replaceAll(process.cwd(), '[WORKSPACE_ROOT]')
-    .replace(
-      /("|')((?:password|pin|token|cookie|authorization|challenge(?:Id)?|credential(?:Id)?|rawId|privateKey|publicKey|signature|clientDataJSON|attestationObject|authenticatorData|userHandle|proof|session(?:Id|Token)?))("|')\s*:\s*("|')[^"']*("|')/gi,
-      '$1$2$3: "[REDACTED]"',
-    )
-    .replace(
-      /\b[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[1-5][A-Fa-f0-9]{3}-[89ABab][A-Fa-f0-9]{3}-[A-Fa-f0-9]{12}\b/g,
-      '[REDACTED-ID]',
-    )
-    .replace(/\b\d{6}\b/g, '[REDACTED-PIN]')
-    .replace(
-      /S3cureOpenApi!|themis-api-openapi-e2e-secret|openapi-[A-Za-z0-9-]+(?:@|%40)example\.test|device-[A-Za-z0-9_-]+/g,
-      '[REDACTED]',
-    );
-
-  return redactLongMaterial ? sanitized.replace(/\b[A-Za-z0-9_-]{24,}\b/g, '[REDACTED-MATERIAL]') : sanitized;
-}
-
-function sanitizeJson(value: unknown, key?: string): unknown {
-  if (key && sensitiveKeys.test(key)) return '[REDACTED]';
-  if (Array.isArray(value)) return value.map((item) => sanitizeJson(item));
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value as JsonRecord).map(([entryKey, entryValue]) => [
-        entryKey,
-        sanitizeJson(entryValue, entryKey),
-      ]),
-    );
-  }
-  if (typeof value === 'string') return sanitizeText(value, key === 'url' || key === 'text');
-
-  return value;
-}
-
 function sessionCookieFrom(response: Response): string | undefined {
   const responseHeaders = response.headers as Headers & { getSetCookie?: () => string[] };
   const values = responseHeaders.getSetCookie?.() ?? [response.headers.get('set-cookie') ?? ''];
@@ -169,38 +122,6 @@ function sessionCookieFrom(response: Response): string | undefined {
     .filter((value) => value.length > 0 && !value.startsWith('themis.hasSession='));
 
   return cookies.length > 0 ? cookies.join('; ') : undefined;
-}
-
-async function sanitizeReports(directory = reportDirectory): Promise<void> {
-  for (const entry of await readdir(directory, { withFileTypes: true })) {
-    const path = resolve(directory, entry.name);
-
-    if (entry.isDirectory()) {
-      await sanitizeReports(path);
-      continue;
-    }
-    const content = await readFile(path, 'utf8');
-
-    if (entry.name.endsWith('.json')) {
-      try {
-        await writeFile(path, JSON.stringify(sanitizeJson(JSON.parse(content)), null, 2));
-        continue;
-      } catch {
-        // Fall through to text redaction for malformed or non-JSON diagnostics.
-      }
-    }
-    await writeFile(path, sanitizeText(content));
-  }
-}
-
-function captureOutput(stream: NodeJS.ReadableStream, output: { value: string }, rawOutput?: { value: string }): void {
-  stream.on('data', (chunk: Buffer | string) => {
-    if (rawOutput) rawOutput.value += chunk.toString();
-    const sanitized = sanitizeText(chunk.toString(), true);
-
-    output.value += sanitized;
-    process.stdout.write(sanitized);
-  });
 }
 
 function canonicalize(value: unknown): string {
@@ -693,73 +614,11 @@ async function bootstrapSession(): Promise<Fixture> {
 
   await fetch(`${apiUrl}/test/mailbox`, { method: 'DELETE' });
 
-  const signUp = await fetch(`${apiUrl}/auth/sign-up`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!signUp.ok) throw new Error(`OpenAPI contract bootstrap sign-up failed with ${signUp.status}.`);
-
-  const signUpBody = (await signUp.json()) as ChallengeResponse;
-  const challengeId = signUpBody.data?.challengeId;
-
-  if (!challengeId) throw new Error('OpenAPI contract bootstrap did not return a sign-up challenge.');
-
-  const mailbox = await fetch(`${apiUrl}/test/mailbox/latest?email=${encodeURIComponent(email)}&purpose=sign_up`);
-  const mailboxBody = (await mailbox.json()) as { pin?: string };
-
-  if (!mailboxBody.pin) throw new Error('OpenAPI contract bootstrap did not return a verification PIN.');
-
-  const verify = await fetch(`${apiUrl}/auth/sign-up/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ challengeId, pin: mailboxBody.pin }),
-  });
-
-  if (!verify.ok) throw new Error(`OpenAPI contract bootstrap verification failed with ${verify.status}.`);
-
-  const verifyHeaders = verify.headers as Headers & { getSetCookie?: () => string[] };
-  const setCookies = verifyHeaders.getSetCookie?.() ?? [verifyHeaders.get('set-cookie') ?? ''];
-
-  if (setCookies.every((cookie) => cookie.length === 0))
-    throw new Error('OpenAPI contract bootstrap did not return a session cookie.');
-
-  const cookie = setCookies
-    .filter((cookie) => cookie.length > 0)
-    .map((cookie) => cookie.split(';', 1)[0])
-    .join('; ');
+  const cookie = await createVerifiedPasswordAccount(apiUrl, origin, email, password);
 
   if (passkeyOnly) {
     const createVerifiedAccount = async (accountEmail: string): Promise<string> => {
-      const response = await fetch(`${apiUrl}/auth/sign-up`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Origin: origin },
-        body: JSON.stringify({ email: accountEmail, password }),
-      });
-      const body = (await response.json()) as ChallengeResponse;
-      const mailbox = await fetch(
-        `${apiUrl}/test/mailbox/latest?email=${encodeURIComponent(accountEmail)}&purpose=sign_up`,
-      );
-      const pin = ((await mailbox.json()) as { pin?: string }).pin;
-
-      if (!response.ok || !body.data?.challengeId || !pin)
-        throw new Error(`OpenAPI passkey fixture sign-up failed for ${accountEmail}.`);
-      const verification = await fetch(`${apiUrl}/auth/sign-up/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Origin: origin },
-        body: JSON.stringify({ challengeId: body.data.challengeId, pin }),
-      });
-      const verificationHeaders = verification.headers as Headers & { getSetCookie?: () => string[] };
-      const verificationCookies = verificationHeaders.getSetCookie?.() ?? [verificationHeaders.get('set-cookie') ?? ''];
-
-      if (!verification.ok || verificationCookies.every((value) => value.length === 0))
-        throw new Error(`OpenAPI passkey fixture verification failed for ${accountEmail}.`);
-
-      return verificationCookies
-        .filter((value) => value.length > 0)
-        .map((value) => value.split(';', 1)[0])
-        .join('; ');
+      return createVerifiedPasswordAccount(apiUrl, origin, accountEmail, password);
     };
     const smokeEmail = `openapi-passkey-smoke-${runSuffix}@example.test`;
     const unverifiedEmail = `openapi-passkey-unverified-${Date.now().toString(36)}@example.test`;
@@ -893,41 +752,14 @@ async function bootstrapSession(): Promise<Fixture> {
   );
   const credentialId = String((credential.data as JsonRecord).id);
 
-  const smokeSignUp = await fetch(`${apiUrl}/auth/sign-up`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: smokeEmail, password }),
-  });
-
-  if (!smokeSignUp.ok) throw new Error(`OpenAPI passkey smoke sign-up failed with ${smokeSignUp.status}.`);
-
-  const smokeSignUpBody = (await smokeSignUp.json()) as ChallengeResponse;
-  const smokeMailbox = await fetch(
-    `${apiUrl}/test/mailbox/latest?email=${encodeURIComponent(smokeEmail)}&purpose=sign_up`,
-  );
-  const smokePin = ((await smokeMailbox.json()) as { pin?: string }).pin;
-
-  if (!smokeSignUpBody.data?.challengeId || !smokePin)
-    throw new Error('OpenAPI isolation fixture did not return a verification challenge and PIN.');
-  const smokeVerify = await fetch(`${apiUrl}/auth/sign-up/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ challengeId: smokeSignUpBody.data.challengeId, pin: smokePin }),
-  });
-  const smokeCookies = (smokeVerify.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie?.() ?? [
-    smokeVerify.headers.get('set-cookie') ?? '',
-  ];
-  const isolatedCookie = smokeCookies
-    .filter(Boolean)
-    .map((cookie) => cookie.split(';', 1)[0])
-    .join('; ');
+  const isolatedCookie = await createVerifiedPasswordAccount(apiUrl, origin, smokeEmail, password);
   const smokeCookie = isolatedCookie;
   const isolatedSession = await requestJson('/auth/session', { headers: { Cookie: isolatedCookie } });
   const isolatedUser = (isolatedSession.data as JsonRecord).user as JsonRecord;
   const unverifiedEmail = `openapi-passkey-unverified-${Date.now().toString(36)}@example.test`;
   const unverifiedSignUp = await fetch(`${apiUrl}/auth/sign-up`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Origin: origin },
     body: JSON.stringify({ email: unverifiedEmail, password }),
   });
 
@@ -965,10 +797,10 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   const accountHeaders = { Cookie: fixture.cookie, 'Content-Type': 'application/json' };
   const rpId = host;
   const pendingEmail = `openapi-passkey-pending-${Date.now().toString(36)}@example.test`;
-  const pendingBegin = await requestObservation('/auth/passkey/registration/begin', {
+  const pendingBegin = await requestObservation('/auth/passkey/sign-up/begin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: pendingEmail, label: 'OpenAPI pending enrollment', pinVerified: true }),
+    body: JSON.stringify({ email: pendingEmail }),
   });
   const pendingData = pendingBegin.body.data as JsonRecord;
   const pendingCookie = pendingBegin.sessionCookie;
@@ -976,7 +808,7 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   if (pendingBegin.status !== 200 || !pendingCookie || typeof pendingData.options !== 'object')
     throw new Error(`Pending registration begin failed: ${observationDetail(pendingBegin)}`);
   const pendingRegistration = createRegistrationFixture(pendingData.options as JsonRecord, origin, rpId);
-  const pendingComplete = await requestObservation('/auth/passkey/registration/complete', {
+  const pendingComplete = await requestObservation('/auth/passkey/sign-up/complete', {
     method: 'POST',
     headers: { Cookie: pendingCookie, 'Content-Type': 'application/json' },
     body: JSON.stringify({ challengeId: pendingData.challengeId, response: pendingRegistration.response }),
@@ -984,42 +816,39 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   const pendingAuthBeforeVerification = await requestObservation('/auth/passkey/authentication/begin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: pendingEmail, pinVerified: true }),
+    body: JSON.stringify({ email: pendingEmail }),
   });
   const pendingMailbox = await fetch(
-    `${apiUrl}/test/mailbox/latest?email=${encodeURIComponent(pendingEmail)}&purpose=sign_up`,
+    `${apiUrl}/test/mailbox/latest?email=${encodeURIComponent(pendingEmail)}&purpose=bootstrap_recovery`,
   );
   const pendingPin = ((await pendingMailbox.json()) as { pin?: string }).pin;
 
   if (!pendingPin) throw new Error('Pending enrollment fixture did not receive a verification PIN.');
-  const pendingVerification = await requestObservation('/auth/sign-up/verify', {
+  const pendingVerification = await requestObservation('/auth/passkey/sign-up/verify', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ challengeId: pendingData.verificationChallengeId, pin: pendingPin }),
+    headers: { 'Content-Type': 'application/json', Cookie: pendingCookie },
+    body: JSON.stringify({ code: pendingPin }),
   });
 
-  if (pendingVerification.status === 200 && pendingVerification.sessionCookie) {
+  if (pendingVerification.status === 201 && pendingVerification.sessionCookie) {
     headers = { Cookie: pendingVerification.sessionCookie, 'Content-Type': 'application/json' };
   }
 
-  if (pendingVerification.status !== 200 || !pendingVerification.sessionCookie)
+  if (pendingVerification.status !== 201 || !pendingVerification.sessionCookie)
     throw new Error(
       `Pending enrollment verification did not activate an authenticated session: ${observationDetail(pendingVerification)}`,
     );
 
-  if (pendingComplete.status !== 201)
+  if (pendingComplete.status !== 202)
     throw new Error(`Pending registration complete failed: ${observationDetail(pendingComplete)}`);
 
-  const pendingCredentialId = String((pendingComplete.body.data as JsonRecord | undefined)?.id ?? '');
-
-  if (!pendingCredentialId || pendingCredentialId !== pendingRegistration.credentialId)
-    throw new Error('The pending enrollment did not persist the generated credential.');
+  const pendingCredentialId = pendingRegistration.credentialId;
 
   const pendingCredential = { ...pendingRegistration, credentialId: pendingCredentialId };
   const authenticationBegin = await requestObservation('/auth/passkey/authentication/begin', {
     method: 'POST',
     headers,
-    body: JSON.stringify({ email: pendingEmail, pinVerified: true }),
+    body: JSON.stringify({ email: pendingEmail }),
   });
 
   if (authenticationBegin.status !== 200)
@@ -1049,17 +878,17 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   const registrationBegin = await requestObservation('/auth/passkey/registration/begin', {
     method: 'POST',
     headers: registrationHeaders,
-    body: JSON.stringify({ email: pendingEmail, label: 'OpenAPI additional passkey', pinVerified: true }),
+    body: JSON.stringify({ label: 'OpenAPI additional passkey' }),
   });
   const registrationNoSession = await requestObservation('/auth/passkey/registration/begin', {
     method: 'POST',
     headers: noSessionHeaders,
-    body: JSON.stringify({ email: fixture.email, label: 'OpenAPI unauthorized', pinVerified: true }),
+    body: JSON.stringify({ label: 'OpenAPI unauthorized' }),
   });
-  const unverifiedEmail = await requestObservation('/auth/passkey/registration/begin', {
+  const unverifiedEmail = await requestObservation('/auth/passkey/sign-up/begin', {
     method: 'POST',
     headers: noSessionHeaders,
-    body: JSON.stringify({ email: fixture.unverifiedEmail, label: 'OpenAPI unverified email', pinVerified: true }),
+    body: JSON.stringify({ email: fixture.unverifiedEmail }),
   });
 
   const unverifiedPin = await requestObservation('/auth/passkey/registration/begin', {
@@ -1071,10 +900,10 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   const authenticationUnverifiedEmail = await requestObservation('/auth/passkey/authentication/begin', {
     method: 'POST',
     headers,
-    body: JSON.stringify({ email: fixture.unverifiedEmail, pinVerified: true }),
+    body: JSON.stringify({ email: fixture.unverifiedEmail }),
   });
 
-  requireResponseCode(authenticationUnverifiedEmail, 'email_unverified', 'authentication-begin-unverified-email');
+  requireResponseCode(authenticationUnverifiedEmail, 'credential_not_found', 'authentication-begin-unverified-email');
 
   const authenticationUnverifiedPin = await requestObservation('/auth/passkey/authentication/begin', {
     method: 'POST',
@@ -1082,7 +911,7 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
     body: JSON.stringify({ email: fixture.email, pinVerified: false }),
   });
 
-  requireResponseCode(authenticationUnverifiedPin, 'pin_required', 'authentication-begin-unverified-pin');
+  requireResponseCode(authenticationUnverifiedPin, 'invalid_request', 'authentication-begin-unverified-pin');
 
   const registrationData = registrationBegin.body.data as JsonRecord;
 
@@ -1093,7 +922,7 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   const mismatchBegin = await requestJson('/auth/passkey/registration/begin', {
     method: 'POST',
     headers: registrationHeaders,
-    body: JSON.stringify({ email: pendingEmail, label: 'OpenAPI smoke state', pinVerified: true }),
+    body: JSON.stringify({ label: 'OpenAPI smoke state' }),
   });
   const mismatchData = mismatchBegin.data as JsonRecord;
   const mismatchCredential = createRegistrationFixture(mismatchData.options as JsonRecord, origin, rpId);
@@ -1105,7 +934,7 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   const expiredBeginResult = await requestJson('/auth/passkey/registration/begin', {
     method: 'POST',
     headers: registrationHeaders,
-    body: JSON.stringify({ email: pendingEmail, label: 'OpenAPI expired state', pinVerified: true }),
+    body: JSON.stringify({ label: 'OpenAPI expired state' }),
   });
   const expiredData = expiredBeginResult.data as JsonRecord;
   const expiredFixture = createRegistrationFixture(expiredData.options as JsonRecord, origin, rpId);
@@ -1121,7 +950,7 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   const successfulBegin = await requestJson('/auth/passkey/registration/begin', {
     method: 'POST',
     headers: registrationHeaders,
-    body: JSON.stringify({ email: pendingEmail, label: 'OpenAPI smoke state', pinVerified: true }),
+    body: JSON.stringify({ label: 'OpenAPI smoke state' }),
   });
   const successfulData = successfulBegin.data as JsonRecord;
   const generatedCredential = createRegistrationFixture(successfulData.options as JsonRecord, origin, rpId);
@@ -1134,7 +963,9 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   if (registrationComplete.status !== 201)
     throw new Error(`Registration complete failed: ${observationDetail(registrationComplete)}`);
 
-  const persistedCredentialId = String((registrationComplete.body.data as JsonRecord | undefined)?.id ?? '');
+  const persistedCredentialId = String(
+    ((registrationComplete.body.data as JsonRecord | undefined)?.credential as JsonRecord | undefined)?.id ?? '',
+  );
 
   if (!persistedCredentialId || persistedCredentialId !== generatedCredential.credentialId)
     throw new Error('The application did not return the generated credential persisted by registration-complete.');
@@ -1159,7 +990,7 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   const originBegin = await requestJson('/auth/passkey/authentication/begin', {
     method: 'POST',
     headers: authenticationHeaders,
-    body: JSON.stringify({ email: pendingEmail, pinVerified: true }),
+    body: JSON.stringify({ email: pendingEmail }),
   });
   const originData = originBegin.data as JsonRecord;
   const originResponse = createAuthenticationResponse(
@@ -1177,7 +1008,7 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   const rpBegin = await requestJson('/auth/passkey/authentication/begin', {
     method: 'POST',
     headers: authenticationHeaders,
-    body: JSON.stringify({ email: pendingEmail, pinVerified: true }),
+    body: JSON.stringify({ email: pendingEmail }),
   });
   const rpData = rpBegin.data as JsonRecord;
   const rpResponse = createAuthenticationResponse(
@@ -1197,17 +1028,17 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   const missingAccount = await requestObservation('/auth/passkey/authentication/begin', {
     method: 'POST',
     headers: noSessionHeaders,
-    body: JSON.stringify({ email: `openapi-missing-${Date.now()}@example.test`, pinVerified: true }),
+    body: JSON.stringify({ email: `openapi-missing-${Date.now()}@example.test` }),
   });
   const existingWithoutCredential = await requestObservation('/auth/passkey/authentication/begin', {
     method: 'POST',
     headers: noSessionHeaders,
-    body: JSON.stringify({ email: fixture.email, pinVerified: true }),
+    body: JSON.stringify({ email: fixture.email }),
   });
   const schemaRegistrationBegin = await requestJson('/auth/passkey/registration/begin', {
     method: 'POST',
     headers: authenticationHeaders,
-    body: JSON.stringify({ email: pendingEmail, label: 'OpenAPI contract example', pinVerified: true }),
+    body: JSON.stringify({ label: 'OpenAPI contract example' }),
   });
   const schemaRegistrationData = schemaRegistrationBegin.data as JsonRecord;
   const schemaRegistration = createRegistrationFixture(schemaRegistrationData.options as JsonRecord, origin, rpId);
@@ -1215,7 +1046,7 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
   const schemaAuthenticationBegin = await requestJson('/auth/passkey/authentication/begin', {
     method: 'POST',
     headers: authenticationHeaders,
-    body: JSON.stringify({ email: pendingEmail, pinVerified: true }),
+    body: JSON.stringify({ email: pendingEmail }),
   });
   const schemaAuthenticationData = schemaAuthenticationBegin.data as JsonRecord;
   const schemaAuthenticationResponse = createAuthenticationResponse(
@@ -1227,38 +1058,37 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
 
   passkeyExamples = {
     registrationBegin: {
-      email: pendingEmail,
       label: 'OpenAPI contract example',
-      pinVerified: true,
     },
     registrationComplete: {
       challengeId: schemaRegistrationData.challengeId,
       response: schemaRegistration.response,
     },
-    authenticationBegin: { email: pendingEmail, pinVerified: true },
+    authenticationBegin: { email: pendingEmail },
     authenticationComplete: {
       challengeId: schemaAuthenticationData.challengeId,
       response: schemaAuthenticationResponse,
     },
   };
+  fixture.schemaExampleCookie = authenticationHeaders.Cookie;
 
   const results: PasskeySmokeResult[] = [
     {
       name: 'registration-begin-pending-enrollment',
-      path: '/auth/passkey/registration/begin',
+      path: '/auth/passkey/sign-up/begin',
       status: pendingBegin.status,
       observation: pendingBegin,
-      observed: pendingBegin.status === 200 && Boolean(pendingData.verificationChallengeId),
-      assertion:
-        'Registration begin created a pending enrollment and returned the application verification challenge over real HTTP.',
+      observed: pendingBegin.status === 200 && Boolean(pendingCookie),
+      assertion: 'Passkey signup begin returned session-bound ceremony options over real HTTP.',
     },
     {
       name: 'registration-complete-pending-credential',
-      path: '/auth/passkey/registration/complete',
+      path: '/auth/passkey/sign-up/complete',
       status: pendingComplete.status,
       observation: pendingComplete,
-      observed: pendingComplete.status === 201,
-      assertion: 'Registration complete persisted a credential linked to the pending enrollment over real HTTP.',
+      observed: pendingComplete.status === 202,
+      assertion:
+        'Passkey signup accepted the credential proof but required email verification before account activation.',
     },
     {
       name: 'authentication-denied-before-verification',
@@ -1266,16 +1096,16 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
       status: pendingAuthBeforeVerification.status,
       observation: pendingAuthBeforeVerification,
       observed:
-        pendingAuthBeforeVerification.status === 403 &&
-        responseCode(pendingAuthBeforeVerification) === 'email_unverified',
+        pendingAuthBeforeVerification.status === 404 &&
+        responseCode(pendingAuthBeforeVerification) === 'credential_not_found',
       assertion: `Pending enrollment authentication was denied before verification: ${observationDetail(pendingAuthBeforeVerification)}.`,
     },
     {
       name: 'verification-activation',
-      path: '/auth/sign-up/verify',
+      path: '/auth/passkey/sign-up/verify',
       status: pendingVerification.status,
       observation: pendingVerification,
-      observed: pendingVerification.status === 200,
+      observed: pendingVerification.status === 201,
       assertion:
         'The application atomically activated the pending account and enrolled credential through the real verification route.',
     },
@@ -1288,28 +1118,29 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
       assertion: 'Registration begin returned application-generated persisted ceremony options over real HTTP.',
     },
     {
-      name: 'registration-begin-existing-email-conflict',
+      name: 'registration-begin-session-required',
       path: '/auth/passkey/registration/begin',
       status: registrationNoSession.status,
       observation: registrationNoSession,
       observed:
-        registrationNoSession.status === 409 && responseCode(registrationNoSession) === 'email_already_registered',
-      assertion: `The application rejected registration for an existing email with code ${responseCode(registrationNoSession) ?? 'none'}.`,
+        registrationNoSession.status === 401 && responseCode(registrationNoSession) === 'restricted_session_required',
+      assertion: 'Additional passkey enrollment requires an authorized session; supplying an email is not authority.',
     },
     {
       name: 'registration-begin-unverified-email-pending-enrollment',
-      path: '/auth/passkey/registration/begin',
+      path: '/auth/passkey/sign-up/begin',
       status: unverifiedEmail.status,
       observation: unverifiedEmail,
       observed: unverifiedEmail.status === 200,
-      assertion: 'The application created a pending enrollment for the persisted unverified account over real HTTP.',
+      assertion:
+        'The application issued signup ceremony options without creating or authenticating an unverified account.',
     },
     {
       name: 'registration-begin-unverified-pin',
       path: '/auth/passkey/registration/begin',
       status: unverifiedPin.status,
       observation: unverifiedPin,
-      observed: responseCode(unverifiedPin) === 'pin_required',
+      observed: responseCode(unverifiedPin) === 'invalid_request',
       assertion: `The application denied pinVerified=false with code ${responseCode(unverifiedPin) ?? 'none'} over real HTTP.`,
     },
     {
@@ -1318,14 +1149,14 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
       status: authenticationUnverifiedEmail.status,
       observation: authenticationUnverifiedEmail,
       observed: true,
-      assertion: `The persisted unverified account was denied by the application with code ${responseCode(authenticationUnverifiedEmail)}.`,
+      assertion: `The pending signup has no usable account credential and was denied with code ${responseCode(authenticationUnverifiedEmail)}.`,
     },
     {
       name: 'authentication-begin-unverified-pin',
       path: '/auth/passkey/authentication/begin',
       status: authenticationUnverifiedPin.status,
       observation: authenticationUnverifiedPin,
-      observed: responseCode(authenticationUnverifiedPin) === 'pin_required',
+      observed: responseCode(authenticationUnverifiedPin) === 'invalid_request',
       assertion: `The application denied authentication with pinVerified=false and code ${responseCode(authenticationUnverifiedPin) ?? 'none'} over real HTTP.`,
     },
     {
@@ -1365,7 +1196,7 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
       path: '/auth/passkey/authentication/complete',
       status: replay.status,
       observation: replay,
-      observed: responseCode(replay) === 'challenge_replayed',
+      observed: replay.status === 401 && responseCode(replay) === 'challenge_mismatch',
       assertion: `A second valid assertion targeted the already consumed challenge and the application returned ${observationDetail(replay)}.`,
     },
     {
@@ -1442,6 +1273,7 @@ async function verifyPasskeySmoke(fixture: Fixture): Promise<void> {
     ),
   );
   await writeStatefulPasskeyReports(results);
+  requireObservedSmokeResults(results);
 }
 
 function claim(fixture: Fixture, profile: 'web-webcrypto' | 'web-local-agent'): JsonRecord {
@@ -1614,10 +1446,10 @@ async function prepareSchema(fixture: Fixture): Promise<string> {
       },
     },
     '/auth/passkey/registration/begin': {
-      smoke: { value: { email: fixture.smokeEmail, label: 'OpenAPI smoke', pinVerified: true } },
+      smoke: { value: { label: 'OpenAPI smoke' } },
     },
     '/auth/passkey/authentication/begin': {
-      smoke: { value: { email: fixture.smokeEmail, pinVerified: true, explicitPassword: true } },
+      smoke: { value: { email: fixture.smokeEmail } },
     },
   };
 
@@ -2075,6 +1907,9 @@ async function writeStatefulPasskeyReports(results: PasskeySmokeResult[]): Promi
 }
 
 async function run(): Promise<number> {
+  const storageEnvironment = gatewayStorageEnvironment(process.env);
+
+  await requireFreeGatewayPort(host, port);
   await rm(reportDirectory, { recursive: true, force: true });
   await rm(stableReportDirectory, { recursive: true, force: true });
   if (process.env['PZS005_ARTIFACT_DIR']) {
@@ -2091,17 +1926,17 @@ async function run(): Promise<number> {
     detached: true,
     env: {
       ...process.env,
+      BASE_URL: baseUrl,
       COOKIE_SECURE: 'false',
       DATABASE_AUTO_MIGRATE: 'true',
-      DATABASE_DRIVER:
-        process.env['OPAQUE_SYNC_STORAGE'] === 'durable' && process.env['DATABASE_DRIVER'] === 'pg' ? 'pg' : 'memory',
+      ...storageEnvironment,
       ENABLE_TEST_API: 'true',
+      ENABLE_LOCAL_ACTIVATION: 'false',
       HOST: host,
       GATEWAY_PORT: String(port),
       MAIL_TRANSPORT: 'memory',
       NG_ALLOWED_HOSTS: host,
       NODE_ENV: 'test',
-      OPAQUE_SYNC_STORAGE: process.env['OPAQUE_SYNC_STORAGE'] ?? 'memory',
       PIN_RESEND_COOLDOWN_SECONDS: phases.includes('fuzzing') ? '0' : process.env['PIN_RESEND_COOLDOWN_SECONDS'],
       PORT: String(port),
       SESSION_SECRET: 'themis-api-openapi-e2e-secret',
@@ -2126,7 +1961,7 @@ async function run(): Promise<number> {
   await writeFile(pidPath, String(server.pid));
 
   try {
-    await waitForPortOpen(port, { host });
+    await waitForGateway(server, `${baseUrl}/healthz`);
     await waitForHealth(baseUrl);
     const fixture = await bootstrapSession();
 
@@ -2151,7 +1986,7 @@ async function run(): Promise<number> {
           '--url',
           apiUrl,
           '--header',
-          `Cookie: ${fixture.cookie}`,
+          `Cookie: ${passkeyOnly ? fixture.schemaExampleCookie : fixture.cookie}`,
           '--header',
           `Origin: ${origin}`,
           '--exclude-path-regex',
@@ -2266,7 +2101,7 @@ async function run(): Promise<number> {
         2,
       ),
     );
-    await sanitizeReports();
+    await sanitizeReports(reportDirectory);
     await cp(reportDirectory, stableReportDirectory, { recursive: true });
     if (process.env['PZS005_ARTIFACT_DIR']) {
       const artifactReportDirectory = resolve(process.env['PZS005_ARTIFACT_DIR'], 'openapi-report');

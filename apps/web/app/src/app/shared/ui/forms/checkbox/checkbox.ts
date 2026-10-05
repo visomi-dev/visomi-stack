@@ -28,7 +28,7 @@ export class Checkbox {
   readonly checked = computed(() => this.formField()().value() === true);
   readonly classes = computed(() =>
     uiClass(
-      'ui-focus-ring ui-touch-target min-h-5 min-w-5 appearance-none rounded border border-slate-950/10 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-600 accent-slate-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:accent-slate-500',
+      'ui-focus-ring ui-touch-target min-h-5 min-w-5 appearance-auto accent-slate-600 disabled:cursor-not-allowed disabled:opacity-50 dark:accent-slate-500',
     ),
   );
 

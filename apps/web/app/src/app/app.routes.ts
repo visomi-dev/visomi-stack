@@ -14,6 +14,7 @@ import {
   SIGN_IN_PATH,
   LEGACY_IDENTITY_PATH,
   SECURITY_PATH,
+  NOTIFICATIONS_PATH,
   DEVICE_APPROVAL_PATH,
   SIGN_UP_PATH,
   EMAIL_VERIFICATION_PATH,
@@ -25,6 +26,16 @@ import {
 } from './shared/constants/routes';
 
 export const appRoutes: Route[] = [
+  {
+    path: 'security/vault',
+    canActivate: [authenticatedGuard],
+    loadComponent: () => import('./vault/vault-settings').then((module) => module.VaultSettings),
+  },
+  {
+    path: NOTIFICATIONS_PATH,
+    canActivate: [authenticatedGuard],
+    loadComponent: () => import('./notifications/notifications').then((module) => module.Notifications),
+  },
   {
     path: 'account',
     canActivate: [authenticatedGuard],

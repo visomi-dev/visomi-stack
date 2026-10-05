@@ -214,20 +214,32 @@ async function main(): Promise<void> {
     await ensureBucket(effectiveEndpoint as string);
   }
 
-  const memoryEnvironment = { ...process.env, DATABASE_DRIVER: 'memory', OPAQUE_SYNC_STORAGE: 'memory' };
+  const memoryEnvironment = {
+    ...process.env,
+    API_E2E_STORAGE_MODE: 'memory',
+    DATABASE_DRIVER: 'memory',
+    OPAQUE_SYNC_STORAGE: 'memory',
+  };
   const runId = process.env['PZS005_RUN_ID'] ?? `RUN-${Date.now()}-${process.pid}`;
   const artifactDirectory = process.env['PZS005_ARTIFACT_DIR'] ?? `docs/verification/pzs-005-${runId.toLowerCase()}`;
 
   await mkdir(artifactDirectory, { recursive: true });
   const durableEnvironment = {
     ...process.env,
+    API_E2E_STORAGE_MODE: 'durable',
     DATABASE_URL: effectiveDatabaseUrl,
     DATABASE_DRIVER: 'pg',
     OPAQUE_SYNC_STORAGE: 'durable',
     OPAQUE_SYNC_S3_ENDPOINT: effectiveEndpoint,
-    OPAQUE_SYNC_S3_BUCKET: process.env['OPAQUE_SYNC_S3_BUCKET'] ?? runtimeBucket,
-    OPAQUE_SYNC_S3_ACCESS_KEY: process.env['OPAQUE_SYNC_S3_ACCESS_KEY'] ?? minioAccessKey,
-    OPAQUE_SYNC_S3_SECRET_KEY: process.env['OPAQUE_SYNC_S3_SECRET_KEY'] ?? minioSecretKey,
+    // Owned MinIO uses only its generated bucket and fixture credentials. Nx may
+    // load a developer .env before this runner starts; that is not an external-services opt-in.
+    OPAQUE_SYNC_S3_BUCKET: externalServices ? (process.env['OPAQUE_SYNC_S3_BUCKET'] ?? runtimeBucket) : runtimeBucket,
+    OPAQUE_SYNC_S3_ACCESS_KEY: externalServices
+      ? (process.env['OPAQUE_SYNC_S3_ACCESS_KEY'] ?? minioAccessKey)
+      : minioAccessKey,
+    OPAQUE_SYNC_S3_SECRET_KEY: externalServices
+      ? (process.env['OPAQUE_SYNC_S3_SECRET_KEY'] ?? minioSecretKey)
+      : minioSecretKey,
     PZS005_RUN_ID: runId,
     PZS005_ARTIFACT_DIR: artifactDirectory,
     PZS005_SERVER_LOG: process.env['PZS005_SERVER_LOG'] ?? `${artifactDirectory}/server.log`,
@@ -263,7 +275,8 @@ async function main(): Promise<void> {
     exitCode = await runJest(durableEnvironment, requestedArgs, 'apps/web/api-e2e/durable-jest.config.cts');
   } else if (fullRun) {
     exitCode = await runJest(memoryEnvironment, [
-      '--testPathIgnorePatterns=sync-restart.spec.ts|durable/|pzs-005-real.spec.ts',
+      // CLI ignore patterns replace the config list, so retain the separately tested native fixtures.
+      '--testPathIgnorePatterns=sync-restart.spec.ts|durable/|pzs-005-real.spec.ts|support/(gateway-process|report-sanitization).spec.ts',
     ]);
     if (exitCode === 0)
       exitCode = await runJest(durableEnvironment, [

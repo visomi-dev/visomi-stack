@@ -12,6 +12,8 @@ import { BrowserRealtime } from './shared/realtime/browser-realtime';
 import { Realtime } from './shared/realtime/realtime';
 import { BrowserSettings } from './shared/browser-settings';
 import { Settings } from './shared/settings';
+import { VaultSession } from './vault/vault-session';
+import { BrowserVaultSession } from './vault/browser-vault-session';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -24,6 +26,7 @@ describe('App', () => {
         { provide: Settings, useExisting: BrowserSettings },
         { provide: Realtime, useExisting: BrowserRealtime },
         { provide: Clipboard, useExisting: BrowserClipboard },
+        { provide: VaultSession, useExisting: BrowserVaultSession },
       ],
     }).compileComponents();
   });

@@ -73,6 +73,7 @@ export class Button {
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly fullWidth = input(false, { transform: booleanAttribute });
   readonly loading = input(false, { transform: booleanAttribute });
+  readonly pressed = input<boolean | null>(null);
   readonly size = input<ButtonSize>('md');
   readonly tone = input<string>('slate');
   readonly type = input<'button' | 'reset' | 'submit'>('button');

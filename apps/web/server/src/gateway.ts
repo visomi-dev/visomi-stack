@@ -12,6 +12,7 @@ import { logger, requestObservability } from 'shared';
 type AstroRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<void> | void;
 
 type GatewayDeps = {
+  trustProxyHops?: number;
   defaultLocale?: 'en' | 'es';
   apiHandler: RequestHandler;
   angularHandler: RequestHandler;
@@ -47,6 +48,7 @@ const gatewaySecurityHeaders = helmet({
 });
 
 function createGatewayApp({
+  trustProxyHops = 0,
   defaultLocale = 'en',
   angularHandler,
   apiHandler,
@@ -59,8 +61,32 @@ function createGatewayApp({
 }: GatewayDeps) {
   const app = express();
 
+  app.set('trust proxy', trustProxyHops);
   app.use(requestObservability((event) => logger.info(event, 'HTTP request completed')));
   app.use(gatewaySecurityHeaders);
+  // Public worker prefetch must not issue/roll session cookies during sign-in.
+  app.use('/app', (req, res, next) => {
+    const publicAsset =
+      /^\/(?:en|es)\/(?:[^/]+\.(?:js|mjs|css|json|webmanifest|ico|svg)|index\.csr\.html|(?:media|icons)\/[^/]+\.(?:woff2?|png|svg|jpg|jpeg|webp|avif))$/u;
+
+    if ((req.method === 'GET' || req.method === 'HEAD') && publicAsset.test(req.path)) {
+      if (/^\/(?:en|es)\/vault-pin-worker\.js$/u.test(req.path)) {
+        // Argon2 embeds its WASM. Allow compilation only in this network-isolated
+        // worker, never by adding JavaScript unsafe-eval to application pages.
+        res.setHeader(
+          'Content-Security-Policy',
+          "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'",
+        );
+      }
+      if (/\/(?:ngsw-worker\.js|ngsw\.json|manifest\.webmanifest|index\.csr\.html)$/u.test(req.path)) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+      angularHandler(req, res, next);
+
+      return;
+    }
+    next();
+  });
   app.use(...authRuntimeHandlers);
   app.get('/healthz', (_req, res) => {
     res.send({ status: 'ok' });

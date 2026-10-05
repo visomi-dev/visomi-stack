@@ -15,19 +15,12 @@ import { establishFullSession } from './auth-session';
 import { authed } from './auth-middleware';
 import { removeAccessMethod } from './access-methods';
 import { listSentMessages } from './auth-mail';
-import {
-  findOrCreateUserByEmail,
-  resolveAuthUserForAccount,
-  setUserPassword,
-  startPasswordSignIn,
-  verifyPasswordTotp,
-  verifyPasswordEmailOtp,
-  startPasswordReset,
-  completePasswordReset,
-  replaceRecoveryCodes,
-  resendEmailOtp,
-} from './auth-service';
+import { resendEmailOtp } from './auth-service';
+import { findOrCreateUserByEmail, resolveAuthUserForAccount } from './auth-identity';
 import { consumeFactorVerificationLimit, resetPasskeySecurityState } from './passkey-security';
+import { replaceRecoveryCodes } from './auth-factors';
+import { startPasswordReset, completePasswordReset } from './password-account';
+import { setUserPassword, startPasswordSignIn, verifyPasswordTotp, verifyPasswordEmailOtp } from './password-session';
 import { verifyTotpCode } from './totp';
 
 import {

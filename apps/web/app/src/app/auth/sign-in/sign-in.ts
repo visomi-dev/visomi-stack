@@ -161,6 +161,7 @@ export class SignIn {
   private readonly googleButton = viewChild<ElementRef<HTMLElement>>('googleButton');
   private readonly methodDialog = viewChild<ElementRef<HTMLDialogElement>>('methodDialog');
   private readonly continueButton = viewChild<ElementRef<HTMLButtonElement>>('continueButton');
+  private readonly methodOpener = viewChild<ElementRef<HTMLButtonElement>>('methodOpener');
 
   private passwordAttempt = 0;
   private recoveryAttempt = 0;
@@ -215,6 +216,12 @@ export class SignIn {
 
       return;
     }
+    if (this.passkey.isSupported()) {
+      void this.authenticateWithPasskey();
+
+      return;
+    }
+
     this.showMethodSheet();
   }
 
@@ -734,17 +741,28 @@ export class SignIn {
     options: Record<string, unknown>;
   }): Promise<void> {
     const attempt = this.credentialAttempt;
+    let credentialSelected = false;
 
     try {
       // Called directly by the click handler with prepared options to retain transient activation.
       const credential = await this.passkey.getImmediateCredential(begin.options);
 
       if (this.destroyed || attempt !== this.credentialAttempt) return;
+      credentialSelected = true;
       await this.passkey.completeAuthentication(begin.challengeId, credential);
       await this.auth.ensureSessionLoaded(true);
-      if (!this.destroyed && attempt === this.credentialAttempt) await this.router.navigateByUrl(this.destination());
+      if (!this.destroyed && attempt === this.credentialAttempt) {
+        this.state.set('success');
+        await this.router.navigateByUrl(this.destination());
+      }
     } catch {
-      if (!this.destroyed && attempt === this.credentialAttempt) this.showMethodSheet();
+      if (!this.destroyed && attempt === this.credentialAttempt) {
+        if (credentialSelected) {
+          this.failPasskey($localize`:@@identityPasskeyFailed:We could not verify that passkey.`);
+        } else {
+          this.showMethodSheet();
+        }
+      }
     } finally {
       this.passkeyVerifying.set(false);
     }
@@ -801,7 +819,10 @@ export class SignIn {
       this.passkeyVerifying.set(true);
       await this.passkey.completeAuthentication(begin.challengeId, credential);
       await this.auth.ensureSessionLoaded(true);
-      if (!this.destroyed) await this.router.navigateByUrl(this.destination());
+      if (!this.destroyed && attempt === this.credentialAttempt) {
+        this.state.set('success');
+        await this.router.navigateByUrl(this.destination());
+      }
     } catch {
       // Discovery may end silently, but a selected credential needs visible verification feedback.
       if (credentialSelected && !this.destroyed && attempt === this.credentialAttempt) {
@@ -892,15 +913,17 @@ export class SignIn {
     return Array.isArray(accounts) ? accounts : null;
   }
 
-  private readonly syncMethodDialog = afterRenderEffect(() => {
-    const dialog = this.methodDialog()?.nativeElement;
+  private readonly syncMethodDialog = afterRenderEffect({
+    write: () => {
+      const dialog = this.methodDialog()?.nativeElement;
 
-    if (!dialog) return;
-    if (this.methodsOpen() && !dialog.open) dialog.showModal();
-    else if (!this.methodsOpen() && dialog.open) {
-      dialog.close();
-      this.continueButton()?.nativeElement.focus();
-    }
+      if (!dialog) return;
+      if (this.methodsOpen() && !dialog.open) dialog.showModal();
+      else if (!this.methodsOpen() && dialog.open) {
+        dialog.close();
+        (this.methodOpener() ?? this.continueButton())?.nativeElement.focus();
+      }
+    },
   });
 
   private readonly syncResendClock = afterRenderEffect((onCleanup) => {

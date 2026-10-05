@@ -16,7 +16,14 @@
         "bundle": false,
         "main": "apps/worker/src/main.ts",
         "tsConfig": "apps/worker/tsconfig.app.json",
-        "assets": ["apps/worker/src/assets"],
+        "assets": [
+          "apps/worker/src/assets",
+          {
+            "input": "libs/backend/shared/src/lib/notifications",
+            "glob": "push-copy.json",
+            "output": "libs/backend/shared/src/lib/notifications"
+          }
+        ],
         "generatePackageJson": true,
         "esbuildOptions": {
           "sourcemap": true,

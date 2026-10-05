@@ -7,8 +7,8 @@ import { Logo } from '../../../layout/logo/logo';
 import { APP_NAME } from '../../../constants/brand';
 
 const DEFAULT_LANGUAGES: ReadonlyArray<LanguageOption> = Object.freeze([
-  { code: 'EN', label: 'English' },
-  { code: 'ES', label: 'Español' },
+  { code: 'EN', label: $localize`:@@languageEnglish:English` },
+  { code: 'ES', label: $localize`:@@languageSpanish:Spanish` },
 ]);
 
 @Component({

@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import type { IncomingMessage } from 'node:http';
 import type { Socket } from 'node:net';
+import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -12,9 +13,9 @@ import template from '../../../../template.json';
 import { createGatewayApp } from './gateway';
 import { DurableReplayStore } from './durable-replay-store';
 import { createLocalAgentProxy, publicKeyFromPem } from './local-agent-proxy';
-import { resolveGatewayPort } from './runtime-config';
+import { resolveGatewayPort, resolveTrustProxyHops } from './runtime-config';
 
-import { createAuthRuntimeMiddleware, logger } from 'shared';
+import { createAuthRuntimeMiddleware, env, logger } from 'shared';
 
 type ApiModule = {
   appPromise?: Promise<Express>;
@@ -80,12 +81,25 @@ const realtimeEntryFile = resolve(serverDistFolder, '..', 'realtime', 'main.js')
 const workerEntryFile = resolve(serverDistFolder, '..', '..', 'worker', 'main.js');
 
 let workerProcess: ChildProcess | undefined;
+let stopInProcessWorker: (() => Promise<void>) | undefined;
 
 let httpServer: ReturnType<Express['listen']> | undefined;
 
 let shuttingDown = false;
 
 function startWorkerRuntime() {
+  if (env.DATABASE_DRIVER === 'memory') {
+    // PGlite and memory session authority are process-local. A spawned worker
+    // would see an unrelated empty database and could never recover the outbox.
+    const workerModule = createRequire(import.meta.url)(workerEntryFile) as {
+      startOperationWorker?: () => () => Promise<void>;
+    };
+
+    if (!workerModule.startOperationWorker) throw new Error('The embedded operation worker is unavailable.');
+    stopInProcessWorker = workerModule.startOperationWorker();
+
+    return;
+  }
   workerProcess = spawn(process.execPath, [workerEntryFile], {
     env: process.env,
     stdio: 'inherit',
@@ -113,7 +127,7 @@ function shutdown() {
   timer.unref();
 
   let serverClosed = !httpServer;
-  let workerClosed = !workerProcess || workerProcess.exitCode !== null;
+  let workerClosed = !stopInProcessWorker && (!workerProcess || workerProcess.exitCode !== null);
   const finish = () => {
     if (serverClosed && workerClosed) {
       clearTimeout(timer);
@@ -126,6 +140,10 @@ function shutdown() {
     finish();
   });
   workerProcess?.kill('SIGTERM');
+  void stopInProcessWorker?.().finally(() => {
+    workerClosed = true;
+    finish();
+  });
   httpServer?.close(() => {
     serverClosed = true;
     finish();
@@ -210,6 +228,7 @@ async function bootstrap() {
   const localAgentTarget = new URL(localAgentUrl);
 
   const app = createGatewayApp({
+    trustProxyHops: resolveTrustProxyHops(),
     defaultLocale: template.project.defaultLocale === 'es' ? 'es' : 'en',
     apiHandler,
     angularHandler,

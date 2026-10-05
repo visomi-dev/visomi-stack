@@ -3,6 +3,9 @@ import AxeBuilder from '@axe-core/playwright';
 
 import { authenticateViaDeterministicTestSession, createCredentials } from '../support/auth';
 
+// Keep presentation HTTP mocks observable; the PWA suite exercises the real worker.
+test.use({ serviceWorkers: 'block' });
+
 // Presentation-only: cancellation and layout must start with an existing sign-in method.
 const activePasskey = {
   id: 'existing-presentation-passkey',

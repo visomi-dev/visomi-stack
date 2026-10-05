@@ -1,12 +1,17 @@
 import { createDocument } from 'zod-openapi';
 
 import { activationOpenApiPaths } from '../../activation/activation-router';
-import { authOpenApiPaths } from '../../auth/auth-router';
+import { authOpenApiPaths } from '../../auth/auth-openapi';
 import { accountPaths } from '../../account/account-schemas';
 import { sessionPaths } from '../../auth/session-schemas';
 import { passkeyOpenApiPaths } from '../../auth/passkey-router';
 import { capabilityOpenApiPaths } from '../../capabilities/capability-router';
 import { projectsOpenApiPaths } from '../../projects/projects-router';
+import { operationPaths } from '../../operations/operation-router';
+import { notificationPaths } from '../../notifications/notification-schemas';
+import { vaultUnlockPaths } from '../../vault-unlock/contract';
+import { prfUnlockPaths } from '../../vault-unlock/prf-contract';
+import { browserEnrollmentPaths } from '../../vault-unlock/browser-contract';
 import { opaqueSyncOpenApiPaths } from '../../sync/opaque-sync-router';
 import { webAuthnOpenApiPaths } from '../../webauthn/webauthn-router';
 import { testOpenApiPaths } from '../../testing/test-router';
@@ -25,6 +30,11 @@ function createOpenApiDocument() {
       ...passkeyOpenApiPaths,
       ...activationOpenApiPaths,
       ...projectsOpenApiPaths,
+      ...operationPaths,
+      ...notificationPaths,
+      ...vaultUnlockPaths,
+      ...prfUnlockPaths,
+      ...browserEnrollmentPaths,
       ...opaqueSyncOpenApiPaths,
       ...capabilityOpenApiPaths,
       ...webAuthnOpenApiPaths,

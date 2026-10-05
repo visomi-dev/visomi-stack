@@ -5,6 +5,13 @@
   "projectType": "application",
   "implicitDependencies": ["shared"],
   "targets": {
+    "minio-fixture": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "",
+        "command": "docker build --file scripts/minio-fixture.dockerfile --tag visomi-minio-e2e:07c3a429 scripts"
+      }
+    },
     "operations-lint": {
       "executor": "nx:run-commands",
       "options": {
@@ -48,10 +55,22 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/.husky/**/*",
+        "{workspaceRoot}/lint-staged.config.mjs",
+        "{workspaceRoot}/.github/workflows/ci.yml",
+        "{workspaceRoot}/apps/web/api-e2e/project.json",
+        "{workspaceRoot}/apps/web/server/project.json",
+        "{workspaceRoot}/apps/web/app-e2e/project.json",
+        "{workspaceRoot}/apps/web/server-e2e/project.json",
+        "{workspaceRoot}/compose.local-e2e.yaml"
+      ],
       "dependsOn": ["build"],
       "options": {
         "cwd": "{workspaceRoot}",
-        "command": "pnpm exec esbuild scripts/template/template.spec.ts scripts/template/restore.spec.ts scripts/template/restore-crypto.spec.ts scripts/template/restore-objects.spec.ts scripts/template/class-layout.spec.ts --bundle --platform=node --format=cjs --packages=external --outdir=dist/template/tests --out-extension:.js=.cjs && node --test dist/template/tests/*.cjs"
+        "command": "pnpm exec esbuild scripts/template/template.spec.ts scripts/template/infrastructure.spec.ts scripts/template/restore.spec.ts scripts/template/restore-crypto.spec.ts scripts/template/restore-objects.spec.ts scripts/template/class-layout.spec.ts scripts/template/pre-commit.spec.ts scripts/template/affected-checks.spec.ts scripts/template/affected-runner.spec.ts --bundle --platform=node --format=cjs --packages=external --outdir=dist/template/tests --out-extension:.js=.cjs && node --test dist/template/tests/*.cjs"
       }
     },
     "typecheck": {

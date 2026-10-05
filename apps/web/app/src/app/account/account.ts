@@ -17,10 +17,11 @@ import { Select } from '../shared/ui/forms/select/select';
 import { Label } from '../shared/ui/forms/label/label';
 import { ErrorMessage } from '../shared/ui/forms/error-message/error-message';
 import { Button } from '../shared/ui/actions/button/button';
+import { PageTitle } from '../shared/layout/page-title';
 
 @Component({
   selector: 'app-account',
-  imports: [Form, Field, Input, Select, Label, ErrorMessage, Button, RouterLink, SecurityConfirmation],
+  imports: [Form, Field, Input, Select, Label, ErrorMessage, Button, RouterLink, SecurityConfirmation, PageTitle],
   providers: [SecurityAction],
   templateUrl: './account.html',
   styleUrl: './account.css',

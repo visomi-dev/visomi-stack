@@ -5,6 +5,9 @@ import { expect, test } from '@playwright/test';
 
 import { readLatestPin } from '../support/mailbox';
 
+// Keep validation HTTP mocks observable; the PWA suite exercises the real worker.
+test.use({ serviceWorkers: 'block' });
+
 for (const [description, password] of [
   ['astral characters', '😀'.repeat(128)],
   ['decomposed characters', 'e\u0301'.repeat(128)],
@@ -61,7 +64,7 @@ test('keeps email validation collapsed while typing and centers its icon after b
 
 test('uses query parameters for password navigation and survives reload and browser back', async ({ page }) => {
   await page.goto('/app/en/auth/sign-in');
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('button', { name: 'Use another method', exact: true }).click();
   await page.getByRole('button', { name: 'Use password instead' }).click();
   await expect(page).toHaveURL(/method=password/);
   await page.reload();

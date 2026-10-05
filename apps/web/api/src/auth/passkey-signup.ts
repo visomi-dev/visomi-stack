@@ -9,13 +9,8 @@ import { env } from '../shared/env';
 import { getValidated, validateRequest } from '../shared/http/route-schemas';
 
 import { establishFullSession } from './auth-session';
-import {
-  consumeChallenge,
-  createEmailChallenge,
-  findUserByEmail,
-  findUserById,
-  resolveAuthUserForAccount,
-} from './auth-service';
+import { consumeChallenge, createEmailChallenge } from './auth-service';
+import { findUserByEmail, findUserById, resolveAuthUserForAccount } from './auth-identity';
 import { consumeEmailOtpDeliveryLimit } from './passkey-security';
 import { APP_NAME } from './auth-brand';
 import { passkeySignupBeginSchema, passkeySignupVerifySchema, registrationCompleteSchema } from './passkey-schemas';

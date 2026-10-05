@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
@@ -82,27 +82,30 @@ export class BrowserAuth extends Auth {
       return;
     }
 
-    if (!force && !this.hasSessionHint()) {
-      this.$user.set(null);
-      this.$sessionLoaded.set(true);
-      this.clearSessionHint();
-
-      return;
-    }
-
     try {
       const response = await firstValueFrom(this.http.get<SessionResponse>('/api/auth/session'));
 
       this.$user.set(response.data.user);
+      this.$sessionLoaded.set(true);
 
       if (response.data.user === null) {
         this.clearSessionHint();
       }
-    } catch {
-      this.$user.set(null);
-      this.clearSessionHint();
-    } finally {
-      this.$sessionLoaded.set(true);
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.status === 401) {
+        this.$user.set(null);
+        this.clearSessionHint();
+        this.$sessionLoaded.set(true);
+
+        return;
+      }
+
+      // Transport failures do not prove revocation. Forced checks still fail closed.
+      this.$sessionLoaded.set(false);
+
+      if (force) {
+        throw error;
+      }
     }
   }
 
@@ -167,26 +170,8 @@ export class BrowserAuth extends Auth {
     this.clearSessionHint();
   }
 
-  private hasSessionHint(): boolean {
-    return this.readCookie(SESSION_PRESENCE_KEY) === '1';
-  }
-
   private clearSessionHint(): void {
     this.writeCookie(SESSION_PRESENCE_KEY, '', 'Thu, 01 Jan 1970 00:00:00 GMT');
-  }
-
-  private readCookie(name: string): string | null {
-    const cookies = this.document.cookie ? this.document.cookie.split(';') : [];
-
-    for (const cookie of cookies) {
-      const [rawKey, ...rest] = cookie.trim().split('=');
-
-      if (rawKey === name) {
-        return rest.join('=');
-      }
-    }
-
-    return null;
   }
 
   private writeCookie(name: string, value: string, expires: string): void {

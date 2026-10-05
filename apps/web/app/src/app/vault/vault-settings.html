@@ -1,0 +1,116 @@
+<app-security-confirmation />
+<section class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 md:px-8">
+  <header class="space-y-2">
+    <h1 *appPageTitle class="font-heading text-2xl font-semibold" i18n="@@vaultTitle">Encrypted vault</h1>
+    <p class="text-sm text-zinc-600 dark:text-zinc-400" i18n="@@vaultDescription">
+      Signing in does not unlock your encryption key. Your PIN and recovery key never leave this browser.
+    </p>
+  </header>
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p role="status">{{ notice() }}</p>
+  }
+  <section class="space-y-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900">
+    @if (state() === 'unlocked') {
+      <p role="status" i18n="@@vaultUnlocked">
+        Vault unlocked. It locks after fifteen minutes of inactivity, session changes or leaving this browser page.
+      </p>
+      <app-button variant="outline" (click)="lock()"><span i18n="@@vaultLock">Lock vault</span></app-button>
+    } @else {
+      <p role="status" i18n="@@vaultLocked">Vault locked</p>
+      <app-form [form]="recoveryForm" (ngSubmit)="unlockRecovery()">
+        <app-field>
+          <app-label for="vault-recovery"><span i18n="@@vaultRecoveryLabel">Vault recovery key</span></app-label>
+          <app-input
+            controlId="vault-recovery"
+            type="password"
+            autocomplete="off"
+            [formField]="recoveryForm.recovery"
+            [ariaDescribedBy]="
+              recoveryForm.recovery().touched() && recoveryForm.recovery().invalid() ? 'vault-recovery-error' : null
+            "
+          />
+          @if (recoveryForm.recovery().touched() && recoveryForm.recovery().invalid()) {
+            <app-error-message controlId="vault-recovery-error">
+              {{ recoveryForm.recovery().errors()[0]?.message }}
+            </app-error-message>
+          }
+        </app-field>
+        <app-button type="submit" [disabled]="busy()" class="mt-4">
+          <span i18n="@@vaultRecoveryUnlock">Unlock with recovery key</span>
+        </app-button>
+      </app-form>
+    }
+  </section>
+  <section class="space-y-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900">
+    <h2 class="font-heading text-lg font-semibold" i18n="@@vaultPinTitle">Browser PIN</h2>
+    <p class="text-sm" i18n="@@vaultPinHelp">
+      This browser stores only a PIN-encrypted key. Online attempts are limited across devices; this does not prevent
+      offline attacks on stolen browser storage.
+    </p>
+    <app-form [form]="pinForm" (ngSubmit)="state() === 'unlocked' ? savePin() : unlockPin()">
+      <app-field>
+        <app-label for="vault-pin"><span i18n="@@vaultPinLabel">Six-digit vault PIN</span></app-label>
+        <app-input
+          controlId="vault-pin"
+          type="password"
+          inputmode="numeric"
+          autocomplete="off"
+          [maxLength]="6"
+          [formField]="pinForm.pin"
+          [ariaDescribedBy]="pinForm.pin().touched() && pinForm.pin().invalid() ? 'vault-pin-error' : null"
+        />
+        @if (pinForm.pin().touched() && pinForm.pin().invalid()) {
+          <app-error-message controlId="vault-pin-error">{{ pinForm.pin().errors()[0]?.message }}</app-error-message>
+        }
+      </app-field>
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+        @if (state() === 'unlocked') {
+          <app-button type="submit" [disabled]="busy()">
+            <span i18n="@@vaultPinEnroll">Save PIN on this browser</span>
+          </app-button>
+          <app-button variant="outline" [disabled]="busy()" (click)="savePin(true)">
+            <span i18n="@@vaultPinChange">Change vault PIN</span>
+          </app-button>
+        } @else {
+          <app-button type="submit" [disabled]="busy()">
+            <span i18n="@@vaultPinUnlock">Unlock with browser PIN</span>
+          </app-button>
+          <app-button variant="outline" [disabled]="busy()" (click)="savePin(false, true)">
+            <span i18n="@@vaultCreate">Create a new vault</span>
+          </app-button>
+        }
+      </div>
+    </app-form>
+    <p class="text-sm" i18n="@@vaultCreateHelp">
+      Create a vault only for an account without an existing vault PIN. Recover an existing key instead of replacing it.
+      A changed PIN revokes older browser enrollments.
+    </p>
+    <app-button variant="outline" [disabled]="busy()" (click)="removePin()">
+      <span i18n="@@vaultPinRemove">Revoke vault PIN</span>
+    </app-button>
+  </section>
+  <app-vault-passkeys />
+  <app-browser-enrollment />
+  <app-sync-status />
+  @if (state() === 'unlocked') {
+    <section class="space-y-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900">
+      <h2 class="font-heading text-lg font-semibold" i18n="@@vaultRecoveryTitle">Recovery key</h2>
+      <p class="text-sm" i18n="@@vaultRecoveryWarning">
+        Anyone with this key can decrypt your vault. Save it offline. Account recovery cannot restore a lost encryption
+        key.
+      </p>
+      <app-button variant="outline" [disabled]="busy()" (click)="exportRecovery()">
+        <span i18n="@@vaultRecoveryExport">Reveal recovery key</span>
+      </app-button>
+      @if (recovery()) {
+        <code class="block break-all select-all">{{ recovery() }}</code>
+        <app-button variant="outline" (click)="recovery.set('')">
+          <span i18n="@@vaultRecoveryHide">Hide recovery key</span>
+        </app-button>
+      }
+    </section>
+  }
+</section>

@@ -9,6 +9,7 @@ import { activationUrlPattern, signInRoute, signInUrlPattern } from './routes';
 type VerificationOptions = {
   completeActivation?: boolean;
   immediate?: boolean;
+  prf?: boolean;
 };
 
 export const createCredentials = () => ({
@@ -159,7 +160,7 @@ export const registerAndAuthenticate = async (
   page: Page,
   request: APIRequestContext,
   email: string,
-  password: string,
+  password = '',
   options: VerificationOptions = {},
 ) => {
   void password;
@@ -174,12 +175,14 @@ export const registerAndAuthenticate = async (
     Object.defineProperty(navigator.credentials, 'get', {
       value: (request: CredentialRequestOptions & { uiMode?: string }) => {
         document.documentElement.dataset['passkeyMode'] = request.uiMode ?? 'modal';
+        sessionStorage.setItem('e2e-passkey-mode', request.uiMode ?? 'modal');
 
         return get(request);
       },
     });
   }, options.immediate ?? false);
-  await addVirtualAuthenticator(page);
+  const authenticator = await addVirtualAuthenticator(page, 'internal', options.prf ?? false);
+
   await page.goto('/app/en/auth/sign-up');
   await page.getByRole('textbox', { name: 'Email address', exact: true }).fill(email);
   await page.getByRole('button', { name: 'Create account with passkey' }).click();
@@ -206,22 +209,28 @@ export const registerAndAuthenticate = async (
       true,
     );
   }
+  await page.evaluate(() => sessionStorage.removeItem('e2e-passkey-mode'));
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  if (options.immediate) await expect(page.locator('html')).toHaveAttribute('data-passkey-mode', 'immediate');
-  else await page.getByRole('button', { name: 'Continue with a passkey' }).click();
+  // Authentication may navigate before the DOM assertion runs; retain fixture telemetry across that navigation.
+  await expect
+    .poll(() => page.evaluate(() => sessionStorage.getItem('e2e-passkey-mode')))
+    .toBe(options.immediate ? 'immediate' : 'modal');
   await waitForAuthenticatedSession(page, email);
   await expect(page).toHaveURL(activationUrlPattern);
   if (options.completeActivation ?? true) await completeActivationIfNeeded(page);
+
+  return authenticator;
 };
 
-export const addVirtualAuthenticator = async (page: Page, transport: 'internal' | 'usb' = 'internal') => {
+export const addVirtualAuthenticator = async (page: Page, transport: 'internal' | 'usb' = 'internal', prf = false) => {
   const cdp = await page.context().newCDPSession(page);
 
   await cdp.send('WebAuthn.enable');
 
-  return cdp.send('WebAuthn.addVirtualAuthenticator', {
+  const result = await cdp.send('WebAuthn.addVirtualAuthenticator', {
     options: {
       protocol: 'ctap2',
+      ...(prf ? { ctap2Version: 'ctap2_1' as const, hasPrf: true } : {}),
       transport,
       hasResidentKey: true,
       hasUserVerification: true,
@@ -229,6 +238,8 @@ export const addVirtualAuthenticator = async (page: Page, transport: 'internal' 
       automaticPresenceSimulation: true,
     },
   });
+
+  return { ...result, cdp };
 };
 
 export const signOutViaApi = async (page: Page) => {

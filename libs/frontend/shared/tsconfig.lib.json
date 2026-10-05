@@ -4,6 +4,7 @@
     "outDir": "../../../dist/out-tsc",
     "declaration": true,
     "types": [],
+    "customConditions": ["visomi-source"],
     "lib": ["es2022", "dom", "dom.iterable"]
   },
   "include": ["src/**/*.ts"],

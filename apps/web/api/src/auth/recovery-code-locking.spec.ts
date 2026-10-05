@@ -8,13 +8,10 @@ import type { Pool } from 'pg';
 
 import * as crypto from './auth-crypto';
 import { clearMailbox, listSentMessages } from './auth-mail';
-import {
-  completePasswordReset,
-  findOrCreateUserByEmail,
-  replaceRecoveryCodes,
-  startPasswordReset,
-} from './auth-service';
+import { findOrCreateUserByEmail } from './auth-identity';
+import { completePasswordReset, startPasswordReset } from './password-account';
 import { resetPasskeySecurityState } from './passkey-security';
+import { replaceRecoveryCodes } from './auth-factors';
 
 import { db, userRecoveryCodes, userTotpEnrollments, users } from 'shared';
 

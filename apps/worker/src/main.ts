@@ -1,6 +1,7 @@
 import { normalize } from 'node:path';
 
 import { start as startProjectsWorkers } from './projects';
+import { startOperationWorker } from './operations/worker';
 
 import { logger, runMigrationsIfEnabled } from 'shared';
 
@@ -8,6 +9,10 @@ async function startWorkerRuntime() {
   await runMigrationsIfEnabled();
 
   startProjectsWorkers();
+  const stopOperations = startOperationWorker();
+
+  process.once('SIGTERM', stopOperations);
+  process.once('SIGINT', stopOperations);
 
   logger.info('Worker runtime ready');
 }
@@ -29,4 +34,4 @@ if (isMainModule()) {
   });
 }
 
-export { startWorkerRuntime };
+export { startWorkerRuntime, startOperationWorker };

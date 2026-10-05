@@ -1,7 +1,7 @@
 <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 text-zinc-950 md:px-8 dark:text-white">
   <header class="flex flex-col gap-6">
     <a routerLink="/security" class="underline" i18n="@@sessionsBack">Back to security</a>
-    <h1 class="font-heading text-2xl font-semibold" i18n="@@sessionsTitle">Active sessions</h1>
+    <h1 *appPageTitle class="font-heading text-2xl font-semibold" i18n="@@sessionsTitle">Active sessions</h1>
   </header>
   <main class="flex flex-col gap-6">
     <p i18n="@@sessionsDescription">Review your signed-in sessions and sign out sessions you no longer use.</p>

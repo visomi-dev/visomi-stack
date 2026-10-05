@@ -1,10 +1,29 @@
 import type { Server } from 'socket.io';
 
-import { subscribeToProjectAsyncJobEvents } from 'projects';
+import { withCurrentSocketOwner } from '../../shared/socket-authority';
+
+import { getProject, subscribeToProjectAsyncJobEvents } from 'projects';
 
 async function subscribeToProjectSeedEvents(io: Server) {
-  await subscribeToProjectAsyncJobEvents(async (event) => {
-    io.to(`user:${event.job.userId}`).emit(event.eventName, event);
+  const unsubscribe = await subscribeToProjectAsyncJobEvents(async (event) => {
+    await Promise.all(
+      [...io.sockets.sockets.values()]
+        .filter((socket) => socket.data.userId === event.job.userId)
+        .map(async (socket) => {
+          try {
+            await withCurrentSocketOwner(socket, async (owner) => {
+              if (!socket.connected || owner.userId !== event.job.userId || !event.job.projectId) return;
+              if (await getProject(owner, event.job.projectId)) socket.emit(event.eventName, event);
+            });
+          } catch {
+            socket.disconnect(true);
+          }
+        }),
+    );
+  });
+
+  io.httpServer.once('close', () => {
+    unsubscribe();
   });
 }
 

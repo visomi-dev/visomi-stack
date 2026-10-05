@@ -11,6 +11,7 @@
     "jest.config.cts",
     "src/**/*.spec.ts",
     "src/**/*.test.ts",
-    "src/testing/managed-session-fixture.ts"
+    "src/testing/managed-session-fixture.ts",
+    "src/testing/database-lifecycle.ts"
   ]
 }

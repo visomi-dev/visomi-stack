@@ -61,7 +61,13 @@ function nextDeviceError(next: NextFunction, error: unknown): void {
   );
 }
 
-opaqueSyncRouter.use(authed({ authority: 'full' }));
+opaqueSyncRouter.use(
+  (_req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store');
+    next();
+  },
+  authed({ authority: 'full' }),
+);
 
 opaqueSyncRouter.post(
   '/:workspaceId/devices',

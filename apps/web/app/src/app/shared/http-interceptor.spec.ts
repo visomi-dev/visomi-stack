@@ -12,7 +12,7 @@ describe('httpInterceptor', () => {
     return new HttpRequest('GET', url, null, { headers: new HttpHeaders(headers) });
   }
 
-  it('passes the request through on the browser', () => {
+  it('bypasses service-worker handling for authenticated API requests on the browser', () => {
     TestBed.configureTestingModule({
       providers: [{ provide: PLATFORM_ID, useValue: 'browser' }],
     });
@@ -22,8 +22,26 @@ describe('httpInterceptor', () => {
 
     const result = runInterceptor(request, next);
 
-    expect(next).toHaveBeenCalledWith(request);
-    expect(result).toBe(request);
+    expect(next).toHaveBeenCalledOnce();
+    const cloned = next.mock.calls[0]?.[0] as HttpRequest<unknown>;
+
+    expect(cloned.url).toBe(request.url);
+    expect(cloned.headers.get('ngsw-bypass')).toBe('true');
+    expect(result).toBe(cloned);
+    expect(request.headers.has('ngsw-bypass')).toBe(false);
+  });
+
+  it('does not bypass static or external requests on the browser', () => {
+    TestBed.configureTestingModule({ providers: [{ provide: PLATFORM_ID, useValue: 'browser' }] });
+    const next = vi.fn((req: HttpRequest<unknown>) => req);
+
+    for (const url of ['/media/avatar.svg', 'https://example.test/api/public']) {
+      const request = buildRequest(url);
+      const result = runInterceptor(request, next);
+
+      expect(result).toBe(request);
+      expect(request.headers.has('ngsw-bypass')).toBe(false);
+    }
   });
 
   it('rewrites the request URL and forwards the cookie on the server', () => {

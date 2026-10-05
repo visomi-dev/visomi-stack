@@ -1,8 +1,6 @@
 <app-container size="lg">
   <div class="flex flex-col gap-6 py-4">
-    <app-topbar>
-      <app-heading i18n="@@dashboardWelcomeTitle" level="1" [text]="'dashboard works!'" />
-    </app-topbar>
+    <app-heading *appPageTitle i18n="@@dashboardWelcomeTitle" level="1" [text]="'dashboard works!'" />
     <main>
       <app-card padding="md" tone="raised">
         <app-text i18n="@@dashboardWelcomeBody">

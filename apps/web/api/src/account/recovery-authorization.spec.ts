@@ -10,8 +10,8 @@ import {
   bindRecoveryEnrollmentSession,
   consumeRecoveryAuthorization,
   createRecoveryChallenge,
-  replaceRecoveryCodes,
-} from '../auth/auth-service';
+} from '../auth/auth-recovery';
+import { replaceRecoveryCodes } from '../auth/auth-factors';
 import { clearMailbox, listSentMessages } from '../auth/auth-mail';
 import { resetPasskeySecurityState } from '../auth/passkey-security';
 

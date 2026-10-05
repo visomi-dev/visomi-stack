@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, it } from 'node:test';
@@ -15,6 +15,7 @@ import {
   startRun,
   transitionWorkItem,
 } from '../libs/themis-workflow/src/lib/legacy-workflow-internal.ts';
+
 import {
   loadProjectStore,
   backupProjectStore,
@@ -23,26 +24,28 @@ import {
   restoreProjectStore,
   rollbackProjectStores,
   synchronizeProjectStore,
-  scanMigrationOutputs,
   validateProjectStore,
 } from './themis-project-migration.ts';
+import { scanMigrationOutputs } from './themis-project-migration-evidence.ts';
 
 const roots: string[] = [];
 const clock = (() => {
   let tick = 0;
+
   return () => `2026-08-24T00:00:${String(tick++).padStart(2, '0')}.000Z`;
 })();
 
 const fixture = (): string => {
   const root = mkdtempSync(join(tmpdir(), 'themis-project-migration-'));
+
   roots.push(root);
+
   return root;
 };
 
 afterEach(() => {
   for (const root of roots.splice(0)) {
-    // The fixture root is unique and is removed by the test runner's temporary directory cleanup.
-    void root;
+    rmSync(root, { recursive: true, force: true });
   }
 });
 
@@ -65,7 +68,9 @@ const makeProject = (root: string, id: string) => {
     'fixture',
     clock,
   );
+
   transitionWorkItem(root, item.id, 'ready', 'fixture', clock);
+
   return item;
 };
 
@@ -74,16 +79,19 @@ describe('project-scoped Themis migration', () => {
     const root = fixture();
     const first = makeProject(root, 'PRJ-A');
     const second = makeProject(root, 'PRJ-B');
+
     addDependency(root, first.id, second.id, 'fixture', clock); // Deliberately cross-project: it must not enter either authority.
 
     // Populate every state collection so the manifest proves complete-domain coverage,
     // rather than proving only the project/epic/work-item happy path.
     claimWorkItem(root, first.id, 'fixture', 'fixture', clock);
     const run = startRun(root, first.id, 'fixture', 'fixture', clock);
+
     addEvidence(root, run.id, 'verification', 'fixture evidence', 'fixture', 'fixture', clock);
     finishRun(root, run.id, 'completed', 'fixture complete', 'fixture', clock);
     const statePath = join(root, '.themis', 'state.json');
     const state = JSON.parse(readFileSync(statePath, 'utf8')) as Record<string, unknown[]>;
+
     state.sprints.push({ id: 'SPR-A', projectId: 'PRJ-A', goal: 'fixture', status: 'active', createdAt: clock() });
     state.revisions.push({
       id: 'REV-A',
@@ -131,10 +139,12 @@ describe('project-scoped Themis migration', () => {
     writeFileSync(statePath, JSON.stringify(state, null, 2) + '\n', 'utf8');
 
     const dryRun = migrateProjectStores(root, { dryRun: true });
+
     assert.equal(dryRun.phase, 'planned');
     assert.equal(existsSync(join(root, '.themis', 'projects')), false);
 
     const report = migrateProjectStores(root);
+
     assert.equal(report.phase, 'cutover');
     assert.equal(report.quarantinedEvents > 0, true);
     assert.equal(report.backupId, `migration-${report.migrationId}`);
@@ -169,6 +179,7 @@ describe('project-scoped Themis migration', () => {
         ['Native UI, native runtime, and native-specific key storage are deferred.'],
       ],
     ];
+
     assert.deepEqual(
       report.phaseFidelity.before.map(({ phaseId, itemIds, statuses, gaps }) => [phaseId, itemIds, statuses, gaps]),
       expectedRows,
@@ -183,6 +194,7 @@ describe('project-scoped Themis migration', () => {
     );
 
     const store = loadProjectStore(root, 'PRJ-A');
+
     assert.equal(store.state.projects[0]?.id, 'PRJ-A');
     assert.equal(store.state.workItems[0]?.id, first.id);
     assert.equal(store.state.dependencies.length, 0);
@@ -195,6 +207,7 @@ describe('project-scoped Themis migration', () => {
         ].sort(),
       ]),
     );
+
     assert.ok(report.quarantinedRecordKeys.includes('dependency:PRJ-A-ITEM->PRJ-B-ITEM'));
     assert.ok(report.quarantinedRecordKeys.includes('sprint-evidence:SEVD-ORPHAN'));
     assert.deepEqual(afterEntities, report.manifests.before.entities);
@@ -216,6 +229,7 @@ describe('project-scoped Themis migration', () => {
       report.quarantinedEvents,
     );
     const rawOutputScan = scanMigrationOutputs(root);
+
     assert.ok(rawOutputScan.categories.backups > 0);
     assert.ok(rawOutputScan.categories.quarantine > 0);
     assert.ok(rawOutputScan.categories.ledgers > 0);
@@ -236,12 +250,15 @@ describe('project-scoped Themis migration', () => {
 
   it('resumes after a project failure and reruns idempotently', () => {
     const root = fixture();
+
     makeProject(root, 'PRJ-A');
     makeProject(root, 'PRJ-B');
     assert.throws(() => migrateProjectStores(root, { failAfterProject: 'PRJ-A' }), /interrupted/);
     const resumed = migrateProjectStores(root, { resume: true });
+
     assert.equal(resumed.phase, 'cutover');
     const rerun = migrateProjectStores(root, { resume: true });
+
     assert.equal(rerun.migrationId, resumed.migrationId);
     assert.deepEqual(loadProjectStore(root, 'PRJ-A').state, readProjectState(root, 'PRJ-A'));
   });
@@ -254,6 +271,7 @@ describe('project-scoped Themis migration', () => {
 
     assert.deepEqual(report.projectIds, ['core']);
     const store = loadProjectStore(root, 'core');
+
     assert.equal(store.state.projects[0]?.id, 'core');
     assert.equal(store.state.workItems[0]?.id, item.id);
     assert.equal(store.state.workItems[0]?.projectId, 'core');
@@ -265,8 +283,10 @@ describe('project-scoped Themis migration', () => {
   it('isolates a corrupt project store and rejects stale global replay', () => {
     const root = fixture();
     const item = makeProject(root, 'PRJ-HEALTHY');
+
     makeProject(root, 'PRJ-CORRUPT');
     const report = migrateProjectStores(root);
+
     writeFileSync(join(root, '.themis', 'projects', 'PRJ-CORRUPT', 'state.json'), 'corrupt\n', 'utf8');
     assert.equal(readProjectState(root, 'PRJ-HEALTHY').workItems[0]?.id, item.id);
     assert.throws(() => readProjectState(root, 'PRJ-CORRUPT'), /checksum mismatch/);
@@ -290,6 +310,7 @@ describe('project-scoped Themis migration', () => {
 
   it('rolls back only while writes are fenced', () => {
     const root = fixture();
+
     makeProject(root, 'PRJ-A');
     migrateProjectStores(root);
     rollbackProjectStores(root);
@@ -300,10 +321,12 @@ describe('project-scoped Themis migration', () => {
   it('validates, backs up, restores, and synchronizes a store independently', () => {
     const root = fixture();
     const item = makeProject(root, 'PRJ-A');
+
     makeProject(root, 'PRJ-B');
     migrateProjectStores(root);
     const original = validateProjectStore(root, 'PRJ-A');
     const backupId = backupProjectStore(root, 'PRJ-A');
+
     writeFileSync(join(root, '.themis', 'projects', 'PRJ-A', 'state.json'), '{}\n', 'utf8');
     assert.throws(() => validateProjectStore(root, 'PRJ-A'), /checksum mismatch/);
     assert.deepEqual(restoreProjectStore(root, 'PRJ-A', backupId), original);
@@ -313,10 +336,12 @@ describe('project-scoped Themis migration', () => {
 
   it('quarantines every orphan and ambiguous record exactly once', () => {
     const root = fixture();
+
     makeProject(root, 'PRJ-A');
     makeProject(root, 'PRJ-B');
     const statePath = join(root, '.themis', 'state.json');
     const state = JSON.parse(readFileSync(statePath, 'utf8')) as Record<string, unknown[]>;
+
     state.epics.push({
       id: 'ORPHAN-EPIC',
       projectId: 'MISSING',
@@ -358,6 +383,7 @@ describe('project-scoped Themis migration', () => {
       records: Array<{ kind: string; id: string }>;
     };
     const keys = quarantine.records.map((record) => `${record.kind}:${record.id}`);
+
     assert.equal(new Set(keys).size, keys.length);
     assert.deepEqual(
       keys.filter((key) => key.includes('ORPHAN') || key.includes('AMBIGUOUS')),

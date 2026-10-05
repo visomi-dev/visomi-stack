@@ -32,6 +32,8 @@ export default [
         'error',
         {
           enforceBuildableLibDependency: true,
+          // Portable crypto is lazy in root custody and static in its lazy settings route, not a route project itself.
+          checkDynamicDependenciesExceptions: ['shared-crypto'],
           // template.json is a public workspace build input, not another domain's implementation.
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$', '^(?:\\.\\./)+template\\.json$'],
           depConstraints: [
@@ -183,6 +185,92 @@ export default [
         { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
         { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
         { blankLine: 'always', prev: '*', next: 'return' },
+      ],
+    },
+  },
+  {
+    // Roll out source-snapshot limits only after a module's compatible extraction.
+    // Native Node entry points and Angular route loaders keep their required extensions.
+    files: [
+      'apps/web/api/src/auth/auth-route-session.ts',
+      'apps/web/api/src/auth/auth-router.ts',
+      'apps/web/api/src/auth/device-approval-router.ts',
+      'apps/web/api/src/auth/google-router.ts',
+      'apps/web/api/src/auth/password-flow-router.ts',
+      'apps/web/api/src/auth/reauth-router.ts',
+      'apps/web/api/src/auth/security-methods.ts',
+      'apps/web/api/src/auth/totp-router.ts',
+      'apps/web/api/src/auth/security-router.ts',
+      'apps/web/api/src/auth/passkey-router.ts',
+      'apps/web/api/src/auth/passkey-ceremony.ts',
+      'apps/web/api/src/auth/passkey-credentials-router.ts',
+      'apps/web/api/src/auth/auth-schemas.ts',
+      'apps/web/api/src/auth/auth-openapi.ts',
+      'apps/web/api/src/auth/auth-recovery.ts',
+      'apps/web/api/src/auth/auth-factors.ts',
+      'apps/web/api/src/auth/password-account.ts',
+      'apps/web/api/src/auth/password-session.ts',
+      'apps/web/api/src/auth/auth-identity.ts',
+      'apps/web/api/src/auth/auth-devices.ts',
+      'apps/web/api/src/auth/auth-service.ts',
+      'apps/web/api-e2e/src/support/report-sanitization.ts',
+      'apps/web/api-e2e/src/support/report-sanitization.spec.ts',
+      'scripts/themis-cli.ts',
+      'scripts/themis-cli-context.ts',
+      'scripts/themis-cli-storage.ts',
+      'scripts/themis-project-migration*.ts',
+      'scripts/themis-adapter*.ts',
+      'libs/themis-workflow/src/lib/project-workflow*.ts',
+    ],
+    rules: {
+      'import-x/extensions': ['error', 'never', { checkTypeImports: true, ignorePackages: true }],
+      curly: ['error', 'all'],
+      '@stylistic/max-len': [
+        'error',
+        {
+          code: 120,
+          tabWidth: 2,
+          ignoreUrls: true,
+          ignoreStrings: true,
+          ignoreTemplateLiterals: true,
+          ignoreRegExpLiterals: true,
+        },
+      ],
+      'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            ':matches(ImportDeclaration, ExportNamedDeclaration, ExportAllDeclaration, ImportExpression)[source.value=/^\\..*\\.[jt]sx?$/]',
+          message: 'Omit JavaScript and TypeScript file extensions from relative module imports and exports.',
+        },
+        {
+          selector:
+            'AwaitExpression:not(VariableDeclarator > AwaitExpression.init):not(ExpressionStatement > AwaitExpression.expression)',
+          message: 'Assign the awaited result to a variable before using it in another expression.',
+        },
+      ],
+    },
+  },
+  {
+    // These modules also execute directly with native Node TypeScript resolution.
+    files: [
+      'scripts/themis-cli.ts',
+      'scripts/themis-cli-context.ts',
+      'scripts/themis-cli-storage.ts',
+      'scripts/themis-project-migration*.ts',
+      'scripts/themis-adapter*.ts',
+      'libs/themis-workflow/src/lib/project-workflow*.ts',
+    ],
+    rules: {
+      'import-x/extensions': ['error', 'always', { checkTypeImports: true, ignorePackages: true }],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'AwaitExpression:not(VariableDeclarator > AwaitExpression.init):not(ExpressionStatement > AwaitExpression.expression)',
+          message: 'Assign the awaited result to a variable before using it in another expression.',
+        },
       ],
     },
   },

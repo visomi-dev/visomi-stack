@@ -83,6 +83,7 @@ describe('opaque sync API', () => {
 
     expect(appendResponse.status).toBe(201);
     expect(listResponse.status).toBe(200);
+    expect(listResponse.headers['cache-control']).toBe('no-store');
     expect(listResponse.body.data.envelopes).toEqual([{ cursor: 1, envelope }]);
   });
 
