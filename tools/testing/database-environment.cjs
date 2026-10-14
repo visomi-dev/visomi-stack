@@ -20,6 +20,11 @@ class DatabaseEnvironment extends TestEnvironment {
     try {
       if (database) {
         await database.waitReady;
+        // Suite hooks have finished. Release an original database left open by
+        // mocked or skipped suites before the next sandbox allocates its WASM memory.
+        if (!database.closed) {
+          await database.close();
+        }
       }
     } finally {
       await super.teardown();

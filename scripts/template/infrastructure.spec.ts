@@ -4,8 +4,79 @@ import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
+import { runInNewContext } from 'node:vm';
 
 import { parse } from 'yaml';
+
+test('Jest database cleanup waits for initialization and closes only open fixtures after suite hooks finish', async () => {
+  const source = await readFile('tools/testing/database-environment.cjs', 'utf8');
+
+  for (const state of ['open', 'closed', 'absent']) {
+    const events: string[] = [];
+    const database = {
+      closed: state === 'closed',
+      waitReady: Promise.resolve().then(() => events.push('ready')),
+      close: async () => events.push('close'),
+    };
+    const module = { exports: undefined as unknown };
+
+    runInNewContext(source, {
+      module,
+      require: (name: string) => {
+        assert.equal(name, 'jest-environment-node');
+
+        return {
+          TestEnvironment: class {
+            global = { [Symbol.for('visomi.memory.database')]: state === 'absent' ? undefined : database };
+
+            async teardown() {
+              events.push('teardown');
+            }
+          },
+        };
+      },
+    });
+    const Environment = module.exports as new () => {
+      handleTestEvent(event: { name: string }): Promise<void>;
+      teardown(): Promise<void>;
+    };
+    const environment = new Environment();
+
+    await environment.handleTestEvent({ name: 'run_finish' });
+    assert.deepEqual(events, ['ready']);
+    await environment.teardown();
+    assert.deepEqual(events, state === 'open' ? ['ready', 'close', 'teardown'] : ['ready', 'teardown']);
+  }
+});
+
+test('API unit storage ignores inherited PostgreSQL settings while preserving explicit integration opt-ins', () => {
+  for (const optIn of [undefined, 'VAULT_UNLOCK_TEST_DATABASE_URL', 'AUTH_REDIS_INTEGRATION']) {
+    const result = spawnSync(
+      process.execPath,
+      [
+        '--experimental-strip-types',
+        '--import',
+        resolve('apps/web/api/src/testing/environment.ts'),
+        '-e',
+        'process.stdout.write(process.env.DATABASE_DRIVER)',
+      ],
+      {
+        encoding: 'utf8',
+        timeout: 10_000,
+        env: {
+          ...process.env,
+          DATABASE_DRIVER: 'pg',
+          VAULT_UNLOCK_TEST_DATABASE_URL: optIn === 'VAULT_UNLOCK_TEST_DATABASE_URL' ? 'explicit-fixture' : '',
+          AUTH_REDIS_INTEGRATION: optIn === 'AUTH_REDIS_INTEGRATION' ? '1' : '',
+        },
+      },
+    );
+
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, optIn ? 'pg' : 'memory');
+  }
+});
 
 test('durable API fixtures use Docker when both engines exist and fall back to Podman otherwise', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'visomi-container-engine-'));

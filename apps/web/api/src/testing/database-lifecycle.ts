@@ -1,5 +1,7 @@
 import type { PGlite } from '@electric-sql/pglite';
 
+import './environment';
+
 // Shared runtime imports can start the composed memory database even when a suite
 // replaces `db` with its own fixture. Drain that original initialization as well; otherwise
 // its asynchronous WASM imports can outlive Jest's ESM environment.
