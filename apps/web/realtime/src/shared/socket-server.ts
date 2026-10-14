@@ -3,6 +3,9 @@ import { createServer, type Server as HttpServer } from 'node:http';
 import express from 'express';
 import { Server } from 'socket.io';
 
+import { subscribeToOperations } from '../operations/subscriber';
+import { subscribeToNotifications } from '../notifications/subscriber';
+
 import { bindSocketSession } from './socket-auth';
 
 import { env, logger } from 'shared';
@@ -17,6 +20,8 @@ async function attachRealtimeServer(server: HttpServer) {
   });
 
   bindSocketSession(io.engine);
+  await subscribeToOperations(io);
+  await subscribeToNotifications(io);
 
   io.use((socket, next) => {
     const request = socket.request as typeof socket.request & {

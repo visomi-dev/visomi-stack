@@ -49,6 +49,12 @@ describe('RadioCard', () => {
 
     input.click();
     expect(fixture.componentInstance.model().plan).toBe('standard');
+    expect(fixture.componentInstance.f.plan().dirty()).toBe(true);
+    expect(fixture.componentInstance.f().dirty()).toBe(true);
+    fixture.componentInstance.f().reset();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.f().dirty()).toBe(false);
+    expect(input.checked).toBe(true);
   });
 
   it('prevents selection when Signal Forms disables the field', async () => {
@@ -60,5 +66,6 @@ describe('RadioCard', () => {
     expect(input.disabled).toBe(true);
     input.click();
     expect(fixture.componentInstance.model().plan).toBe('');
+    expect(fixture.componentInstance.f().dirty()).toBe(false);
   });
 });

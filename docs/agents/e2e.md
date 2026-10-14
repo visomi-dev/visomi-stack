@@ -33,6 +33,11 @@ Auth changes should keep the route suite green for:
 - Avoid combining every auth scenario into one PR unless it is initial infrastructure work.
 - Prefer deterministic helpers for OTP, mailbox, session, and route setup.
 - When debugging flakiness, isolate the failing route spec before broad suite runs.
+- HTTP-mocked route suites must use `test.use({ serviceWorkers: 'block' })` at their
+  file or describe scope. The production PWA worker can intercept requests before
+  `page.route` sees them, causing mocks to be bypassed nondeterministically after
+  activation. Do not disable workers globally: the dedicated PWA suite and real
+  gateway notification/operation flows must continue exercising the actual worker.
 
 ## Verification
 

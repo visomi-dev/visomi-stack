@@ -177,7 +177,10 @@ export class Passkey {
     return credential;
   }
 
-  async createCredential(options: Record<string, unknown>): Promise<Credential> {
+  async createCredential(
+    options: Record<string, unknown>,
+    request: { signal?: AbortSignal } = {},
+  ): Promise<Credential> {
     const view = this.document.defaultView;
 
     if (!view?.navigator.credentials) {
@@ -185,7 +188,15 @@ export class Passkey {
     }
 
     const credential = await view.navigator.credentials.create({
-      publicKey: decodeOptions(options) as unknown as PublicKeyCredentialCreationOptions,
+      ...request,
+      publicKey: decodeOptions({
+        ...options,
+        // Capability negotiation does not enroll vault custody or expose PRF output.
+        extensions: {
+          ...(typeof options['extensions'] === 'object' && options['extensions'] !== null ? options['extensions'] : {}),
+          prf: {},
+        },
+      }) as unknown as PublicKeyCredentialCreationOptions,
     });
 
     if (!credential) {
@@ -218,7 +229,7 @@ export class Passkey {
   }
 }
 
-function serializeCredential(credential: Credential): Record<string, unknown> {
+export function serializeCredential(credential: Credential): Record<string, unknown> {
   const publicKey = credential as PublicKeyCredential;
   const response = publicKey.response as AuthenticatorAssertionResponse | AuthenticatorAttestationResponse;
   const encoded = (value: ArrayBuffer): string => {

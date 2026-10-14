@@ -2,6 +2,7 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import {
   ApplicationConfig,
   inject,
+  isDevMode,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
@@ -13,8 +14,11 @@ import {
   withI18nSupport,
 } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { provideServiceWorker } from '@angular/service-worker';
 
 import { appRoutes } from './app.routes';
+import { VaultSession } from './vault/vault-session';
+import { BrowserVaultSession } from './vault/browser-vault-session';
 import { Auth } from './shared/auth/auth';
 import { BrowserAuth } from './shared/auth/browser-auth';
 import { Clipboard } from './shared/clipboard/clipboard';
@@ -38,11 +42,13 @@ export const appConfig: ApplicationConfig = {
       }),
     ),
     provideRouter(appRoutes),
+    provideServiceWorker('ngsw-worker.js', { enabled: !isDevMode(), registrationStrategy: 'registerWhenStable:30000' }),
     provideAppInitializer(() => inject(Auth).ensureSessionLoaded()),
 
     { provide: Auth, useExisting: BrowserAuth },
     { provide: Settings, useExisting: BrowserSettings },
     { provide: Realtime, useExisting: BrowserRealtime },
     { provide: Clipboard, useExisting: BrowserClipboard },
+    { provide: VaultSession, useExisting: BrowserVaultSession },
   ],
 };

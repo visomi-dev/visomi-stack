@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { authed, authedContext } from '../auth/auth-middleware';
+import { authed, authedContext, authedRequest } from '../auth/auth-middleware';
 import { getValidated, validateRequest } from '../shared/http/route-schemas';
 import { env } from '../shared/env';
 
@@ -10,6 +10,7 @@ import {
   projectParamsSchema,
   projectsOpenApiPaths,
   updateProjectSchema,
+  seedRequestHeaders,
 } from './projects-schemas';
 import { listProjectJobs, queueProjectSeed } from './project-seed-queue';
 
@@ -161,12 +162,23 @@ projectsRouter.get(
 
 projectsRouter.post(
   '/:projectId/seed',
-  validateRequest({ params: projectParamsSchema }),
+  validateRequest({ params: projectParamsSchema, headers: seedRequestHeaders }),
   async function seedProjectHandler(req, res) {
     const { projectId } = getValidated<{ params: typeof projectParamsSchema }>(req).params!;
 
-    const job = await queueProjectSeed(authedContext(req), projectId);
+    const { user } = authedRequest(req);
+    const requestKey = getValidated<{ headers: typeof seedRequestHeaders }>(req).headers!['idempotency-key'];
+    const job = await queueProjectSeed(
+      {
+        ...authedContext(req),
+        sessionId: req.sessionID,
+        authVersion: user.authVersion ?? 1,
+      },
+      projectId,
+      requestKey,
+    );
 
+    res.setHeader('Cache-Control', 'no-store');
     httpResponse.json(res, { data: job, status: 202, message: 'Project seed queued.' });
   },
 );

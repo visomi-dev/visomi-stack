@@ -5,7 +5,20 @@
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "visomi-source": "./src/index.ts",
+      "default": "./src/index.js"
+    },
+    "./vault-pin": {
+      "types": "./src/vault-pin.d.ts",
+      "visomi-source": "./src/vault-pin.ts",
+      "default": "./src/vault-pin.js"
+    }
+  },
   "dependencies": {
+    "hash-wasm": "4.12.0",
     "tslib": "^2.8.1",
     "zod": "^4.6.5"
   }

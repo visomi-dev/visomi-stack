@@ -2,6 +2,8 @@ import { ApplicationConfig, REQUEST, REQUEST_CONTEXT, inject, mergeApplicationCo
 import { provideServerRendering, withRoutes } from '@angular/ssr';
 
 import { appConfig } from './app.config';
+import { VaultSession } from './vault/vault-session';
+import { ServerVaultSession } from './vault/server-vault-session';
 import { serverRoutes } from './app.routes.server';
 import { Auth } from './shared/auth/auth';
 import { AUTH_REQUEST_CONTEXT, type AuthRequestContext } from './shared/auth/auth-request-context.token';
@@ -16,6 +18,7 @@ import { Settings } from './shared/settings';
 const serverConfig: ApplicationConfig = {
   providers: [
     provideServerRendering(withRoutes(serverRoutes)),
+    { provide: VaultSession, useExisting: ServerVaultSession },
     ServerAuth,
     { provide: Auth, useExisting: ServerAuth },
     ServerSettings,

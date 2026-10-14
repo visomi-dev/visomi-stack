@@ -14,11 +14,38 @@ export function assertRestoreIsolation(options: { memory?: boolean }, env: NodeJ
     );
 }
 
-/** pg_dump adds random psql restriction keys in newer PostgreSQL minor releases. */
-export function dumpFingerprint(dump: string): string {
-  return createHash('sha256')
-    .update(dump.replace(/^\\(?:un)?restrict .*\r?\n/gm, ''))
-    .digest('hex');
+/** Ignore dump nonces and PostgreSQL's associative AND deparse regrouping only. */
+export function dumpFingerprint(dump: string, kind: 'schema' | 'data' = 'data'): string {
+  const withoutNonces = dump.replace(/^\\(?:un)?restrict .*\r?\n/gm, '');
+  const normalized =
+    kind === 'schema'
+      ? withoutNonces.replace(
+          /'(?:''|\\.|[^'\\])*'|"(?:""|[^"])*"|\$([A-Za-z_][A-Za-z_0-9]*|)\$[\s\S]*?\$\1\$|--[^\n]*|\/\*[\s\S]*?\*\/|^(\s+CONSTRAINT .+? CHECK )(.+)$/gm,
+          (token, _dollarTag: string | undefined, prefix: string | undefined, expression: string | undefined) =>
+            prefix && expression ? prefix + normalizeCheckConjunction(expression) : token,
+        )
+      : withoutNonces;
+
+  return createHash('sha256').update(normalized).digest('hex');
+}
+
+function normalizeCheckConjunction(expression: string): string {
+  // PostgreSQL folds nested AND nodes while reparsing a restored CHECK. Flatten
+  // only fully parenthesized, unquoted conjunction terms. Keep every operand's
+  // parentheses (including OR groups), order, value and operator unchanged.
+  // Quoted literals/identifiers and dollar strings are intentionally not handled.
+  if (/['"$]/.test(expression)) return expression;
+  let previous: string;
+  let normalized = expression;
+
+  do {
+    previous = normalized;
+    normalized = normalized
+      .replace(/\(\((\([^()]+\)(?: AND \([^()]+\))+)\) AND (\([^()]+\))\)/g, '($1 AND $2)')
+      .replace(/\((\([^()]+\)) AND \((\([^()]+\)(?: AND \([^()]+\))+)\)\)/g, '($1 AND $2)');
+  } while (normalized !== previous);
+
+  return normalized;
 }
 
 /** Only called with the container created by this smoke invocation. No ambient DB credentials. */
@@ -78,6 +105,7 @@ INSERT INTO restore_fixture.totp VALUES (1, 1, '${totpFixture.encryptedSecret}')
   const fingerprint = (database: string, kind: '--schema-only' | '--data-only') =>
     dumpFingerprint(
       exec(['pg_dump', '-U', 'postgres', '-d', database, '--no-owner', '--no-privileges', '--inserts', kind]),
+      kind === '--schema-only' ? 'schema' : 'data',
     );
   const before = {
     schema: fingerprint('template_smoke', '--schema-only'),

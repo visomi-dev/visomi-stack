@@ -1,7 +1,14 @@
+import { z } from 'zod';
+
 import { parseEncryptedEnvelope, serializeEncryptedEnvelope, type EncryptedEnvelope } from './encrypted-envelope';
 
 export type SyncCursor = { workspaceId: string; value: number };
-export type SyncQueueEntry = { envelope: string; attempts: number; nextAttemptAt: number };
+export type SyncQueueEntry = {
+  envelope: string;
+  attempts: number;
+  nextAttemptAt: number;
+  status?: 'pending' | 'blocked' | 'conflict';
+};
 export type SyncState = {
   cursor: SyncCursor;
   queue: SyncQueueEntry[];
@@ -11,7 +18,52 @@ export type SyncState = {
 export type SyncStateStore = {
   load(): Promise<SyncState | undefined>;
   save(state: SyncState): Promise<void>;
+  exclusive?<T>(operation: () => Promise<T>): Promise<T>;
 };
+
+export const syncStateSchema = z
+  .strictObject({
+    cursor: z.strictObject({ workspaceId: z.string().min(1), value: z.number().int().nonnegative() }),
+    queue: z
+      .array(
+        z.strictObject({
+          envelope: z
+            .string()
+            .max(150_000)
+            .refine((value) => {
+              try {
+                const envelope = parseEncryptedEnvelope(JSON.parse(value) as unknown);
+
+                return envelope.kind === 'sync-object' && serializeEncryptedEnvelope(envelope) === value;
+              } catch {
+                return false;
+              }
+            }, 'Invalid canonical sync envelope'),
+          attempts: z.number().int().nonnegative(),
+          nextAttemptAt: z.number().int().nonnegative(),
+          status: z.enum(['pending', 'blocked', 'conflict']).optional(),
+        }),
+      )
+      .max(10_000),
+    tombstones: z.array(z.string().min(1)).max(100_000),
+  })
+  .refine((state) => {
+    try {
+      return state.queue.every(
+        (entry) =>
+          parseEncryptedEnvelope(JSON.parse(entry.envelope) as unknown).workspaceId === state.cursor.workspaceId,
+      );
+    } catch {
+      return false;
+    }
+  }, 'Sync state workspace mismatch');
+
+export class SyncTransportError extends Error {
+  constructor(readonly status: number) {
+    super(`Opaque sync request failed with status ${status}.`);
+    this.name = 'SyncTransportError';
+  }
+}
 
 export type OpaqueSyncTransport = {
   append(envelope: EncryptedEnvelope): Promise<{ cursor: number; duplicate: boolean }>;
@@ -23,6 +75,7 @@ export type OpaqueSyncTransportOptions = {
   workspaceId: string;
   deviceId: string;
   enrollmentVersion: number;
+  signal?: AbortSignal;
   fetcher?: typeof fetch;
 };
 
@@ -33,9 +86,17 @@ export function createOpaqueSyncHttpTransport(options: OpaqueSyncTransportOption
   const headers = { 'content-type': 'application/json' };
 
   async function request(path: string, init?: RequestInit): Promise<unknown> {
-    const response = await fetcher(url + path, { ...init, headers: { ...headers, ...init?.headers } });
+    const response = await fetcher(url + path, {
+      ...init,
+      credentials: 'same-origin',
+      cache: 'no-store',
+      signal: options.signal
+        ? AbortSignal.any([options.signal, AbortSignal.timeout(20_000)])
+        : AbortSignal.timeout(20_000),
+      headers: { ...headers, ...init?.headers },
+    });
 
-    if (!response.ok) throw new Error(`Opaque sync request failed with status ${response.status}.`);
+    if (!response.ok) throw new SyncTransportError(response.status);
 
     return response.json() as Promise<unknown>;
   }
@@ -46,27 +107,31 @@ export function createOpaqueSyncHttpTransport(options: OpaqueSyncTransportOption
         method: 'POST',
         body: JSON.stringify({ deviceId: options.deviceId, enrollmentVersion: options.enrollmentVersion, envelope }),
       });
-      const data = body as { data?: { cursor?: unknown; duplicate?: unknown } };
 
-      if (typeof data.data?.cursor !== 'number' || typeof data.data.duplicate !== 'boolean')
-        throw new Error('Malformed opaque sync response.');
-
-      return { cursor: data.data.cursor, duplicate: data.data.duplicate };
+      return z.object({ data: z.object({ cursor: z.number().int().positive(), duplicate: z.boolean() }) }).parse(body)
+        .data;
     },
     async list(afterCursor) {
       const body = await request(
         `?afterCursor=${afterCursor}&limit=100&deviceId=${encodeURIComponent(options.deviceId)}&enrollmentVersion=${options.enrollmentVersion}`,
       );
-      const data = body as { data?: { envelopes?: unknown } };
-
-      if (!Array.isArray(data.data?.envelopes)) throw new Error('Malformed opaque sync response.');
+      const data = z
+        .object({
+          data: z.object({
+            envelopes: z
+              .array(
+                z.object({
+                  cursor: z.number().int().positive(),
+                  envelope: z.unknown(),
+                }),
+              )
+              .max(100),
+          }),
+        })
+        .parse(body);
 
       return data.data.envelopes.map((record) => {
-        const value = record as { cursor?: unknown; envelope?: unknown };
-
-        if (typeof value.cursor !== 'number') throw new Error('Malformed opaque sync cursor.');
-
-        return { cursor: value.cursor, envelope: parseEncryptedEnvelope(value.envelope) };
+        return { cursor: record.cursor, envelope: parseEncryptedEnvelope(record.envelope) };
       });
     },
   };
@@ -123,7 +188,8 @@ export function mergeProjectionChanges(changes: ReadonlyArray<ProjectionChange>)
     .filter((change) => change.operation === 'delete')
     .map((change) => change.entityId)
     .sort();
-  const active = selected.filter((change) => change.operation === 'upsert' && !tombstones.includes(change.entityId));
+  // Winner identity includes the entity type. Deleting work must not delete an unrelated planning record with the same ID.
+  const active = selected.filter((change) => change.operation === 'upsert');
 
   return {
     work: active.filter((change) => change.entityType === 'work').sort(compareChange),
@@ -135,18 +201,28 @@ export function mergeProjectionChanges(changes: ReadonlyArray<ProjectionChange>)
 
 export class MemorySyncStateStore implements SyncStateStore {
   private state: SyncState | undefined;
+  private tail: Promise<unknown> = Promise.resolve();
+
+  async exclusive<T>(operation: () => Promise<T>): Promise<T> {
+    const pending = this.tail.then(operation, operation);
+
+    this.tail = pending.catch(() => undefined);
+
+    return await pending;
+  }
 
   async load(): Promise<SyncState | undefined> {
     return this.state ? structuredClone(this.state) : undefined;
   }
 
   async save(state: SyncState): Promise<void> {
-    this.state = structuredClone(state);
+    this.state = syncStateSchema.parse(state);
   }
 }
 
 export abstract class ClientSyncAdapter {
   private state: SyncState;
+  private tail: Promise<unknown> = Promise.resolve();
 
   public constructor(
     private readonly workspaceId: string,
@@ -158,9 +234,7 @@ export abstract class ClientSyncAdapter {
   }
 
   async initialize(): Promise<void> {
-    const stored = await this.stateStore.load();
-
-    if (stored?.cursor.workspaceId === this.workspaceId) this.state = stored;
+    await this.exclusive(async () => undefined);
   }
 
   async enqueue(envelope: EncryptedEnvelope): Promise<void> {
@@ -168,56 +242,138 @@ export abstract class ClientSyncAdapter {
 
     if (parsed.kind !== 'sync-object' || parsed.workspaceId !== this.workspaceId)
       throw new Error('Envelope workspace mismatch.');
-    if (this.state.tombstones.includes(parsed.envelopeId)) return;
-    this.state.queue.push({ envelope: serializeEncryptedEnvelope(parsed), attempts: 0, nextAttemptAt: 0 });
-    await this.persist();
+    await this.exclusive(async () => {
+      if (this.state.tombstones.includes(parsed.envelopeId)) return;
+      const serialized = serializeEncryptedEnvelope(parsed);
+      const existing = this.state.queue.find((entry) => {
+        const previous = parseEncryptedEnvelope(JSON.parse(entry.envelope) as unknown);
+
+        return previous.envelopeId === parsed.envelopeId && previous.revision === parsed.revision;
+      });
+
+      if (existing) {
+        if (existing.envelope !== serialized)
+          throw new Error('Resolve the pending encrypted revision before replacing it.');
+
+        return;
+      }
+
+      this.state.queue.push({ envelope: serialized, attempts: 0, nextAttemptAt: 0 });
+      await this.persist();
+    });
   }
 
   async flush(now = Date.now()): Promise<{ sent: number; pending: number }> {
-    let sent = 0;
+    return await this.exclusive(async () => {
+      let sent = 0;
+      let failure: unknown;
 
-    for (const entry of [...this.state.queue]) {
-      if (entry.nextAttemptAt > now) continue;
-      try {
-        await this.transport.append(parseEncryptedEnvelope(JSON.parse(entry.envelope) as unknown));
-        this.state.queue = this.state.queue.filter((candidate) => candidate !== entry);
-        sent += 1;
-      } catch (error: unknown) {
-        entry.attempts += 1;
-        if (entry.attempts >= this.maxAttempts) throw new SyncOfflineError(error);
-        entry.nextAttemptAt = now + 2 ** entry.attempts * 1000;
+      for (const entry of [...this.state.queue]) {
+        if (entry.nextAttemptAt > now || (entry.status && entry.status !== 'pending')) continue;
+        try {
+          await this.transport.append(parseEncryptedEnvelope(JSON.parse(entry.envelope) as unknown));
+          this.state.queue = this.state.queue.filter((candidate) => candidate !== entry);
+          sent += 1;
+        } catch (error: unknown) {
+          if (typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError') {
+            failure = error;
+
+            break;
+          }
+          if (error instanceof SyncTransportError) {
+            if (error.status === 401) {
+              failure = error;
+
+              break;
+            }
+            if ([400, 403, 404, 409, 410, 422].includes(error.status)) {
+              entry.status = error.status === 409 ? 'conflict' : 'blocked';
+
+              continue;
+            }
+          }
+
+          entry.attempts += 1;
+          entry.nextAttemptAt = now + 2 ** Math.min(entry.attempts, 10) * 1000;
+          if (entry.attempts >= this.maxAttempts) {
+            failure = error;
+          }
+        }
       }
-    }
-    await this.persist();
+      await this.persist();
+      if (failure) throw new SyncOfflineError(failure);
 
-    return { sent, pending: this.state.queue.length };
+      return { sent, pending: this.state.queue.length };
+    });
   }
 
-  async pull(): Promise<ReadonlyArray<EncryptedEnvelope>> {
-    let records: ReadonlyArray<{ cursor: number; envelope: EncryptedEnvelope }>;
+  /** Explicit user reconciliation only; conflicts are never silently replayed. */
+  async discard(envelopeId: string, revision: number): Promise<void> {
+    await this.exclusive(async () => {
+      this.state.queue = this.state.queue.filter((entry) => {
+        const envelope = parseEncryptedEnvelope(JSON.parse(entry.envelope) as unknown);
 
-    try {
-      records = await this.transport.list(this.state.cursor.value);
-    } catch (error: unknown) {
-      throw new SyncOfflineError(error);
-    }
-    const accepted: EncryptedEnvelope[] = [];
+        return envelope.envelopeId !== envelopeId || envelope.revision !== revision;
+      });
+      await this.persist();
+    });
+  }
 
-    for (const record of [...records].sort((left, right) => left.cursor - right.cursor)) {
-      if (record.cursor <= this.state.cursor.value) continue;
-      const envelope = parseEncryptedEnvelope(record.envelope);
+  /** Apply durably and idempotently before acknowledging the cursor; failures replay the batch. */
+  async pull(
+    apply?: (envelopes: ReadonlyArray<EncryptedEnvelope>) => Promise<void>,
+  ): Promise<ReadonlyArray<EncryptedEnvelope>> {
+    return await this.exclusive(async () => {
+      let records: ReadonlyArray<{ cursor: number; envelope: EncryptedEnvelope }>;
 
-      if (envelope.workspaceId !== this.workspaceId) continue;
-      if (envelope.metadata['tombstone'] === 'true') {
-        this.state.tombstones = [...new Set([...this.state.tombstones, envelope.envelopeId])].sort();
-      } else if (!this.state.tombstones.includes(envelope.envelopeId)) {
-        accepted.push(envelope);
+      try {
+        records = await this.transport.list(this.state.cursor.value);
+      } catch (error: unknown) {
+        throw new SyncOfflineError(error);
       }
-      this.state.cursor = { workspaceId: this.workspaceId, value: record.cursor };
-    }
-    await this.persist();
+      const accepted: EncryptedEnvelope[] = [];
+      const changes: EncryptedEnvelope[] = [];
+      const ordered = [...records].sort((left, right) => left.cursor - right.cursor);
+      const cursors = new Set<number>();
 
-    return accepted;
+      for (const record of ordered) {
+        const envelope = parseEncryptedEnvelope(record.envelope);
+
+        if (
+          !Number.isSafeInteger(record.cursor) ||
+          record.cursor < 1 ||
+          cursors.has(record.cursor) ||
+          envelope.kind !== 'sync-object' ||
+          envelope.workspaceId !== this.workspaceId
+        ) {
+          throw new Error('Invalid opaque sync batch.');
+        }
+        cursors.add(record.cursor);
+      }
+
+      for (const record of ordered) {
+        if (record.cursor <= this.state.cursor.value) continue;
+        const envelope = parseEncryptedEnvelope(record.envelope);
+
+        if (envelope.metadata['tombstone'] === 'true') {
+          changes.push(envelope);
+          this.state.tombstones = [...new Set([...this.state.tombstones, envelope.envelopeId])].sort();
+          for (const entry of this.state.queue) {
+            const queued = parseEncryptedEnvelope(JSON.parse(entry.envelope) as unknown);
+
+            if (queued.envelopeId === envelope.envelopeId) entry.status = 'blocked';
+          }
+        } else if (!this.state.tombstones.includes(envelope.envelopeId)) {
+          changes.push(envelope);
+          accepted.push(envelope);
+        }
+        this.state.cursor = { workspaceId: this.workspaceId, value: record.cursor };
+      }
+      if (apply) await apply(changes);
+      await this.persist();
+
+      return accepted;
+    });
   }
 
   snapshot(): SyncState {
@@ -225,7 +381,41 @@ export abstract class ClientSyncAdapter {
   }
 
   private async persist(): Promise<void> {
-    await this.stateStore.save(structuredClone(this.state));
+    await this.stateStore.save(syncStateSchema.parse(this.state));
+  }
+
+  private async exclusive<T>(operation: () => Promise<T>): Promise<T> {
+    const execute = async () => {
+      const stored = await this.stateStore.load();
+
+      if (stored) {
+        const parsed = syncStateSchema.parse(stored);
+
+        if (parsed.cursor.workspaceId !== this.workspaceId) throw new Error('Sync state workspace mismatch.');
+        this.state = parsed;
+      }
+
+      const before = structuredClone(this.state);
+
+      try {
+        return await operation();
+      } catch (error: unknown) {
+        // A failed pull/save must not leave an uncommitted cursor or queue in memory.
+        // Flush can persist successful deliveries before reporting another failure.
+        const committed = await this.stateStore.load().catch(() => undefined);
+
+        this.state = committed ? syncStateSchema.parse(committed) : before;
+
+        throw error;
+      }
+    };
+
+    if (this.stateStore.exclusive) return await this.stateStore.exclusive(execute);
+    const pending = this.tail.then(execute, execute);
+
+    this.tail = pending.catch(() => undefined);
+
+    return await pending;
   }
 }
 

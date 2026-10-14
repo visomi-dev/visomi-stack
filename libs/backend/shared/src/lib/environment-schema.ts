@@ -5,6 +5,13 @@ export const environmentSchema = z
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     HOST: z.string().default('0.0.0.0'),
     MAIL_TRANSPORT: z.enum(['mailgun', 'memory']).optional(),
+    WEB_PUSH_ENABLED: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
+    WEB_PUSH_SUBJECT: z.string().default(''),
+    WEB_PUSH_PUBLIC_KEY: z.string().default(''),
+    WEB_PUSH_PRIVATE_KEY: z.string().default(''),
     MAILGUN_API_KEY: z.string().default(''),
     MAILGUN_DOMAIN: z.string().default(''),
     MAILGUN_FROM: z.string().default('Themis <no-reply@themis.local>'),
@@ -61,11 +68,19 @@ export const environmentSchema = z
       .optional()
       .transform((value) => value === 'true'),
     AUTH_TOTP_ENCRYPTION_KEY: z.string().default(''),
+    VAULT_PRF_ENABLED: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform((value) => value === 'true'),
     AUTH_PASSWORD_RATE_WINDOW_MS: z.coerce
       .number()
       .int()
       .positive()
       .default(15 * 60 * 1000),
+    VAULT_BROWSER_ENABLED: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform((value) => value === 'true'),
     AUTH_PASSWORD_RATE_IDENTIFIER_MAX: z.coerce.number().int().positive().default(10),
     AUTH_PASSWORD_RATE_IP_MAX: z.coerce.number().int().positive().default(50),
     AUTH_PASSWORD_BLOCKLIST_PATH: z.string().default(''),

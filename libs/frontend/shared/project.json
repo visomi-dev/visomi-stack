@@ -7,17 +7,33 @@
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
-      "options": { "command": "pnpm exec tsc --noEmit -p libs/frontend/shared/tsconfig.lib.json" }
+      "options": {
+        "commands": [
+          "pnpm exec tsc --noEmit -p libs/frontend/shared/tsconfig.lib.json",
+          "pnpm exec tsc --noEmit -p libs/frontend/shared/tsconfig.spec.json"
+        ],
+        "parallel": false
+      }
     },
     "browser-build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm exec esbuild libs/frontend/shared/src/index.ts --bundle --platform=browser --format=esm --metafile=dist/frontend-shared-browser/meta.json --outfile=dist/frontend-shared-browser/index.js"
+        "commands": [
+          "pnpm exec esbuild libs/frontend/shared/src/index.ts --bundle --platform=browser --format=esm --metafile=dist/frontend-shared-browser/meta.json --outfile=dist/frontend-shared-browser/index.js",
+          "pnpm exec esbuild libs/frontend/shared/src/pin-worker.ts --bundle --platform=browser --format=esm --conditions=visomi-source --metafile=dist/frontend-shared-browser/pin-worker-meta.json --outfile=dist/frontend-shared-browser/pin-worker.js"
+        ],
+        "parallel": false
       }
     },
     "browser-smoke": {
       "executor": "nx:run-commands",
-      "options": { "command": "node --experimental-strip-types scripts/browser-vault-smoke.ts" }
+      "options": {
+        "commands": [
+          "node --experimental-strip-types scripts/browser-vault-smoke.ts",
+          "node --experimental-strip-types scripts/browser-sync-smoke.ts"
+        ],
+        "parallel": false
+      }
     }
   }
 }

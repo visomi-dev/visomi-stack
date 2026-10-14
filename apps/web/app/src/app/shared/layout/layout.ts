@@ -1,11 +1,15 @@
-import { afterRenderEffect, Component, computed, inject, signal } from '@angular/core';
+import { afterNextRender, afterRenderEffect, Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 
 import { Auth } from '../auth/auth';
+import { VaultSession } from '../../vault/vault-session';
 import { AccountProfile } from '../auth/account-profile';
 import { Settings } from '../settings';
+import { AppUpdates } from '../app-updates';
+import { Button } from '../ui/actions/button/button';
 import { DASHBOARD_URL } from '../constants/routes';
 import {
   BottomNavigation,
@@ -16,6 +20,7 @@ import { Icon } from '../ui/media/icon/icon';
 import { type IconName } from '../ui/media/icon/icon-paths';
 
 import { SidebarMenu } from './sidebar-menu/sidebar-menu';
+import { PageTitles } from './page-titles';
 
 type BottomNavItem = {
   ariaLabel: string;
@@ -37,13 +42,21 @@ const BOTTOM_NAV_ITEMS: ReadonlyArray<BottomNavItem> = Object.freeze([
     RouterLink,
     RouterOutlet,
     SidebarMenu,
+    Button,
+    NgTemplateOutlet,
   ],
+  providers: [PageTitles],
   selector: 'app-layout',
   templateUrl: './layout.html',
   styleUrl: './layout.css',
 })
 export class Layout {
+  protected readonly pageTitles = inject(PageTitles);
+  private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly appUpdates = inject(AppUpdates);
   private readonly auth = inject(Auth);
+  private readonly vault = inject(VaultSession);
   private readonly router = inject(Router);
   private readonly settings = inject(Settings);
   private readonly accountProfile = inject(AccountProfile);
@@ -82,7 +95,13 @@ export class Layout {
 
   readonly bottomNavItems = BOTTOM_NAV_ITEMS;
 
+  private menuOpener: HTMLElement | null = null;
+
   openMobileMenu() {
+    const active = this.document.activeElement;
+    const HTMLElementConstructor = this.document.defaultView?.HTMLElement;
+
+    this.menuOpener = HTMLElementConstructor && active instanceof HTMLElementConstructor ? active : null;
     this.mobileMenuOpen.set(true);
   }
 
@@ -101,6 +120,33 @@ export class Layout {
 
       if (!userId || this.showAppShell())
         void this.accountProfile.synchronizePreferences(userId, () => this.router.url);
+    },
+  });
+
+  private readonly initializeUpdates = afterNextRender(() => {
+    this.destroyRef.onDestroy(this.appUpdates.start());
+    this.destroyRef.onDestroy(this.vault.startLifecycle());
+  });
+
+  private readonly closeDrawerOnDesktop = afterNextRender(() => {
+    const desktop = this.document.defaultView?.matchMedia?.('(min-width: 1024px)');
+
+    if (!desktop) return;
+    const closeOnDesktop = () => {
+      if (desktop.matches) this.closeMobileMenu();
+    };
+
+    desktop.addEventListener('change', closeOnDesktop);
+    this.destroyRef.onDestroy(() => desktop.removeEventListener('change', closeOnDesktop));
+    closeOnDesktop();
+  });
+
+  private readonly restoreNavigationFocus = afterRenderEffect({
+    write: () => {
+      if (!this.mobileMenuOpen() && this.menuOpener) {
+        if (this.menuOpener.isConnected) this.menuOpener.focus();
+        this.menuOpener = null;
+      }
     },
   });
 }

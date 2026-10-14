@@ -4,6 +4,9 @@
   "projectType": "application",
   "sourceRoot": "apps/web/site/src",
   "targets": {
+    "vite:test": {
+      "outputs": ["{workspaceRoot}/coverage/apps/web/site"]
+    },
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/web/site"],

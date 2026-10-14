@@ -12,7 +12,7 @@ import { env } from '../shared/env';
 
 import { sessionRouter } from './session-router';
 import { passport } from './passport';
-import { findOrCreateUserByEmail, resolveAuthUserForAccount } from './auth-service';
+import { findOrCreateUserByEmail, resolveAuthUserForAccount } from './auth-identity';
 
 import { authOperationGrants, db, errorHandler, ManagedMemorySessionStore } from 'shared';
 

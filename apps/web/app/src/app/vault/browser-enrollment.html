@@ -1,0 +1,100 @@
+<section class="space-y-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900" aria-labelledby="vault-browser-title">
+  <h2 id="vault-browser-title" class="font-heading text-lg font-semibold" i18n="@@vaultBrowserTitle">
+    Connect another browser
+  </h2>
+  <p class="text-sm" i18n="@@vaultBrowserHelp">
+    Sign in to the same account in both browsers. Start a request on the new browser, then compare its complete code on
+    your unlocked trusted browser. Only an encrypted key is relayed.
+  </p>
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p role="status">{{ notice() }}</p>
+  }
+  @if (enabled()) {
+    @if (state() === 'locked') {
+      @if (request(); as pending) {
+        <dl class="space-y-3">
+          <div>
+            <dt class="font-medium" i18n="@@vaultBrowserRequestId">Browser request ID</dt>
+            <dd class="font-mono break-all select-all" data-slot="request-id">{{ pending.requestId }}</dd>
+          </div>
+          <div>
+            <dt class="font-medium" i18n="@@vaultBrowserComparisonCode">Browser comparison code</dt>
+            <dd class="font-mono break-all select-all" data-slot="comparison-code">{{ pending.fingerprint }}</dd>
+          </div>
+        </dl>
+        <p class="text-sm" i18n="@@vaultBrowserExpiry">
+          This request expires within ten minutes. Cancel it if you did not initiate the connection.
+        </p>
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <app-button [disabled]="busy() || !!confirming()" (click)="receive()">
+            <span i18n="@@vaultBrowserReceive">Receive vault key</span>
+          </app-button>
+          <app-button variant="outline" (click)="cancel()">
+            <span i18n="@@vaultBrowserCancel">Cancel browser request</span>
+          </app-button>
+        </div>
+      } @else {
+        <app-button [disabled]="busy() || !!confirming()" (click)="begin()">
+          <span i18n="@@vaultBrowserBegin">Request vault key from trusted browser</span>
+        </app-button>
+      }
+    }
+    @if (state() === 'unlocked') {
+      <app-form [form]="approvalForm" (ngSubmit)="approve()">
+        <div class="space-y-4">
+          <app-field>
+            <app-label for="vault-browser-request">
+              <span i18n="@@vaultBrowserRequestId">Browser request ID</span>
+            </app-label>
+            <app-input
+              controlId="vault-browser-request"
+              autocomplete="off"
+              [formField]="approvalForm.requestId"
+              [ariaDescribedBy]="
+                approvalForm.requestId().touched() && approvalForm.requestId().invalid()
+                  ? 'vault-browser-request-error'
+                  : null
+              "
+            />
+            @if (approvalForm.requestId().touched() && approvalForm.requestId().invalid()) {
+              <app-error-message controlId="vault-browser-request-error">
+                {{ approvalForm.requestId().errors()[0]?.message }}
+              </app-error-message>
+            }
+          </app-field>
+          <app-field>
+            <app-label for="vault-browser-code">
+              <span i18n="@@vaultBrowserComparisonCode">Browser comparison code</span>
+            </app-label>
+            <app-input
+              controlId="vault-browser-code"
+              autocomplete="off"
+              [formField]="approvalForm.code"
+              [ariaDescribedBy]="
+                approvalForm.code().touched() && approvalForm.code().invalid() ? 'vault-browser-code-error' : null
+              "
+            />
+            @if (approvalForm.code().touched() && approvalForm.code().invalid()) {
+              <app-error-message controlId="vault-browser-code-error">
+                {{ approvalForm.code().errors()[0]?.message }}
+              </app-error-message>
+            }
+          </app-field>
+          <app-button type="submit" [disabled]="busy() || !!confirming()">
+            <span i18n="@@vaultBrowserApprove">Approve browser connection</span>
+          </app-button>
+        </div>
+      </app-form>
+    }
+  } @else {
+    <p class="text-sm" i18n="@@vaultBrowserUnavailable">
+      Browser key delivery is unavailable on this server. Use your browser PIN, passkey or recovery key.
+    </p>
+  }
+  <app-button variant="outline" [disabled]="busy() || !!confirming()" (click)="refresh()">
+    <span i18n="@@vaultBrowserRefresh">Refresh browser delivery availability</span>
+  </app-button>
+</section>

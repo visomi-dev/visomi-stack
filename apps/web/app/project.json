@@ -18,6 +18,13 @@
   },
   "targets": {
     "build": {
+      "dependsOn": ["^build", "pwa-assets", "vault-worker-assets"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/build-pwa-assets.ts",
+        { "dependentTasksOutputFiles": "**/vault-pin-worker.js" }
+      ],
       "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
       "options": {
@@ -27,6 +34,8 @@
         "polyfills": ["@angular/localize/init"],
         "tsConfig": "apps/web/app/tsconfig.app.json",
         "assets": [
+          { "glob": "**/*", "input": "dist/pwa-assets" },
+          { "glob": "*.js", "input": "dist/vault-worker-assets" },
           {
             "glob": "**/*",
             "input": "apps/web/app/public"
@@ -44,6 +53,7 @@
       },
       "configurations": {
         "production": {
+          "serviceWorker": "apps/web/app/ngsw-config.json",
           "localize": true,
           "i18nMissingTranslation": "error",
           "baseHref": "/app/",
@@ -69,6 +79,36 @@
         }
       },
       "defaultConfiguration": "production"
+    },
+    "pwa-assets-typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "pnpm exec tsc --noEmit -p scripts/tsconfig-pwa.json" }
+    },
+    "vault-worker-assets": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/libs/frontend/shared/src/pin-worker.ts",
+        "{workspaceRoot}/libs/frontend/shared/src/lib/vault/**",
+        "{workspaceRoot}/libs/shared/crypto/src/**",
+        "{workspaceRoot}/libs/shared/crypto/package.json",
+        { "externalDependencies": ["esbuild", "hash-wasm", "zod"] }
+      ],
+      "outputs": ["{workspaceRoot}/dist/vault-worker-assets"],
+      "options": {
+        "command": "pnpm exec esbuild libs/frontend/shared/src/pin-worker.ts --bundle --platform=browser --format=esm --conditions=visomi-source --minify --outfile=dist/vault-worker-assets/vault-pin-worker.js"
+      }
+    },
+    "pwa-assets": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/template.json",
+        "{workspaceRoot}/scripts/build-pwa-assets.ts",
+        "{workspaceRoot}/scripts/template/template-config.ts"
+      ],
+      "outputs": ["{workspaceRoot}/dist/pwa-assets"],
+      "options": { "command": "node --experimental-strip-types scripts/build-pwa-assets.ts" }
     },
     "serve": {
       "continuous": true,

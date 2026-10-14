@@ -4,6 +4,10 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { expect, test } from '@playwright/test';
 
 import { readLatestPin } from '../support/mailbox';
+import { activationUrlPattern } from '../support/routes';
+
+// Keep validation HTTP mocks observable; the PWA suite exercises the real worker.
+test.use({ serviceWorkers: 'block' });
 
 for (const [description, password] of [
   ['astral characters', '😀'.repeat(128)],
@@ -42,12 +46,21 @@ test('keeps email validation collapsed while typing and centers its icon after b
   }
   await email.blur();
   await expect.poll(async () => (await error.locator('..').boundingBox())?.height ?? 0).toBeGreaterThan(0);
-  const icon = await error.locator('app-icon').boundingBox();
-  const text = await error.locator('span').last().boundingBox();
+  // Read both centers in one frame while the field's reveal animation is active.
+  await expect
+    .poll(() =>
+      error.evaluate((element) => {
+        const icon = element.querySelector('app-icon')?.getBoundingClientRect();
+        const text = element.querySelector(':scope > span')?.getBoundingClientRect();
 
-  expect(icon).not.toBeNull();
-  expect(text).not.toBeNull();
-  expect(Math.abs(icon!.y + icon!.height / 2 - text!.y - text!.height / 2)).toBeLessThan(2);
+        if (!icon || !text) {
+          return Infinity;
+        }
+
+        return Math.abs(icon.y + icon.height / 2 - text.y - text.height / 2);
+      }),
+    )
+    .toBeLessThan(2);
   await page.screenshot({ path: 'tmp/auth-captures/email-error-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: 'tmp/auth-captures/email-error-mobile.png', fullPage: true });
@@ -61,7 +74,7 @@ test('keeps email validation collapsed while typing and centers its icon after b
 
 test('uses query parameters for password navigation and survives reload and browser back', async ({ page }) => {
   await page.goto('/app/en/auth/sign-in');
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('button', { name: 'Use another method', exact: true }).click();
   await page.getByRole('button', { name: 'Use password instead' }).click();
   await expect(page).toHaveURL(/method=password/);
   await page.reload();
@@ -167,27 +180,39 @@ for (const expiredAssertion of [false, true]) {
     await expect
       .poll(async () => (await (await page.request.get('/api/auth/session')).json()).data.authenticated)
       .toBe(true);
+    await expect(page).toHaveURL(activationUrlPattern);
+    await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
     const replay = await page.request.post('/api/auth/passkey/sign-up/verify', {
       data: { code: pin },
       headers: { Origin: new URL(page.url()).origin },
     });
 
     expect(replay.status()).toBe(410);
+    // Stop the previous app before clearing cookies: its in-flight requests roll the session cookie.
+    await page.goto('about:blank');
     await page.context().clearCookies();
-    await page.goto('/app/en/auth/sign-in');
+    expect((await (await page.request.get('/api/auth/session')).json()).data.authenticated).toBe(false);
+    let expiredResponses = 0;
+
     if (expiredAssertion) {
       await page.route(
         '**/api/auth/passkey/authentication/complete',
-        (route) =>
-          route.fulfill({
+        (route) => {
+          expiredResponses += 1;
+
+          return route.fulfill({
             status: 410,
             json: { code: 'challenge_expired', message: 'The challenge has expired.' },
-          }),
+          });
+        },
         { times: 1 },
       );
     }
+    // Automatic passkey entry can finish during navigation; install the fault first.
+    await page.goto('/app/en/auth/sign-in');
     if (expiredAssertion) {
       await expect(page.getByRole('heading', { name: 'Passkey sign-in did not finish.' })).toBeVisible();
+      expect(expiredResponses).toBe(1);
       expect((await (await page.request.get('/api/auth/session')).json()).data.authenticated).toBe(false);
       await page.getByRole('button', { name: 'Try passkey again' }).click();
     }

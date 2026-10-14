@@ -1,13 +1,23 @@
 import { normalize } from 'node:path';
 
 import { start as startProjectsWorkers } from './projects';
+import { startOperationWorker } from './operations/worker';
+import { stopWorkerRuntime } from './worker-lifecycle';
 
 import { logger, runMigrationsIfEnabled } from 'shared';
 
 async function startWorkerRuntime() {
   await runMigrationsIfEnabled();
 
-  startProjectsWorkers();
+  const worker = startProjectsWorkers();
+  const stopOperations = startOperationWorker();
+  const stop = stopWorkerRuntime([stopOperations, () => worker.close()], {
+    exit: (code) => process.exit(code),
+    failed: () => logger.error({ code: 'worker_shutdown_failed' }, 'Worker shutdown failed'),
+  });
+
+  process.once('SIGTERM', stop);
+  process.once('SIGINT', stop);
 
   logger.info('Worker runtime ready');
 }
@@ -29,4 +39,4 @@ if (isMainModule()) {
   });
 }
 
-export { startWorkerRuntime };
+export { startWorkerRuntime, startOperationWorker };

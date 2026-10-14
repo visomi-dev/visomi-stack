@@ -7,7 +7,14 @@ export default {
   // All suites share one gateway and reset its global mailbox in beforeEach.
   // Serialize suites for the Nx test target as the e2e runner does with --runInBand.
   maxWorkers: 1,
-  testPathIgnorePatterns: ['<rootDir>/src/durable/', '<rootDir>/src/api/pzs-005-real.spec.ts'],
+  testPathIgnorePatterns: [
+    '<rootDir>/src/durable/',
+    '<rootDir>/src/api/pzs-005-real.spec.ts',
+    '<rootDir>/src/support/gateway-process.spec.ts',
+    // Native fixture suites run through the required fixture-test dependency, not Jest.
+    '<rootDir>/src/support/report-sanitization.spec.ts',
+    '<rootDir>/src/support/openapi-contract.spec.ts',
+  ],
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': [

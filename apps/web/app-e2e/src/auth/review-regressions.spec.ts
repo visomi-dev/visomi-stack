@@ -4,6 +4,9 @@ import { expect, test } from '@playwright/test';
 
 import { addVirtualAuthenticator } from '../support/auth';
 
+// Keep HTTP mocks observable; the PWA suite exercises the real worker.
+test.use({ serviceWorkers: 'block' });
+
 test('abandons the password verification screen on browser Back without showing reset-field errors', async ({
   page,
 }) => {
@@ -14,7 +17,7 @@ test('abandons the password verification screen on browser Back without showing 
     }),
   );
   await page.goto('/app/en/auth/sign-in');
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('button', { name: 'Use another method', exact: true }).click();
   await page.getByRole('button', { name: 'Use password instead' }).click();
   await expect(page.getByRole('heading', { name: 'Sign in with password', exact: true })).toBeVisible();
   await page.getByRole('textbox', { name: 'Email address', exact: true }).fill('person@example.test');

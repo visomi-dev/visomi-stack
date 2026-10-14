@@ -1,7 +1,9 @@
 import passport from 'passport';
 
-import { findUserById, resolveAuthUser, resolveAuthUserForAccount } from './auth-service';
+import { findUserById, resolveAuthUser, resolveAuthUserForAccount } from './auth-identity';
 import { hasCurrentAuthVersion } from './auth-middleware';
+
+import { HttpError } from 'shared';
 
 type SerializedUser = {
   accountId: string;
@@ -63,6 +65,9 @@ passport.deserializeUser(async (serializedUser: SerializedUser, done) => {
       authVersion: user.authVersion,
     });
   } catch (error) {
+    // Membership revocation invalidates this selected-account session, not the database service.
+    if (error instanceof HttpError && error.code === 'account_membership_missing') return done(null, false);
+
     return done(error as Error);
   }
 });

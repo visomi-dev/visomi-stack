@@ -1,11 +1,26 @@
 import { configs as nxConfigs } from '@nx/eslint-plugin';
 
 import baseConfig from '../../../eslint.config.mjs';
+import angularI18nRule from '../../../tools/eslint/angular-i18n-rule.mjs';
 
 export default [
   ...nxConfigs['flat/angular'],
   ...nxConfigs['flat/angular-template'],
   ...baseConfig,
+  {
+    files: ['**/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    plugins: {
+      themis: {
+        rules: {
+          'angular-i18n': angularI18nRule,
+        },
+      },
+    },
+    rules: {
+      'themis/angular-i18n': 'error',
+    },
+  },
   {
     files: ['**/*.ts'],
     rules: {

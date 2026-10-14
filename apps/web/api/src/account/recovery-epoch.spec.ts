@@ -11,7 +11,7 @@ import request from 'supertest';
 
 import { passport } from '../auth/passport';
 import { authRouter } from '../auth/auth-router';
-import * as recovery from '../auth/auth-service';
+import * as recovery from '../auth/auth-recovery';
 import { clearMailbox, listSentMessages } from '../auth/auth-mail';
 import { verifySecret } from '../auth/auth-crypto';
 import { resetPasskeySecurityState } from '../auth/passkey-security';

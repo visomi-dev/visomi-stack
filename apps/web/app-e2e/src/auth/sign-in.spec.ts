@@ -10,13 +10,16 @@ import { assertOpenDesignChrome } from '../support/auth-layout';
 import { activationUrlPattern, appUrlPattern, signInRoute, signInUrlPattern } from '../support/routes';
 
 test.describe('/app/auth/sign-in', () => {
+  // Native credential mocks and HTTP routing must see the browser requests.
+  // PWA interception is verified separately in the service-worker route suite.
+  test.use({ serviceWorkers: 'block' });
   test('renders the unified passkey-first access route', async ({ page }) => {
     await page.goto(signInRoute);
 
     await assertOpenDesignChrome(page);
     await expect(page.getByRole('heading', { name: 'Sign in to Visomi Stack' })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: 'Email address' })).toBeEditable();
-    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await expect(page.getByRole('textbox')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Use another method', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Continue with a passkey' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Recover with email' })).toBeVisible();
     await expect(page.getByRole('dialog')).toBeVisible();
@@ -24,7 +27,7 @@ test.describe('/app/auth/sign-in', () => {
 
   test('opens email recovery inline without changing routes', async ({ page }) => {
     await page.goto(signInRoute);
-    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await page.getByRole('button', { name: 'Use another method', exact: true }).click();
     await page.getByRole('button', { name: 'Recover with email' }).click();
 
     await expect(page).toHaveURL(signInUrlPattern);
@@ -52,7 +55,6 @@ test.describe('/app/auth/sign-in', () => {
     });
     await page.goto(signInRoute);
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
-    await page.getByRole('button', { name: 'Continue with a passkey' }).click();
 
     await expect(page.getByRole('heading', { name: 'Passkey sign-in did not finish.' })).toBeVisible();
     await page.getByRole('button', { name: 'Try passkey again' }).click();

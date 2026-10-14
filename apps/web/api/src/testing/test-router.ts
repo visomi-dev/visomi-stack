@@ -7,15 +7,8 @@ import { clearMailbox, listSentMessages } from '../auth/auth-mail';
 import { challengeSchema } from '../auth/auth-schemas';
 import { resetPasskeySecurityState } from '../auth/passkey-security';
 import { env } from '../shared/env';
-import {
-  consumeChallenge,
-  createChallenge,
-  findOrCreateUserByEmail,
-  findUserById,
-  listMembershipsForUser,
-  markChallengeConsumed,
-  resolveAuthUser,
-} from '../auth/auth-service';
+import { consumeChallenge, createChallenge, markChallengeConsumed } from '../auth/auth-service';
+import { findOrCreateUserByEmail, findUserById, listMembershipsForUser, resolveAuthUser } from '../auth/auth-identity';
 import { emailSchema, getValidated, validateRequest, z } from '../shared/http/route-schemas';
 
 import { accountMemberships, db, saveSession, users } from 'shared';

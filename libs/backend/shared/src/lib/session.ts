@@ -9,6 +9,7 @@ type SessionConfig = {
   databaseDriver: 'memory' | 'pg';
   sessionMaxAgeMs: number;
   sessionSecret: string;
+  onSessionRevoked?: (sid: string) => Promise<void>;
 };
 
 type SessionCallback = (error?: unknown, session?: SessionData | null) => void;
@@ -194,6 +195,10 @@ export class ManagedMemorySessionStore extends Store {
   // Retain tombstones for the store lifetime: an arbitrarily delayed save must never revive a SID.
   private readonly revoked = new Set<string>();
 
+  constructor(private readonly onSessionRevoked?: (sid: string) => Promise<void>) {
+    super();
+  }
+
   override get(sid: string, callback: SessionCallback): void {
     const row = this.rows.get(sid);
 
@@ -204,17 +209,52 @@ export class ManagedMemorySessionStore extends Store {
   }
 
   override set(sid: string, sess: SessionData, callback: (error?: unknown) => void = () => undefined): void {
-    if (!this.revoked.has(sid)) {
-      const now = new Date();
+    const previous = this.rows.get(sid);
+    const before = previous ? record(JSON.parse(String(previous.sess))) : undefined;
+    const beforeUser = record(record(before?.['passport'])?.['user']);
+    const after = record(sess);
+    const afterUser = record(record(after?.['passport'])?.['user']);
+    const changed =
+      before?.['authority'] === 'full' &&
+      (after?.['authority'] !== 'full' ||
+        beforeUser?.['id'] !== afterUser?.['id'] ||
+        beforeUser?.['accountId'] !== afterUser?.['accountId'] ||
+        beforeUser?.['authVersion'] !== afterUser?.['authVersion']);
 
-      this.rows.set(sid, {
-        sid,
-        sess: JSON.stringify(sess),
-        expires_at: resolveExpiry(sess),
-        created_at: this.rows.get(sid)?.created_at ?? now,
-        updated_at: now,
-      });
+    const persist = () => {
+      if (!this.revoked.has(sid)) {
+        const now = new Date();
+
+        this.rows.set(sid, {
+          sid,
+          sess: JSON.stringify(sess),
+          expires_at: resolveExpiry(sess),
+          created_at: this.rows.get(sid)?.created_at ?? now,
+          updated_at: now,
+        });
+      }
+    };
+    const revoke = this.onSessionRevoked;
+
+    if (changed && revoke && !this.revoked.has(sid)) {
+      // Keep cleanup ahead of publishing a changed scope. A concurrent destroy
+      // still wins: persistence rechecks the permanent SID tombstone.
+      void this.leases
+        .run([`sid:${sid}`], async () => {
+          try {
+            await revoke(sid);
+            persist();
+          } catch (error) {
+            this.revoked.add(sid);
+            this.rows.delete(sid);
+            throw error;
+          }
+        })
+        .then(() => callback(), callback);
+
+      return;
     }
+    persist();
     callback();
   }
 
@@ -233,6 +273,7 @@ export class ManagedMemorySessionStore extends Store {
       .run([`sid:${sid}`], async () => {
         this.revoked.add(sid);
         this.rows.delete(sid);
+        await this.onSessionRevoked?.(sid);
       })
       .then(() => callback(), callback);
   }
@@ -479,7 +520,9 @@ function createSessionStore(config: SessionConfig, pool?: Pool) {
   }
 
   const store =
-    config.databaseDriver === 'memory' || !pool ? new ManagedMemorySessionStore() : new PostgresSessionStore(pool);
+    config.databaseDriver === 'memory' || !pool
+      ? new ManagedMemorySessionStore(config.onSessionRevoked)
+      : new PostgresSessionStore(pool);
 
   globalState[globalKey] = store;
 

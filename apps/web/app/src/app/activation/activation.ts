@@ -24,6 +24,7 @@ import { Heading } from '../shared/ui/typography/heading/heading';
 import { Input } from '../shared/ui/forms/input/input';
 import { Label } from '../shared/ui/forms/label/label';
 import { Loader } from '../shared/ui/feedback/loader/loader';
+import { PageTitle } from '../shared/layout/page-title';
 
 type ApiKeyModel = {
   label: string;
@@ -49,6 +50,7 @@ type ConfigTab = 'env' | 'opencode' | 'themis';
     Input,
     Label,
     Loader,
+    PageTitle,
   ],
   selector: 'app-activation',
   templateUrl: './activation.html',
@@ -59,7 +61,9 @@ export class Activation implements OnInit {
   private readonly clipboard = inject(Clipboard);
   private readonly router = inject(Router);
 
-  readonly apiKeyModel = signal<ApiKeyModel>({ label: 'Primary workspace key' });
+  readonly apiKeyModel = signal<ApiKeyModel>({
+    label: $localize`:@@activationDefaultApiKeyLabel:Primary workspace key`,
+  });
   readonly activationData = signal<ActivationState | null>(null);
   readonly continuing = signal(false);
   readonly copyMessage = signal('');
@@ -74,8 +78,8 @@ export class Activation implements OnInit {
   readonly apiKeyForm: FieldTree<ApiKeyModel> = form(
     this.apiKeyModel,
     (p) => {
-      required(p.label, { message: 'Enter a label for the API key.' });
-      maxLength(p.label, 80, { message: 'Use 80 characters or fewer.' });
+      required(p.label, { message: $localize`:@@activationApiKeyLabelRequired:Enter a label for the API key.` });
+      maxLength(p.label, 80, { message: $localize`:@@activationApiKeyLabelMaxLength:Use 80 characters or fewer.` });
     },
     {
       submission: {

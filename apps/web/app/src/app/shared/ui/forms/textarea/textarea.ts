@@ -1,12 +1,13 @@
 import {
+  afterRenderEffect,
   booleanAttribute,
   Component,
   computed,
-  effect,
   ElementRef,
   input,
   numberAttribute,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import type { Field } from '@angular/forms/signals';
@@ -33,6 +34,8 @@ export class Textarea {
   readonly rows = input(4);
   readonly valueChange = output<string>();
 
+  private readonly renderedValue = signal<string | null>(null);
+
   readonly classes = computed(() =>
     uiClass(
       'ui-focus-ring min-h-28 w-full resize-y rounded-[var(--radius-control)] border bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-950 dark:text-slate-50 placeholder:text-slate-500 dark:text-slate-400 disabled:cursor-not-allowed disabled:opacity-50',
@@ -42,12 +45,28 @@ export class Textarea {
 
   readonly formField = input.required<Field<string>>();
 
+  protected readonly ready = computed(() => this.renderedValue() === this.formField()().value());
+
   private readonly textareaRef = viewChild<ElementRef<HTMLTextAreaElement>>('textareaEl');
+
+  focus(): boolean {
+    const ref = this.textareaRef();
+
+    if (!this.ready() || this.disabled() || this.formField()().disabled() || !ref) {
+      return false;
+    }
+
+    ref.nativeElement.focus();
+
+    return ref.nativeElement.ownerDocument.activeElement === ref.nativeElement;
+  }
 
   onInput(event: Event): void {
     const nextValue = (event.target as HTMLTextAreaElement).value;
 
+    this.renderedValue.set(nextValue);
     this.formField()().value.set(nextValue);
+    this.formField()().markAsDirty();
     this.valueChange.emit(nextValue);
   }
 
@@ -55,12 +74,18 @@ export class Textarea {
     this.formField()().markAsTouched();
   }
 
-  private readonly syncEffect = effect(() => {
-    const ref = this.textareaRef();
-    const value = this.formField()().value();
+  private readonly syncTextareaAfterRender = afterRenderEffect({
+    write: () => {
+      const ref = this.textareaRef();
+      const value = this.formField()().value() ?? '';
 
-    if (ref) {
-      ref.nativeElement.value = value ?? '';
-    }
+      if (ref) {
+        if (ref.nativeElement.value !== value) {
+          ref.nativeElement.value = value;
+        }
+
+        this.renderedValue.set(value);
+      }
+    },
   });
 }

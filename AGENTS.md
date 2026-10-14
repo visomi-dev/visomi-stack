@@ -22,9 +22,15 @@
 
 <!-- nx configuration end-->
 
-# Themis Repository Rules
+# Visomi Stack Repository Rules
 
-Themis is an Nx monorepo with Angular frontend apps and Node backend runtimes. Keep root instructions concise and load area-specific guidance only when it is relevant to the task.
+Visomi Stack is a reusable Nx application template with Angular frontend apps and Node backend runtimes. Keep platform capabilities independent of any derived product. Keep root instructions concise and load area-specific guidance only when it is relevant to the task.
+
+## Upstream Reference Boundaries
+
+- The sibling `../nive` repository is a read-only reference. Never edit files, install dependencies, run generators, execute application/test scripts, or mutate Git state there while working on the stack.
+- Inspect committed source with `git show <revision>:<path>` and record the revision in the port notes. Exclude uncommitted source work, product domains, branding, secrets, customer data, and production resource identifiers.
+- Adapt reusable behavior to the stack's existing contracts and test it here. Missing source filenames do not establish missing functionality; review the existing implementation before adding another module.
 
 ## Mandatory Rules
 

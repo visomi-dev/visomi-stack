@@ -1,0 +1,51 @@
+<section class="space-y-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900" aria-labelledby="vault-passkeys-title">
+  <h2 id="vault-passkeys-title" class="font-heading text-lg font-semibold" i18n="@@vaultPasskeyTitle">
+    Passkey vault unlock
+  </h2>
+  <p class="text-sm" i18n="@@vaultPasskeyHelp">
+    Use an existing PRF-capable passkey to unlock the same encryption key. Signing in with a passkey does not
+    automatically unlock your vault.
+  </p>
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p role="status">{{ notice() }}</p>
+  }
+  @if (enabled()) {
+    @for (method of methods(); track method.methodId) {
+      <div class="space-y-2 rounded-md bg-zinc-100 p-3 dark:bg-zinc-800">
+        <h3 class="font-medium">{{ label(method) }}</h3>
+        <div class="flex flex-col gap-3 sm:flex-row">
+          @if (state() !== 'unlocked') {
+            <app-button [disabled]="busy() || !!confirming()" (click)="unlock(method)">
+              <span i18n="@@vaultPasskeyUnlock">Unlock with passkey</span>
+            </app-button>
+          }
+          <app-button variant="outline" [disabled]="busy() || !!confirming()" (click)="revoke(method)">
+            <span i18n="@@vaultPasskeyRevoke">Revoke passkey vault unlock</span>
+          </app-button>
+        </div>
+      </div>
+    } @empty {
+      <p class="text-sm" i18n="@@vaultPasskeyEmpty">No passkey is enrolled for vault unlock.</p>
+    }
+    @if (state() === 'unlocked') {
+      @for (credential of candidates(); track credential.id) {
+        <div class="space-y-2 rounded-md bg-zinc-100 p-3 dark:bg-zinc-800">
+          <h3 class="font-medium">{{ credential.label }}</h3>
+          <app-button variant="outline" [disabled]="busy() || !!confirming()" (click)="enroll(credential)">
+            <span i18n="@@vaultPasskeyEnroll">Enable passkey vault unlock</span>
+          </app-button>
+        </div>
+      }
+    }
+  } @else {
+    <p class="text-sm" i18n="@@vaultPasskeyUnavailable">
+      Passkey vault unlock is unavailable on this server. Browser PIN and recovery remain separate options.
+    </p>
+  }
+  <app-button variant="outline" [disabled]="busy() || !!confirming()" (click)="refresh()">
+    <span i18n="@@vaultPasskeyRefresh">Refresh passkey methods</span>
+  </app-button>
+</section>

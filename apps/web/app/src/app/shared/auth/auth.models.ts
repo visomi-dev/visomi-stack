@@ -8,6 +8,7 @@ export type ResponseEnvelope<T> = {
 };
 
 export type AuthUser = {
+  authVersion?: number;
   accountId: string;
   email: string;
   emailVerifiedAt: string | null;

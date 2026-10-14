@@ -96,4 +96,21 @@ describe('Passkey browser discovery', () => {
       signal: controller.signal,
     });
   });
+
+  it('passes registration cancellation to the browser without changing PRF negotiation', async () => {
+    const credential = { id: 'registration' };
+    const create = vi.fn().mockResolvedValue(credential);
+    const passkey = configure({ navigator: { credentials: { create } } });
+    const controller = new AbortController();
+    const result = await passkey.createCredential({ challenge: 'AQID' }, { signal: controller.signal });
+
+    expect(result).toBe(credential);
+    expect(create).toHaveBeenCalledWith({
+      signal: controller.signal,
+      publicKey: expect.objectContaining({
+        challenge: new Uint8Array([1, 2, 3]).buffer,
+        extensions: { prf: {} },
+      }),
+    });
+  });
 });

@@ -18,7 +18,7 @@ async function publishProjectAsyncJobEvent(eventName: AsyncJobEventName, job: As
 }
 
 async function subscribeToProjectAsyncJobEvents(onMessage: (event: AsyncJobEvent) => void | Promise<void>) {
-  await subscribeToJson<AsyncJobEvent>(projectAsyncJobEventsChannel, onMessage);
+  return subscribeToJson<AsyncJobEvent>(projectAsyncJobEventsChannel, onMessage);
 }
 
 export { projectAsyncJobEventsChannel, publishProjectAsyncJobEvent, subscribeToProjectAsyncJobEvents };

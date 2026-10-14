@@ -1,0 +1,4 @@
+<mj-button href="{{actionUrl}}">{{ copy.action }}</mj-button>
+<mj-text font-size="14px"
+  >{{ copy.linkHelp }} <a href="{{actionUrl}}">{{ actionUrl }}</a></mj-text
+>

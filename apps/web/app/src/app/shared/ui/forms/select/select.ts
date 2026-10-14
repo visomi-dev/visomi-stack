@@ -48,6 +48,7 @@ export class Select<T extends string = string> {
     const nextValue = (event.target as HTMLSelectElement).value;
 
     this.formField()().value.set(nextValue as T);
+    this.formField()().markAsDirty();
     this.valueChange.emit(nextValue);
   }
 

@@ -215,6 +215,7 @@ export class PinInput {
     const joined = limited.join('');
 
     this.formField()().value.set(joined);
+    this.formField()().markAsDirty();
 
     if (joined.length === this.digits()) {
       this.completed.emit({ code: joined });

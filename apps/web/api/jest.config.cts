@@ -1,7 +1,8 @@
 module.exports = {
   displayName: 'api',
   preset: '../../../jest.preset.js',
-  testEnvironment: 'node',
+  testEnvironment: '<rootDir>/../../../tools/testing/database-environment.cjs',
+  setupFilesAfterEnv: ['<rootDir>/src/testing/database-lifecycle.ts'],
   // Each worker boots PGlite and ts-jest. Serialize suites on shared CI runners
   // to prevent resource contention from timing out unrelated first requests.
   maxWorkers: process.env.CI ? 1 : 4,

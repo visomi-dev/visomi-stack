@@ -1,0 +1,53 @@
+<mjml lang="{{locale}}">
+  <mj-head>
+    <mj-title>{{ subject }}</mj-title>
+    <mj-preview>{{ copy.preview }}</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text color="#18181b" font-size="16px" line-height="1.65" padding="0 24px 20px" />
+      <mj-button
+        background-color="#1d4ed8"
+        color="#ffffff"
+        border-radius="8px"
+        font-size="16px"
+        font-weight="700"
+        inner-padding="14px 20px"
+        align="left"
+        padding="4px 24px 24px"
+      />
+    </mj-attributes>
+    <mj-style inline="inline">
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.25;
+        font-weight: 700;
+      }
+      a {
+        color: #1d4ed8;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f4f4f5" width="560px">
+    <mj-section padding="32px 0 20px">
+      <mj-column
+        ><mj-text font-size="24px" font-weight="700" padding-bottom="0">{{ appName }}</mj-text></mj-column
+      >
+    </mj-section>
+    <mj-section background-color="#ffffff" border-radius="12px" padding="24px 0 4px">
+      <mj-column>
+        <mj-text
+          ><h1>{{ copy.title }}</h1></mj-text
+        >
+        <mj-text>{{ copy.body }}</mj-text>
+        {{{content}}}
+        <mj-text font-size="14px" color="#52525b">{{ copy.safety }}</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="20px 0 32px">
+      <mj-column
+        ><mj-text font-size="12px" color="#52525b">{{ footer }}</mj-text></mj-column
+      >
+    </mj-section>
+  </mj-body>
+</mjml>

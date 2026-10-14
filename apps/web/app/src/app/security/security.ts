@@ -18,11 +18,12 @@ import { Label } from '../shared/ui/forms/label/label';
 import { Input } from '../shared/ui/forms/input/input';
 import { PasswordInput } from '../shared/ui/forms/password-input/password-input';
 import { GOOGLE_LINK_PATH, PASSWORD_MANAGEMENT_PATH, RECOVERY_CODES_PATH } from '../shared/constants/routes';
+import { PageTitle } from '../shared/layout/page-title';
 
 type View = 'list' | 'add' | 'name' | 'revoke';
 
 @Component({
-  imports: [DatePipe, RouterLink, Form, Field, Label, Input, PasswordInput, SecurityConfirmation],
+  imports: [DatePipe, RouterLink, Form, Field, Label, Input, PasswordInput, SecurityConfirmation, PageTitle],
   providers: [SecurityAction],
   selector: 'app-security',
   templateUrl: './security.html',

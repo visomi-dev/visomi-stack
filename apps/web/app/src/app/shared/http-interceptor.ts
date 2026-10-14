@@ -9,7 +9,8 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
   const request = inject(REQUEST, { optional: true });
 
   if (!isPlatformServer(platformId)) {
-    return next(req);
+    // Authenticated API responses must never enter the application-shell cache.
+    return next(req.url.startsWith('/api/') ? req.clone({ setHeaders: { 'ngsw-bypass': 'true' } }) : req);
   }
 
   if (!req.url.startsWith('/api/')) {

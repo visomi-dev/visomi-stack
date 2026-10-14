@@ -10,6 +10,7 @@
   [attr.placeholder]="placeholder()"
   [attr.required]="required() ? '' : null"
   [class]="classes()"
+  [disabled]="disabled() || formField()().disabled() || !ready()"
   [rows]="rows()"
   data-slot="control"
   (blur)="onBlur()"

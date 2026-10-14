@@ -47,21 +47,25 @@ export class PasswordReset {
   readonly complete = signal(false);
 
   readonly emailForm: FieldTree<EmailModel> = form(this.emailModel, (path) => {
-    required(path.email, { message: 'Enter your email address.' });
-    email(path.email, { message: 'Enter a valid email address.' });
+    required(path.email, { message: $localize`:@@passwordResetEmailRequired:Enter your email address.` });
+    email(path.email, { message: $localize`:@@passwordResetEmailInvalid:Enter a valid email address.` });
   });
   readonly resetForm: FieldTree<ResetModel> = form(this.resetModel, (path) => {
-    required(path.emailCode, { message: 'Enter the 6-digit email code.' });
-    minLength(path.emailCode, 6, { message: 'Enter all 6 digits.' });
-    maxLength(path.emailCode, 6, { message: 'Enter all 6 digits.' });
-    pattern(path.emailCode, /^\d{6}$/u, { message: 'Use the code from your email.' });
-    required(path.password, { message: 'Enter a new password.' });
+    required(path.emailCode, { message: $localize`:@@passwordResetCodeRequired:Enter the 6-digit email code.` });
+    minLength(path.emailCode, 6, { message: $localize`:@@passwordResetCodeMinLength:Enter all 6 digits.` });
+    maxLength(path.emailCode, 6, { message: $localize`:@@passwordResetCodeMaxLength:Enter all 6 digits.` });
+    pattern(path.emailCode, /^\d{6}$/u, {
+      message: $localize`:@@passwordResetCodePattern:Use the code from your email.`,
+    });
+    required(path.password, { message: $localize`:@@passwordResetPasswordRequired:Enter a new password.` });
     validatePasswordLength(path.password);
-    required(path.confirmation, { message: 'Confirm your new password.' });
+    required(path.confirmation, {
+      message: $localize`:@@passwordResetConfirmationRequired:Confirm your new password.`,
+    });
     validate(path.confirmation, ({ value, valueOf }) =>
       value() === valueOf(path.password)
         ? undefined
-        : { kind: 'password_mismatch', message: 'Passwords do not match.' },
+        : { kind: 'password_mismatch', message: $localize`:@@passwordResetPasswordsMismatch:Passwords do not match.` },
     );
   });
 
@@ -88,7 +92,7 @@ export class PasswordReset {
   protected async completeReset(): Promise<void> {
     if (this.resetForm().invalid() || !this.flow() || this.submitting()) return;
     if (this.factorRequired() && !this.resetModel().factorCode) {
-      this.error.set('Enter your authenticator or recovery code.');
+      this.error.set($localize`:@@passwordResetFactorRequired:Enter your authenticator or recovery code.`);
 
       return;
     }

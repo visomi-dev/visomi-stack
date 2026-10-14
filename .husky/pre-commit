@@ -1,12 +1,10 @@
+set -eu
+
 export NX_DAEMON=false
 export PATH="$HOME/.local/share/fnm/node-versions/v24.14.1/installation/bin:$HOME/.local/share/pnpm:$PATH"
 
 # Format and lint staged files before running the affected Nx checks.
 pnpm exec lint-staged
 
-# lint-staged may rewrite files, so read the index after it completes. Nx has
-# no --staged option; --files gives it the exact staged file set.
-staged_files=$(git diff --cached --name-only --diff-filter=ACMR | paste -sd, -)
-if [ -n "$staged_files" ]; then
-  pnpm exec nx affected -t lint test --files="$staged_files" --outputStyle=static
-fi
+# Read the index after autofixes and combine Nx's consumer graph with native related-test filters.
+pnpm exec node --experimental-strip-types scripts/template/checks/affected.ts staged

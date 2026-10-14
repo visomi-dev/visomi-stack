@@ -39,7 +39,7 @@ export class Table<T extends TableRow = TableRow> {
       'text-slate-950 dark:text-slate-50 transition',
       this.mobileCards()
         ? 'flex flex-col px-4 py-4 md:table-row md:px-0 md:py-0'
-        : 'hover:bg-slate-100 dark:bg-slate-800',
+        : 'hover:bg-slate-100 dark:hover:bg-slate-800',
     ),
   );
 
@@ -57,13 +57,13 @@ export class Table<T extends TableRow = TableRow> {
   headerClasses(column: TableColumn<T>): string {
     return uiClass(
       column.class,
-      this.stickyHeaders() && 'md:sticky md:top-0 md:z-10 md:bg-slate-100 dark:bg-slate-800',
+      this.stickyHeaders() && 'md:sticky md:top-0 md:z-10 md:bg-slate-100 md:dark:bg-slate-800',
       'px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400',
     );
   }
 
   cellClasses(column: TableColumn<T>): string {
-    return uiClass(column.class, 'px-4 py-3 align-top');
+    return uiClass(column.class, 'px-4 py-3 align-middle');
   }
 
   cellValue(row: T, column: TableColumn<T>): unknown {

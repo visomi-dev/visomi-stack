@@ -16,10 +16,11 @@ import { Field } from '../../shared/ui/forms/field/field';
 import { Form } from '../../shared/ui/forms/form/form';
 import { Input } from '../../shared/ui/forms/input/input';
 import { Label } from '../../shared/ui/forms/label/label';
+import { PageTitle } from '../../shared/layout/page-title';
 
 @Component({
   selector: 'app-device-approval',
-  imports: [DatePipe, RouterLink, Field, Form, Input, Label, SecurityConfirmation],
+  imports: [DatePipe, RouterLink, Field, Form, Input, Label, SecurityConfirmation, PageTitle],
   providers: [SecurityAction],
   templateUrl: './device-approval.html',
   styleUrl: './device-approval.css',

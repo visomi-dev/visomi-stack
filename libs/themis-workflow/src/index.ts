@@ -1,4 +1,7 @@
 export * from './lib/project-workflow.ts';
+export type { ProjectDomain } from './lib/project-workflow-domain.ts';
+export * from './lib/project-workflow-contract.ts';
+export * from './lib/project-workflow-portable.ts';
 export type {
   AgentRun,
   Dependency,

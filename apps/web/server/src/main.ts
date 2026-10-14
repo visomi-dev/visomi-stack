@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import type { IncomingMessage } from 'node:http';
 import type { Socket } from 'node:net';
+import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -12,9 +13,10 @@ import template from '../../../../template.json';
 import { createGatewayApp } from './gateway';
 import { DurableReplayStore } from './durable-replay-store';
 import { createLocalAgentProxy, publicKeyFromPem } from './local-agent-proxy';
-import { resolveGatewayPort } from './runtime-config';
+import { resolveGatewayPort, resolveTrustProxyHops } from './runtime-config';
+import { stopGatewayRuntime } from './gateway-shutdown';
 
-import { createAuthRuntimeMiddleware, logger } from 'shared';
+import { createAuthRuntimeMiddleware, env, logger } from 'shared';
 
 type ApiModule = {
   appPromise?: Promise<Express>;
@@ -22,7 +24,9 @@ type ApiModule = {
 };
 
 type RealtimeModule = {
-  attachRealtimeServer?: (server: ReturnType<Express['listen']>) => Promise<unknown>;
+  attachRealtimeServer?: (server: ReturnType<Express['listen']>) => Promise<{
+    close: (closed: () => void) => unknown;
+  }>;
 };
 
 type AngularModule = {
@@ -80,12 +84,27 @@ const realtimeEntryFile = resolve(serverDistFolder, '..', 'realtime', 'main.js')
 const workerEntryFile = resolve(serverDistFolder, '..', '..', 'worker', 'main.js');
 
 let workerProcess: ChildProcess | undefined;
+let stopInProcessWorker: (() => Promise<void>) | undefined;
 
 let httpServer: ReturnType<Express['listen']> | undefined;
+
+let realtimeRuntime: Awaited<ReturnType<NonNullable<RealtimeModule['attachRealtimeServer']>>> | undefined;
 
 let shuttingDown = false;
 
 function startWorkerRuntime() {
+  if (env.DATABASE_DRIVER === 'memory') {
+    // PGlite and memory session authority are process-local. A spawned worker
+    // would see an unrelated empty database and could never recover the outbox.
+    const workerModule = createRequire(import.meta.url)(workerEntryFile) as {
+      startOperationWorker?: () => () => Promise<void>;
+    };
+
+    if (!workerModule.startOperationWorker) throw new Error('The embedded operation worker is unavailable.');
+    stopInProcessWorker = workerModule.startOperationWorker();
+
+    return;
+  }
   workerProcess = spawn(process.execPath, [workerEntryFile], {
     env: process.env,
     stdio: 'inherit',
@@ -104,33 +123,20 @@ function startWorkerRuntime() {
   });
 }
 
-function shutdown() {
-  if (shuttingDown) return;
+function shutdown(exitCode = 0) {
+  if (shuttingDown) {
+    return;
+  }
+
   shuttingDown = true;
-  const exit = () => process.exit(0);
-  const timer = setTimeout(exit, 10_000);
-
-  timer.unref();
-
-  let serverClosed = !httpServer;
-  let workerClosed = !workerProcess || workerProcess.exitCode !== null;
-  const finish = () => {
-    if (serverClosed && workerClosed) {
-      clearTimeout(timer);
-      exit();
-    }
-  };
-
-  workerProcess?.once('exit', () => {
-    workerClosed = true;
-    finish();
+  stopGatewayRuntime({
+    worker: workerProcess,
+    server: httpServer,
+    realtime: realtimeRuntime,
+    stopInProcessWorker,
+    exitCode,
+    exit: (code) => process.exit(code),
   });
-  workerProcess?.kill('SIGTERM');
-  httpServer?.close(() => {
-    serverClosed = true;
-    finish();
-  });
-  finish();
 }
 
 function failBootstrap(error: unknown): void {
@@ -139,7 +145,7 @@ function failBootstrap(error: unknown): void {
   // (most commonly because a stale gateway still owns the configured port),
   // the parent process can exit while the child remains alive and poisons the
   // next Playwright webServer attempt. Always tear down the child first.
-  shutdown();
+  shutdown(1);
 }
 
 async function loadApiApp() {
@@ -210,6 +216,7 @@ async function bootstrap() {
   const localAgentTarget = new URL(localAgentUrl);
 
   const app = createGatewayApp({
+    trustProxyHops: resolveTrustProxyHops(),
     defaultLocale: template.project.defaultLocale === 'es' ? 'es' : 'en',
     apiHandler,
     angularHandler,
@@ -237,6 +244,7 @@ async function bootstrap() {
   httpServer = app.listen(port, host, () => {
     logger.info({ host, port }, 'Gateway server ready');
   });
+  httpServer.once('error', failBootstrap);
 
   if (angularHandler.upgrade) {
     httpServer.on('upgrade', (req, socket, head) => {
@@ -246,12 +254,14 @@ async function bootstrap() {
     });
   }
 
-  await attachRealtimeServer(httpServer);
+  const attachedRealtime = await attachRealtimeServer(httpServer);
+
+  realtimeRuntime = attachedRealtime;
   readiness.ready = true;
 }
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on('SIGINT', () => shutdown());
+process.on('SIGTERM', () => shutdown());
 
 bootstrap().catch((error: unknown) => {
   failBootstrap(error);

@@ -1,0 +1,41 @@
+<section class="space-y-3 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900" aria-labelledby="device-push-title">
+  <h2 id="device-push-title" class="font-semibold" i18n="@@notificationsDeviceTitle">This device</h2>
+  @if (!enabled) {
+    <p class="text-sm" i18n="@@notificationsDeviceUnsupported">
+      Device alerts require a supported browser and the installed app service worker.
+    </p>
+  } @else if (capability.isLoading()) {
+    <p role="status" i18n="@@notificationsDeviceLoading">Checking device alerts...</p>
+  } @else if (capability.error()) {
+    <p role="alert" i18n="@@notificationsDeviceLoadError">Device alert settings could not be loaded.</p>
+    <app-button variant="outline" (click)="capability.reload()">
+      <span i18n="@@notificationsRefresh">Refresh</span>
+    </app-button>
+  } @else if (capability.hasValue()) {
+    @if (capability.value().registered) {
+      <p role="status" class="text-sm" i18n="@@notificationsDeviceRegistered">
+        Device alerts are registered for your current session and account.
+      </p>
+      <app-button variant="outline" [disabled]="busy()" [loading]="busy()" (click)="unsubscribe()">
+        <span i18n="@@notificationsDeviceRemove">Remove device alerts</span>
+      </app-button>
+    } @else if (capability.value().available) {
+      <p class="text-sm" i18n="@@notificationsDeviceConsent">
+        Enable generic alerts on this device. Your browser will ask for permission. Account activity alerts also require
+        the delivery preference above.
+      </p>
+      <app-button variant="outline" [disabled]="busy()" [loading]="busy()" (click)="subscribe()">
+        <span i18n="@@notificationsDeviceEnable">Enable device alerts</span>
+      </app-button>
+    } @else {
+      <p class="text-sm" i18n="@@notificationsPushUnavailable">
+        Device push notifications are not available yet. Your inbox remains available here.
+      </p>
+    }
+  }
+  @if (error()) {
+    <p role="alert" class="text-sm" i18n="@@notificationsDeviceError">
+      Device alerts could not be updated. Check browser permissions and try again.
+    </p>
+  }
+</section>

@@ -272,6 +272,27 @@ describe('account lifecycle with persisted membership and identity', () => {
     });
   });
 
+  it('preserves the initiating locale for new-address verification and old-address security notices', async () => {
+    const { context, email } = await identity();
+
+    await db
+      .update(users)
+      .set({ preferences: { locale: 'es', theme: 'system' } })
+      .where(eq(users.id, context.userId));
+    const challenge = await requestEmailChange(context, `${randomUUID()}@example.test`);
+    const message = mail.listSentMessages().find((sent) => sent.challengeId === challenge.flowId)!;
+
+    expect(message.locale).toBe('es');
+    expect(message.body.subject).toContain('código de verificación');
+    expect(message.body.text).toContain('nueva dirección');
+    await verifyEmailChange(context, challenge.flowId, message.pin);
+    const notice = mail.listSentMessages().find((sent) => sent.challengeId === 'email-change-notification')!;
+
+    expect(notice.email).toBe(email);
+    expect(notice.locale).toBe('es');
+    expect(notice.body.text).toContain('correo principal');
+  });
+
   it('commits invalid-code attempts and locks out the proof after five failures', async () => {
     const { context } = await identity();
     const challenge = await requestEmailChange(context, `${randomUUID()}@example.test`);

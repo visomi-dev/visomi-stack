@@ -1,0 +1,132 @@
+<section class="space-y-4 rounded-lg bg-zinc-50 p-4 md:p-6 dark:bg-zinc-900" aria-labelledby="vault-sync-title">
+  <h2 id="vault-sync-title" class="font-heading text-lg font-semibold" i18n="@@vaultSyncTitle">
+    Encrypted workspace synchronization
+  </h2>
+  <p class="text-sm" i18n="@@vaultSyncHelp">
+    Connect a workspace and device that are already enrolled. Only encrypted changes leave this browser. Decrypted
+    projections are cleared when the vault locks.
+  </p>
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+  }
+  @if (vaultState() !== 'unlocked') {
+    <p i18n="@@vaultSyncLocked">Unlock your vault before connecting encrypted workspace data.</p>
+  } @else if (state() === 'detached') {
+    <app-form [form]="connectionForm" (ngSubmit)="connect()">
+      <div class="space-y-4">
+        <app-field>
+          <app-label for="vault-sync-workspace">
+            <span i18n="@@vaultSyncWorkspace">Enrolled workspace ID</span>
+          </app-label>
+          <app-input
+            controlId="vault-sync-workspace"
+            autocomplete="off"
+            [formField]="connectionForm.workspaceId"
+            [ariaDescribedBy]="
+              connectionForm.workspaceId().touched() && connectionForm.workspaceId().invalid()
+                ? 'vault-sync-workspace-error'
+                : null
+            "
+          />
+          @if (connectionForm.workspaceId().touched() && connectionForm.workspaceId().invalid()) {
+            <app-error-message controlId="vault-sync-workspace-error">
+              {{ connectionForm.workspaceId().errors()[0]?.message }}
+            </app-error-message>
+          }
+        </app-field>
+        <app-field>
+          <app-label for="vault-sync-device"><span i18n="@@vaultSyncDevice">Enrolled device ID</span></app-label>
+          <app-input
+            controlId="vault-sync-device"
+            autocomplete="off"
+            [formField]="connectionForm.deviceId"
+            [ariaDescribedBy]="
+              connectionForm.deviceId().touched() && connectionForm.deviceId().invalid()
+                ? 'vault-sync-device-error'
+                : null
+            "
+          />
+          @if (connectionForm.deviceId().touched() && connectionForm.deviceId().invalid()) {
+            <app-error-message controlId="vault-sync-device-error">
+              {{ connectionForm.deviceId().errors()[0]?.message }}
+            </app-error-message>
+          }
+        </app-field>
+        <app-field>
+          <app-label for="vault-sync-version">
+            <span i18n="@@vaultSyncVersion">Device enrollment version</span>
+          </app-label>
+          <app-input
+            controlId="vault-sync-version"
+            inputmode="numeric"
+            autocomplete="off"
+            [formField]="connectionForm.enrollmentVersion"
+            [ariaDescribedBy]="
+              connectionForm.enrollmentVersion().touched() && connectionForm.enrollmentVersion().invalid()
+                ? 'vault-sync-version-error'
+                : null
+            "
+          />
+          @if (connectionForm.enrollmentVersion().touched() && connectionForm.enrollmentVersion().invalid()) {
+            <app-error-message controlId="vault-sync-version-error">
+              {{ connectionForm.enrollmentVersion().errors()[0]?.message }}
+            </app-error-message>
+          }
+        </app-field>
+        <app-button type="submit" [disabled]="busy()">
+          <span i18n="@@vaultSyncConnect">Connect enrolled workspace</span>
+        </app-button>
+      </div>
+    </app-form>
+  } @else {
+    @if (state() === 'offline') {
+      <p role="status" i18n="@@vaultSyncOffline">Waiting for synchronization. Your encrypted queue is retained.</p>
+    } @else {
+      <p role="status" i18n="@@vaultSyncReady">Encrypted workspace connected.</p>
+    }
+    @if (projection(); as data) {
+      <p class="text-sm">
+        <span i18n="@@vaultSyncProjectionCount">Local projections:</span>
+        {{ data.work.length + data.planning.length + data.progress.length }}
+      </p>
+    }
+    <div class="flex flex-col gap-3 sm:flex-row">
+      <app-button [disabled]="busy()" (click)="synchronize()">
+        <span i18n="@@vaultSyncRetry">Synchronize now</span>
+      </app-button>
+      <app-button variant="outline" (click)="disconnect()">
+        <span i18n="@@vaultSyncDisconnect">Disconnect workspace</span>
+      </app-button>
+    </div>
+    @for (entry of review(); track entry.envelopeId + ':' + entry.revision) {
+      <div class="space-y-2 rounded-md bg-zinc-100 p-3 dark:bg-zinc-800">
+        <p class="font-mono text-sm break-all">{{ entry.envelopeId }} · {{ entry.revision }}</p>
+        @switch (entry.status) {
+          @case ('pending') {
+            <p i18n="@@vaultSyncPending">Encrypted upload pending.</p>
+          }
+          @case ('blocked') {
+            <p i18n="@@vaultSyncBlocked">
+              Upload blocked. Review workspace or device access before creating a new revision.
+            </p>
+          }
+          @case ('conflict') {
+            <p i18n="@@vaultSyncConflict">
+              Revision conflict. Keep the local encrypted projection and review the cloud version before creating a new
+              revision.
+            </p>
+          }
+        }
+        @if (entry.status !== 'pending') {
+          <p class="text-sm" i18n="@@vaultSyncDiscardHelp">
+            Discard stops only this rejected upload. It does not delete your local encrypted projection or other
+            revisions.
+          </p>
+          <app-button variant="outline" [disabled]="busy()" (click)="discard(entry.envelopeId, entry.revision)">
+            <span i18n="@@vaultSyncDiscard">Discard this rejected upload</span>
+          </app-button>
+        }
+      </div>
+    }
+  }
+</section>

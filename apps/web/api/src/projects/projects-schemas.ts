@@ -1,6 +1,8 @@
 import { projectIdParamSchema, responseEnvelope, z } from '../shared/http/route-schemas';
 
-import { errorEnvelopeSchema } from 'shared';
+import { errorEnvelopeSchema, operationTicket } from 'shared';
+
+export const seedRequestHeaders = z.object({ 'idempotency-key': z.uuid().optional() });
 
 export const projectStatusSchema = z.enum(['active', 'archived', 'draft']);
 export const projectSourceTypeSchema = z.enum(['imported', 'manual', 'seeded']);
@@ -329,10 +331,14 @@ export const projectsOpenApiPaths = {
   },
   '/projects/{projectId}/seed': {
     post: {
-      requestParams: { path: projectParamsSchema },
+      requestParams: { path: projectParamsSchema, header: seedRequestHeaders },
       responses: {
         202: {
-          content: { 'application/json': { schema: responseEnvelope(asyncJobSchema, 'AsyncJobEnvelope') } },
+          content: {
+            'application/json': {
+              schema: responseEnvelope(asyncJobSchema.extend({ operation: operationTicket }), 'AsyncJobEnvelope'),
+            },
+          },
           description: 'Project seed queued.',
         },
       },

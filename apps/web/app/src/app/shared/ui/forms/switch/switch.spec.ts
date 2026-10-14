@@ -29,4 +29,26 @@ describe('Switch', () => {
 
     expect(button.getAttribute('aria-checked')).toBe('true');
   });
+
+  it('tracks toggles separately from loaded values and preserves accessibility after reset', async () => {
+    const button = fixture.nativeElement.querySelector('button[role="switch"]') as HTMLButtonElement;
+
+    fixture.componentInstance.model.set({ darkMode: false });
+    await fixture.whenStable();
+    expect(button.getAttribute('aria-checked')).toBe('false');
+    expect(button.getAttribute('aria-label')).toBe('Dark mode');
+    expect(fixture.componentInstance.f().dirty()).toBe(false);
+    button.click();
+    button.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+    expect(fixture.componentInstance.model().darkMode).toBe(true);
+    expect(fixture.componentInstance.f.darkMode().dirty()).toBe(true);
+    expect(fixture.componentInstance.f.darkMode().touched()).toBe(true);
+    expect(fixture.componentInstance.f().dirty()).toBe(true);
+    fixture.componentInstance.f().reset();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.f().dirty()).toBe(false);
+    expect(fixture.componentInstance.f.darkMode().touched()).toBe(false);
+    expect(button.getAttribute('aria-checked')).toBe('true');
+  });
 });

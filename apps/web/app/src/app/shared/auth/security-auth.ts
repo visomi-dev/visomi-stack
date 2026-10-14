@@ -16,7 +16,9 @@ export type ReauthenticationPurpose =
   | 'email_change'
   | 'workspace_leave'
   | 'sessions_revoke'
-  | 'passkey_enroll';
+  | 'passkey_enroll'
+  | 'vault_unlock_manage'
+  | 'vault_recovery_export';
 
 export type ReauthenticationStart = {
   grantId: string;

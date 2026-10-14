@@ -1,9 +1,11 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { afterRenderEffect, Component, computed, inject, input, output, signal, viewChild } from '@angular/core';
+import type { ElementRef } from '@angular/core';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { Auth } from '../../auth/auth';
 import { APP_NAME } from '../../constants/brand';
-import { APP_URL, SIGN_IN_URL, SECURITY_URL, ACCOUNT_URL } from '../../constants/routes';
+import { APP_URL, SIGN_IN_URL, SECURITY_URL, ACCOUNT_URL, NOTIFICATIONS_URL } from '../../constants/routes';
 import { Settings } from '../../settings';
 import { Avatar } from '../../ui/data/avatar/avatar';
 import { Icon } from '../../ui/media/icon/icon';
@@ -24,7 +26,7 @@ type LayoutNavSection = {
 };
 
 @Component({
-  imports: [Avatar, Icon, RouterLink, RouterLinkActive, LanguageSwitcher],
+  imports: [Avatar, CdkTrapFocus, Icon, RouterLink, RouterLinkActive, LanguageSwitcher],
   selector: 'app-sidebar-menu',
   templateUrl: './sidebar-menu.html',
   styleUrl: './sidebar-menu.css',
@@ -42,6 +44,7 @@ export class SidebarMenu {
   readonly signingOut = signal(false);
 
   readonly user = this.auth.user;
+
   readonly userInitials = computed(() => {
     const email = this.user()?.email ?? 'T';
 
@@ -63,11 +66,19 @@ export class SidebarMenu {
         },
         { exact: true, icon: 'circle-info', label: $localize`:@@layoutMenuSecurity:Security`, url: SECURITY_URL },
         { exact: true, icon: 'circle-info', label: $localize`:@@layoutMenuAccount:Account`, url: ACCOUNT_URL },
+        {
+          exact: true,
+          icon: 'circle-info',
+          label: $localize`:@@layoutMenuNotifications:Notifications`,
+          url: NOTIFICATIONS_URL,
+        },
       ],
     },
   ];
 
   protected readonly appName = APP_NAME;
+
+  private readonly mobileMenuClose = viewChild<ElementRef<HTMLButtonElement>>('mobileMenuClose');
 
   closeMenu() {
     this.closed.emit();
@@ -88,4 +99,12 @@ export class SidebarMenu {
       this.closeMenu();
     }
   }
+
+  private readonly focusMobileNavigation = afterRenderEffect({
+    write: () => {
+      // Capture only after the drawer's visibility and background inertness render.
+      // The owning layout restores the opener on close; no deferred focus may outlive it.
+      if (this.mobileMenuOpen()) this.mobileMenuClose()?.nativeElement.focus();
+    },
+  });
 }

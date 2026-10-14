@@ -1,11 +1,8 @@
-import { HttpError, correlateJob } from 'shared';
-import {
-  createAsyncJob,
-  getProject,
-  getProjectSeedQueue,
-  listAsyncJobsForProject,
-  publishProjectAsyncJobEvent,
-} from 'projects';
+import { randomUUID } from 'node:crypto';
+
+import { HttpError, acceptDurableOperation, asyncJobs } from 'shared';
+import type { OperationOwner } from 'shared';
+import { getProject, listAsyncJobsForProject, findAsyncJobById } from 'projects';
 
 type ProjectSeedContext = {
   accountId: string;
@@ -16,30 +13,35 @@ async function listProjectJobs(context: ProjectSeedContext, projectId: string) {
   return listAsyncJobsForProject(context, projectId);
 }
 
-async function queueProjectSeed(context: ProjectSeedContext, projectId: string) {
+async function queueProjectSeed(context: OperationOwner, projectId: string, requestKey: string = randomUUID()) {
   const project = await getProject(context, projectId);
 
   if (!project) {
     throw new HttpError({ code: 'project_not_found', message: 'The project could not be found.', statusCode: 404 });
   }
 
-  const job = await createAsyncJob(context, {
-    projectId,
-    type: 'project_seed',
-  });
+  const operation = await acceptDurableOperation(
+    context,
+    { requestKey, kind: 'project_seed', fingerprint: projectId },
+    async (transaction, operationId) => {
+      await transaction.insert(asyncJobs).values({
+        id: operationId,
+        accountId: context.accountId,
+        userId: context.userId,
+        projectId,
+        type: 'project_seed',
+        status: 'queued',
+        progress: 0,
+      });
 
-  await getProjectSeedQueue().add(
-    'project_seed',
-    correlateJob({
-      accountId: context.accountId,
-      jobId: job.id,
-      projectId,
-      userId: context.userId,
-    }),
+      return { accountId: context.accountId, userId: context.userId, projectId, jobId: operationId };
+    },
   );
-  await publishProjectAsyncJobEvent('job:queued', job, 'Project seed queued.');
+  const job = await findAsyncJobById(context, operation.id);
 
-  return job;
+  if (!job) throw new Error('The accepted operation is missing its job.');
+
+  return { ...job, operation: { operationId: operation.id, expiresAt: operation.expiresAt.toISOString() } };
 }
 
 export { listProjectJobs, queueProjectSeed };

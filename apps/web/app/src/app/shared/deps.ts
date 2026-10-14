@@ -5,6 +5,40 @@ import type { ZxcvbnFactory } from '@zxcvbn-ts/core';
 export class Deps {
   private passwordEstimator: Promise<ZxcvbnFactory> | undefined;
 
+  operationContracts(): Promise<typeof import('./realtime/operation-contract')> {
+    return import('./realtime/operation-contract');
+  }
+
+  vaultUnlock(): Promise<
+    Pick<
+      typeof import('shared-crypto'),
+      | 'VaultKeySession'
+      | 'decodeRecoveryBytes'
+      | 'openVaultKey'
+      | 'openBrowserVaultKey'
+      | 'vaultPinProfile'
+      | 'verifyVaultPinProfileKey'
+    >
+  > {
+    return import('shared-crypto').then(
+      ({
+        VaultKeySession,
+        decodeRecoveryBytes,
+        openVaultKey,
+        openBrowserVaultKey,
+        vaultPinProfile,
+        verifyVaultPinProfileKey,
+      }) => ({
+        VaultKeySession,
+        decodeRecoveryBytes,
+        openVaultKey,
+        openBrowserVaultKey,
+        vaultPinProfile,
+        verifyVaultPinProfileKey,
+      }),
+    );
+  }
+
   async approvalQr(text: string): Promise<string> {
     const { default: encoder } = await import('qrcode');
 

@@ -44,6 +44,7 @@ export class Switch {
     const nextValue = !this.checked();
 
     this.formField()().value.set(nextValue);
+    this.formField()().markAsDirty();
     this.checkedChange.emit(nextValue);
   }
 

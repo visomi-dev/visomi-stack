@@ -1,57 +1,20 @@
 import { fileURLToPath } from 'node:url';
 
-import { boolean, command, run, string, type Command } from '@drizzle-team/brocli';
+import { command, run, string } from '@drizzle-team/brocli';
+import type { Command } from '@drizzle-team/brocli';
 
 import {
-  backupProjectStore,
-  migrateProjectStores,
-  readProjectState,
-  restoreProjectStore,
-  rollbackProjectStores,
-  synchronizeProjectStore,
-  validateProjectStore,
-} from './themis-project-migration.ts';
+  migrate,
+  migrateRollback,
+  projectState,
+  projectValidate,
+  projectBackup,
+  projectRestore,
+  projectSync,
+} from './themis-cli-storage.ts';
+import { baseOptions, print, projectDomain, registerProject, split } from './themis-cli-context.ts';
 
-import { ProjectWorkflowStore, WorkspaceRegistry, redactPortable } from '../libs/themis-workflow/src/index.ts';
 import { workspaceStatus } from '../libs/themis-workflow/src/lib/legacy-workflow-internal.ts';
-
-const split = (value: string): string[] =>
-  value
-    .split(',')
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-
-const print = (value: unknown, asJson: boolean): void => {
-  const portable = redactPortable(value);
-  if (asJson) {
-    console.log(JSON.stringify(portable, null, 2));
-
-    return;
-  }
-  console.log(typeof portable === 'string' ? portable : JSON.stringify(portable, null, 2));
-};
-
-const projectDomain = (root: string, projectId: string): ReturnType<ProjectWorkflowStore['domain']> =>
-  new ProjectWorkflowStore(new WorkspaceRegistry(root), projectId).domain();
-
-const registeredProject = (root: string, projectId: string): void => {
-  new WorkspaceRegistry(root).resolve(projectId);
-};
-
-const registerProject = (root: string, projectId: string, name: string, summary: string) => {
-  const registry = new WorkspaceRegistry(root);
-
-  registry.register(projectId, name, root);
-
-  return new ProjectWorkflowStore(registry, projectId)
-    .domain()
-    .createProject({ id: projectId, name, summary }, 'human:cli');
-};
-
-const baseOptions = () => ({
-  root: string().desc('Project root containing .themis').default('.'),
-  json: boolean().desc('Print machine-readable JSON').default(false),
-});
 
 const workspaceStatusCommand = command({
   name: 'workspace-status',
@@ -83,92 +46,6 @@ const ready = command({
           : 'No ready work.',
       options.json,
     );
-  },
-});
-
-const migrate = command({
-  name: 'project-migrate',
-  desc: 'Partition global local state into independently loadable project stores',
-  options: {
-    ...baseOptions(),
-    dryRun: boolean('dry-run').desc('Plan without writing stores').default(false),
-    resume: boolean().desc('Resume an interrupted migration').default(false),
-    cutover: boolean().desc('Activate project stores as the write authority').default(true),
-    targetProject: string().desc('Retarget a single local project during migration').default(''),
-  },
-  handler: (options) =>
-    print(
-      migrateProjectStores(options.root, {
-        dryRun: options.dryRun,
-        resume: options.resume,
-        cutover: options.cutover,
-        targetProjectId: options.targetProject || undefined,
-      }),
-      options.json,
-    ),
-});
-
-const migrateRollback = command({
-  name: 'project-migrate-rollback',
-  desc: 'Rollback a fenced project-store cutover',
-  options: { ...baseOptions() },
-  handler: (options) => {
-    rollbackProjectStores(options.root);
-    print({ rolledBack: true }, options.json);
-  },
-});
-
-const projectState = command({
-  name: 'project-state',
-  desc: 'Read one project without loading unrelated project domain state',
-  options: { ...baseOptions(), project: string().desc('Project identifier').required() },
-  handler: (options) => {
-    registeredProject(options.root, options.project);
-    print(readProjectState(options.root, options.project), options.json);
-  },
-});
-
-const projectValidate = command({
-  name: 'project-validate',
-  desc: 'Validate one project store independently',
-  options: { ...baseOptions(), project: string().desc('Project identifier').required() },
-  handler: (options) => {
-    registeredProject(options.root, options.project);
-    print(validateProjectStore(options.root, options.project), options.json);
-  },
-});
-
-const projectBackup = command({
-  name: 'project-backup',
-  desc: 'Back up one project store independently',
-  options: { ...baseOptions(), project: string().desc('Project identifier').required() },
-  handler: (options) => {
-    registeredProject(options.root, options.project);
-    print({ backupId: backupProjectStore(options.root, options.project) }, options.json);
-  },
-});
-
-const projectRestore = command({
-  name: 'project-restore',
-  desc: 'Restore one project store and validate it',
-  options: {
-    ...baseOptions(),
-    project: string().desc('Project identifier').required(),
-    backup: string().desc('Safe backup identifier').default(''),
-  },
-  handler: (options) => {
-    registeredProject(options.root, options.project);
-    print(restoreProjectStore(options.root, options.project, options.backup || undefined), options.json);
-  },
-});
-
-const projectSync = command({
-  name: 'project-sync',
-  desc: 'Synchronize and independently validate one project store',
-  options: { ...baseOptions(), project: string().desc('Project identifier').required() },
-  handler: (options) => {
-    registeredProject(options.root, options.project);
-    print(synchronizeProjectStore(options.root, options.project), options.json);
   },
 });
 

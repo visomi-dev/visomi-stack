@@ -4,14 +4,27 @@
   "projectType": "application",
   "implicitDependencies": ["server"],
   "targets": {
+    "fixture-test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec esbuild apps/web/api-e2e/src/support/gateway-process.spec.ts apps/web/api-e2e/src/support/report-sanitization.spec.ts apps/web/api-e2e/src/support/openapi-contract.spec.ts --bundle --platform=node --format=cjs --packages=external --outdir=dist/api-e2e-fixture --out-extension:.js=.cjs && node --test dist/api-e2e-fixture/gateway-process.spec.cjs dist/api-e2e-fixture/report-sanitization.spec.cjs dist/api-e2e-fixture/openapi-contract.spec.cjs"
+      }
+    },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/coverage/{e2eProjectRoot}"],
       "options": {
-        "jestConfig": "apps/web/api-e2e/jest.config.cts",
-        "passWithNoTests": true
+        "command": "node node_modules/jest/bin/jest.js --config apps/web/api-e2e/jest.config.cts --passWithNoTests --runInBand"
       },
-      "dependsOn": ["api:build", "app:build", "site:build", "worker:build", "realtime:build", "server:build"]
+      "dependsOn": [
+        "fixture-test",
+        "api:build",
+        "app:build",
+        "site:build",
+        "worker:build",
+        "realtime:build",
+        "server:build"
+      ]
     },
     "e2e": {
       "executor": "nx:run-commands",
@@ -19,7 +32,15 @@
       "options": {
         "command": "node --experimental-strip-types apps/web/api-e2e/src/support/run-api-e2e.ts"
       },
-      "dependsOn": ["api:build", "app:build", "site:build", "worker:build", "realtime:build", "server:build"]
+      "dependsOn": [
+        "fixture-test",
+        "api:build",
+        "app:build",
+        "site:build",
+        "worker:build",
+        "realtime:build",
+        "server:build"
+      ]
     },
     "openapi": {
       "executor": "nx:run-commands",

@@ -1,4 +1,10 @@
-<button [attr.aria-busy]="loading()" [class]="classes()" [disabled]="disabled() || loading()" [type]="type()">
+<button
+  [attr.aria-busy]="loading()"
+  [attr.aria-pressed]="pressed()"
+  [class]="classes()"
+  [disabled]="disabled() || loading()"
+  [type]="type()"
+>
   @if (loading()) {
     <span
       aria-hidden="true"

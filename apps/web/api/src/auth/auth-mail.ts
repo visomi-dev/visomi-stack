@@ -1,12 +1,14 @@
 import FormData from 'form-data';
 import Mailgun from 'mailgun.js';
+import { eq } from 'drizzle-orm';
 
 import { env } from '../shared/env';
 
 import type { VerificationPurpose } from './auth-schemas';
 import { APP_NAME } from './auth-brand';
 
-import { HttpError } from 'shared';
+import { HttpError, db, users, renderMail, normalizeMailLocale } from 'shared';
+import type { MailBody, MailLocale } from 'shared';
 
 export type VerificationMessage = {
   challengeId: string;
@@ -14,10 +16,12 @@ export type VerificationMessage = {
   expiresAt: Date;
   pin: string;
   purpose: VerificationPurpose;
+  locale?: MailLocale;
 };
 
 export type SentVerificationMessage = VerificationMessage & {
   sentAt: Date;
+  body: MailBody;
 };
 
 const mailbox: SentVerificationMessage[] = [];
@@ -47,26 +51,39 @@ export function getMailgunClient() {
 }
 
 export function createMessageBody(message: VerificationMessage) {
-  const intent =
-    message.purpose === 'email_change'
-      ? 'verify your new primary email address'
-      : 'continue signing in or finish creating your account';
-  const htmlName = APP_NAME.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return renderMail(
+    {
+      template: 'verification',
+      code: message.pin,
+      expiresAt: message.expiresAt.toISOString(),
+      emailChange: message.purpose === 'email_change',
+    },
+    APP_NAME,
+    message.locale,
+  );
+}
 
-  return {
-    html: `<p>Your ${htmlName} verification code is <strong>${message.pin}</strong>.</p><p>Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.</p>`,
-    subject: `Your ${APP_NAME} verification code`,
-    text: `Your ${APP_NAME} verification code is ${message.pin}. Use it to ${intent}. This code expires at ${message.expiresAt.toISOString()}.`,
-  };
+async function recipientLocale(email: string, locale?: MailLocale): Promise<MailLocale> {
+  if (locale) return locale;
+  const [recipient] = await db
+    .select({ preferences: users.preferences })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
+  return normalizeMailLocale(recipient?.preferences.locale);
 }
 
 export async function sendVerificationMessage(message: VerificationMessage) {
-  const body = createMessageBody(message);
+  const locale = await recipientLocale(message.email, message.locale);
+  const body = createMessageBody({ ...message, locale });
 
   if (env.MAIL_TRANSPORT === 'memory') {
     mailbox.push({
       ...message,
       sentAt: new Date(),
+      locale,
+      body,
     });
 
     return;
@@ -83,9 +100,9 @@ export async function sendVerificationMessage(message: VerificationMessage) {
   });
 }
 
-export async function sendRecoveryNotification(email: string): Promise<void> {
-  const subject = `Your ${APP_NAME} account was recovered`;
-  const text = `A lower-assurance email recovery was completed for your ${APP_NAME} account. If you did not do this, secure your account immediately.`;
+export async function sendRecoveryNotification(email: string, requestedLocale?: MailLocale): Promise<void> {
+  const locale = await recipientLocale(email, requestedLocale);
+  const body = renderMail({ template: 'recovery-notice', appBaseUrl: env.APP_BASE_URL }, APP_NAME, locale);
 
   if (env.MAIL_TRANSPORT === 'memory') {
     mailbox.push({
@@ -95,6 +112,8 @@ export async function sendRecoveryNotification(email: string): Promise<void> {
       pin: '',
       purpose: 'existing_account_recovery',
       sentAt: new Date(),
+      locale,
+      body,
     });
 
     return;
@@ -103,9 +122,7 @@ export async function sendRecoveryNotification(email: string): Promise<void> {
 
   await client.messages.create(env.MAILGUN_DOMAIN, {
     from: env.MAILGUN_FROM,
-    html: `<p>${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`,
-    subject,
-    text,
+    ...body,
     to: [email],
   });
 }
@@ -114,7 +131,10 @@ export function listSentMessages() {
   return mailbox.map((message) => ({ ...message }));
 }
 
-export async function sendEmailChangeNotification(email: string): Promise<void> {
+export async function sendEmailChangeNotification(email: string, requestedLocale?: MailLocale): Promise<void> {
+  const locale = await recipientLocale(email, requestedLocale);
+  const body = renderMail({ template: 'email-change-notice', appBaseUrl: env.APP_BASE_URL }, APP_NAME, locale);
+
   if (env.MAIL_TRANSPORT === 'memory') {
     mailbox.push({
       challengeId: 'email-change-notification',
@@ -123,6 +143,8 @@ export async function sendEmailChangeNotification(email: string): Promise<void> 
       pin: '',
       purpose: 'email_change',
       sentAt: new Date(),
+      locale,
+      body,
     });
 
     return;
@@ -130,8 +152,7 @@ export async function sendEmailChangeNotification(email: string): Promise<void> 
   await getMailgunClient().messages.create(env.MAILGUN_DOMAIN, {
     from: env.MAILGUN_FROM,
     to: [email],
-    subject: `Your ${APP_NAME} primary email changed`,
-    text: `Your ${APP_NAME} primary email address was changed after verification. All existing sessions have been invalidated. If you did not request this change, contact support and secure your account immediately.`,
+    ...body,
   });
 }
 

@@ -269,14 +269,14 @@ export class Gallery {
   readonly filteredIconNames: Signal<readonly string[]> = computed(() => this.iconNames);
 
   readonly listboxOptions: ListboxOption[] = [
-    { label: 'Active projects', value: 'active' },
-    { label: 'Archived projects', value: 'archived' },
-    { label: 'All projects', value: 'all' },
+    { label: $localize`:@@galleryActiveProjects:Active projects`, value: 'active' },
+    { label: $localize`:@@galleryArchivedProjects:Archived projects`, value: 'archived' },
+    { label: $localize`:@@galleryAllProjects:All projects`, value: 'all' },
   ];
   readonly selectOptions: ListboxOption[] = [
-    { label: 'Active projects', value: 'active' },
-    { label: 'Archived projects', value: 'archived' },
-    { label: 'All projects', value: 'all' },
+    { label: $localize`:@@galleryActiveProjects:Active projects`, value: 'active' },
+    { label: $localize`:@@galleryArchivedProjects:Archived projects`, value: 'archived' },
+    { label: $localize`:@@galleryAllProjects:All projects`, value: 'all' },
   ];
   readonly tableRows = [
     { id: 1, name: 'Atlas', tone: 'success', count: 12 },
@@ -284,14 +284,24 @@ export class Gallery {
     { id: 3, name: 'Citadel', tone: 'danger', count: 0 },
   ];
   readonly radioOptions: readonly RadioOption[] = [
-    { value: 'starter', label: 'Starter', icon: 'folder', description: 'For solo founders and weekend builds.' },
-    { value: 'team', label: 'Team', icon: 'grid', description: 'For small product teams up to 10 people.' },
+    {
+      value: 'starter',
+      label: $localize`:@@galleryStarterPlan:Starter`,
+      icon: 'folder',
+      description: $localize`:@@galleryStarterPlanDescription:For solo founders and weekend builds.`,
+    },
+    {
+      value: 'team',
+      label: $localize`:@@galleryTeamPlan:Team`,
+      icon: 'grid',
+      description: $localize`:@@galleryTeamPlanDescription:For small product teams up to 10 people.`,
+    },
     {
       value: 'enterprise',
-      label: 'Enterprise',
+      label: $localize`:@@galleryEnterprisePlan:Enterprise`,
       icon: 'globe',
       disabled: true,
-      description: 'Contact us to enable this plan.',
+      description: $localize`:@@galleryEnterprisePlanDescription:Contact us to enable this plan.`,
     },
   ];
   readonly inputField = this.inputForm.value;

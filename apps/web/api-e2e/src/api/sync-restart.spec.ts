@@ -3,6 +3,8 @@ import { resolve } from 'node:path';
 
 import axios from 'axios';
 
+import { requireFreeGatewayPort, stopGateway, waitForGateway } from '../support/gateway-process';
+
 const password = 'S3cureAuth!';
 const entrypoint = resolve(__dirname, '../../../../../dist/apps/web/server/main.js');
 // The API-e2e composition owns GATEWAY_PORT. Keep this independently
@@ -10,26 +12,17 @@ const entrypoint = resolve(__dirname, '../../../../../dist/apps/web/server/main.
 const port = Number(process.env['SYNC_RESTART_PORT'] ?? 8091);
 const baseURL = `http://127.0.0.1:${port}`;
 const apiBaseURL = `${baseURL}/api`;
-const durableSyncConfigured = Boolean(process.env['DATABASE_URL'] && process.env['OPAQUE_SYNC_S3_ENDPOINT']);
+const durableSyncConfigured =
+  process.env['API_E2E_STORAGE_MODE'] === 'durable' &&
+  Boolean(process.env['DATABASE_URL'] && process.env['OPAQUE_SYNC_S3_ENDPOINT']);
 
 function cookieHeader(setCookie: string[] | undefined): string {
   return setCookie?.map((cookie) => cookie.split(';', 1)[0]).join('; ') ?? '';
 }
 
-async function waitForGateway(): Promise<void> {
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    try {
-      if ((await axios.get('/healthz', { baseURL })).status === 200) return;
-    } catch {
-      // The listener can accept TCP before the application is ready.
-    }
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
-  }
-  throw new Error(`Restart fixture did not become ready on ${baseURL}.`);
-}
-
 function startGateway(): ChildProcess {
   return spawn(process.execPath, [entrypoint], {
+    detached: process.platform !== 'win32',
     env: {
       ...process.env,
       COOKIE_SECURE: 'false',
@@ -49,22 +42,17 @@ function startGateway(): ChildProcess {
   });
 }
 
-async function stopGateway(child: ChildProcess): Promise<void> {
-  if (!child.killed) child.kill('SIGTERM');
-  await new Promise<void>((resolvePromise) => child.once('exit', () => resolvePromise()));
-}
-
 describe('opaque sync API process restart lifecycle', () => {
   jest.setTimeout(60_000);
 
   (durableSyncConfigured ? it : it.skip)(
     'replays a durable enrollment and envelope after the API process restarts',
     async () => {
+      await requireFreeGatewayPort('127.0.0.1', port);
       let gateway = startGateway();
 
-      await waitForGateway();
-
       try {
+        await waitForGateway(gateway, `${baseURL}/healthz`);
         const email = `sync-restart-${Date.now()}@themis.dev`;
         const authenticated = await axios.post('/test/auth/session', { email, password }, { baseURL: apiBaseURL });
         const cookie = cookieHeader(authenticated.headers['set-cookie']);
@@ -117,7 +105,7 @@ describe('opaque sync API process restart lifecycle', () => {
 
         await stopGateway(gateway);
         gateway = startGateway();
-        await waitForGateway();
+        await waitForGateway(gateway, `${baseURL}/healthz`);
 
         const restartedAuth = await axios.post(
           '/test/auth/session',

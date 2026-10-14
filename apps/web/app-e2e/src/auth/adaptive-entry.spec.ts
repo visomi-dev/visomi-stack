@@ -13,6 +13,24 @@ test('uses native immediate UI with a saved discoverable passkey after an explic
   await expect(page).toHaveURL(/\/dashboard$/);
 });
 
+test('uses a saved discoverable passkey directly without Immediate UI or an email', async ({ page, request }) => {
+  const credentials = createCredentials();
+
+  await registerAndAuthenticate(page, request, credentials.email, credentials.password);
+  await expect(page).toHaveURL(/\/dashboard$/);
+
+  // The auxiliary hint is not the authority for the persisted HttpOnly session.
+  await page.evaluate(() => {
+    document.cookie = 'themis.hasSession=; Path=/; Max-Age=0';
+  });
+  await page.reload();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  const session = await page.request.get('/api/auth/session');
+
+  expect(session.headers()['cache-control']).toBe('no-store');
+  expect((await session.json()).data.user.email).toBe(credentials.email);
+});
+
 test('falls back to the method sheet when native immediate access does not complete', async ({ page }) => {
   await addVirtualAuthenticator(page);
   await page.addInitScript(() => {
@@ -61,11 +79,13 @@ test('cancels conditional discovery before choosing another method', async ({ pa
   });
   await page.goto(signInRoute);
   await expect(page.locator('html')).toHaveAttribute('data-conditional-started', 'true');
-  await page.getByRole('textbox', { name: 'Email address' }).fill('returning@example.test');
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(page.getByRole('textbox')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Use another method', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-conditional-aborted', 'true');
   await page.getByRole('button', { name: 'Use password instead' }).click();
   await expect(page.getByRole('heading', { name: 'Sign in with password' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Email address' })).toHaveValue('');
+  await page.getByRole('textbox', { name: 'Email address' }).fill('returning@example.test');
   await expect(page.getByRole('textbox', { name: 'Email address' })).toHaveValue('returning@example.test');
 });
 
@@ -85,7 +105,10 @@ for (const locale of ['en', 'es']) {
         await page.setViewportSize({ width, height: 900 });
         await page.emulateMedia({ colorScheme: theme });
         await page.goto(`/app/${locale}/auth/sign-in`);
-        const opener = page.getByRole('button', { name: locale === 'es' ? 'Continuar' : 'Continue', exact: true });
+        const opener = page.getByRole('button', {
+          name: locale === 'es' ? 'Usar otro método' : 'Use another method',
+          exact: true,
+        });
 
         await opener.click();
         const dialog = page.getByRole('dialog');
