@@ -25,7 +25,8 @@ async function execute(args: string[], input: string, dryRun: boolean): Promise<
   console.log(`pnpm nx ${args.map(quote).join(' ')}`);
   if (dryRun) return;
   const target = args[args.indexOf('-t') + 1];
-  const timeoutMs = target === 'e2e' ? 25 * 60_000 : 5 * 60_000;
+  // Complete serial PGlite/ts-jest suites need more time than lint and formatting on cold CI runners.
+  const timeoutMs = target === 'e2e' ? 25 * 60_000 : ['test', 'vite:test'].includes(target) ? 15 * 60_000 : 5 * 60_000;
 
   await runCommand('pnpm', ['exec', 'nx', ...args], input, timeoutMs);
 }
@@ -103,7 +104,7 @@ if (files.length) {
           target,
           '--stdin',
           `--exclude=*,!${name}`,
-          '--outputStyle=static',
+          '--outputStyle=stream',
           '--parallel=1',
           ...check.args,
         ],
