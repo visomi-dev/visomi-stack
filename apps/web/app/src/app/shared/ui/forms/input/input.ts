@@ -1,9 +1,8 @@
 import {
-  afterNextRender,
+  afterRenderEffect,
   booleanAttribute,
   Component,
   computed,
-  effect,
   ElementRef,
   input,
   numberAttribute,
@@ -42,8 +41,11 @@ export class Input {
   readonly spellcheck = input<boolean | null>(null);
   readonly valueChange = output<string>();
 
-  protected readonly ready = signal(false);
+  private readonly renderedValue = signal<string | null>(null);
 
+  readonly formField = input.required<Field<string>>();
+
+  protected readonly ready = computed(() => this.renderedValue() === this.formField()().value());
   readonly classes = computed(() =>
     uiClass(
       'ui-focus-ring w-full rounded-[var(--radius-control)] border bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-950 dark:text-slate-50 placeholder:text-slate-500 dark:text-slate-400 disabled:cursor-not-allowed disabled:opacity-50',
@@ -51,14 +53,14 @@ export class Input {
     ),
   );
 
-  readonly formField = input.required<Field<string>>();
-
   private readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('inputEl');
 
   onInput(event: Event): void {
     const nextValue = (event.target as HTMLInputElement).value;
 
+    this.renderedValue.set(nextValue);
     this.formField()().value.set(nextValue);
+    this.formField()().markAsDirty();
     this.valueChange.emit(nextValue);
   }
 
@@ -66,14 +68,22 @@ export class Input {
     this.formField()().markAsTouched();
   }
 
-  private readonly enableInputAfterRender = afterNextRender(() => this.ready.set(true));
+  private readonly syncInputAfterRender = afterRenderEffect({
+    write: () => {
+      const ref = this.inputRef();
+      const value = this.formField()().value() ?? '';
 
-  private readonly syncEffect = effect(() => {
-    const ref = this.inputRef();
-    const value = this.formField()().value();
+      // Type changes can sanitize the native value even when the model is unchanged.
+      this.type();
 
-    if (ref) {
-      ref.nativeElement.value = value ?? '';
-    }
+      if (ref) {
+        if (ref.nativeElement.value !== value) {
+          ref.nativeElement.value = value;
+        }
+
+        // Do not enable a replacement until the loaded value is in the native control.
+        this.renderedValue.set(value);
+      }
+    },
   });
 }

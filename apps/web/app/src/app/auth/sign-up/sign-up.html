@@ -1,6 +1,6 @@
 <app-auth-layout>
   <app-auth-card>
-    @if (complete()) {
+    @if (complete() || needsSignIn()) {
       <p
         i18n="@@signupReady"
         class="font-mono text-xs font-semibold tracking-widest text-green-700 uppercase dark:text-green-400"
@@ -8,17 +8,21 @@
         Account ready
       </p>
       <h1 i18n="@@signupVerified" class="font-heading mt-3 text-3xl font-bold">Your account is verified</h1>
-      <p i18n="@@signupVerifiedDescription" class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
-        Your email is verified. This browser is now signed in; continue to your workspace.
-      </p>
-      <a
-        routerLink="/"
-        queryParamsHandling="preserve"
-        i18n="@@signupContinue"
-        class="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
-      >
-        Continue to workspace
-      </a>
+      @if (needsSignIn()) {
+        <p i18n="@@signupVerifiedSignInDescription" class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+          Your email is verified. Sign in to continue setting up your account.
+        </p>
+        <app-button class="mt-6 block" fullWidth tone="blue" [disabled]="submitting()" (click)="continueSignUp()">
+          <span i18n="@@signupVerifiedSignIn">Sign in to continue</span>
+        </app-button>
+      } @else {
+        <p i18n="@@signupVerifiedDescription" class="mt-4 text-base leading-6 text-slate-500 dark:text-slate-400">
+          Your email is verified. Continue to your workspace.
+        </p>
+        <app-button class="mt-6 block" fullWidth tone="blue" [disabled]="submitting()" (click)="continueSignUp()">
+          <span i18n="@@signupContinue">Continue to workspace</span>
+        </app-button>
+      }
     } @else if (flowId() || passkeyEmailPending()) {
       <p
         i18n="@@identityOtpEyebrow"
@@ -54,6 +58,9 @@
           Verify email
         </button>
       </app-form>
+      <app-button class="mt-4 block" fullWidth variant="plain" (click)="cancelSignUp()">
+        <span i18n="@@signupBackToSignup">Back to signup</span>
+      </app-button>
     } @else if (!passwordMode()) {
       <p
         class="font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400"
@@ -101,13 +108,19 @@
         routerLink="."
         [queryParams]="{ method: 'password' }"
         queryParamsHandling="merge"
+        (click)="cancelSignUp()"
         class="ui-focus-ring flex min-h-11 w-full items-center justify-center rounded-md border border-slate-950/10 px-4 text-center text-sm font-semibold text-blue-600 hover:bg-blue-600/10 dark:border-white/10 dark:text-blue-400"
         i18n="@@signupUsePassword"
       >
         Use password instead
       </a>
       <p class="mt-5 text-center text-sm">
-        <a routerLink="/auth/sign-in" queryParamsHandling="preserve" i18n="@@signupExistingAccount">
+        <a
+          routerLink="/auth/sign-in"
+          queryParamsHandling="preserve"
+          (click)="cancelSignUp()"
+          i18n="@@signupExistingAccount"
+        >
           Already have an account? Sign in
         </a>
       </p>
@@ -175,6 +188,7 @@
           routerLink="."
           [queryParams]="{ method: null }"
           queryParamsHandling="merge"
+          (click)="cancelSignUp()"
           class="mb-4 block font-semibold text-blue-600 dark:text-blue-400"
           i18n="@@signupUsePasskey"
         >
@@ -183,6 +197,7 @@
         <a
           routerLink="/auth/sign-in"
           queryParamsHandling="preserve"
+          (click)="cancelSignUp()"
           class="font-semibold text-blue-600 dark:text-blue-400"
           i18n="@@SignUpDuplicate3"
         >

@@ -6,6 +6,19 @@ The gateway serves Astro at `/`, Angular at `/app`, Express at `/api`, and Socke
 
 Authentication, sessions, middleware, input validation, and error contracts belong to the foundation. `libs/backend/shared` owns cross-cutting runtime code; its `shared/environment-schema` public subpath exposes validation without loading `.env`, databases, or sessions. Template tooling bundles that source using the `visomi-source` export condition.
 
+On SIGINT/SIGTERM the worker drains its owned queue and durable-operation polling
+once before exiting. The gateway closes Socket.IO and its underlying HTTP
+listener, then waits for its owned worker. Memory mode drains the existing
+in-process worker instead, preserving process-local database and session state.
+The ten-second deadline terminates and reaps only the gateway's child; forced
+shutdown and drain/bootstrap failures return a nonzero status. Socket.IO owns
+upgraded connections, so closing HTTP alone is insufficient; see its
+[close contract](https://socket.io/docs/v4/server-api/#serverclosecallback).
+
+An optional [isolated extractor primitive](extractors.md) runs operator-approved
+local images against one selected document with bounded input/output and explicit
+result validation. It has no automatic discovery or product integration.
+
 `libs/frontend/shared` owns framework-agnostic browser utilities shared by Angular
 and Astro, including the IndexedDB/WebCrypto vault and WebAuthn PRF adapter. It
 does not depend on either framework or on the backend runtime. Portable envelope

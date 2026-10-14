@@ -96,4 +96,20 @@ describe('RadioGroup', () => {
     await fixture.whenStable();
     expect(input.disabled).toBe(false);
   });
+
+  it('keeps loaded choices pristine and clears dirty state only on an explicit form reset', async () => {
+    fixture.componentInstance.model.set({ plan: 'standard' });
+    await fixture.whenStable();
+    const input = fixture.nativeElement.querySelector('input[value="pro"]') as HTMLInputElement;
+
+    expect(fixture.componentInstance.f().dirty()).toBe(false);
+    input.click();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.f().dirty()).toBe(true);
+    expect(input.checked).toBe(true);
+    fixture.componentInstance.f().reset();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.f().dirty()).toBe(false);
+    expect(input.checked).toBe(true);
+  });
 });

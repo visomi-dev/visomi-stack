@@ -58,6 +58,7 @@ export class RadioCard {
     const nextValue = this.optionValue();
 
     this.formField()().value.set(nextValue);
+    this.formField()().markAsDirty();
     this.valueChange.emit(nextValue);
   }
 

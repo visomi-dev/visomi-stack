@@ -41,4 +41,23 @@ describe('PinInput', () => {
     expect(inputs[5]?.getAttribute('aria-posinset')).toBe('6');
     expect(inputs[0]?.getAttribute('aria-required')).toBe('true');
   });
+
+  it('keeps loaded codes pristine and marks only native edits as unsaved changes', async () => {
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const field = fixture.componentInstance.f.pin;
+
+    fixture.componentInstance.model.set({ pin: '654321' });
+    await fixture.whenStable();
+    expect(field().dirty()).toBe(false);
+    input.value = '9';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+    expect(field().value()).toBe('954321');
+    expect(field().dirty()).toBe(true);
+    expect(fixture.componentInstance.f().dirty()).toBe(true);
+    fixture.componentInstance.f().reset();
+    await fixture.whenStable();
+    expect(field().dirty()).toBe(false);
+    expect(input.value).toBe('9');
+  });
 });

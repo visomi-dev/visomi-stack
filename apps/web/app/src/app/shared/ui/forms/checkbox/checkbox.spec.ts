@@ -50,4 +50,21 @@ describe('Checkbox', () => {
 
     expect(input.disabled).toBe(true);
   });
+
+  it('reflects a replaced form value before the next native interaction', async () => {
+    const input = fixture.nativeElement.querySelector('input[type="checkbox"]') as HTMLInputElement;
+
+    fixture.componentInstance.model.set({ remember: false });
+    await fixture.whenStable();
+    expect(input.checked).toBe(false);
+    expect(fixture.componentInstance.f().dirty()).toBe(false);
+    input.click();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.model().remember).toBe(true);
+    expect(fixture.componentInstance.f().dirty()).toBe(true);
+    fixture.componentInstance.f().reset();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.f().dirty()).toBe(false);
+    expect(input.checked).toBe(true);
+  });
 });

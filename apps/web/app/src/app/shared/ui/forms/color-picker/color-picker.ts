@@ -81,6 +81,7 @@ export class ColorPicker {
     }
 
     this.formField()().value.set(optionValue);
+    this.formField()().markAsDirty();
     this.valueChange.emit(optionValue);
   }
 

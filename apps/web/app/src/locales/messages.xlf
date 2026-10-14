@@ -2330,13 +2330,7 @@
           <context context-type="linenumber">10,11</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="signupVerifiedDescription" datatype="html">
-        <source> Your email is verified. This browser is now signed in; continue to your workspace. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/sign-up/sign-up.html</context>
-          <context context-type="linenumber">12,15</context>
-        </context-group>
-      </trans-unit>
+      <trans-unit id="signupVerifiedDescription" datatype="html"><source>Your email is verified. Continue to your workspace.</source></trans-unit>
       <trans-unit id="signupContinue" datatype="html">
         <source> Continue to workspace </source>
         <context-group purpose="location">
@@ -4877,6 +4871,10 @@
       <trans-unit id="vaultSyncDiscardHelp" datatype="html"><source>Discard stops only this rejected upload. It does not delete your local encrypted projection or other revisions.</source></trans-unit>
       <trans-unit id="vaultSyncDiscard" datatype="html"><source>Discard this rejected upload</source></trans-unit>
       <trans-unit id="vaultSyncFailed" datatype="html"><source>Synchronization could not finish. Local encrypted changes are retained. Check your connection and workspace enrollment before retrying.</source></trans-unit>
+      <trans-unit id="signupVerifiedSignInDescription" datatype="html"><source>Your email is verified. Sign in to continue setting up your account.</source></trans-unit>
+      <trans-unit id="signupVerifiedSignIn" datatype="html"><source>Sign in to continue</source></trans-unit>
+      <trans-unit id="signupBackToSignup" datatype="html"><source>Back to signup</source></trans-unit>
+      <trans-unit id="signupSessionCheckFailed" datatype="html"><source>Your email is verified, but we could not confirm that you are signed in. Sign in to continue.</source></trans-unit>
     </body>
   </file>
 </xliff>

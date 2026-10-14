@@ -177,7 +177,10 @@ export class Passkey {
     return credential;
   }
 
-  async createCredential(options: Record<string, unknown>): Promise<Credential> {
+  async createCredential(
+    options: Record<string, unknown>,
+    request: { signal?: AbortSignal } = {},
+  ): Promise<Credential> {
     const view = this.document.defaultView;
 
     if (!view?.navigator.credentials) {
@@ -185,6 +188,7 @@ export class Passkey {
     }
 
     const credential = await view.navigator.credentials.create({
+      ...request,
       publicKey: decodeOptions({
         ...options,
         // Capability negotiation does not enroll vault custody or expose PRF output.

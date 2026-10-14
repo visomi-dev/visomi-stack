@@ -125,7 +125,7 @@
       <trans-unit id="signupCodeFailed" datatype="html"><source>That verification code is not valid.</source><target>Ese código de verificación no es válido.</target></trans-unit>
       <trans-unit id="signupReady" datatype="html"><source>Account ready</source><target>Cuenta lista</target></trans-unit>
       <trans-unit id="signupVerified" datatype="html"><source>Your account is verified</source><target>Tu cuenta está verificada</target></trans-unit>
-       <trans-unit id="signupVerifiedDescription" datatype="html"><source>Your email is verified. This browser is now signed in; continue to your workspace.</source><target>Tu correo está verificado. Esta sesión ya está iniciada en este navegador; continúa a tu espacio de trabajo.</target></trans-unit>
+       <trans-unit id="signupVerifiedDescription" datatype="html"><source>Your email is verified. Continue to your workspace.</source><target>Tu correo está verificado. Continúa a tu espacio de trabajo.</target></trans-unit>
        <trans-unit id="signupContinue" datatype="html"><source>Continue to workspace</source><target>Continuar al espacio de trabajo</target></trans-unit>
       <trans-unit id="signupCheckEmail" datatype="html"><source>Check your email</source><target>Revisa tu correo electrónico</target></trans-unit>
       <trans-unit id="signupCodeDescription" datatype="html"><source>Enter the 6-digit code sent to verify your new account.</source><target>Ingresa el código de 6 dígitos enviado para verificar tu nueva cuenta.</target></trans-unit>
@@ -1416,6 +1416,10 @@
       <trans-unit id="vaultSyncDiscardHelp" datatype="html"><source>Discard stops only this rejected upload. It does not delete your local encrypted projection or other revisions.</source><target>Descartar detiene solo este envío rechazado. No elimina tu proyección cifrada local ni otras revisiones.</target></trans-unit>
       <trans-unit id="vaultSyncDiscard" datatype="html"><source>Discard this rejected upload</source><target>Descartar este envío rechazado</target></trans-unit>
       <trans-unit id="vaultSyncFailed" datatype="html"><source>Synchronization could not finish. Local encrypted changes are retained. Check your connection and workspace enrollment before retrying.</source><target>No se pudo completar la sincronización. Los cambios cifrados locales se conservan. Comprueba tu conexión y el registro del espacio de trabajo antes de reintentarlo.</target></trans-unit>
+      <trans-unit id="signupVerifiedSignInDescription" datatype="html"><source>Your email is verified. Sign in to continue setting up your account.</source><target>Tu correo está verificado. Inicia sesión para continuar con la configuración de tu cuenta.</target></trans-unit>
+      <trans-unit id="signupVerifiedSignIn" datatype="html"><source>Sign in to continue</source><target>Inicia sesión para continuar</target></trans-unit>
+      <trans-unit id="signupBackToSignup" datatype="html"><source>Back to signup</source><target>Volver al registro</target></trans-unit>
+      <trans-unit id="signupSessionCheckFailed" datatype="html"><source>Your email is verified, but we could not confirm that you are signed in. Sign in to continue.</source><target>Tu correo está verificado, pero no pudimos confirmar que hayas iniciado sesión. Inicia sesión para continuar.</target></trans-unit>
     </body>
   </file>
 </xliff>

@@ -14,23 +14,227 @@ The incremental verification follow-up explicitly imports later tooling commits
 
 ## Phase inventory
 
-| Phase                         | Explicit sub-scope                                                                                                                                                          | Status                                                                                                                               | Remaining gaps                                                                                                                                                                 |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Tooling                       | Fail-fast hooks; graph-aware affected/related checks; exact-file lint; CI base/head; one-shot tests; serialized E2E; bounded interruption cleanup                           | Implemented, focused tests passed                                                                                                    | Await-expression, extensionless-import, 120-column and 500-line enforcement require the associated workspace refactors; do not enable them against incompatible existing files |
-| Formatting                    | Compare Prettier configuration and dependency versions                                                                                                                      | Already equivalent                                                                                                                   | None for configuration; workspace-wide formatting is not part of this first block                                                                                              |
-| Deployment and infrastructure | Explicit trusted ingress hops; secure-cookie HTTP regressions; generic deployment/migration runbook; checksum-pinned MinIO CI fixture                                       | Implemented, tests and fixture build passed                                                                                          | Container deployment, real provider verification and real restore remain unverified                                                                                            |
-| Sessions                      | Authoritative HttpOnly session lookup without auxiliary hints; retry temporary failures; forced checks fail closed; no-store session responses                              | Implemented, unit and gateway browser tests passed                                                                                   | None for this correction; application vault lifecycle remains separate                                                                                                         |
-| Passkeys                      | Direct regular WebAuthn; explicit method sheet; post-selection errors; focus return; email-free entry and live waiting/navigation status                                    | Implemented, unit and gateway route tests passed                                                                                     | None for entry behavior; vault unlock remains separate                                                                                                                         |
-| Zero-knowledge primitives     | Strict PRF/PIN envelopes; Argon2id; non-extractable custody; local PIN enrollment; durable attempts; recovery UI; PRF assertions/UI; signed relay; session cleanup          | PIN/recovery, PRF and application browser relay verified                                                                             | Final whole-port verification and deployment/authenticator certification                                                                                                       |
-| Resilient synchronization     | Persistent encrypted queue; revision-bound replay; cross-tab locking; isolate blocked/conflicting transfers; durable apply-before-cursor                                    | Application projection consumer, ciphertext archive, gateway authority and localized reconciliation integrated; native checks passed | Final whole-port verification; archive compaction/checkpoint retention beyond the bounded 10,000-envelope archive requires a separate design                                   |
-| Durable async operations      | Persisted operation acceptance/results; reconnect catch-up; authenticated live completion                                                                                   | Integrated with project seed and gateway verified                                                                                    | Real PostgreSQL process-restart/failover verification; new handlers require their own bounded, idempotent writes                                                               |
-| Notifications                 | Account/user-scoped inbox/preferences; atomic producers; localized inbox; live invalidation; session-bound subscriptions; leased outbox; VAPID; explicit browser enrollment | Inbox/preferences, bounded delivery and opt-in enrollment implemented and verified                                                   | External-provider/OS permission certification and deployment-specific VAPID rollout                                                                                            |
-| Email                         | Generic localized MJML verification, email-change and recovery templates; previews; renderer/build and real delivery-flow integration                                       | Implemented, tests/build/gateway checks passed                                                                                       | Real Mailgun delivery and Gmail/Outlook client certification not exercised; no family or financial reminder templates imported                                                 |
-| Application updates and PWA   | Locale-scoped worker; template-generated manifest/icons; explicit reload notice; freshness navigation; no API data caching                                                  | Implemented, unit/build/gateway browser passed                                                                                       | Real deployment update rollout and operating-system install certification remain unverified                                                                                    |
-| Shared UI                     | Native button toggle semantics; table state fixes; select parity review; mobile navigation focus restoration; shell-local page titles                                       | Primitives and shell titles verified                                                                                                 | Product palettes/navigation excluded; complete any remaining independently useful source review                                                                                |
-| Personal runtime              | Portable pairing proof and recipient-bound encrypted key delivery in shared-crypto                                                                                          | Primitives and application browser enrollment verified                                                                               | Finance client, intake commands and product runtime excluded; final whole-port verification remains                                                                            |
+| Phase                         | Explicit sub-scope                                                                                                                                                                  | Status                                                                                                                               | Remaining gaps                                                                                                                                                                 |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tooling                       | Fail-fast hooks; graph-aware affected/related checks; exact-file lint; CI base/head; one-shot tests; serialized E2E; bounded interruption cleanup                                   | Implemented, focused tests passed                                                                                                    | Await-expression, extensionless-import, 120-column and 500-line enforcement require the associated workspace refactors; do not enable them against incompatible existing files |
+| Formatting                    | Compare Prettier configuration and dependency versions                                                                                                                              | Already equivalent                                                                                                                   | None for configuration; workspace-wide formatting is not part of this first block                                                                                              |
+| Deployment and infrastructure | Explicit trusted ingress hops; secure-cookie HTTP regressions; generic deployment/migration runbook; checksum-pinned MinIO CI fixture                                               | Implemented; disposable PostgreSQL and synthetic encrypted-object/TOTP restore refreshed on 2026-10-13                               | Container deployment, real providers and production restore remain unverified                                                                                                  |
+| Sessions                      | Authoritative HttpOnly session lookup without auxiliary hints; retry temporary failures; forced checks fail closed; no-store session responses                                      | Implemented, unit and gateway browser tests passed                                                                                   | None for this correction; application vault lifecycle remains separate                                                                                                         |
+| Passkeys                      | Direct regular WebAuthn; explicit method sheet; post-selection errors; focus return; email-free entry and live waiting/navigation status                                            | Implemented, unit and gateway route tests passed                                                                                     | None for entry behavior; vault unlock remains separate                                                                                                                         |
+| Zero-knowledge primitives     | Strict PRF/PIN envelopes; Argon2id; non-extractable custody; local PIN enrollment; durable attempts; recovery UI; PRF assertions/UI; signed relay; session cleanup                  | PIN/recovery, PRF and application browser relay verified                                                                             | Final whole-port verification and deployment/authenticator certification                                                                                                       |
+| Resilient synchronization     | Persistent encrypted queue; revision-bound replay; cross-tab locking; isolate blocked/conflicting transfers; durable apply-before-cursor                                            | Application projection consumer, ciphertext archive, gateway authority and localized reconciliation integrated; native checks passed | Final whole-port verification; archive compaction/checkpoint retention beyond the bounded 10,000-envelope archive requires a separate design                                   |
+| Durable async operations      | Persisted operation acceptance/results; reconnect catch-up; authenticated live completion                                                                                           | Integrated with project seed and gateway verified                                                                                    | Real PostgreSQL process-restart/failover verification; new handlers require their own bounded, idempotent writes                                                               |
+| Notifications                 | Account/user-scoped inbox/preferences; atomic producers; localized inbox; live invalidation; session-bound subscriptions; leased outbox; VAPID; explicit browser enrollment         | Inbox/preferences, bounded delivery and opt-in enrollment implemented and verified                                                   | External-provider/OS permission certification and deployment-specific VAPID rollout                                                                                            |
+| Email                         | Generic localized MJML verification, email-change and recovery templates; previews; renderer/build and real delivery-flow integration                                               | Implemented, tests/build/gateway checks passed                                                                                       | Real Mailgun delivery and Gmail/Outlook client certification not exercised; no family or financial reminder templates imported                                                 |
+| Application updates and PWA   | Locale-scoped worker; template-generated manifest/icons; explicit reload notice; freshness navigation; no API data caching                                                          | Implemented, unit/build/gateway browser passed                                                                                       | Real deployment update rollout and operating-system install certification remain unverified                                                                                    |
+| Shared UI                     | Native button toggle semantics; table/select state; mobile focus; shell titles; shared form value synchronization and dirty state; empty error projection; auth language navigation | Primitives, shell titles, form corrections and empty projection verified                                                             | Product palettes/navigation excluded; remaining reusable details require individual review                                                                                     |
+| Personal runtime              | Portable pairing proof and recipient-bound encrypted key delivery in shared-crypto                                                                                                  | Primitives and application browser enrollment verified                                                                               | Finance client, intake commands and product runtime excluded; final whole-port verification remains                                                                            |
+| Runtime lifecycle             | Queue/operation draining; HTTP/realtime closure; owned-child escalation/reaping; memory-runtime adaptation                                                                          | Unit, real socket, build and composed runtime checks passed                                                                          | Deployment-specific shutdown certification remains separate                                                                                                                    |
+| Isolated extractors           | Strict manifest; immutable local image; bounded no-network/no-secret execution; explicit result validation                                                                          | Generic boundary completed; mocked and real Podman checks passed                                                                     | Real Docker and third-party image certification remain separate                                                                                                                |
 
 ## Provenance and adaptations
+
+### Stability priority follow-up (2026-10-13)
+
+The owner selected documented pending work and stack stability as the priority.
+Continue using Nive revision `073e16b8` strictly as a read-only reference.
+
+| Pending slice               | Implementation                                                                                                                                                                                                                | Verification                                                                                                    | Remaining boundary                                                     |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Signup continuity           | Invalidate abandoned registration/OTP/session results; clear secrets; abort the owned browser registration; distinguish verified email from an authenticated session; preserve the stack workspace route and query parameters | Passkey/password/unit race coverage and localized gateway browser scenarios                                     | Real physical authenticator certification remains separate             |
+| Reauthentication continuity | Snapshot the confirmation context; expose owner invalidation; ignore late factor/preparation responses; reject malformed/expired ISO deadlines with Luxon                                                                     | Authorization-before-mutation, invalidation, out-of-order preparation and existing password/TOTP consumer tests | Product-specific approval recovery and family purposes remain excluded |
+| Empty error projection      | Track projected message text after browser render; hide empty/whitespace-only errors; disconnect observers on destruction; preserve SSR text and accessible control IDs                                                       | Dynamic projection, observer cleanup, SSR and existing form browser checks                                      | No product palette or validation schema is imported                    |
+| Auth language navigation    | Reuse the existing route-aware language switcher in the auth shell instead of its presentational demo control                                                                                                                 | English/Spanish route, query-parameter and current-locale browser checks                                        | Existing supported locales remain en/es                                |
+| Strict lint rollout         | Extend the existing strict scope to signup, security actions and error-message primitives; retain all previous scope                                                                                                          | Focused lint, template rule tests and a refreshed non-mutating global audit                                     | Workspace-wide await/import/control-flow refactors remain open         |
+
+The source signup coordinator is adapted to `APP_URL` and `SIGN_IN_URL`; the
+source onboarding destination and product features are not copied. New visible
+result/back actions use existing shared buttons. English source messages and
+Spanish translations are updated together. The passkey wrapper accepts an
+optional cancellation signal without changing other callers or PRF negotiation.
+
+A stricter deadline check exposed a password/TOTP test fixture without the real
+response's `expiresAt` field. Repair that fixture to provide the complete valid
+contract; do not relax the production check to accept missing/malformed expiry.
+The signup unit suites cover method changes, route destruction, duplicate
+submissions, late browser credentials, consumed OTPs, session-check failures,
+manual continuation and a failed initial navigation.
+
+Screenshot review found that the auth shell still used a presentational language
+control: selecting a language changed its stored indicator without navigating,
+and Spanish routes could display EN. The shell now reuses the existing
+`LanguageSwitcher`; two browser regressions verify both directions, the active
+locale, password mode and query-parameter continuity. No duplicate locale service
+or project-specific navigation is introduced.
+
+Focused verification passed all 330 Angular tests with one existing activation
+skip and all 69 template tests. Six new real-gateway browser scenarios cover
+localized truthful completion, failed session lookup, late registration results
+and language navigation in both directions. The combined sign-in/signup focused
+run passed all 11 scenarios. English/Spanish screenshot baselines were recaptured
+and reviewed after connecting the auth shell to its functional language switcher;
+the 360px Spanish method-sheet capture was also reviewed for header containment.
+
+A complete browser run before the language fix passed 91 scenarios with one
+existing skip. The first complete run after that fix passed 92 scenarios but
+failed the old `[data-od-id="lang-menu"]` test assertion. The chrome helper now
+checks the visible accessible Change language button, while the new language
+scenarios verify its behavior. This was a test coupling to the replaced demo
+control, not accepted as green evidence.
+
+A subsequent full run exposed two existing fixture races. The validation icon
+test sampled two bounding boxes in separate frames during the reveal animation;
+it now reads both centers in one browser evaluation and retains the original
+two-pixel tolerance. The expired passkey assertion test installed its mock after
+navigation, allowing automatic authentication to finish first; it now installs
+the one-use 410 response before navigating. The initial three repetitions of
+each case passed (`tmp/stability-fixture-repeat.log`), but the complete run still
+exposed an earlier fixture race (`tmp/stability-cookie-race-full.log`): it cleared
+cookies while the completed signup was still transitioning to the application.
+The session middleware deliberately uses rolling cookies, so in-flight requests
+could restore the authenticated cookie after the test cleared it. The fixture now
+waits for the authenticated application route, leaves the previous document,
+clears cookies, and asserts an anonymous server session before beginning sign-in.
+It also checks that exactly one expired response was actually consumed. Expiry,
+unauthenticated session, retry and OTP replay assertions remain intact. The final
+fixture passed three repetitions of validation alignment and both passkey variants
+(nine checks, `tmp/stability-cookie-fixture-repeat.log`). The final complete
+regression and its results follow below. Backend route/schema code is unchanged
+by this increment; the previous backend/restore evidence remains recorded
+separately.
+
+Validation matrix: `unit`, `app-e2e`, `gateway-e2e`, `site-e2e`, `visual`, `security`
+and `build` are required. API contract E2E is not applicable because this slice
+changes browser state/controls and test fixtures, not HTTP schemas or handlers.
+Production app/gateway builds passed, including strict missing-translation checks;
+lint passed for app, app-e2e and template. No dependencies, persisted schema or
+migration history changed.
+
+Final verification after the fixture corrections:
+
+| Check                    | Result                                                                                                                 | Evidence                                                                                                       |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Angular unit suite       | 330 passed; one existing activation skip                                                                               | `tmp/stability-shell-unit.log`                                                                                 |
+| Template tooling suite   | 69 passed                                                                                                              | `tmp/stability-template-test.log`                                                                              |
+| Complete application E2E | 93 passed; one existing activation skip; Chromium and Firefox/WebKit fallback projects                                 | `tmp/stability-final-browser.log`                                                                              |
+| Composed gateway E2E     | Five passed                                                                                                            | `tmp/stability-final-gateway.log`                                                                              |
+| Site E2E                 | Seven passed                                                                                                           | `tmp/stability-final-site.log`                                                                                 |
+| Production builds        | All E2E prerequisite builds passed without cache, including localized app and composed runtimes                        | The three final E2E logs                                                                                       |
+| Lint and format          | App, app-e2e and template lint passed; final fixture lint passed; changed-file formatting and whitespace checks passed | `tmp/stability-final-lint.log`, `tmp/stability-final-fixture-lint.log`, `tmp/stability-final-format-check.log` |
+
+The temporary Redis composition was removed after verification. The Redis,
+gateway and local-agent ports have no remaining listeners and can be reused
+(allowing normal TCP TIME_WAIT reuse); evidence is in `tmp/stability-cleanup.log`. No source-repository
+commands execute application scripts or change files/Git state in Nive. The owner
+subsequently requested committing and pushing these changes to the existing draft
+PR #2. Publication must pass the normal pre-commit and commit-message hooks;
+the PR remains a draft while the remaining port work is open.
+
+The refreshed non-mutating audit (`tmp/stability-strict-inventory.json`) inspected
+740 JS/TS files: 1,008 brace violations, 662 embedded awaits, three overlong lines
+and zero oversized files. Global strict activation and native import-runner
+compatibility still require their own refactors. This audit reports remaining
+workspace debt; the strict rules enabled on this increment's modules are green.
+
+### Stack-only resumption (2026-10-13)
+
+The current owner instruction keeps the sibling `../nive` repository strictly
+read-only and limits this work to the reusable stack. No downstream Nive
+application wiring is part of this continuation. New source inspection uses
+committed revision `073e16b8b2f2d5810f25e18cf33f3e4a5e59c330`; it does not silently
+replace the original `070ec99` baseline or import the sibling's uncommitted
+personal-runtime changes. Root agent instructions now preserve this boundary.
+
+| Slice                     | Source or existing work                                          | Result                                                                                                                                                                                                                        | Acceptance                                                                                                     |
+| ------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Runtime shutdown          | Nive `ca8a9c13`, `796265e3`                                      | Drain the owned queue and durable-operation worker once; close Socket.IO and HTTP before exiting; kill/reap only the owned child at the existing ten-second deadline                                                          | Focused lifecycle tests, complete runtime unit suites, production build and composed runtime checks            |
+| Memory runtime adaptation | Existing stack-only in-process durable worker                    | Preserve process-local PGlite/session authority; await its active operation, handle synchronous/asynchronous stop failure, report forced/failed cleanup as nonzero; retain failed-bootstrap status and handle listener errors | Fake-time memory/child lifecycle cases and clean-copy PostgreSQL/restore                                       |
+| Extractor boundary        | Existing uncommitted generic port of the source manifest/sandbox | Finish bounded local Docker/Podman execution with caller-supplied result validation; Podman cleanup uses `--time=0` inside its ten-second deadline                                                                            | Mocked failure/limit/cancellation tests and opt-in real Podman isolation; Docker remains separately unverified |
+| Shared forms              | Committed Nive input/textarea and interaction-state corrections  | Browser-render value synchronization preserves selection; loaded values stay pristine; nine controls mark user edits dirty, including a stack-specific PIN correction                                                         | Full Angular suite, lint, production build and existing browser scenarios                                      |
+| Affected ownership        | Nive `8a11eda6` reviewed against the existing stack graph        | Existing gateway project edges already select app/API/gateway E2E for API, realtime and worker edits; no duplicate product dependency map is imported                                                                         | Actual single-file Nx affected queries retained in `tmp/resume-*-affected.json`                                |
+
+The independently reviewable slices are runtime shutdown, extractor isolation and
+shared form state. They share no new product domain or database migration and can
+be reviewed separately before publication. The uncommitted extractor work found
+on arrival is preserved and completed rather than discarded.
+
+The real isolation check initially failed when Podman's default ten-second stop
+grace consumed the entire cleanup deadline after cancellation. The correction
+uses immediate forced removal for Podman and keeps Docker's native forced-removal
+arguments. The fixture snapshots preexisting containers and verifies they remain
+unchanged; it never deletes another invocation's container. The repeated real
+check passed all 26 extractor cases, including cancellation and output overflow.
+
+Source reconciliation also identifies further reusable work; these are explicit
+follow-ups, not a claim of full parity with the new snapshot:
+
+- Registration attempt invalidation, late-result cancellation and post-verification
+  session feedback were identified in `auth/sign-up` and are now resolved in the
+  stability-priority follow-up above. Nive's onboarding route and product copy
+  remain excluded.
+- Reauthentication action continuity is resolved by the stability-priority
+  follow-up above; the family-management purposes and approval protocols remain
+  excluded.
+- Empty shared error-message presentation is resolved in the stability-priority
+  follow-up above, including dynamic projection, cleanup and SSR coverage.
+- Workspace-wide strict lint still needs compatible await/control-flow/import
+  refactors. This continuation only extends the existing strict scope to the
+  lifecycle helpers, extractor and touched shared form modules. It does not hide
+  the historical global audit or enable failing rules everywhere.
+- Source financial/family synchronization proposals, reminders, catalog/shopping
+  operations, native finance clients and browser coverage maps remain product
+  functionality. The stack already has neutral durable sync and operation
+  transports; do not copy these source implementations by filename alone.
+
+Validation matrix for this continuation: `unit`, `app-e2e`, `gateway-e2e`,
+`site-e2e`, `security`, and `build` are required. API contract E2E is not applicable
+because no request/response schema, HTTP handler or public route changes here;
+existing API unit regressions are still run. Visual snapshot authoring is not
+applicable because no style, layout or visible copy changes; existing browser
+assertions remain in scope. Real PostgreSQL/object-store restore is additional
+acceptance, not replaced by the memory-mode suites.
+
+#### Fresh verification and remaining strict audit
+
+- `app:vite:test --run`: 284 passed, one existing activation skip.
+- `template:test`: all 69 passed, including initializer/toolchain/hook regressions.
+- `server:test`: all 46 passed, including both real websocket and polling shutdown
+  with an active HTTP response; `worker:test`: all 16 passed.
+- `api:test`: 243 passed, nine existing infrastructure cases skipped in memory
+  mode; `realtime:test`: all nine passed. No forced test-runner exit was used.
+- An occupied-listener probe against the built gateway reported bootstrap failure,
+  completed its cleanup and exited with status 1 rather than an unhandled server
+  error. Evidence: `tmp/resume-bootstrap-probe.log`.
+- `shared:test`: 259 passed, ten preexisting/opt-in cases skipped. The separately
+  enabled real extractor suite plus mocked extractor suite passed all 26 cases.
+- Full `app-e2e:e2e`: 87 passed, one existing skip across Chromium and the
+  configured Firefox/WebKit password/registration fallback scenarios.
+- Full `server-e2e:e2e`: five passed; full `site-e2e:e2e`: seven passed.
+- Production `server:build:production`: all 12 tasks passed without cached build
+  output. The E2E invocations also reran their build prerequisites.
+- Lint passed for all four touched projects (`app`, `shared`, `server`, `worker`).
+- Clean-copy `template:smoke --restore` passed with isolated local PostgreSQL,
+  Redis and MinIO. Evidence: `tmp/template-smoke-XXdNA5/result.json`. The restore
+  proves schema/data fingerprints, migration continuity, password authentication,
+  a synthetic encrypted-object canary and TOTP key continuity. It does not certify
+  full product-vault or production key-escrow recovery. An initial invocation
+  correctly refused ambient container connection overrides; the repeat removed
+  those overrides only from the verification process environment. The template
+  tooling bundle was cached; the clean install, renamed runtime build, flow and
+  restore were fresh.
+
+Logs use the `tmp/resume-*` prefix. The non-mutating strict audit examined 736
+tracked/non-ignored untracked JS/TS files: 1,031 brace violations, 666 embedded
+awaits, three overlong lines, and zero files above 500 counted lines. This audit
+includes native scripts and config files; it is a broader scope than the earlier
+726-file checkpoint, not a before/after regression comparison. Global strict
+activation and import-runner compatibility remain follow-up work.
+
+The sibling hash audit observed concurrent changes in personal-runtime and
+shared-common files, while its committed HEAD stayed `073e16b8`. This continuation
+never writes or runs application tools in that checkout and never imports that
+mutable work. The hashes are diagnostic evidence, not a claim that other actors
+kept the entire sibling worktree unchanged.
 
 ### Boundary publication and reusable-source reconciliation follow-up
 

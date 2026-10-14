@@ -38,7 +38,12 @@ describe('PasswordManagement', () => {
         {
           provide: SecurityAuth,
           useValue: {
-            startReauthentication: vi.fn().mockResolvedValue({ grantId: 'grant-1', methods: ['passkey'] }),
+            startReauthentication: vi.fn().mockResolvedValue({
+              grantId: 'grant-1',
+              methods: ['passkey'],
+              expiresAt: '2099-01-01T00:00:00Z',
+              passwordRequiresTotp: false,
+            }),
             completeReauthentication: vi.fn().mockResolvedValue({ grantId: 'grant-1', authenticated: true }),
           },
         },

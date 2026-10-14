@@ -65,6 +65,8 @@ describe('Select templates', () => {
     await fixture.whenStable();
     expect(fixture.componentInstance.model().role).toBe('admin');
     expect(fixture.componentInstance.f.role().touched()).toBe(true);
+    expect(fixture.componentInstance.f.role().dirty()).toBe(true);
+    expect(fixture.componentInstance.f().dirty()).toBe(true);
   });
 });
 
@@ -117,5 +119,19 @@ describe('Select', () => {
     fixture.componentInstance.roles.set(['admin', 'member', 'viewer']);
     await fixture.whenStable();
     expect(select.value).toBe('viewer');
+    expect(fixture.componentInstance.f().dirty()).toBe(false);
+  });
+
+  it('marks a native selection as dirty and resets interaction state without discarding its value', async () => {
+    const select = fixture.nativeElement.querySelector('select') as HTMLSelectElement;
+
+    select.value = 'admin';
+    select.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    expect(fixture.componentInstance.f().dirty()).toBe(true);
+    fixture.componentInstance.f().reset();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.f().dirty()).toBe(false);
+    expect(select.value).toBe('admin');
   });
 });

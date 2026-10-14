@@ -4,6 +4,8 @@ export * from './lib/db/migrate';
 export * from './lib/db/pool';
 export * from './lib/db/safe-insert';
 export * from './lib/db/schema';
+export { extractorManifest, runExtractor } from './lib/plugins/extractor';
+export type { ExtractorManifest, ExtractorOptions } from './lib/plugins/extractor';
 export * from './lib/crypto/device-identity';
 export * from './lib/crypto/vault-session-cleanup';
 export * from './lib/crypto/durable-device-identity';

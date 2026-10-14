@@ -36,6 +36,7 @@ export class Checkbox {
     const nextValue = (event.target as HTMLInputElement).checked;
 
     this.formField()().value.set(nextValue);
+    this.formField()().markAsDirty();
     this.checkedChange.emit(nextValue);
   }
 

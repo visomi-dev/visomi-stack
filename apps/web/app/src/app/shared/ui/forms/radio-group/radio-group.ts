@@ -52,8 +52,12 @@ export class RadioGroup {
   );
 
   selectValue(optionValue: string): void {
-    if (this.isDisabled() || !this.options().some((option) => option.value === optionValue && !option.disabled)) return;
+    if (this.isDisabled() || !this.options().some((option) => option.value === optionValue && !option.disabled)) {
+      return;
+    }
+
     this.formField()().value.set(optionValue);
+    this.formField()().markAsDirty();
     this.valueChange.emit(optionValue);
   }
 
