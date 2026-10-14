@@ -18,7 +18,8 @@ const runtimeBucket = `${runtimePrefix}-opaque`;
 let selectedCli: string | undefined;
 
 function runtimeCli(): string {
-  for (const candidate of ['podman', 'docker']) {
+  // The MinIO fixture target builds into Docker's image store when both engines are installed.
+  for (const candidate of ['docker', 'podman']) {
     if (spawnSync('command', ['-v', candidate], { shell: true, stdio: 'ignore' }).status === 0) return candidate;
   }
   throw new Error('API E2E durable prerequisites require podman or docker, or explicit CI storage overrides.');

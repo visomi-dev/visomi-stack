@@ -1,8 +1,46 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
 import { parse } from 'yaml';
+
+test('durable API fixtures use Docker when both engines exist and fall back to Podman otherwise', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'visomi-container-engine-'));
+  const runner = resolve('apps/web/api-e2e/src/support/run-api-e2e.ts');
+
+  try {
+    for (const engines of [['docker', 'podman'], ['podman']]) {
+      for (const engine of ['docker', 'podman']) {
+        const executable = join(directory, engine);
+
+        await rm(executable, { force: true });
+        if (!engines.includes(engine)) continue;
+        // Fail before any real service starts; stderr identifies the selected engine and image.
+        await writeFile(executable, '#!/bin/sh\nexit 1\n');
+        await chmod(executable, 0o755);
+      }
+      const result = spawnSync(process.execPath, ['--experimental-strip-types', runner], {
+        encoding: 'utf8',
+        timeout: 10_000,
+        env: {
+          ...process.env,
+          PATH: directory,
+          API_E2E_DURABLE_ONLY: 'true',
+          API_E2E_EXTERNAL_SERVICES: 'false',
+        },
+      });
+
+      assert.equal(result.error, undefined);
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, new RegExp(`${engines[0]} run .*docker.io/library/postgres:16-alpine failed`));
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
 
 test('non-bundled runtimes package the push translation resource beside its compiled importer', async () => {
   for (const path of ['apps/worker/project.json', 'apps/web/realtime/project.json']) {
