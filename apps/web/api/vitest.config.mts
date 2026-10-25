@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -12,7 +12,7 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'node',
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    passWithNoTests: true,
+    exclude: [...configDefaults.exclude, 'e2e/**'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../../coverage/apps/web/api',

@@ -1,39 +1,72 @@
 #!/usr/bin/env tsx
 // @nx-target-name: serve
-import express from 'express';
+import { createServer } from 'node:http';
+
+import { initializeObservability } from '@visomi-stack/web-backend-shared';
+
+import packageJson from '../package.json' with { type: 'json' };
+
+import { createApp } from './app';
+
+const observability = initializeObservability({
+  service: 'web-api',
+  version: packageJson.version,
+  environment: process.env.NODE_ENV,
+});
+const server = createServer(createApp({ observability }));
+let stopping = false;
+
+async function stop(exitCode: number): Promise<void> {
+  if (stopping) {
+    return;
+  }
+
+  stopping = true;
+  process.off('SIGINT', onSignal);
+  process.off('SIGTERM', onSignal);
+  const deadline = setTimeout(() => {
+    observability.event('runtime.failed', 'shutdown_timeout');
+    process.exit(1);
+  }, 5000);
+  const drain = setTimeout(() => server.closeAllConnections(), 3000);
+
+  await new Promise<void>((resolve) => server.close(() => resolve()));
+  clearTimeout(drain);
+  observability.event(exitCode ? 'runtime.failed' : 'runtime.stopped', exitCode ? 'startup_failed' : 'none');
+  const flushed = await observability.shutdown(1000);
+
+  clearTimeout(deadline);
+  process.exitCode = flushed ? exitCode : 1;
+}
+
+function onSignal(): void {
+  void stop(0);
+}
+
+process.once('SIGINT', onSignal);
+process.once('SIGTERM', onSignal);
+server.once('error', () => void stop(1));
 
 const host = process.env.HOST ?? 'localhost';
-const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+const port = process.env.PORT === undefined ? 3000 : Number(process.env.PORT);
 
-const app = express();
+if (!Number.isInteger(port) || port < 0 || port > 65535) {
+  void stop(1);
+} else {
+  server.listen(port, host, async () => {
+    observability.event('runtime.started');
 
-app.get('/', (_req, res) => {
-  res.send({ message: 'Hello API' });
-});
+    if (process.env.NX_READY_SIGNAL_SOCKET) {
+      try {
+        const load = new Function('specifier', 'return import(specifier)') as (
+          specifier: string,
+        ) => Promise<{ emitReadySignal(server: unknown): boolean }>;
+        const ready = await load('@nx/js/ready-signal');
 
-const server = app.listen(port, host, async (error?: Error) => {
-  if (error) {
-    throw error;
-  }
-
-  console.log(`[ ready ] http://${host}:${port}`);
-  // Set when Nx waits for this server to be ready
-  if (process.env.NX_READY_SIGNAL_SOCKET) {
-    try {
-      // Function keeps TypeScript and bundlers from rewriting or bundling the import
-      const load = new Function('s', 'return import(s)') as (
-        s: string,
-      ) => Promise<{ emitReadySignal(server: unknown): boolean }>;
-
-      const module = await load('@nx/js/src/utils/ready-signal');
-
-      module.emitReadySignal(server);
-    } catch {
-      // @nx/js isn't installed
+        ready.emitReadySignal(server);
+      } catch {
+        // Nx readiness is optional for standalone execution.
+      }
     }
-  }
-});
-
-process.on('SIGTERM', () => {
-  server.close(() => process.exit(0));
-});
+  });
+}
