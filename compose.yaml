@@ -1,10 +1,10 @@
+# Local development only. Keep unique secrets in .env; do not use example placeholders.
 name: ${COMPOSE_PROJECT_NAME:-visomi-local}
 
 services:
   postgres:
     image: docker.io/library/postgres:16-alpine
     environment:
-      # Debe coincidir con DATABASE_URL. No migra una base ya inicializada.
       - POSTGRES_DB=${POSTGRES_DB:-visomi}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-local-development-only}
@@ -51,19 +51,55 @@ services:
       start_period: ${HEALTHCHECK_START_PERIOD:-5s}
 
   minio-init:
-    image: docker.io/library/node:24.14.1-alpine
+    image: docker.io/minio/mc:latest
+    restart: "no"
     depends_on:
       minio:
         condition: service_healthy
-    working_dir: /workspace
-    command: ['node', '--experimental-strip-types', 'initialize-minio-bucket.ts']
+    entrypoint: ['/bin/sh', '-ec']
+    command:
+      - |
+        mc alias set local "$$MINIO_ENDPOINT" "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"
+        mc mb --ignore-existing "local/$$OPAQUE_SYNC_S3_BUCKET"
     environment:
       - MINIO_ENDPOINT=http://minio:9000
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-visomi_local}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-visomi_local_minio_password}
       - OPAQUE_SYNC_S3_BUCKET=${OPAQUE_SYNC_S3_BUCKET:-visomi-opaque-sync}
-    volumes:
-      - ./scripts/initialize-minio-bucket.ts:/workspace/initialize-minio-bucket.ts:ro
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        SITE_URL: ${SITE_URL:-http://localhost:8080}
+    # Public browser URLs stay on localhost; service connections use container DNS.
+    # If DATABASE_AUTO_MIGRATE=false in .env, initialize the database schema separately.
+    env_file:
+      - .env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+      - GATEWAY_PORT=8080
+      # Set APP_DATABASE_URL for URL-encoded credentials; use postgres:5432 as the host.
+      - DATABASE_URL=${APP_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-visomi}}
+      - REDIS_URL=redis://redis:6379
+      - OPAQUE_SYNC_S3_ENDPOINT=http://minio:9000
+      - OPAQUE_SYNC_S3_ACCESS_KEY=${MINIO_ROOT_USER:-visomi_local}
+      - OPAQUE_SYNC_S3_SECRET_KEY=${MINIO_ROOT_PASSWORD:-visomi_local_minio_password}
+      - OPAQUE_SYNC_S3_BUCKET=${OPAQUE_SYNC_S3_BUCKET:-visomi-opaque-sync}
+    ports:
+      - '127.0.0.1:8080:8080'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
 
 volumes:
   postgres-data:

@@ -2,3 +2,5 @@ autoInstallPeers: true
 allowBuilds:
   nx: true
   unrs-resolver: true
+  '@parcel/watcher': false
+  esbuild: true

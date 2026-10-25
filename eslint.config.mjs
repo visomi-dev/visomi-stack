@@ -34,9 +34,7 @@ export default [
           enforceBuildableLibDependency: true,
           // Portable primitives and contracts are used statically by routes and lazily by root services.
           // These are libraries, not lazy route projects; keep heavy validation/crypto out of the initial bundle.
-          checkDynamicDependenciesExceptions: [
-            'web-shared-common',
-          ],
+          checkDynamicDependenciesExceptions: ['web-shared-common'],
           // template.json is a public workspace build input, not another domain's implementation.
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$', '^(?:\\.\\./)+template\\.json$'],
           depConstraints: [
@@ -77,8 +75,7 @@ export default [
     settings: {
       'import-x/ignore': ['^astro:'],
       // Keep workspace alias grouping independent of the lint cwd and generated resolver paths.
-      'import-x/internal-regex':
-        '^(?:web-shared|web-shared-common|web-frontend-shared|web-backend-shared)(?:/|$)',
+      'import-x/internal-regex': '^(?:web-shared|web-shared-common|web-frontend-shared|web-backend-shared)(?:/|$)',
     },
     rules: {
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
