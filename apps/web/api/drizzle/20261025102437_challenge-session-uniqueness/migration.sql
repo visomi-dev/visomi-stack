@@ -1,0 +1,1 @@
+ALTER TABLE "auth_challenges" ADD CONSTRAINT "auth_challenges_session_id_key" UNIQUE("session_id");

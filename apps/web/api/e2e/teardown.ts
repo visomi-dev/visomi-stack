@@ -2,7 +2,9 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
-export default async function teardown() {
+import { stopTestPostgres } from '../tests/support/postgres';
+
+async function stopApplication() {
   const directory = process.env.VISOMI_E2E_TELEMETRY_DIR;
 
   if (!directory) {
@@ -45,4 +47,48 @@ export default async function teardown() {
     await delay(100);
   }
   signal(owner.pid, 'SIGKILL');
+}
+
+async function stopDatabase() {
+  const directory = process.env.VISOMI_E2E_TELEMETRY_DIR;
+
+  if (!directory) {
+    return;
+  }
+
+  let cluster: { directory: string; binary: string };
+
+  try {
+    const manifest = await readFile(join(directory, 'postgres.json'), 'utf8');
+
+    cluster = JSON.parse(manifest);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return;
+    }
+
+    throw error;
+  }
+
+  await stopTestPostgres(cluster.directory, cluster.binary);
+}
+
+export default async function teardown() {
+  const failures: unknown[] = [];
+
+  try {
+    await stopApplication();
+  } catch (error) {
+    failures.push(error);
+  }
+
+  try {
+    await stopDatabase();
+  } catch (error) {
+    failures.push(error);
+  }
+
+  if (failures.length) {
+    throw failures[0];
+  }
 }

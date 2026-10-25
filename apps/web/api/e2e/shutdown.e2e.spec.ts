@@ -1,15 +1,20 @@
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
 
 import { expect, test } from '@playwright/test';
+import { Pool } from 'pg';
 
 import { readTelemetry } from './telemetry';
 
 async function startStandalone(directory: string) {
   const root = resolve(__dirname, '../../../..');
+  const text = await readFile(join(process.env.VISOMI_E2E_TELEMETRY_DIR!, 'database.json'), 'utf8');
+  const databaseUrl = new URL(JSON.parse(text).url);
+
+  databaseUrl.searchParams.set('application_name', 'visomi_e2e_shutdown');
   const probe = createServer();
 
   await mkdir(directory, { recursive: true });
@@ -30,6 +35,10 @@ async function startStandalone(directory: string) {
         HOST: '127.0.0.1',
         PORT: String(address.port),
         NODE_ENV: 'test',
+        DATABASE_URL: databaseUrl.toString(),
+        AUTH_ORIGIN: 'http://127.0.0.1:3307',
+        AUTH_RP_ID: '127.0.0.1',
+        SESSION_SECRET: 'synthetic-e2e-only-session-secret-32-bytes',
         VISOMI_E2E_TELEMETRY_DIR: directory,
         VISOMI_E2E_HOLD_SPANS: 'true',
       },
@@ -37,7 +46,7 @@ async function startStandalone(directory: string) {
     },
   );
 
-  return { child, origin: `http://127.0.0.1:${address.port}` };
+  return { child, databaseUrl: databaseUrl.toString(), origin: `http://127.0.0.1:${address.port}` };
 }
 
 async function closeStandalone(child: ReturnType<typeof spawn>, exited: Promise<unknown>) {
@@ -49,7 +58,11 @@ async function closeStandalone(child: ReturnType<typeof spawn>, exited: Promise<
 
 test('the compiled executable delivers pending telemetry within its shutdown limits', async ({ request }, testInfo) => {
   const directory = testInfo.outputPath('telemetry');
-  const { child, origin } = await startStandalone(directory);
+  const { child, origin, databaseUrl } = await startStandalone(directory);
+  const probeUrl = new URL(databaseUrl);
+
+  probeUrl.searchParams.set('application_name', 'visomi_e2e_probe');
+  const pool = new Pool({ connectionString: probeUrl.toString() });
   const exited = once(child, 'exit');
   let errors = '';
 
@@ -65,6 +78,11 @@ test('the compiled executable delivers pending telemetry within its shutdown lim
         return telemetry.logs.some((log) => log.event === 'runtime.started');
       })
       .toBe(true);
+    const active = await pool.query(
+      "SELECT count(*)::int AS count FROM pg_stat_activity WHERE application_name = 'visomi_e2e_shutdown'",
+    );
+
+    expect(active.rows[0].count).toBe(1);
     const response = await request.get(`${origin}/`);
     const id = response.headers()['x-request-id'];
 
@@ -93,6 +111,15 @@ test('the compiled executable delivers pending telemetry within its shutdown lim
     const telemetry = await readTelemetry(directory);
     const completion = telemetry.logs.filter((log) => log.requestId === id);
 
+    await expect
+      .poll(async () => {
+        const closed = await pool.query(
+          "SELECT count(*)::int AS count FROM pg_stat_activity WHERE application_name = 'visomi_e2e_shutdown'",
+        );
+
+        return closed.rows[0].count;
+      })
+      .toBe(0);
     expect(exitResult[0]).toBe(0);
     expect(performance.now() - started).toBeLessThan(5000);
     expect(errors).toBe('');
@@ -103,5 +130,6 @@ test('the compiled executable delivers pending telemetry within its shutdown lim
     expect((telemetry.spans[0].context as { spanId: string }).spanId).toBe(completion[0].spanId);
   } finally {
     await closeStandalone(child, exited);
+    await pool.end();
   }
 });

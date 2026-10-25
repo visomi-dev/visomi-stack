@@ -20,9 +20,11 @@ libs/
 `apps/web/api/src/app.ts` exports `createApp()`. Calling it configures and returns
 an Express application without opening a listener or initializing telemetry.
 `main.ts` owns standalone telemetry initialization, listening, SIGINT/SIGTERM
-handling, HTTP draining, and bounded telemetry shutdown. The only feature endpoint
-is `GET /`, returning a static JSON greeting; unknown routes and application errors
-return fixed error responses.
+handling, HTTP draining, and bounded telemetry shutdown. The public `GET /` endpoint returns a static JSON greeting. The authentication
+capability provides passkey signup/sign-in, session inspection/logout, and owned
+credential management under `/auth`, backed by PostgreSQL. Unknown routes and
+application errors return fixed responses. See the [API guide](../apps/web/api/README.md)
+for the schema, migration commands and managed/inherited ownership contract.
 
 The API's Rolldown build preserves named `app` and `main` entries with stable
 `app.js` and `main.js` filenames, CommonJS output, external runtime dependencies,
@@ -148,15 +150,16 @@ points; their names and layout can be decided when needed.
 
 The topology does not select:
 
-- Authentication methods, session lifecycle, recovery, or authorization policy.
-- Tenant boundaries, database isolation, storage engines, or migration tooling.
+- Authentication beyond the implemented passkey/session slice, recovery, and domain authorization policy.
+- Tenant boundaries, domain database isolation, and storage beyond the implemented PostgreSQL/Drizzle authentication slice.
 - Queue and realtime libraries, delivery guarantees, or event contracts.
 - UI components, styling foundations, localization, or PWA behavior.
 - Encryption, browser vaults, local-agent integration, or synchronization protocols.
 - Hosting, ingress, deployment composition, external telemetry exporters/providers, or release controls.
 
-PostgreSQL, Redis, and MinIO appear in the inherited Compose file. Their presence
-does not establish working integrations or settle these decisions.
+PostgreSQL now backs authentication through explicit Drizzle migrations. Redis and
+MinIO still only appear in inherited container configuration; their presence does
+not establish working integrations or settle these decisions.
 
 ## Reference boundaries
 

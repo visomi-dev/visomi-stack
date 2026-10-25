@@ -13,11 +13,22 @@ const boundary = vi.hoisted(() => ({
   createApp: vi.fn(() => 'synthetic-app'),
   createServer: vi.fn(),
   initialize: vi.fn(),
+  createDatabase: vi.fn(),
+  database: { db: {}, pool: { query: vi.fn() }, close: vi.fn() },
+  authConfig: vi.fn(),
+  createAuthentication: vi.fn(),
 }));
 
 vi.mock('node:http', () => ({ createServer: boundary.createServer }));
-vi.mock('@visomi-stack/web-backend-shared', () => ({ initializeObservability: boundary.initialize }));
-vi.mock('./app', () => ({ createApp: boundary.createApp }));
+vi.mock('@visomi-stack/web-backend-shared', () => ({
+  initializeObservability: boundary.initialize,
+  createDatabase: boundary.createDatabase,
+}));
+vi.mock('./app', () => ({
+  createApp: boundary.createApp,
+  authConfig: boundary.authConfig,
+  createAuthentication: boundary.createAuthentication,
+}));
 
 const originalExitCode = process.exitCode;
 
@@ -25,6 +36,13 @@ beforeEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
   vi.useFakeTimers();
+  vi.stubEnv('DATABASE_URL', '');
+  vi.stubEnv('AUTH_TRUST_PROXY', '');
+  boundary.createDatabase.mockReturnValue(boundary.database);
+  boundary.database.close.mockResolvedValue(undefined);
+  boundary.database.pool.query.mockResolvedValue({ rows: [] });
+  boundary.authConfig.mockReturnValue({});
+  boundary.createAuthentication.mockReturnValue({});
   vi.stubEnv('HOST', '127.0.0.1');
   vi.stubEnv('PORT', '3456');
   vi.stubEnv('NODE_ENV', 'test');
@@ -119,5 +137,61 @@ describe('API executable lifecycle', () => {
     await vi.advanceTimersByTimeAsync(2000);
     expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed', 'shutdown_timeout');
     expect(exit).toHaveBeenCalledExactlyOnceWith(1);
+  });
+  it('verifies its owned database before listening and closes it after HTTP draining', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    await import('./main');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(boundary.database.pool.query).toHaveBeenCalledWith('SELECT 1');
+    expect(boundary.server.listen).toHaveBeenCalledOnce();
+    boundary.signals.get('SIGTERM')!();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(boundary.database.close).toHaveBeenCalledOnce();
+    expect(boundary.server.close.mock.invocationCallOrder[0]).toBeLessThan(
+      boundary.database.close.mock.invocationCallOrder[0],
+    );
+    expect(boundary.database.close.mock.invocationCallOrder[0]).toBeLessThan(
+      boundary.observability.shutdown.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('closes an owned database after startup failure without logging driver errors', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    boundary.database.pool.query.mockRejectedValue(new Error('SYNTHETIC_PRIVATE_DATABASE_ERROR'));
+    await import('./main');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(boundary.server.listen).not.toHaveBeenCalled();
+    expect(boundary.database.close).toHaveBeenCalledOnce();
+    expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed', 'startup_failed');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('still flushes telemetry when closing the database fails', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    boundary.database.close.mockRejectedValue(new Error('SYNTHETIC_PRIVATE_DATABASE_ERROR'));
+    await import('./main');
+    await vi.advanceTimersByTimeAsync(0);
+    boundary.signals.get('SIGTERM')!();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed', 'shutdown_failed');
+    expect(boundary.observability.shutdown).toHaveBeenCalledOnce();
+    expect(process.exitCode).toBe(1);
+  });
+  it('does not start listening after shutdown begins while the database is connecting', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    let ready: () => void = () => undefined;
+
+    boundary.database.pool.query.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          ready = resolve;
+        }),
+    );
+    await import('./main');
+    boundary.signals.get('SIGTERM')!();
+    ready();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(boundary.server.listen).not.toHaveBeenCalled();
+    expect(boundary.database.close).toHaveBeenCalledOnce();
   });
 });

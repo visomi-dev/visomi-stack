@@ -19,7 +19,7 @@ export default defineConfig({
   workers: 1,
   use: { baseURL: 'http://127.0.0.1:3307', trace: 'off' },
   webServer: {
-    command: 'pnpm nx serve web-api',
+    command: 'pnpm exec tsx apps/web/api/e2e/serve.ts',
     url: 'http://127.0.0.1:3307',
     reuseExistingServer: false,
     cwd: workspaceRoot,

@@ -81,8 +81,9 @@ Playwright E2E configuration and directory; no separate E2E project is needed.
 
 The current API uses `HOST` and `PORT` from its process environment for networking;
 standalone startup validates the port. `NODE_ENV` maps to the controlled labels
-`development`, `test`, `production`, or `unknown` for telemetry. It does not load
-`.env` or validate a broader runtime configuration schema.
+`development`, `test`, `production`, or `unknown` for telemetry. It does not load `.env`. PostgreSQL authentication requires `DATABASE_URL`,
+`AUTH_ORIGIN`, `AUTH_RP_ID` and `SESSION_SECRET`; migration and trust-proxy settings
+are explicit. See the [API guide](../apps/web/api/README.md) for configuration and isolated tests.
 Container configuration describes additional variables for integrations that
 have not been implemented.
 

@@ -15,8 +15,8 @@ The `web-gateway` application is a separate scaffold; API composition there
 is still in progress and is not verified by the API's import-contract tests.
 
 Angular tooling is installed, but Angular SSR, Astro, worker, and realtime
-applications have not been implemented. Authentication, persistence, and business
-domains remain future work; the current scaffold does not demonstrate a complete DDD model.
+applications have not been implemented. The API now supports PostgreSQL-backed passkey authentication and durable sessions.
+Business domains remain future work; this slice does not demonstrate a complete DDD model.
 
 The agreed topology is documented in [Architecture](docs/architecture.md).
 Descriptions of the previous stack and Nive are reference material, not evidence
@@ -39,8 +39,10 @@ Open <http://localhost:3000/>. Stop the development server with Ctrl+C.
 The server reads `HOST` and `PORT` from the process environment; their defaults
 are `localhost` and `3000`. `NODE_ENV` selects a controlled telemetry environment
 label; logs are local JSON and no trace or metric exporter is configured by default.
-The API currently has no database or Redis dependency
-and does not load a `.env` file.
+Authentication requires PostgreSQL and explicit configuration; without it, auth routes
+fail closed with 503 while the public greeting remains available. There is no Redis
+dependency or `.env` loader. See the [API guide](apps/web/api/README.md) for migration
+commands, authentication endpoints and middleware ownership.
 
 The serve command and HTTP response have been checked with the existing local
 dependencies. A fresh-checkout installation has not yet been verified.
@@ -58,6 +60,7 @@ dependencies. A fresh-checkout installation has not yet been verified.
 
 ## Documentation
 
+- [API authentication and persistence](apps/web/api/README.md): schema, migrations, endpoints, ownership and verification.
 - [Architecture](docs/architecture.md): current structure, intended topology, and open decisions.
 - [Development](docs/development.md): project discovery, verification, contribution conventions, and maintenance.
 - [Agent guidance](AGENTS.md): repository instructions for coding agents.

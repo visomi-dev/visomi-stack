@@ -1,0 +1,35 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "ca00d841-01d6-4755-ba4f-86b814499b22",
+  "prevIds": ["807b6b9d-954e-4718-ac9e-81c0828e18ec"],
+  "footprints": [
+    {
+      "statementType": "add_unique",
+      "statementTarget": ["table", "public", "auth_challenges"],
+      "writes": [
+        "s|uq|public.auth_challenges.auth_challenges_session_id_key",
+        "n|uq|public.auth_challenges.auth_challenges_session_id_key",
+        "e|uq|public.auth_challenges.auth_challenges_session_id_key",
+        "n|con|public.auth_challenges.auth_challenges_session_id_key",
+        "n|rel|public.auth_challenges_session_id_key"
+      ],
+      "reads": ["n|tbl|public.auth_challenges", "n|sch|public", "n|col|public.auth_challenges.session_id"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_challenges",
+        "name": "auth_challenges_session_id_key",
+        "nameExplicit": false,
+        "columns": ["session_id"],
+        "nullsNotDistinct": false,
+        "entityType": "uniques"
+      }
+    }
+  ]
+}
