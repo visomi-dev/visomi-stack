@@ -12,10 +12,11 @@ import type {
   AuthenticatorTransport,
 } from '@simplewebauthn/server';
 import { authSchema, type Database } from '@visomi-stack/backend-shared';
+import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 
 import type { AuthConfig } from './config';
-import { AuthError, requireFresh } from './security';
+import { requireFresh } from './security';
 
 const { challenges, credentials, sessions, users } = authSchema;
 
@@ -75,7 +76,7 @@ export class Passkeys {
     if (user) {
       requireFresh(user, this.config);
       if (pending.subjectId !== user.id) {
-        throw new AuthError('challenge_invalid');
+        throw new HttpError(400, 'challenge_invalid');
       }
     }
 
@@ -93,11 +94,11 @@ export class Passkeys {
 
       verified = result;
     } catch {
-      throw new AuthError('passkey_invalid');
+      throw new HttpError(400, 'passkey_invalid');
     }
 
     if (!verified.verified) {
-      throw new AuthError('passkey_invalid');
+      throw new HttpError(400, 'passkey_invalid');
     }
 
     const info = verified.registrationInfo;
@@ -143,7 +144,7 @@ export class Passkeys {
     const [candidate] = await this.database.select().from(credentials).where(eq(credentials.credentialId, response.id));
 
     if (!candidate) {
-      throw new AuthError('passkey_invalid');
+      throw new HttpError(400, 'passkey_invalid');
     }
 
     return this.database.transaction(async (tx) => {
@@ -161,7 +162,7 @@ export class Passkeys {
         (response.response.userHandle &&
           response.response.userHandle !== Buffer.from(credential.userId).toString('base64url'))
       ) {
-        throw new AuthError('passkey_invalid');
+        throw new HttpError(400, 'passkey_invalid');
       }
 
       let verified;
@@ -183,14 +184,14 @@ export class Passkeys {
 
         verified = result;
       } catch {
-        throw new AuthError('passkey_invalid');
+        throw new HttpError(400, 'passkey_invalid');
       }
 
       if (
         !verified.verified ||
         (verified.authenticationInfo.credentialDeviceType === 'multiDevice') !== credential.backupEligible
       ) {
-        throw new AuthError('passkey_invalid');
+        throw new HttpError(400, 'passkey_invalid');
       }
 
       await tx
@@ -233,7 +234,7 @@ export class Passkeys {
         .returning({ id: credentials.id });
 
       if (!updated.length) {
-        throw new AuthError('credential_not_found', 404);
+        throw new HttpError(404, 'credential_not_found');
       }
     });
   }
@@ -249,11 +250,11 @@ export class Passkeys {
         .where(and(eq(credentials.userId, user.id), isNull(credentials.revokedAt)));
 
       if (!owned.some((credential) => credential.id === id)) {
-        throw new AuthError('credential_not_found', 404);
+        throw new HttpError(404, 'credential_not_found');
       }
 
       if (owned.length === 1) {
-        throw new AuthError('last_credential', 409);
+        throw new HttpError(409, 'last_credential');
       }
 
       await tx.update(credentials).set({ revokedAt: new Date(), updatedAt: new Date() }).where(eq(credentials.id, id));
@@ -280,7 +281,7 @@ export class Passkeys {
       );
 
     if (!active) {
-      throw new AuthError('authentication_required', 401);
+      throw new AuthHttpError(401, 'authentication_required');
     }
   }
 
@@ -292,7 +293,7 @@ export class Passkeys {
       .for('update');
 
     if (!active) {
-      throw new AuthError('session_expired', 401);
+      throw new AuthHttpError(401, 'session_expired');
     }
   }
 
@@ -332,7 +333,7 @@ export class Passkeys {
         .returning();
 
       if (!pending) {
-        throw new AuthError('challenge_invalid');
+        throw new HttpError(400, 'challenge_invalid');
       }
 
       return pending;

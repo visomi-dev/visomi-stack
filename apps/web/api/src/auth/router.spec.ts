@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
 import { Socket } from 'node:net';
 
+import { AuthHttpError, HttpError, httpErrorHandler } from '@visomi-stack/web-backend-shared';
 import express from 'express';
 import type { Request, Response } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -8,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { authConfig } from './config';
 import { authErrorHandler, authRouter, saveSession } from './router';
 import type { AuthRuntime } from './runtime';
-import { AuthError, rateLimit } from './security';
+import { rateLimit } from './security';
 
 describe('authentication HTTP boundary', () => {
   it('saves the session before returning and sanitizes failed persistence', async () => {
@@ -23,14 +24,22 @@ describe('authentication HTTP boundary', () => {
   });
 
   it.each([
-    [new AuthError('authentication_required', 401), 401, 'authentication_required'],
+    [new AuthHttpError(401, 'authentication_required'), 401, 'authentication_required'],
+    [new HttpError(422, 'request_invalid', 'Check the request.', { field: 'label' }), 422, 'request_invalid'],
     [new Error('SYNTHETIC_PRIVATE_SQL_PARAMETERS'), 503, 'authentication_unavailable'],
-  ])('returns only a controlled status and error code', (error, status, code) => {
+  ])('normalizes failures and delegates public errors to the owning response handler', (error, status, code) => {
     const response = { status: vi.fn().mockReturnThis(), json: vi.fn() } as unknown as Response;
+    const next = vi.fn();
 
-    authErrorHandler(error, {} as Request, response, vi.fn());
-    expect(response.status).toHaveBeenCalledWith(status);
-    expect(response.json).toHaveBeenCalledWith({ error: code });
+    authErrorHandler(error, {} as Request, response, next);
+    expect(next.mock.calls[0][0]).toBeInstanceOf(HttpError);
+    expect(next.mock.calls[0][0]).toMatchObject({ status, code });
+    if (HttpError.is(error)) {
+      expect(next).toHaveBeenCalledExactlyOnceWith(error);
+    }
+
+    expect(response.status).not.toHaveBeenCalled();
+    expect(response.json).not.toHaveBeenCalled();
   });
 
   it('delegates a started response to the existing operational error handler', () => {
@@ -82,6 +91,7 @@ function routerFixture() {
   const app = express();
 
   app.use('/auth', authRouter(auth), authErrorHandler);
+  app.use(httpErrorHandler);
 
   const dispatch = (
     method: string,
@@ -157,7 +167,7 @@ describe('authentication router decisions and delegation', () => {
     const fixture = routerFixture();
 
     fixture.requireInitialized.mockImplementation((_request, _response, next) =>
-      next(new AuthError('auth_initialization_missing', 503)),
+      next(new HttpError(503, 'auth_initialization_missing')),
     );
     const result = await fixture.dispatch('GET', '/session');
 
@@ -286,7 +296,7 @@ describe('authentication router decisions and delegation', () => {
   });
 
   it.each([
-    [new AuthError('last_credential', 409), 409, 'last_credential'],
+    [new HttpError(409, 'last_credential'), 409, 'last_credential'],
     [new Error('SYNTHETIC_PRIVATE_SQL_PARAMETERS'), 503, 'authentication_unavailable'],
   ])('sanitizes rejected authentication without establishing a session', async (error, status, code) => {
     const fixture = routerFixture();

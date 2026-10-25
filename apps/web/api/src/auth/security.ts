@@ -1,19 +1,11 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 import type { Database } from '@visomi-stack/backend-shared';
+import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 import { sql } from 'drizzle-orm';
 import type { RequestHandler } from 'express';
 
 import type { AuthConfig } from './config';
-
-export class AuthError extends Error {
-  constructor(
-    readonly code: string,
-    readonly status = 400,
-  ) {
-    super(code);
-  }
-}
 
 export function csrf(config: AuthConfig): RequestHandler {
   return (request, _response, next) => {
@@ -33,7 +25,7 @@ export function csrf(config: AuthConfig): RequestHandler {
       Buffer.byteLength(supplied) !== Buffer.byteLength(expected) ||
       !timingSafeEqual(Buffer.from(supplied), Buffer.from(expected))
     ) {
-      next(new AuthError('csrf_invalid', 403));
+      next(new AuthHttpError(403, 'csrf_invalid'));
 
       return;
     }
@@ -71,7 +63,7 @@ export function rateLimit(database: Database, config: AuthConfig): RequestHandle
 
       if (result.rows[0].attempts > maximum) {
         response.setHeader('Retry-After', '60');
-        next(new AuthError('rate_limited', 429));
+        next(new HttpError(429, 'rate_limited'));
 
         return;
       }
@@ -82,7 +74,7 @@ export function rateLimit(database: Database, config: AuthConfig): RequestHandle
 
 export function requireFresh(user: Express.User | undefined, config: AuthConfig): Express.User {
   if (!user) {
-    throw new AuthError('authentication_required', 401);
+    throw new AuthHttpError(401, 'authentication_required');
   }
 
   if (
@@ -90,7 +82,7 @@ export function requireFresh(user: Express.User | undefined, config: AuthConfig)
     Date.now() - user.authenticatedAt > config.freshMaxAge ||
     user.authenticatedAt > Date.now()
   ) {
-    throw new AuthError('reauthentication_required', 401);
+    throw new AuthHttpError(401, 'reauthentication_required');
   }
 
   return user;

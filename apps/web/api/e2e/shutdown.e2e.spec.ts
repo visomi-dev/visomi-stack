@@ -4,14 +4,13 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
 
-import { expect, test } from '@playwright/test';
 import { Pool } from 'pg';
 
-import { readTelemetry } from './telemetry';
+import { expect, test } from '../../../../e2e/fixtures/http';
 
-async function startStandalone(directory: string) {
+async function startStandalone(directory: string, runDirectory: string) {
   const root = resolve(__dirname, '../../../..');
-  const text = await readFile(join(process.env.VISOMI_E2E_TELEMETRY_DIR!, 'database.json'), 'utf8');
+  const text = await readFile(join(runDirectory, 'database.json'), 'utf8');
   const databaseUrl = new URL(JSON.parse(text).url);
 
   databaseUrl.searchParams.set('application_name', 'visomi_e2e_shutdown');
@@ -28,7 +27,7 @@ async function startStandalone(directory: string) {
   await new Promise<void>((resolveClosed) => probe.close(() => resolveClosed()));
   const child = spawn(
     process.execPath,
-    ['--require', join(__dirname, 'telemetry-preload.cjs'), join(root, 'dist/apps/web/api/main.js')],
+    ['--require', join(root, 'e2e/support/telemetry-preload.cjs'), join(root, 'dist/apps/web/api/main.js')],
     {
       cwd: root,
       env: {
@@ -56,9 +55,12 @@ async function closeStandalone(child: ReturnType<typeof spawn>, exited: Promise<
   }
 }
 
-test('the compiled executable delivers pending telemetry within its shutdown limits', async ({ request }, testInfo) => {
+test('the compiled executable delivers pending telemetry within its shutdown limits', async ({
+  request,
+  telemetry: telemetryFiles,
+}, testInfo) => {
   const directory = testInfo.outputPath('telemetry');
-  const { child, origin, databaseUrl } = await startStandalone(directory);
+  const { child, origin, databaseUrl } = await startStandalone(directory, telemetryFiles.directory);
   const probeUrl = new URL(databaseUrl);
 
   probeUrl.searchParams.set('application_name', 'visomi_e2e_probe');
@@ -73,7 +75,7 @@ test('the compiled executable delivers pending telemetry within its shutdown lim
   try {
     await expect
       .poll(async () => {
-        const telemetry = await readTelemetry(directory);
+        const telemetry = await telemetryFiles.read(directory);
 
         return telemetry.logs.some((log) => log.event === 'runtime.started');
       })
@@ -89,12 +91,12 @@ test('the compiled executable delivers pending telemetry within its shutdown lim
     expect(response.status()).toBe(200);
     await expect
       .poll(async () => {
-        const telemetry = await readTelemetry(directory);
+        const telemetry = await telemetryFiles.read(directory);
 
         return telemetry.pending.some((entry) => entry.file === 'spans.jsonl');
       })
       .toBe(true);
-    const beforeShutdown = await readTelemetry(directory);
+    const beforeShutdown = await telemetryFiles.read(directory);
 
     expect(beforeShutdown.spans).toHaveLength(0);
     const started = performance.now();
@@ -108,7 +110,7 @@ test('the compiled executable delivers pending telemetry within its shutdown lim
         void exited.then(() => clearTimeout(deadline));
       }),
     ]);
-    const telemetry = await readTelemetry(directory);
+    const telemetry = await telemetryFiles.read(directory);
     const completion = telemetry.logs.filter((log) => log.requestId === id);
 
     await expect

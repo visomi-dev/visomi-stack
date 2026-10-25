@@ -2,19 +2,26 @@ import { spawn } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { testPostgres } from '../tests/support/postgres';
+import { testPostgres } from '../../tests/support/postgres';
 
 async function serve() {
   const directory = process.env.VISOMI_E2E_TELEMETRY_DIR!;
+  const application = process.env.VISOMI_E2E_APPLICATION ?? 'web-api';
+
+  if (application !== 'web-api' && application !== 'web-gateway') {
+    throw new Error('isolated_test_application_invalid');
+  }
+
+  const origin = application === 'web-api' ? 'http://127.0.0.1:3307' : 'http://127.0.0.1:3317';
   const postgres = await testPostgres(join(directory, 'postgres.json'));
 
   await writeFile(join(directory, 'database.json'), JSON.stringify({ url: postgres.url }));
-  const child = spawn('pnpm', ['nx', 'serve', 'web-api'], {
+  const child = spawn('pnpm', ['nx', 'serve', application], {
     stdio: 'inherit',
     env: {
       ...process.env,
       DATABASE_URL: postgres.url,
-      AUTH_ORIGIN: 'http://127.0.0.1:3307',
+      AUTH_ORIGIN: origin,
       AUTH_RP_ID: '127.0.0.1',
       SESSION_SECRET: 'synthetic-e2e-only-session-secret-32-bytes',
     },
@@ -34,6 +41,6 @@ async function serve() {
 }
 
 void serve().catch(() => {
-  process.stderr.write('isolated_api_test_startup_failed\n');
+  process.stderr.write('isolated_http_test_startup_failed\n');
   process.exitCode = 1;
 });

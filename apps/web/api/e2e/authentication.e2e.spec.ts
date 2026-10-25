@@ -1,10 +1,7 @@
-import { expect, test } from '@playwright/test';
 import type { APIRequestContext } from '@playwright/test';
 
-import { authenticator } from '../tests/support/authenticator';
-
-import { testDatabasePool, resetAuthRateLimits } from './database';
-import { readTelemetry } from './telemetry';
+import { expect, authTest as test } from '../../../../e2e/fixtures/http';
+import { authenticator } from '../../../../tests/support/authenticator';
 
 const origin = 'http://127.0.0.1:3307';
 const rpId = '127.0.0.1';
@@ -36,10 +33,6 @@ async function enroll(request: APIRequestContext, token: string, device = authen
 
   return { device, result, response, challengeId: options.challengeId };
 }
-
-test.beforeEach(resetAuthRateLimits);
-
-test.afterEach(resetAuthRateLimits);
 
 test('registers and signs in with real ES256 assertions, rotates cookies and revokes logout', async ({ request }) => {
   const anonymous = await session(request);
@@ -91,7 +84,10 @@ test('registers and signs in with real ES256 assertions, rotates cookies and rev
   expect(replay.status()).toBe(400);
 });
 
-test('rejects anonymous access, CSRF, identity injection and invalid WebAuthn origins', async ({ request }) => {
+test('rejects anonymous access, CSRF, identity injection and invalid WebAuthn origins', async ({
+  request,
+  telemetry: telemetryFiles,
+}) => {
   const protectedResponse = await request.get('/auth/passkeys');
   const state = await session(request);
   const missingOrigin = await request.post('/auth/passkeys/registration/options', {
@@ -118,7 +114,7 @@ test('rejects anonymous access, CSRF, identity injection and invalid WebAuthn or
   });
 
   expect(verify.status()).toBe(400);
-  const telemetry = await readTelemetry();
+  const telemetry = await telemetryFiles.read();
 
   expect(JSON.stringify(telemetry)).not.toContain(marker);
 });
@@ -171,7 +167,11 @@ test('enforces credential ownership, updates labels and prevents removal of the 
   expect(remainingBody.credentials[0].label).toBe('Synthetic device');
 });
 
-test('rejects expired and foreign-session challenges at the HTTP boundary', async ({ request, playwright }) => {
+test('rejects expired and foreign-session challenges at the HTTP boundary', async ({
+  request,
+  playwright,
+  database,
+}) => {
   const state = await session(request);
   const headers = { origin, 'x-csrf-token': state.csrfToken };
   const begin = await request.post('/auth/passkeys/registration/options', { headers, data: {} });
@@ -192,16 +192,10 @@ test('rejects expired and foreign-session challenges at the HTTP boundary', asyn
     await other.dispose();
   }
 
-  const pool = await testDatabasePool();
-
-  try {
-    await pool.query(
-      "UPDATE auth_challenges SET created_at = now() - interval '5 minutes', expires_at = now() - interval '1 second' WHERE id = $1",
-      [pending.challengeId],
-    );
-  } finally {
-    await pool.end();
-  }
+  await database.query(
+    "UPDATE auth_challenges SET created_at = now() - interval '5 minutes', expires_at = now() - interval '1 second' WHERE id = $1",
+    [pending.challengeId],
+  );
   const expired = await request.post('/auth/passkeys/registration/verify', {
     headers,
     data: { challengeId: pending.challengeId, response },
@@ -212,6 +206,7 @@ test('rejects expired and foreign-session challenges at the HTTP boundary', asyn
 
 test('exports no credential, session, identity or SQL material after success and a database rejection', async ({
   request,
+  telemetry: telemetryFiles,
 }) => {
   const state = await session(request);
   const enrolled = await enroll(request, state.csrfToken);
@@ -231,13 +226,13 @@ test('exports no credential, session, identity or SQL material after success and
   expect(rejectedBody).toEqual({ error: 'authentication_unavailable' });
   await expect
     .poll(async () => {
-      const telemetry = await readTelemetry();
+      const telemetry = await telemetryFiles.read();
       const log = telemetry.logs.find((entry) => entry.requestId === requestId);
 
       return telemetry.spans.some((span) => (span.context as { spanId: string }).spanId === log?.spanId);
     })
     .toBe(true);
-  const telemetry = await readTelemetry();
+  const telemetry = await telemetryFiles.read();
   const serialized = JSON.stringify(telemetry);
 
   for (const sensitive of [

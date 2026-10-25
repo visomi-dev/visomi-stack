@@ -9,6 +9,7 @@ describe('explicit PostgreSQL ownership', () => {
     const first = resource.close();
 
     expect(resource.pool.totalCount).toBe(0);
+    expect(() => resource.pool.emit('error', new Error('SYNTHETIC_IDLE_FAILURE'))).not.toThrow();
     expect(resource.close()).toBe(first);
     await first;
     expect(end).toHaveBeenCalledOnce();

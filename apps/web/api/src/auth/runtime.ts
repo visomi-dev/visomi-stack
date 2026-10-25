@@ -1,4 +1,5 @@
 import { authSchema, type Database } from '@visomi-stack/backend-shared';
+import { HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { RequestHandler, Request } from 'express';
 import session from 'express-session';
@@ -7,7 +8,6 @@ import type { Pool } from 'pg';
 
 import type { AuthConfig } from './config';
 import { Passkeys } from './passkeys';
-import { AuthError } from './security';
 import { SessionStore } from './session-store';
 
 const { credentials } = authSchema;
@@ -80,7 +80,7 @@ export function createAuthentication(options: { database: Database; pool: Pool; 
     next(
       request[initialized] === owner && request.session && typeof request.logIn === 'function'
         ? undefined
-        : new AuthError('auth_initialization_missing', 503),
+        : new HttpError(503, 'auth_initialization_missing'),
     );
   };
 

@@ -70,6 +70,55 @@ afterEach(() => {
 });
 
 describe('API executable lifecycle', () => {
+  it('uses default networking when no host or port is configured', async () => {
+    vi.stubEnv('HOST', undefined);
+    vi.stubEnv('PORT', undefined);
+    await import('./main');
+    expect(boundary.server.listen).toHaveBeenCalledWith(3000, 'localhost', expect.any(Function));
+  });
+
+  it('handles composition failure before listening', async () => {
+    boundary.createApp.mockImplementationOnce(() => {
+      throw new Error('SYNTHETIC_COMPOSITION_FAILURE');
+    });
+    await import('./main');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(boundary.server.listen).not.toHaveBeenCalled();
+    expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed', 'startup_failed');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('passes explicit proxy trust and reports idle pool errors without their contents', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    vi.stubEnv('AUTH_TRUST_PROXY', '127.0.0.1, ::1');
+    await import('./main');
+    const onError = boundary.createDatabase.mock.calls[0][1];
+
+    onError();
+    expect(boundary.createApp).toHaveBeenCalledWith(expect.objectContaining({ trustProxy: ['127.0.0.1', '::1'] }));
+    expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed');
+  });
+
+  it.each([false, true])('treats Nx readiness as optional when the loader fails: %s', async (fails) => {
+    vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/synthetic/ready.sock');
+    await import('./main');
+    const emitReadySignal = vi.fn();
+    const load = fails
+      ? vi.fn().mockRejectedValue(new Error('SYNTHETIC_OPTIONAL_IMPORT'))
+      : vi.fn().mockResolvedValue({ emitReadySignal });
+    const dynamicFunction = vi.spyOn(globalThis, 'Function').mockImplementation(function () {
+      return load;
+    });
+
+    try {
+      await boundary.server.listen.mock.calls[0][2]();
+      expect(load).toHaveBeenCalledWith('@nx/js/ready-signal');
+      expect(emitReadySignal).toHaveBeenCalledTimes(fails ? 0 : 1);
+      expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.started');
+    } finally {
+      dynamicFunction.mockRestore();
+    }
+  });
   it('owns initialization and starts listening only from the entrypoint', async () => {
     await import('./main');
     expect(boundary.initialize).toHaveBeenCalledWith(

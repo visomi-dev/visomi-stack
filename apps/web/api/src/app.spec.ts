@@ -1,21 +1,30 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
 import { Socket } from 'node:net';
 
-import { currentObservability, httpObservability } from '@visomi-stack/web-backend-shared';
+import { currentObservability, httpObservability, httpErrorHandler, HttpError } from '@visomi-stack/web-backend-shared';
 import type { Observability } from '@visomi-stack/web-backend-shared';
 import type { Request, Response } from 'express';
+import express from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthRuntime } from './auth/runtime';
 import { createApp } from './app';
 
-vi.mock('@visomi-stack/web-backend-shared', () => ({
-  currentObservability: vi.fn(),
-  httpObservability: vi.fn(() => (_request: unknown, _response: unknown, next: () => void) => next()),
-  operationalErrorHandler: vi.fn(),
-}));
+vi.mock('@visomi-stack/web-backend-shared', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@visomi-stack/web-backend-shared')>();
 
-function dispatch(app: ReturnType<typeof createApp>, url: string) {
+  return {
+    ...actual,
+    currentObservability: vi.fn(),
+    httpObservability: vi.fn(() => (_request: unknown, _response: unknown, next: () => void) => next()),
+  };
+});
+
+function dispatch(
+  app: ReturnType<typeof createApp>,
+  url: string,
+  inspectHeaders?: (headers: ReturnType<ServerResponse['getHeaders']>) => void,
+) {
   const request = new IncomingMessage(new Socket());
   const response = new ServerResponse(request);
 
@@ -24,6 +33,7 @@ function dispatch(app: ReturnType<typeof createApp>, url: string) {
 
   return new Promise<{ status: number; body: unknown; poweredBy: unknown }>((resolve, reject) => {
     vi.spyOn(response, 'end').mockImplementation((chunk?: unknown) => {
+      inspectHeaders?.(response.getHeaders());
       resolve({
         status: response.statusCode,
         body: JSON.parse(String(chunk)),
@@ -97,4 +107,48 @@ describe('API composition', () => {
     expect(createApp().get('trust proxy')).toBe(false);
     expect(createApp({ trustProxy: ['127.0.0.1'] }).get('trust proxy')).toEqual(['127.0.0.1']);
   });
+
+  it.each([undefined, 'managed', 'inherited'] as const)(
+    'keeps response ownership explicit for errorMode %s independently of authMode',
+    async (errorMode) => {
+      const parent = express();
+      const errors = vi.fn((error, request, response, next) => httpErrorHandler(error, request, response, next));
+
+      parent.use('/api', createApp({ authMode: 'inherited', errorMode }));
+      parent.use(errors);
+      const result = await dispatch(parent, '/api/auth/session');
+
+      expect(result.status).toBe(503);
+      expect(result.body).toEqual({ error: 'authentication_unavailable' });
+      expect(errors).toHaveBeenCalledTimes(errorMode === 'inherited' ? 1 : 0);
+      if (errorMode === 'inherited') {
+        expect(HttpError.is(errors.mock.calls[0][0])).toBe(true);
+      }
+    },
+  );
+
+  it.each([undefined, 'managed', 'inherited'] as const)(
+    'installs Helmet only for managed ownership, helmetMode %s',
+    async (helmetMode) => {
+      const parent = express();
+      const inspect = vi.fn();
+
+      parent.use((_request, response, next) => {
+        response.setHeader('Content-Security-Policy', "default-src 'none'");
+        next();
+      });
+      parent.use(createApp({ helmetMode }));
+      const result = await dispatch(parent, '/', inspect);
+      const headers = inspect.mock.calls[0][0];
+
+      expect(result.status).toBe(200);
+      if (helmetMode === 'inherited') {
+        expect(headers['content-security-policy']).toBe("default-src 'none'");
+        expect(headers['x-content-type-options']).toBeUndefined();
+      } else {
+        expect(headers['content-security-policy']).toContain("script-src 'self'");
+        expect(headers['x-content-type-options']).toBe('nosniff');
+      }
+    },
+  );
 });

@@ -5,7 +5,7 @@ import {
   InMemoryMetricExporter,
   PeriodicExportingMetricReader,
 } from '@opentelemetry/sdk-metrics';
-import { InMemorySpanExporter } from '@opentelemetry/sdk-trace';
+import { InMemorySpanExporter, TracerProvider } from '@opentelemetry/sdk-trace';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { currentObservability, initializeObservability } from './observability';
@@ -40,6 +40,37 @@ afterEach(async () => {
 });
 
 describe('observability runtime', () => {
+  it('keeps application work and completion records available when span construction fails', async () => {
+    const tracer = vi.spyOn(TracerProvider.prototype, 'getTracer').mockReturnValue({
+      startSpan: () => {
+        throw new Error(marker);
+      },
+    } as never);
+    const f = fixture();
+
+    tracer.mockRestore();
+    const request = f.telemetry.beginHttp();
+
+    expect(request.run(f.telemetry.correlation)).toBeUndefined();
+    expect(request.run(f.telemetry.captureJobContext)).toBeUndefined();
+    request.finish('success', 200);
+    expect(f.lines).toEqual([expect.objectContaining({ event: 'http.request', outcome: 'success' })]);
+    expect(f.lines[0]).not.toHaveProperty('traceId');
+    const value = await f.telemetry.runJob(undefined, async () => 'completed');
+
+    expect(value).toBe('completed');
+    expect(f.spans.getFinishedSpans()).toHaveLength(0);
+  });
+
+  it('clamps invalid shutdown deadlines and supports an absent metrics reader', async () => {
+    const f = fixture({ metricReader: undefined, spanExporter: undefined });
+    const success = await f.telemetry.shutdown(Number.NaN);
+
+    expect(success).toBe(true);
+    expect(currentObservability()).toBeUndefined();
+    // The unused fixture reader is still owned by this test.
+    await f.reader.shutdown();
+  });
   it('carries only technical context through serialized jobs and preserves application errors', async () => {
     const f = fixture();
     const http = f.telemetry.beginHttp();

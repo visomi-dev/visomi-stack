@@ -1,14 +1,9 @@
-const { appendFileSync, writeFileSync } = require('node:fs');
+const { appendFileSync } = require('node:fs');
 const { join } = require('node:path');
 
-// This explicit test entrypoint only instruments the application, never Nx or its watchers.
-const entry = process.argv[1]?.replaceAll('\\', '/');
-const directory = process.env.VISOMI_E2E_TELEMETRY_DIR;
+const { PeriodicExportingMetricReader, AggregationTemporality } = require('@opentelemetry/sdk-metrics');
 
-if (directory && (entry?.endsWith('/api/src/main.ts') || entry?.endsWith('/api/main.js'))) {
-  require('tsx/cjs');
-  const { initializeObservability } = require('../../../../libs/web/backend/shared/src/index');
-  const { PeriodicExportingMetricReader, AggregationTemporality } = require('@opentelemetry/sdk-metrics');
+exports.createTelemetryOptions = function createTelemetryOptions(directory, service, options = {}) {
   const pendingSpans = new Set();
   const pendingMetrics = new Set();
   const heldSpans = [];
@@ -23,7 +18,7 @@ if (directory && (entry?.endsWith('/api/src/main.ts') || entry?.endsWith('/api/m
         resolve();
       };
 
-      if (file === 'spans.jsonl' && process.env.VISOMI_E2E_HOLD_SPANS === 'true') {
+      if (file === 'spans.jsonl' && options.holdSpans) {
         heldSpans.push(deliver);
       } else {
         setTimeout(deliver, 50);
@@ -46,15 +41,22 @@ if (directory && (entry?.endsWith('/api/src/main.ts') || entry?.endsWith('/api/m
     exportIntervalMillis: 100,
     exporter: {
       selectAggregationTemporality: () => AggregationTemporality.CUMULATIVE,
-      export: (metrics, callback) => exportRecord('metrics.jsonl', metrics, callback),
+      export: (metrics, callback) =>
+        exportRecord(
+          'metrics.jsonl',
+          {
+            resource: { attributes: metrics.resource.attributes },
+            scopeMetrics: metrics.scopeMetrics,
+          },
+          callback,
+        ),
       forceFlush: drainMetrics,
       shutdown: drainMetrics,
     },
   });
 
-  writeFileSync(join(directory, 'owner.json'), JSON.stringify({ pid: process.pid, parentPid: process.ppid }));
-  initializeObservability({
-    service: 'web-api',
+  return {
+    service,
     version: '0.0.1',
     environment: 'test',
     destination: { write: (line) => appendFileSync(join(directory, 'logs.jsonl'), line) },
@@ -79,5 +81,5 @@ if (directory && (entry?.endsWith('/api/src/main.ts') || entry?.endsWith('/api/m
       forceFlush: drainSpans,
       shutdown: drainSpans,
     },
-  });
-}
+  };
+};

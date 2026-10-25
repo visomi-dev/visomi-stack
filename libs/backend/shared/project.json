@@ -9,14 +9,14 @@
     "db-generate": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "libs/backend/shared/src/lib/database",
+        "cwd": "libs/backend/shared",
         "command": "drizzle-kit generate --config drizzle.config.ts"
       }
     },
     "db-migrate": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "libs/backend/shared/src/lib/database",
+        "cwd": "libs/backend/shared",
         "command": "drizzle-kit migrate --config drizzle.config.ts"
       }
     },
@@ -26,6 +26,10 @@
         "cwd": "libs/backend/shared",
         "command": "tsc -p tsconfig.spec.json --noEmit"
       }
+    },
+    "test-ci": {
+      "executor": "nx:noop",
+      "dependsOn": ["test"]
     }
   }
 }

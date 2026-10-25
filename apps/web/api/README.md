@@ -4,7 +4,7 @@ The baseline is PR #2. Its observability runtime, import-safe `createApp`, stabl
 
 ## Dependencies and database commands
 
-Drizzle belongs to the shared backend database module at `libs/backend/shared/src/lib/database/`, not to the API. That module owns `drizzle.config.ts`, the domain schema in `schema-auth.ts`, the schema discovery barrel `schema.ts`, and the single `migrations/` history. API authentication consumes `authSchema` through `@visomi-stack/backend-shared`; other backend modules use the same shared definitions and migration history.
+Drizzle belongs to the shared backend database module at `libs/backend/shared/src/lib/database/`, not to the API. The library-level `libs/backend/shared/drizzle.config.ts` sits alongside `src/`; the database module owns the domain schema in `schema-auth.ts`, the schema discovery barrel `schema.ts`, and the single `migrations/` history. API authentication consumes `authSchema` through `@visomi-stack/backend-shared`; other backend modules use the same shared definitions and migration history.
 
 Runtime dependencies are pinned in both workspace and API manifests: Drizzle ORM `1.0.0-rc.5`, `pg` `8.23.1`, SimpleWebAuthn server `14.0.3`, Passport `0.7.0`, express-session `1.19.0`, and connect-pg-simple `10.0.0`. Drizzle Kit is pinned to `1.0.0-rc.5`. Generated runtime package metadata includes the external dependencies.
 
@@ -17,7 +17,7 @@ DATABASE_URL=postgresql://localhost/visomi_stack_dev pnpm nx run backend-shared:
 pnpm nx serve web-api
 ```
 
-The database URL above is an example for a separately created local development database, not a test target or an instruction to migrate an existing database. Supply `DATABASE_URL`, `AUTH_ORIGIN`, `AUTH_RP_ID`, and `SESSION_SECRET` in the owning process environment before serving. No `.env` loader, schema push, synchronization, or automatic migration runs during imports or startup. The shared Nx targets run Kit from the database module with its checked-in `drizzle.config.ts`; generation needs no connection. Migrations use the [Drizzle v1 directory/snapshot layout](https://orm.drizzle.team/docs/upgrade-v1), not a legacy journal. Relocation preserves all existing migration identifiers, SQL and snapshots; it does not introduce another migration history.
+The database URL above is an example for a separately created local development database, not a test target or an instruction to migrate an existing database. Supply `DATABASE_URL`, `AUTH_ORIGIN`, `AUTH_RP_ID`, and `SESSION_SECRET` in the owning process environment before serving. No `.env` loader, schema push, synchronization, or automatic migration runs during imports or startup. The shared Nx targets run Kit from `libs/backend/shared/` with its checked-in `drizzle.config.ts`; generation needs no connection. Migrations use the [Drizzle v1 directory/snapshot layout](https://orm.drizzle.team/docs/upgrade-v1), not a legacy journal. Relocation preserves all existing migration identifiers, SQL and snapshots; it does not introduce another migration history.
 
 `AUTH_ORIGIN` is one canonical origin without a trailing slash; HTTP is allowed only for loopback development. `AUTH_RP_ID` must equal that host or a permitted parent domain. `SESSION_SECRET` must contain at least 32 bytes and must match across instances; supply a high-entropy value outside the repository. Production origins require HTTPS and secure `__Host-visomi.sid` cookies. Local HTTP uses `visomi.sid`. Cookies are HttpOnly, SameSite=Strict, host-only, and scoped to `/`.
 
@@ -65,16 +65,45 @@ First fetch `/auth/session`, retain its cookie and token, then send the configur
 
 `createApp({ auth, authMode })` has one implementation. `authMode` defaults to `managed`: the supplied auth runtime installs session, Passport initialization, and Passport session handling before authentication-dependent routes. With no supplied runtime, those routes fail closed with 503 and public greeting/import compatibility remains available.
 
-In `inherited`, install the same runtime on the real parent before mounting the API:
+In `inherited`, install the same runtime on the real parent before mounting the API.
+In a workspace host, shared-library imports are bundled by its build; `api` below
+is the compiled `app.js` module loaded by the host, as in the gateway:
 
 ```ts
-const { createApp, createAuthentication, authConfig } = require('./dist/apps/web/api/app');
-const auth = createAuthentication({ database, pool, config: authConfig(trustedConfiguration) });
+import { securityHeaders, httpErrorHandler } from '@visomi-stack/web-backend-shared';
+
+const auth = api.createAuthentication({ database, pool, config: api.authConfig(trustedConfiguration) });
+host.use(securityHeaders());
 host.use(auth.middleware);
-host.use('/api', createApp({ auth, authMode: 'inherited' }));
+host.use(
+  '/api',
+  api.createApp({
+    auth,
+    authMode: 'inherited',
+    helmetMode: 'inherited',
+    errorMode: 'inherited',
+  }),
+);
+host.use(httpErrorHandler);
 ```
 
 The host owns `database` and `pool`; the imported app never closes them. An explicit per-request initialization marker checks that this runtime's full chain ran. The API does not inspect Express internals or infer initialization from `req.user`. Missing initialization returns `503 auth_initialization_missing`, while properly initialized anonymous sessions work and protected routes still return 401. There is no second session/Passport chain in inherited mode.
+
+The current `web-gateway` implements this contract at `/api`: its ESM executable
+loads the compiled API's CommonJS `app.js`, creates the auth runtime using the
+host-owned pool and installs the middleware before mounting. `pnpm nx serve
+web-gateway` builds the API first. Gateway process integration tests verify real
+PostgreSQL-backed authentication and cleanup; Angular SSR remains unimplemented.
+
+`helmetMode` and `errorMode` also default to `managed`, independently of
+`authMode`. In inherited mode the parent must install security headers before
+the API and the shared error handler after it. Authentication guards stay active.
+Auth normalizes private persistence and parser failures to public `HttpError`
+values, then delegates the response to its owner. `AuthHttpError` is used for
+401/403; validation and challenge failures retain 400, with conflicts, rate limits
+and availability errors retaining their existing statuses. Existing code-only
+responses remain compatible; explicit public messages and JSON bodies are
+optional. See the [shared HTTP contract](../../../libs/web/backend/shared/README.md).
 
 ## Verification and reference differences
 

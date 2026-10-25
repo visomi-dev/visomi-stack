@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 
 import type { Database } from '@visomi-stack/backend-shared';
+import { AuthHttpError } from '@visomi-stack/web-backend-shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { authConfig } from './config';
@@ -55,6 +56,7 @@ describe('passkey capability authorization', () => {
     await expect(passkeys.registrationOptions('synthetic-session', stale)).rejects.toMatchObject({
       code: 'reauthentication_required',
     });
+    await expect(passkeys.registrationOptions('synthetic-session', stale)).rejects.toBeInstanceOf(AuthHttpError);
     await expect(passkeys.rename('synthetic-session', stale, 'credential', 'label')).rejects.toMatchObject({
       code: 'reauthentication_required',
     });
@@ -137,6 +139,7 @@ describe('passkey capability authorization', () => {
     fixture.sessionLock.mockResolvedValue([]);
     await expect(fixture.passkeys.authenticationOptions('expired-session')).rejects.toMatchObject({
       code: 'session_expired',
+      status: 401,
     });
     expect(fixture.persist).not.toHaveBeenCalled();
   });

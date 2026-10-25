@@ -5,8 +5,9 @@ HTTP. Applications and other backend modules consume its public exports.
 
 ## Database
 
-`src/lib/database/` owns the Drizzle factory, configuration, domain schemas and
-single migration history. `schema-auth.ts` defines the current authentication
+`drizzle.config.ts` lives at this library root, alongside `src/`.
+`src/lib/database/` owns the Drizzle factory, domain schemas and single migration
+history. `schema-auth.ts` defines the current authentication
 tables and is exposed as `authSchema`; `schema.ts` is Kit's schema discovery
 barrel. Existing migration SQL, identifiers and snapshots are preserved.
 

@@ -1,4 +1,4 @@
-# Observability checks
+# API and gateway HTTP checks
 
 Run from the workspace root:
 
@@ -6,7 +6,8 @@ Run from the workspace root:
 pnpm nx test web-backend-shared
 pnpm nx test web-api
 pnpm nx e2e web-api
-pnpm nx run-many -t lint typecheck typecheck-tests -p web-api web-backend-shared
+pnpm nx e2e web-gateway
+pnpm nx run-many -t lint typecheck typecheck-tests -p web-api web-gateway web-backend-shared
 ```
 
 | Suite                                                        | Ownership                                                                                                                                                                      |
@@ -20,7 +21,48 @@ pnpm nx run-many -t lint typecheck typecheck-tests -p web-api web-backend-shared
 | API `tests/integration/compiled.integration.spec.ts`         | Compiled import/package boundary, standalone signal handling and serialized job context across a real child process                                                            |
 | API `e2e/*.e2e.spec.ts`                                      | Running API HTTP lifecycle, correlation, privacy and local exporter delivery during shutdown                                                                                   |
 
+Shared `src/lib/http/*.spec.ts` own HTTP error classes, cross-bundle recognition,
+public response serialization and the Helmet policy. API/gateway composition
+units cover independent managed/inherited ownership. `http-security.e2e.spec.ts`
+checks real response headers on successes and failures and controlled 401/403s.
+The inherited parent fixture installs Helmet and the common handler itself,
+preserving a distinct host CSP across the compiled API boundary. Gateway process
+integration verifies the same delegation between the actual ESM/CJS artifacts.
+
+Shared Playwright dependencies live at the workspace root:
+
+- `e2e/fixtures/http.ts`: lazy `telemetry` and `database` fixtures; `authTest`
+  adds rate-limit reset before each auth test and in its teardown.
+- `e2e/support/`: the Nx serve wrapper, teardown, isolated database access,
+  telemetry reader, local exporters and minimal server preload.
+- `tests/support/`: runner-independent PostgreSQL and software-authenticator
+  helpers used by integration tests and E2E setup.
+
+Specs keep using Playwright's request fixture. The telemetry fixture binds the
+run's destination and can read a separate destination for the compiled shutdown
+scenario. The database fixture closes only the pool it creates. Neither fixture
+initializes telemetry or starts another server. The preload runs in the owning
+server process, writes its PID marker, and initializes observability with the
+shared test exporters. `webServer` still owns startup through Nx serve.
+
+Gateway `e2e/http.e2e.spec.ts`, `authentication.e2e.spec.ts` and
+`telemetry.e2e.spec.ts` exercise the running gateway through Playwright's request
+fixture. They verify mounted success/failure headers, controlled 400/401/403s,
+real ES256 signup/sign-in, cookie rotation, logout revocation, concurrent
+correlation and exactly-once completion/spans across the host/API layers.
+Telemetry is delivered to owned local files; no collector or external service is
+contacted. The unit and compiled-process suites remain distinct from these E2E checks.
+
 The existing Playwright configuration uses a test-only wrapper to start isolated PostgreSQL and then `pnpm nx serve web-api` on loopback port 3307. It never reuses an unrelated server. Request fixtures need no browser. A test-only preload explicitly supplies local file exporters; the application entrypoint still performs shutdown. Teardown closes the owned watcher, application and recorded PostgreSQL cluster. The cluster has an ownership marker and a separate manifest, so cleanup does not depend on the serve wrapper surviving. Each run gets an isolated ignored directory under `tmp/api-e2e/run-*` from the repository root, containing its telemetry, manifests and temporary PostgreSQL cluster. Teardown removes the owned cluster and retains telemetry for inspection. The shutdown scenario owns a separate compiled process and destination under Playwright's configured test output; Nx's report/output locations remain unchanged.
+
+The gateway's existing configuration selects that same test-only wrapper's
+explicit `web-gateway` target on loopback port 3317, with its own PostgreSQL
+cluster and `tmp/api-e2e/gateway-run-*` destination. Its readiness path is `/api/`;
+the gateway root intentionally remains 404. Only application entrypoints are
+instrumented, including the gateway's ESM startup; imports of the compiled API
+never initialize another runtime. Both configurations use one API-only Playwright
+project and disable browser traces. The file metric exporter projects public SDK
+resource attributes rather than serializing SDK-private resource fields.
 
 The shutdown check holds a local span export until shutdown and uses delayed local metric exports and the existing runtime's one-second flush budget and executable's five-second deadline. It verifies delivery across a real process/filesystem boundary and verifies that the owned PostgreSQL connections disappear when the standalone process exits. It does not verify OTLP, network collectors or external services. The compiled build is also checked for import safety without enabling telemetry or opening ports.
 
@@ -34,4 +76,13 @@ SimpleWebAuthn verification cover wrong user handles, revoked credentials,
 counter regression, inconsistent backup flags and independent challenge races in
 integration.
 
-Vitest includes only `src/` and `tests/` and explicitly excludes `e2e/`. Test type checking includes both runners. Production builds retain their existing test exclusions and explicit application entrypoints. Type-only files, re-export barrels, static configuration and test harness helpers do not receive artificial unit suites.
+Unit tests remain beside the module they test. The shared telemetry reader and
+exporters have colocated `*.spec.ts` regressions in `e2e/support/`; `web-api:test`
+explicitly includes those files once. Playwright discovers only each application's
+`e2e/*.e2e.spec.ts`, while Vitest includes application `src/` and `tests/` plus that
+explicit support-unit pattern. It never discovers the Playwright suites. Test
+type checking and lint include the shared dependencies; Nx test inputs include
+them so edits invalidate cached checks. Production builds retain their explicit
+application entrypoints and exclude all test dependencies. Type-only files,
+barrels and static configuration do not receive artificial unit suites; fixture,
+bootstrap and owned-process cleanup wiring is exercised through the real E2E runs.

@@ -14,8 +14,8 @@ import { authConfig } from '../../src/auth/config';
 import { Passkeys } from '../../src/auth/passkeys';
 import { rateLimit } from '../../src/auth/security';
 import { SessionStore } from '../../src/auth/session-store';
-import { authenticator } from '../support/authenticator';
-import { testPostgres } from '../support/postgres';
+import { authenticator } from '../../../../../tests/support/authenticator';
+import { testPostgres } from '../../../../../tests/support/postgres';
 
 const { challenges, credentials, sessions, users } = authSchema;
 

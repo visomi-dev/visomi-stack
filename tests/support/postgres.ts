@@ -74,7 +74,7 @@ export async function testPostgres(manifest?: string) {
 
     try {
       await migrate(db, {
-        migrationsFolder: resolve(__dirname, '../../../../../libs/backend/shared/src/lib/database/migrations'),
+        migrationsFolder: resolve(__dirname, '../../libs/backend/shared/src/lib/database/migrations'),
       });
     } finally {
       await pool.end();

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
-import { stopTestPostgres } from '../tests/support/postgres';
+import { stopTestPostgres } from '../../tests/support/postgres';
 
 async function stopApplication() {
   const directory = process.env.VISOMI_E2E_TELEMETRY_DIR;

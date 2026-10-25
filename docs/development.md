@@ -20,12 +20,13 @@ NX_DAEMON=false pnpm nx show project web-api --json
 
 The current projects are `web-api`, `web-gateway`, `web-backend-shared`, and `backend-shared`.
 Do not substitute the legacy name `api` or assume planned projects such as
-`server`, `app`, or `site` exist. Gateway import wiring is being developed separately.
+`server`, `app`, or `site` exist.
 Template initialization, doctor and smoke scripts from the previous stack are not
 available here. Check command help before using unfamiliar
 flags. Agents should follow the Nx skill guidance in [AGENTS.md](../AGENTS.md).
 
-Drizzle configuration, domain schemas and migrations live together in
+Drizzle configuration lives at `libs/backend/shared/drizzle.config.ts`, alongside
+`src/`. Domain schemas and migrations live in
 `libs/backend/shared/src/lib/database/`. Use the shared project's explicit
 commands from the workspace root:
 
@@ -39,6 +40,34 @@ for tests: the API integration and E2E suites create isolated PostgreSQL cluster
 and apply this same shared migration history. Application imports and startup do
 not run migrations. See the [API guide](../apps/web/api/README.md) for configuration
 and resource ownership.
+
+## Gateway development
+
+```sh
+pnpm nx serve web-gateway
+pnpm nx build web-gateway
+```
+
+Serving watches the gateway source and builds the API dependency first. It mounts
+the compiled API at `/api`; the gateway root currently returns 404. Rebuild the
+API explicitly after changing its source, then restart the gateway to load the
+new artifact. Nx supplies `API_APP_PATH` for source-mode serving. Standalone
+compiled startup defaults to `../api/app.js` relative to the gateway artifact,
+independent of the working directory. An explicit `API_APP_PATH` override must
+point to compiled `app.js`; relative overrides resolve from the working directory.
+
+The gateway emits ESM with matching package metadata; the API retains CommonJS.
+Deploy both complete output directories as siblings with their runtime
+dependencies. `node dist/apps/web/gateway/main.js` owns the public listener.
+Importing either `app.js` only exposes a factory, without listening, connecting
+to PostgreSQL or initializing telemetry. The gateway uses the API's existing
+database/auth environment settings, with `AUTH_ORIGIN` matching its public origin.
+It installs one auth chain in the host and uses inherited mode for the mounted API.
+Its shutdown uses the same three-second HTTP drain, one-second telemetry flush
+budget and five-second total deadline as the standalone API.
+
+The existing container runtime still launches the standalone API; this gateway
+slice does not add Angular SSR, Astro, realtime or worker mounts.
 
 ## Container database initialization
 
@@ -110,9 +139,22 @@ Choose checks relevant to the change and report the command, result, and any
 remaining limitation. Focused checks for the API boundary and shared infrastructure are:
 
 ```sh
-NX_DAEMON=false pnpm nx run-many -t lint typecheck test -p web-api web-backend-shared backend-shared
-NX_DAEMON=false pnpm nx run web-api:build
+NX_DAEMON=false pnpm nx run-many -t lint typecheck typecheck-tests test build -p web-api web-gateway web-backend-shared backend-shared
+pnpm nx e2e web-api
+pnpm nx e2e web-gateway
 ```
+
+Every project's Vitest suite collects V8 coverage by default and requires 100%
+statements, branches, functions and lines **per source file**. The include pattern
+is `src/**/*.ts`, including modules not imported by tests; only test files and
+type declarations are excluded. Reports are written to `coverage/<project-root>`
+as HTML, JSON and LCOV. Unit and integration tests contribute to this source
+coverage. Playwright E2E checks and compiled child processes verify their real
+boundaries separately and do not contribute source coverage to these reports.
+SQL migrations are verified against isolated PostgreSQL, not instrumented by V8.
+`test-ci` delegates to the complete project `test` target, including its build
+dependencies. Individual Nx test atoms are disabled: a single spec cannot satisfy
+the project-wide include pattern and per-file coverage gate on its own.
 
 `web-api:test` depends on its build so the import and startup tests exercise the
 actual emitted application. These tests cover side-effect-free CommonJS imports
@@ -122,7 +164,23 @@ real HTTP listeners and local in-memory OpenTelemetry sinks. Playwright request
 tests run the API through Nx serve and inspect telemetry exported to isolated local
 files, including delivery during standalone shutdown. See the
 [observability test guide](../apps/web/api/e2e/README.md) for suite ownership and commands.
-They do not certify gateway composition, queue delivery, external providers, or deployment.
+Gateway colocated units cover composition, compiled-module validation and startup
+ownership. Its `tests/integration/compiled.integration.spec.ts` starts the compiled
+ESM executable, imports the sibling API, and verifies real HTTP, PostgreSQL-backed
+passkey sessions, single telemetry completion and owned-pool cleanup. It reuses
+runner-independent helpers from `tests/support/`; no production API source is imported. Its isolated
+cluster and temporary files live under `tmp/api-e2e/gateway-*` and are removed
+afterward. These are Vitest process integration checks. Both projects also own
+Playwright request suites in their existing `e2e/` directories. The gateway suite
+runs `pnpm nx serve web-gateway`, mounts the compiled API, and verifies inherited
+authentication/errors, Helmet, correlation and privacy through local file exports.
+The API and gateway share only test setup for their owned PostgreSQL clusters,
+local exporters and teardown; production application composition stays separate.
+Playwright fixtures live in root `e2e/fixtures/`, with their bootstrap and
+exporter dependencies in `e2e/support/`. Unit tests stay beside the modules they
+test, including the shared support's explicit Vitest `*.spec.ts` files. No
+separate unit-test directory or additional Nx project is introduced.
+Neither suite certifies Angular SSR, queue delivery, external collectors or deployment.
 
 For Markdown-only changes, check the touched files and review the diff:
 
@@ -150,7 +208,20 @@ historical or unrelated results do not establish current coverage.
 - Use Conventional Commit messages, enforced by Commitlint.
 
 The Husky pre-commit hook runs lint-staged, which formats staged files and lints
-staged code, followed by affected Nx test and E2E checks. The commit-message hook
+staged code, followed sequentially by these checks:
+
+```sh
+pnpm exec nx affected -t test --base=HEAD --nxBail
+pnpm exec nx affected -t e2e --base=HEAD --nxBail
+```
+
+Comparing against `HEAD` includes staged, unstaged and untracked changes, including
+shared test support. Tests enforce the coverage threshold before E2E starts; any
+failed step stops the hook and blocks the commit. The PostgreSQL integration and
+E2E suites use dedicated disposable databases under `tmp/api-e2e`, so the local
+PostgreSQL test prerequisites described in the API guide are required.
+
+The commit-message hook
 runs Commitlint. These hooks contain machine-specific Node paths: pre-commit uses
 24.15.0, while commit-msg still points to 24.14.1. They need a later portability
 review; do not describe them as verified on a fresh checkout. The API owns its

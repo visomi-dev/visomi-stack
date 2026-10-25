@@ -8,7 +8,12 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json"
     ],
-    "sharedGlobals": []
+    "sharedGlobals": [],
+    "httpTestSupport": [
+      "{workspaceRoot}/tests/support/**/*",
+      "{workspaceRoot}/e2e/support/**/*",
+      "{workspaceRoot}/e2e/fixtures/**/*"
+    ]
   },
   "plugins": [
     {
@@ -36,7 +41,6 @@
       "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test",
-        "ciTargetName": "test-ci",
         "testMode": "watch"
       }
     },

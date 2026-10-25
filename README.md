@@ -11,8 +11,9 @@ Express, and explicit gateway, worker, and realtime boundaries.
 The API project, `web-api` in `apps/web/api`, exports `createApp()` separately
 from its standalone server. `GET /` returns `{"message":"Hello API"}`.
 The `web-backend-shared` library contains the Pino/OpenTelemetry integration.
-The `web-gateway` application is a separate scaffold; API composition there
-is still in progress and is not verified by the API's import-contract tests.
+The `web-gateway` application mounts the compiled API at `/api` and owns its
+HTTP listener, shared telemetry and optional PostgreSQL pool. Authentication
+runs once in the host; the embedded API uses inherited mode.
 
 Angular tooling is installed, but Angular SSR, Astro, worker, and realtime
 applications have not been implemented. The API now supports PostgreSQL-backed passkey authentication and durable sessions.
@@ -33,9 +34,12 @@ From the repository root, with those tools available:
 ```sh
 pnpm install --frozen-lockfile
 NX_DAEMON=false pnpm nx run web-api:serve
+# Or serve the gateway, which builds and mounts the compiled API:
+pnpm nx serve web-gateway
 ```
 
-Open <http://localhost:3000/>. Stop the development server with Ctrl+C.
+Run one server at a time. Open <http://localhost:3000/> for the standalone API
+or <http://localhost:3000/api/> for the gateway. Stop it with Ctrl+C.
 The server reads `HOST` and `PORT` from the process environment; their defaults
 are `localhost` and `3000`. `NODE_ENV` selects a controlled telemetry environment
 label; logs are local JSON and no trace or metric exporter is configured by default.
@@ -59,8 +63,13 @@ dependencies. A fresh-checkout installation has not yet been verified.
 - The API build emits `app.js`, `main.js`, shared chunks, and CommonJS package
   metadata under `dist/apps/web/api`. Preserve that complete output directory
   and provide its declared runtime dependencies when consuming it.
-- Focused tests verify the API boundary and shared telemetry. A complete gateway,
-  queue, deployment, or production-readiness claim requires separate verification.
+- The gateway emits ESM `app.js` and `main.js` under `dist/apps/web/gateway`.
+  Keep the API output as its sibling directory; the gateway imports `../api/app.js`.
+  Process integration tests verify that mount, inherited authentication, shared
+  telemetry and resource cleanup. Angular SSR and other frontend mounts remain pending.
+- API and gateway Playwright request suites verify their HTTP contracts using
+  separate owned PostgreSQL clusters and local telemetry destinations. Run
+  `pnpm nx e2e web-api` and `pnpm nx e2e web-gateway`.
 - The container runtime targets the current standalone API, with a separate
   database initialization image. Redis and MinIO services remain in Compose from
   the earlier infrastructure setup; the API authentication slice does not use

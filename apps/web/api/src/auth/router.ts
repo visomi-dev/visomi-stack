@@ -1,11 +1,12 @@
 import { randomBytes } from 'node:crypto';
 
-import type { RegistrationResponseJSON, AuthenticationResponseJSON } from '@simplewebauthn/server';
+import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
+import type { ErrorRequestHandler, Request } from 'express';
 import { Router, json } from 'express';
-import type { Request, ErrorRequestHandler } from 'express';
+import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 
 import type { AuthRuntime } from './runtime';
-import { AuthError, csrf, rateLimit } from './security';
+import { csrf, rateLimit } from './security';
 
 function body(request: Request, keys: string[]) {
   const value = request.body;
@@ -16,7 +17,7 @@ function body(request: Request, keys: string[]) {
     Array.isArray(value) ||
     Object.keys(value).some((key) => !keys.includes(key))
   ) {
-    throw new AuthError('request_invalid');
+    throw new HttpError(400, 'request_invalid');
   }
 
   return value as Record<string, unknown>;
@@ -27,7 +28,7 @@ function identifier(value: unknown): string {
     typeof value !== 'string' ||
     !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value)
   ) {
-    throw new AuthError('request_invalid');
+    throw new HttpError(400, 'request_invalid');
   }
 
   return value;
@@ -41,7 +42,7 @@ function webAuthnResponse(value: unknown): RegistrationResponseJSON & Authentica
     !(value as { response?: unknown }).response ||
     typeof (value as { response: unknown }).response !== 'object'
   ) {
-    throw new AuthError('request_invalid');
+    throw new HttpError(400, 'request_invalid');
   }
 
   return value as RegistrationResponseJSON & AuthenticationResponseJSON;
@@ -49,7 +50,7 @@ function webAuthnResponse(value: unknown): RegistrationResponseJSON & Authentica
 
 function label(value: unknown): string {
   if (typeof value !== 'string' || !value.trim() || value.length > 64) {
-    throw new AuthError('request_invalid');
+    throw new HttpError(400, 'request_invalid');
   }
 
   return value.trim();
@@ -57,13 +58,13 @@ function label(value: unknown): string {
 
 export function saveSession(request: Request): Promise<void> {
   return new Promise((resolve, reject) =>
-    request.session.save((error) => (error ? reject(new AuthError('session_unavailable', 503)) : resolve())),
+    request.session.save((error) => (error ? reject(new HttpError(503, 'session_unavailable')) : resolve())),
   );
 }
 
 async function establishSession(request: Request, user: Express.User) {
   await new Promise<void>((resolve, reject) =>
-    request.logIn(user, (error) => (error ? reject(new AuthError('session_unavailable', 503)) : resolve())),
+    request.logIn(user, (error) => (error ? reject(new HttpError(503, 'session_unavailable')) : resolve())),
   );
   request.session.csrf = randomBytes(32).toString('base64url');
   await saveSession(request);
@@ -129,13 +130,13 @@ export function authRouter(auth: AuthRuntime) {
   router.post('/logout', async (request, response) => {
     body(request, []);
     await new Promise<void>((resolve, reject) =>
-      request.session.destroy((error) => (error ? reject(new AuthError('session_unavailable', 503)) : resolve())),
+      request.session.destroy((error) => (error ? reject(new HttpError(503, 'session_unavailable')) : resolve())),
     );
     response.clearCookie(config.cookieName, { httpOnly: true, secure: config.secure, sameSite: 'strict', path: '/' });
     response.status(204).end();
   });
   router.use('/passkeys', (request, _response, next) => {
-    next(request.isAuthenticated() ? undefined : new AuthError('authentication_required', 401));
+    next(request.isAuthenticated() ? undefined : new AuthHttpError(401, 'authentication_required'));
   });
   router.get('/passkeys', async (request, response) => {
     const result = await passkeys.list(request.user!);
@@ -163,18 +164,18 @@ export const authErrorHandler: ErrorRequestHandler = (error, _request, response,
     return;
   }
 
-  if (error instanceof AuthError) {
-    response.status(error.status).json({ error: error.code });
+  if (HttpError.is(error)) {
+    next(error);
 
     return;
   }
 
   if (error?.type === 'entity.parse.failed' || error?.type === 'entity.too.large') {
-    response.status(error.type === 'entity.too.large' ? 413 : 400).json({ error: 'request_invalid' });
+    next(new HttpError(error.type === 'entity.too.large' ? 413 : 400, 'request_invalid'));
 
     return;
   }
 
   // Includes SQL/driver failures; neither the query nor its parameters leave the boundary.
-  response.status(503).json({ error: 'authentication_unavailable' });
+  next(new HttpError(503, 'authentication_unavailable'));
 };

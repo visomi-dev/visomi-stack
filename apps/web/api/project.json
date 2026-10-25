@@ -6,7 +6,30 @@
   "tags": [],
   "targets": {
     "test": {
-      "dependsOn": ["build"]
+      "dependsOn": ["build"],
+      "inputs": [
+        "default",
+        "^production",
+        "httpTestSupport",
+        {
+          "fileset": "{projectRoot}/tsconfig.spec.json",
+          "dependencies": true
+        },
+        {
+          "fileset": "{projectRoot}/tsconfig.storybook.json",
+          "dependencies": true
+        },
+        {
+          "externalDependencies": ["vitest"]
+        },
+        {
+          "env": "CI"
+        },
+        {
+          "dependentTasksOutputFiles": "**/*.js",
+          "transitive": true
+        }
+      ]
     },
     "prune-lockfile": {
       "dependsOn": ["build"],
@@ -60,7 +83,39 @@
       }
     },
     "e2e": {
-      "dependsOn": ["build"]
+      "dependsOn": ["build"],
+      "inputs": [
+        "default",
+        "^production",
+        "httpTestSupport",
+        "^{projectRoot}/tsconfig*.json",
+        {
+          "externalDependencies": ["@playwright/test"]
+        },
+        {
+          "env": "CI"
+        }
+      ]
+    },
+    "lint": {
+      "inputs": [
+        "default",
+        "^default",
+        "httpTestSupport",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/apps/web/api/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        {
+          "externalDependencies": ["eslint"]
+        }
+      ],
+      "options": {
+        "command": "eslint . ../../../tests/support ../../../e2e"
+      }
+    },
+    "test-ci": {
+      "executor": "nx:noop",
+      "dependsOn": ["test"]
     }
   }
 }

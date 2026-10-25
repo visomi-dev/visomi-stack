@@ -12,11 +12,15 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'node',
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    passWithNoTests: true,
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../../coverage/apps/web/gateway',
       provider: 'v8' as const,
+      enabled: true,
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/**/*.d.ts'],
+      reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
+      thresholds: { perFile: true, statements: 100, branches: 100, functions: 100, lines: 100 },
     },
   },
 }));

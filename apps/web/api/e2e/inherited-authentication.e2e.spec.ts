@@ -1,13 +1,13 @@
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 
-import { expect, test } from '@playwright/test';
+import { httpErrorHandler, securityHeaders } from '@visomi-stack/web-backend-shared';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import express from 'express';
 
-import { authenticator } from '../tests/support/authenticator';
-
-import { testDatabasePool, resetAuthRateLimits } from './database';
+import { expect, authTest as test } from '../../../../e2e/fixtures/http';
+import { authenticator } from '../../../../tests/support/authenticator';
+import { testDatabasePool } from '../../../../e2e/support/database';
 
 const { createApp, authConfig, createAuthentication } = require(
   resolve(__dirname, '../../../../dist/apps/web/api/app'),
@@ -27,6 +27,12 @@ async function parentHost(initialize: boolean, options: { origin?: string; trust
   });
   const parent = express();
 
+  parent.use(securityHeaders());
+  parent.use((_request, response, next) => {
+    response.setHeader('Content-Security-Policy', "default-src 'none'");
+    next();
+  });
+
   if (options.trustProxy) {
     parent.set('trust proxy', options.trustProxy);
   }
@@ -35,7 +41,8 @@ async function parentHost(initialize: boolean, options: { origin?: string; trust
     parent.use(auth.middleware);
   }
 
-  parent.use('/api', createApp({ auth, authMode: 'inherited' }));
+  parent.use('/api', createApp({ auth, authMode: 'inherited', errorMode: 'inherited', helmetMode: 'inherited' }));
+  parent.use(httpErrorHandler);
   const server = createServer(parent);
 
   await new Promise<void>((ready) => server.listen(0, '127.0.0.1', ready));
@@ -56,10 +63,6 @@ async function parentHost(initialize: boolean, options: { origin?: string; trust
   };
 }
 
-test.beforeEach(resetAuthRateLimits);
-
-test.afterEach(resetAuthRateLimits);
-
 test('an inherited API uses its real parent session/Passport chain and preserves route protection', async ({
   request,
 }) => {
@@ -73,6 +76,12 @@ test('an inherited API uses its real parent session/Passport chain and preserves
     expect(response.status()).toBe(200);
     expect(state.authenticated).toBe(false);
     expect(protectedResponse.status()).toBe(401);
+    expect(response.headers()['content-security-policy']).toBe("default-src 'none'");
+    expect(protectedResponse.headers()['content-security-policy']).toBe("default-src 'none'");
+    expect(protectedResponse.headers()['x-content-type-options']).toBe('nosniff');
+    const denied = await protectedResponse.json();
+
+    expect(denied).toEqual({ error: 'authentication_required' });
     const begin = await request.post(`${host.origin}/auth/passkeys/registration/options`, {
       headers: { origin, 'x-csrf-token': state.csrfToken },
       data: {},
