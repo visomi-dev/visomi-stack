@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { testPostgres } from '../../../../../tests/support/postgres';
+import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 
 async function serve() {
   const directory = process.env.VISOMI_E2E_TELEMETRY_DIR!;

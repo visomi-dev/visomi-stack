@@ -15,11 +15,11 @@ process.env.VISOMI_E2E_TELEMETRY_DIR = telemetryDirectory;
 export default defineConfig({
   ...nxE2EPreset(import.meta.dirname, { testDir: './e2e' }),
   testMatch: '**/*.e2e.spec.ts',
-  globalTeardown: '../../../e2e/support/teardown.ts',
+  globalTeardown: './e2e/support/teardown.ts',
   workers: 1,
   use: { baseURL: 'http://127.0.0.1:3307', trace: 'off' },
   webServer: {
-    command: 'pnpm exec tsx apps/web/api/e2e/support/serve.ts',
+    command: 'pnpm exec tsx --tsconfig apps/web/api/tsconfig.spec.json apps/web/api/e2e/support/serve.ts',
     url: 'http://127.0.0.1:3307',
     reuseExistingServer: false,
     cwd: workspaceRoot,

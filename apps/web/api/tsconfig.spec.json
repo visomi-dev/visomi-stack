@@ -22,8 +22,6 @@
     "src/**/*.d.ts",
     "tests/**/*.ts",
     "e2e/**/*.ts",
-    "playwright.config.mts",
-    "../../../tests/support/**/*.ts",
-    "../../../e2e/**/*.ts"
+    "playwright.config.mts"
   ]
 }

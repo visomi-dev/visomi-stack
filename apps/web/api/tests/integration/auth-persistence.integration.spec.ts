@@ -9,13 +9,13 @@ import type { Request, Response } from 'express';
 import { Cookie } from 'express-session';
 import type { SessionData } from 'express-session';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { authenticator } from '@visomi-stack/dev-testing';
+import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 
 import { authConfig } from '../../src/auth/config';
 import { Passkeys } from '../../src/auth/passkeys';
 import { rateLimit } from '../../src/auth/security';
 import { SessionStore } from '../../src/auth/session-store';
-import { authenticator } from '../../../../../tests/support/authenticator';
-import { testPostgres } from '../../../../../tests/support/postgres';
 
 const { challenges, credentials, sessions, users } = authSchema;
 

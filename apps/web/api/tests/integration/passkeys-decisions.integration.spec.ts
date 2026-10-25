@@ -4,12 +4,12 @@ import { verifyAuthenticationResponse, verifyRegistrationResponse } from '@simpl
 import { authSchema, createDatabase } from '@visomi-stack/backend-shared';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { authenticator } from '@visomi-stack/dev-testing';
+import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 
 import { authConfig } from '../../src/auth/config';
 import { Passkeys } from '../../src/auth/passkeys';
 import { SessionStore } from '../../src/auth/session-store';
-import { authenticator } from '../../../../../tests/support/authenticator';
-import { testPostgres } from '../../../../../tests/support/postgres';
 
 vi.mock('@simplewebauthn/server', async (original) => {
   const actual = await original<typeof import('@simplewebauthn/server')>();

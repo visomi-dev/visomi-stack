@@ -5,9 +5,10 @@ Run from the workspace root:
 ```sh
 pnpm nx test web-backend-shared
 pnpm nx test web-api
+pnpm nx test dev-testing
 pnpm nx e2e web-api
 pnpm nx e2e web-gateway
-pnpm nx run-many -t lint typecheck typecheck-tests -p web-api web-gateway web-backend-shared
+pnpm nx run-many -t lint typecheck typecheck-tests -p web-api web-gateway web-backend-shared dev-testing
 ```
 
 | Suite                                                        | Ownership                                                                                                                                                                      |
@@ -39,12 +40,14 @@ own `e2e/` directory:
 - Each project's `e2e/support/` owns its Nx serve entrypoint, isolated auth
   database access and minimal preload restricted to that application's process.
 
-Only dependencies currently used by both projects live at the workspace root:
+Dependencies currently used by both projects live in `libs/development/testing`:
 
-- `e2e/fixtures/telemetry.ts`: lazy binding to the run's telemetry destination.
-- `e2e/support/`: telemetry reader, local exporters and common teardown of owned
-  watchers, application processes and recorded PostgreSQL clusters.
-- `tests/support/`: runner-independent PostgreSQL and software-authenticator helpers.
+- `@visomi-stack/dev-testing/playwright`: lazy telemetry fixture, `expect` and
+  shared teardown of owned watchers, application processes and PostgreSQL clusters.
+- `@visomi-stack/dev-testing/telemetry`: telemetry reader and local exporters.
+- `@visomi-stack/dev-testing/postgres`: runner-independent owned PostgreSQL helpers.
+- `@visomi-stack/dev-testing`: PostgreSQL and software-authenticator helpers without
+  importing Playwright.
 
 Specs keep using Playwright's request fixture. The telemetry fixture binds the
 run's destination and can read a separate destination for the compiled shutdown
@@ -84,13 +87,15 @@ SimpleWebAuthn verification cover wrong user handles, revoked credentials,
 counter regression, inconsistent backup flags and independent challenge races in
 integration.
 
-Unit tests remain beside the module they test. The shared telemetry reader and
-exporters have colocated `*.spec.ts` regressions in `e2e/support/`; `web-api:test`
-explicitly includes those files once. Playwright discovers only each application's
-`e2e/*.e2e.spec.ts`, while Vitest includes application `src/` and `tests/` plus that
-explicit support-unit pattern. It never discovers the Playwright suites. Test
-type checking and lint include the shared dependencies; Nx test inputs include
-them so edits invalidate cached checks. Production builds retain their explicit
+Unit tests remain beside the module they test. `dev-testing:test` owns the shared
+helper regressions, including cryptographically valid authenticator responses,
+PostgreSQL ownership/failure paths, fixtures, telemetry and teardown. Its coverage
+gate includes `src/`, `e2e/` and `tests/`; re-export barrels do not get artificial
+tests. Playwright discovers only each application's `e2e/*.e2e.spec.ts`, while
+application Vitest suites include their `src/` and `tests/`. They never discover
+the Playwright suites. The source aliases resolve through the configured test
+tsconfig, including the server preload. Nx detects the library dependency for
+affected and cached checks. Production builds retain their explicit
 application entrypoints and exclude all test dependencies. Type-only files,
 barrels and static configuration do not receive artificial unit suites; fixture,
 bootstrap and owned-process cleanup wiring is exercised through the real E2E runs.

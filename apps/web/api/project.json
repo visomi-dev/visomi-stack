@@ -10,7 +10,6 @@
       "inputs": [
         "default",
         "^production",
-        "httpTestSupport",
         {
           "fileset": "{projectRoot}/tsconfig.spec.json",
           "dependencies": true
@@ -87,7 +86,6 @@
       "inputs": [
         "default",
         "^production",
-        "httpTestSupport",
         "^{projectRoot}/tsconfig*.json",
         {
           "externalDependencies": ["@playwright/test"]
@@ -101,7 +99,6 @@
       "inputs": [
         "default",
         "^default",
-        "httpTestSupport",
         "{workspaceRoot}/eslint.config.mjs",
         "{workspaceRoot}/apps/web/api/eslint.config.mjs",
         "{workspaceRoot}/tools/eslint-rules/**/*",
@@ -110,7 +107,7 @@
         }
       ],
       "options": {
-        "command": "eslint . ../../../tests/support ../../../e2e"
+        "command": "eslint ."
       }
     },
     "test-ci": {

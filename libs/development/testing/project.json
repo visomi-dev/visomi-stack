@@ -1,0 +1,22 @@
+{
+  "name": "dev-testing",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/development/testing/src",
+  "projectType": "library",
+  "tags": ["scope:development"],
+  "// targets": "to see all targets run: nx show project dev-testing --web",
+  "targets": {
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/development/testing",
+        "command": "tsc -p tsconfig.spec.json --noEmit"
+      }
+    },
+    "test-ci": {
+      "executor": "nx:noop",
+      "dependsOn": ["test"]
+    }
+  },
+  "implicitDependencies": ["backend-shared"]
+}

@@ -1,4 +1,5 @@
-import { test as base } from '../../../../../e2e/fixtures/telemetry';
+import { test as base } from '@visomi-stack/dev-testing/playwright';
+
 import { resetAuthRateLimits } from '../support/database';
 
 export const test = base;
@@ -18,4 +19,4 @@ export const authTest = test.extend<{ rateLimitIsolation: void }>({
   ],
 });
 
-export { expect } from '../../../../../e2e/fixtures/telemetry';
+export { expect } from '@visomi-stack/dev-testing/playwright';

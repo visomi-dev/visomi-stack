@@ -1,6 +1,6 @@
 import type { Pool } from 'pg';
+import { test as base } from '@visomi-stack/dev-testing/playwright';
 
-import { test as base } from '../../../../../e2e/fixtures/telemetry';
 import { resetAuthRateLimits, testDatabasePool } from '../support/database';
 
 export const test = base.extend<{ database: Pool }>({
@@ -30,4 +30,4 @@ export const authTest = test.extend<{ rateLimitIsolation: void }>({
   ],
 });
 
-export { expect } from '../../../../../e2e/fixtures/telemetry';
+export { expect } from '@visomi-stack/dev-testing/playwright';

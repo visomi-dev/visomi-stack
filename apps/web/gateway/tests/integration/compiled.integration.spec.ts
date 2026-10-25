@@ -9,10 +9,10 @@ import { randomUUID } from 'node:crypto';
 
 import { createDatabase } from '@visomi-stack/backend-shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { authenticator } from '@visomi-stack/dev-testing';
+import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 
 import { loadApi } from '../../src/api-module';
-import { authenticator } from '../../../../../tests/support/authenticator';
-import { testPostgres } from '../../../../../tests/support/postgres';
 
 const execute = promisify(execFile);
 const root = resolve(import.meta.dirname, '../../../../..');

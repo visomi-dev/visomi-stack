@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { readTelemetry } from './telemetry';
 
@@ -19,6 +19,16 @@ afterEach(async () => {
 });
 
 describe('isolated telemetry file reader', () => {
+  it('requires an explicit or environment-owned destination', async () => {
+    vi.stubEnv('VISOMI_E2E_TELEMETRY_DIR', undefined);
+
+    try {
+      await expect(readTelemetry()).rejects.toThrow('Missing isolated telemetry directory');
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('treats not-yet-exported files as empty without inventing records', async () => {
     const telemetry = await readTelemetry(directory);
 

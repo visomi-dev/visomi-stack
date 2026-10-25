@@ -1,4 +1,4 @@
-import { authenticator } from '../../../../tests/support/authenticator';
+import { authenticator } from '@visomi-stack/dev-testing';
 
 import { expect, authTest as test } from './fixtures/http';
 

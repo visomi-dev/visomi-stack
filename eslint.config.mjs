@@ -245,14 +245,18 @@ export default [
     },
   },
   {
-    files: ['**/e2e/**/*.ts', '**/tests/**/*.spec.ts'],
+    files: ['**/src/**/*.{ts,tsx,js,jsx}'],
+    ignores: ['**/*.spec.*', '**/*.test.*'],
     rules: {
-      '@nx/enforce-module-boundaries': [
+      'no-restricted-imports': [
         'error',
         {
-          ...moduleBoundaryOptions,
-          // Test-only imports do not create a production dependency on a fixture project.
-          allow: [...moduleBoundaryOptions.allow, '^(?:\\.\\./)+(?:e2e/(?:fixtures|support)|tests/support)/'],
+          patterns: [
+            {
+              group: ['@visomi-stack/dev-testing', '@visomi-stack/dev-testing/*'],
+              message: 'Development testing helpers belong only in tests and fixtures.',
+            },
+          ],
         },
       ],
     },

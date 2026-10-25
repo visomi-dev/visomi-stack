@@ -4,8 +4,7 @@ import { resolve } from 'node:path';
 import { httpErrorHandler, securityHeaders } from '@visomi-stack/web-backend-shared';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import express from 'express';
-
-import { authenticator } from '../../../../tests/support/authenticator';
+import { authenticator } from '@visomi-stack/dev-testing';
 
 import { expect, authTest as test } from './fixtures/http';
 import { testDatabasePool } from './support/database';

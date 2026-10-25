@@ -1,17 +1,23 @@
-const { appendFileSync } = require('node:fs');
-const { join } = require('node:path');
+import { appendFileSync } from 'node:fs';
+import { join } from 'node:path';
 
-const { PeriodicExportingMetricReader, AggregationTemporality } = require('@opentelemetry/sdk-metrics');
+import { PeriodicExportingMetricReader, AggregationTemporality } from '@opentelemetry/sdk-metrics';
 
-exports.createTelemetryOptions = function createTelemetryOptions(directory, service, options = {}) {
-  const pendingSpans = new Set();
-  const pendingMetrics = new Set();
-  const heldSpans = [];
-  const write = (file, value) => appendFileSync(join(directory, file), JSON.stringify(value) + '\n');
-  const exportRecord = (file, value, callback) => {
+import type { ObservabilityOptions } from '@visomi-stack/web-backend-shared';
+
+export function createTelemetryOptions(
+  directory: string,
+  service: ObservabilityOptions['service'],
+  options: { holdSpans?: boolean } = {},
+): ObservabilityOptions {
+  const pendingSpans = new Set<Promise<void>>();
+  const pendingMetrics = new Set<Promise<void>>();
+  const heldSpans: (() => void)[] = [];
+  const write = (file: string, value: unknown) => appendFileSync(join(directory, file), JSON.stringify(value) + '\n');
+  const exportRecord = (file: string, value: unknown, callback: (result: { code: 0 }) => void) => {
     write('pending.jsonl', { file });
     const pending = file === 'spans.jsonl' ? pendingSpans : pendingMetrics;
-    const delivery = new Promise((resolve) => {
+    const delivery = new Promise<void>((resolve) => {
       const deliver = () => {
         write(file, value);
         callback({ code: 0 });
@@ -82,4 +88,4 @@ exports.createTelemetryOptions = function createTelemetryOptions(directory, serv
       shutdown: drainSpans,
     },
   };
-};
+}

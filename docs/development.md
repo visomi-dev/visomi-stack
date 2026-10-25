@@ -139,15 +139,16 @@ Choose checks relevant to the change and report the command, result, and any
 remaining limitation. Focused checks for the API boundary and shared infrastructure are:
 
 ```sh
-NX_DAEMON=false pnpm nx run-many -t lint typecheck typecheck-tests test build -p web-api web-gateway web-backend-shared backend-shared
+NX_DAEMON=false pnpm nx run-many -t lint typecheck typecheck-tests test build -p web-api web-gateway web-backend-shared backend-shared dev-testing
 pnpm nx e2e web-api
 pnpm nx e2e web-gateway
 ```
 
 Every project's Vitest suite collects V8 coverage by default and requires 100%
-statements, branches, functions and lines **per source file**. The include pattern
-is `src/**/*.ts`, including modules not imported by tests; only test files and
-type declarations are excluded. Reports are written to `coverage/<project-root>`
+statements, branches, functions and lines **per source file**. Production projects
+include `src/**/*.ts`; the development testing library also includes its `e2e/`
+and `tests/` helpers. Modules not imported by tests are included; only test files
+and type declarations are excluded. Reports are written to `coverage/<project-root>`
 as HTML, JSON and LCOV. Unit and integration tests contribute to this source
 coverage. Playwright E2E checks and compiled child processes verify their real
 boundaries separately and do not contribute source coverage to these reports.
@@ -168,7 +169,7 @@ Gateway colocated units cover composition, compiled-module validation and startu
 ownership. Its `tests/integration/compiled.integration.spec.ts` starts the compiled
 ESM executable, imports the sibling API, and verifies real HTTP, PostgreSQL-backed
 passkey sessions, single telemetry completion and owned-pool cleanup. It reuses
-runner-independent helpers from `tests/support/`; no production API source is imported. Its isolated
+runner-independent helpers from `@visomi-stack/dev-testing`; no production API source is imported. Its isolated
 cluster and temporary files live under `tmp/api-e2e/gateway-*` and are removed
 afterward. These are Vitest process integration checks. Both projects also own
 Playwright request suites in their existing `e2e/` directories. The gateway suite
@@ -178,12 +179,17 @@ Each project owns its Playwright fixture composition in `e2e/fixtures/http.ts`
 and its Nx serve entrypoint, authentication database access and minimal telemetry
 preload in `e2e/support/`. These files live under `apps/web/api/` or
 `apps/web/gateway/`; neither project imports the other project's test files.
-The root `e2e/fixtures/telemetry.ts` only binds the isolated telemetry destination.
-Root `e2e/support/` contains the telemetry reader, local exporters and owned-process
-teardown used by both suites. It does not select application targets or origins.
-Runner-independent PostgreSQL and authenticator helpers remain in `tests/support/`.
-Unit tests stay beside the modules they test, including the shared support's
-explicit Vitest `*.spec.ts` files. No
+Shared support lives in `libs/development/testing`, an internal source library
+exposed as `@visomi-stack/dev-testing`. Its `/playwright` entry exports the shared
+telemetry fixture and teardown; `/telemetry` exports the reader and local exporters;
+`/postgres` exports the owned-cluster helpers. The root entry exports PostgreSQL
+and software-authenticator helpers without loading Playwright. The library keeps
+Playwright dependencies in `e2e/fixtures` and `e2e/support`, and runner-independent
+helpers in `tests/support`. It does not select application targets or origins.
+Unit tests stay beside each helper and run through `dev-testing:test`, with the
+same 100% per-file coverage gate covering all three directories. Nx detects the
+library dependencies for affected checks; production code cannot import it.
+No
 separate unit-test directory or additional Nx project is introduced.
 Neither suite certifies Angular SSR, queue delivery, external collectors or deployment.
 

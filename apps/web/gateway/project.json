@@ -59,7 +59,6 @@
       "inputs": [
         "default",
         "^default",
-        "httpTestSupport",
         {
           "externalDependencies": ["vitest"]
         },
@@ -77,7 +76,6 @@
       "inputs": [
         "default",
         "^default",
-        "httpTestSupport",
         {
           "externalDependencies": ["@playwright/test"]
         },
@@ -97,7 +95,6 @@
       "inputs": [
         "default",
         "^default",
-        "httpTestSupport",
         "{workspaceRoot}/eslint.config.mjs",
         "{workspaceRoot}/apps/web/gateway/eslint.config.mjs",
         "{workspaceRoot}/tools/eslint-rules/**/*",
@@ -106,7 +103,7 @@
         }
       ],
       "options": {
-        "command": "eslint . ../../../tests/support ../../../e2e"
+        "command": "eslint ."
       }
     },
     "test-ci": {
