@@ -38,7 +38,7 @@ export function createApp(options: AppOptions = {}) {
       app.use(options.auth.middleware);
     }
 
-    app.use('/auth', authRouter(options.auth, options.auth.database), authErrorHandler);
+    app.use('/auth', authRouter(options.auth), authErrorHandler);
   } else {
     app.use('/auth', (_request, response) => response.status(503).json({ error: 'authentication_unavailable' }));
   }

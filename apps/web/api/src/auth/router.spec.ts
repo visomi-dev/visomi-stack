@@ -1,8 +1,14 @@
-import type { Request, Response } from 'express';
-import { describe, expect, it, vi } from 'vitest';
+import { IncomingMessage, ServerResponse } from 'node:http';
+import { Socket } from 'node:net';
 
-import { authErrorHandler, saveSession } from './router';
-import { AuthError } from './security';
+import express from 'express';
+import type { Request, Response } from 'express';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { authConfig } from './config';
+import { authErrorHandler, authRouter, saveSession } from './router';
+import type { AuthRuntime } from './runtime';
+import { AuthError, rateLimit } from './security';
 
 describe('authentication HTTP boundary', () => {
   it('saves the session before returning and sanitizes failed persistence', async () => {
@@ -33,5 +39,304 @@ describe('authentication HTTP boundary', () => {
 
     authErrorHandler(error, {} as Request, { headersSent: true } as Response, next);
     expect(next).toHaveBeenCalledWith(error);
+  });
+});
+
+vi.mock('./security', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./security')>();
+
+  return {
+    ...actual,
+    rateLimit: vi.fn(() => (_request: Request, _response: Response, next: () => void) => next()),
+  };
+});
+
+beforeEach(() => vi.clearAllMocks());
+
+const challengeId = '11111111-1111-4111-8111-111111111111';
+const credentialId = '22222222-2222-4222-8222-222222222222';
+const user = { id: '33333333-3333-4333-8333-333333333333', credentialId, authenticatedAt: 123456 };
+const response = { id: 'synthetic_public_key', response: {} };
+
+function routerFixture() {
+  const config = authConfig({
+    origin: 'http://localhost',
+    rpId: 'localhost',
+    secret: 'synthetic-session-secret-with-32-bytes',
+  });
+  const passkeys = {
+    registrationOptions: vi.fn().mockResolvedValue({ challengeId, options: { challenge: 'synthetic' } }),
+    authenticationOptions: vi.fn().mockResolvedValue({ challengeId, options: { challenge: 'synthetic' } }),
+    register: vi.fn().mockResolvedValue(user),
+    authenticate: vi.fn().mockResolvedValue(user),
+    list: vi.fn().mockResolvedValue([{ id: credentialId, label: 'Synthetic' }]),
+    rename: vi.fn().mockResolvedValue(undefined),
+    revoke: vi.fn().mockResolvedValue(undefined),
+  };
+  const save = vi.fn((callback: (error?: Error) => void) => callback());
+  const destroy = vi.fn((callback: (error?: Error) => void) => callback());
+  const logIn = vi.fn((_user: Express.User, callback: (error?: Error) => void) => callback());
+  const requireInitialized = vi.fn((_request: Request, _response: Response, next: (error?: Error) => void) => next());
+  const database = {};
+  const auth = { config, passkeys, requireInitialized, database } as unknown as AuthRuntime;
+  const app = express();
+
+  app.use('/auth', authRouter(auth), authErrorHandler);
+
+  const dispatch = (
+    method: string,
+    path: string,
+    body?: unknown,
+    options: { user?: Express.User; raw?: string; origin?: string } = {},
+  ) => {
+    const request = new IncomingMessage(new Socket()) as Request;
+    const output = new ServerResponse(request);
+    const data = options.raw ?? (body === undefined ? undefined : JSON.stringify(body));
+
+    request.method = method;
+    request.url = '/auth' + path;
+    request.headers = { origin: options.origin ?? config.origin, 'x-csrf-token': 'synthetic_csrf' };
+
+    if (data !== undefined) {
+      request.headers['content-type'] = 'application/json';
+      request.headers['content-length'] = String(Buffer.byteLength(data));
+    }
+
+    Object.assign(request, {
+      sessionID: 'synthetic-session',
+      session: { csrf: 'synthetic_csrf', save, destroy },
+      user: options.user,
+      isAuthenticated: () => Boolean(options.user),
+      logIn,
+    });
+
+    return new Promise<{ status: number; body: unknown; headers: ReturnType<ServerResponse['getHeaders']> }>(
+      (resolve, reject) => {
+        vi.spyOn(output, 'end').mockImplementation((chunk?: unknown) => {
+          resolve({
+            status: output.statusCode,
+            body: chunk ? JSON.parse(String(chunk)) : undefined,
+            headers: output.getHeaders(),
+          });
+
+          return output;
+        });
+        app(request, output as Response, reject);
+
+        if (data !== undefined) {
+          request.push(data);
+        }
+
+        request.push(null);
+      },
+    );
+  };
+
+  return { dispatch, passkeys, database, save, destroy, logIn, requireInitialized };
+}
+
+describe('authentication router decisions and delegation', () => {
+  it('uses the runtime database as the only rate-limit source', () => {
+    const fixture = routerFixture();
+
+    expect(rateLimit).toHaveBeenCalledExactlyOnceWith(fixture.database, expect.objectContaining({ rpId: 'localhost' }));
+  });
+
+  it('allows an initialized anonymous session and returns only public session fields', async () => {
+    const fixture = routerFixture();
+    const anonymous = await fixture.dispatch('GET', '/session');
+    const authenticated = await fixture.dispatch('GET', '/session', undefined, { user });
+
+    expect(anonymous.body).toEqual({ authenticated: false, user: null, csrfToken: 'synthetic_csrf' });
+    expect(authenticated.body).toEqual({ authenticated: true, user: { id: user.id }, csrfToken: 'synthetic_csrf' });
+    expect(anonymous.headers['cache-control']).toBe('no-store');
+    expect(fixture.save).toHaveBeenCalledTimes(2);
+  });
+
+  it('requires inherited initialization before session persistence or passkey work', async () => {
+    const fixture = routerFixture();
+
+    fixture.requireInitialized.mockImplementation((_request, _response, next) =>
+      next(new AuthError('auth_initialization_missing', 503)),
+    );
+    const result = await fixture.dispatch('GET', '/session');
+
+    expect(result.status).toBe(503);
+    expect(result.body).toEqual({ error: 'auth_initialization_missing' });
+    expect(fixture.save).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['/passkeys/registration/options', 'registrationOptions'],
+    ['/passkeys/authentication/options', 'authenticationOptions'],
+  ] as const)('delegates %s with the server session and authenticated identity', async (path, operation) => {
+    const fixture = routerFixture();
+    const result = await fixture.dispatch('POST', path, {}, { user });
+
+    expect(result.status).toBe(200);
+    expect(fixture.passkeys[operation]).toHaveBeenCalledExactlyOnceWith(
+      ...(operation === 'registrationOptions' ? ['synthetic-session', user] : ['synthetic-session']),
+    );
+    expect(fixture.logIn).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, '  Named passkey  '])(
+    'validates registration, normalizes its label and establishes the verified identity',
+    async (label) => {
+      const fixture = routerFixture();
+      const result = await fixture.dispatch('POST', '/passkeys/registration/verify', {
+        challengeId,
+        response,
+        ...(label === undefined ? {} : { label }),
+      });
+
+      expect(fixture.passkeys.register).toHaveBeenCalledExactlyOnceWith(
+        'synthetic-session',
+        challengeId,
+        response,
+        label === undefined ? 'Passkey' : 'Named passkey',
+        undefined,
+      );
+      expect(fixture.logIn).toHaveBeenCalledWith(user, expect.any(Function));
+      expect(fixture.save).toHaveBeenCalledOnce();
+      expect(result.status).toBe(201);
+      expect(result.body).toEqual({ authenticated: true, user: { id: user.id }, csrfToken: expect.any(String) });
+      expect((result.body as { csrfToken: string }).csrfToken).not.toBe('synthetic_csrf');
+    },
+  );
+
+  it('delegates authentication and rotates CSRF only after a verified principal is returned', async () => {
+    const fixture = routerFixture();
+    const result = await fixture.dispatch('POST', '/passkeys/authentication/verify', { challengeId, response });
+
+    expect(fixture.passkeys.authenticate).toHaveBeenCalledExactlyOnceWith('synthetic-session', challengeId, response);
+    expect(fixture.logIn).toHaveBeenCalledWith(user, expect.any(Function));
+    expect(result.status).toBe(200);
+    expect(result.body).toEqual({ authenticated: true, user: { id: user.id }, csrfToken: expect.any(String) });
+  });
+
+  it.each([
+    ['POST', '/passkeys/registration/options', { userId: user.id }],
+    ['POST', '/passkeys/authentication/options', []],
+    ['POST', '/passkeys/registration/verify', { challengeId: 'invalid', response }],
+    ['POST', '/passkeys/registration/verify', { challengeId, response, label: ' ' }],
+    ['POST', '/passkeys/registration/verify', { challengeId, response, label: 'x'.repeat(65) }],
+    ['POST', '/passkeys/authentication/verify', { challengeId, response: { id: 'synthetic' } }],
+    ['POST', '/passkeys/authentication/verify', { challengeId, response, userId: user.id }],
+    ['PATCH', '/passkeys/invalid', { label: 'Name' }],
+    ['PATCH', '/passkeys/' + credentialId, { label: 42 }],
+  ])('rejects invalid input for %s %s before delegating', async (method, path, body) => {
+    const fixture = routerFixture();
+    const result = await fixture.dispatch(method as string, path as string, body, { user });
+
+    expect(result.status).toBe(400);
+    expect(result.body).toEqual({ error: 'request_invalid' });
+    for (const operation of Object.values(fixture.passkeys)) {
+      expect(operation).not.toHaveBeenCalled();
+    }
+    expect(fixture.logIn).not.toHaveBeenCalled();
+  });
+
+  it('enforces CSRF before delegating a mutation', async () => {
+    const fixture = routerFixture();
+    const result = await fixture.dispatch(
+      'POST',
+      '/passkeys/registration/options',
+      {},
+      { origin: 'https://other.example.test' },
+    );
+
+    expect(result.status).toBe(403);
+    expect(result.body).toEqual({ error: 'csrf_invalid' });
+    expect(fixture.passkeys.registrationOptions).not.toHaveBeenCalled();
+  });
+
+  it.each(['GET', 'PATCH', 'DELETE'])('requires authentication for %s credential operations', async (method) => {
+    const fixture = routerFixture();
+    const path = method === 'GET' ? '/passkeys' : '/passkeys/' + credentialId;
+    const result = await fixture.dispatch(method, path, method === 'PATCH' ? { label: 'Name' } : undefined);
+
+    expect(result.status).toBe(401);
+    expect(fixture.passkeys.list).not.toHaveBeenCalled();
+    expect(fixture.passkeys.rename).not.toHaveBeenCalled();
+    expect(fixture.passkeys.revoke).not.toHaveBeenCalled();
+  });
+
+  it('delegates credential listing, rename and revocation using the authenticated owner', async () => {
+    const fixture = routerFixture();
+    const listed = await fixture.dispatch('GET', '/passkeys', undefined, { user });
+    const renamed = await fixture.dispatch('PATCH', '/passkeys/' + credentialId, { label: '  Renamed  ' }, { user });
+    const revoked = await fixture.dispatch('DELETE', '/passkeys/' + credentialId, undefined, { user });
+
+    expect(listed.body).toEqual({ credentials: [{ id: credentialId, label: 'Synthetic' }] });
+    expect(fixture.passkeys.list).toHaveBeenCalledExactlyOnceWith(user);
+    expect(fixture.passkeys.rename).toHaveBeenCalledExactlyOnceWith('synthetic-session', user, credentialId, 'Renamed');
+    expect(fixture.passkeys.revoke).toHaveBeenCalledExactlyOnceWith('synthetic-session', user, credentialId);
+    expect(renamed.status).toBe(204);
+    expect(revoked.status).toBe(204);
+  });
+
+  it('revokes the session and clears its cookie on logout', async () => {
+    const fixture = routerFixture();
+    const result = await fixture.dispatch('POST', '/logout', {});
+
+    expect(fixture.destroy).toHaveBeenCalledOnce();
+    expect(result.status).toBe(204);
+    expect(String(result.headers['set-cookie'])).toContain('visomi.sid=;');
+  });
+
+  it.each([
+    [new AuthError('last_credential', 409), 409, 'last_credential'],
+    [new Error('SYNTHETIC_PRIVATE_SQL_PARAMETERS'), 503, 'authentication_unavailable'],
+  ])('sanitizes rejected authentication without establishing a session', async (error, status, code) => {
+    const fixture = routerFixture();
+
+    fixture.passkeys.authenticate.mockRejectedValueOnce(error);
+    const result = await fixture.dispatch('POST', '/passkeys/authentication/verify', { challengeId, response });
+
+    expect(result.status).toBe(status);
+    expect(result.body).toEqual({ error: code });
+    expect(fixture.logIn).not.toHaveBeenCalled();
+    expect(fixture.save).not.toHaveBeenCalled();
+  });
+
+  it.each(['login', 'save', 'logout'] as const)(
+    'reports failed %s session persistence without a success response',
+    async (operation) => {
+      const fixture = routerFixture();
+      const error = new Error('SYNTHETIC_PRIVATE_SESSION');
+
+      if (operation === 'login') {
+        fixture.logIn.mockImplementation((_user, callback) => callback(error));
+      }
+
+      if (operation === 'save') {
+        fixture.save.mockImplementation((callback) => callback(error));
+      }
+
+      if (operation === 'logout') {
+        fixture.destroy.mockImplementation((callback) => callback(error));
+      }
+
+      const path = operation === 'logout' ? '/logout' : '/passkeys/authentication/verify';
+      const input = operation === 'logout' ? {} : { challengeId, response };
+      const result = await fixture.dispatch('POST', path, input);
+
+      expect(result.status).toBe(503);
+      expect(result.body).toEqual({ error: 'session_unavailable' });
+      expect(result.headers['set-cookie']).toBeUndefined();
+    },
+  );
+
+  it.each([
+    ['{', 400],
+    [JSON.stringify({ oversized: 'x'.repeat(33000) }), 413],
+  ] as const)('returns a controlled response for rejected JSON', async (raw, status) => {
+    const fixture = routerFixture();
+    const result = await fixture.dispatch('POST', '/passkeys/registration/options', undefined, { raw });
+
+    expect(result.status).toBe(status);
+    expect(result.body).toEqual({ error: 'request_invalid' });
+    expect(fixture.passkeys.registrationOptions).not.toHaveBeenCalled();
   });
 });

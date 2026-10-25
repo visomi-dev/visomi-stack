@@ -1,7 +1,6 @@
 import { randomBytes } from 'node:crypto';
 
 import type { RegistrationResponseJSON, AuthenticationResponseJSON } from '@simplewebauthn/server';
-import type { Database } from '@visomi-stack/backend-shared';
 import { Router, json } from 'express';
 import type { Request, ErrorRequestHandler } from 'express';
 
@@ -70,7 +69,7 @@ async function establishSession(request: Request, user: Express.User) {
   await saveSession(request);
 }
 
-export function authRouter(auth: AuthRuntime, database: Database) {
+export function authRouter(auth: AuthRuntime) {
   const router = Router();
   const { passkeys, config } = auth;
 
@@ -79,7 +78,7 @@ export function authRouter(auth: AuthRuntime, database: Database) {
     next();
   });
   router.use(auth.requireInitialized);
-  router.use(rateLimit(database, config));
+  router.use(rateLimit(auth.database, config));
   router.use(csrf(config));
   router.use(json({ limit: '32kb' }));
   router.get('/session', async (request, response) => {

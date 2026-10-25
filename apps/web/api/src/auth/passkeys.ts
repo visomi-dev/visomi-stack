@@ -261,7 +261,12 @@ export class Passkeys {
       await tx
         .update(sessions)
         .set({ revokedAt: new Date(), expire: new Date(0), sess: {} })
-        .where(sql`${sessions.sess}->'passport'->'user'->>'credentialId' = ${id}`);
+        .where(
+          and(
+            sql`${sessions.sess}->'passport'->'user'->>'id' = ${user.id}`,
+            sql`${sessions.sess}->'passport'->'user'->>'credentialId' = ${id}`,
+          ),
+        );
     });
   }
 

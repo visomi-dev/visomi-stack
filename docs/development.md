@@ -74,9 +74,11 @@ DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock" docker-compose up --bui
 ```
 
 Both services use the same database URL, with container DNS `postgres:5432`.
-Set `APP_DATABASE_URL` when overriding the PostgreSQL database/user/password or
-when credentials need URL encoding; its default matches the default local
-PostgreSQL settings. Both services receive this same explicit URL.
+The default URL is composed from the same `POSTGRES_USER`, `POSTGRES_PASSWORD`
+and `POSTGRES_DB` values as PostgreSQL. Set `APP_DATABASE_URL` when credentials
+need URL encoding or when using a different connection target. Both services
+receive the same URL. Nested defaults require Docker Compose v2; the older local
+`podman-compose` provider does not interpolate them correctly.
 The API defaults to `AUTH_ORIGIN=http://localhost:8080` and `AUTH_RP_ID=localhost`
 for this local setup; override both together when needed. Compose supplies only
 the declared settings to the API and does not require an `env_file`.

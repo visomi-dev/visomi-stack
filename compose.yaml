@@ -78,7 +78,7 @@ services:
         condition: service_healthy
     environment:
       # Set APP_DATABASE_URL when credentials need URL encoding; use postgres:5432.
-      - DATABASE_URL=${APP_DATABASE_URL:-postgresql://postgres:local-development-only@postgres:5432/visomi}
+      - DATABASE_URL=${APP_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-visomi}}
 
   app:
     build:
@@ -93,7 +93,7 @@ services:
       - AUTH_RP_ID=${AUTH_RP_ID:-localhost}
       - SESSION_SECRET=${SESSION_SECRET:?Set a high-entropy SESSION_SECRET of at least 32 bytes}
       # Set APP_DATABASE_URL for URL-encoded credentials; use postgres:5432 as the host.
-      - DATABASE_URL=${APP_DATABASE_URL:-postgresql://postgres:local-development-only@postgres:5432/visomi}
+      - DATABASE_URL=${APP_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-visomi}}
     ports:
       - '127.0.0.1:8080:8080'
     depends_on:

@@ -61,6 +61,48 @@ function read(store: SessionStore, sid: string) {
   );
 }
 
+async function registeredPasskey() {
+  const sid = randomUUID();
+  const store = new SessionStore(resource.pool);
+  const device = authenticator();
+  const passkeys = new Passkeys(resource.db, config);
+
+  await save(store, sid);
+  const signup = await passkeys.registrationOptions(sid);
+  const user = await passkeys.register(
+    sid,
+    signup.challengeId,
+    device.register(signup.options.challenge, config.origin, config.rpId),
+    'Synthetic passkey',
+  );
+
+  return { store, device, passkeys, user };
+}
+
+async function authenticationAttempt(
+  fixture: Awaited<ReturnType<typeof registeredPasskey>>,
+  counter: number,
+  database = resource.db,
+) {
+  const sid = randomUUID();
+  const passkeys = new Passkeys(database, config);
+
+  await save(fixture.store, sid);
+  const pending = await passkeys.authenticationOptions(sid);
+  const response = fixture.device.authenticate(
+    pending.options.challenge,
+    config.origin,
+    config.rpId,
+    fixture.user.id,
+    true,
+    {
+      counter,
+    },
+  );
+
+  return { sid, pending, run: () => passkeys.authenticate(sid, pending.challengeId, response) };
+}
+
 describe('isolated PostgreSQL authentication persistence', () => {
   it('applies generated RC migrations and enforces identity, key and backup constraints', async () => {
     const userId = randomUUID();
@@ -193,7 +235,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
       code: 'challenge_invalid',
     });
   });
-  it('persists real WebAuthn credentials, serializes concurrent assertions and updates counters', async () => {
+  it('persists real WebAuthn credentials and rejects concurrent replay of the same challenge', async () => {
     const sid = randomUUID();
     const store = new SessionStore(resource.pool);
     const device = authenticator();
@@ -218,6 +260,9 @@ describe('isolated PostgreSQL authentication persistence', () => {
       ]);
 
       expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+      expect(results.find((result) => result.status === 'rejected')).toMatchObject({
+        reason: { code: 'challenge_invalid' },
+      });
       const [credential] = await resource.db
         .select()
         .from(credentials)
@@ -231,6 +276,117 @@ describe('isolated PostgreSQL authentication persistence', () => {
       await otherResource.close();
     }
   });
+
+  it('serializes equal counters from independent sessions and challenges for one credential', async () => {
+    const fixture = await registeredPasskey();
+    const second = createDatabase(postgres.url);
+
+    try {
+      const firstAttempt = await authenticationAttempt(fixture, 1);
+      const secondAttempt = await authenticationAttempt(fixture, 1, second.db);
+
+      expect(firstAttempt.sid).not.toBe(secondAttempt.sid);
+      expect(firstAttempt.pending.challengeId).not.toBe(secondAttempt.pending.challengeId);
+      expect(firstAttempt.pending.options.challenge).not.toBe(secondAttempt.pending.options.challenge);
+      const results = await Promise.allSettled([firstAttempt.run(), secondAttempt.run()]);
+
+      expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+      expect(results.find((result) => result.status === 'rejected')).toMatchObject({
+        reason: { code: 'passkey_invalid' },
+      });
+      const [persisted] = await resource.db
+        .select()
+        .from(credentials)
+        .where(eq(credentials.id, fixture.user.credentialId));
+
+      expect(persisted.counter).toBe(1);
+      for (const attempt of [firstAttempt, secondAttempt]) {
+        const pending = await resource.db
+          .select()
+          .from(challenges)
+          .where(eq(challenges.id, attempt.pending.challengeId));
+
+        expect(pending).toHaveLength(0);
+      }
+    } finally {
+      await second.close();
+    }
+  });
+
+  it('rejects an outdated counter while a fresh assertion runs, regardless of arrival order', async () => {
+    const fixture = await registeredPasskey();
+    const baseline = await authenticationAttempt(fixture, 5);
+
+    await baseline.run();
+    const second = createDatabase(postgres.url);
+
+    try {
+      const stale = await authenticationAttempt(fixture, 4);
+      const fresh = await authenticationAttempt(fixture, 6, second.db);
+      const [staleResult, freshResult] = await Promise.allSettled([stale.run(), fresh.run()]);
+
+      expect(staleResult).toMatchObject({ status: 'rejected', reason: { code: 'passkey_invalid' } });
+      expect(freshResult.status).toBe('fulfilled');
+      const [persisted] = await resource.db
+        .select()
+        .from(credentials)
+        .where(eq(credentials.id, fixture.user.credentialId));
+
+      expect(persisted.counter).toBe(6);
+      const regression = await authenticationAttempt(fixture, 5);
+
+      await expect(regression.run()).rejects.toMatchObject({ code: 'passkey_invalid' });
+      const [unchanged] = await resource.db
+        .select()
+        .from(credentials)
+        .where(eq(credentials.id, fixture.user.credentialId));
+
+      expect(unchanged.counter).toBe(6);
+    } finally {
+      await second.close();
+    }
+  });
+
+  it.each(['userHandle', 'revoked', 'backupEligibility', 'backupState'] as const)(
+    'rejects a signed assertion with invalid %s without updating its credential',
+    async (invalid) => {
+      const fixture = await registeredPasskey();
+      const sid = randomUUID();
+
+      await save(fixture.store, sid);
+      const pending = await fixture.passkeys.authenticationOptions(sid);
+      const response = fixture.device.authenticate(
+        pending.options.challenge,
+        config.origin,
+        config.rpId,
+        invalid === 'userHandle' ? randomUUID() : fixture.user.id,
+        true,
+        { backupEligible: invalid === 'backupEligibility', backupState: invalid === 'backupState' },
+      );
+
+      if (invalid === 'revoked') {
+        await resource.db
+          .update(credentials)
+          .set({ revokedAt: new Date() })
+          .where(eq(credentials.id, fixture.user.credentialId));
+      }
+
+      await expect(fixture.passkeys.authenticate(sid, pending.challengeId, response)).rejects.toMatchObject({
+        code: 'passkey_invalid',
+      });
+      const [persisted] = await resource.db
+        .select()
+        .from(credentials)
+        .where(eq(credentials.id, fixture.user.credentialId));
+      const remaining = await resource.db.select().from(challenges).where(eq(challenges.id, pending.challengeId));
+
+      expect(persisted.counter).toBe(0);
+      expect(persisted.backupEligible).toBe(false);
+      expect(persisted.backupState).toBe(false);
+      expect(persisted.lastUsedAt).toBeNull();
+      expect(remaining).toHaveLength(0);
+    },
+  );
 
   it('rolls back identity creation when a credential conflicts and consumes the failed challenge', async () => {
     const sid = randomUUID();
@@ -318,11 +474,27 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const stale = { ...payload(), passport: { user: first } };
 
     await save(store, oldSid, stale);
+    const otherUser = { ...first, id: randomUUID(), credentialId: randomUUID() };
+    const otherSid = randomUUID();
+    const foreignReferenceSid = randomUUID();
+
+    await resource.db.insert(users).values({ id: otherUser.id });
+    await save(store, otherSid, { ...payload(), passport: { user: otherUser } });
+    // Even an inconsistent snapshot cannot make one user revoke another user's session.
+    await save(store, foreignReferenceSid, {
+      ...payload(),
+      passport: { user: { ...otherUser, credentialId: first.credentialId } },
+    });
     await passkeys.revoke(sid, second, first.credentialId);
     await save(store, oldSid, stale);
     const persisted = await read(store, oldSid);
 
     expect(persisted).toBeUndefined();
+    const otherSession = await read(store, otherSid);
+    const foreignReference = await read(store, foreignReferenceSid);
+
+    expect(otherSession?.passport?.user.id).toBe(otherUser.id);
+    expect(foreignReference?.passport?.user.id).toBe(otherUser.id);
     await destroy(store, sid);
     await expect(passkeys.rename(sid, second, second.credentialId, 'Denied')).rejects.toMatchObject({
       code: 'session_expired',

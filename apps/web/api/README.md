@@ -39,6 +39,8 @@ A signup allocates the identity on the server and inserts the user and first cre
 
 User security mutations and authentication serialize on the user, session and credential rows in that order. Credential conflicts roll back identity creation. Removing the last active credential is rejected. Removing another credential revokes all sessions authenticated by it in the same transaction. Logout and Passport login rotation tombstone the old SID; an already revoked SID cannot establish a replacement login. Passport deserialization rechecks credential ownership and revocation on each request.
 
+Credential-session revocation filters by both the serialized owner ID and credential ID, matching the existing `auth_sessions_user_idx` expression. Other users' sessions remain outside that transaction's update scope. Counter concurrency is tested with independently signed assertions from separate sessions and challenges; replay of one challenge is a separate invariant.
+
 Expired challenges and rate buckets may be removed by explicit maintenance. Neither expired SID rows nor revocation tombstones may be deleted under this stale-write contract. A bounded retention protocol and recovery after losing every passkey are separate future decisions.
 
 ## HTTP contract

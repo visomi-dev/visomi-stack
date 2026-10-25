@@ -89,11 +89,15 @@ export function authenticator() {
       rpId: string,
       userId?: string,
       verified = true,
+      assertion: { counter?: number; backupEligible?: boolean; backupState?: boolean } = {},
     ): AuthenticationResponseJSON {
       const count = Buffer.alloc(4);
 
-      count.writeUInt32BE(++counter);
-      const authData = Buffer.concat([hash(rpId), Buffer.from([verified ? 0x05 : 0x01]), count]);
+      counter = assertion.counter ?? counter + 1;
+      count.writeUInt32BE(counter);
+      const flags =
+        (verified ? 0x05 : 0x01) | (assertion.backupEligible ? 0x08 : 0) | (assertion.backupState ? 0x10 : 0);
+      const authData = Buffer.concat([hash(rpId), Buffer.from([flags]), count]);
       const client = clientData('webauthn.get', challenge, origin);
       const signature = sign('sha256', Buffer.concat([authData, hash(client)]), privateKey);
 
