@@ -4,12 +4,48 @@
   "license": "MIT",
   "scripts": {},
   "private": true,
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.x",
+      "onFail": "download"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.15.0",
+      "onFail": "download"
+    }
+  },
   "dependencies": {},
   "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@eslint/js": "^10.0.1",
+    "@nx/eslint-plugin": "^24.0.1",
     "@nx/js": "24.0.1",
     "@nx/workspace": "24.0.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@typescript-eslint/parser": "^8.72.0",
+    "angular-eslint": "^22.6.0",
+    "astro-eslint-parser": "^3.2.0",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-astro": "^3.2.1",
+    "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-perfectionist": "^5.13.0",
+    "eslint-plugin-playwright": "^2.12.1",
+    "eslint-plugin-unicorn": "^79.0.0",
+    "globals": "^17.13.0",
+    "husky": "^9.1.7",
+    "jsonc-eslint-parser": "^3.3.0",
+    "lint-staged": "^17.6.0",
     "nx": "24.0.1",
-    "typescript": "~6.0.3"
-  },
-  "packageManager": "pnpm@12.4.2"
+    "postcss": "^8.5.31",
+    "prettier": "^3.9.10",
+    "prettier-plugin-astro": "^1.1.2",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.0"
+  }
 }
