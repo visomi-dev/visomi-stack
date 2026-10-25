@@ -44,6 +44,13 @@ fail closed with 503 while the public greeting remains available. There is no Re
 dependency or `.env` loader. See the [API guide](apps/web/api/README.md) for migration
 commands, authentication endpoints and middleware ownership.
 
+For local containers, supply a high-entropy `SESSION_SECRET` of at least 32 bytes
+and run `docker compose up --build app`. The separate `database-init` service
+waits for healthy PostgreSQL and applies checked-in migrations before `app` can
+start. The API never migrates or seeds during startup. See
+[container database initialization](docs/development.md#container-database-initialization)
+for reruns and seed ownership.
+
 The serve command and HTTP response have been checked with the existing local
 dependencies. A fresh-checkout installation has not yet been verified.
 
@@ -54,9 +61,10 @@ dependencies. A fresh-checkout installation has not yet been verified.
   and provide its declared runtime dependencies when consuming it.
 - Focused tests verify the API boundary and shared telemetry. A complete gateway,
   queue, deployment, or production-readiness claim requires separate verification.
-- `Dockerfile` and `compose.yaml` contain configuration inherited from the previous
-  stack. They reference absent runtimes, packages, and an `.env` file; they are not
-  a working application bootstrap or a verified deployment path.
+- The container runtime targets the current standalone API, with a separate
+  database initialization image. Redis and MinIO services remain in Compose from
+  the earlier infrastructure setup; the API authentication slice does not use
+  them. Containers do not establish gateway, worker, or deployment readiness.
 
 ## Documentation
 

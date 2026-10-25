@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process';
 import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
-import { basename, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -13,7 +13,8 @@ const execute = promisify(execFile);
 
 // Always creates an owned cluster; developer DATABASE_URL is deliberately never consulted.
 export async function testPostgres(manifest?: string) {
-  const directory = await mkdtemp(join(tmpdir(), 'visomi-auth-test-'));
+  const temporaryRoot = manifest ? dirname(manifest) : tmpdir();
+  const directory = await mkdtemp(join(temporaryRoot, 'visomi-auth-test-'));
   const binary = process.env.PG_BIN ?? '/usr/lib/postgresql/17/bin';
 
   await writeFile(join(directory, 'test-owner'), 'visomi-stack-isolated-postgres');
@@ -44,6 +45,7 @@ export async function testPostgres(manifest?: string) {
       'visomi_test',
       '--no-locale',
     ]);
+    // Repository paths can exceed the Unix socket limit; tests connect over loopback TCP.
     await execute(join(binary, 'pg_ctl'), [
       '-D',
       join(directory, 'data'),
@@ -53,7 +55,7 @@ export async function testPostgres(manifest?: string) {
       '-t',
       '10',
       '-o',
-      `-h 127.0.0.1 -p ${address.port} -k ${directory} -F`,
+      `-h 127.0.0.1 -p ${address.port} -c unix_socket_directories='' -F`,
       'start',
     ]);
     started = true;

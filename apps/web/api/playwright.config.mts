@@ -5,10 +5,10 @@ import { workspaceRoot } from '@nx/devkit';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { defineConfig } from '@playwright/test';
 
-const temporaryRoot = join(workspaceRoot, 'tmp');
+const temporaryRoot = join(workspaceRoot, 'tmp/api-e2e');
 
 mkdirSync(temporaryRoot, { recursive: true });
-const telemetryDirectory = process.env.VISOMI_E2E_TELEMETRY_DIR ?? mkdtempSync(join(temporaryRoot, 'api-e2e-'));
+const telemetryDirectory = process.env.VISOMI_E2E_TELEMETRY_DIR ?? mkdtempSync(join(temporaryRoot, 'run-'));
 
 process.env.VISOMI_E2E_TELEMETRY_DIR = telemetryDirectory;
 

@@ -22,6 +22,14 @@ pnpm nx run backend-shared:typecheck-tests
 The example development database must be created separately. Tests create their
 own isolated PostgreSQL clusters; they never migrate a developer database.
 
+Compose runs the same `backend-shared:db-migrate` target in a separate one-shot
+`database-init` service after PostgreSQL is healthy. The application waits for
+successful completion. No authentication seeds are required or inserted; future
+required reference data belongs in this initialization step, not API startup.
+See [container initialization](../../../docs/development.md#container-database-initialization)
+for commands and reruns. Migration generation remains an explicit development
+command rather than a container startup action.
+
 The owning executable explicitly calls `createDatabase()`, passes its `db` and
 `pool` to its modules, and calls the idempotent `close()` during shutdown. Importing
 this library does not initialize a pool, connect or run migrations. A composed

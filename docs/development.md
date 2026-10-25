@@ -40,6 +40,68 @@ and apply this same shared migration history. Application imports and startup do
 not run migrations. See the [API guide](../apps/web/api/README.md) for configuration
 and resource ownership.
 
+## Container database initialization
+
+The Dockerfile has separate `database-init` and `runtime` targets. The former
+includes the workspace tooling and shared database migrations; the latter runs
+only the compiled standalone API with production dependencies. Neither image runs
+migrations at build time. The API entrypoint does not run migrations or seeds.
+
+Provide a high-entropy `SESSION_SECRET` of at least 32 bytes in your environment,
+then run:
+
+```sh
+docker compose up --build app
+```
+
+Compose starts PostgreSQL, waits for its health check, then runs the one-shot
+`database-init` service. It executes `pnpm nx run backend-shared:db-migrate` and
+exits. `app` requires `service_completed_successfully`; a failed migration blocks
+its startup. Redis and MinIO remain available as separate services but are not
+dependencies of the current API. Use `up app` for this slice; starting every
+service also includes those legacy integrations.
+
+Use Docker Compose with support for these dependency conditions. On the current
+development host, `docker` is a Podman wrapper and its `podman-compose` 1.3
+provider fails to start the application after the one-shot dependency exits.
+Docker Compose v2 can use the host's Podman API socket instead; this is a local
+provider limitation, not a reason to move initialization into the API.
+
+With that socket available, the current host can run:
+
+```sh
+DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock" docker-compose up --build app
+```
+
+Both services use the same database URL, with container DNS `postgres:5432`.
+Set `APP_DATABASE_URL` when overriding the PostgreSQL database/user/password or
+when credentials need URL encoding; its default matches the default local
+PostgreSQL settings. Both services receive this same explicit URL.
+The API defaults to `AUTH_ORIGIN=http://localhost:8080` and `AUTH_RP_ID=localhost`
+for this local setup; override both together when needed. Compose supplies only
+the declared settings to the API and does not require an `env_file`.
+
+Migration generation stays a development action through `backend-shared:db-generate`;
+the initializer only applies the versioned SQL already in the image. There are no
+required seeds for the current authentication schema: users are created only
+after successful passkey registration. No default identities, credentials or test
+fixtures are inserted. If a capability later needs reference data, its idempotent
+seed belongs in this explicit initialization workflow after migrations, with a
+failure preventing application startup.
+
+To apply pending migrations explicitly against an existing local database:
+
+```sh
+docker compose build database-init
+docker compose run --rm database-init
+```
+
+Migration history makes successful reruns safe. Restarting the API alone does not
+apply new migrations; rebuilding the initializer and running it is an explicit
+step when schema changes. Coordinate schema changes with existing application
+instances: the startup dependency does not stop an already running API. Do not
+delete volumes to rerun initialization or point test runs at developer data.
+
 ## Verification
 
 Choose checks relevant to the change and report the command, result, and any

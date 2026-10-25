@@ -45,7 +45,9 @@ The gateway must consume the compiled API application export, never API TypeScri
 source or `main.js`. That integration is being developed separately. The API's
 compiled-import harness verifies the package boundary, not the gateway application.
 Angular SSR, Astro, background workers, and realtime delivery remain unimplemented.
-Existing container configuration still references a broader, absent system.
+The container runtime starts the standalone API. Compose applies versioned
+migrations through a separate one-shot database initializer before starting it;
+the API does not own schema migration or seed execution.
 
 ## Screaming Architecture and Domain-Driven Design
 
