@@ -1,2 +1,2 @@
-export { authenticator } from '../tests/support/authenticator';
-export { testPostgres, stopTestPostgres } from '../tests/support/postgres';
+export { authenticator } from './lib/authenticator';
+export { testPostgres, stopTestPostgres } from './lib/postgres';

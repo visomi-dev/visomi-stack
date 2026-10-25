@@ -145,9 +145,9 @@ pnpm nx e2e web-gateway
 ```
 
 Every project's Vitest suite collects V8 coverage by default and requires 100%
-statements, branches, functions and lines **per source file**. Production projects
-include `src/**/*.ts`; the development testing library also includes its `e2e/`
-and `tests/` helpers. Modules not imported by tests are included; only test files
+statements, branches, functions and lines **per source file**. Each project includes
+`src/**/*.ts`, including the exported helpers in the development testing library.
+Modules not imported by tests are included; only test files
 and type declarations are excluded. Reports are written to `coverage/<project-root>`
 as HTML, JSON and LCOV. Unit and integration tests contribute to this source
 coverage. Playwright E2E checks and compiled child processes verify their real
@@ -183,14 +183,13 @@ Shared support lives in `libs/development/testing`, an internal source library
 exposed as `@visomi-stack/dev-testing`. Its `/playwright` entry exports the shared
 telemetry fixture and teardown; `/telemetry` exports the reader and local exporters;
 `/postgres` exports the owned-cluster helpers. The root entry exports PostgreSQL
-and software-authenticator helpers without loading Playwright. The library keeps
-Playwright dependencies in `e2e/fixtures` and `e2e/support`, and runner-independent
-helpers in `tests/support`. It does not select application targets or origins.
+and software-authenticator helpers without loading Playwright. Exported library
+implementation lives in `src/lib/`, with Playwright-specific helpers grouped in
+`src/lib/playwright/`. It does not select application targets or origins.
 Unit tests stay beside each helper and run through `dev-testing:test`, with the
-same 100% per-file coverage gate covering all three directories. Nx detects the
+same 100% per-file coverage gate over `src/`. Nx detects the
 library dependencies for affected checks; production code cannot import it.
-No
-separate unit-test directory or additional Nx project is introduced.
+No separate unit-test directory or additional Nx project is introduced.
 Neither suite certifies Angular SSR, queue delivery, external collectors or deployment.
 
 For Markdown-only changes, check the touched files and review the diff:

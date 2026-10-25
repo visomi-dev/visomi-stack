@@ -1,2 +1,2 @@
-export { test, expect } from '../e2e/fixtures/telemetry';
-export { default as teardown } from '../e2e/support/teardown';
+export { test, expect } from './lib/playwright/fixtures/telemetry';
+export { default as teardown } from './lib/playwright/support/teardown';

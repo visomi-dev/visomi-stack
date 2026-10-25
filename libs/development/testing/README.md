@@ -17,10 +17,11 @@ import { test as base } from '@visomi-stack/dev-testing/playwright';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 ```
 
-Playwright-specific code stays in `e2e/fixtures` and `e2e/support`.
-Runner-independent helpers stay in `tests/support`. Every helper has colocated
-Vitest tests; `src/` contains public re-export entries. The generated placeholder
-function and its scaffold test are replaced by these behavioral tests.
+All exported implementation lives under `src/lib/`. Playwright-specific fixtures
+and support live in `src/lib/playwright/`; PostgreSQL, authenticator and CBOR helpers
+live directly in `src/lib/`. Every helper has colocated Vitest tests, and `src/`
+contains the public re-export entries. The library does not own an E2E suite;
+the applications exercise this support through their existing suites.
 
 The workspace uses source aliases, not independently installed library packages.
 Playwright and Vitest use the applications' test configuration; scripts launched

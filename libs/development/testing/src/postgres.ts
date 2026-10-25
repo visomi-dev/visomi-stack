@@ -1,1 +1,1 @@
-export { testPostgres, stopTestPostgres } from '../tests/support/postgres';
+export { testPostgres, stopTestPostgres } from './lib/postgres';

@@ -90,7 +90,7 @@ integration.
 Unit tests remain beside the module they test. `dev-testing:test` owns the shared
 helper regressions, including cryptographically valid authenticator responses,
 PostgreSQL ownership/failure paths, fixtures, telemetry and teardown. Its coverage
-gate includes `src/`, `e2e/` and `tests/`; re-export barrels do not get artificial
+gate includes `src/`, where exported helpers live under `lib/`; re-export barrels do not get artificial
 tests. Playwright discovers only each application's `e2e/*.e2e.spec.ts`, while
 application Vitest suites include their `src/` and `tests/`. They never discover
 the Playwright suites. The source aliases resolve through the configured test

@@ -3,13 +3,13 @@ import { setTimeout as delay } from 'node:timers/promises';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { stopTestPostgres } from '../../tests/support/postgres';
+import { stopTestPostgres } from '../../postgres';
 
 import teardown from './teardown';
 
 vi.mock('node:fs/promises', () => ({ readFile: vi.fn() }));
 vi.mock('node:timers/promises', () => ({ setTimeout: vi.fn() }));
-vi.mock('../../tests/support/postgres', () => ({ stopTestPostgres: vi.fn() }));
+vi.mock('../../postgres', () => ({ stopTestPostgres: vi.fn() }));
 
 const owner = { pid: 991001, parentPid: 991002 };
 const cluster = { directory: '/synthetic/visomi-auth-test-owned', binary: '/synthetic/pg' };

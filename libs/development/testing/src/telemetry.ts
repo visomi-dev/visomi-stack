@@ -1,2 +1,2 @@
-export { readTelemetry } from '../e2e/support/telemetry';
-export { createTelemetryOptions } from '../e2e/support/telemetry-exporters';
+export { readTelemetry } from './lib/playwright/support/telemetry';
+export { createTelemetryOptions } from './lib/playwright/support/telemetry-exporters';
