@@ -1,0 +1,17 @@
+{
+  "name": "web-backend-shared",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/backend/shared/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project web-backend-shared --web",
+  "targets": {
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/web/backend/shared",
+        "command": "tsc -p tsconfig.spec.json --noEmit"
+      }
+    }
+  }
+}
