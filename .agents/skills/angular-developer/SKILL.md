@@ -11,35 +11,19 @@ metadata:
 
 1. Always analyze the project's Angular version before providing guidance, as best practices and available features can vary significantly between versions. If creating a new project with Angular CLI, do not specify a version unless prompted by the user.
 
-2. When generating code, follow Angular's style guide and best practices for maintainability and performance. Use the Angular CLI for scaffolding components, services, directives, pipes, and routes to ensure consistency.
+2. When generating code, follow Angular's style guide and the repository's existing patterns. In this Nx workspace, prefer its configured Nx generators and targets through the repository package manager; do not create a parallel Angular workspace or replace existing project configuration.
 
-3. Once you finish generating code, run `ng build` to ensure there are no build errors. If there are errors, analyze the error messages and fix them before proceeding. Do not skip this step, as it is critical for ensuring the generated code is correct and functional.
+3. After authorized code changes, run the affected project's configured build and relevant tests/lint through Nx. Use `ng build` only in a standalone Angular project where it is the supported workflow. Report failed or blocked checks honestly; an audit request alone does not authorize edits, installs, or migrations.
 
 ## Creating New Projects
 
-If no guidelines are provided by the user, here are some default rules to follow when creating a new Angular project:
+First determine whether the request concerns an existing Nx workspace or an explicitly requested new standalone Angular project.
 
-1. Use the latest stable version of Angular unless the user specifies otherwise.
-2. Use Signal Forms for form management in new projects (stable in Angular v22 and newer) [Find out more](references/signal-forms.md).
-
-**Execution Rules for `ng new`:**
-When asked to create a new Angular project, you must determine the correct execution command by following these strict steps:
-
-**Step 1: Check for an explicit user version.**
-
-- **IF** the user requests a specific version (e.g., Angular 15), bypass local installations and strictly use `npx`.
-- **Command:** `npx @angular/cli@<requested_version> new <project-name>`
-
-**Step 2: Check for an existing Angular installation.**
-
-- **IF** no specific version is requested, run `ng version` in the terminal to check if the Angular CLI is already installed on the system.
-- **IF** the command succeeds and returns an installed version, use the local/global installation directly.
-- **Command:** `ng new <project-name>`
-
-**Step 3: Fallback to Latest.**
-
-- **IF** no specific version is requested AND the `ng version` command fails (indicating no Angular installation exists), you must use `npx` to fetch the latest version.
-- **Command:** `npx @angular/cli@latest new <project-name>`
+1. Inspect the manifest, lockfile, workspace configuration, and installed Angular/Nx versions. Preserve them unless an upgrade is explicitly in scope.
+2. In this workspace, use the existing Nx generator and project layout rather than `ng new`.
+3. For a standalone project requested outside the workspace, honor the requested Angular version and package manager. If no version is specified, confirm a supported stable version from official documentation before proposing setup.
+4. Do not download a CLI, install dependencies, or select `latest` merely because a local command is absent.
+5. Prefer Signal Forms for new forms when supported by the installed Angular version and the chosen project strategy. Preserve existing forms unless migration is separately requested.
 
 ## Components
 
@@ -79,7 +63,7 @@ In most cases for new apps, **prefer signal forms**. When making a forms decisio
 
 - **Signal Forms**: Use signals for form state management. Read [signal-forms.md](references/signal-forms.md)
 - **Template-driven forms**: Use for simple forms. Read [template-driven-forms.md](references/template-driven-forms.md)
-- **Reactive forms**: Use for complex forms. Read [reactive-forms.md](references/reactive-forms.md)
+- **Reactive forms**: Preserve existing Reactive Forms and use them when the project's supported form strategy calls for them; complexity alone does not mandate switching form APIs. Read [reactive-forms.md](references/reactive-forms.md)
 
 ## Dependency Injection
 

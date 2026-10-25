@@ -5,16 +5,19 @@ description: Review and improve financial-product navigation, information hierar
 
 # Financial Product UX
 
-Use this skill for financial dashboards, budgeting, accounts, transaction flows, and financial UI reviews.
-Read `references/research.md`, repository frontend/design guidance, and the browser-vault decision first.
+Use this skill only when the current product actually has financial dashboards, budgeting, accounts, or transaction flows. It is a product-specific profile, not the default domain or architecture of this reusable stack.
+Read `references/research.md` and the current product's frontend/design guidance. Read a browser-vault decision only if that product has one; do not introduce a vault, household model, financial scope, or Nive-specific requirement into unrelated applications.
+
+For a review-only request, report findings without editing. Implement fixes and run checks only within the authorized scope.
 
 ## Workflow
 
 1. Inspect the actual routes, shared primitives, translations, and the PR diff. Record findings by severity
    with paths and lines. Passing snapshots are not product-owner approval or proof of good hierarchy.
 2. Identify each screen's user question, primary amount/status, and next action. Put these before general help.
-3. Group navigation by user purpose: finances, household, settings. Keep groups shallow, with explicit
-   labels and real destinations. Settings should contain profile, security, and devices, not the main money flow.
+3. Group navigation by the actual product's user purposes (for example finances, household, and settings,
+   when those domains exist). Keep groups shallow, with explicit labels and real destinations. Keep profile,
+   security, and device settings separate from the main money flow when applicable.
 4. Use distinct, consistent outline icons (wallet, shield, person, devices, household). Keep visible text
    in normal navigation. Icon-only utilities need accessible names, visible focus, and 44px touch targets.
    A bell may represent notifications; retain sync status and required actions on its destination.

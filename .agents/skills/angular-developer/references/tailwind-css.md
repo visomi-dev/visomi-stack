@@ -2,7 +2,9 @@
 
 Tailwind CSS is a utility-first CSS framework that integrates seamlessly with Angular.
 
-**CRITICAL AGENT GUIDANCE: ALWAYS focus on Tailwind CSS v4 practices. DO NOT revert to old Tailwind v3 patterns (like creating `tailwind.config.js` with `@tailwind` directives) as this will break the application build. Modern Angular projects use Tailwind v4.**
+Inspect the installed Tailwind version and existing Angular/Nx integration first. For v4, use CSS-first practices below. Preserve a real v3 project until a migration is explicitly requested; Angular's version alone does not select Tailwind's version.
+
+Reuse existing dependencies and configuration. Setup examples are conditional on an authorized setup change; do not run installs or `ng add` merely to style a component. Use the repository package manager and Nx workflow.**
 
 ## Automated Setup (Recommended)
 
@@ -27,7 +29,7 @@ If setting up manually, use the following Tailwind v4 pattern:
 Install Tailwind CSS and PostCSS:
 
 ```shell
-npm install tailwindcss @tailwindcss/postcss postcss
+pnpm add -D tailwindcss @tailwindcss/postcss postcss
 ```
 
 ### 2. Configure PostCSS
@@ -42,7 +44,7 @@ Create a `.postcssrc.json` file in the project root:
 }
 ```
 
-_(Do NOT create a `tailwind.config.js` file! Configuration in v4 is handled through CSS variables)._
+_Prefer CSS-first configuration in v4. A legacy JavaScript config is supported only when deliberately loaded with `@config`; do not introduce one by default._
 
 ### 3. Import Tailwind CSS
 
@@ -52,7 +54,7 @@ In your global styles file (e.g., `src/styles.css`), add the standard v4 import:
 @import 'tailwindcss';
 ```
 
-_(If using SCSS, use `@use 'tailwindcss';` instead)._
+_Tailwind v4 is not designed to run through Sass/Less/Stylus. Keep its entry in a plain CSS file supported by the existing Angular/Nx pipeline; do not substitute Sass `@use` for this import or migrate unrelated component styles. See the [official compatibility guidance](https://tailwindcss.com/docs/compatibility#sass-less-and-stylus)._
 
 ### 4. Use Utility Classes
 
@@ -65,5 +67,5 @@ You can now use Tailwind classes directly in your component templates:
 ## Summary for AI Agents
 
 - **Do not use `@tailwind base; @tailwind components; @tailwind utilities;`**. Use `@import 'tailwindcss';`.
-- **Do not create `tailwind.config.js`**. Configuration is managed directly in CSS via theme variables or using PostCSS configurations.
-- Stick strictly to v4 syntax and workflows.
+- Prefer CSS-first tokens; load legacy JavaScript configuration explicitly only when required by the existing setup.
+- Apply v4 syntax to v4 projects; do not force a migration or install.

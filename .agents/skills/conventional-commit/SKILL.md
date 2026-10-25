@@ -15,15 +15,12 @@ description: 'Prompt and workflow for generating conventional commit messages us
 
 1. Run `git status` to review changed files.
 2. Run `git diff` or `git diff --cached` to inspect changes.
-3. Stage your changes with `git add <file>`.
+3. Draft the message from the inspected changes. Stage only specifically authorized files when the user requested an actual commit.
 4. Construct your commit message using the following XML structure.
-5. After generating your commit message, Copilot will automatically run the following command in your integrated terminal (no confirmation needed):
+5. Return the proposed message for review. A request to write a message does not authorize creating a commit.
+6. Execute git commit only when the user explicitly requested it, using the exact intended staged changes and preserving unrelated work.
 
-```bash
-git commit -m "type(scope): description"
-```
-
-6. Just execute this prompt and Copilot will handle the commit for you in the terminal.
+For narrative context and a copyable final message, prefer the commit-message-storyteller skill. This file is a format reference, not a second automatic commit workflow.
 
 ### Commit Message Structure
 
@@ -62,11 +59,11 @@ git commit -m "type(scope): description"
 </validation>
 ```
 
-### Final Step
+### Optional execution after an explicit commit request
 
 ```xml
 <final-step>
 	<cmd>git commit -m "type(scope): description"</cmd>
-	<note>Replace with your constructed message. Include body and footer if needed.</note>
+	<note>Use only after an explicit commit request. Include body and footer if needed; do not stage unrelated files.</note>
 </final-step>
 ```

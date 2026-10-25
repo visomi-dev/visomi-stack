@@ -1,11 +1,11 @@
 ---
 name: create-architectural-decision-record
-description: 'Create an Architectural Decision Record (ADR) document for AI-optimized decision documentation.'
+description: 'Document an explicitly requested or agreed durable architecture decision with its context, alternatives, and consequences. Do not require an ADR for routine edits or every pull request.'
 ---
 
 # Create Architectural Decision Record
 
-Create an ADR document for `${input:DecisionTitle}` using structured formatting optimized for AI consumption and human readability.
+Create an ADR for a durable decision that materially affects boundaries, dependencies, data handling, or long-term trade-offs. Confirm that an ADR is useful or requested before creating one. Follow applicable repository instructions, the existing domain-first architecture, privacy constraints, and user approval checkpoints. An ADR records a decision; it does not authorize implementation.
 
 ## Inputs
 
@@ -25,13 +25,13 @@ If any of the required inputs are not provided or cannot be determined from the 
 - Include both positive and negative consequences
 - Document alternatives with rejection rationale
 - Structure for machine parsing and human reference
-- Use coded bullet points (3-4 letter codes + 3-digit numbers) for multi-item sections
+- Prefer concise prose or bullets; coded identifiers are optional when an established template needs them
 
-The ADR must be saved in the `/docs/adr/` directory using the naming convention: `adr-NNNN-[title-slug].md`, where NNNN is the next sequential 4-digit number (e.g., `adr-0001-database-selection.md`).
+Use the repository's existing ADR location and naming convention. If none exists, propose a destination such as `docs/adr/` and agree it with the user before saving. Do not fabricate sequential numbers without checking existing records.
 
 ## Required Documentation Structure
 
-The documentation file must follow the template below, ensuring that all sections are filled out appropriately. The front matter for the markdown should be structured correctly as per the example following:
+Use the template below only as a starting point. Keep context, decision, alternatives, consequences, and status; omit irrelevant optional detail. Do not invent stakeholders, alternatives, metrics, or implementation notes to fill the template.
 
 ```md
 ---

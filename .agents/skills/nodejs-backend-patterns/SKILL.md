@@ -1,13 +1,19 @@
 ---
 name: nodejs-backend-patterns
-description: Build production-ready Node.js backend services with Express/Fastify, implementing middleware patterns, error handling, authentication, database integration, and API design best practices. Use when creating Node.js servers, REST APIs, GraphQL backends, or microservices architectures.
+description: 'Optional Node.js pattern reference. Load only when explicitly requested or when the canonical nodejs-express-server skill identifies a specific missing pattern. Do not trigger as a second general backend workflow or reselect the repository stack.'
 ---
 
 # Node.js Backend Patterns
 
 Comprehensive guidance for building scalable, maintainable, and production-ready Node.js backend applications with modern frameworks, architectural patterns, and best practices.
 
-## When to Use This Skill
+## Repository Scope
+
+The canonical backend skill is `nodejs-express-server`; follow it and applicable repository instructions first. Read only the section needed for the current question. Alternatives below are reference material, not recommendations to add a framework, database, cache, DI container, APM service, or authentication system. New dependencies and infrastructure require a demonstrated need and user approval.
+
+Use business-capability-first organization and existing DDD boundaries. Keep domain logic independent of HTTP and storage. Prefer direct composition to containers and extra abstractions. Never log client/business data, payloads, identifiers, raw URLs, IP addresses, user agents, tokens, raw exception messages, or stacks. Use fixed public error codes and an allowlist of technical telemetry fields.
+
+## Optional Reference Topics
 
 - Building REST APIs or GraphQL servers
 - Creating microservices with Node.js
@@ -43,7 +49,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging
 app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${req.method} ${req.path}`);
+  console.log({ event: 'request_received' });
   next();
 });
 
@@ -64,13 +70,8 @@ import cors from '@fastify/cors';
 import compress from '@fastify/compress';
 
 const fastify = Fastify({
-  logger: {
-    level: process.env.LOG_LEVEL || 'info',
-    transport: {
-      target: 'pino-pretty',
-      options: { colorize: true },
-    },
-  },
+  // Automatic request logging can capture client data. Keep it disabled.
+  logger: false,
 });
 
 // Plugins
@@ -107,24 +108,22 @@ await fastify.listen({ port: 3000, host: '0.0.0.0' });
 
 ## Architectural Patterns
 
-### Pattern 1: Layered Architecture
+### Pattern 1: Domain-First Responsibility Boundaries
 
 **Structure:**
 
 ```
 src/
-├── controllers/     # Handle HTTP requests/responses
-├── services/        # Business logic
-├── repositories/    # Data access layer
-├── models/          # Data models
-├── middleware/      # Express/Fastify middleware
-├── routes/          # Route definitions
-├── utils/           # Helper functions
-├── config/          # Configuration
-└── types/           # TypeScript types
+└── users/                   # Business capability first
+    ├── domain/              # Business rules and domain types
+    ├── application/         # Use cases, only where needed
+    ├── infrastructure/      # Persistence adapters, only where needed
+    └── interfaces/          # HTTP routes and boundary validation
 ```
 
-**Controller Layer:**
+The snippets below illustrate responsibilities, not mandatory files or a complete architecture. Their shorthand paths are relative to a capability; adapt them to the existing domain/application/infrastructure/interfaces boundaries. Do not create every layer for a small operation.
+
+**HTTP Boundary:**
 
 ```typescript
 // controllers/user.controller.ts
@@ -137,7 +136,7 @@ export class UserController {
 
   async createUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const userData: CreateUserDTO = req.body;
+      const userData: CreateUserDTO = res.locals.validated.body;
       const user = await this.userService.createUser(userData);
       res.status(201).json(user);
     } catch (error) {
@@ -158,7 +157,7 @@ export class UserController {
   async updateUser(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const updates: UpdateUserDTO = req.body;
+      const updates: UpdateUserDTO = res.locals.validated.body;
       const user = await this.userService.updateUser(id, updates);
       res.json(user);
     } catch (error) {
@@ -297,7 +296,7 @@ export class UserRepository {
 
 ### Pattern 2: Dependency Injection
 
-Use a DI container to wire up repositories, services, and controllers. For a full container implementation, see [references/advanced-patterns.md](references/advanced-patterns.md).
+Prefer ordinary constructor/function injection and a small composition root. A container is optional, only for an approved requirement; see [references/advanced-patterns.md](references/advanced-patterns.md) if needed.
 
 ## Middleware Patterns
 
@@ -368,19 +367,17 @@ import { ValidationError } from '../utils/errors';
 export const validate = (schema: AnyZodObject) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await schema.parseAsync({
+      const validated = await schema.parseAsync({
         body: req.body,
         query: req.query,
         params: req.params,
       });
+      // Preserve stripping/transforms; handlers consume this, not raw request data.
+      res.locals.validated = validated;
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const errors = error.errors.map((err) => ({
-          field: err.path.join('.'),
-          message: err.message,
-        }));
-        next(new ValidationError('Validation failed', errors));
+        next(new ValidationError('VALIDATION_FAILED'));
       } else {
         next(error);
       }
@@ -399,7 +396,8 @@ const createUserSchema = z.object({
   }),
 });
 
-router.post('/users', validate(createUserSchema), userController.createUser);
+// Define corresponding schemas for every route using validated body/params.
+router.post('/users', validate(createUserSchema), (req, res, next) => userController.createUser(req, res, next));
 ```
 
 ### Rate Limiting Middleware
@@ -460,12 +458,9 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
   res.on('finish', () => {
     const duration = Date.now() - start;
     logger.info({
-      method: req.method,
-      url: req.url,
+      event: 'request_completed',
       status: res.statusCode,
-      duration: `${duration}ms`,
-      userAgent: req.headers['user-agent'],
-      ip: req.ip,
+      durationMs: duration,
     });
   });
 
@@ -532,32 +527,26 @@ export class ConflictError extends AppError {
 ```typescript
 // middleware/error-handler.ts
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/errors';
+import { AppError, ValidationError } from '../utils/errors';
 import { logger } from './logger.middleware';
 
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       status: 'error',
-      message: err.message,
-      ...(err instanceof ValidationError && { errors: err.errors }),
+      error: err instanceof ValidationError ? 'VALIDATION_FAILED' : 'REQUEST_FAILED',
     });
   }
 
   // Log unexpected errors
   logger.error({
-    error: err.message,
-    stack: err.stack,
-    url: req.url,
-    method: req.method,
+    event: 'request_failed',
   });
 
-  // Don't leak error details in production
-  const message = process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message;
-
+  // Never expose internal errors or request data in any environment.
   res.status(500).json({
     status: 'error',
-    message,
+    error: 'INTERNAL_ERROR',
   });
 };
 
@@ -597,17 +586,17 @@ Standardized `ApiResponse` helper with `success`, `error`, and `paginated` stati
 2. **Implement proper error handling**: Use custom error classes
 3. **Validate input**: Use libraries like Zod or Joi
 4. **Use environment variables**: Never hardcode secrets
-5. **Implement logging**: Use structured logging (Pino, Winston)
+5. **Implement safe logging**: Use only approved technical fields, never client data or raw errors
 6. **Add rate limiting**: Prevent abuse
 7. **Use HTTPS**: Always in production
 8. **Implement CORS properly**: Don't use `*` in production
-9. **Use dependency injection**: Easier testing and maintenance
+9. **Compose dependencies simply**: Prefer constructor/function injection; containers are optional
 10. **Write tests**: Unit, integration, and E2E tests
 11. **Handle graceful shutdown**: Clean up resources
 12. **Use connection pooling**: For databases
 13. **Implement health checks**: For monitoring
 14. **Use compression**: Reduce response size
-15. **Monitor performance**: Use APM tools
+15. **Monitor only when needed**: Use existing approved, privacy-safe observability; do not add APM automatically
 
 ## Testing Patterns
 

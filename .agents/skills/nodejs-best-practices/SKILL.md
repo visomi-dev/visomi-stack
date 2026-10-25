@@ -1,6 +1,6 @@
 ---
 name: nodejs-best-practices
-description: 'Node.js development principles and decision-making. Framework selection, async patterns, security, and architecture. Teaches thinking, not copying.'
+description: 'Optional Node.js decision reference for an explicitly requested architecture, runtime, or framework comparison, or a focused async/security question. Use nodejs-express-server for routine backend work; do not reopen approved stack choices.'
 risk: unknown
 source: community
 date_added: '2026-02-27'
@@ -13,7 +13,9 @@ date_added: '2026-02-27'
 
 ## When to Use
 
-Use this skill when making Node.js architecture decisions, choosing frameworks, designing async patterns, or applying security and deployment best practices.
+Use this reference only for an explicit architecture comparison or a focused question not covered by `nodejs-express-server`, the canonical backend skill. Inspect the repository manifests and applicable instructions, preserve installed versions, and use existing Nx targets. Do not reselect frameworks, runtimes, validation libraries, or module systems for a routine edit.
+
+The comparisons below are background, not current benchmark evidence or migration recommendations. Verify version-sensitive claims before a requested evaluation. Prefer domain-first organization, minimal abstractions, and user-reviewed steps. Loading this reference does not authorize dependency, infrastructure, or architecture changes.
 
 ---
 
@@ -107,10 +109,10 @@ CommonJS (require)
 
 ## 3. Architecture Principles
 
-### Layered Structure Concept
+### Responsibilities Within a Business Capability
 
 ```
-Request Flow:
+Domain-first request flow (not global controller/service/repository folders):
 │
 ├── Controller/Route Layer
 │   ├── Handles HTTP specifics
@@ -138,7 +140,8 @@ Request Flow:
 
 - Small scripts → Single file OK
 - Prototypes → Less structure acceptable
-- Always ask: "Will this grow?"
+- Add structure for demonstrated requirements, not hypothetical growth
+- Preserve DDD boundaries; do not add every layer or a DI container by default
 
 ---
 
@@ -160,14 +163,17 @@ Pattern:
 Client gets:
 ├── Appropriate HTTP status
 ├── Error code for programmatic handling
-├── User-friendly message
+├── Fixed public error code/message
 └── NO internal details (security!)
 
-Logs get:
-├── Full stack trace
-├── Request context
-├── User ID (if applicable)
+Logs get only approved technical fields:
+├── Fixed technical event code
+├── Status class or outcome
+├── Bounded duration measurement
 └── Timestamp
+
+Never log client/business data, payloads, identifiers, raw URLs, IP addresses,
+user agents, tokens, raw exception messages, or stacks.
 ```
 
 ### Status Code Selection
@@ -180,7 +186,7 @@ Logs get:
 | Not found     | 404    | Resource doesn't exist               |
 | Conflict      | 409    | Duplicate or state conflict          |
 | Validation    | 422    | Schema valid but business rules fail |
-| Server error  | 500    | Our fault, log everything            |
+| Server error  | 500    | Fixed public code; safe technical event only |
 
 ---
 
@@ -321,7 +327,7 @@ node --test src/**/*.test.ts
 
 - Choose framework based on context
 - Ask user for preferences when unclear
-- Use layered architecture for growing projects
+- Preserve domain-first architecture; add only the boundaries the task needs
 - Validate all inputs
 - Use environment variables for secrets
 - Profile before optimizing
@@ -332,8 +338,8 @@ node --test src/**/*.test.ts
 
 Before implementing:
 
-- [ ] **Asked user about stack preference?**
-- [ ] **Chosen framework for THIS context?** (not just default)
+- [ ] **Confirmed existing stack and repository instructions?**
+- [ ] **Preserved the approved framework unless an explicit evaluation was requested?**
 - [ ] **Considered deployment target?**
 - [ ] **Planned error handling strategy?**
 - [ ] **Identified validation points?**

@@ -5,7 +5,7 @@ description: Configure Vitest with vite.config.ts or vitest.config.ts
 
 # Configuration
 
-Vitest reads configuration from `vitest.config.ts` or `vite.config.ts`. It shares the same config format as Vite.
+Vitest reads configuration from `vitest.config.ts` or `vite.config.ts`. In this workspace, preserve the existing Nx integration and inspect the installed major version before applying examples. Prefer editing an existing configuration over creating another. See the [official migration guide](https://vitest.dev/guide/migration/) for version-sensitive options.
 
 ## Basic Setup
 
@@ -98,13 +98,9 @@ defineConfig({
     // Pool for running tests: 'threads', 'forks', 'vmThreads'
     pool: 'threads',
 
-    // Number of threads/processes
-    poolOptions: {
-      threads: {
-        maxThreads: 4,
-        minThreads: 1,
-      },
-    },
+    // Maximum workers (Vitest 4+); tune only for a demonstrated need.
+    // Legacy poolOptions/maxThreads/minThreads were removed in Vitest 4.
+    maxWorkers: 4,
 
     // Automatically clear mocks between tests
     clearMocks: true,

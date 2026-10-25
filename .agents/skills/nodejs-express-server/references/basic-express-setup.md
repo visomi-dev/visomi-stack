@@ -18,11 +18,9 @@ app.get('/health', (req, res) => {
 
 // Error handling
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: err.message,
-    requestId: req.id,
-  });
+  // Do not log the request or exception: they may contain client data.
+  console.error({ event: 'request_failed' });
+  res.status(500).json({ error: 'INTERNAL_ERROR' });
 });
 
 app.listen(PORT, () => {

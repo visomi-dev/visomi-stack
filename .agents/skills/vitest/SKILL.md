@@ -19,7 +19,13 @@ Vitest is a next-generation testing framework powered by Vite. It provides a Jes
 - Built-in coverage via V8 or Istanbul
 - Snapshot testing, mocking, and spy utilities
 
-> The skill is based on Vitest 3.x, generated at 2026-01-28.
+> Historical source: Vitest 3.x, generated at 2026-01-28. The current repository manifest declares Vitest 5.x. Inspect the manifest, lockfile, and Nx configuration before using examples, and verify version-sensitive APIs in the official documentation. References may retain older patterns; they are not migration instructions.
+
+## Repository scope
+
+Use the existing Vitest runner and Nx targets through the repository package manager. Jest-compatible assertion terminology does not authorize adding Jest. Preserve Angular's TestBed/zoneless setup where applicable and use Node environments for appropriate backend/domain tests. Do not create duplicate test configuration, install providers, change coverage policy, or migrate versions implicitly.
+
+For version-sensitive configuration, consult the [Vitest migration guide](https://vitest.dev/guide/migration/) and the documentation for the installed major version.
 
 ## Core
 

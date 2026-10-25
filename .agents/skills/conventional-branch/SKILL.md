@@ -111,13 +111,11 @@ for b in develop main master; do
 done
 ```
 
-**Step 4 — Create and Checkout**
+**Step 4 — Create Only When Requested**
 
-```bash
-git checkout <base>
-git pull origin <base>
-git checkout -b <type>/<description>
-```
+A naming or compliance question is read-only: return the proposed name without changing Git state. For an explicit branch-creation request, inspect git status and the current branch, confirm the intended base, and preserve unrelated work. Do not automatically checkout another branch, pull, stash, or reset as part of naming a branch.
+
+After these checks, use the approved base and branch name. Report any dirty-worktree or base mismatch instead of silently moving work.
 
 **Step 5 — Confirm**
 

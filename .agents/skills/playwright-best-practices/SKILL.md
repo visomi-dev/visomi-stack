@@ -9,7 +9,9 @@ metadata:
 
 # Playwright Best Practices
 
-This skill provides comprehensive guidance for all aspects of Playwright test development, from writing new tests to debugging and maintaining existing test suites.
+This skill provides task-selected references for Playwright development. Load only the references relevant to the actual project and requested test; do not add POM layers, frameworks, parallel/sharding infrastructure, or CI providers without a demonstrated need.
+
+Use installed Node.js Playwright, the repository package manager, existing fixtures, and configured Nx targets. Keep Angular tests in Angular patterns, not React component-testing examples. Use synthetic data and ensure screenshots, traces, HAR files, logs, and reporters do not disclose customer data or secrets. Installs, external uploads, CI changes, and baseline updates require appropriate authorization.
 
 ## Activity-Based Reference Guide
 
@@ -294,10 +296,10 @@ What are you doing?
 
 After writing or modifying tests:
 
-1. **Run tests**: `npx playwright test --reporter=list`
+1. **Run the affected tests** through the configured Nx target and installed Playwright runner; do not fetch a runner with `npx` or create a parallel test configuration.
 2. **If tests fail**:
-   - Review error output and trace (`npx playwright show-trace`)
+   - Review error output and sanitized local traces with the installed tooling
    - Fix locators, waits, or assertions
    - Re-run tests
-3. **Only proceed when all tests pass**
-4. **Run multiple times** for critical tests: `npx playwright test --repeat-each=5`
+3. **Report the evidence precisely**: which checks passed, failed, or were not run. Do not weaken assertions or update snapshots merely to obtain a pass.
+4. **Repeat critical tests when justified** using the existing runner's repeat option; keep the scope proportional to the change and report instability.

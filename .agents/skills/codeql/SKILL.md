@@ -7,6 +7,14 @@ description: Comprehensive guide for setting up and configuring CodeQL code scan
 
 This skill provides procedural guidance for configuring and running CodeQL code scanning — both through GitHub Actions workflows and the standalone CodeQL CLI.
 
+## Authorization and repository scope
+
+Start by inspecting the existing workflow/setup, repository languages, manifest, and requested scope. An audit or troubleshooting request is read-only unless fixes are explicitly requested. Reuse existing scans where possible; do not add a second CodeQL workflow by default.
+
+Installing the CLI or query packs, enabling/disabling setup, changing workflow permissions/triggers, dispatching workflows, uploading SARIF, publishing packs, or dismissing alerts are separate state-changing actions and require appropriate authorization. A permission error is not permission to broaden a token or workflow. Explain the specific missing access and propose the minimum change instead.
+
+Use actual Nx workspace paths, including libraries when applicable; do not copy `apps/` or `services/` filters blindly and omit code from analysis. Keep synthetic fixtures and customer data boundaries intact. Review artifacts for secrets and sensitive data before any approved upload. The examples below describe capabilities, not automatic steps to execute.
+
 ## When to Use This Skill
 
 Use this skill when the request involves:
@@ -355,7 +363,7 @@ To enable detailed diagnostics:
 | Problem                           | Solution                                                                                                     |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Workflow not triggering           | Verify `on:` triggers match event; check `paths`/`branches` filters; ensure workflow exists on target branch |
-| `Resource not accessible` error   | Add `security-events: write` and `contents: read` permissions                                                |
+| `Resource not accessible` error   | Inspect event/token restrictions and existing permissions; propose the minimum authorized permission change rather than broadening access automatically |
 | Autobuild failure                 | Switch to `build-mode: manual` and add explicit build commands                                               |
 | No source code seen               | Verify `--source-root`, build command, and language identifier                                               |
 | C# compiler failure               | Check for `/p:EmitCompilerGeneratedFiles=true` conflicts with `.sqlproj` or legacy projects                  |

@@ -1,70 +1,32 @@
 ---
 name: feature-spec
-description: Kicks off a new feature by finding the next incomplete phase in docs/constitution/roadmap.md, creating a git branch, interviewing the user about scope/decisions/context, and writing a dated spec directory under docs/specs/ containing plan.md, requirements.md, and validation.md. Trigger when the user says "feature spec", "next phase", "start the next feature", or invokes /feature-spec.
+description: 'Draft a small, human-reviewed feature specification only when the user explicitly asks for a feature spec or requirements document. Do not select roadmap work, create branches, or start implementation automatically.'
 ---
 
 # Feature Spec
 
+## Scope
+
+Use the current user request and applicable repository instructions as the source of scope. Inspect relevant existing code and documentation; do not assume a constitution directory, roadmap, branch convention, version file, or document destination exists.
+
+This skill drafts requirements, not implementation authorization. Preserve the existing Angular/Express/Node/Nx stack, domain-first DDD boundaries, privacy constraints, and user-selected checkpoints. Do not add dependencies or infrastructure without approval.
+
 ## Workflow
 
-### 1. Find the next phase
+1. Confirm the requested outcome, non-goals, and acceptance criteria from available context.
+2. Inspect only the relevant capability, dependencies, tests, and established patterns. Use `context-map` for a concise impact map when useful.
+3. Ask only unresolved questions that materially affect scope or decisions. Do not repeat answered questions or require a fixed question count.
+4. Present a short draft for review using the format below. Keep a small feature to one concise draft; do not create multiple documents by default.
+5. Revise after feedback. Save a file only when requested, using an established repository location or a destination agreed with the user.
+6. Stop at the user's approval checkpoint. Do not create a branch, update a roadmap, bump a version, or implement the feature merely because the specification is drafted.
 
-Read `docs/constitution/roadmap.md`. The next phase is the first section whose items are all `[ ]`. Note its name to derive the branch and directory name.
+## Suggested Draft
 
-### 2. Create the branch
+- **Goal:** the user-visible outcome.
+- **Scope and non-goals:** the smallest independently useful change.
+- **Acceptance criteria:** observable behavior, failure cases, and relevant privacy/security constraints.
+- **Affected capability:** existing files or areas, with evidence rather than guessed paths.
+- **Next slice:** one reviewable step and its focused verification.
+- **Open decisions:** only matters not settled by the request or repository instructions.
 
-Follow the project branch naming convention: `<verb>/OC/<description>` (see `AGENTS.md`).
-
-```
-git checkout -b feat/OC/<feature-name>
-```
-
-### 3. Interview the user — BEFORE writing any files
-
-Ask the user exactly **3 questions**:
-
-| Header        | Question focus                                                                             |
-| ------------- | ------------------------------------------------------------------------------------------ |
-| **Scope**     | What the feature collects, exposes, or does — fields, behaviour, data shape                |
-| **Decisions** | Key implementation choices — storage, visibility, validation, UX pattern                   |
-| **Context**   | Tone, constraints, or anything shaping the spec — copy style, stack limits, open questions |
-
-Do **not** write any files until the user has answered all three questions.
-
-### 4. Read guidance files
-
-Read `docs/constitution/mission.md` and `docs/constitution/tech-stack.md` before drafting.
-
-### 5. Create the spec directory
-
-Name: `docs/specs/YYYY-MM-DD-<feature-name>/` using today's date.
-
-#### `requirements.md`
-
-- Scope section: what is and is not included; field/data table if applicable
-- Decisions section: choices made and why (draw from user answers)
-- Context section: tone rules, stack pointers, existing patterns to follow
-
-#### `plan.md`
-
-- Numbered task groups appropriate to the feature (for example: Data → Components → Page & Route → Navigation → Tests)
-- Each group has numbered sub-tasks; groups should be independently implementable
-
-#### `validation.md`
-
-- Automated: project test and typecheck commands pass; specific assertions required
-- Manual: walkthrough, behaviour, edge cases
-- Tone check if the feature has user-facing copy
-- Definition of done
-
-### 6. Update the roadmap
-
-Mark the relevant phase items as `[ ]` → `[ ]` (with link to the spec directory) in `docs/constitution/roadmap.md`.
-
-## Constraints
-
-- Respect the existing tech stack defined in `docs/constitution/tech-stack.md` — no new dependencies without user approval
-- Follow existing conventions and patterns already established in the codebase
-- Keep feature scope focused and independently shippable
-- Branch naming: `feat/OC/<feature-name>` (see `AGENTS.md`)
-- Version bump required in `apps/web/app/version.json` when source files change
+Use `feature-slicing` only if the change needs multiple reviewable slices. A PRD, ADR, or detailed implementation plan is optional and should be produced only when requested or justified by a substantial decision, not as an automatic chain.

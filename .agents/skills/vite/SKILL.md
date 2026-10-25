@@ -9,9 +9,13 @@ metadata:
 
 # Vite
 
-> Based on Vite 8 beta (Rolldown-powered). Vite 8 uses Rolldown bundler and Oxc transformer.
+> Historical source: Vite 8 beta (Rolldown-powered). Inspect the manifest and lockfile and verify APIs against the installed Vite release before copying a reference; this is not a request to adopt a beta or migrate.
 
 Vite is a next-generation frontend build tool with fast dev server (native ESM + HMR) and optimized production builds.
+
+## Repository scope
+
+Use only for actual Vite configuration/plugin work. In an Angular Nx project, preserve the configured Angular/Nx builder rather than assuming its internal use of Vite exposes a standalone `vite.config.ts`. Reuse configured targets and the repository package manager. Do not add plugins, change browser targets, upgrade Vite, or migrate bundlers implicitly.
 
 ## Preferences
 

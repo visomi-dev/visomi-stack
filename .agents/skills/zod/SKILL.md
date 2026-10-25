@@ -7,6 +7,12 @@ description: Zod schema validation best practices for type safety, parsing, and 
 
 Comprehensive schema validation guide for Zod in TypeScript applications. Contains 43 rules across 8 categories, prioritized by impact to guide automated refactoring and code generation.
 
+## Repository Scope
+
+Use this reference only where Zod is already used or explicitly approved; its availability is not permission to install it or migrate validation libraries. Match the installed Zod version and the repository's Express/Angular patterns instead of copying framework-specific examples. Follow domain boundaries and keep schemas as simple as the task allows.
+
+At trust boundaries, consume the parsed output so stripping and transforms take effect. Return fixed public validation codes or an explicitly approved mapping of static field/error codes; do not echo arbitrary issue messages, input values, or dynamic paths, and never log payloads or raw validation errors. Do not add instrumentation or dependencies without approval.
+
 ## When to Apply
 
 Reference these guidelines when:

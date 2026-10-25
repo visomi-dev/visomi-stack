@@ -196,8 +196,8 @@ const requestPromise = page.waitForRequest('**/api/submit');
 await page.click('button');
 const request = await requestPromise;
 
-// Wait for no network activity
-await page.waitForLoadState('networkidle');
+// Assert the UI state needed by the test instead of waiting for networkidle.
+await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
 ```
 
 ### Wait for Element State
