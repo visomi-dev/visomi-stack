@@ -1,2 +1,8 @@
 # These files declare Node module format; their tools belong to existing Nx targets.
 .opencode/package.json
+cache/
+tmp/
+.husky
+.nx
+.vscode
+node_modules
