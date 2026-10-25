@@ -71,7 +71,9 @@ export async function testPostgres(manifest?: string) {
     const db = drizzle({ client: pool, logger: false });
 
     try {
-      await migrate(db, { migrationsFolder: resolve(__dirname, '../../drizzle') });
+      await migrate(db, {
+        migrationsFolder: resolve(__dirname, '../../../../../libs/backend/shared/src/lib/database/migrations'),
+      });
     } finally {
       await pool.end();
     }

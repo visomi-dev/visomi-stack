@@ -2,7 +2,8 @@
 // @nx-target-name: serve
 import { createServer } from 'node:http';
 
-import { createDatabase, initializeObservability, type DatabaseResource } from '@visomi-stack/web-backend-shared';
+import { createDatabase, type DatabaseResource } from '@visomi-stack/backend-shared';
+import { initializeObservability } from '@visomi-stack/web-backend-shared';
 
 import packageJson from '../package.json' with { type: 'json' };
 

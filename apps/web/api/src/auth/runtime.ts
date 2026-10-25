@@ -1,4 +1,4 @@
-import type { Database } from '@visomi-stack/web-backend-shared';
+import { authSchema, type Database } from '@visomi-stack/backend-shared';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { RequestHandler, Request } from 'express';
 import session from 'express-session';
@@ -7,9 +7,10 @@ import type { Pool } from 'pg';
 
 import type { AuthConfig } from './config';
 import { Passkeys } from './passkeys';
-import { credentials } from './schema';
 import { AuthError } from './security';
 import { SessionStore } from './session-store';
+
+const { credentials } = authSchema;
 
 const initialized = Symbol.for('visomi-stack.authentication.v1');
 

@@ -22,8 +22,8 @@ const boundary = vi.hoisted(() => ({
 vi.mock('node:http', () => ({ createServer: boundary.createServer }));
 vi.mock('@visomi-stack/web-backend-shared', () => ({
   initializeObservability: boundary.initialize,
-  createDatabase: boundary.createDatabase,
 }));
+vi.mock('@visomi-stack/backend-shared', () => ({ createDatabase: boundary.createDatabase }));
 vi.mock('./app', () => ({
   createApp: boundary.createApp,
   authConfig: boundary.authConfig,

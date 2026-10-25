@@ -18,12 +18,27 @@ NX_DAEMON=false pnpm nx show projects --json
 NX_DAEMON=false pnpm nx show project web-api --json
 ```
 
-The current projects are `web-api`, `web-gateway`, and `web-backend-shared`.
+The current projects are `web-api`, `web-gateway`, `web-backend-shared`, and `backend-shared`.
 Do not substitute the legacy name `api` or assume planned projects such as
 `server`, `app`, or `site` exist. Gateway import wiring is being developed separately.
-Template initialization, doctor, smoke, and database migration scripts from the
-previous stack are not available here. Check command help before using unfamiliar
+Template initialization, doctor and smoke scripts from the previous stack are not
+available here. Check command help before using unfamiliar
 flags. Agents should follow the Nx skill guidance in [AGENTS.md](../AGENTS.md).
+
+Drizzle configuration, domain schemas and migrations live together in
+`libs/backend/shared/src/lib/database/`. Use the shared project's explicit
+commands from the workspace root:
+
+```sh
+pnpm nx run backend-shared:db-generate -- --name describe-schema-change
+DATABASE_URL=postgresql://localhost/visomi_stack_dev pnpm nx run backend-shared:db-migrate
+```
+
+The example database must be created separately. Do not use a developer database
+for tests: the API integration and E2E suites create isolated PostgreSQL clusters
+and apply this same shared migration history. Application imports and startup do
+not run migrations. See the [API guide](../apps/web/api/README.md) for configuration
+and resource ownership.
 
 ## Verification
 
@@ -31,7 +46,7 @@ Choose checks relevant to the change and report the command, result, and any
 remaining limitation. Focused checks for the API boundary and shared infrastructure are:
 
 ```sh
-NX_DAEMON=false pnpm nx run-many -t lint typecheck test -p web-api web-backend-shared
+NX_DAEMON=false pnpm nx run-many -t lint typecheck test -p web-api web-backend-shared backend-shared
 NX_DAEMON=false pnpm nx run web-api:build
 ```
 

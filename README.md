@@ -61,6 +61,7 @@ dependencies. A fresh-checkout installation has not yet been verified.
 ## Documentation
 
 - [API authentication and persistence](apps/web/api/README.md): schema, migrations, endpoints, ownership and verification.
+- [Shared backend infrastructure](libs/backend/shared/README.md): database module, shared schemas and explicit migration commands.
 - [Architecture](docs/architecture.md): current structure, intended topology, and open decisions.
 - [Development](docs/development.md): project discovery, verification, contribution conventions, and maintenance.
 - [Agent guidance](AGENTS.md): repository instructions for coding agents.

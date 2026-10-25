@@ -61,20 +61,6 @@
     },
     "e2e": {
       "dependsOn": ["build"]
-    },
-    "db-generate": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "apps/web/api",
-        "command": "drizzle-kit generate --config drizzle.config.ts"
-      }
-    },
-    "db-migrate": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "apps/web/api",
-        "command": "drizzle-kit migrate --config drizzle.config.ts"
-      }
     }
   }
 }

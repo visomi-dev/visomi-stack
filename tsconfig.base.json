@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "strict": false,
     "paths": {
-      "@visomi-stack/web-backend-shared": ["./libs/web/backend/shared/src/index.ts"]
+      "@visomi-stack/web-backend-shared": ["./libs/web/backend/shared/src/index.ts"],
+      "@visomi-stack/backend-shared": ["./libs/backend/shared/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

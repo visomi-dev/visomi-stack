@@ -23,6 +23,23 @@ describe('explicit PostgreSQL ownership', () => {
     await resource.close();
   });
 
+  it('keeps separately owned database resources independent', async () => {
+    const first = createDatabase('postgresql://synthetic@127.0.0.1:1/unused');
+    const second = createDatabase('postgresql://synthetic@127.0.0.1:1/unused');
+    const endSecond = vi.spyOn(second.pool, 'end');
+
+    try {
+      expect(first.pool).not.toBe(second.pool);
+      expect(first.db).not.toBe(second.db);
+      await first.close();
+      expect(endSecond).not.toHaveBeenCalled();
+      expect(second.pool.ending).toBe(false);
+      expect(second.pool.totalCount).toBe(0);
+    } finally {
+      await Promise.all([first.close(), second.close()]);
+    }
+  });
+
   it('rejects non-PostgreSQL connection configuration before pool construction', () => {
     expect(() => createDatabase('https://example.invalid')).toThrow('database_configuration_invalid');
     expect(() => createDatabase('SYNTHETIC_PRIVATE_URL')).toThrow('database_configuration_invalid');

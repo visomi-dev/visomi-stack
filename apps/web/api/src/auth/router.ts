@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 
 import type { RegistrationResponseJSON, AuthenticationResponseJSON } from '@simplewebauthn/server';
-import type { Database } from '@visomi-stack/web-backend-shared';
+import type { Database } from '@visomi-stack/backend-shared';
 import { Router, json } from 'express';
 import type { Request, ErrorRequestHandler } from 'express';
 

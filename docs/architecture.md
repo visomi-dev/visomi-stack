@@ -13,6 +13,8 @@ apps/
     api/          # web-api: application factory and standalone startup
     gateway/      # web-gateway: separate scaffold; composition in progress
 libs/
+  backend/
+    shared/       # backend-shared: infrastructure independent of HTTP, including Drizzle
   web/backend/
     shared/       # web-backend-shared: shared infrastructure and observability
 ```
@@ -25,6 +27,13 @@ capability provides passkey signup/sign-in, session inspection/logout, and owned
 credential management under `/auth`, backed by PostgreSQL. Unknown routes and
 application errors return fixed responses. See the [API guide](../apps/web/api/README.md)
 for the schema, migration commands and managed/inherited ownership contract.
+
+`libs/backend/shared/src/lib/database/` owns the Drizzle configuration, domain
+schemas and one migration history for all backend modules. The API imports its
+authentication schema through the shared library. Database initialization remains
+explicit: each executable creates and closes its own pool and supplies it to the
+modules it composes. Imports do not open connections or run migrations; separate
+processes share PostgreSQL state, not JavaScript resources.
 
 The API's Rolldown build preserves named `app` and `main` entries with stable
 `app.js` and `main.js` filenames, CommonJS output, external runtime dependencies,

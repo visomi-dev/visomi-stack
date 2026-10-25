@@ -11,12 +11,13 @@ import type {
   RegistrationResponseJSON,
   AuthenticatorTransport,
 } from '@simplewebauthn/server';
-import type { Database } from '@visomi-stack/web-backend-shared';
+import { authSchema, type Database } from '@visomi-stack/backend-shared';
 import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 
 import type { AuthConfig } from './config';
-import { challenges, credentials, sessions, users } from './schema';
 import { AuthError, requireFresh } from './security';
+
+const { challenges, credentials, sessions, users } = authSchema;
 
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 type Purpose = typeof challenges.$inferSelect.purpose;

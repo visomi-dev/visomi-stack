@@ -1,4 +1,4 @@
-import type { Database } from '@visomi-stack/web-backend-shared';
+import type { Database } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
 import { describe, expect, it, vi } from 'vitest';
 

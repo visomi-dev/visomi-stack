@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-import type { Database } from '@visomi-stack/web-backend-shared';
+import type { Database } from '@visomi-stack/backend-shared';
 import { sql } from 'drizzle-orm';
 import type { RequestHandler } from 'express';
 

@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { randomUUID } from 'node:crypto';
 
-import { createDatabase } from '@visomi-stack/web-backend-shared';
+import { authSchema, createDatabase } from '@visomi-stack/backend-shared';
 import { eq, sql } from 'drizzle-orm';
 import type { Request, Response } from 'express';
 import { Cookie } from 'express-session';
@@ -12,11 +12,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { authConfig } from '../../src/auth/config';
 import { Passkeys } from '../../src/auth/passkeys';
-import { challenges, credentials, sessions, users } from '../../src/auth/schema';
 import { rateLimit } from '../../src/auth/security';
 import { SessionStore } from '../../src/auth/session-store';
 import { authenticator } from '../support/authenticator';
 import { testPostgres } from '../support/postgres';
+
+const { challenges, credentials, sessions, users } = authSchema;
 
 let postgres: Awaited<ReturnType<typeof testPostgres>>;
 let resource: ReturnType<typeof createDatabase>;
@@ -359,7 +360,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
 
     url.pathname = '/visomi_auth_cli_test';
     const command = () =>
-      execute('pnpm', ['nx', 'run', 'web-api:db-migrate', '--output-style=static'], {
+      execute('pnpm', ['nx', 'run', 'backend-shared:db-migrate', '--output-style=static'], {
         cwd: resolve(__dirname, '../../../../..'),
         env: { ...process.env, DATABASE_URL: url.toString() },
         timeout: 20000,

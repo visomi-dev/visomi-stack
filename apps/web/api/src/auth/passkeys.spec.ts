@@ -1,4 +1,4 @@
-import type { Database } from '@visomi-stack/web-backend-shared';
+import type { Database } from '@visomi-stack/backend-shared';
 import { describe, expect, it, vi } from 'vitest';
 
 import { authConfig } from './config';
