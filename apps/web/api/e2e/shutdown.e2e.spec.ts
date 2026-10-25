@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path';
 
 import { Pool } from 'pg';
 
-import { expect, test } from '../../../../e2e/fixtures/http';
+import { expect, test } from './fixtures/http';
 
 async function startStandalone(directory: string, runDirectory: string) {
   const root = resolve(__dirname, '../../../..');
@@ -27,7 +27,11 @@ async function startStandalone(directory: string, runDirectory: string) {
   await new Promise<void>((resolveClosed) => probe.close(() => resolveClosed()));
   const child = spawn(
     process.execPath,
-    ['--require', join(root, 'e2e/support/telemetry-preload.cjs'), join(root, 'dist/apps/web/api/main.js')],
+    [
+      '--require',
+      join(root, 'apps/web/api/e2e/support/telemetry-preload.cjs'),
+      join(root, 'dist/apps/web/api/main.js'),
+    ],
     {
       cwd: root,
       env: {

@@ -1,4 +1,4 @@
-import { expect, test } from '../../../../e2e/fixtures/http';
+import { expect, test } from './fixtures/http';
 
 test('applies the shared Helmet policy to successful requests, 404s and authentication failures', async ({
   request,

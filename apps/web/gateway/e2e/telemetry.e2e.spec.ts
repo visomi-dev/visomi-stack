@@ -1,4 +1,4 @@
-import { expect, test } from '../../../../e2e/fixtures/http';
+import { expect, test } from './fixtures/http';
 
 test('exports one completion per concurrent request across both middleware layers', async ({
   request,

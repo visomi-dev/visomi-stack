@@ -29,14 +29,22 @@ The inherited parent fixture installs Helmet and the common handler itself,
 preserving a distinct host CSP across the compiled API boundary. Gateway process
 integration verifies the same delegation between the actual ESM/CJS artifacts.
 
-Shared Playwright dependencies live at the workspace root:
+Each project owns its application-specific Playwright dependencies under its
+own `e2e/` directory:
 
-- `e2e/fixtures/http.ts`: lazy `telemetry` and `database` fixtures; `authTest`
-  adds rate-limit reset before each auth test and in its teardown.
-- `e2e/support/`: the Nx serve wrapper, teardown, isolated database access,
-  telemetry reader, local exporters and minimal server preload.
-- `tests/support/`: runner-independent PostgreSQL and software-authenticator
-  helpers used by integration tests and E2E setup.
+- `apps/web/api/e2e/fixtures/http.ts`: composes the shared telemetry fixture
+  with an owned database pool and auth rate-limit isolation.
+- `apps/web/gateway/e2e/fixtures/http.ts`: composes the shared telemetry fixture
+  with rate-limit isolation for authentication through the mounted API.
+- Each project's `e2e/support/` owns its Nx serve entrypoint, isolated auth
+  database access and minimal preload restricted to that application's process.
+
+Only dependencies currently used by both projects live at the workspace root:
+
+- `e2e/fixtures/telemetry.ts`: lazy binding to the run's telemetry destination.
+- `e2e/support/`: telemetry reader, local exporters and common teardown of owned
+  watchers, application processes and recorded PostgreSQL clusters.
+- `tests/support/`: runner-independent PostgreSQL and software-authenticator helpers.
 
 Specs keep using Playwright's request fixture. The telemetry fixture binds the
 run's destination and can read a separate destination for the compiled shutdown
@@ -55,7 +63,7 @@ contacted. The unit and compiled-process suites remain distinct from these E2E c
 
 The existing Playwright configuration uses a test-only wrapper to start isolated PostgreSQL and then `pnpm nx serve web-api` on loopback port 3307. It never reuses an unrelated server. Request fixtures need no browser. A test-only preload explicitly supplies local file exporters; the application entrypoint still performs shutdown. Teardown closes the owned watcher, application and recorded PostgreSQL cluster. The cluster has an ownership marker and a separate manifest, so cleanup does not depend on the serve wrapper surviving. Each run gets an isolated ignored directory under `tmp/api-e2e/run-*` from the repository root, containing its telemetry, manifests and temporary PostgreSQL cluster. Teardown removes the owned cluster and retains telemetry for inspection. The shutdown scenario owns a separate compiled process and destination under Playwright's configured test output; Nx's report/output locations remain unchanged.
 
-The gateway's existing configuration selects that same test-only wrapper's
+The gateway's existing configuration selects its own test-only wrapper's
 explicit `web-gateway` target on loopback port 3317, with its own PostgreSQL
 cluster and `tmp/api-e2e/gateway-run-*` destination. Its readiness path is `/api/`;
 the gateway root intentionally remains 404. Only application entrypoints are

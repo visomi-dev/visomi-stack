@@ -1,4 +1,4 @@
-import { expect, test } from '../../../../e2e/fixtures/http';
+import { expect, test } from './fixtures/http';
 
 test('exports one completion, span and metric contribution per successful or failed request', async ({
   request,

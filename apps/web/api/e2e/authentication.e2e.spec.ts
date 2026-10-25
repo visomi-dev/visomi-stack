@@ -1,7 +1,8 @@
 import type { APIRequestContext } from '@playwright/test';
 
-import { expect, authTest as test } from '../../../../e2e/fixtures/http';
 import { authenticator } from '../../../../tests/support/authenticator';
+
+import { expect, authTest as test } from './fixtures/http';
 
 const origin = 'http://127.0.0.1:3307';
 const rpId = '127.0.0.1';

@@ -1,4 +1,4 @@
-import { expect, test } from '../../../../e2e/fixtures/http';
+import { expect, test } from './fixtures/http';
 
 test('excludes synthetic private input from exported operational telemetry', async ({
   request,

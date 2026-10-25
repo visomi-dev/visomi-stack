@@ -5,14 +5,14 @@ const { join } = require('node:path');
 const entry = process.argv[1]?.replaceAll('\\', '/');
 const directory = process.env.VISOMI_E2E_TELEMETRY_DIR;
 
-if (directory && /\/(api|gateway)\/(src\/)?main\.(ts|js)$/.test(entry ?? '')) {
+if (directory && /\/gateway\/(src\/)?main\.(ts|js)$/.test(entry ?? '')) {
   require('tsx/cjs');
-  const { initializeObservability } = require('../../libs/web/backend/shared/src/index');
-  const { createTelemetryOptions } = require('./telemetry-exporters.cjs');
+  const { initializeObservability } = require('../../../../../libs/web/backend/shared/src/index');
+  const { createTelemetryOptions } = require('../../../../../e2e/support/telemetry-exporters.cjs');
 
   writeFileSync(join(directory, 'owner.json'), JSON.stringify({ pid: process.pid, parentPid: process.ppid }));
   initializeObservability(
-    createTelemetryOptions(directory, entry.includes('/gateway/') ? 'web-gateway' : 'web-api', {
+    createTelemetryOptions(directory, 'web-gateway', {
       holdSpans: process.env.VISOMI_E2E_HOLD_SPANS === 'true',
     }),
   );

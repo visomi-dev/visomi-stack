@@ -5,9 +5,10 @@ import { httpErrorHandler, securityHeaders } from '@visomi-stack/web-backend-sha
 import { drizzle } from 'drizzle-orm/node-postgres';
 import express from 'express';
 
-import { expect, authTest as test } from '../../../../e2e/fixtures/http';
 import { authenticator } from '../../../../tests/support/authenticator';
-import { testDatabasePool } from '../../../../e2e/support/database';
+
+import { expect, authTest as test } from './fixtures/http';
+import { testDatabasePool } from './support/database';
 
 const { createApp, authConfig, createAuthentication } = require(
   resolve(__dirname, '../../../../dist/apps/web/api/app'),

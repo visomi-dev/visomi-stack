@@ -258,7 +258,7 @@ export default [
     },
   },
   {
-    files: ['e2e/fixtures/**/*.ts'],
+    files: ['**/e2e/fixtures/**/*.ts'],
     rules: {
       // Playwright requires destructured fixture dependencies, including an empty dependency set.
       'no-empty-pattern': ['error', { allowObjectPatternsAsParameters: true }],

@@ -1,4 +1,4 @@
-import { expect, test } from '../../../../e2e/fixtures/http';
+import { expect, test } from './fixtures/http';
 
 test('mounts only the API and applies the host Helmet policy to successes and failures', async ({ request }) => {
   for (const [path, status] of [

@@ -1,4 +1,4 @@
-import { expect, test } from '../../../../e2e/fixtures/http';
+import { expect, test } from './fixtures/http';
 
 test('concurrent requests own distinct correlation and ignore external trace context', async ({
   request,

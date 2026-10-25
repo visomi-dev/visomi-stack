@@ -174,11 +174,16 @@ afterward. These are Vitest process integration checks. Both projects also own
 Playwright request suites in their existing `e2e/` directories. The gateway suite
 runs `pnpm nx serve web-gateway`, mounts the compiled API, and verifies inherited
 authentication/errors, Helmet, correlation and privacy through local file exports.
-The API and gateway share only test setup for their owned PostgreSQL clusters,
-local exporters and teardown; production application composition stays separate.
-Playwright fixtures live in root `e2e/fixtures/`, with their bootstrap and
-exporter dependencies in `e2e/support/`. Unit tests stay beside the modules they
-test, including the shared support's explicit Vitest `*.spec.ts` files. No
+Each project owns its Playwright fixture composition in `e2e/fixtures/http.ts`
+and its Nx serve entrypoint, authentication database access and minimal telemetry
+preload in `e2e/support/`. These files live under `apps/web/api/` or
+`apps/web/gateway/`; neither project imports the other project's test files.
+The root `e2e/fixtures/telemetry.ts` only binds the isolated telemetry destination.
+Root `e2e/support/` contains the telemetry reader, local exporters and owned-process
+teardown used by both suites. It does not select application targets or origins.
+Runner-independent PostgreSQL and authenticator helpers remain in `tests/support/`.
+Unit tests stay beside the modules they test, including the shared support's
+explicit Vitest `*.spec.ts` files. No
 separate unit-test directory or additional Nx project is introduced.
 Neither suite certifies Angular SSR, queue delivery, external collectors or deployment.
 

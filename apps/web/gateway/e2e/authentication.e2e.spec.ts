@@ -1,5 +1,6 @@
-import { expect, authTest as test } from '../../../../e2e/fixtures/http';
 import { authenticator } from '../../../../tests/support/authenticator';
+
+import { expect, authTest as test } from './fixtures/http';
 
 const origin = 'http://127.0.0.1:3317';
 
