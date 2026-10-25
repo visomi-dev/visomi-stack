@@ -1,8 +1,8 @@
 # Signal Forms
 
-Signal Forms are the recommended approach for handling forms in modern Angular applications (v21+). They provide a reactive, type-safe, and model-driven way to manage form state using Angular Signals.
+Use this reference when Signal Forms are supported by the installed Angular version and selected for the current form. Prefer them for new forms under the project's strategy; verify APIs against that Angular version.
 
-**CRITICAL**: You MUST use Angular's new Signal Forms API for all form-related functionality. Do NOT use null as a value or type of any fields.
+Do not migrate existing Reactive or template-driven forms merely to apply this reference. Preserve domain semantics: missing/unknown amounts, dates, and identifiers are not automatically zero or empty strings. Use a UI-specific model/adapter compatible with the selected form control, and validate the conversion at the boundary rather than coercing the domain model.
 
 ## Imports
 
@@ -44,24 +44,20 @@ import {form, FormField} from '@angular/forms/signals';
   imports: [FormField],
 })
 export class Example {
-  // 1. Define your model with initial values (avoid undefined)
+  // 1. Define a UI model compatible with the selected controls.
   protected readonly userModel = signal({
-    name: '', // CRITICAL: NEVER use null or undefined as initial values
+    name: '', // Empty text is appropriate for this text control.
     email: '',
-    age: 0, // Use 0 for numbers, NOT null
+    age: 18, // Known example value, not a replacement for an unknown age.
     address: {
       street: '',
       city: '',
     },
-    hobbies: [] as string[], // Use [] for arrays, NOT null
+    hobbies: [] as string[], // This example starts with a known empty list.
   });
 
-  // WRONG - DO NOT DO THIS:
-  // badModel = signal({
-  //   name: null,      // ERROR: use '' instead
-  //   age: null,       // ERROR: use 0 instead
-  //   items: null      // ERROR: use [] instead
-  // });
+  // For optional/unknown domain values, define an explicit UI representation
+  // and a validated mapping; do not silently convert unknown numbers to zero.
 
   // 2. Create the form
   protected readonly userForm = form(this.userModel);
@@ -200,14 +196,13 @@ Do NOT do this: `<input min="1" [formField]>` or `<input [value]="val" [formFiel
   <option value="us">US</option>
 </select>
 
-<!-- userForm.name can NOT be nullable, because input does not accept null-->
+<!-- Ensure this UI field's value type matches the selected control contract. -->
 <input [formField]="userForm.name" />
 ```
 
 ## Reactive Forms
 
-**Do NOT import** `FormControl`, `FormGroup`, `FormArray`, or `FormBuilder` from `@angular/forms`. Signal Forms replace these concepts entirely.
-Signal forms does NOT have a builder.
+Signal Forms use their own API rather than `FormControl`, `FormGroup`, `FormArray`, or `FormBuilder`. These Reactive Forms APIs remain appropriate for existing forms or a deliberately selected Reactive Forms strategy. Do not mix APIs on one control or migrate without an explicit reason.
 
 ## Accessing State
 
@@ -532,7 +527,7 @@ form(this.model, (path) => {
 | **applyEach args**     | `applyEach(s.items, (item, index) => ...)`    | `applyEach(s.items, (item) => ...)`                                              |
 | **Nested @for**        | `$parent.$index`                              | Use `let outerIndex = $index`                                                    |
 | **FormState import**   | `import { FormState }`                        | `FormState` does not exist, use `FieldState`                                     |
-| **Null in model**      | `signal({ name: null })`                      | `signal({ name: '' })` or `signal({ age: 0 })`                                   |
+| **Control/model mismatch** | Passing a domain value incompatible with a control | Use a typed UI adapter; preserve the distinction between unknown, empty, and zero |
 | **Validate syntax**    | `validate(s.field, { value } => ...)`         | `validate(s.field, ({ value }) => ...)`                                          |
 | **Checkbox Array**     | `[formField]="form.tags"` (string[])          | Checkboxes ONLY bind to `boolean`: one boolean field per option                  |
 
@@ -565,7 +560,7 @@ export class App {
       firstName: '',
       lastName: '',
       email: '',
-      age: 0,
+      age: 18, // Known fixture value; do not coerce an unknown age to zero.
     },
     tripDetails: {
       destination: 'Mars',

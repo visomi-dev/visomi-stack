@@ -1,6 +1,6 @@
 ---
 name: tailwind-css-patterns
-description: Provides comprehensive Tailwind CSS utility-first styling patterns including responsive design, layout utilities, flexbox, grid, spacing, typography, colors, and modern CSS best practices. Use when styling React/Vue/Svelte components, building responsive layouts, implementing design systems, or optimizing CSS workflow.
+description: Provides comprehensive Tailwind CSS utility-first styling patterns including responsive design, layout utilities, flexbox, grid, spacing, typography, colors, and modern CSS best practices. Use when styling Angular or other existing framework components, building responsive layouts, implementing design systems, or optimizing CSS workflow.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
@@ -10,11 +10,11 @@ Expert guide for building modern, responsive user interfaces with Tailwind CSS u
 
 ## Overview
 
-Provides actionable patterns for responsive, accessible UIs with Tailwind CSS v4.1+. Covers utility composition, dark mode, component patterns, and performance optimization.
+Provides actionable patterns for responsive, accessible UIs with Tailwind CSS v4.1+. Inspect the installed version, existing integration, and design tokens first. Apply v3 guidance only to an actual v3 project; do not migrate, install packages, or replace configuration implicitly. Use the repository package manager and configured Nx targets.
 
 ## When to Use
 
-- Styling React/Vue/Svelte components
+- Styling components in the project's actual framework, including Angular
 - Building responsive layouts and grids
 - Implementing design systems
 - Adding dark mode support
@@ -56,25 +56,24 @@ Provides actionable patterns for responsive, accessible UIs with Tailwind CSS v4
 2. **Use Design Tokens**: Leverage Tailwind's spacing, color, and typography scales
 3. **Compose Utilities**: Combine multiple utilities for complex styles
 4. **Extract Components**: Create reusable component classes for repeated patterns
-5. **Configure Theme**: Customize design tokens in `tailwind.config.js` or using `@theme`
+5. **Configure Theme**: In v4, reuse CSS-first `@theme` tokens. A legacy JavaScript config is supported only when deliberately loaded with `@config`; do not create one by default.
 6. **Verify Changes**: Test at each breakpoint using DevTools responsive mode. Check for visual regressions and accessibility issues before committing.
 
 ## Examples
 
 ### Responsive Card Component
 
-```tsx
-function ProductCard({ product }: { product: Product }) {
-  return (
-    <div className="overflow-hidden rounded-lg bg-white shadow-lg sm:flex">
-      <img className="h-48 w-full object-cover sm:h-auto sm:w-48" src={product.image} />
-      <div className="p-6">
-        <h3 className="text-lg font-semibold">{product.name}</h3>
-        <button className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">Add to Cart</button>
-      </div>
-    </div>
-  );
-}
+<!-- Angular template example: reuse the project's semantic design tokens. -->
+```html
+<article class="overflow-hidden rounded-lg sm:flex">
+  <img class="h-48 w-full object-cover sm:h-auto sm:w-48" [src]="product.image" [alt]="product.imageAlt" />
+  <div class="p-6">
+    <h3 class="text-lg font-semibold">{{ product.name }}</h3>
+    <button type="button" class="mt-4 px-4 py-2 focus-visible:outline" (click)="addToCart(product)">
+      Add to Cart
+    </button>
+  </div>
+</article>
 ```
 
 ### Dark Mode Toggle
@@ -88,8 +87,12 @@ function ProductCard({ product }: { product: Product }) {
 ### Form Input
 
 ```html
+<label for="email">Email</label>
 <input
-  class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+  id="email"
+  type="email"
+  autocomplete="email"
+  class="w-full rounded-lg border px-4 py-2 focus-visible:outline"
   placeholder="you@example.com"
 />
 ```
@@ -97,32 +100,32 @@ function ProductCard({ product }: { product: Product }) {
 ## Best Practices
 
 1. **Consistent Spacing**: Use Tailwind's spacing scale (4, 8, 12, 16, etc.)
-2. **Color Palette**: Stick to Tailwind's color system for consistency
+2. **Color Palette**: Reuse the project's semantic color tokens and contrast requirements
 3. **Component Extraction**: Extract repeated patterns into reusable components
 4. **Utility Composition**: Prefer utility classes over `@apply` for maintainability
 5. **Semantic HTML**: Use proper HTML elements with Tailwind classes
-6. **Performance**: Ensure content paths include all template files for optimal purging
+6. **Performance**: Verify v4 source detection includes the project's Angular HTML/TypeScript and shared UI files; use explicit `@source` only where needed
 7. **Accessibility**: Include focus styles, ARIA labels, and respect user preferences (reduced-motion)
 
 ## Troubleshooting
 
 ### Classes Not Applying
 
-- **Check content paths**: Ensure all template files are included in `content: []` in config
-- **Verify build**: Run `npm run build` to regenerate purged CSS
-- **Dev mode**: Use `npx tailwindcss -o` with `--watch` flag for live updates
+- **Check source detection**: In v4, inspect automatic detection and any `@source` declarations. In an actual v3 project, inspect its `content` configuration.
+- **Verify build**: Run the affected project's existing Nx build target; do not assume an `npm run build` script exists.
+- **Dev mode**: Reuse the existing dev target. If a separately approved v4 CLI workflow is needed, the CLI package is `@tailwindcss/cli`; do not fetch it implicitly.
 
 ### Responsive Styles Not Working
 
-- **Order matters**: Responsive prefixes must come before non-responsive (e.g., `md:flex` not `flex md:flex`)
+- **Check variants and generated CSS**: `flex md:flex` is valid. Class-attribute order does not determine CSS precedence; inspect responsive variants, conflicting utilities, and the generated stylesheet.
 - **Check breakpoint values**: Verify breakpoints match your design requirements
 - **DevTools**: Use browser DevTools responsive mode to test at each breakpoint
 
 ### Dark Mode Issues
 
-- **Verify config**: Ensure `darkMode: 'class'` or `'media'` is set correctly
-- **Toggle implementation**: Use `document.documentElement.classList.toggle('dark')` for class strategy
-- **Initial flash**: Add `dark` class to `<html>` before body renders
+- **Verify variant**: In v4, use the existing `dark` variant; a manual selector strategy can use `@custom-variant dark`. Legacy `darkMode` config applies only to a compatible, deliberately loaded setup.
+- **Toggle implementation**: Preserve the application's existing theme mechanism and SSR-safe behavior.
+- **Initial flash**: Use the existing initial-theme strategy rather than forcing dark mode.
 
 ## Constraints and Warnings
 
@@ -130,7 +133,7 @@ function ProductCard({ product }: { product: Product }) {
 - **Content Paths**: Misconfigured paths cause classes to be purged in production
 - **Arbitrary Values**: Use sparingly; prefer design tokens for consistency
 - **Specificity Issues**: Avoid `@apply` with complex selectors
-- **Dark Mode**: Requires correct configuration (`class` or `media` strategy)
+- **Dark Mode**: Verify the intended media or custom-selector variant and both themes
 - **Browser Support**: Check Tailwind docs for compatibility notes
 
 ## References
@@ -147,5 +150,6 @@ function ProductCard({ product }: { product: Product }) {
 ## External Resources
 
 - [Tailwind CSS Docs](https://tailwindcss.com/docs)
+- [v4 upgrade and legacy configuration guidance](https://tailwindcss.com/docs/upgrade-guide)
 - [Tailwind UI](https://tailwindui.com)
 - [Tailwind Play](https://play.tailwindcss.com)

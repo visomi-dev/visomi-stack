@@ -7,7 +7,7 @@ tags: parse, performance, optimization, architecture
 
 ## Avoid Double Validation
 
-Once data is validated by Zod, trust the result. Re-validating the same data in multiple layers doubles CPU usage and adds latency. Pass the typed result through your application instead.
+Within the same trust boundary and unchanged schema, consume and pass the parsed result rather than the original input. Avoid redundant parsing while the data, schema, and trust boundary remain unchanged. Pass the typed parsed result through the application; validate again when those assumptions no longer hold.
 
 **Incorrect (validating at every layer):**
 
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
   const result = userSchema.safeParse(body);
   if (!result.success) {
-    return NextResponse.json({ errors: result.error.issues }, { status: 400 });
+    return NextResponse.json({ error: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
   // Pass validated, typed data

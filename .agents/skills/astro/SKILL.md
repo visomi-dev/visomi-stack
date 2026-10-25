@@ -1,6 +1,6 @@
 ---
 name: astro
-description: Skill for building with the Astro web framework. Helps create Astro components and pages, configure SSR adapters, set up content collections, deploy static sites, and manage project structure and CLI commands. Use when the user needs to work with Astro, mentions .astro files, asks about static site generation (SSG), islands architecture, content collections, or deploying an Astro project.
+description: Skill for building with the Astro web framework. Helps create Astro components and pages, configure SSR adapters, set up content collections, deploy static sites, and manage project structure and CLI commands. Use when working on an actual Astro project or an explicitly requested Astro implementation, including .astro files, Astro islands, content collections, or Astro deployment. Generic SSG or SSR requests do not select Astro over an existing Angular application.
 license: MIT
 metadata:
   authors: 'Astro Team'
@@ -12,6 +12,10 @@ metadata:
 **Always consult [docs.astro.build](https://docs.astro.build) for code examples and latest API.**
 
 Astro is the web framework for content-driven websites.
+
+## Repository scope
+
+Apply only to confirmed Astro projects. Inspect their manifest and configuration first; keep the repository's package manager, pinned versions, and Nx targets. CLI examples below describe Astro operations, not permission to install integrations, create a second framework stack, or deploy. Propose missing dependencies and deployment changes separately.
 
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: Generate high-quality Product Requirements Documents (PRDs) for software systems and AI-powered features. Includes executive summaries, user stories, technical specifications, and risk analysis.
+description: Draft a Product Requirements Document only when the user explicitly requests a PRD or a substantial product requirements document. Do not trigger for ordinary feature planning, bug fixes, or narrow implementation tasks.
 license: MIT
 metadata:
   github-path: skills/prd
@@ -19,11 +19,9 @@ Design comprehensive, production-grade Product Requirements Documents (PRDs) tha
 
 Use this skill when:
 
-- Starting a new product or feature development cycle
-- Translating a vague idea into a concrete technical specification
-- Defining requirements for AI-powered features
-- Stakeholders need a unified "source of truth" for project scope
-- User asks to "write a PRD", "document requirements", or "plan a feature"
+- The user explicitly asks to write or revise a PRD or a substantial product requirements document.
+- If a simple feature plan is sufficient, use a concise draft instead of this full template.
+- Use repository instructions and existing context first; preserve the current stack, domain-first boundaries, privacy rules, and user review checkpoints. A PRD does not authorize implementation or publication.
 
 ---
 
@@ -31,7 +29,7 @@ Use this skill when:
 
 ### Phase 1: Discovery (The Interview)
 
-Before writing a single line of the PRD, you **MUST** interrogate the user to fill knowledge gaps. Do not assume context.
+Read available context first. Ask only material unresolved questions; do not repeat answered questions or impose a minimum question count. Separate verified requirements, proposals, and unknowns.
 
 **Ask about:**
 
@@ -48,7 +46,7 @@ Synthesize the user's input. Identify dependencies and hidden complexities.
 
 ### Phase 3: Technical Drafting
 
-Generate the document using the **Strict PRD Schema** below.
+Use the suggested schema below, keeping only sections relevant to the requested document.
 
 ---
 
@@ -66,14 +64,14 @@ Use concrete, measurable criteria. Avoid "fast", "easy", or "intuitive".
 # Concrete (GOOD)
 + The search must return results within 200ms for a 10k record dataset.
 + The search algorithm must achieve >= 85% Precision@10 in benchmark evals.
-+ The UI must follow the 'Vercel/Next.js' design system and achieve 100% Lighthouse Accessibility score.
++ The UI must follow the repository's approved design system and meet the agreed accessibility acceptance criteria.
 ```
 
 ---
 
-## Strict PRD Schema
+## Suggested PRD Schema
 
-You **MUST** follow this exact structure for the output:
+Adapt this structure to the user's requested depth; do not invent metrics, features, or infrastructure to fill a section. Proposed metrics require user agreement and must not rely on collecting client data.
 
 ### 1. Executive Summary
 
@@ -115,7 +113,7 @@ You **MUST** follow this exact structure for the output:
 
 ### DON'T (Avoid)
 
-- **Skip Discovery**: Never write a PRD without asking at least 2 clarifying questions first.
+- **Skip Discovery**: Do not leave material uncertainty unmarked; ask for decisions only when the available context cannot resolve them.
 - **Hallucinate Constraints**: If the user didn't specify a tech stack, ask or label it as `TBD`.
 
 ---

@@ -5,7 +5,7 @@ description: Multi-project configuration for monorepos and different test types
 
 # Projects
 
-Run different test configurations in the same Vitest process.
+Run different test configurations in the same Vitest process only when the existing Nx/project setup needs them. Inspect the installed major version and avoid duplicating Nx test orchestration. Examples below are references, not a requirement to add more projects or providers.
 
 ## Basic Projects Setup
 
@@ -98,7 +98,12 @@ defineConfig({
 
 ## Browser + Node Projects
 
+Use only when browser-mode testing is needed and the compatible provider is already installed or its installation is authorized. The provider factory below follows Vitest 4+; check the installed release's documentation.
+
 ```ts
+import { playwright } from '@vitest/browser-playwright';
+import { defineConfig } from 'vitest/config';
+
 defineConfig({
   test: {
     projects: [
@@ -115,8 +120,8 @@ defineConfig({
           include: ['tests/browser/**/*.test.ts'],
           browser: {
             enabled: true,
-            name: 'chromium',
-            provider: 'playwright',
+            provider: playwright(),
+            instances: [{ browser: 'chromium' }],
           },
         },
       },
@@ -292,7 +297,7 @@ defineConfig({
 - Use glob patterns for monorepo packages
 - Run specific projects with `--project` flag
 - Use `provide` to inject config values into tests
-- Projects inherit from root config unless overridden
+- Inline projects in Vitest 5 inherit root configuration by default; verify inheritance/`extends` semantics for the installed major and any file-based project configuration.
 
 <!--
 Source references:

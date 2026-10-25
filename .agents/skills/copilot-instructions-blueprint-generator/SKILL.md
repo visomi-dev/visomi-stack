@@ -1,9 +1,13 @@
 ---
 name: copilot-instructions-blueprint-generator
-description: 'Technology-agnostic blueprint generator for creating comprehensive copilot-instructions.md files that guide GitHub Copilot to produce code consistent with project standards, architecture patterns, and exact technology versions by analyzing existing codebase patterns and avoiding assumptions.'
+description: 'Create or update GitHub Copilot repository instructions only when explicitly requested. This is an instruction-maintenance tool, not a prerequisite for routine coding, planning, or codebase discovery.'
 ---
 
 # Copilot Instructions Blueprint Generator
+
+## Repository Scope
+
+Follow authoritative repository instructions and user-approved target architecture before incidental existing code patterns. Preserve domain-first DDD boundaries, privacy constraints, and installed versions. Document divergences instead of turning unsafe or accidental patterns into policy. Keep generated guidance minimal, avoid duplicating `AGENTS.md`, and request review before saving changes. Do not generate instructions unless the user uses Copilot and requests this maintenance.
 
 ## Configuration Variables
 
@@ -16,7 +20,7 @@ ${VERSIONING="Semantic|CalVer|Custom"} <!-- Versioning approach -->
 
 ## Generated Prompt
 
-"Generate a comprehensive copilot-instructions.md file that will guide GitHub Copilot to produce code consistent with our project's standards, architecture, and technology versions. The instructions must be strictly based on actual code patterns in our codebase and avoid making any assumptions. Follow this approach:
+"Generate a comprehensive copilot-instructions.md file that will guide GitHub Copilot to produce code consistent with our project's standards, architecture, and technology versions. Ground instructions in explicit repository policy, approved architectural decisions, and observed code patterns. Separate target policy from current implementation and avoid unsupported assumptions. Follow this approach:
 
 ### 1. Core Instruction Structure
 
@@ -74,8 +78,8 @@ When context files don't provide specific guidance:
    - Documentation style
    - Testing patterns
 3. Follow the most consistent patterns found in the codebase
-4. When conflicting patterns exist, prioritize patterns in newer files or files with higher test coverage
-5. Never introduce patterns not found in the existing codebase
+4. When patterns conflict, follow applicable repository instructions and approved decisions; ask about unresolved material conflicts
+5. Treat existing patterns as evidence, not authority to preserve unsafe behavior or reject an approved architecture change
 
 ## Code Quality Standards
 
@@ -269,7 +273,7 @@ ${VERSIONING == "Custom" ?
 - Scan the codebase thoroughly before generating any code
 - Respect existing architectural boundaries without exception
 - Match the style and patterns of surrounding code
-- When in doubt, prioritize consistency with existing code over external best practices
+- When in doubt, follow explicit repository policy and approved decisions; surface conflicts with existing code rather than copying them silently
 ```
 
 ### 2. Codebase Analysis Instructions
@@ -302,14 +306,14 @@ To create the copilot-instructions.md file, first analyze the codebase to:
 
 The final copilot-instructions.md should:
 
-- Be placed in the .github/copilot directory
-- Reference only patterns and standards that exist in the codebase
+- Use the repository's existing Copilot instruction location; propose `.github/copilot-instructions.md` if no convention exists
+- Clearly separate observed code patterns from explicit repository policy and approved target architecture
 - Include explicit version compatibility requirements
-- Avoid prescribing any practices not evident in the code
+- Do not invent practices; include approved policy even when existing code has not yet caught up
 - Provide concrete examples from the codebase
 - Be comprehensive yet concise enough for Copilot to effectively use
 
-Important: Only include guidance based on patterns actually observed in the codebase. Explicitly instruct Copilot to prioritize consistency with existing code over external best practices or newer language features.
+Important: Support observations with repository evidence. Explicit repository policy, privacy requirements, and approved decisions take precedence over incidental code patterns. Preserve installed-version compatibility and report divergences instead of guessing.
 "
 
 ## Expected Output

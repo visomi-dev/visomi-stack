@@ -9,19 +9,13 @@ metadata:
 
 # SEO optimization
 
-Search engine optimization based on Lighthouse SEO audits and Google Search guidelines. Focus on technical SEO, on-page optimization, and structured data.
+Search engine optimization based on Lighthouse SEO audits and Google Search guidelines. Apply only to public surfaces intended for indexing, not authenticated application screens, private data, staging, or internal tools. Preserve intentional `noindex` rules and access controls; robots directives are not authorization or a security boundary.
+
+Use existing repository tooling and review proposed changes before editing when the request is audit-only. Do not submit URLs, connect analytics, or send page/customer data to external services implicitly.
 
 ## SEO fundamentals
 
-Search ranking factors (approximate influence):
-
-| Factor                            | Influence | This Skill                                         |
-| --------------------------------- | --------- | -------------------------------------------------- |
-| Content quality & relevance       | ~40%      | Partial (structure)                                |
-| Backlinks & authority             | ~25%      | ✗                                                  |
-| Technical SEO                     | ~15%      | ✓                                                  |
-| Page experience (Core Web Vitals) | ~10%      | See [Core Web Vitals](../core-web-vitals/SKILL.md) |
-| On-page SEO                       | ~10%      | ✓                                                  |
+Prioritize crawlability, accurate content, useful page metadata, and good page experience for the intended public audience. Search ranking is multifactorial; do not assign unsupported percentage weights or promise ranking improvements.
 
 ---
 
@@ -72,9 +66,10 @@ Sitemap: https://example.com/sitemap.xml
 <!-- Self-referencing canonical (recommended) -->
 <link rel="canonical" href="https://example.com/current-page" />
 
-<!-- For paginated content -->
-<link rel="canonical" href="https://example.com/products" />
-<!-- Or use rel="prev" / rel="next" for explicit pagination -->
+<!-- Each indexable page in a paginated sequence has its own canonical URL -->
+<link rel="canonical" href="https://example.com/products?page=2" />
+<!-- Link sequential pages with crawlable <a href> links.
+     Google no longer uses rel="prev" / rel="next" for pagination. -->
 ```
 
 ### XML sitemap
@@ -484,7 +479,7 @@ body {
 
 - [ ] HTTPS enabled
 - [ ] robots.txt allows crawling
-- [ ] No `noindex` on important pages
+- [ ] No accidental `noindex` on public pages intended for indexing; preserve it on private/staging surfaces
 - [ ] Title tags present and unique
 - [ ] Single `<h1>` per page
 
@@ -527,6 +522,7 @@ body {
 ## References
 
 - [Google Search Central](https://developers.google.com/search)
+- [Google pagination guidance](https://developers.google.com/search/docs/specialty/ecommerce/pagination-and-incremental-page-loading)
 - [Schema.org](https://schema.org/)
 - [Core Web Vitals](../core-web-vitals/SKILL.md)
 - [Web Quality Audit](../web-quality-audit/SKILL.md)

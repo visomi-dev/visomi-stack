@@ -1,10 +1,12 @@
 # Node.js Advanced Patterns
 
-Advanced patterns for dependency injection, database integration, authentication, caching, and API response formatting.
+Optional references for specific approved requirements, not a checklist to implement. Read the canonical `nodejs-express-server` skill and applicable repository instructions first. Preserve domain-first boundaries and the installed stack. Do not introduce a container, database, cache, authentication system, or dependency merely because an example exists. Never send client/business data or raw errors to telemetry; use only allowlisted technical events.
 
 ## Dependency Injection
 
-### DI Container
+### Optional DI Container
+
+Prefer ordinary constructor/function injection. Use a container only if an established requirement justifies it; the paths below are shorthand within a capability, not a global layer-based scaffold.
 
 ```typescript
 // di-container.ts
@@ -94,7 +96,7 @@ pool.on('connect', () => {
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected database error', err);
+  console.error({ event: 'database_connection_failed' });
   process.exit(-1);
 });
 
@@ -121,7 +123,7 @@ const connectDB = async () => {
 
     console.log('MongoDB connected');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error({ event: 'database_connection_failed' });
     process.exit(1);
   }
 };
@@ -131,7 +133,7 @@ mongoose.connection.on('disconnected', () => {
 });
 
 mongoose.connection.on('error', (err) => {
-  console.error('MongoDB error:', err);
+  console.error({ event: 'database_connection_failed' });
 });
 
 export { connectDB };
@@ -295,6 +297,8 @@ export class AuthService {
 
 ## Caching Strategies
 
+Preserve the approved data-storage and encryption policy when using a cache. Never log cache keys or values. These generic examples do not authorize plaintext storage of zero-knowledge payloads or a change to persistence architecture.
+
 ```typescript
 // utils/cache.ts
 import Redis from 'ioredis';
@@ -375,12 +379,9 @@ export class ApiResponse {
     });
   }
 
-  static error(res: Response, message: string, statusCode = 500, errors?: any) {
-    return res.status(statusCode).json({
-      status: 'error',
-      message,
-      ...(errors && { errors }),
-    });
+  static error(res: Response, code: 'VALIDATION_FAILED' | 'INTERNAL_ERROR') {
+    const statusCode = code === 'VALIDATION_FAILED' ? 400 : 500;
+    return res.status(statusCode).json({ status: 'error', error: code });
   }
 
   static paginated<T>(res: Response, data: T[], page: number, limit: number, total: number) {

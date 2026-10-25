@@ -95,8 +95,8 @@ Comprehensive accessibility guidelines based on WCAG 2.2 and Lighthouse accessib
 
 | Text Size                          | AA minimum | AAA enhanced |
 | ---------------------------------- | ---------- | ------------ |
-| Normal text (< 18px / < 14px bold) | 4.5:1      | 7:1          |
-| Large text (≥ 18px / ≥ 14px bold)  | 3:1        | 4.5:1        |
+| Normal text (below the large-text threshold) | 4.5:1      | 7:1          |
+| Large text (≥ 18pt / 24px, or ≥ 14pt / ~18.67px bold) | 3:1 | 4.5:1 |
 | UI components & graphics           | 3:1        | 3:1          |
 
 ```css
@@ -168,8 +168,10 @@ Comprehensive accessibility guidelines based on WCAG 2.2 and Lighthouse accessib
 
 **All functionality must be keyboard accessible:**
 
+Prefer native controls: a native `<button>` already supports keyboard activation through its click behavior. Do not add duplicate Enter/Space handlers to native buttons. The following example applies only to a custom control whose semantics and focus behavior must also be implemented:
+
 ```javascript
-// ❌ Only handles click
+// ❌ Custom non-native control only handles click
 element.addEventListener('click', handleAction);
 
 // ✅ Handles both click and keyboard
@@ -399,14 +401,13 @@ Use `aria-live` regions to announce dynamic content changes without moving focus
 
 ### Automated testing
 
-```bash
-# Lighthouse accessibility audit
-npx lighthouse https://example.com --only-categories=accessibility
+Use existing repository accessibility tests and approved local tooling first. Run through the configured package manager and Nx target where available. Do not install a global CLI or fetch a package implicitly; propose missing tooling separately.
 
-# axe-core
-npm install @axe-core/cli -g
-axe https://example.com
-```
+- Run the existing Lighthouse accessibility audit, if configured.
+- Run the existing axe integration against the agreed test environment.
+- Use synthetic test data and keep reports free of customer information.
+
+Automated checks cover only part of WCAG; retain manual verification below.
 
 ### Manual testing
 

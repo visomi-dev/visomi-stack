@@ -1,7 +1,7 @@
 ---
 title: Choose strict() vs strip() for Unknown Keys
 impact: MEDIUM-HIGH
-impactDescription: Default passthrough mode leaks unexpected data; strict() catches schema mismatches, strip() silently removes extras
+impactDescription: Default strip behavior removes unknown keys; strict() rejects them, while explicit passthrough() preserves them
 tags: object, strict, strip, passthrough
 ---
 

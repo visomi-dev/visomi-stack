@@ -7,7 +7,7 @@ tags: parse, safeParse, error-handling, validation
 
 ## Use safeParse() for User Input
 
-`parse()` throws a `ZodError` when validation fails, which crashes your application if not caught. `safeParse()` returns a result object that you can inspect without try/catch. Use `safeParse()` for any user-provided or external data.
+`parse()` throws a `ZodError` when validation fails, which crashes your application if not caught. `safeParse()` returns a result object that you can inspect without try/catch. Prefer `safeParse()` for user-provided or external data. A caught `parse()`/`parseAsync()` is also valid when the existing boundary handles failures safely. Match the repository's framework and installed Zod version rather than copying this Next.js example directly.
 
 **Incorrect (parse without error handling):**
 
@@ -51,7 +51,8 @@ export async function POST(req: NextRequest) {
 
   if (!result.success) {
     // Return structured error response
-    return NextResponse.json({ error: 'Validation failed', issues: result.error.issues }, { status: 400 });
+    // Do not expose input-derived messages, values, paths, or the raw ZodError.
+    return NextResponse.json({ error: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
   // result.data is typed correctly

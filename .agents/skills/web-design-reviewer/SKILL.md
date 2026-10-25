@@ -1,11 +1,11 @@
 ---
 name: web-design-reviewer
-description: 'This skill enables visual inspection of websites running locally or remotely to identify and fix design issues. Triggers on requests like "review website design", "check the UI", "fix the layout", "find design problems". Detects issues with responsive design, accessibility, visual consistency, and layout breakage, then performs fixes at the source code level.'
+description: 'This skill enables visual inspection of websites running locally or remotely to identify and fix design issues. Triggers on requests like "review website design", "check the UI", "fix the layout", "find design problems". Detects issues with responsive design, accessibility, visual consistency, and layout breakage. Reviews are read-only; source fixes require an implementation request or explicit approval.'
 ---
 
 # Web Design Reviewer
 
-This skill enables visual inspection and validation of website design quality, identifying and fixing issues at the source code level.
+This skill enables visual inspection and validation of website design quality. For review-only requests, inspect and report; do not edit source or baselines. Fix only the issues authorized by the user, then verify them. Reuse the repository's design system, synthetic data, installed tooling, package manager, and Nx targets.
 
 ## Scope of Application
 
@@ -37,7 +37,9 @@ This skill enables visual inspection and validation of website design quality, i
 ```mermaid
 flowchart TD
     A[Step 1: Information Gathering] --> B[Step 2: Visual Inspection]
-    B --> C[Step 3: Issue Fixing]
+    B --> G{Fixes authorized?}
+    G -->|No| F[Findings and proposed fixes]
+    G -->|Yes| C[Step 3: Issue Fixing]
     C --> D[Step 4: Re-verification]
     D --> E{Issues Remaining?}
     E -->|Yes| B
@@ -152,7 +154,9 @@ Test at the following viewports:
 
 ---
 
-## Step 3: Issue Fixing Phase
+## Step 3: Issue Fixing Phase — Authorized Changes Only
+
+If the request is an audit, stop at prioritized findings and proposed fixes. Do not treat the review trigger, source access, or browser access as permission to change files, install tooling, navigate unrelated areas, or upload screenshots.
 
 ### 3.1 Issue Prioritization
 
@@ -288,7 +292,7 @@ flowchart TD
 
 ### Implementation with Playwright MCP
 
-[Playwright MCP](https://github.com/microsoft/playwright-mcp) is recommended as the reference implementation for this skill.
+Use the existing browser automation or Node.js Playwright test setup first. [Playwright MCP](https://github.com/microsoft/playwright-mcp) is an optional reference implementation, not a dependency to add automatically.
 
 | Capability | Playwright MCP Tool | Purpose |
 |------------|---------------------|---------|
@@ -299,18 +303,9 @@ flowchart TD
 | Resize | `browser_resize` | Responsive testing |
 | Console | `browser_console_messages` | Detect JS errors |
 
-#### Configuration Example (MCP Server)
+#### MCP setup
 
-```json
-{
-  "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest", "--caps=vision"]
-    }
-  }
-}
-```
+Reuse an already approved and configured server. If one is missing, propose setup separately and verify the package, pinned version, executable, and supported options from its official documentation before changing configuration. Do not fetch `latest` or add a server implicitly.
 
 ### Other Compatible Browser Automation Tools
 
@@ -362,7 +357,7 @@ The same workflow can be implemented with these tools. As long as they provide t
 
 ### Problem: Fixes affecting other areas
 
-1. Rollback changes
+1. Inspect the diff and undo only your own authorized changes if needed; preserve unrelated and uncommitted work
 2. Use more specific selectors
 3. Consider using CSS Modules or scoped styles
 4. Consult user to confirm impact scope

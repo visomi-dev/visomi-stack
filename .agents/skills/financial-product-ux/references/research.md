@@ -1,6 +1,6 @@
 # Financial UX Research
 
-Researched on 2026-09-30. These are design principles, not evidence that Nive has been user-tested.
+Researched on 2026-09-30. These are design principles, not evidence that Nive has been user-tested. Nive-specific examples and preferences apply only when working on that product; they do not define the reusable stack's domain, storage, navigation, or design system.
 
 ## Primary usability and accessibility guidance
 

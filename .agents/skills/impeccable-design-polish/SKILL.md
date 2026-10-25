@@ -59,10 +59,11 @@ Use this skill as the post-generation pass for an existing design. It should not
    - inconsistent spacing and type scale
    - decorative effects that do not support comprehension
 5. Preserve accessibility: focus states, contrast, semantic controls, readable text, and reduced-motion fallbacks.
-6. Finish with the artifact in a better runnable state, not just a critique list.
+6. Keep audit and critique modes read-only: return prioritized findings and proposed fixes. Edit only when the user requested implementation or approved the fixes; then verify the affected artifact and repository checks.
+7. Reuse the repository's design system and tooling. Adding motion libraries, assets, or dependencies requires a concrete need within the approved scope.
 
 ## Best Pairings
 
 - Pair with `design-taste-frontend` or `gpt-taste` for stronger anti-slop redesign work.
-- Pair with `emilkowalski-motion` or GSAP skills for motion-specific polish.
+- Use a motion-specific reference only for requested motion work; prefer existing CSS/framework capabilities and do not add GSAP or another library implicitly.
 - Pair with image/video skills when the artifact needs real visual assets rather than CSS-only decoration.

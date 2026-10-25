@@ -48,10 +48,12 @@ Use the `@theme` directive for CSS-based configuration:
 
 ## JavaScript Configuration (Legacy)
 
+This is for an existing v3 setup or a deliberately retained compatible JavaScript config. Tailwind v4 does not discover this file automatically; load it explicitly with `@config` only when needed. Prefer v4 CSS-first tokens and automatic source detection/`@source`, and check unsupported legacy options in the [upgrade guide](https://tailwindcss.com/docs/upgrade-guide#using-a-javascript-config-file). Do not introduce this file as a second configuration.
+
 ```javascript
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx,vue,svelte}'],
+  content: ['./index.html', './src/**/*.{html,js,ts,jsx,tsx,vue,svelte}'],
   theme: {
     extend: {
       colors: {
@@ -76,6 +78,8 @@ export default {
 ---
 
 ## Vite Integration (v4.1+)
+
+Only for a project with a real Vite configuration and an approved installed integration. Angular/Nx builder internals do not imply that this plugin belongs in a standalone Vite config; preserve the project's supported integration.
 
 ```javascript
 // vite.config.ts
@@ -122,6 +126,8 @@ export default defineConfig({
 ---
 
 ## Plugins
+
+The JavaScript plugin/preset examples below are legacy compatibility references, not instructions to install packages or replace CSS-first v4 configuration.
 
 ### Custom Plugin Example
 
