@@ -7,7 +7,7 @@ import type { Request, Response } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { authConfig } from './config';
-import { authErrorHandler, authRouter, saveSession } from './router';
+import { authErrorHandler, createAuthRouter, saveSession } from './router';
 import type { AuthRuntime } from './runtime';
 import { rateLimit } from './security';
 
@@ -104,7 +104,7 @@ function routerFixture() {
   const auth = { config, passkeys, requireInitialized, database, accounts } as unknown as AuthRuntime;
   const app = express();
 
-  app.use('/auth', authRouter(auth), authErrorHandler);
+  app.use('/auth', createAuthRouter(auth), authErrorHandler);
   app.use(httpErrorHandler);
 
   const dispatch = (
@@ -163,6 +163,23 @@ function routerFixture() {
 }
 
 describe('authentication router decisions and delegation', () => {
+  it('keeps separately composed runtimes isolated when their routes run concurrently', async () => {
+    const first = routerFixture();
+    const second = routerFixture();
+
+    first.passkeys.list.mockResolvedValue([{ id: credentialId, label: 'First runtime' }]);
+    second.passkeys.list.mockResolvedValue([{ id: credentialId, label: 'Second runtime' }]);
+    const [firstResponse, secondResponse] = await Promise.all([
+      first.dispatch('GET', '/passkeys', undefined, { user }),
+      second.dispatch('GET', '/passkeys', undefined, { user }),
+    ]);
+
+    expect(firstResponse.body).toEqual({ credentials: [{ id: credentialId, label: 'First runtime' }] });
+    expect(secondResponse.body).toEqual({ credentials: [{ id: credentialId, label: 'Second runtime' }] });
+    expect(first.passkeys.list).toHaveBeenCalledExactlyOnceWith(user);
+    expect(second.passkeys.list).toHaveBeenCalledExactlyOnceWith(user);
+  });
+
   it('reports disabled providers and rejects unsupported Google intent', async () => {
     const fixture = routerFixture();
     const providers = await fixture.dispatch('GET', '/providers');

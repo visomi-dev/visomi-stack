@@ -141,6 +141,15 @@ Factor kinds are `email`, `totp`, and `recovery_code`. Public session handles ar
 not SIDs and cannot be used as cookies. No IP address or user agent is retained as
 session metadata. Password/Google removal may end the current session.
 
+## HTTP composition
+
+`createAuthRouter()` installs the common security middleware and composes small
+routers for passwords, email identity, Google, TOTP, recovery, devices, sessions
+and passkeys. Each capability's `*.http.ts` keeps route registration separate from
+named handlers, with explicit runtime arguments. `auth/http.ts` owns parsing,
+principal/anonymous guards, session responses and controlled error translation.
+Router construction has no process-wide state or import-time resources.
+
 ## Persistence and builds
 
 `backend-shared` owns `authSchema` and the single migration history. Each owner

@@ -29,6 +29,12 @@ enrollment, and method/session management under `/auth`, backed by PostgreSQL. U
 application errors return fixed responses. See the [API guide](../apps/web/api/README.md)
 for the schema, migration commands and managed/inherited ownership contract.
 
+Auth's root router composes capability-specific `*.http.ts` adapters. Their
+factories register routes with inline delegates to named handlers; dependencies
+are passed explicitly per runtime instance. Shared auth HTTP guards and session
+responses live in `auth/http.ts`, while domain operations remain in their
+capability modules.
+
 `libs/backend/shared/drizzle.config.ts` configures Drizzle at the library root.
 `src/lib/database/` owns domain schemas and one migration history for all backend
 modules. The API imports its

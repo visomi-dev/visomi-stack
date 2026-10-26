@@ -1,10 +1,10 @@
 import { randomBytes } from 'node:crypto';
 
-import { HttpError } from '@visomi-stack/web-backend-shared';
-import type { Request } from 'express';
+import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
+import type { NextFunction, Request, Response } from 'express';
 
 import type { Factor } from './factors';
-import type { Principal } from './identity';
+import { validPrincipal, type Principal } from './identity';
 import type { AuthRuntime } from './runtime';
 
 export function body(request: Request, keys: string[]) {
@@ -94,4 +94,68 @@ export function destroySession(request: Request): Promise<void> {
   return new Promise((resolve, reject) =>
     request.session.destroy((error) => (error ? reject(new HttpError(503, 'session_unavailable')) : resolve())),
   );
+}
+
+export function requirePrincipal(request: Request): Principal {
+  if (!validPrincipal(request.user)) {
+    throw new AuthHttpError(401, 'authentication_required');
+  }
+
+  return request.user;
+}
+
+export function requireAnonymousSession(request: Request): void {
+  if (request.user) {
+    throw new AuthHttpError(403, 'anonymous_session_required');
+  }
+}
+
+export async function sendAuthenticationResult(
+  auth: AuthRuntime,
+  request: Request,
+  response: Response,
+  user: Express.User | null,
+  extras: Record<string, unknown> = {},
+) {
+  if (user) {
+    await establishSession(request, user, auth);
+    response.json({ ...sessionView(request), ...extras });
+  } else {
+    await destroySession(request);
+    response.clearCookie(auth.config.cookieName, {
+      httpOnly: true,
+      secure: auth.config.secure,
+      sameSite: 'strict',
+      path: '/',
+    });
+    response.status(204).end();
+  }
+}
+
+export function authErrorHandler(
+  error: Error & { type?: string },
+  _request: Request,
+  response: Response,
+  next: NextFunction,
+): void {
+  if (response.headersSent) {
+    next(error);
+
+    return;
+  }
+
+  if (HttpError.is(error)) {
+    next(error);
+
+    return;
+  }
+
+  if (error?.type === 'entity.parse.failed' || error?.type === 'entity.too.large') {
+    next(new HttpError(error.type === 'entity.too.large' ? 413 : 400, 'request_invalid'));
+
+    return;
+  }
+
+  // Includes SQL/driver failures; neither the query nor its parameters leave the boundary.
+  next(new HttpError(503, 'authentication_unavailable'));
 }

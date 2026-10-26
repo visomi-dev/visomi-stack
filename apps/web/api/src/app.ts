@@ -8,7 +8,7 @@ import {
 } from '@visomi-stack/web-backend-shared';
 import express from 'express';
 
-import { authRouter, authErrorHandler } from './auth/router';
+import { createAuthRouter, authErrorHandler } from './auth/router';
 import type { AuthRuntime } from './auth/runtime';
 
 export { createAuthentication } from './auth/runtime';
@@ -46,7 +46,7 @@ export function createApp(options: AppOptions = {}) {
       app.use(options.auth.middleware);
     }
 
-    app.use('/auth', authRouter(options.auth), authErrorHandler);
+    app.use('/auth', createAuthRouter(options.auth), authErrorHandler);
   } else {
     app.use('/auth', (_request, _response, next) => next(new HttpError(503, 'authentication_unavailable')));
   }
