@@ -76,7 +76,8 @@ its planted credentials and sessions revoked before Google enables access.
 A revoked Google identity requires explicit authenticated relinking; it cannot be
 silently transferred to another user.
 
-Security changes require authentication within five minutes. Reauthenticate with
+Security changes require authentication within five minutes. Management changes
+retain the timestamp and factor evidence of the last authentication proof. Reauthenticate with
 a passkey assertion, linked Google, or password plus the configured second factor.
 Removing the last usable primary method is rejected transactionally. Password,
 email and factor changes invalidate stale proofs and other sessions. Credential
@@ -148,7 +149,9 @@ serialize on user/session/proof rows. Email and provider-subject claims also use
 transaction advisory locks to prevent duplicate identities during concurrent
 unification. Challenges and grants are scoped to a purpose, browser session and
 security version. Six-digit codes expire in ten minutes, allow five attempts and
-have a sixty-second resend cooldown. Shared PostgreSQL limits supplement those
+have a sixty-second resend cooldown, including replacement requests through the
+email verification/change routes. Replacements retain the original attempt budget
+and expiry; failed SMTP delivery permits immediate retry. Shared PostgreSQL limits supplement those
 budgets. WebAuthn ceremonies expire after three minutes; sessions have an absolute
 eight-hour limit. Revoked SID tombstones remain immutable and are not pruned.
 

@@ -39,6 +39,15 @@ export function principal(
   };
 }
 
+export function updatedPrincipal(user: User, current: Express.User): Principal {
+  // Management changes update identity state without proving an authentication method again.
+  return {
+    ...principal(user, current.method!, current.methodId),
+    authenticatedAt: current.authenticatedAt,
+    secondFactor: current.secondFactor,
+  };
+}
+
 export function validPrincipal(value: unknown): value is Principal {
   if (!value || typeof value !== 'object') {
     return false;

@@ -12,6 +12,7 @@ import { AuthMail } from './mail/messages';
 const { flows, rateLimits } = authSchema;
 
 export type Flow = typeof flows.$inferSelect;
+type FlowInput = Partial<Pick<Flow, 'userId' | 'authVersion' | 'email' | 'data' | 'attempts' | 'expiresAt'>>;
 export const unavailable = () => new HttpError(400, 'verification_failed');
 export class Flows {
   constructor(
@@ -39,43 +40,45 @@ export class Flows {
     }
   }
 
-  async create(
-    sid: string,
-    purpose: Flow['purpose'],
-    input: { userId?: string; authVersion?: number; email?: string; data?: Flow['data'] } = {},
-    send = false,
-  ) {
-    const id = randomUUID();
-    const code = pin();
-    const created = await this.database.transaction(async (tx) => {
-      await lockSession(tx, sid);
-      const [flow] = await tx
-        .insert(flows)
-        .values({
-          id,
-          sessionId: sid,
-          purpose,
-          ...input,
-          codeHash: send ? digest(this.config.secret, id, code) : null,
-          lastSentAt: send ? new Date() : null,
-          expiresAt: new Date(Date.now() + this.config.flowMaxAge),
-        })
-        .returning();
-
-      return flow;
-    });
+  async create(sid: string, purpose: Flow['purpose'], input: FlowInput = {}, send = false) {
+    const issued = await this.database.transaction((tx) => this.issue(tx, sid, purpose, input, send));
 
     if (send) {
-      try {
-        await this.mail.code(input.email!, purpose, code);
-      } catch {
-        await this.database.update(flows).set({ consumedAt: new Date() }).where(eq(flows.id, id));
-
-        throw new HttpError(503, 'mail_unavailable');
-      }
+      await this.deliver(issued.flow, issued.code);
     }
 
-    return created;
+    return issued.flow;
+  }
+
+  async issue(tx: Transaction, sid: string, purpose: Flow['purpose'], input: FlowInput, send: boolean) {
+    const id = randomUUID();
+    const code = pin();
+
+    await lockSession(tx, sid);
+    const [flow] = await tx
+      .insert(flows)
+      .values({
+        id,
+        sessionId: sid,
+        purpose,
+        expiresAt: new Date(Date.now() + this.config.flowMaxAge),
+        ...input,
+        codeHash: send ? digest(this.config.secret, id, code) : null,
+        lastSentAt: send ? new Date() : null,
+      })
+      .returning();
+
+    return { flow, code };
+  }
+
+  async deliver(flow: Flow, code: string) {
+    try {
+      await this.mail.code(flow.email!, flow.purpose, code);
+    } catch {
+      await this.database.update(flows).set({ consumedAt: new Date() }).where(eq(flows.id, flow.id));
+
+      throw new HttpError(503, 'mail_unavailable');
+    }
   }
 
   async reserve(sid: string, id: string, purpose?: Flow['purpose']) {

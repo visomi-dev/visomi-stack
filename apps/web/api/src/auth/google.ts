@@ -14,6 +14,7 @@ import {
   lockIdentity,
   lockSession,
   principal,
+  updatedPrincipal,
   requireFull,
   type User,
 } from './identity';
@@ -161,9 +162,7 @@ export class Google {
       await tx.update(federatedIdentities).set({ revokedAt: new Date() }).where(eq(federatedIdentities.id, identityId));
       const updated = await invalidate(tx, user.id, sid);
 
-      return current.method === 'google' && current.methodId === identityId
-        ? null
-        : principal(updated, current.method!, current.methodId);
+      return current.method === 'google' && current.methodId === identityId ? null : updatedPrincipal(updated, current);
     });
   }
 

@@ -179,8 +179,8 @@ export function authenticationFixture() {
     get origin() {
       return origin;
     },
-    failDelivery() {
-      failMail = true;
+    failDelivery(fail = true) {
+      failMail = fail;
     },
   };
 }

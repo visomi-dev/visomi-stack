@@ -134,6 +134,7 @@ export class Passkeys {
 
       return {
         ...principal(identity, 'passkey', id, user?.grantId ? 'enrollment' : undefined),
+        ...(user ? { authenticatedAt: user.authenticatedAt, secondFactor: user.secondFactor } : {}),
         ...(user?.grantId ? { grantId: user.grantId } : {}),
       };
     });

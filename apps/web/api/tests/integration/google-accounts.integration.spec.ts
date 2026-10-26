@@ -220,10 +220,22 @@ it('unlinks Google while retaining a password-authenticated session', async () =
     flowId: start.data.flowId,
     factor: { kind: 'email', code: f.lastCode(account.email) },
   });
+  const proofTime = Date.now() - 240_000;
+
+  await f.pool.query(
+    "update auth_sessions set sess = jsonb_set(sess, '{passport,user,authenticatedAt}', to_jsonb($1::bigint)) where sess->>'csrf' = $2",
+    [proofTime, account.browser.csrf],
+  );
   const removed = await account.browser.call('DELETE', `/google/${methods.data.google[0].id}`);
 
   expect(removed.status).toBe(200);
   expect(removed.data.method).toBe('password');
+  const stored = await f.pool.query(
+    "select sess->'passport'->'user' as principal from auth_sessions where sess->>'csrf' = $1",
+    [account.browser.csrf],
+  );
+
+  expect(stored.rows[0].principal).toMatchObject({ authenticatedAt: proofTime, secondFactor: 'email' });
 });
 
 it('can remove a password when Google remains and rejects password sign-in afterwards', async () => {

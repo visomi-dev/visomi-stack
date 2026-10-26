@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { authSchema, type Database } from '@visomi-stack/backend-shared';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
-import { and, eq, isNotNull, isNull, ne, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, isNotNull, isNull, ne, sql } from 'drizzle-orm';
 
 import type { AuthConfig } from './config';
 import { Factors, type Factor } from './factors';
@@ -14,6 +14,7 @@ import {
   lockSession,
   lastMethod,
   principal,
+  updatedPrincipal,
   requireFull,
   type User,
   type Principal,
@@ -65,7 +66,7 @@ export class Accounts {
     const email = normalizeEmail(input ?? current.email);
 
     await this.flows.limit('email-delivery', email, 5);
-    const user = await this.database.transaction(async (tx) => {
+    const issued = await this.database.transaction(async (tx) => {
       const user = await lockIdentity(tx, sid, current);
 
       if (!change && user.email && user.email !== email) {
@@ -76,25 +77,53 @@ export class Accounts {
         await tx.update(users).set({ email }).where(eq(users.id, user.id));
       }
 
-      await tx
-        .update(flows)
-        .set({ consumedAt: new Date() })
+      const purpose = change ? 'email_change' : 'email_verify';
+      const [previous] = await tx
+        .select()
+        .from(flows)
         .where(
           and(
             eq(flows.userId, user.id),
-            eq(flows.purpose, change ? 'email_change' : 'email_verify'),
+            eq(flows.purpose, purpose),
             isNull(flows.consumedAt),
+            gt(flows.expiresAt, new Date()),
           ),
-        );
+        )
+        .orderBy(desc(flows.createdAt))
+        .limit(1)
+        .for('update');
 
-      return user;
+      if (previous) {
+        if (previous.lastSentAt && Date.now() - previous.lastSentAt.getTime() < 60_000) {
+          throw new HttpError(429, 'resend_cooldown');
+        }
+
+        if (previous.attempts >= 5) {
+          throw unavailable();
+        }
+      }
+
+      await tx
+        .update(flows)
+        .set({ consumedAt: new Date() })
+        .where(and(eq(flows.userId, user.id), eq(flows.purpose, purpose), isNull(flows.consumedAt)));
+
+      return this.flows.issue(
+        tx,
+        sid,
+        purpose,
+        {
+          userId: user.id,
+          authVersion: user.authVersion,
+          email,
+          ...(previous ? { attempts: previous.attempts, expiresAt: previous.expiresAt } : {}),
+        },
+        true,
+      );
     });
-    const flow = await this.flows.create(
-      sid,
-      change ? 'email_change' : 'email_verify',
-      { userId: user.id, authVersion: user.authVersion, email },
-      true,
-    );
+
+    await this.flows.deliver(issued.flow, issued.code);
+    const { flow } = issued;
 
     return { flowId: flow.id, expiresAt: flow.expiresAt };
   }
@@ -130,7 +159,10 @@ export class Accounts {
       await this.flows.consume(tx, flow);
       const updated = await invalidate(tx, user.id, sid);
 
-      return { user: principal(updated, current.method!, current.methodId), previousEmail: change ? user.email : null };
+      return {
+        user: change ? updatedPrincipal(updated, current) : principal(updated, current.method!, current.methodId),
+        previousEmail: change ? user.email : null,
+      };
     });
   }
 
@@ -340,7 +372,7 @@ export class Accounts {
       await tx.update(users).set({ passwordHash: hash }).where(eq(users.id, user.id));
       const updated = await invalidate(tx, user.id, sid);
 
-      return current.method === 'password' && !hash ? null : principal(updated, current.method!, current.methodId);
+      return current.method === 'password' && !hash ? null : updatedPrincipal(updated, current);
     });
   }
 

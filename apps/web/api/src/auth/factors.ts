@@ -5,7 +5,7 @@ import { HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, isNull } from 'drizzle-orm';
 
 import type { AuthConfig } from './config';
-import { type Transaction, type User, lockIdentity, invalidate, principal, requireFull } from './identity';
+import { type Transaction, type User, lockIdentity, invalidate, updatedPrincipal, requireFull } from './identity';
 import { unavailable } from './flows';
 import { requireFresh } from './security';
 import { decryptSecret, digest, encryptSecret, matches, token, totpSetup, totpStep } from './secrets';
@@ -155,7 +155,7 @@ export class Factors {
       const codes = await this.replaceCodes(tx, user.id);
       const updated = await invalidate(tx, user.id, sid);
 
-      return { user: principal(updated, current.method!, current.methodId), codes };
+      return { user: updatedPrincipal(updated, current), codes };
     });
   }
 
@@ -170,7 +170,7 @@ export class Factors {
       await tx.delete(recoveryCodes).where(eq(recoveryCodes.userId, user.id));
       const updated = await invalidate(tx, user.id, sid);
 
-      return principal(updated, current.method!, current.methodId);
+      return updatedPrincipal(updated, current);
     });
   }
 
@@ -204,7 +204,7 @@ export class Factors {
       const codes = await this.replaceCodes(tx, user.id);
       const updated = await invalidate(tx, user.id, sid);
 
-      return { user: principal(updated, current.method!, current.methodId), codes };
+      return { user: updatedPrincipal(updated, current), codes };
     });
   }
 }
