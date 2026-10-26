@@ -6,11 +6,13 @@ import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
+import type { AddressInfo } from 'node:net';
 
 import { createDatabase } from '@visomi-stack/backend-shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { authenticator } from '@visomi-stack/dev-testing';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
+import { SMTPServer } from 'smtp-server';
 
 import { loadApi } from '../../src/api-module';
 
@@ -20,6 +22,9 @@ const output = join(root, 'dist/apps/web/gateway');
 let directory: string;
 let postgres: Awaited<ReturnType<typeof testPostgres>>;
 let probe: ReturnType<typeof createDatabase>;
+let smtp: SMTPServer;
+let smtpPort: number;
+const messages: string[] = [];
 
 beforeAll(async () => {
   await mkdir(join(root, 'tmp/api-e2e'), { recursive: true });
@@ -29,9 +34,30 @@ beforeAll(async () => {
   directory = temporary;
   postgres = cluster;
   probe = createDatabase(postgres.url);
+  smtp = new SMTPServer({
+    disabledCommands: ['AUTH', 'STARTTLS'],
+    logger: false,
+    onData(stream, _session, callback) {
+      let raw = '';
+
+      stream.on('data', (chunk) => {
+        raw += String(chunk);
+      });
+      stream.on('end', () => {
+        messages.push(raw);
+        callback();
+      });
+    },
+  });
+  await new Promise<void>((ready) => smtp.listen(0, '127.0.0.1', ready));
+  smtpPort = ((smtp as unknown as { server: ReturnType<typeof createServer> }).server.address() as AddressInfo).port;
 }, 120000);
 
 afterAll(async () => {
+  if (smtp) {
+    await new Promise<void>((ready) => smtp.close(ready));
+  }
+
   await probe?.close();
   await postgres?.stop();
   if (directory) {
@@ -59,6 +85,10 @@ async function launch(databaseUrl?: string) {
       NODE_ENV: 'test',
       ...(databaseUrl
         ? {
+            SMTP_HOST: '127.0.0.1',
+            SMTP_PORT: String(smtpPort),
+            SMTP_FROM: 'auth@example.test',
+            SMTP_ALLOW_INSECURE_LOCAL: 'true',
             DATABASE_URL: databaseUrl,
             AUTH_ORIGIN: url,
             AUTH_RP_ID: '127.0.0.1',
@@ -256,7 +286,7 @@ describe('compiled ESM gateway and embedded API', () => {
       token = csrfToken;
       expect(forbidden.status).toBe(403);
       expect(forbidden.body).toEqual({ error: 'csrf_invalid' });
-      const signup = await request('POST', '/passkeys/registration/options', {});
+      const signup = await request('POST', '/passkeys/registration/options', { email: `${randomUUID()}@example.test` });
       const originalCookie = cookie;
       const registered = await request('POST', '/passkeys/registration/verify', {
         challengeId: signup.body.challengeId,
@@ -266,6 +296,11 @@ describe('compiled ESM gateway and embedded API', () => {
       expect(registered.status).toBe(201);
       expect(cookie).not.toBe(originalCookie);
       token = registered.body.csrfToken;
+      const code = messages[messages.length - 1].match(/\b\d{6}\b/)![0];
+      const verified = await request('POST', '/email/verify', { flowId: registered.body.flowId, code });
+
+      expect(verified.status).toBe(200);
+      token = verified.body.csrfToken;
       const listed = await request('GET', '/passkeys');
 
       expect(listed.status).toBe(200);

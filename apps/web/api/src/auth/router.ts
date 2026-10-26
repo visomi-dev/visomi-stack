@@ -1,38 +1,17 @@
 import { randomBytes } from 'node:crypto';
 
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
-import type { ErrorRequestHandler, Request } from 'express';
+import type { ErrorRequestHandler } from 'express';
 import { Router, json } from 'express';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 
 import type { AuthRuntime } from './runtime';
 import { csrf, rateLimit } from './security';
-
-function body(request: Request, keys: string[]) {
-  const value = request.body;
-
-  if (
-    !value ||
-    typeof value !== 'object' ||
-    Array.isArray(value) ||
-    Object.keys(value).some((key) => !keys.includes(key))
-  ) {
-    throw new HttpError(400, 'request_invalid');
-  }
-
-  return value as Record<string, unknown>;
-}
-
-function identifier(value: unknown): string {
-  if (
-    typeof value !== 'string' ||
-    !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value)
-  ) {
-    throw new HttpError(400, 'request_invalid');
-  }
-
-  return value;
-}
+import { accountRouter } from './account-router';
+import { body, identifier, establishSession, saveSession, sessionView } from './http';
+import { requireFull } from './identity';
+import { normalizeEmail } from './secrets';
+export { saveSession } from './http';
 
 function webAuthnResponse(value: unknown): RegistrationResponseJSON & AuthenticationResponseJSON {
   if (
@@ -56,20 +35,6 @@ function label(value: unknown): string {
   return value.trim();
 }
 
-export function saveSession(request: Request): Promise<void> {
-  return new Promise((resolve, reject) =>
-    request.session.save((error) => (error ? reject(new HttpError(503, 'session_unavailable')) : resolve())),
-  );
-}
-
-async function establishSession(request: Request, user: Express.User) {
-  await new Promise<void>((resolve, reject) =>
-    request.logIn(user, (error) => (error ? reject(new HttpError(503, 'session_unavailable')) : resolve())),
-  );
-  request.session.csrf = randomBytes(32).toString('base64url');
-  await saveSession(request);
-}
-
 export function authRouter(auth: AuthRuntime) {
   const router = Router();
   const { passkeys, config } = auth;
@@ -82,22 +47,29 @@ export function authRouter(auth: AuthRuntime) {
   router.use(rateLimit(auth.database, config));
   router.use(csrf(config));
   router.use(json({ limit: '32kb' }));
+  router.use(accountRouter(auth));
   router.get('/session', async (request, response) => {
     request.session.csrf ??= randomBytes(32).toString('base64url');
     await saveSession(request);
-    response.json({
-      authenticated: request.isAuthenticated(),
-      user: request.user ? { id: request.user.id } : null,
-      csrfToken: request.session.csrf,
-    });
+    response.json(sessionView(request));
   });
   router.post('/passkeys/registration/options', async (request, response) => {
-    body(request, []);
-    const result = await passkeys.registrationOptions(request.sessionID, request.user);
+    const input = body(request, request.user ? [] : ['email']);
+
+    if (request.user && !request.user.grantId) {
+      requireFull(request.user);
+    }
+
+    const email = request.user ? undefined : normalizeEmail(input.email);
+    const result = await passkeys.registrationOptions(request.sessionID, request.user, email);
 
     response.json(result);
   });
   router.post('/passkeys/registration/verify', async (request, response) => {
+    if (request.user && !request.user.grantId) {
+      requireFull(request.user);
+    }
+
     const input = body(request, ['challengeId', 'response', 'label']);
     const result = await passkeys.register(
       request.sessionID,
@@ -107,8 +79,16 @@ export function authRouter(auth: AuthRuntime) {
       request.user,
     );
 
-    await establishSession(request, result);
-    response.status(201).json({ authenticated: true, user: { id: result.id }, csrfToken: request.session.csrf });
+    await establishSession(request, result, auth);
+    let verification = {};
+
+    if (result.level === 'unverified' && result.email) {
+      const result1 = await auth.accounts.emailStart(request.sessionID, result);
+
+      verification = result1;
+    }
+
+    response.status(201).json({ ...sessionView(request), ...verification });
   });
   router.post('/passkeys/authentication/options', async (request, response) => {
     body(request, []);
@@ -122,10 +102,21 @@ export function authRouter(auth: AuthRuntime) {
       request.sessionID,
       identifier(input.challengeId),
       webAuthnResponse(input.response),
+      request.user?.grantId ? request.user : undefined,
     );
 
-    await establishSession(request, result);
-    response.json({ authenticated: true, user: { id: result.id }, csrfToken: request.session.csrf });
+    if (request.user && request.user.id !== result.id) {
+      throw new AuthHttpError(403, 'identity_mismatch');
+    }
+
+    const recovering = Boolean(request.user?.grantId);
+
+    await establishSession(request, result, auth);
+    if (recovering && result.level === 'full') {
+      await auth.accounts.notify(result.email, 'Account recovery completed with a new passkey.');
+    }
+
+    response.json(sessionView(request));
   });
   router.post('/logout', async (request, response) => {
     body(request, []);
@@ -136,7 +127,12 @@ export function authRouter(auth: AuthRuntime) {
     response.status(204).end();
   });
   router.use('/passkeys', (request, _response, next) => {
-    next(request.isAuthenticated() ? undefined : new AuthHttpError(401, 'authentication_required'));
+    try {
+      requireFull(request.user);
+      next();
+    } catch (error) {
+      next(error);
+    }
   });
   router.get('/passkeys', async (request, response) => {
     const result = await passkeys.list(request.user!);

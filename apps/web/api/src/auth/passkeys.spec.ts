@@ -154,3 +154,46 @@ describe('passkey capability authorization', () => {
     expect(fixture.database.transaction).not.toHaveBeenCalled();
   });
 });
+
+it('rejects an enrollment grant revoked after assertion verification starts', async () => {
+  const { storage, config: trusted, user, session, flow } = await import('../../tests/support/auth-state');
+  const { verifyAuthenticationResponse } = await import('@simplewebauthn/server');
+
+  vi.mocked(verifyAuthenticationResponse).mockResolvedValue({
+    verified: true,
+    authenticationInfo: { credentialDeviceType: 'singleDevice', newCounter: 1, credentialBackedUp: false },
+  } as never);
+  const candidate = {
+    id: 'synthetic-key',
+    userId: user.id,
+    credentialId: 'synthetic-key',
+    rpId: trusted.rpId,
+    publicKey: 'synthetic',
+    counter: 0,
+    backupEligible: false,
+    pendingGrantId: flow.id,
+  };
+  const pending = { ...flow, subjectId: user.id, purpose: 'authentication', challengeHash: 'synthetic' };
+  const f = storage([[session], [pending], [candidate], [user], [session], [candidate], [], []]);
+  const enrollment = {
+    ...user,
+    id: user.id,
+    method: 'passkey' as const,
+    methodId: candidate.id,
+    credentialId: candidate.id,
+    authenticatedAt: Date.now(),
+    version: 1,
+    level: 'enrollment' as const,
+    emailVerified: true,
+    grantId: flow.id,
+  };
+
+  await expect(
+    new Passkeys(f.db, trusted).authenticate(
+      session.sid,
+      flow.id,
+      { id: candidate.credentialId, response: {} } as never,
+      enrollment,
+    ),
+  ).rejects.toMatchObject({ code: 'challenge_invalid' });
+});

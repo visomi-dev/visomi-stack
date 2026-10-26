@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 
@@ -16,7 +17,16 @@ const origin = 'http://127.0.0.1:3307';
 
 async function parentHost(initialize: boolean, options: { origin?: string; trustProxy?: string[] } = {}) {
   const pool = await testDatabasePool();
+  const messages: { text: string }[] = [];
   const auth = createAuthentication({
+    mail: {
+      async send(message) {
+        messages.push(message);
+      },
+      close() {
+        return undefined;
+      },
+    },
     pool,
     database: drizzle({ client: pool, logger: false }),
     config: authConfig({
@@ -54,6 +64,7 @@ async function parentHost(initialize: boolean, options: { origin?: string; trust
 
   return {
     pool,
+    messages,
     origin: `http://127.0.0.1:${address.port}/api`,
     close: async () => {
       server.closeAllConnections();
@@ -84,7 +95,7 @@ test('an inherited API uses its real parent session/Passport chain and preserves
     expect(denied).toEqual({ error: 'authentication_required' });
     const begin = await request.post(`${host.origin}/auth/passkeys/registration/options`, {
       headers: { origin, 'x-csrf-token': state.csrfToken },
-      data: {},
+      data: { email: `${randomUUID()}@example.test` },
     });
     const pending = await begin.json();
     const device = authenticator();
@@ -95,6 +106,14 @@ test('an inherited API uses its real parent session/Passport chain and preserves
         response: device.register(pending.options.challenge, origin, '127.0.0.1'),
       },
     });
+    const created = await verification.json();
+    const code = host.messages[0].text.match(/\b\d{6}\b/)![0];
+    const emailVerified = await request.post(`${host.origin}/auth/email/verify`, {
+      headers: { origin, 'x-csrf-token': created.csrfToken },
+      data: { flowId: created.flowId, code },
+    });
+
+    expect(emailVerified.status()).toBe(200);
     const authorized = await request.get(`${host.origin}/auth/passkeys`);
     const livePool = await host.pool.query('SELECT 1 AS alive');
 

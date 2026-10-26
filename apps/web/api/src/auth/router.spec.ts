@@ -64,7 +64,17 @@ beforeEach(() => vi.clearAllMocks());
 
 const challengeId = '11111111-1111-4111-8111-111111111111';
 const credentialId = '22222222-2222-4222-8222-222222222222';
-const user = { id: '33333333-3333-4333-8333-333333333333', credentialId, authenticatedAt: 123456 };
+const user = {
+  id: '33333333-3333-4333-8333-333333333333',
+  credentialId,
+  method: 'passkey' as const,
+  methodId: credentialId,
+  version: 1,
+  level: 'full' as const,
+  email: 'synthetic@example.test',
+  emailVerified: true,
+  authenticatedAt: 123456,
+};
 const response = { id: 'synthetic_public_key', response: {} };
 
 function routerFixture() {
@@ -87,7 +97,11 @@ function routerFixture() {
   const logIn = vi.fn((_user: Express.User, callback: (error?: Error) => void) => callback());
   const requireInitialized = vi.fn((_request: Request, _response: Response, next: (error?: Error) => void) => next());
   const database = {};
-  const auth = { config, passkeys, requireInitialized, database } as unknown as AuthRuntime;
+  const accounts = {
+    notify: vi.fn().mockResolvedValue(true),
+    emailStart: vi.fn().mockResolvedValue({ flowId: challengeId }),
+  };
+  const auth = { config, passkeys, requireInitialized, database, accounts } as unknown as AuthRuntime;
   const app = express();
 
   app.use('/auth', authRouter(auth), authErrorHandler);
@@ -116,8 +130,11 @@ function routerFixture() {
       sessionID: 'synthetic-session',
       session: { csrf: 'synthetic_csrf', save, destroy },
       user: options.user,
-      isAuthenticated: () => Boolean(options.user),
-      logIn,
+      isAuthenticated: () => Boolean(request.user),
+      logIn: (user: Express.User, callback: (error?: Error) => void) => {
+        request.user = user;
+        logIn(user, callback);
+      },
     });
 
     return new Promise<{ status: number; body: unknown; headers: ReturnType<ServerResponse['getHeaders']> }>(
@@ -146,6 +163,24 @@ function routerFixture() {
 }
 
 describe('authentication router decisions and delegation', () => {
+  it('reports disabled providers and rejects unsupported Google intent', async () => {
+    const fixture = routerFixture();
+    const providers = await fixture.dispatch('GET', '/providers');
+
+    expect(providers.body).toMatchObject({ google: { enabled: false, clientId: null }, totp: false });
+    const invalid = await fixture.dispatch('POST', '/google/start', { intent: 'unsupported' });
+
+    expect(invalid.status).toBe(403);
+    const pending = await fixture.dispatch(
+      'POST',
+      '/email/request',
+      { email: 'synthetic@example.test' },
+      { user: { ...user, email: null, level: 'unverified', emailVerified: false } },
+    );
+
+    expect(pending.status).toBe(202);
+  });
+
   it('uses the runtime database as the only rate-limit source', () => {
     const fixture = routerFixture();
 
@@ -157,8 +192,12 @@ describe('authentication router decisions and delegation', () => {
     const anonymous = await fixture.dispatch('GET', '/session');
     const authenticated = await fixture.dispatch('GET', '/session', undefined, { user });
 
-    expect(anonymous.body).toEqual({ authenticated: false, user: null, csrfToken: 'synthetic_csrf' });
-    expect(authenticated.body).toEqual({ authenticated: true, user: { id: user.id }, csrfToken: 'synthetic_csrf' });
+    expect(anonymous.body).toMatchObject({ authenticated: false, user: null, csrfToken: 'synthetic_csrf' });
+    expect(authenticated.body).toMatchObject({
+      authenticated: true,
+      user: { id: user.id },
+      csrfToken: 'synthetic_csrf',
+    });
     expect(anonymous.headers['cache-control']).toBe('no-store');
     expect(fixture.save).toHaveBeenCalledTimes(2);
   });
@@ -185,7 +224,7 @@ describe('authentication router decisions and delegation', () => {
 
     expect(result.status).toBe(200);
     expect(fixture.passkeys[operation]).toHaveBeenCalledExactlyOnceWith(
-      ...(operation === 'registrationOptions' ? ['synthetic-session', user] : ['synthetic-session']),
+      ...(operation === 'registrationOptions' ? ['synthetic-session', user, undefined] : ['synthetic-session']),
     );
     expect(fixture.logIn).not.toHaveBeenCalled();
   });
@@ -210,7 +249,7 @@ describe('authentication router decisions and delegation', () => {
       expect(fixture.logIn).toHaveBeenCalledWith(user, expect.any(Function));
       expect(fixture.save).toHaveBeenCalledOnce();
       expect(result.status).toBe(201);
-      expect(result.body).toEqual({ authenticated: true, user: { id: user.id }, csrfToken: expect.any(String) });
+      expect(result.body).toMatchObject({ authenticated: true, user: { id: user.id }, csrfToken: expect.any(String) });
       expect((result.body as { csrfToken: string }).csrfToken).not.toBe('synthetic_csrf');
     },
   );
@@ -219,10 +258,15 @@ describe('authentication router decisions and delegation', () => {
     const fixture = routerFixture();
     const result = await fixture.dispatch('POST', '/passkeys/authentication/verify', { challengeId, response });
 
-    expect(fixture.passkeys.authenticate).toHaveBeenCalledExactlyOnceWith('synthetic-session', challengeId, response);
+    expect(fixture.passkeys.authenticate).toHaveBeenCalledExactlyOnceWith(
+      'synthetic-session',
+      challengeId,
+      response,
+      undefined,
+    );
     expect(fixture.logIn).toHaveBeenCalledWith(user, expect.any(Function));
     expect(result.status).toBe(200);
-    expect(result.body).toEqual({ authenticated: true, user: { id: user.id }, csrfToken: expect.any(String) });
+    expect(result.body).toMatchObject({ authenticated: true, user: { id: user.id }, csrfToken: expect.any(String) });
   });
 
   it.each([
@@ -284,6 +328,19 @@ describe('authentication router decisions and delegation', () => {
     expect(fixture.passkeys.revoke).toHaveBeenCalledExactlyOnceWith('synthetic-session', user, credentialId);
     expect(renamed.status).toBe(204);
     expect(revoked.status).toBe(204);
+  });
+
+  it('rejects switching the authenticated subject during a passkey reauthentication', async () => {
+    const fixture = routerFixture();
+    const result = await fixture.dispatch(
+      'POST',
+      '/passkeys/authentication/verify',
+      { challengeId, response },
+      { user: { ...user, id: '44444444-4444-4444-8444-444444444444' } },
+    );
+
+    expect(result.status).toBe(403);
+    expect(fixture.logIn).not.toHaveBeenCalled();
   });
 
   it('revokes the session and clears its cookie on logout', async () => {

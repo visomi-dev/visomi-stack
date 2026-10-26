@@ -120,6 +120,30 @@
     "test-ci": {
       "executor": "nx:noop",
       "dependsOn": ["test"]
+    },
+    "emails-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx tools/mail/build-templates.ts"
+      },
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/src/auth/mail/templates/*.mjml",
+        "{workspaceRoot}/tools/mail/build-templates.ts",
+        {
+          "externalDependencies": ["mjml"]
+        }
+      ],
+      "outputs": ["{projectRoot}/src/auth/mail/templates.generated.ts"]
+    },
+    "emails-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx tools/mail/build-templates.ts --check"
+      }
+    },
+    "build": {
+      "dependsOn": ["emails-build"]
     }
   }
 }

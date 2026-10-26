@@ -1,15 +1,43 @@
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 
-import { challenges, credentials, rateLimits, sessions, users } from './schema-auth';
+import {
+  challenges,
+  credentials,
+  rateLimits,
+  sessions,
+  users,
+  flows,
+  federatedIdentities,
+  totpEnrollments,
+  recoveryCodes,
+  deviceApprovals,
+} from './schema-auth';
 
 describe('authentication schema contract', () => {
   it('defines stable primary keys and required columns for every persisted capability', () => {
-    for (const table of [users, credentials, sessions, challenges, rateLimits]) {
+    for (const table of [
+      users,
+      credentials,
+      sessions,
+      challenges,
+      rateLimits,
+      flows,
+      federatedIdentities,
+      totpEnrollments,
+      recoveryCodes,
+      deviceApprovals,
+    ]) {
       const config = getTableConfig(table);
 
       expect(config.columns.filter((column) => column.primary)).toHaveLength(1);
       expect(config.columns.filter((column) => column.primary)[0].notNull).toBe(true);
+      for (const foreignKey of config.foreignKeys) {
+        const reference = foreignKey.reference();
+
+        expect(reference.columns).toHaveLength(reference.foreignColumns.length);
+        expect(reference.foreignTable).toBeDefined();
+      }
     }
     expect(credentials.credentialId.isUnique).toBe(true);
     expect(challenges.sessionId.isUnique).toBe(true);

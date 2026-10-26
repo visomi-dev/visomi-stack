@@ -14,6 +14,9 @@ const boundary = vi.hoisted(() => ({
   createServer: vi.fn(),
   initialize: vi.fn(),
   createDatabase: vi.fn(),
+  smtpConfig: vi.fn(),
+  createSmtp: vi.fn(),
+  smtp: { send: vi.fn(), close: vi.fn() },
   database: { db: {}, pool: { query: vi.fn() }, close: vi.fn() },
   authConfig: vi.fn(),
   createAuthentication: vi.fn(),
@@ -23,7 +26,11 @@ vi.mock('node:http', () => ({ createServer: boundary.createServer }));
 vi.mock('@visomi-stack/web-backend-shared', () => ({
   initializeObservability: boundary.initialize,
 }));
-vi.mock('@visomi-stack/backend-shared', () => ({ createDatabase: boundary.createDatabase }));
+vi.mock('@visomi-stack/backend-shared', () => ({
+  createDatabase: boundary.createDatabase,
+  smtpConfig: boundary.smtpConfig,
+  createSmtp: boundary.createSmtp,
+}));
 vi.mock('./app', () => ({
   createApp: boundary.createApp,
   authConfig: boundary.authConfig,
@@ -39,6 +46,9 @@ beforeEach(() => {
   vi.stubEnv('DATABASE_URL', '');
   vi.stubEnv('AUTH_TRUST_PROXY', '');
   boundary.createDatabase.mockReturnValue(boundary.database);
+  boundary.smtpConfig.mockReturnValue(undefined);
+  boundary.createSmtp.mockReturnValue(boundary.smtp);
+  boundary.smtp.close.mockImplementation(() => undefined);
   boundary.database.close.mockResolvedValue(undefined);
   boundary.database.pool.query.mockResolvedValue({ rows: [] });
   boundary.authConfig.mockReturnValue({});
@@ -244,3 +254,30 @@ describe('API executable lifecycle', () => {
     expect(boundary.database.close).toHaveBeenCalledOnce();
   });
 });
+
+it.each([false, true])(
+  'closes its owned SMTP transport and still closes PostgreSQL after SMTP failure: %s',
+  async (fails) => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    vi.stubEnv('GOOGLE_AUTH_CLIENT_ID', 'synthetic-client');
+    vi.stubEnv('AUTH_TOTP_ENCRYPTION_KEY', 'synthetic-key');
+    boundary.smtpConfig.mockReturnValue({ host: 'smtp.example.test' });
+    if (fails) {
+      boundary.smtp.close.mockImplementation(() => {
+        throw new Error('synthetic_smtp_close_failure');
+      });
+    }
+
+    await import('./main');
+    await vi.advanceTimersByTimeAsync(0);
+    boundary.signals.get('SIGTERM')!();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(boundary.createSmtp).toHaveBeenCalledOnce();
+    expect(boundary.smtp.close).toHaveBeenCalledOnce();
+    expect(boundary.database.close).toHaveBeenCalledOnce();
+    expect(boundary.observability.event).toHaveBeenCalledWith(
+      fails ? 'runtime.failed' : 'runtime.stopped',
+      fails ? 'shutdown_failed' : 'none',
+    );
+  },
+);

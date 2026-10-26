@@ -1,0 +1,1778 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "e7252d61-c432-43c0-8092-aec23f85ae6a",
+  "prevIds": ["ca00d841-01d6-4755-ba4f-86b814499b22"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "auth_device_approvals"],
+      "writes": [
+        "s|tbl|public.auth_device_approvals",
+        "n|tbl|public.auth_device_approvals",
+        "e|tbl|public.auth_device_approvals",
+        "n|rel|public.auth_device_approvals",
+        "n|type|public.auth_device_approvals",
+        "n|rel|public.auth_device_approvals_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "auth_federated_identities"],
+      "writes": [
+        "s|tbl|public.auth_federated_identities",
+        "n|tbl|public.auth_federated_identities",
+        "e|tbl|public.auth_federated_identities",
+        "n|rel|public.auth_federated_identities",
+        "n|type|public.auth_federated_identities",
+        "n|rel|public.auth_federated_identities_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "auth_flows"],
+      "writes": [
+        "s|tbl|public.auth_flows",
+        "n|tbl|public.auth_flows",
+        "e|tbl|public.auth_flows",
+        "n|rel|public.auth_flows",
+        "n|type|public.auth_flows",
+        "n|rel|public.auth_flows_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "auth_recovery_codes"],
+      "writes": [
+        "s|tbl|public.auth_recovery_codes",
+        "n|tbl|public.auth_recovery_codes",
+        "e|tbl|public.auth_recovery_codes",
+        "n|rel|public.auth_recovery_codes",
+        "n|type|public.auth_recovery_codes",
+        "n|rel|public.auth_recovery_codes_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "auth_totp_enrollments"],
+      "writes": [
+        "s|tbl|public.auth_totp_enrollments",
+        "n|tbl|public.auth_totp_enrollments",
+        "e|tbl|public.auth_totp_enrollments",
+        "n|rel|public.auth_totp_enrollments",
+        "n|type|public.auth_totp_enrollments",
+        "n|rel|public.auth_totp_enrollments_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "auth_challenges", "email"],
+      "writes": [
+        "s|col|public.auth_challenges.email",
+        "n|col|public.auth_challenges.email",
+        "e|col|public.auth_challenges.email"
+      ],
+      "reads": ["n|tbl|public.auth_challenges", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "auth_credentials", "pending_grant_id"],
+      "writes": [
+        "s|col|public.auth_credentials.pending_grant_id",
+        "n|col|public.auth_credentials.pending_grant_id",
+        "e|col|public.auth_credentials.pending_grant_id"
+      ],
+      "reads": ["n|tbl|public.auth_credentials", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "auth_users", "email"],
+      "writes": ["s|col|public.auth_users.email", "n|col|public.auth_users.email", "e|col|public.auth_users.email"],
+      "reads": ["n|tbl|public.auth_users", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "auth_users", "email_verified_at"],
+      "writes": [
+        "s|col|public.auth_users.email_verified_at",
+        "n|col|public.auth_users.email_verified_at",
+        "e|col|public.auth_users.email_verified_at"
+      ],
+      "reads": ["n|tbl|public.auth_users", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "auth_users", "password_hash"],
+      "writes": [
+        "s|col|public.auth_users.password_hash",
+        "n|col|public.auth_users.password_hash",
+        "e|col|public.auth_users.password_hash"
+      ],
+      "reads": ["n|tbl|public.auth_users", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "auth_users", "auth_version"],
+      "writes": [
+        "s|col|public.auth_users.auth_version",
+        "n|col|public.auth_users.auth_version",
+        "e|col|public.auth_users.auth_version"
+      ],
+      "reads": ["n|tbl|public.auth_users", "n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "auth_device_approvals", "auth_device_approvals_expiry_idx"],
+      "writes": [
+        "s|idx|public.auth_device_approvals_expiry_idx",
+        "n|idx|public.auth_device_approvals_expiry_idx",
+        "e|idx|public.auth_device_approvals_expiry_idx",
+        "n|rel|public.auth_device_approvals_expiry_idx"
+      ],
+      "reads": ["n|tbl|public.auth_device_approvals", "n|sch|public", "n|col|public.auth_device_approvals.expires_at"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "auth_federated_identities", "auth_federated_subject_idx"],
+      "writes": [
+        "s|idx|public.auth_federated_subject_idx",
+        "n|idx|public.auth_federated_subject_idx",
+        "e|idx|public.auth_federated_subject_idx",
+        "n|rel|public.auth_federated_subject_idx"
+      ],
+      "reads": [
+        "n|tbl|public.auth_federated_identities",
+        "n|sch|public",
+        "n|col|public.auth_federated_identities.issuer",
+        "n|col|public.auth_federated_identities.subject"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "auth_federated_identities", "auth_federated_user_idx"],
+      "writes": [
+        "s|idx|public.auth_federated_user_idx",
+        "n|idx|public.auth_federated_user_idx",
+        "e|idx|public.auth_federated_user_idx",
+        "n|rel|public.auth_federated_user_idx"
+      ],
+      "reads": [
+        "n|tbl|public.auth_federated_identities",
+        "n|sch|public",
+        "n|col|public.auth_federated_identities.user_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "auth_flows", "auth_flows_session_idx"],
+      "writes": [
+        "s|idx|public.auth_flows_session_idx",
+        "n|idx|public.auth_flows_session_idx",
+        "e|idx|public.auth_flows_session_idx",
+        "n|rel|public.auth_flows_session_idx"
+      ],
+      "reads": ["n|tbl|public.auth_flows", "n|sch|public", "n|col|public.auth_flows.session_id"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "auth_flows", "auth_flows_user_idx"],
+      "writes": [
+        "s|idx|public.auth_flows_user_idx",
+        "n|idx|public.auth_flows_user_idx",
+        "e|idx|public.auth_flows_user_idx",
+        "n|rel|public.auth_flows_user_idx"
+      ],
+      "reads": ["n|tbl|public.auth_flows", "n|sch|public", "n|col|public.auth_flows.user_id"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "auth_flows", "auth_flows_expiry_idx"],
+      "writes": [
+        "s|idx|public.auth_flows_expiry_idx",
+        "n|idx|public.auth_flows_expiry_idx",
+        "e|idx|public.auth_flows_expiry_idx",
+        "n|rel|public.auth_flows_expiry_idx"
+      ],
+      "reads": ["n|tbl|public.auth_flows", "n|sch|public", "n|col|public.auth_flows.expires_at"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "auth_recovery_codes", "auth_recovery_codes_user_idx"],
+      "writes": [
+        "s|idx|public.auth_recovery_codes_user_idx",
+        "n|idx|public.auth_recovery_codes_user_idx",
+        "e|idx|public.auth_recovery_codes_user_idx",
+        "n|rel|public.auth_recovery_codes_user_idx"
+      ],
+      "reads": ["n|tbl|public.auth_recovery_codes", "n|sch|public", "n|col|public.auth_recovery_codes.user_id"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "auth_totp_enrollments", "auth_totp_active_idx"],
+      "writes": [
+        "s|idx|public.auth_totp_active_idx",
+        "n|idx|public.auth_totp_active_idx",
+        "e|idx|public.auth_totp_active_idx",
+        "n|rel|public.auth_totp_active_idx"
+      ],
+      "reads": ["n|tbl|public.auth_totp_enrollments", "n|sch|public", "n|col|public.auth_totp_enrollments.user_id"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "auth_users", "auth_users_verified_email_idx"],
+      "writes": [
+        "s|idx|public.auth_users_verified_email_idx",
+        "n|idx|public.auth_users_verified_email_idx",
+        "e|idx|public.auth_users_verified_email_idx",
+        "n|rel|public.auth_users_verified_email_idx"
+      ],
+      "reads": ["n|tbl|public.auth_users", "n|sch|public", "n|col|public.auth_users.email"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "auth_users", "auth_users_email_idx"],
+      "writes": [
+        "s|idx|public.auth_users_email_idx",
+        "n|idx|public.auth_users_email_idx",
+        "e|idx|public.auth_users_email_idx",
+        "n|rel|public.auth_users_email_idx"
+      ],
+      "reads": ["n|tbl|public.auth_users", "n|sch|public", "n|col|public.auth_users.email"]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "auth_device_approvals"],
+      "writes": [
+        "s|fk|public.auth_device_approvals.auth_device_approvals_session_id_auth_sessions_sid_fkey",
+        "n|fk|public.auth_device_approvals.auth_device_approvals_session_id_auth_sessions_sid_fkey",
+        "e|fk|public.auth_device_approvals.auth_device_approvals_session_id_auth_sessions_sid_fkey",
+        "n|con|public.auth_device_approvals.auth_device_approvals_session_id_auth_sessions_sid_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.auth_device_approvals",
+        "n|sch|public",
+        "n|tbl|public.auth_sessions",
+        "n|sch|public",
+        "n|col|public.auth_device_approvals.session_id",
+        "n|col|public.auth_sessions.sid",
+        "e|uniqueness|public.auth_sessions.sid"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "auth_device_approvals"],
+      "writes": [
+        "s|fk|public.auth_device_approvals.auth_device_approvals_user_id_auth_users_id_fkey",
+        "n|fk|public.auth_device_approvals.auth_device_approvals_user_id_auth_users_id_fkey",
+        "e|fk|public.auth_device_approvals.auth_device_approvals_user_id_auth_users_id_fkey",
+        "n|con|public.auth_device_approvals.auth_device_approvals_user_id_auth_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.auth_device_approvals",
+        "n|sch|public",
+        "n|tbl|public.auth_users",
+        "n|sch|public",
+        "n|col|public.auth_device_approvals.user_id",
+        "n|col|public.auth_users.id",
+        "e|uniqueness|public.auth_users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "auth_device_approvals"],
+      "writes": [
+        "s|fk|public.auth_device_approvals.auth_device_approvals_x8JSMQfcQ9C9_fkey",
+        "n|fk|public.auth_device_approvals.auth_device_approvals_x8JSMQfcQ9C9_fkey",
+        "e|fk|public.auth_device_approvals.auth_device_approvals_x8JSMQfcQ9C9_fkey",
+        "n|con|public.auth_device_approvals.auth_device_approvals_x8JSMQfcQ9C9_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.auth_device_approvals",
+        "n|sch|public",
+        "n|tbl|public.auth_sessions",
+        "n|sch|public",
+        "n|col|public.auth_device_approvals.approver_session_id",
+        "n|col|public.auth_sessions.sid",
+        "e|uniqueness|public.auth_sessions.sid"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "auth_federated_identities"],
+      "writes": [
+        "s|fk|public.auth_federated_identities.auth_federated_identities_user_id_auth_users_id_fkey",
+        "n|fk|public.auth_federated_identities.auth_federated_identities_user_id_auth_users_id_fkey",
+        "e|fk|public.auth_federated_identities.auth_federated_identities_user_id_auth_users_id_fkey",
+        "n|con|public.auth_federated_identities.auth_federated_identities_user_id_auth_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.auth_federated_identities",
+        "n|sch|public",
+        "n|tbl|public.auth_users",
+        "n|sch|public",
+        "n|col|public.auth_federated_identities.user_id",
+        "n|col|public.auth_users.id",
+        "e|uniqueness|public.auth_users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "auth_flows"],
+      "writes": [
+        "s|fk|public.auth_flows.auth_flows_session_id_auth_sessions_sid_fkey",
+        "n|fk|public.auth_flows.auth_flows_session_id_auth_sessions_sid_fkey",
+        "e|fk|public.auth_flows.auth_flows_session_id_auth_sessions_sid_fkey",
+        "n|con|public.auth_flows.auth_flows_session_id_auth_sessions_sid_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.auth_flows",
+        "n|sch|public",
+        "n|tbl|public.auth_sessions",
+        "n|sch|public",
+        "n|col|public.auth_flows.session_id",
+        "n|col|public.auth_sessions.sid",
+        "e|uniqueness|public.auth_sessions.sid"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "auth_flows"],
+      "writes": [
+        "s|fk|public.auth_flows.auth_flows_user_id_auth_users_id_fkey",
+        "n|fk|public.auth_flows.auth_flows_user_id_auth_users_id_fkey",
+        "e|fk|public.auth_flows.auth_flows_user_id_auth_users_id_fkey",
+        "n|con|public.auth_flows.auth_flows_user_id_auth_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.auth_flows",
+        "n|sch|public",
+        "n|tbl|public.auth_users",
+        "n|sch|public",
+        "n|col|public.auth_flows.user_id",
+        "n|col|public.auth_users.id",
+        "e|uniqueness|public.auth_users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "auth_recovery_codes"],
+      "writes": [
+        "s|fk|public.auth_recovery_codes.auth_recovery_codes_user_id_auth_users_id_fkey",
+        "n|fk|public.auth_recovery_codes.auth_recovery_codes_user_id_auth_users_id_fkey",
+        "e|fk|public.auth_recovery_codes.auth_recovery_codes_user_id_auth_users_id_fkey",
+        "n|con|public.auth_recovery_codes.auth_recovery_codes_user_id_auth_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.auth_recovery_codes",
+        "n|sch|public",
+        "n|tbl|public.auth_users",
+        "n|sch|public",
+        "n|col|public.auth_recovery_codes.user_id",
+        "n|col|public.auth_users.id",
+        "e|uniqueness|public.auth_users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "auth_totp_enrollments"],
+      "writes": [
+        "s|fk|public.auth_totp_enrollments.auth_totp_enrollments_user_id_auth_users_id_fkey",
+        "n|fk|public.auth_totp_enrollments.auth_totp_enrollments_user_id_auth_users_id_fkey",
+        "e|fk|public.auth_totp_enrollments.auth_totp_enrollments_user_id_auth_users_id_fkey",
+        "n|con|public.auth_totp_enrollments.auth_totp_enrollments_user_id_auth_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.auth_totp_enrollments",
+        "n|sch|public",
+        "n|tbl|public.auth_users",
+        "n|sch|public",
+        "n|col|public.auth_totp_enrollments.user_id",
+        "n|col|public.auth_users.id",
+        "e|uniqueness|public.auth_users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "auth_totp_enrollments"],
+      "writes": [
+        "s|fk|public.auth_totp_enrollments.auth_totp_enrollments_session_id_auth_sessions_sid_fkey",
+        "n|fk|public.auth_totp_enrollments.auth_totp_enrollments_session_id_auth_sessions_sid_fkey",
+        "e|fk|public.auth_totp_enrollments.auth_totp_enrollments_session_id_auth_sessions_sid_fkey",
+        "n|con|public.auth_totp_enrollments.auth_totp_enrollments_session_id_auth_sessions_sid_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.auth_totp_enrollments",
+        "n|sch|public",
+        "n|tbl|public.auth_sessions",
+        "n|sch|public",
+        "n|col|public.auth_totp_enrollments.session_id",
+        "n|col|public.auth_sessions.sid",
+        "e|uniqueness|public.auth_sessions.sid"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": ["table", "public", "auth_users"],
+      "writes": [
+        "s|ck|public.auth_users.auth_users_version_check",
+        "n|ck|public.auth_users.auth_users_version_check",
+        "e|ck|public.auth_users.auth_users_version_check",
+        "n|con|public.auth_users.auth_users_version_check"
+      ],
+      "reads": ["n|tbl|public.auth_users", "n|sch|public", "n|col|public.auth_users.auth_version"]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": ["table", "public", "auth_users"],
+      "writes": [
+        "s|ck|public.auth_users.auth_users_email_check",
+        "n|ck|public.auth_users.auth_users_email_check",
+        "e|ck|public.auth_users.auth_users_email_check",
+        "n|con|public.auth_users.auth_users_email_check"
+      ],
+      "reads": [
+        "n|tbl|public.auth_users",
+        "n|sch|public",
+        "n|col|public.auth_users.email_verified_at",
+        "n|col|public.auth_users.email"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "auth_device_approvals",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "auth_federated_identities",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "auth_flows",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "auth_recovery_codes",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "auth_totp_enrollments",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_challenges",
+        "name": "email",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_credentials",
+        "name": "pending_grant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "session_id",
+        "type": "varchar(128)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "email",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "code_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "approver_session_id",
+        "type": "varchar(128)",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "approver",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "status",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'pending'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "attempts",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "expires_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_federated_identities",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_federated_identities",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_federated_identities",
+        "name": "issuer",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_federated_identities",
+        "name": "subject",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_federated_identities",
+        "name": "revoked_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_federated_identities",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "session_id",
+        "type": "varchar(128)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "auth_version",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "purpose",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "email",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "code_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "data",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'{}'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "attempts",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "last_sent_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "expires_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "consumed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_recovery_codes",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_recovery_codes",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_recovery_codes",
+        "name": "code_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_recovery_codes",
+        "name": "used_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "encrypted_secret",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "status",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'pending'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "last_step",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "-1",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "session_id",
+        "type": "varchar(128)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "auth_version",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "expires_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_users",
+        "name": "email",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_users",
+        "name": "email_verified_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_users",
+        "name": "password_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_users",
+        "name": "auth_version",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "1",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "auth_device_approvals_expiry_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "expires_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_federated_identities",
+        "name": "auth_federated_subject_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "issuer",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "subject",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_federated_identities",
+        "name": "auth_federated_user_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "auth_flows_session_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "session_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "auth_flows_user_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "auth_flows_expiry_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "expires_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_recovery_codes",
+        "name": "auth_recovery_codes_user_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "auth_totp_active_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"status\" = 'active'",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_users",
+        "name": "auth_users_verified_email_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "email",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"email_verified_at\" IS NOT NULL",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_users",
+        "name": "auth_users_email_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "email",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "auth_device_approvals_session_id_auth_sessions_sid_fkey",
+        "nameExplicit": false,
+        "columns": ["session_id"],
+        "schemaTo": "public",
+        "tableTo": "auth_sessions",
+        "columnsTo": ["sid"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "auth_device_approvals_user_id_auth_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["user_id"],
+        "schemaTo": "public",
+        "tableTo": "auth_users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "auth_device_approvals_x8JSMQfcQ9C9_fkey",
+        "nameExplicit": false,
+        "columns": ["approver_session_id"],
+        "schemaTo": "public",
+        "tableTo": "auth_sessions",
+        "columnsTo": ["sid"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_federated_identities",
+        "name": "auth_federated_identities_user_id_auth_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["user_id"],
+        "schemaTo": "public",
+        "tableTo": "auth_users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "auth_flows_session_id_auth_sessions_sid_fkey",
+        "nameExplicit": false,
+        "columns": ["session_id"],
+        "schemaTo": "public",
+        "tableTo": "auth_sessions",
+        "columnsTo": ["sid"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "auth_flows_user_id_auth_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["user_id"],
+        "schemaTo": "public",
+        "tableTo": "auth_users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_recovery_codes",
+        "name": "auth_recovery_codes_user_id_auth_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["user_id"],
+        "schemaTo": "public",
+        "tableTo": "auth_users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "auth_totp_enrollments_user_id_auth_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["user_id"],
+        "schemaTo": "public",
+        "tableTo": "auth_users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "auth_totp_enrollments_session_id_auth_sessions_sid_fkey",
+        "nameExplicit": false,
+        "columns": ["session_id"],
+        "schemaTo": "public",
+        "tableTo": "auth_sessions",
+        "columnsTo": ["sid"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "auth_device_approvals_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_federated_identities",
+        "name": "auth_federated_identities_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "auth_flows_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_recovery_codes",
+        "name": "auth_recovery_codes_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "auth_totp_enrollments_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "auth_device_approvals_status_check",
+        "value": "\"status\" IN ('pending','approved','denied','cancelled','consumed')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_device_approvals",
+        "name": "auth_device_approvals_attempts_check",
+        "value": "\"attempts\" BETWEEN 0 AND 5",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "auth_flows_attempts_check",
+        "value": "\"attempts\" BETWEEN 0 AND 5",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_flows",
+        "name": "auth_flows_purpose_check",
+        "value": "\"purpose\" IN ('email_verify','email_change','password_login','password_reset','recovery','google_login','google_link','google_reauth','enrollment','reauth')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_totp_enrollments",
+        "name": "auth_totp_status_check",
+        "value": "\"status\" IN ('pending','active','revoked')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_users",
+        "name": "auth_users_version_check",
+        "value": "\"auth_version\" > 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_users",
+        "name": "auth_users_email_check",
+        "value": "\"email_verified_at\" IS NULL OR \"email\" IS NOT NULL",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

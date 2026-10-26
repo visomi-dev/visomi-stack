@@ -106,7 +106,7 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
     }
     await expect(passkeys.revoke(first.sid, first.user, first.user.credentialId)).rejects.toMatchObject({
       status: 409,
-      code: 'last_credential',
+      code: 'last_access_method',
     });
     const [unchanged] = await resource.db.select().from(credentials).where(eq(credentials.id, other.user.credentialId));
 

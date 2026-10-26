@@ -15,6 +15,10 @@ if (directory && /\/api\/(src\/)?main\.(ts|js)$/.test(entry ?? '')) {
     writeFileSync(join(directory, 'owner.json'), JSON.stringify({ pid: process.pid, parentPid: process.ppid }));
   }
 
+  if (process.env.VISOMI_E2E_CONTAINER === 'true') {
+    require('../../../../../tools/mail/test-smtp.cjs');
+  }
+
   initializeObservability(
     createTelemetryOptions(directory, 'web-api', {
       holdSpans: process.env.VISOMI_E2E_HOLD_SPANS === 'true',

@@ -104,7 +104,11 @@ describe('explicit session and Passport initialization', () => {
       if (state === 'unavailable') {
         where.mockRejectedValue(new Error('SYNTHETIC_PRIVATE_DATABASE_ERROR'));
       } else {
-        where.mockResolvedValue(state === 'active' ? [{ id: 'synthetic-credential' }] : []);
+        where
+          .mockResolvedValueOnce([
+            { id: 'synthetic-user', authVersion: 1, email: 'synthetic@example.test', emailVerifiedAt: new Date() },
+          ])
+          .mockResolvedValueOnce(state === 'active' ? [{ id: 'synthetic-credential' }] : []);
       }
 
       const callback = deserialize.mock.calls[0][0] as (
@@ -112,7 +116,17 @@ describe('explicit session and Passport initialization', () => {
         done: (...args: unknown[]) => void,
       ) => Promise<void>;
       const done = vi.fn();
-      const user = { id: 'synthetic-user', credentialId: 'synthetic-credential', authenticatedAt: 123 };
+      const user = {
+        id: 'synthetic-user',
+        credentialId: 'synthetic-credential',
+        method: 'passkey',
+        methodId: 'synthetic-credential',
+        version: 1,
+        level: 'full',
+        email: 'synthetic@example.test',
+        emailVerified: true,
+        authenticatedAt: 123,
+      };
 
       await callback(user, done);
       if (state === 'unavailable') {
@@ -155,4 +169,27 @@ describe('explicit session and Passport initialization', () => {
 
     expect(result).toEqual({ status: 503, body: { error: 'auth_initialization_missing' } });
   });
+});
+
+it('exposes a full-session guard that rejects anonymous and unverified sessions', () => {
+  const runtime = fixture().runtime;
+  const full = {
+    id: 'synthetic',
+    version: 1,
+    authenticatedAt: Date.now(),
+    method: 'password' as const,
+    level: 'full' as const,
+    emailVerified: true,
+  };
+
+  for (const user of [undefined, { ...full, level: 'unverified' as const }, full]) {
+    const next = vi.fn();
+
+    runtime.requireVerifiedSession({ user } as Request, {} as Response, next);
+    if (user?.level === 'full') {
+      expect(next).toHaveBeenCalledWith();
+    } else {
+      expect(next.mock.calls[0][0]).toBeInstanceOf(Error);
+    }
+  }
 });

@@ -23,8 +23,9 @@ libs/
 an Express application without opening a listener or initializing telemetry.
 `main.ts` owns standalone telemetry initialization, listening, SIGINT/SIGTERM
 handling, HTTP draining, and bounded telemetry shutdown. The public `GET /` endpoint returns a static JSON greeting. The authentication
-capability provides passkey signup/sign-in, session inspection/logout, and owned
-credential management under `/auth`, backed by PostgreSQL. Unknown routes and
+capability provides passkey and password signup/sign-in, email verification,
+Google account unification, TOTP and backup codes, restricted recovery/device
+enrollment, and method/session management under `/auth`, backed by PostgreSQL. Unknown routes and
 application errors return fixed responses. See the [API guide](../apps/web/api/README.md)
 for the schema, migration commands and managed/inherited ownership contract.
 
@@ -49,7 +50,7 @@ exports without changing that API contract. Preserve both complete sibling outpu
 directories and their declared runtime dependencies.
 
 `createGatewayApp()` composes Express without starting resources. Gateway
-`main.ts` owns the listener, telemetry and optional database pool; it creates the
+`main.ts` owns the listener, telemetry, optional SMTP transport and database pool; it creates the
 API's auth runtime and installs its middleware before mounting at `/api` with
 `authMode: inherited`. Helmet policy and HTTP error classes/handling live in
 `web-backend-shared/src/lib/http/`. The API also delegates headers and error
