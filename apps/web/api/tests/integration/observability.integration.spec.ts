@@ -13,7 +13,12 @@ import {
 import { InMemorySpanExporter } from '@opentelemetry/sdk-trace';
 import express, { json } from 'express';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { initializeObservability, httpObservability, operationalErrorHandler } from '@visomi-stack/web-backend-shared';
+import {
+  HttpError,
+  initializeObservability,
+  httpObservability,
+  operationalErrorHandler,
+} from '@visomi-stack/web-backend-shared';
 import type { Observability, ObservabilityOptions } from '@visomi-stack/web-backend-shared';
 
 const marker = 'SYNTHETIC_CUSTOMER_SECRET_8d51';
@@ -258,6 +263,35 @@ describe('HTTP observability integration', () => {
 
     expect(response.status).toBe(204);
     expect(result).toBe(42);
+  });
+
+  it('returns deliberate public error details without exporting them in telemetry', async () => {
+    const f = fixture();
+    const app = express();
+
+    app.use(httpObservability(f.telemetry));
+    app.get('/', () => {
+      throw new HttpError(422, 'request_invalid', marker, { fields: [marker] });
+    });
+    app.use(operationalErrorHandler);
+    const origin = await listen(app);
+    const response = await fetch(origin);
+    const body = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(body).toEqual({ error: 'request_invalid', message: marker, body: { fields: [marker] } });
+    await f.reader.forceFlush();
+    const spans = f.spans.getFinishedSpans().map((span) => ({
+      attributes: span.attributes,
+      events: span.events,
+      status: span.status,
+      resource: span.resource.attributes,
+    }));
+
+    expect(f.lines).toHaveLength(1);
+    expect(f.lines[0]).toMatchObject({ outcome: 'client_error', status: 422 });
+    expect(spans).toHaveLength(1);
+    expect(JSON.stringify({ logs: f.lines, spans, metrics: f.metrics.getMetrics() })).not.toContain(marker);
   });
 
   it('keeps failed cleanup isolated and prevents another runtime from starting', () => {

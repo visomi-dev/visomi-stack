@@ -1,29 +1,30 @@
-const { appendFileSync, writeFileSync } = require('node:fs');
-const { join } = require('node:path');
+import { appendFileSync } from 'node:fs';
+import { join } from 'node:path';
 
-// This explicit test entrypoint only instruments the application, never Nx or its watchers.
-const entry = process.argv[1]?.replaceAll('\\', '/');
-const directory = process.env.VISOMI_E2E_TELEMETRY_DIR;
+import { PeriodicExportingMetricReader, AggregationTemporality } from '@opentelemetry/sdk-metrics';
 
-if (directory && (entry?.endsWith('/api/src/main.ts') || entry?.endsWith('/api/main.js'))) {
-  require('tsx/cjs');
-  const { initializeObservability } = require('../../../../libs/web/backend/shared/src/index');
-  const { PeriodicExportingMetricReader, AggregationTemporality } = require('@opentelemetry/sdk-metrics');
-  const pendingSpans = new Set();
-  const pendingMetrics = new Set();
-  const heldSpans = [];
-  const write = (file, value) => appendFileSync(join(directory, file), JSON.stringify(value) + '\n');
-  const exportRecord = (file, value, callback) => {
+import type { ObservabilityOptions } from '@visomi-stack/web-backend-shared';
+
+export function createTelemetryOptions(
+  directory: string,
+  service: ObservabilityOptions['service'],
+  options: { holdSpans?: boolean } = {},
+): ObservabilityOptions {
+  const pendingSpans = new Set<Promise<void>>();
+  const pendingMetrics = new Set<Promise<void>>();
+  const heldSpans: (() => void)[] = [];
+  const write = (file: string, value: unknown) => appendFileSync(join(directory, file), JSON.stringify(value) + '\n');
+  const exportRecord = (file: string, value: unknown, callback: (result: { code: 0 }) => void) => {
     write('pending.jsonl', { file });
     const pending = file === 'spans.jsonl' ? pendingSpans : pendingMetrics;
-    const delivery = new Promise((resolve) => {
+    const delivery = new Promise<void>((resolve) => {
       const deliver = () => {
         write(file, value);
         callback({ code: 0 });
         resolve();
       };
 
-      if (file === 'spans.jsonl' && process.env.VISOMI_E2E_HOLD_SPANS === 'true') {
+      if (file === 'spans.jsonl' && options.holdSpans) {
         heldSpans.push(deliver);
       } else {
         setTimeout(deliver, 50);
@@ -46,15 +47,22 @@ if (directory && (entry?.endsWith('/api/src/main.ts') || entry?.endsWith('/api/m
     exportIntervalMillis: 100,
     exporter: {
       selectAggregationTemporality: () => AggregationTemporality.CUMULATIVE,
-      export: (metrics, callback) => exportRecord('metrics.jsonl', metrics, callback),
+      export: (metrics, callback) =>
+        exportRecord(
+          'metrics.jsonl',
+          {
+            resource: { attributes: metrics.resource.attributes },
+            scopeMetrics: metrics.scopeMetrics,
+          },
+          callback,
+        ),
       forceFlush: drainMetrics,
       shutdown: drainMetrics,
     },
   });
 
-  writeFileSync(join(directory, 'owner.json'), JSON.stringify({ pid: process.pid, parentPid: process.ppid }));
-  initializeObservability({
-    service: 'web-api',
+  return {
+    service,
     version: '0.0.1',
     environment: 'test',
     destination: { write: (line) => appendFileSync(join(directory, 'logs.jsonl'), line) },
@@ -79,5 +87,5 @@ if (directory && (entry?.endsWith('/api/src/main.ts') || entry?.endsWith('/api/m
       forceFlush: drainSpans,
       shutdown: drainSpans,
     },
-  });
+  };
 }

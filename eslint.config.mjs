@@ -9,6 +9,33 @@ import globals from 'globals';
 
 const importXFiles = ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'];
 
+const moduleBoundaryOptions = {
+  enforceBuildableLibDependency: true,
+  // Portable primitives and contracts are used statically by routes and lazily by root services.
+  // These are libraries, not lazy route projects; keep heavy validation/crypto out of the initial bundle.
+  checkDynamicDependenciesExceptions: ['web-shared-common'],
+  // template.json is a public workspace build input, not another domain's implementation.
+  allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$', '^(?:\\.\\./)+template\\.json$'],
+  depConstraints: [
+    {
+      sourceTag: 'scope:web-frontend',
+      onlyDependOnLibsWithTags: ['scope:web-frontend', 'scope:web-shared'],
+    },
+    {
+      sourceTag: 'scope:web-shared',
+      onlyDependOnLibsWithTags: ['scope:web-shared'],
+    },
+    {
+      sourceTag: 'scope:web-backend',
+      notDependOnLibsWithTags: ['scope:web-frontend'],
+    },
+    {
+      sourceTag: '*',
+      onlyDependOnLibsWithTags: ['*'],
+    },
+  ],
+};
+
 export default [
   ...nxConfigs['flat/base'],
   ...nxConfigs['flat/typescript'],
@@ -28,35 +55,7 @@ export default [
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
-      '@nx/enforce-module-boundaries': [
-        'error',
-        {
-          enforceBuildableLibDependency: true,
-          // Portable primitives and contracts are used statically by routes and lazily by root services.
-          // These are libraries, not lazy route projects; keep heavy validation/crypto out of the initial bundle.
-          checkDynamicDependenciesExceptions: ['web-shared-common'],
-          // template.json is a public workspace build input, not another domain's implementation.
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$', '^(?:\\.\\./)+template\\.json$'],
-          depConstraints: [
-            {
-              sourceTag: 'scope:web-frontend',
-              onlyDependOnLibsWithTags: ['scope:web-frontend', 'scope:web-shared'],
-            },
-            {
-              sourceTag: 'scope:web-shared',
-              onlyDependOnLibsWithTags: ['scope:web-shared'],
-            },
-            {
-              sourceTag: 'scope:web-backend',
-              notDependOnLibsWithTags: ['scope:web-frontend'],
-            },
-            {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
-            },
-          ],
-        },
-      ],
+      '@nx/enforce-module-boundaries': ['error', moduleBoundaryOptions],
     },
   },
   {
@@ -243,6 +242,30 @@ export default [
         { blankLine: 'always', prev: 'if', next: '*' },
         { blankLine: 'always', prev: '*', next: 'try' },
       ],
+    },
+  },
+  {
+    files: ['**/src/**/*.{ts,tsx,js,jsx}'],
+    ignores: ['**/*.spec.*', '**/*.test.*'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@visomi-stack/dev-testing', '@visomi-stack/dev-testing/*'],
+              message: 'Development testing helpers belong only in tests and fixtures.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/e2e/fixtures/**/*.ts'],
+    rules: {
+      // Playwright requires destructured fixture dependencies, including an empty dependency set.
+      'no-empty-pattern': ['error', { allowObjectPatternsAsParameters: true }],
     },
   },
   {

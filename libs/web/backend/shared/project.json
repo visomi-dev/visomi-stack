@@ -12,6 +12,10 @@
         "cwd": "libs/web/backend/shared",
         "command": "tsc -p tsconfig.spec.json --noEmit"
       }
+    },
+    "test-ci": {
+      "executor": "nx:noop",
+      "dependsOn": ["test"]
     }
   }
 }

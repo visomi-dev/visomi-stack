@@ -180,9 +180,8 @@ class ObservabilityRuntime implements Observability {
       return this.shutdownPromise;
     }
 
-    if (this.state.runtime === this) {
-      this.state.shuttingDown = true;
-    }
+    // Only the registered runtime can start shutdown; repeated calls returned above.
+    this.state.shuttingDown = true;
 
     const timeout = Number.isFinite(timeoutMs) ? Math.min(5000, Math.max(1, timeoutMs)) : 1000;
 
@@ -215,23 +214,21 @@ class ObservabilityRuntime implements Observability {
         }
       });
 
-      Promise.allSettled([
+      void Promise.allSettled([
         Promise.resolve().then(() => this.provider.shutdown()),
         Promise.resolve().then(() => this.meterProvider.shutdown()),
         flushLogs,
-      ])
-        .then((results) => {
-          const success = results.every((result) => result.status === 'fulfilled');
+      ]).then((results) => {
+        const success = results.every((result) => result.status === 'fulfilled');
 
-          // A caller timeout does not prove that the owned resources have stopped.
-          if (success && this.state.runtime === this) {
-            this.state.runtime = undefined;
-            this.state.shuttingDown = false;
-          }
+        // A caller timeout does not prove that the owned resources have stopped.
+        if (success && this.state.runtime === this) {
+          this.state.runtime = undefined;
+          this.state.shuttingDown = false;
+        }
 
-          done(success);
-        })
-        .catch(() => done(false));
+        done(success);
+      });
     });
 
     return this.shutdownPromise;

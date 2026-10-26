@@ -5,5 +5,5 @@ export PATH="$HOME/.local/share/fnm/node-versions/v24.15.0/installation/bin:$HOM
 
 # Format and lint staged files before running the affected Nx checks.
 pnpm exec lint-staged
-pnpm exec nx affected -t test --uncommitted --nxBail
-pnpm exec nx affected -t e2e --uncommitted --nxBail
+pnpm exec nx affected -t test --base=HEAD --nxBail
+pnpm exec nx affected -t e2e --base=HEAD --nxBail

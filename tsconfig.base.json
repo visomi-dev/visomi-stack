@@ -15,7 +15,12 @@
     "skipDefaultLibCheck": true,
     "strict": false,
     "paths": {
-      "@visomi-stack/web-backend-shared": ["./libs/web/backend/shared/src/index.ts"]
+      "@visomi-stack/web-backend-shared": ["./libs/web/backend/shared/src/index.ts"],
+      "@visomi-stack/backend-shared": ["./libs/backend/shared/src/index.ts"],
+      "@visomi-stack/dev-testing": ["./libs/development/testing/src/index.ts"],
+      "@visomi-stack/dev-testing/playwright": ["./libs/development/testing/src/playwright.ts"],
+      "@visomi-stack/dev-testing/postgres": ["./libs/development/testing/src/postgres.ts"],
+      "@visomi-stack/dev-testing/telemetry": ["./libs/development/testing/src/telemetry.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

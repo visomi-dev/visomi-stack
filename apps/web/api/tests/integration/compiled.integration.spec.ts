@@ -41,7 +41,7 @@ describe('API process and compiled boundaries', () => {
         global.setInterval = () => { intervals++; throw new Error('unexpected loop'); };
         const app = require(${JSON.stringify(join(directory, 'api'))});
         app.createApp();
-        console.log(JSON.stringify({ listens, connections, providers, intervals, exports: Object.keys(app) }));
+        console.log(JSON.stringify({ listens, connections, providers, intervals, exports: Object.keys(app).sort() }));
       `;
       const result = await execute(process.execPath, ['-e', script], { cwd: root, timeout: 5000 });
 
@@ -50,7 +50,7 @@ describe('API process and compiled boundaries', () => {
         connections: 0,
         providers: 0,
         intervals: 0,
-        exports: ['createApp'],
+        exports: ['authConfig', 'createApp', 'createAuthentication'],
       });
       const metadataText = await readFile(join(directory, 'api/package.json'), 'utf8');
       const metadata = JSON.parse(metadataText);
@@ -58,6 +58,9 @@ describe('API process and compiled boundaries', () => {
       expect(metadata.type).toBe('commonjs');
       expect(metadata.main).toBe('./app.js');
       expect(metadata.exports).toEqual({ '.': './app.js', './app': './app.js' });
+      expect(metadata.dependencies['drizzle-orm']).toBe('1.0.0-rc.5');
+      expect(metadata.dependencies.pg).toBe('8.23.1');
+      expect(metadata.dependencies['@simplewebauthn/server']).toBe('14.0.3');
       expect(metadata.dependencies.pino).toBeDefined();
       expect(metadata.dependencies['@opentelemetry/sdk-trace']).toBeDefined();
     } finally {

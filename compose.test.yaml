@@ -1,0 +1,14 @@
+# Used together with compose.yaml, always with a unique test project and synthetic env file.
+services:
+  app:
+    build:
+      target: test-runtime
+    environment:
+      NODE_ENV: test
+      AUTH_TRUST_PROXY: ''
+      NODE_OPTIONS: --require /workspace/${VISOMI_TEST_APP_ROOT}/e2e/support/telemetry-preload.cjs
+      VISOMI_E2E_CONTAINER: 'true'
+      VISOMI_E2E_TELEMETRY_DIR: /workspace/tmp/container-telemetry
+    volumes:
+      - '${VISOMI_TEST_TELEMETRY_DIR}:/workspace/tmp/container-telemetry:Z'
+    stop_grace_period: 6s

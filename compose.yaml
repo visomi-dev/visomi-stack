@@ -1,4 +1,4 @@
-# Local development only. Keep unique secrets in .env; do not use example placeholders.
+# Local development only. Supply a unique SESSION_SECRET through the environment.
 name: ${COMPOSE_PROJECT_NAME:-visomi-local}
 
 services:
@@ -9,7 +9,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-local-development-only}
     ports:
-      - '${HOST_BINDING-127.0.0.1:}${POSTGRES_PORT:-5432}:5432'
+      - '${HOST_BINDING-127.0.0.1:}${POSTGRES_PORT-5432}:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -52,7 +52,7 @@ services:
 
   minio-init:
     image: docker.io/minio/mc:latest
-    restart: "no"
+    restart: 'no'
     depends_on:
       minio:
         condition: service_healthy
@@ -67,42 +67,44 @@ services:
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-visomi_local_minio_password}
       - OPAQUE_SYNC_S3_BUCKET=${OPAQUE_SYNC_S3_BUCKET:-visomi-opaque-sync}
 
+  database-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: database-init
+    restart: 'no'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Set APP_DATABASE_URL when credentials need URL encoding; use postgres:5432.
+      - DATABASE_URL=${APP_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-visomi}}
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
       target: runtime
       args:
-        SITE_URL: ${SITE_URL:-http://localhost:8080}
+        APP_NAME: ${APP_NAME:-web-api}
     # Public browser URLs stay on localhost; service connections use container DNS.
-    # If DATABASE_AUTO_MIGRATE=false in .env, initialize the database schema separately.
-    env_file:
-      - .env
     environment:
       - HOST=0.0.0.0
       - PORT=8080
-      - GATEWAY_PORT=8080
+      - AUTH_ORIGIN=${AUTH_ORIGIN:-http://localhost:8080}
+      - AUTH_RP_ID=${AUTH_RP_ID:-localhost}
+      - SESSION_SECRET=${SESSION_SECRET:?Set a high-entropy SESSION_SECRET of at least 32 bytes}
       # Set APP_DATABASE_URL for URL-encoded credentials; use postgres:5432 as the host.
       - DATABASE_URL=${APP_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-visomi}}
-      - REDIS_URL=redis://redis:6379
-      - OPAQUE_SYNC_S3_ENDPOINT=http://minio:9000
-      - OPAQUE_SYNC_S3_ACCESS_KEY=${MINIO_ROOT_USER:-visomi_local}
-      - OPAQUE_SYNC_S3_SECRET_KEY=${MINIO_ROOT_PASSWORD:-visomi_local_minio_password}
-      - OPAQUE_SYNC_S3_BUCKET=${OPAQUE_SYNC_S3_BUCKET:-visomi-opaque-sync}
     ports:
-      - '127.0.0.1:8080:8080'
+      - '127.0.0.1:${APP_PORT:-8080}:8080'
     depends_on:
+      database-init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-      minio-init:
-        condition: service_completed_successfully
 
 volumes:
   postgres-data:
   redis-data:
   minio-data:
-

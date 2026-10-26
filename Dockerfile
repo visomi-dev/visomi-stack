@@ -10,53 +10,58 @@ FROM base AS deps
 
 WORKDIR /workspace
 
-COPY package.json pnpm-lock.yaml nx.json tsconfig.base.json pnpm-workspace.yaml ./
-COPY .node-version ./
-COPY libs/web/backend/shared/package.json ./libs/web/backend/shared/package.json
-COPY libs/web/shared/common/package.json ./libs/web/shared/common/package.json
-COPY apps/web/cli/package.json ./apps/web/cli/package.json
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-RUN pnpm install --frozen-lockfile
+RUN HUSKY=0 pnpm install --frozen-lockfile
 
-FROM deps AS build
-
-WORKDIR /workspace
-ARG SITE_URL
+FROM deps AS workspace
 
 COPY . .
 
-RUN pnpm nx run-many -t build --projects server,realtime,worker,api,app,site --configuration production
+FROM workspace AS database-init
 
-FROM base AS runtime-base
+CMD ["pnpm", "nx", "run", "backend-shared:db-migrate", "--output-style=static"]
+
+FROM workspace AS build
+
+ARG APP_NAME=web-api
+
+RUN case "$APP_NAME" in \
+      web-api) printf '%s\n' 'dist/apps/web/api/main.js' > app-entrypoint ;; \
+      web-gateway) printf '%s\n' 'dist/apps/web/gateway/main.js' > app-entrypoint ;; \
+      *) exit 1 ;; \
+    esac \
+    && pnpm nx build "$APP_NAME"
+
+# Test-only tooling supplies local exporters; the compiled executable still owns startup.
+FROM build AS test-runtime
+
+ARG APP_NAME=web-api
+
+ENV APP_NAME=${APP_NAME}
+
+CMD ["sh", "-c", "exec node \"$(cat app-entrypoint)\""]
+
+FROM base AS runtime
+
+ARG APP_NAME=web-api
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
+ENV PORT=8080
+ENV APP_NAME=${APP_NAME}
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY libs/web/backend/shared/package.json ./libs/web/backend/shared/package.json
-COPY libs/web/shared/crypto/package.json ./libs/web/shared/crypto/package.json
-COPY libs/web/shared/common/package.json ./libs/web/shared/common/package.json
-COPY apps/web/cli/package.json ./apps/web/cli/package.json
 
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
-COPY --from=build /workspace/dist ./dist
-COPY --from=build /workspace/dist/libs/web/backend/shared ./libs/web/backend/shared
-COPY --from=build /workspace/dist/libs/web/shared/common ./libs/web/shared/common
-COPY --from=build /workspace/dist/apps/web/app ./dist/apps/web/app
-COPY --from=build /workspace/dist/apps/web/api ./dist/apps/web/api
-COPY --from=build /workspace/dist/apps/web/realtime ./dist/apps/web/realtime
-COPY --from=build /workspace/dist/apps/web/site ./dist/apps/web/site
-COPY --from=build /workspace/dist/apps/worker ./dist/apps/worker
-
-FROM runtime-base AS server-runtime
+COPY --from=build /workspace/dist/apps/web ./dist/apps/web
+COPY --from=build /workspace/app-entrypoint ./app-entrypoint
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD ["node", "-e", "const port = process.env.PORT ?? process.env.GATEWAY_PORT ?? '8080'; fetch('http://127.0.0.1:' + port + '/healthz').then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT ?? '8080') + (process.env.APP_NAME === 'web-gateway' ? '/api/' : '/')).then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"]
 
-CMD ["node", "dist/apps/web/server/main.js"]
-
-FROM server-runtime AS runtime
+CMD ["sh", "-c", "exec node \"$(cat app-entrypoint)\""]

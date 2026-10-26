@@ -11,8 +11,10 @@ for the previous stack.
 apps/
   web/
     api/          # web-api: application factory and standalone startup
-    gateway/      # web-gateway: separate scaffold; composition in progress
+    gateway/      # web-gateway: ESM host mounting the compiled API at /api
 libs/
+  backend/
+    shared/       # backend-shared: infrastructure independent of HTTP, including Drizzle
   web/backend/
     shared/       # web-backend-shared: shared infrastructure and observability
 ```
@@ -20,9 +22,19 @@ libs/
 `apps/web/api/src/app.ts` exports `createApp()`. Calling it configures and returns
 an Express application without opening a listener or initializing telemetry.
 `main.ts` owns standalone telemetry initialization, listening, SIGINT/SIGTERM
-handling, HTTP draining, and bounded telemetry shutdown. The only feature endpoint
-is `GET /`, returning a static JSON greeting; unknown routes and application errors
-return fixed error responses.
+handling, HTTP draining, and bounded telemetry shutdown. The public `GET /` endpoint returns a static JSON greeting. The authentication
+capability provides passkey signup/sign-in, session inspection/logout, and owned
+credential management under `/auth`, backed by PostgreSQL. Unknown routes and
+application errors return fixed responses. See the [API guide](../apps/web/api/README.md)
+for the schema, migration commands and managed/inherited ownership contract.
+
+`libs/backend/shared/drizzle.config.ts` configures Drizzle at the library root.
+`src/lib/database/` owns domain schemas and one migration history for all backend
+modules. The API imports its
+authentication schema through the shared library. Database initialization remains
+explicit: each executable creates and closes its own pool and supplies it to the
+modules it composes. Imports do not open connections or run migrations; separate
+processes share PostgreSQL state, not JavaScript resources.
 
 The API's Rolldown build preserves named `app` and `main` entries with stable
 `app.js` and `main.js` filenames, CommonJS output, external runtime dependencies,
@@ -30,11 +42,30 @@ and public application exports. Generated `package.json` explicitly declares
 `type: commonjs` and directs package imports to `app.js`. Shared chunks belong
 to the deployment artifact and must be copied with both entries.
 
-The gateway must consume the compiled API application export, never API TypeScript
-source or `main.js`. That integration is being developed separately. The API's
-compiled-import harness verifies the package boundary, not the gateway application.
+The gateway imports the compiled API's `app.js`, never API TypeScript source or
+`main.js`. Its ESM build emits stable `app.js` and `main.js` entries with
+`type: module` metadata. Native ESM imports the API's existing CommonJS public
+exports without changing that API contract. Preserve both complete sibling output
+directories and their declared runtime dependencies.
+
+`createGatewayApp()` composes Express without starting resources. Gateway
+`main.ts` owns the listener, telemetry and optional database pool; it creates the
+API's auth runtime and installs its middleware before mounting at `/api` with
+`authMode: inherited`. Helmet policy and HTTP error classes/handling live in
+`web-backend-shared/src/lib/http/`. The API also delegates headers and error
+responses through explicit `helmetMode: inherited` and `errorMode: inherited`;
+standalone defaults manage both. The host installs Helmet before authentication
+and routes, then installs the shared error handler last. Domain-specific failure
+translation stays with auth. The same observability instance crosses both bundles,
+with one completion record per request. Shutdown drains HTTP work, closes the
+owned pool, and flushes telemetry. Auth routes fail closed without a configured
+database. Paths outside `/api` currently return 404. Process integration tests
+exercise the actual compiled gateway and API, including real PostgreSQL and
+cryptographically valid WebAuthn; the API's own import harness remains separate.
 Angular SSR, Astro, background workers, and realtime delivery remain unimplemented.
-Existing container configuration still references a broader, absent system.
+The container runtime starts the standalone API. Compose applies versioned
+migrations through a separate one-shot database initializer before starting it;
+the API does not own schema migration or seed execution.
 
 ## Screaming Architecture and Domain-Driven Design
 
@@ -121,7 +152,8 @@ five seconds); failures cannot rewrite application results or expose raw errors.
 Angular SSR, Astro, Express, and separate gateway, worker, and realtime
 responsibilities are the agreed direction for the reboot. The following paths
 and public mounts describe the intended organization. The API and gateway
-directories exist; the gateway's composition contract is still future work.
+directories exist, and the gateway currently composes only the API. Frontend,
+worker and realtime composition remain future work.
 Future Nx project names must be checked when projects are created.
 
 | Boundary    | Intended location   | Responsibility                                                                        |
@@ -148,15 +180,16 @@ points; their names and layout can be decided when needed.
 
 The topology does not select:
 
-- Authentication methods, session lifecycle, recovery, or authorization policy.
-- Tenant boundaries, database isolation, storage engines, or migration tooling.
+- Authentication beyond the implemented passkey/session slice, recovery, and domain authorization policy.
+- Tenant boundaries, domain database isolation, and storage beyond the implemented PostgreSQL/Drizzle authentication slice.
 - Queue and realtime libraries, delivery guarantees, or event contracts.
 - UI components, styling foundations, localization, or PWA behavior.
 - Encryption, browser vaults, local-agent integration, or synchronization protocols.
 - Hosting, ingress, deployment composition, external telemetry exporters/providers, or release controls.
 
-PostgreSQL, Redis, and MinIO appear in the inherited Compose file. Their presence
-does not establish working integrations or settle these decisions.
+PostgreSQL now backs authentication through explicit Drizzle migrations. Redis and
+MinIO still only appear in inherited container configuration; their presence does
+not establish working integrations or settle these decisions.
 
 ## Reference boundaries
 

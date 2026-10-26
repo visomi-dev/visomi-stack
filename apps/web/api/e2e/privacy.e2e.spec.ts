@@ -1,8 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures/http';
 
-import { readTelemetry } from './telemetry';
-
-test('excludes synthetic private input from exported operational telemetry', async ({ request }) => {
+test('excludes synthetic private input from exported operational telemetry', async ({
+  request,
+  telemetry: telemetryFiles,
+}) => {
   const marker = 'SYNTHETIC_PRIVATE_MARKER_e2e_73fa';
   const response = await request.post(`/missing/${marker}?secret=${marker}`, {
     headers: {
@@ -20,7 +21,7 @@ test('excludes synthetic private input from exported operational telemetry', asy
   expect(response.status()).toBe(404);
   await expect
     .poll(async () => {
-      const telemetry = await readTelemetry();
+      const telemetry = await telemetryFiles.read();
 
       return telemetry.spans.some(
         (span) =>
@@ -30,12 +31,12 @@ test('excludes synthetic private input from exported operational telemetry', asy
     .toBe(true);
   await expect
     .poll(async () => {
-      const telemetry = await readTelemetry();
+      const telemetry = await telemetryFiles.read();
 
       return telemetry.metrics.length;
     })
     .toBeGreaterThan(0);
-  const telemetry = await readTelemetry();
+  const telemetry = await telemetryFiles.read();
 
   expect(JSON.stringify(telemetry)).not.toContain(marker);
 });

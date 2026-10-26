@@ -1,8 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures/http';
 
-import { readTelemetry } from './telemetry';
-
-test('exports one completion, span and metric contribution per successful or failed request', async ({ request }) => {
+test('exports one completion, span and metric contribution per successful or failed request', async ({
+  request,
+  telemetry: telemetryFiles,
+}) => {
   const success = await request.get('/');
   const missing = await request.get('/synthetic-missing');
   const body = await success.json();
@@ -13,7 +14,7 @@ test('exports one completion, span and metric contribution per successful or fai
   expect(missing.status()).toBe(404);
   await expect
     .poll(async () => {
-      const telemetry = await readTelemetry();
+      const telemetry = await telemetryFiles.read();
       const logs = telemetry.logs.filter((log) => ids.includes(log.requestId as string));
 
       return telemetry.spans.filter((span) =>
@@ -21,7 +22,7 @@ test('exports one completion, span and metric contribution per successful or fai
       ).length;
     })
     .toBe(2);
-  const telemetry = await readTelemetry();
+  const telemetry = await telemetryFiles.read();
   const completions = telemetry.logs.filter((log) => ids.includes(log.requestId as string));
 
   expect(completions).toHaveLength(2);
@@ -41,7 +42,7 @@ test('exports one completion, span and metric contribution per successful or fai
 
   await expect
     .poll(async () => {
-      const exported = await readTelemetry();
+      const exported = await telemetryFiles.read();
       const latest = exported.metrics.at(-1) as
         | {
             scopeMetrics: { metrics: { descriptor: { name: string }; dataPoints: { value: number }[] }[] }[];

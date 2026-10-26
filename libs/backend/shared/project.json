@@ -1,0 +1,35 @@
+{
+  "name": "backend-shared",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/backend/shared/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project backend-shared --web",
+  "targets": {
+    "db-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/backend/shared",
+        "command": "drizzle-kit generate --config drizzle.config.ts"
+      }
+    },
+    "db-migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/backend/shared",
+        "command": "drizzle-kit migrate --config drizzle.config.ts"
+      }
+    },
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/backend/shared",
+        "command": "tsc -p tsconfig.spec.json --noEmit"
+      }
+    },
+    "test-ci": {
+      "executor": "nx:noop",
+      "dependsOn": ["test"]
+    }
+  }
+}

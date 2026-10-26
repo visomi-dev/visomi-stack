@@ -47,7 +47,76 @@
       "dependsOn": ["^build"],
       "readyWhen": {
         "signal": true
+      },
+      "options": {
+        "env": {
+          "API_APP_PATH": "../../../dist/apps/web/api/app.js"
+        }
       }
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "externalDependencies": ["vitest"]
+        },
+        {
+          "env": "CI"
+        },
+        {
+          "dependentTasksOutputFiles": "**/*.js",
+          "transitive": true
+        }
+      ]
+    },
+    "e2e": {
+      "dependsOn": ["build"],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "externalDependencies": ["@playwright/test"]
+        },
+        {
+          "env": "CI"
+        },
+        "{workspaceRoot}/Dockerfile",
+        "{workspaceRoot}/.dockerignore",
+        "{workspaceRoot}/compose.yaml",
+        "{workspaceRoot}/compose.test.yaml",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/pnpm-lock.yaml",
+        "{workspaceRoot}/pnpm-workspace.yaml"
+      ]
+    },
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/web/gateway",
+        "command": "tsc -p tsconfig.spec.json --noEmit"
+      }
+    },
+    "lint": {
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/apps/web/gateway/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        {
+          "externalDependencies": ["eslint"]
+        }
+      ],
+      "options": {
+        "command": "eslint ."
+      }
+    },
+    "test-ci": {
+      "executor": "nx:noop",
+      "dependsOn": ["test"]
     }
-  }
+  },
+  "implicitDependencies": ["web-api"]
 }
