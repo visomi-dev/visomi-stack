@@ -51,7 +51,7 @@ function descriptor(cluster: string): TestCompose {
     project: basename(cluster).toLowerCase(),
     directory: cluster,
     telemetryDirectory: directory,
-    app: 'api',
+    app: 'web-api',
   };
 }
 
@@ -108,7 +108,7 @@ describe('Compose PostgreSQL resource', () => {
 
   it('records ownership before startup and selects the gateway build without reading a developer env file', async () => {
     const manifest = join(directory, 'postgres.json');
-    const resource = await testPostgres(manifest, 'gateway');
+    const resource = await testPostgres(manifest, 'web-gateway');
 
     const text = await readFile(manifest, 'utf8');
     const envFile = await readFile(join(resource.directory, 'compose.env'), 'utf8');
@@ -118,7 +118,7 @@ describe('Compose PostgreSQL resource', () => {
       compose: resource.compose,
     });
     expect(envFile).toBe('');
-    expect(resource.compose.app).toBe('gateway');
+    expect(resource.compose.app).toBe('web-gateway');
     await resource.stop();
   });
 

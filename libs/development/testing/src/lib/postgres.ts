@@ -11,7 +11,7 @@ import { createTestCompose, runTestCompose } from './compose';
 import type { TestCompose } from './compose';
 
 // Every resource has its own Compose project/volume; developer DATABASE_URL is never consulted.
-export async function testPostgres(manifest?: string, app: TestCompose['app'] = 'api', signal?: AbortSignal) {
+export async function testPostgres(manifest?: string, app: TestCompose['app'] = 'web-api', signal?: AbortSignal) {
   const temporaryRoot = manifest ? dirname(manifest) : tmpdir();
   const directory = await mkdtemp(join(temporaryRoot, 'visomi-auth-test-'));
   let compose: TestCompose | undefined;

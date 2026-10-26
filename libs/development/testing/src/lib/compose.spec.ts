@@ -12,7 +12,7 @@ const owner: TestCompose = {
   directory: '/synthetic/visomi-auth-test-owned',
   project: 'visomi-auth-test-owned',
   telemetryDirectory: '/synthetic/telemetry',
-  app: 'api',
+  app: 'web-api',
 };
 
 beforeEach(() => {
@@ -28,18 +28,18 @@ afterEach(() => vi.unstubAllEnvs());
 describe('test Compose command ownership', () => {
   it.each(['docker', 'podman-compose'] as const)('honors the explicit %s provider', async (provider) => {
     vi.stubEnv('VISOMI_TEST_COMPOSE', provider);
-    const resource = await createTestCompose(owner.directory, owner.telemetryDirectory, 'gateway');
+    const resource = await createTestCompose(owner.directory, owner.telemetryDirectory, 'web-gateway');
 
     expect(resource).toEqual({
       ...owner,
       provider,
-      app: 'gateway',
+      app: 'web-gateway',
     });
     expect(execFile).not.toHaveBeenCalled();
   });
 
   it('detects Docker Compose without consulting a daemon or starting services', async () => {
-    const resource = await createTestCompose(owner.directory, owner.telemetryDirectory, 'api');
+    const resource = await createTestCompose(owner.directory, owner.telemetryDirectory, 'web-api');
 
     expect(resource.provider).toBe('docker');
     expect(execFile).toHaveBeenCalledExactlyOnceWith('docker', ['compose', 'version'], expect.any(Function));
@@ -49,7 +49,7 @@ describe('test Compose command ownership', () => {
     vi.mocked(execFile).mockImplementationOnce(((...args: unknown[]) => {
       (args.at(-1) as (error: Error) => void)(new Error('synthetic_docker_unavailable'));
     }) as never);
-    const resource = await createTestCompose(owner.directory, owner.telemetryDirectory, 'api');
+    const resource = await createTestCompose(owner.directory, owner.telemetryDirectory, 'web-api');
 
     expect(resource.provider).toBe('podman-compose');
     expect(execFile).toHaveBeenLastCalledWith('podman-compose', ['version'], expect.any(Function));
@@ -57,13 +57,13 @@ describe('test Compose command ownership', () => {
 
   it('rejects an unsupported provider instead of interpreting a shell command', async () => {
     vi.stubEnv('VISOMI_TEST_COMPOSE', 'synthetic; unsafe');
-    await expect(createTestCompose(owner.directory, owner.telemetryDirectory, 'api')).rejects.toThrow(
+    await expect(createTestCompose(owner.directory, owner.telemetryDirectory, 'web-api')).rejects.toThrow(
       'test_compose_provider_invalid',
     );
     expect(execFile).not.toHaveBeenCalled();
   });
 
-  it.each(['api', 'gateway'] as const)('isolates %s from ambient development settings', async (app) => {
+  it.each(['web-api', 'web-gateway'] as const)('isolates %s from ambient development settings', async (app) => {
     vi.stubEnv('APP_DATABASE_URL', 'postgresql://synthetic-development/never-use');
     vi.stubEnv('POSTGRES_DB', 'synthetic-development');
     vi.stubEnv('HOST_BINDING', '0.0.0.0:');
@@ -90,7 +90,8 @@ describe('test Compose command ownership', () => {
     );
     expect(options.env).toMatchObject({
       APP_NAME: app,
-      APP_PORT: app === 'api' ? '3307' : '3317',
+      VISOMI_TEST_APP_ROOT: app === 'web-api' ? 'apps/web/api' : 'apps/web/gateway',
+      APP_PORT: app === 'web-api' ? '3307' : '3317',
       POSTGRES_DB: 'visomi_auth_test',
       POSTGRES_PORT: '',
       HOST_BINDING: '127.0.0.1:',
@@ -113,6 +114,8 @@ describe('test Compose command ownership', () => {
     { project: 'visomi-local' },
     { provider: 'synthetic-command' },
     { app: 'synthetic-app' },
+    { app: 'api' },
+    { app: 'gateway' },
   ])('refuses an unowned or unsupported descriptor: %j', (change) => {
     expect(() => runTestCompose({ ...owner, ...change } as TestCompose, ['down', '--volumes'])).toThrow(
       'isolated_compose_owner_invalid',

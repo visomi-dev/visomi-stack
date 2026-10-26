@@ -66,7 +66,7 @@ It installs one auth chain in the host and uses inherited mode for the mounted A
 Its shutdown uses the same three-second HTTP drain, one-second telemetry flush
 budget and five-second total deadline as the standalone API.
 
-The container runtime defaults to the standalone API. Set `APP_NAME=gateway`
+The container runtime defaults to the standalone API. Set `APP_NAME=web-gateway`
 to build the gateway and its API dependency, copy both compiled outputs, and run
 the gateway's `main.js`. Set `APP_PORT` to change the published port and align
 `AUTH_ORIGIN` with that public URL. This adds no Angular SSR, Astro, realtime or

@@ -11,7 +11,7 @@ export type TestCompose = {
   project: string;
   directory: string;
   telemetryDirectory: string;
-  app: 'api' | 'gateway';
+  app: 'web-api' | 'web-gateway';
 };
 
 export async function createTestCompose(
@@ -48,7 +48,7 @@ export function runTestCompose(
     !basename(owner.directory).startsWith('visomi-auth-test-') ||
     owner.project !== basename(owner.directory).toLowerCase() ||
     !['docker', 'podman-compose'].includes(owner.provider) ||
-    !['api', 'gateway'].includes(owner.app)
+    !['web-api', 'web-gateway'].includes(owner.app)
   ) {
     throw new Error('isolated_compose_owner_invalid');
   }
@@ -77,14 +77,15 @@ export function runTestCompose(
         // Override ambient development settings; Compose must only reach this owned test database.
         COMPOSE_PROJECT_NAME: owner.project,
         APP_NAME: owner.app,
-        APP_PORT: owner.app === 'api' ? '3307' : '3317',
+        VISOMI_TEST_APP_ROOT: owner.app === 'web-api' ? 'apps/web/api' : 'apps/web/gateway',
+        APP_PORT: owner.app === 'web-api' ? '3307' : '3317',
         APP_DATABASE_URL: 'postgresql://visomi_test:synthetic-test-password@postgres:5432/visomi_auth_test',
         POSTGRES_DB: 'visomi_auth_test',
         POSTGRES_USER: 'visomi_test',
         POSTGRES_PASSWORD: 'synthetic-test-password',
         POSTGRES_PORT: '',
         HOST_BINDING: '127.0.0.1:',
-        AUTH_ORIGIN: owner.app === 'api' ? 'http://127.0.0.1:3307' : 'http://127.0.0.1:3317',
+        AUTH_ORIGIN: owner.app === 'web-api' ? 'http://127.0.0.1:3307' : 'http://127.0.0.1:3317',
         AUTH_RP_ID: '127.0.0.1',
         SESSION_SECRET: 'synthetic-e2e-only-session-secret-32-bytes',
         VISOMI_TEST_TELEMETRY_DIR: owner.telemetryDirectory,

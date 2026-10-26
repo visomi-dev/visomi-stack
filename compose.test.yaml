@@ -6,7 +6,7 @@ services:
     environment:
       NODE_ENV: test
       AUTH_TRUST_PROXY: ''
-      NODE_OPTIONS: --require /workspace/apps/web/${APP_NAME}/e2e/support/telemetry-preload.cjs
+      NODE_OPTIONS: --require /workspace/${VISOMI_TEST_APP_ROOT}/e2e/support/telemetry-preload.cjs
       VISOMI_E2E_CONTAINER: 'true'
       VISOMI_E2E_TELEMETRY_DIR: /workspace/tmp/container-telemetry
     volumes:

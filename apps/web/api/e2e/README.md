@@ -32,8 +32,8 @@ with one-shot dependency conditions. Initialization failure prevents app startup
 For regular local containers, `APP_NAME` selects the same build and executable:
 
 ```sh
-APP_NAME=api docker compose up --build app
-APP_NAME=gateway docker compose up --build app
+APP_NAME=web-api docker compose up --build app
+APP_NAME=web-gateway docker compose up --build app
 ```
 
 Supply `SESSION_SECRET` as described in the development guide. Use `APP_PORT` to
@@ -124,7 +124,7 @@ Telemetry is delivered to owned local files; no collector or external service is
 contacted. The unit and compiled-process suites remain distinct from these E2E checks.
 
 Playwright starts a dedicated Compose project for each run using `compose.yaml`
-and `compose.test.yaml`. The wrapper selects `APP_NAME=api` or `gateway`, builds
+and `compose.test.yaml`. The wrapper selects `APP_NAME=web-api` or `web-gateway`, builds
 that application with Nx inside the image, runs the explicit database initializer,
 and starts its compiled `main.js`. API binds loopback port 3307; gateway binds
 3317 and uses `/api/` for readiness. The gateway root intentionally remains 404.

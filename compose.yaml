@@ -86,7 +86,7 @@ services:
       dockerfile: Dockerfile
       target: runtime
       args:
-        APP_NAME: ${APP_NAME:-api}
+        APP_NAME: ${APP_NAME:-web-api}
     # Public browser URLs stay on localhost; service connections use container DNS.
     environment:
       - HOST=0.0.0.0

@@ -72,7 +72,7 @@ dependencies. A fresh-checkout installation has not yet been verified.
   application, and local telemetry destinations. Run
   `pnpm nx e2e web-api` and `pnpm nx e2e web-gateway`.
 - The container runtime selects the standalone API or gateway with
-  `APP_NAME=api|gateway`, with a separate database initialization image. Redis and MinIO services remain in Compose from
+  `APP_NAME=web-api|web-gateway`, with a separate database initialization image. Redis and MinIO services remain in Compose from
   the earlier infrastructure setup; the API authentication slice does not use
   them. Containers do not establish worker or deployment readiness.
 

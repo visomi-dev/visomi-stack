@@ -17,7 +17,7 @@ const compose = {
   project: 'visomi-auth-test-owned',
   directory: '/synthetic/visomi-auth-test-owned',
   telemetryDirectory: '/synthetic/telemetry',
-  app: 'api' as const,
+  app: 'web-api' as const,
 };
 let handlers: Map<string | symbol, () => void>;
 
@@ -48,17 +48,17 @@ afterEach(() => {
 describe('Compose E2E server lifecycle', () => {
   it('requires an isolated telemetry directory before starting resources', async () => {
     vi.stubEnv('VISOMI_E2E_TELEMETRY_DIR', undefined);
-    await expect(serveTestApplication('api')).rejects.toThrow('isolated_telemetry_directory_required');
+    await expect(serveTestApplication('web-api')).rejects.toThrow('isolated_telemetry_directory_required');
     expect(testPostgres).not.toHaveBeenCalled();
   });
 
   it.each(['SIGINT', 'SIGTERM'])('builds the selected app and cleans owned resources after %s', async (signal) => {
-    const serving = serveTestApplication('gateway');
+    const serving = serveTestApplication('web-gateway');
 
     await vi.waitFor(() => expect(runTestCompose).toHaveBeenCalledTimes(3));
     expect(testPostgres).toHaveBeenCalledExactlyOnceWith(
       '/synthetic/telemetry/postgres.json',
-      'gateway',
+      'web-gateway',
       expect.any(AbortSignal),
     );
     expect(writeFile).toHaveBeenCalledExactlyOnceWith(
@@ -80,7 +80,7 @@ describe('Compose E2E server lifecycle', () => {
     const failure = new Error('synthetic_build_failure');
 
     vi.mocked(runTestCompose).mockRejectedValueOnce(failure);
-    await expect(serveTestApplication('api')).rejects.toBe(failure);
+    await expect(serveTestApplication('web-api')).rejects.toBe(failure);
     expect(stop).toHaveBeenCalledOnce();
   });
 
@@ -88,14 +88,14 @@ describe('Compose E2E server lifecycle', () => {
     const failure = new Error('synthetic_migration_failure');
 
     vi.mocked(runTestCompose).mockResolvedValueOnce({ stdout: '', stderr: '' }).mockRejectedValueOnce(failure);
-    await expect(serveTestApplication('api')).rejects.toBe(failure);
+    await expect(serveTestApplication('web-api')).rejects.toBe(failure);
     expect(runTestCompose).toHaveBeenCalledTimes(2);
     expect(stop).toHaveBeenCalledOnce();
   });
 
   it('releases the wrapper timer and containers only when the runner signals shutdown', async () => {
     vi.useFakeTimers();
-    const serving = serveTestApplication('api');
+    const serving = serveTestApplication('web-api');
 
     await vi.waitFor(() => expect(runTestCompose).toHaveBeenCalledTimes(3));
     await vi.advanceTimersByTimeAsync(1000);
@@ -107,7 +107,7 @@ describe('Compose E2E server lifecycle', () => {
   });
 
   it('cleans a database that finishes starting after the runner already cancelled', async () => {
-    const serving = serveTestApplication('api');
+    const serving = serveTestApplication('web-api');
     const rejected = expect(serving).rejects.toMatchObject({ name: 'AbortError' });
 
     handlers.get('SIGINT')!();
@@ -125,7 +125,7 @@ describe('Compose E2E server lifecycle', () => {
           signal!.addEventListener('abort', () => reject(failure), { once: true });
         }),
     );
-    const serving = serveTestApplication('api');
+    const serving = serveTestApplication('web-api');
     const rejected = expect(serving).rejects.toBe(failure);
 
     await vi.waitFor(() => expect(runTestCompose).toHaveBeenCalledOnce());
@@ -138,14 +138,14 @@ describe('Compose E2E server lifecycle', () => {
     const failure = new Error('synthetic_database_failure');
 
     vi.mocked(testPostgres).mockRejectedValueOnce(failure);
-    await expect(serveTestApplication('api')).rejects.toBe(failure);
+    await expect(serveTestApplication('web-api')).rejects.toBe(failure);
     expect(runTestCompose).not.toHaveBeenCalled();
     expect(stop).not.toHaveBeenCalled();
   });
 
   it('reports cleanup failure instead of silently leaving containers alive', async () => {
     const failure = new Error('synthetic_cleanup_failure');
-    const serving = serveTestApplication('api');
+    const serving = serveTestApplication('web-api');
     const rejected = expect(serving).rejects.toBe(failure);
 
     await vi.waitFor(() => expect(runTestCompose).toHaveBeenCalledTimes(3));
