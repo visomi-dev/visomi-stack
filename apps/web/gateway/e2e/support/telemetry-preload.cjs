@@ -11,7 +11,10 @@ if (directory && /\/gateway\/(src\/)?main\.(ts|js)$/.test(entry ?? '')) {
   const { initializeObservability } = require('@visomi-stack/web-backend-shared');
   const { createTelemetryOptions } = require('@visomi-stack/dev-testing/telemetry');
 
-  writeFileSync(join(directory, 'owner.json'), JSON.stringify({ pid: process.pid, parentPid: process.ppid }));
+  if (process.env.VISOMI_E2E_CONTAINER !== 'true') {
+    writeFileSync(join(directory, 'owner.json'), JSON.stringify({ pid: process.pid, parentPid: process.ppid }));
+  }
+
   initializeObservability(
     createTelemetryOptions(directory, 'web-gateway', {
       holdSpans: process.env.VISOMI_E2E_HOLD_SPANS === 'true',

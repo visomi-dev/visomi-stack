@@ -24,24 +24,41 @@ CMD ["pnpm", "nx", "run", "backend-shared:db-migrate", "--output-style=static"]
 
 FROM workspace AS build
 
-RUN pnpm nx build web-api
+ARG APP_NAME=api
+
+RUN case "$APP_NAME" in api|gateway) ;; *) exit 1 ;; esac \
+    && pnpm nx build "web-$APP_NAME"
+
+# Test-only tooling supplies local exporters; the compiled executable still owns startup.
+FROM build AS test-runtime
+
+ARG APP_NAME=api
+
+ENV APP_MAIN=dist/apps/web/${APP_NAME}/main.js
+ENV APP_NAME=${APP_NAME}
+
+CMD ["sh", "-c", "exec node \"$APP_MAIN\""]
 
 FROM base AS runtime
+
+ARG APP_NAME=api
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=8080
+ENV APP_MAIN=dist/apps/web/${APP_NAME}/main.js
+ENV APP_NAME=${APP_NAME}
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
-COPY --from=build /workspace/dist/apps/web/api ./dist/apps/web/api
+COPY --from=build /workspace/dist/apps/web ./dist/apps/web
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT ?? '8080') + '/').then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT ?? '8080') + (process.env.APP_NAME === 'gateway' ? '/api/' : '/')).then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"]
 
-CMD ["node", "dist/apps/web/api/main.js"]
+CMD ["sh", "-c", "exec node \"$APP_MAIN\""]

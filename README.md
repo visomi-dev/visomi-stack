@@ -68,12 +68,13 @@ dependencies. A fresh-checkout installation has not yet been verified.
   Process integration tests verify that mount, inherited authentication, shared
   telemetry and resource cleanup. Angular SSR and other frontend mounts remain pending.
 - API and gateway Playwright request suites verify their HTTP contracts using
-  separate owned PostgreSQL clusters and local telemetry destinations. Run
+  separate owned Compose projects with container PostgreSQL, the compiled
+  application, and local telemetry destinations. Run
   `pnpm nx e2e web-api` and `pnpm nx e2e web-gateway`.
-- The container runtime targets the current standalone API, with a separate
-  database initialization image. Redis and MinIO services remain in Compose from
+- The container runtime selects the standalone API or gateway with
+  `APP_NAME=api|gateway`, with a separate database initialization image. Redis and MinIO services remain in Compose from
   the earlier infrastructure setup; the API authentication slice does not use
-  them. Containers do not establish gateway, worker, or deployment readiness.
+  them. Containers do not establish worker or deployment readiness.
 
 ## Documentation
 

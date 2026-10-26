@@ -92,7 +92,14 @@
         },
         {
           "env": "CI"
-        }
+        },
+        "{workspaceRoot}/Dockerfile",
+        "{workspaceRoot}/.dockerignore",
+        "{workspaceRoot}/compose.yaml",
+        "{workspaceRoot}/compose.test.yaml",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/pnpm-lock.yaml",
+        "{workspaceRoot}/pnpm-workspace.yaml"
       ]
     },
     "lint": {

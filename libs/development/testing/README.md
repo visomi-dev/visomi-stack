@@ -29,12 +29,18 @@ with tsx from the workspace root pass that tsconfig explicitly. Each server
 preload configures the same aliases before requiring the telemetry entry. These
 are development-only loaders, not production initialization.
 
-PostgreSQL helpers always create a dedicated owned cluster, never use developer
-`DATABASE_URL`, and explicitly apply the shared database migrations. `PG_BIN`
-selects the local PostgreSQL binaries; the default is `/usr/lib/postgresql/17/bin`.
-An explicit Nx dependency on `backend-shared` tracks migration changes. Tests stub
-process/network/database boundaries for ownership and failure cases; the API and
-gateway integration/E2E suites continue exercising real PostgreSQL and HTTP.
+PostgreSQL helpers create a dedicated Compose project and volume using the base
+Compose PostgreSQL image, never use developer `DATABASE_URL`, and apply the shared
+database migrations. No native PostgreSQL binaries are used. Docker Compose v2
+or Podman with `podman-compose` must be available; `VISOMI_TEST_COMPOSE` can select
+`docker` or `podman-compose` explicitly. An empty explicit env file and controlled
+settings isolate tests from development configuration. The ownership manifest
+records the provider and project so cleanup removes only that run's containers
+and volumes, including after wrapper failure. E2E startup also builds the chosen
+application, awaits database initialization, and starts its compiled main in Compose.
+An explicit Nx dependency on `backend-shared` tracks migration changes. Unit tests
+stub process/database boundaries for ownership and failure cases; API and gateway
+integration/E2E suites exercise real container PostgreSQL and HTTP.
 No telemetry is sent to external services.
 
 From the workspace root:

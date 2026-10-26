@@ -29,7 +29,7 @@ beforeAll(async () => {
   directory = temporary;
   postgres = cluster;
   probe = createDatabase(postgres.url);
-}, 20000);
+}, 120000);
 
 afterAll(async () => {
   await probe?.close();

@@ -12,7 +12,7 @@ vi.mock('node:timers/promises', () => ({ setTimeout: vi.fn() }));
 vi.mock('../../postgres', () => ({ stopTestPostgres: vi.fn() }));
 
 const owner = { pid: 991001, parentPid: 991002 };
-const cluster = { directory: '/synthetic/visomi-auth-test-owned', binary: '/synthetic/pg' };
+const cluster = { directory: '/synthetic/visomi-auth-test-owned', compose: { project: 'visomi-auth-test-owned' } };
 const missing = () => Object.assign(new Error('synthetic_missing'), { code: 'ENOENT' });
 let signal: ReturnType<typeof vi.spyOn>;
 
@@ -54,7 +54,7 @@ describe('owned E2E process teardown', () => {
       [owner.pid, 'SIGTERM'],
       [owner.pid, 0],
     ]);
-    expect(stopTestPostgres).toHaveBeenCalledExactlyOnceWith(cluster.directory, cluster.binary);
+    expect(stopTestPostgres).toHaveBeenCalledExactlyOnceWith(cluster.directory, cluster.compose);
     expect(signal.mock.invocationCallOrder.at(-1)).toBeLessThan(
       vi.mocked(stopTestPostgres).mock.invocationCallOrder[0],
     );

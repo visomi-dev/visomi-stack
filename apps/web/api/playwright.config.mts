@@ -19,6 +19,7 @@ export default defineConfig({
   workers: 1,
   use: { baseURL: 'http://127.0.0.1:3307', trace: 'off' },
   webServer: {
+    timeout: 300000,
     command: 'pnpm exec tsx --tsconfig apps/web/api/tsconfig.spec.json apps/web/api/e2e/support/serve.ts',
     url: 'http://127.0.0.1:3307',
     reuseExistingServer: false,

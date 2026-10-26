@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import { stopTestPostgres } from '../../postgres';
+import type { TestCompose } from '../../compose';
 
 async function stopApplication() {
   const directory = process.env.VISOMI_E2E_TELEMETRY_DIR;
@@ -56,7 +57,7 @@ async function stopDatabase() {
     return;
   }
 
-  let cluster: { directory: string; binary: string };
+  let cluster: { directory: string; compose: TestCompose };
 
   try {
     const manifest = await readFile(join(directory, 'postgres.json'), 'utf8');
@@ -70,7 +71,7 @@ async function stopDatabase() {
     throw error;
   }
 
-  await stopTestPostgres(cluster.directory, cluster.binary);
+  await stopTestPostgres(cluster.directory, cluster.compose);
 }
 
 export default async function teardown() {

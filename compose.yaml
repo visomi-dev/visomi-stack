@@ -9,7 +9,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-local-development-only}
     ports:
-      - '${HOST_BINDING-127.0.0.1:}${POSTGRES_PORT:-5432}:5432'
+      - '${HOST_BINDING-127.0.0.1:}${POSTGRES_PORT-5432}:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -85,6 +85,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runtime
+      args:
+        APP_NAME: ${APP_NAME:-api}
     # Public browser URLs stay on localhost; service connections use container DNS.
     environment:
       - HOST=0.0.0.0
@@ -95,7 +97,7 @@ services:
       # Set APP_DATABASE_URL for URL-encoded credentials; use postgres:5432 as the host.
       - DATABASE_URL=${APP_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-visomi}}
     ports:
-      - '127.0.0.1:8080:8080'
+      - '127.0.0.1:${APP_PORT:-8080}:8080'
     depends_on:
       database-init:
         condition: service_completed_successfully

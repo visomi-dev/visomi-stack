@@ -11,6 +11,64 @@ pnpm nx e2e web-gateway
 pnpm nx run-many -t lint typecheck typecheck-tests -p web-api web-gateway web-backend-shared dev-testing
 ```
 
+## Compose prerequisites and application selection
+
+Install Docker with Compose v2 or Podman with `podman-compose`, and make the
+container engine available to your unprivileged user. The test helper detects
+Docker Compose first, then `podman-compose`. To choose explicitly:
+
+```sh
+export VISOMI_TEST_COMPOSE=podman-compose
+pnpm nx e2e web-api --ui
+# Or:
+pnpm nx e2e web-gateway --ui
+```
+
+No native PostgreSQL or Redis installation is required. The first run downloads
+images/dependencies and builds the selected application. With Podman, the wrapper
+explicitly awaits the initializer before starting `app`, avoiding provider issues
+with one-shot dependency conditions. Initialization failure prevents app startup.
+
+For regular local containers, `APP_NAME` selects the same build and executable:
+
+```sh
+APP_NAME=api docker compose up --build app
+APP_NAME=gateway docker compose up --build app
+```
+
+Supply `SESSION_SECRET` as described in the development guide. Use `APP_PORT` to
+change the published application port; keep `AUTH_ORIGIN` consistent with it.
+Use separate Compose project names when running both applications concurrently.
+
+## Local UI mode on Arch Linux
+
+The API suites use HTTP request fixtures and need no browser for a normal run.
+Playwright's `--ui` mode needs its bundled Chromium to display the test runner.
+Arch Linux is outside Playwright's officially supported Linux distributions;
+`install-deps` and `install --with-deps` use `apt-get` and do not work with
+Arch's `pacman`.
+
+Install system prerequisites with Arch's package manager if they are missing.
+The `chromium` package supplies the browser's system libraries; Playwright still
+uses its own versioned browser binary:
+
+```sh
+sudo pacman -S --needed chromium
+pnpm exec playwright install chromium --no-shell --no-remove
+```
+
+Only Chromium is needed for this UI; Firefox and WebKit are not prerequisites.
+The installer may warn that it is using an Ubuntu fallback build on Arch.
+Do not bypass dependency validation; an actual browser launch must still work.
+
+```sh
+pnpm nx e2e web-api --ui
+```
+
+Run this from a graphical desktop session. For a terminal-only run, omit `--ui`.
+
+## Suite ownership
+
 | Suite                                                        | Ownership                                                                                                                                                                      |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Shared colocated `lib/observability/lib/*.spec.ts`           | Capture policy, runtime reuse, detached callbacks, async context, jobs, metrics, completion guards, shutdown and cleanup failures                                              |
@@ -37,13 +95,13 @@ own `e2e/` directory:
   with an owned database pool and auth rate-limit isolation.
 - `apps/web/gateway/e2e/fixtures/http.ts`: composes the shared telemetry fixture
   with rate-limit isolation for authentication through the mounted API.
-- Each project's `e2e/support/` owns its Nx serve entrypoint, isolated auth
+- Each project's `e2e/support/` selects its Compose application, isolated auth
   database access and minimal preload restricted to that application's process.
 
 Dependencies currently used by both projects live in `libs/development/testing`:
 
 - `@visomi-stack/dev-testing/playwright`: lazy telemetry fixture, `expect` and
-  shared teardown of owned watchers, application processes and PostgreSQL clusters.
+  shared Compose startup/teardown and owned PostgreSQL resources.
 - `@visomi-stack/dev-testing/telemetry`: telemetry reader and local exporters.
 - `@visomi-stack/dev-testing/postgres`: runner-independent owned PostgreSQL helpers.
 - `@visomi-stack/dev-testing`: PostgreSQL and software-authenticator helpers without
@@ -53,8 +111,9 @@ Specs keep using Playwright's request fixture. The telemetry fixture binds the
 run's destination and can read a separate destination for the compiled shutdown
 scenario. The database fixture closes only the pool it creates. Neither fixture
 initializes telemetry or starts another server. The preload runs in the owning
-server process, writes its PID marker, and initializes observability with the
-shared test exporters. `webServer` still owns startup through Nx serve.
+server process and initializes observability with the shared test exporters.
+Container PIDs are never used to signal host processes. `webServer` owns the
+Compose wrapper; only the separate host shutdown fixture writes a host PID marker.
 
 Gateway `e2e/http.e2e.spec.ts`, `authentication.e2e.spec.ts` and
 `telemetry.e2e.spec.ts` exercise the running gateway through Playwright's request
@@ -64,20 +123,38 @@ correlation and exactly-once completion/spans across the host/API layers.
 Telemetry is delivered to owned local files; no collector or external service is
 contacted. The unit and compiled-process suites remain distinct from these E2E checks.
 
-The existing Playwright configuration uses a test-only wrapper to start isolated PostgreSQL and then `pnpm nx serve web-api` on loopback port 3307. It never reuses an unrelated server. Request fixtures need no browser. A test-only preload explicitly supplies local file exporters; the application entrypoint still performs shutdown. Teardown closes the owned watcher, application and recorded PostgreSQL cluster. The cluster has an ownership marker and a separate manifest, so cleanup does not depend on the serve wrapper surviving. Each run gets an isolated ignored directory under `tmp/api-e2e/run-*` from the repository root, containing its telemetry, manifests and temporary PostgreSQL cluster. Teardown removes the owned cluster and retains telemetry for inspection. The shutdown scenario owns a separate compiled process and destination under Playwright's configured test output; Nx's report/output locations remain unchanged.
+Playwright starts a dedicated Compose project for each run using `compose.yaml`
+and `compose.test.yaml`. The wrapper selects `APP_NAME=api` or `gateway`, builds
+that application with Nx inside the image, runs the explicit database initializer,
+and starts its compiled `main.js`. API binds loopback port 3307; gateway binds
+3317 and uses `/api/` for readiness. The gateway root intentionally remains 404.
+The gateway build also produces the compiled API it imports as a sibling artifact.
+There is no Nx serve watcher or native PostgreSQL server in this E2E startup.
 
-The gateway's existing configuration selects its own test-only wrapper's
-explicit `web-gateway` target on loopback port 3317, with its own PostgreSQL
-cluster and `tmp/api-e2e/gateway-run-*` destination. Its readiness path is `/api/`;
-the gateway root intentionally remains 404. Only application entrypoints are
-instrumented, including the gateway's ESM startup; imports of the compiled API
-never initialize another runtime. Both configurations use one API-only Playwright
-project and disable browser traces. The file metric exporter projects public SDK
-resource attributes rather than serializing SDK-private resource fields.
+Every run owns its project name, PostgreSQL volume, network, synthetic credentials,
+and ignored `tmp/api-e2e/run-*` or `gateway-run-*` directory. PostgreSQL is published
+on an automatically assigned loopback port for fixture queries. The empty explicit
+Compose env file and controlled settings prevent use of developer database
+configuration. Teardown removes only that test project's containers and volumes;
+telemetry and manifests remain for local inspection. Redis and MinIO are available
+in the base Compose but are not started because these suites have no consumer for them.
+
+The test-only image retains tooling for the local telemetry preload. The regular
+`runtime` target installs production dependencies and excludes the preload/tooling.
+Both execute the compiled application; only the owning entrypoint initializes
+resources. Telemetry files are mounted into the test container, with browser
+tracing disabled and no external collector. The metric exporter projects public
+SDK resource attributes rather than serializing SDK-private resource fields.
+
+The inherited parent-Express scenarios and standalone shutdown scenario retain
+their dedicated host process fixtures and compiled-module checks. They connect
+to the same owned Compose PostgreSQL, without native PostgreSQL binaries. The Nx
+host build remains necessary for those compiled fixture imports. Nx's existing
+report/output locations remain unchanged.
 
 The shutdown check holds a local span export until shutdown and uses delayed local metric exports and the existing runtime's one-second flush budget and executable's five-second deadline. It verifies delivery across a real process/filesystem boundary and verifies that the owned PostgreSQL connections disappear when the standalone process exits. It does not verify OTLP, network collectors or external services. The compiled build is also checked for import safety without enabling telemetry or opening ports.
 
-The API exposes a greeting, passkey authentication and credential/session routes, and a 404 response. Authentication scenarios verify real ES256 signatures, cookies, CSRF, replay/expiry, ownership, sanitized SQL rejection, and a real inherited Express host. PostgreSQL setup uses only an owned cluster; see the [API guide](../README.md). Induced 500-error privacy, internal async work and job trace relationships remain unit/integration checks. There is no running worker, realtime service or queue path to exercise end to end. The child-process carrier check verifies serialization and reconstruction, not queue delivery or a production worker.
+The API exposes a greeting, passkey authentication and credential/session routes, and a 404 response. Authentication scenarios verify real ES256 signatures, cookies, CSRF, replay/expiry, ownership, sanitized SQL rejection, and a real inherited Express host. PostgreSQL setup uses only an owned Compose project; see the [API guide](../README.md). Induced 500-error privacy, internal async work and job trace relationships remain unit/integration checks. There is no running worker, realtime service or queue path to exercise end to end. The child-process carrier check verifies serialization and reconstruction, not queue delivery or a production worker.
 
 Passkey unit tests stub option generation and the narrow persistence boundary;
 router unit tests dispatch through the router without opening a listener and stub

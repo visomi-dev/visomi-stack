@@ -33,7 +33,7 @@ beforeAll(async () => {
 
   postgres = isolated;
   resource = createDatabase(postgres.url);
-}, 20000);
+}, 120000);
 afterAll(async () => {
   await resource?.close();
   await postgres?.stop();

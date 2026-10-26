@@ -37,7 +37,7 @@ beforeAll(async () => {
   postgres = isolated;
   resource = createDatabase(postgres.url);
   passkeys = new Passkeys(resource.db, config);
-}, 20000);
+}, 120000);
 
 afterAll(async () => {
   await resource?.close();

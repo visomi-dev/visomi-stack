@@ -66,14 +66,17 @@ It installs one auth chain in the host and uses inherited mode for the mounted A
 Its shutdown uses the same three-second HTTP drain, one-second telemetry flush
 budget and five-second total deadline as the standalone API.
 
-The existing container runtime still launches the standalone API; this gateway
-slice does not add Angular SSR, Astro, realtime or worker mounts.
+The container runtime defaults to the standalone API. Set `APP_NAME=gateway`
+to build the gateway and its API dependency, copy both compiled outputs, and run
+the gateway's `main.js`. Set `APP_PORT` to change the published port and align
+`AUTH_ORIGIN` with that public URL. This adds no Angular SSR, Astro, realtime or
+worker mounts.
 
 ## Container database initialization
 
 The Dockerfile has separate `database-init` and `runtime` targets. The former
 includes the workspace tooling and shared database migrations; the latter runs
-only the compiled standalone API with production dependencies. Neither image runs
+the selected compiled API or gateway with production dependencies. Neither image runs
 migrations at build time. The API entrypoint does not run migrations or seeds.
 
 Provide a high-entropy `SESSION_SECRET` of at least 32 bytes in your environment,
@@ -91,12 +94,11 @@ dependencies of the current API. Use `up app` for this slice; starting every
 service also includes those legacy integrations.
 
 Use Docker Compose with support for these dependency conditions. On the current
-development host, `docker` is a Podman wrapper and its `podman-compose` 1.3
-provider fails to start the application after the one-shot dependency exits.
+development hosts, the `podman-compose` provider can fail to start the application after the one-shot dependency exits.
 Docker Compose v2 can use the host's Podman API socket instead; this is a local
 provider limitation, not a reason to move initialization into the API.
 
-With that socket available, the current host can run:
+With that socket and Docker Compose v2 available, run:
 
 ```sh
 DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock" docker-compose up --build app
@@ -133,6 +135,23 @@ step when schema changes. Coordinate schema changes with existing application
 instances: the startup dependency does not stop an already running API. Do not
 delete volumes to rerun initialization or point test runs at developer data.
 
+## Compose-backed tests
+
+`pnpm nx e2e web-api` and `pnpm nx e2e web-gateway` build and run the selected
+compiled application through `compose.yaml` plus `compose.test.yaml`. Playwright
+and its optional `--ui` stay on the host. Test PostgreSQL uses the same image as
+local Compose, with an independent project, volume, credentials and random
+loopback database port for each run. Native PostgreSQL and Redis are unnecessary.
+The tests do not start Redis or MinIO because neither application consumes them.
+
+Docker Compose is detected first, falling back to `podman-compose`; select a
+provider with `VISOMI_TEST_COMPOSE=docker|podman-compose`. The E2E wrapper explicitly
+builds both required images, runs the one-shot initializer, checks its exit, and
+starts only the selected app. This also works with providers that mishandle
+`service_completed_successfully`. Cleanup removes only the recorded test project
+and its volumes and retains local telemetry. See the [E2E guide](../apps/web/api/e2e/README.md)
+for browser setup on Arch and fixture boundaries.
+
 ## Verification
 
 Choose checks relevant to the change and report the command, result, and any
@@ -162,7 +181,7 @@ actual emitted application. These tests cover side-effect-free CommonJS imports
 under an ESM parent and standalone startup/shutdown. Colocated shared unit tests verify policy, runtime lifecycle, context isolation,
 job correlation, and adapter completion ownership. API integration tests exercise
 real HTTP listeners and local in-memory OpenTelemetry sinks. Playwright request
-tests run the API through Nx serve and inspect telemetry exported to isolated local
+tests run the compiled API in Compose and inspect telemetry exported to isolated local
 files, including delivery during standalone shutdown. See the
 [observability test guide](../apps/web/api/e2e/README.md) for suite ownership and commands.
 Gateway colocated units cover composition, compiled-module validation and startup
@@ -173,19 +192,20 @@ runner-independent helpers from `@visomi-stack/dev-testing`; no production API s
 cluster and temporary files live under `tmp/api-e2e/gateway-*` and are removed
 afterward. These are Vitest process integration checks. Both projects also own
 Playwright request suites in their existing `e2e/` directories. The gateway suite
-runs `pnpm nx serve web-gateway`, mounts the compiled API, and verifies inherited
+runs the compiled gateway in Compose, mounts the compiled API, and verifies inherited
 authentication/errors, Helmet, correlation and privacy through local file exports.
 Each project owns its Playwright fixture composition in `e2e/fixtures/http.ts`
-and its Nx serve entrypoint, authentication database access and minimal telemetry
+and its Compose app selection, authentication database access and minimal telemetry
 preload in `e2e/support/`. These files live under `apps/web/api/` or
 `apps/web/gateway/`; neither project imports the other project's test files.
 Shared support lives in `libs/development/testing`, an internal source library
 exposed as `@visomi-stack/dev-testing`. Its `/playwright` entry exports the shared
-telemetry fixture and teardown; `/telemetry` exports the reader and local exporters;
+telemetry fixture, Compose server lifecycle and teardown; `/telemetry` exports the reader and local exporters;
 `/postgres` exports the owned-cluster helpers. The root entry exports PostgreSQL
 and software-authenticator helpers without loading Playwright. Exported library
 implementation lives in `src/lib/`, with Playwright-specific helpers grouped in
-`src/lib/playwright/`. It does not select application targets or origins.
+`src/lib/playwright/`. Each application wrapper explicitly selects its own target;
+the shared Compose support maps that selection to the test build and loopback port.
 Unit tests stay beside each helper and run through `dev-testing:test`, with the
 same 100% per-file coverage gate over `src/`. Nx detects the
 library dependencies for affected checks; production code cannot import it.
