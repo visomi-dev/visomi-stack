@@ -1,6 +1,4 @@
-import type { MailTransport } from '@visomi-stack/backend-shared';
-import { HttpError } from '@visomi-stack/web-backend-shared';
-
+import type { MailTransport } from './smtp';
 import { templates } from './templates.generated';
 
 const copy = {
@@ -15,6 +13,20 @@ const copy = {
   enrollment: ['Confirm your new password', 'Enter this code to finish setting up your new sign-in method.'],
   reauth: ['Confirm your identity', 'Enter this code to confirm your identity.'],
 } as const;
+
+const notices = {
+  email_changed: 'Your account email address changed.',
+  password_changed: 'Your password settings changed.',
+  google_unlinked: 'Google was disconnected from your account.',
+  totp_enabled: 'An authenticator app was enabled for your account.',
+  totp_disabled: 'Your authenticator app was removed.',
+  password_reset: 'Your password was reset.',
+  recovery_authorized: 'Account recovery was authorized.',
+  password_recovered: 'Account recovery completed with a new password.',
+  passkey_recovered: 'Account recovery completed with a new passkey.',
+} as const;
+
+export type SecurityNotice = keyof typeof notices;
 
 export type CodePurpose = keyof typeof copy;
 const escape = (value: string) =>
@@ -43,7 +55,7 @@ export class AuthMail {
 
   async code(to: string, purpose: CodePurpose, code: string) {
     if (!this.transport) {
-      throw new HttpError(503, 'mail_unavailable');
+      throw new Error('mail_unavailable');
     }
 
     const [title, description] = copy[purpose];
@@ -51,19 +63,19 @@ export class AuthMail {
     try {
       await this.transport.send({ to, ...renderMessage('verification', title, description, code) });
     } catch {
-      throw new HttpError(503, 'mail_unavailable');
+      throw new Error('mail_unavailable');
     }
   }
 
-  async notice(to: string, description: string) {
+  async notice(to: string, notice: SecurityNotice) {
     if (!this.transport) {
-      throw new HttpError(503, 'mail_unavailable');
+      throw new Error('mail_unavailable');
     }
 
     try {
-      await this.transport.send({ to, ...renderMessage('security', 'Account security update', description) });
+      await this.transport.send({ to, ...renderMessage('security', 'Account security update', notices[notice]) });
     } catch {
-      throw new HttpError(503, 'mail_unavailable');
+      throw new Error('mail_unavailable');
     }
   }
 }

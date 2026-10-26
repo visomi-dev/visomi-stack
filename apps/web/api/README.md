@@ -158,15 +158,18 @@ eight-hour limit. Revoked SID tombstones remain immutable and are not pruned.
 ```sh
 pnpm nx run backend-shared:db-generate -- --name describe-schema-change
 DATABASE_URL=postgresql://localhost/visomi_stack_dev pnpm nx run backend-shared:db-migrate
-pnpm nx run web-api:emails-build
-pnpm nx run web-api:emails-check
+pnpm nx run backend-shared:emails-build
+pnpm nx run backend-shared:emails-check
 ```
 
 Use an explicitly provisioned development database for migrations; tests never
-use developer `DATABASE_URL`. MJML is a development-only dependency. Its strict
-compiler embeds HTML in generated TypeScript; runtime rendering escapes values
-and adds a plain-text alternative. Templates contain no tracking pixels or remote
-fonts. Regenerate resources after editing templates. Builds depend on generation.
+use developer `DATABASE_URL`. `backend-shared` owns the SMTP adapter, authentication email content, MJML
+templates, rendering and generation tooling. Auth selects typed message purposes
+and translates delivery failures into controlled HTTP responses. MJML is a
+development-only dependency. Its strict compiler embeds HTML in generated
+TypeScript; runtime rendering escapes values and adds a plain-text alternative.
+Templates contain no tracking pixels or remote fonts. Regenerate resources after
+editing templates. The API build depends on the library's generation target.
 
 Managed mode installs session and Passport middleware in the API. Inherited mode
 installs the same runtime once on the real parent, before mounting the API, with

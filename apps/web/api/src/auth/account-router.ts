@@ -87,7 +87,7 @@ export function accountRouter(auth: AuthRuntime) {
       text(input.code, 6),
       true,
     );
-    const notificationSent = await accounts.notify(changed.previousEmail, 'Your account email address changed.');
+    const notificationSent = await accounts.notify(changed.previousEmail, 'email_changed');
 
     await result(request, response, changed.user, { notificationSent });
   });
@@ -138,7 +138,7 @@ export function accountRouter(auth: AuthRuntime) {
         operation === 'remove' ? null : text(input.password),
         operation === 'add',
       );
-      const notificationSent = await accounts.notify(user.email, 'Your password settings changed.');
+      const notificationSent = await accounts.notify(user.email, 'password_changed');
 
       await result(request, response, updated, { notificationSent });
     });
@@ -193,7 +193,7 @@ export function accountRouter(auth: AuthRuntime) {
   router.delete('/google/:id', async (request, response) => {
     const user = current(request);
     const updated = await google.unlink(request.sessionID, user, identifier(request.params.id));
-    const notificationSent = await accounts.notify(user.email, 'Google was disconnected from your account.');
+    const notificationSent = await accounts.notify(user.email, 'google_unlinked');
 
     await result(request, response, updated, { notificationSent });
   });
@@ -210,14 +210,14 @@ export function accountRouter(auth: AuthRuntime) {
 
     await accounts.flows.limit('totp-confirm', id, 5);
     const confirmed = await accounts.factors.confirm(request.sessionID, user, id, text(input.code, 6));
-    const notificationSent = await accounts.notify(user.email, 'An authenticator app was enabled for your account.');
+    const notificationSent = await accounts.notify(user.email, 'totp_enabled');
 
     await result(request, response, confirmed.user, { recoveryCodes: confirmed.codes, notificationSent });
   });
   router.delete('/totp', async (request, response) => {
     const user = current(request);
     const updated = await accounts.factors.remove(request.sessionID, user);
-    const notificationSent = await accounts.notify(user.email, 'Your authenticator app was removed.');
+    const notificationSent = await accounts.notify(user.email, 'totp_disabled');
 
     await result(request, response, updated, { notificationSent });
   });
@@ -247,10 +247,7 @@ export function accountRouter(auth: AuthRuntime) {
         request.user,
       );
       const user = recovered.user;
-      const notificationSent = await accounts.notify(
-        recovered.email,
-        reset ? 'Your password was reset.' : 'Account recovery was authorized.',
-      );
+      const notificationSent = await accounts.notify(recovered.email, reset ? 'password_reset' : 'recovery_authorized');
 
       if (!user && !request.user) {
         response.json({ passwordReset: true, notificationSent });
@@ -274,7 +271,7 @@ export function accountRouter(auth: AuthRuntime) {
       text(input.password),
       factor(input.factor),
     );
-    const notificationSent = await accounts.notify(user.email, 'Account recovery completed with a new password.');
+    const notificationSent = await accounts.notify(user.email, 'password_recovered');
 
     await result(request, response, user, { notificationSent });
   });

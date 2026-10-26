@@ -1,10 +1,9 @@
-import { type Database } from '@visomi-stack/backend-shared';
+import { AuthMail, type Database } from '@visomi-stack/backend-shared';
 import { vi } from 'vitest';
 
 import { authConfig } from '../../src/auth/config';
 import { type Flow } from '../../src/auth/flows';
 import { principal, type Principal, type Transaction, type User } from '../../src/auth/identity';
-import { AuthMail } from '../../src/auth/mail/messages';
 import { encryptSecret, totpSetup } from '../../src/auth/secrets';
 export function storage(results: unknown[] = []) {
   const run = vi.fn(async () => {

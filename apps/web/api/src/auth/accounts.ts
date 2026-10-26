@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { authSchema, type Database } from '@visomi-stack/backend-shared';
+import { AuthMail, authSchema, type Database, type SecurityNotice } from '@visomi-stack/backend-shared';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 import { and, desc, eq, gt, isNotNull, isNull, ne, sql } from 'drizzle-orm';
 
@@ -19,7 +19,6 @@ import {
   type User,
   type Principal,
 } from './identity';
-import { AuthMail } from './mail/messages';
 import { requireFresh } from './security';
 import { digest, hashPassword, normalizeEmail, verifyPassword } from './secrets';
 
@@ -443,13 +442,13 @@ export class Accounts {
     });
   }
 
-  async notify(email: string | null, message: string) {
+  async notify(email: string | null, notice: SecurityNotice) {
     if (!email) {
       return false;
     }
 
     try {
-      await this.mail.notice(email, message);
+      await this.mail.notice(email, notice);
 
       return true;
     } catch {

@@ -14,7 +14,7 @@ apps/
     gateway/      # web-gateway: ESM host mounting the compiled API at /api
 libs/
   backend/
-    shared/       # backend-shared: infrastructure independent of HTTP, including Drizzle
+    shared/       # backend-shared: HTTP-independent database and email capabilities
   web/backend/
     shared/       # web-backend-shared: shared infrastructure and observability
 ```
@@ -36,6 +36,12 @@ authentication schema through the shared library. Database initialization remain
 explicit: each executable creates and closes its own pool and supplies it to the
 modules it composes. Imports do not open connections or run migrations; separate
 processes share PostgreSQL state, not JavaScript resources.
+
+`libs/backend/shared/src/lib/mail/` owns SMTP delivery, typed authentication mail
+content, MJML templates, escaped HTML/plain-text rendering and generated resources.
+Its `emails-build` target runs before the API build. Auth decides when to send
+messages and translates mail failures to HTTP; the executables create and close
+the injected transport.
 
 The API's Rolldown build preserves named `app` and `main` entries with stable
 `app.js` and `main.js` filenames, CommonJS output, external runtime dependencies,

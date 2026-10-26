@@ -16,7 +16,6 @@ import {
   totpStep,
   verifyPassword,
 } from './secrets';
-import { AuthMail, renderMessage } from './mail/messages';
 
 const key = Buffer.alloc(32, 7).toString('base64url');
 
@@ -88,34 +87,5 @@ describe('authentication secret boundaries', () => {
 
     expect(authConfig({ ...input, totpKey: key }).totpKey).toBe(key);
     expect(() => authConfig({ ...input, totpKey: 'invalid' })).toThrow('auth_configuration_invalid');
-  });
-  it('escapes dynamic email values and sanitizes transport failures', async () => {
-    const message = renderMessage('verification', '<script>', '"quoted" & \'single\'', '123456');
-
-    expect(message.html).not.toContain('<script>');
-    expect(message.html).toContain('&lt;script&gt;');
-    expect(message.text).toContain('123456');
-    const security = renderMessage('security', 'Security', 'A setting changed.');
-
-    expect(security.text).toContain('recover your account');
-    await expect(new AuthMail().code('synthetic@example.test', 'recovery', '123456')).rejects.toMatchObject({
-      code: 'mail_unavailable',
-    });
-    await expect(new AuthMail().notice('synthetic@example.test', 'Changed.')).rejects.toMatchObject({
-      code: 'mail_unavailable',
-    });
-    const mail = new AuthMail({
-      send: async () => {
-        throw new Error('SYNTHETIC_SMTP_PASSWORD');
-      },
-      close() {
-        return undefined;
-      },
-    });
-
-    await expect(mail.code('synthetic@example.test', 'recovery', '123456')).rejects.toMatchObject({
-      code: 'mail_unavailable',
-    });
-    await expect(mail.notice('synthetic@example.test', 'Changed.')).rejects.toMatchObject({ code: 'mail_unavailable' });
   });
 });

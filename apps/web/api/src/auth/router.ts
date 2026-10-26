@@ -113,7 +113,7 @@ export function authRouter(auth: AuthRuntime) {
 
     await establishSession(request, result, auth);
     if (recovering && result.level === 'full') {
-      await auth.accounts.notify(result.email, 'Account recovery completed with a new passkey.');
+      await auth.accounts.notify(result.email, 'passkey_recovered');
     }
 
     response.json(sessionView(request));

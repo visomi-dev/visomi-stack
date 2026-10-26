@@ -1,13 +1,12 @@
 import { randomUUID } from 'node:crypto';
 
-import { authSchema, type Database } from '@visomi-stack/backend-shared';
+import { AuthMail, authSchema, type Database } from '@visomi-stack/backend-shared';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
 
 import type { AuthConfig } from './config';
 import { lockSession, type Transaction } from './identity';
 import { digest, matches, pin } from './secrets';
-import { AuthMail } from './mail/messages';
 
 const { flows, rateLimits } = authSchema;
 

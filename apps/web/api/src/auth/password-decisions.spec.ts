@@ -82,7 +82,7 @@ describe('password and email proof version binding', () => {
     await expect(missing.account.reauthStart(session.sid, current, 'Synthetic password!')).rejects.toMatchObject({
       code: 'verification_failed',
     });
-    const result1 = await missing.account.notify(null, 'Synthetic');
+    const result1 = await missing.account.notify(null, 'password_changed');
 
     expect(result1).toBe(false);
   });

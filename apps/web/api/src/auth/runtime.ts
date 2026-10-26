@@ -1,4 +1,4 @@
-import { type MailTransport, type Database } from '@visomi-stack/backend-shared';
+import { AuthMail, type MailTransport, type Database } from '@visomi-stack/backend-shared';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import type { RequestHandler, Request } from 'express';
 import session from 'express-session';
@@ -11,7 +11,6 @@ import { Google } from './google';
 import { Recovery } from './recovery';
 import { Devices } from './devices';
 import { Accounts } from './accounts';
-import { AuthMail } from './mail/messages';
 import { Passkeys } from './passkeys';
 import { SessionStore } from './session-store';
 

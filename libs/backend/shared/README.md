@@ -40,3 +40,27 @@ reported without raw database errors.
 
 The API's [authentication guide](../../../apps/web/api/README.md) documents the
 current schema, security guarantees, configuration and integration tests.
+
+## Email
+
+`src/lib/mail/` owns the SMTP adapter, authentication code and security-notice
+content, MJML templates, generated HTML, escaping and plain-text alternatives.
+Consumers use `AuthMail`, `CodePurpose` and `SecurityNotice` through the library's
+public exports. Mail failures carry only a fixed message; HTTP translation stays
+in the calling application.
+
+The owning executable calls `smtpConfig()` and `createSmtp()` and closes the
+transport during shutdown. Importing the library does not connect to SMTP.
+`AuthMail` accepts that injected transport without owning its lifecycle.
+
+Generate or check the committed resources from the workspace root:
+
+```sh
+pnpm nx run backend-shared:emails-build
+pnpm nx run backend-shared:emails-check
+```
+
+`tools/mail/build-templates.ts` compiles MJML in strict mode, without remote fonts
+or includes. Generated resources are bundled by the API; the compiled gateway
+continues consuming the compiled API exports. Tests use the isolated SMTP fixture
+in `tests/support/smtp.cjs`; production executables never load it.
