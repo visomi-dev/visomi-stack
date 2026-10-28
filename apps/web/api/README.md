@@ -141,6 +141,17 @@ Factor kinds are `email`, `totp`, and `recovery_code`. Public session handles ar
 not SIDs and cannot be used as cookies. No IP address or user agent is retained as
 session metadata. Password/Google removal may end the current session.
 
+## Service composition
+
+`createAuthentication()` creates a separate `injection-js` graph per runtime using
+only the DI exports from `backend-shared`. PostgreSQL, the pool, optional SMTP and
+`AUTH_CONFIG` are explicit value providers. Accounts, passkeys, flows, factors,
+Google, recovery, devices and the session adapter resolve dependencies with
+`inject()` during construction, sharing instances only within that graph.
+Handlers still receive their runtime explicitly. Imports do not construct services
+or open resources, and the standalone/gateway public factory contracts remain the
+same. Service tests use provider overrides instead of positional constructors.
+
 ## HTTP composition
 
 `createAuthRouter()` installs the common security middleware and composes small

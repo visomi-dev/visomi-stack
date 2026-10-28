@@ -4,6 +4,8 @@ import type { Database } from '@visomi-stack/backend-shared';
 import { AuthHttpError } from '@visomi-stack/web-backend-shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { authService } from '../../tests/support/injection';
+
 import { authConfig } from './config';
 import { Passkeys } from './passkeys';
 
@@ -44,13 +46,19 @@ function optionsFixture() {
     select: () => ({ from: () => ({ where: owned }) }),
   };
 
-  return { database, owned, sessionLock, persist, passkeys: new Passkeys(database as unknown as Database, config) };
+  return {
+    database,
+    owned,
+    sessionLock,
+    persist,
+    passkeys: authService(Passkeys, database as unknown as Database, config),
+  };
 }
 
 describe('passkey capability authorization', () => {
   it('requires fresh passkey authentication before offering enrollment or changing credentials', async () => {
     const database = { transaction: vi.fn(), select: vi.fn(), update: vi.fn() } as unknown as Database;
-    const passkeys = new Passkeys(database, config);
+    const passkeys = authService(Passkeys, database, config);
     const stale = { id: 'synthetic-user', credentialId: 'synthetic-credential', authenticatedAt: Date.now() - 600000 };
 
     await expect(passkeys.registrationOptions('synthetic-session', stale)).rejects.toMatchObject({
@@ -189,7 +197,7 @@ it('rejects an enrollment grant revoked after assertion verification starts', as
   };
 
   await expect(
-    new Passkeys(f.db, trusted).authenticate(
+    authService(Passkeys, f.db, trusted).authenticate(
       session.sid,
       flow.id,
       { id: candidate.credentialId, response: {} } as never,

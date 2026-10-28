@@ -1,5 +1,7 @@
+import { AuthMail } from '@visomi-stack/backend-shared';
 import { describe, expect, it, vi } from 'vitest';
 
+import { authService } from '../../tests/support/injection';
 import {
   config,
   current,
@@ -21,7 +23,7 @@ import { hashPassword } from './secrets';
 describe('password and email proof version binding', () => {
   function accounts(results: unknown[], pending: Flow) {
     const f = storage(results);
-    const account = new Accounts(f.db, config, quietMail);
+    const account = authService(Accounts, f.db, config, [{ provide: AuthMail, useValue: quietMail }]);
 
     vi.spyOn(account.flows, 'reserve').mockResolvedValue(pending);
     vi.spyOn(account.flows, 'locked').mockResolvedValue(pending);
@@ -119,7 +121,10 @@ describe('recovery proof binding', () => {
       consume: vi.fn().mockResolvedValue(undefined),
     };
     const factors = { active: vi.fn().mockResolvedValue(undefined), verify: vi.fn() };
-    const recovery = new Recovery(f.db, config, proofs as unknown as Flows, factors as unknown as Factors);
+    const recovery = authService(Recovery, f.db, config, [
+      { provide: Flows, useValue: proofs as unknown as Flows },
+      { provide: Factors, useValue: factors as unknown as Factors },
+    ]);
 
     return { ...f, proofs, factors, recovery };
   }
@@ -199,7 +204,7 @@ it('rejects claiming an unverified duplicate after another identity verified its
     data: { method: 'password' as const, requiredFactor: 'email' as const },
   };
   const f = storage([[], [{ ...user, emailVerifiedAt: null }], [], [user]]);
-  const account = new Accounts(f.db, config, quietMail);
+  const account = authService(Accounts, f.db, config, [{ provide: AuthMail, useValue: quietMail }]);
 
   vi.spyOn(account.flows, 'reserve').mockResolvedValue(pending);
   vi.spyOn(account.flows, 'locked').mockResolvedValue(pending);

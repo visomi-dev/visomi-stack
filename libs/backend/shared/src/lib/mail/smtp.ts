@@ -1,7 +1,11 @@
 import { createTransport } from 'nodemailer';
 
+import { InjectionToken } from '../injection';
+
 export type MailMessage = { to: string; subject: string; html: string; text: string };
 export type MailTransport = { send(message: MailMessage): Promise<void>; close(): void };
+export const MAIL_TRANSPORT = new InjectionToken<MailTransport>('mail transport');
+
 export type SmtpConfig = {
   host: string;
   port: number;

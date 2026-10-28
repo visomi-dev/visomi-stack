@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
 
-import { authSchema, type Database } from '@visomi-stack/backend-shared';
+import { authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, isNull } from 'drizzle-orm';
 
-import type { AuthConfig } from './config';
+import { AUTH_CONFIG, type AuthConfig } from './config';
 import { type Transaction, type User, lockIdentity, invalidate, updatedPrincipal, requireFull } from './identity';
 import { unavailable } from './flows';
 import { requireFresh } from './security';
@@ -14,10 +14,8 @@ const { totpEnrollments, recoveryCodes } = authSchema;
 
 export type Factor = { kind: 'email' | 'totp' | 'recovery_code'; code: string };
 export class Factors {
-  constructor(
-    private readonly database: Database,
-    private readonly config: AuthConfig,
-  ) {}
+  private readonly database = inject<Database>(DATABASE);
+  private readonly config = inject<AuthConfig>(AUTH_CONFIG);
 
   async active(tx: Transaction | Database, userId: string) {
     const [factor] = await tx

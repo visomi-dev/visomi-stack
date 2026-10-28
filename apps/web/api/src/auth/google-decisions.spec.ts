@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { OAuth2Client } from 'google-auth-library';
 
+import { authService } from '../../tests/support/injection';
 import { storage, config, user, current, session, flow } from '../../tests/support/auth-state';
 
 import { Google } from './google';
@@ -9,7 +10,7 @@ import { Flows } from './flows';
 describe('Google configuration and proof races', () => {
   it('disables provider operations without a configured audience', async () => {
     const f = storage();
-    const google = new Google(f.db, config, {} as Flows);
+    const google = authService(Google, f.db, config, [{ provide: Flows, useValue: {} as Flows }]);
 
     await expect(google.start(session.sid, 'login')).rejects.toMatchObject({ code: 'google_disabled' });
     await expect(google.complete(session.sid, flow.id, 'synthetic')).rejects.toMatchObject({ code: 'google_disabled' });
@@ -20,11 +21,9 @@ describe('Google configuration and proof races', () => {
       const proofs = { reserve: vi.fn().mockResolvedValue(pending) } as unknown as Flows;
 
       await expect(
-        new Google(f.db, { ...config, googleClientId: 'synthetic' }, proofs).complete(
-          session.sid,
-          flow.id,
-          'synthetic',
-        ),
+        authService(Google, f.db, { ...config, googleClientId: 'synthetic' }, [
+          { provide: Flows, useValue: proofs },
+        ]).complete(session.sid, flow.id, 'synthetic'),
       ).rejects.toMatchObject({ code: 'verification_failed' });
     }
   });
@@ -47,11 +46,9 @@ describe('Google configuration and proof races', () => {
 
     try {
       await expect(
-        new Google(storage().db, { ...config, googleClientId: 'synthetic' }, proofs).complete(
-          session.sid,
-          flow.id,
-          'synthetic',
-        ),
+        authService(Google, storage().db, { ...config, googleClientId: 'synthetic' }, [
+          { provide: Flows, useValue: proofs },
+        ]).complete(session.sid, flow.id, 'synthetic'),
       ).rejects.toMatchObject({ code: 'verification_failed' });
     } finally {
       verify.mockRestore();
@@ -68,11 +65,9 @@ describe('Google configuration and proof races', () => {
       const f = storage([candidate ? [candidate] : []]);
 
       await expect(
-        new Google(f.db, { ...config, googleClientId: 'synthetic' }, proofs).emailComplete(
-          session.sid,
-          flow.id,
-          '123456',
-        ),
+        authService(Google, f.db, { ...config, googleClientId: 'synthetic' }, [
+          { provide: Flows, useValue: proofs },
+        ]).emailComplete(session.sid, flow.id, '123456'),
       ).rejects.toMatchObject({ code: 'verification_failed' });
     }
     const candidate = {
@@ -83,12 +78,9 @@ describe('Google configuration and proof races', () => {
     const f = storage([[candidate], [], [], [], [user], [session]]);
 
     await expect(
-      new Google(f.db, { ...config, googleClientId: 'synthetic' }, proofs).emailComplete(
-        session.sid,
-        flow.id,
-        '123456',
-        current,
-      ),
+      authService(Google, f.db, { ...config, googleClientId: 'synthetic' }, [
+        { provide: Flows, useValue: proofs },
+      ]).emailComplete(session.sid, flow.id, '123456', current),
     ).rejects.toMatchObject({ code: 'verification_failed' });
   });
 });
@@ -119,7 +111,9 @@ it('does not let a provider result skip an SMTP proof attached concurrently', as
 
   try {
     await expect(
-      new Google(f.db, { ...config, googleClientId: 'synthetic' }, proofs).complete(session.sid, flow.id, 'synthetic'),
+      authService(Google, f.db, { ...config, googleClientId: 'synthetic' }, [
+        { provide: Flows, useValue: proofs },
+      ]).complete(session.sid, flow.id, 'synthetic'),
     ).rejects.toMatchObject({ code: 'verification_failed' });
   } finally {
     verify.mockRestore();

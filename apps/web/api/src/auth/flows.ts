@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
 
-import { AuthMail, authSchema, type Database } from '@visomi-stack/backend-shared';
+import { AuthMail, authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
 
-import type { AuthConfig } from './config';
+import { AUTH_CONFIG, type AuthConfig } from './config';
 import { lockSession, type Transaction } from './identity';
 import { digest, matches, pin } from './secrets';
 
@@ -14,11 +14,9 @@ export type Flow = typeof flows.$inferSelect;
 type FlowInput = Partial<Pick<Flow, 'userId' | 'authVersion' | 'email' | 'data' | 'attempts' | 'expiresAt'>>;
 export const unavailable = () => new HttpError(400, 'verification_failed');
 export class Flows {
-  constructor(
-    private readonly database: Database,
-    private readonly config: AuthConfig,
-    private readonly mail: AuthMail,
-  ) {}
+  private readonly database = inject<Database>(DATABASE);
+  private readonly config = inject<AuthConfig>(AUTH_CONFIG);
+  private readonly mail = inject(AuthMail);
 
   async limit(purpose: string, identity: string, maximum = 10) {
     const key = digest(this.config.secret, `limit:${purpose}`, identity);

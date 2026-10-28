@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { createInjector, MAIL_TRANSPORT } from '../../index';
+
 import { AuthMail, renderMessage, type CodePurpose, type SecurityNotice } from './messages';
 
 describe('shared authentication mail', () => {
@@ -12,27 +14,36 @@ describe('shared authentication mail', () => {
     const security = renderMessage('security', 'Security', 'A setting changed.');
 
     expect(security.text).toContain('recover your account');
-    await expect(new AuthMail().code('synthetic@example.test', 'recovery', '123456')).rejects.toThrow(
-      'mail_unavailable',
-    );
-    await expect(new AuthMail().notice('synthetic@example.test', 'password_changed')).rejects.toThrow(
-      'mail_unavailable',
-    );
-    const mail = new AuthMail({
-      send: async () => {
-        throw new Error('SYNTHETIC_SMTP_PASSWORD');
+    await expect(
+      createInjector([AuthMail]).get<AuthMail>(AuthMail).code('synthetic@example.test', 'recovery', '123456'),
+    ).rejects.toThrow('mail_unavailable');
+    await expect(
+      createInjector([AuthMail]).get<AuthMail>(AuthMail).notice('synthetic@example.test', 'password_changed'),
+    ).rejects.toThrow('mail_unavailable');
+    const mail = createInjector([
+      AuthMail,
+      {
+        provide: MAIL_TRANSPORT,
+        useValue: {
+          send: async () => {
+            throw new Error('SYNTHETIC_SMTP_PASSWORD');
+          },
+          close() {
+            return undefined;
+          },
+        },
       },
-      close() {
-        return undefined;
-      },
-    });
+    ]).get<AuthMail>(AuthMail);
 
     await expect(mail.code('synthetic@example.test', 'recovery', '123456')).rejects.toThrow('mail_unavailable');
     await expect(mail.notice('synthetic@example.test', 'password_changed')).rejects.toThrow('mail_unavailable');
   });
   it('renders and delivers each supported code and security notice through the injected transport', async () => {
     const send = vi.fn().mockResolvedValue(undefined);
-    const mail = new AuthMail({ send, close: vi.fn() });
+    const mail = createInjector([
+      AuthMail,
+      { provide: MAIL_TRANSPORT, useValue: { send, close: vi.fn() } },
+    ]).get<AuthMail>(AuthMail);
     const purposes: CodePurpose[] = [
       'email_verify',
       'email_change',

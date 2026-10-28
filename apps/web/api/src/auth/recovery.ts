@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 
-import { authSchema, type Database } from '@visomi-stack/backend-shared';
+import { authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
 
-import type { AuthConfig } from './config';
+import { AUTH_CONFIG, type AuthConfig } from './config';
 import { validateApproval } from './devices';
 import { Factors, type Factor } from './factors';
 import { Flows, unavailable, type Flow } from './flows';
@@ -58,12 +58,10 @@ export async function completeEnrollment(
   return principal(updated, method, methodId);
 }
 export class Recovery {
-  constructor(
-    private readonly database: Database,
-    private readonly config: AuthConfig,
-    private readonly proofs: Flows,
-    private readonly factors: Factors,
-  ) {}
+  private readonly database = inject<Database>(DATABASE);
+  private readonly config = inject<AuthConfig>(AUTH_CONFIG);
+  private readonly proofs = inject(Flows);
+  private readonly factors = inject(Factors);
 
   async request(sid: string, input: string, reset = false, current?: Express.User) {
     const email = normalizeEmail(input);

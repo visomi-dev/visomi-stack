@@ -11,11 +11,11 @@ import type {
   RegistrationResponseJSON,
   AuthenticatorTransport,
 } from '@simplewebauthn/server';
-import { authSchema, type Database } from '@visomi-stack/backend-shared';
+import { authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 
-import type { AuthConfig } from './config';
+import { AUTH_CONFIG, type AuthConfig } from './config';
 import { requireFresh } from './security';
 import { lockIdentity, principal, lastMethod } from './identity';
 import { completeEnrollment } from './recovery';
@@ -27,10 +27,8 @@ type Purpose = typeof challenges.$inferSelect.purpose;
 const hash = (challenge: string) => createHash('sha256').update(challenge).digest('hex');
 
 export class Passkeys {
-  constructor(
-    private readonly database: Database,
-    private readonly config: AuthConfig,
-  ) {}
+  private readonly database = inject<Database>(DATABASE);
+  private readonly config = inject<AuthConfig>(AUTH_CONFIG);
 
   async registrationOptions(sid: string, user?: Express.User, email?: string) {
     if (user) {

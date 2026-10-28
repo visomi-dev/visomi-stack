@@ -7,9 +7,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { authenticator } from '@visomi-stack/dev-testing';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 
+import { authService, sessionStore } from '../support/injection';
 import { authConfig } from '../../src/auth/config';
 import { Passkeys } from '../../src/auth/passkeys';
-import { SessionStore } from '../../src/auth/session-store';
 
 vi.mock('@simplewebauthn/server', async (original) => {
   const actual = await original<typeof import('@simplewebauthn/server')>();
@@ -36,7 +36,7 @@ beforeAll(async () => {
 
   postgres = isolated;
   resource = createDatabase(postgres.url);
-  passkeys = new Passkeys(resource.db, config);
+  passkeys = authService(Passkeys, resource.db, config);
 }, 120000);
 
 afterAll(async () => {
@@ -46,7 +46,7 @@ afterAll(async () => {
 
 async function session() {
   const sid = randomUUID();
-  const store = new SessionStore(resource.pool);
+  const store = sessionStore(resource.pool);
 
   await new Promise<void>((resolve, reject) =>
     store.set(sid, { cookie: { maxAge: 60000 } } as never, (error) => (error ? reject(error) : resolve())),

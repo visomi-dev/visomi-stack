@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 
-import { authSchema, type Database } from '@visomi-stack/backend-shared';
+import { authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
 import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
 
-import type { AuthConfig } from './config';
+import { AUTH_CONFIG, type AuthConfig } from './config';
 import { Flows, unavailable } from './flows';
 import {
   activeMethod,
@@ -47,11 +47,9 @@ export async function validateApproval(tx: Transaction, id: string, userId: stri
   return approval;
 }
 export class Devices {
-  constructor(
-    private readonly database: Database,
-    private readonly config: AuthConfig,
-    private readonly proofs: Flows,
-  ) {}
+  private readonly database = inject<Database>(DATABASE);
+  private readonly config = inject<AuthConfig>(AUTH_CONFIG);
+  private readonly proofs = inject(Flows);
 
   async request(sid: string, emailInput: string) {
     const email = normalizeEmail(emailInput);

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { authService } from '../../tests/support/injection';
 import { config, current, flow, granted, session, storage, user } from '../../tests/support/auth-state';
 
 import { Devices, validateApproval } from './devices';
@@ -52,40 +53,30 @@ describe('device approval revocation and races', () => {
       const f = storage([result]);
 
       await expect(
-        new Devices(f.db, config, { limit: vi.fn() } as unknown as Flows).decide(
-          'approver',
-          current,
-          flow.id,
-          true,
-          '123456',
-        ),
+        authService(Devices, f.db, config, [
+          { provide: Flows, useValue: { limit: vi.fn() } as unknown as Flows },
+        ]).decide('approver', current, flow.id, true, '123456'),
       ).rejects.toMatchObject({ code: 'verification_failed' });
     }
     const mismatch = storage([[request], [{ ...user, email: 'other@example.test' }], [session]]);
 
     await expect(
-      new Devices(mismatch.db, config, { limit: vi.fn() } as unknown as Flows).decide(
-        'approver',
-        current,
-        flow.id,
-        true,
-        '123456',
-      ),
+      authService(Devices, mismatch.db, config, [
+        { provide: Flows, useValue: { limit: vi.fn() } as unknown as Flows },
+      ]).decide('approver', current, flow.id, true, '123456'),
     ).rejects.toMatchObject({ code: 'verification_failed' });
     const raced = storage([[request], [user], [session], []]);
 
     await expect(
-      new Devices(raced.db, config, { limit: vi.fn() } as unknown as Flows).decide(
-        'approver',
-        current,
-        flow.id,
-        true,
-        '123456',
-      ),
+      authService(Devices, raced.db, config, [
+        { provide: Flows, useValue: { limit: vi.fn() } as unknown as Flows },
+      ]).decide('approver', current, flow.id, true, '123456'),
     ).rejects.toMatchObject({ code: 'verification_failed' });
     const cancelled = storage([[session], []]);
 
-    await expect(new Devices(cancelled.db, config, proofs).cancel(session.sid, flow.id)).rejects.toMatchObject({
+    await expect(
+      authService(Devices, cancelled.db, config, [{ provide: Flows, useValue: proofs }]).cancel(session.sid, flow.id),
+    ).rejects.toMatchObject({
       code: 'verification_failed',
     });
   });
@@ -93,22 +84,38 @@ describe('device approval revocation and races', () => {
     const missing = storage([[user], [session], []]);
 
     await expect(
-      new Devices(missing.db, config, {} as Flows).review('approver', current, flow.id),
+      authService(Devices, missing.db, config, [{ provide: Flows, useValue: {} as Flows }]).review(
+        'approver',
+        current,
+        flow.id,
+      ),
     ).rejects.toMatchObject({ code: 'verification_failed' });
     const self = storage([[user], [session], [request]]);
 
-    await expect(new Devices(self.db, config, {} as Flows).review(session.sid, current, flow.id)).rejects.toMatchObject(
-      { code: 'verification_failed' },
-    );
+    await expect(
+      authService(Devices, self.db, config, [{ provide: Flows, useValue: {} as Flows }]).review(
+        session.sid,
+        current,
+        flow.id,
+      ),
+    ).rejects.toMatchObject({ code: 'verification_failed' });
     const gone = storage([[request], [], [session]]);
 
     await expect(
-      new Devices(gone.db, config, {} as Flows).consume(session.sid, flow.id, '123456'),
+      authService(Devices, gone.db, config, [{ provide: Flows, useValue: {} as Flows }]).consume(
+        session.sid,
+        flow.id,
+        '123456',
+      ),
     ).rejects.toMatchObject({ code: 'verification_failed' });
     const race = storage([[request], [user], [session], [request], [session], []]);
 
     await expect(
-      new Devices(race.db, config, {} as Flows).consume(session.sid, flow.id, '123456'),
+      authService(Devices, race.db, config, [{ provide: Flows, useValue: {} as Flows }]).consume(
+        session.sid,
+        flow.id,
+        '123456',
+      ),
     ).rejects.toMatchObject({ code: 'verification_failed' });
   });
 });
@@ -126,7 +133,10 @@ describe('restricted enrollment guards', () => {
   );
   it('does not move a missing or already invalidated grant into a new session', async () => {
     const f = storage([[session], []]);
-    const recovery = new Recovery(f.db, config, {} as Flows, {} as Factors);
+    const recovery = authService(Recovery, f.db, config, [
+      { provide: Flows, useValue: {} as Flows },
+      { provide: Factors, useValue: {} as Factors },
+    ]);
 
     await expect(recovery.bindGrant('previous', session.sid, current)).resolves.toBeUndefined();
     await expect(recovery.bindGrant('previous', session.sid, granted)).rejects.toMatchObject({

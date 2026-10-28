@@ -59,6 +59,7 @@ describe('API process and compiled boundaries', () => {
       expect(metadata.main).toBe('./app.js');
       expect(metadata.exports).toEqual({ '.': './app.js', './app': './app.js' });
       expect(metadata.dependencies['drizzle-orm']).toBe('1.0.0-rc.5');
+      expect(metadata.dependencies['injection-js']).toBe('2.6.1');
       expect(metadata.dependencies.pg).toBe('8.23.1');
       expect(metadata.dependencies['@simplewebauthn/server']).toBe('14.0.3');
       expect(metadata.dependencies.pino).toBeDefined();
@@ -167,7 +168,11 @@ describe('API process and compiled boundaries', () => {
             payload: 'SYNTHETIC_CUSTOMER_MARKER',
           }),
         ],
-        { cwd: root, timeout: 5000 },
+        {
+          cwd: root,
+          timeout: 5000,
+          env: { ...process.env, TSX_TSCONFIG_PATH: join(root, 'apps/web/api/tsconfig.spec.json') },
+        },
       );
       const restored = JSON.parse(result.stdout);
 

@@ -1,6 +1,8 @@
+import { AuthMail } from '@visomi-stack/backend-shared';
 import { generate } from 'otplib';
 import { describe, expect, it } from 'vitest';
 
+import { authService } from '../../tests/support/injection';
 import {
   config,
   current,
@@ -74,17 +76,24 @@ describe('identity revocation decisions', () => {
 describe('atomic proof and factor consumption', () => {
   it('rejects a proof lost between reservation and locked consumption', async () => {
     const f = storage([[session], []]);
-    const proofs = new Flows(f.db, config, quietMail);
+    const proofs = authService(Flows, f.db, config, [{ provide: AuthMail, useValue: quietMail }]);
 
     await expect(proofs.locked(f.tx, session.sid, flow.id)).rejects.toMatchObject({ code: 'verification_failed' });
     const lost = storage([[]]);
 
-    await expect(new Flows(lost.db, config, quietMail).consume(lost.tx, flow)).rejects.toMatchObject({
+    await expect(
+      authService(Flows, lost.db, config, [{ provide: AuthMail, useValue: quietMail }]).consume(lost.tx, flow),
+    ).rejects.toMatchObject({
       code: 'verification_failed',
     });
     const limited = storage([[{ attempts: 11 }]]);
 
-    await expect(new Flows(limited.db, config, quietMail).limit('synthetic', 'identity')).rejects.toMatchObject({
+    await expect(
+      authService(Flows, limited.db, config, [{ provide: AuthMail, useValue: quietMail }]).limit(
+        'synthetic',
+        'identity',
+      ),
+    ).rejects.toMatchObject({
       code: 'rate_limited',
     });
   });
@@ -99,7 +108,9 @@ describe('atomic proof and factor consumption', () => {
       const state = { ...flow, purpose: 'email_verify', codeHash: 'synthetic', ...changed };
       const f = storage([[{ attempts: 1 }], [session], [state]]);
 
-      await expect(new Flows(f.db, config, quietMail).resend(session.sid, flow.id)).rejects.toMatchObject({
+      await expect(
+        authService(Flows, f.db, config, [{ provide: AuthMail, useValue: quietMail }]).resend(session.sid, flow.id),
+      ).rejects.toMatchObject({
         code: 'verification_failed',
       });
     }
@@ -108,15 +119,15 @@ describe('atomic proof and factor consumption', () => {
     const missing = storage([[]]);
 
     await expect(
-      new Factors(missing.db, config).verify(missing.tx, user, { kind: 'totp', code: '123456' }),
+      authService(Factors, missing.db, config).verify(missing.tx, user, { kind: 'totp', code: '123456' }),
     ).rejects.toMatchObject({ code: 'verification_failed' });
     const absentKey = { ...config, totpKey: undefined };
     const f = storage([[factor]]);
 
     await expect(
-      new Factors(f.db, absentKey).verify(f.tx, user, { kind: 'totp', code: '123456' }),
+      authService(Factors, f.db, absentKey).verify(f.tx, user, { kind: 'totp', code: '123456' }),
     ).rejects.toMatchObject({ code: 'totp_unavailable' });
-    await expect(new Factors(f.db, absentKey).setup(session.sid, current)).rejects.toMatchObject({
+    await expect(authService(Factors, f.db, absentKey).setup(session.sid, current)).rejects.toMatchObject({
       code: 'totp_unavailable',
     });
   });
@@ -127,7 +138,9 @@ describe('atomic proof and factor consumption', () => {
       [{ ...factor, authVersion: 1, sessionId: session.sid, expiresAt: flow.expiresAt }],
     ]);
 
-    await expect(new Factors(f.db, config).confirm(session.sid, current, flow.id, 'invalid')).rejects.toMatchObject({
+    await expect(
+      authService(Factors, f.db, config).confirm(session.sid, current, flow.id, 'invalid'),
+    ).rejects.toMatchObject({
       code: 'verification_failed',
     });
     const code = 'SYNTHETIC';
@@ -138,7 +151,7 @@ describe('atomic proof and factor consumption', () => {
     ]);
 
     await expect(
-      new Factors(race.db, config).verify(race.tx, user, { kind: 'recovery_code', code }),
+      authService(Factors, race.db, config).verify(race.tx, user, { kind: 'recovery_code', code }),
     ).rejects.toMatchObject({ code: 'verification_failed' });
   });
 });
@@ -148,7 +161,7 @@ it('accepts a fresh TOTP proof and advances its replay barrier', async () => {
   const code = await generate({ secret });
   const f = storage([[factor], []]);
 
-  await expect(new Factors(f.db, config).verify(f.tx, user, { kind: 'totp', code })).resolves.toBeUndefined();
+  await expect(authService(Factors, f.db, config).verify(f.tx, user, { kind: 'totp', code })).resolves.toBeUndefined();
 });
 
 it('binds a legacy restricted principal by its method reference when no separate grant field exists', async () => {

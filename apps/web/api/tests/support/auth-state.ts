@@ -1,4 +1,4 @@
-import { AuthMail, type Database } from '@visomi-stack/backend-shared';
+import { AuthMail, type Database, createInjector, MAIL_TRANSPORT } from '@visomi-stack/backend-shared';
 import { vi } from 'vitest';
 
 import { authConfig } from '../../src/auth/config';
@@ -84,11 +84,17 @@ export const factor = {
   status: 'active',
 };
 
-export const quietMail = new AuthMail({
-  async send() {
-    return undefined;
+export const quietMail = createInjector([
+  AuthMail,
+  {
+    provide: MAIL_TRANSPORT,
+    useValue: {
+      async send() {
+        return undefined;
+      },
+      close() {
+        return undefined;
+      },
+    },
   },
-  close() {
-    return undefined;
-  },
-});
+]).get<AuthMail>(AuthMail);

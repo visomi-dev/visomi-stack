@@ -55,6 +55,19 @@ async function initializedRequest(first: ReturnType<typeof fixture>, second = fi
 }
 
 describe('explicit session and Passport initialization', () => {
+  it('creates an isolated service graph for every runtime', () => {
+    const first = fixture();
+    const second = fixture();
+
+    expect(first.runtime.accounts).not.toBe(second.runtime.accounts);
+    expect(first.runtime.accounts.flows).not.toBe(second.runtime.accounts.flows);
+    expect(first.runtime.accounts.factors).not.toBe(second.runtime.accounts.factors);
+    expect(first.runtime.passkeys).not.toBe(second.runtime.passkeys);
+    expect(first.runtime.google).not.toBe(second.runtime.google);
+    expect(first.pool.query).not.toHaveBeenCalled();
+    expect(second.pool.query).not.toHaveBeenCalled();
+  });
+
   it('serializes only the authentication identity and timestamp', () => {
     const serialize = vi.spyOn(Passport.prototype, 'serializeUser');
 

@@ -1,11 +1,11 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 
-import { authSchema, type Database } from '@visomi-stack/backend-shared';
+import { authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import { OAuth2Client, type TokenPayload } from 'google-auth-library';
 
-import type { AuthConfig } from './config';
+import { AUTH_CONFIG, type AuthConfig } from './config';
 import { Flows, unavailable } from './flows';
 import {
   invalidate,
@@ -24,15 +24,11 @@ import { normalizeEmail } from './secrets';
 const { users, credentials, flows, federatedIdentities } = authSchema;
 
 export class Google {
-  private readonly client: OAuth2Client;
+  private readonly database = inject<Database>(DATABASE);
+  private readonly config = inject<AuthConfig>(AUTH_CONFIG);
+  private readonly proofs = inject(Flows);
 
-  constructor(
-    private readonly database: Database,
-    private readonly config: AuthConfig,
-    private readonly proofs: Flows,
-  ) {
-    this.client = new OAuth2Client(config.googleClientId);
-  }
+  private readonly client = new OAuth2Client(this.config.googleClientId);
 
   async start(sid: string, intent: 'login' | 'link' | 'reauth', current?: Express.User) {
     if (!this.config.googleClientId) {

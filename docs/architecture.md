@@ -29,6 +29,14 @@ enrollment, and method/session management under `/auth`, backed by PostgreSQL. U
 application errors return fixed responses. See the [API guide](../apps/web/api/README.md)
 for the schema, migration commands and managed/inherited ownership contract.
 
+`backend-shared` exposes the pinned `injection-js` DI surface and database/SMTP
+resource tokens. Auth composes a graph per runtime, with property-injected services
+and explicit value providers. Observability uses the same DI surface only when its
+owner initializes it. Backend projects disable decorators and metadata emission;
+DI does not load a metadata polyfill. The HTTP factories retain explicit arguments,
+and executable resource ownership and the existing observability registry are
+preserved. No request-wide ambient injector is introduced.
+
 Auth's root router composes capability-specific `*.http.ts` adapters. Their
 factories register routes with inline delegates to named handlers; dependencies
 are passed explicitly per runtime instance. Shared auth HTTP guards and session

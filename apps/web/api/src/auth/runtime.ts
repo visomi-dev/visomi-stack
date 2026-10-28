@@ -1,11 +1,19 @@
-import { AuthMail, type MailTransport, type Database } from '@visomi-stack/backend-shared';
+import {
+  AuthMail,
+  createInjector,
+  DATABASE,
+  DATABASE_POOL,
+  MAIL_TRANSPORT,
+  type MailTransport,
+  type Database,
+} from '@visomi-stack/backend-shared';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import type { RequestHandler, Request } from 'express';
 import session from 'express-session';
 import { Passport } from 'passport';
 import type { Pool } from 'pg';
 
-import type { AuthConfig } from './config';
+import { AUTH_CONFIG, type AuthConfig } from './config';
 import { readPrincipal, requireFull } from './identity';
 import { Google } from './google';
 import { Recovery } from './recovery';
@@ -13,6 +21,8 @@ import { Devices } from './devices';
 import { Accounts } from './accounts';
 import { Passkeys } from './passkeys';
 import { SessionStore } from './session-store';
+import { Flows } from './flows';
+import { Factors } from './factors';
 
 const initialized = Symbol.for('visomi-stack.authentication.v1');
 
@@ -27,7 +37,22 @@ export function createAuthentication(options: {
 }) {
   const { database, pool, config } = options;
   const passport = new Passport();
-  const store = new SessionStore(pool);
+  const injector = createInjector([
+    { provide: DATABASE, useValue: database },
+    { provide: DATABASE_POOL, useValue: pool },
+    { provide: AUTH_CONFIG, useValue: config },
+    { provide: MAIL_TRANSPORT, useValue: options.mail },
+    AuthMail,
+    SessionStore,
+    Flows,
+    Factors,
+    Accounts,
+    Passkeys,
+    Google,
+    Recovery,
+    Devices,
+  ]);
+  const store = injector.get<SessionStore>(SessionStore);
   const owner = {};
 
   passport.serializeUser<Express.User>((user, done) =>
@@ -77,7 +102,7 @@ export function createAuthentication(options: {
     );
   };
 
-  const accounts = new Accounts(database, config, new AuthMail(options.mail));
+  const accounts = injector.get<Accounts>(Accounts);
 
   return {
     database,
@@ -92,10 +117,10 @@ export function createAuthentication(options: {
         next(error);
       }
     }) as RequestHandler,
-    passkeys: new Passkeys(database, config),
+    passkeys: injector.get<Passkeys>(Passkeys),
     accounts,
-    google: new Google(database, config, accounts.flows),
-    recovery: new Recovery(database, config, accounts.flows, accounts.factors),
-    devices: new Devices(database, config, accounts.flows),
+    google: injector.get<Google>(Google),
+    recovery: injector.get<Recovery>(Recovery),
+    devices: injector.get<Devices>(Devices),
   };
 }

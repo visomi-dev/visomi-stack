@@ -12,6 +12,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { authenticator } from '@visomi-stack/dev-testing';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 
+import { authService, sessionStore } from '../support/injection';
 import { authConfig } from '../../src/auth/config';
 import { Passkeys } from '../../src/auth/passkeys';
 import { rateLimit } from '../../src/auth/security';
@@ -63,9 +64,9 @@ function read(store: SessionStore, sid: string) {
 
 async function registeredPasskey() {
   const sid = randomUUID();
-  const store = new SessionStore(resource.pool);
+  const store = sessionStore(resource.pool);
   const device = authenticator();
-  const passkeys = new Passkeys(resource.db, config);
+  const passkeys = authService(Passkeys, resource.db, config);
 
   await save(store, sid);
   const signup = await passkeys.registrationOptions(sid);
@@ -85,7 +86,7 @@ async function authenticationAttempt(
   database = resource.db,
 ) {
   const sid = randomUUID();
-  const passkeys = new Passkeys(database, config);
+  const passkeys = authService(Passkeys, database, config);
 
   await save(fixture.store, sid);
   const pending = await passkeys.authenticationOptions(sid);
@@ -141,7 +142,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
   });
 
   it('retains tombstones across store instances and concurrent delayed saves/touches', async () => {
-    const first = new SessionStore(resource.pool);
+    const first = sessionStore(resource.pool);
     const sid = randomUUID();
 
     await save(first, sid);
@@ -149,7 +150,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
 
     expect(stale).toBeTruthy();
     await destroy(first, sid);
-    const second = new SessionStore(resource.pool);
+    const second = sessionStore(resource.pool);
 
     await Promise.all([save(second, sid, stale!), new Promise<void>((resolve) => second.touch(sid, stale!, resolve))]);
     const after = await read(second, sid);
@@ -175,7 +176,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
   });
 
   it('enforces absolute session lifetime and rejects delayed saves of expired sessions', async () => {
-    const store = new SessionStore(resource.pool);
+    const store = sessionStore(resource.pool);
     const sid = randomUUID();
     const data = payload();
 
@@ -195,9 +196,9 @@ describe('isolated PostgreSQL authentication persistence', () => {
   });
 
   it('consumes a session-bound challenge only once across concurrent verifiers', async () => {
-    const store = new SessionStore(resource.pool);
+    const store = sessionStore(resource.pool);
     const sid = randomUUID();
-    const passkeys = new Passkeys(resource.db, config);
+    const passkeys = authService(Passkeys, resource.db, config);
 
     await save(store, sid);
     const pending = await passkeys.authenticationOptions(sid);
@@ -215,10 +216,10 @@ describe('isolated PostgreSQL authentication persistence', () => {
   });
 
   it('rejects challenges from another session and expired challenges', async () => {
-    const store = new SessionStore(resource.pool);
+    const store = sessionStore(resource.pool);
     const sid = randomUUID();
     const other = randomUUID();
-    const passkeys = new Passkeys(resource.db, config);
+    const passkeys = authService(Passkeys, resource.db, config);
 
     await save(store, sid);
     await save(store, other);
@@ -237,9 +238,9 @@ describe('isolated PostgreSQL authentication persistence', () => {
   });
   it('persists real WebAuthn credentials and rejects concurrent replay of the same challenge', async () => {
     const sid = randomUUID();
-    const store = new SessionStore(resource.pool);
+    const store = sessionStore(resource.pool);
     const device = authenticator();
-    const passkeys = new Passkeys(resource.db, config);
+    const passkeys = authService(Passkeys, resource.db, config);
 
     await save(store, sid);
     const signup = await passkeys.registrationOptions(sid);
@@ -256,7 +257,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
     try {
       const results = await Promise.allSettled([
         passkeys.authenticate(sid, pending.challengeId, assertion),
-        new Passkeys(otherResource.db, config).authenticate(sid, pending.challengeId, assertion),
+        authService(Passkeys, otherResource.db, config).authenticate(sid, pending.challengeId, assertion),
       ]);
 
       expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
@@ -390,9 +391,9 @@ describe('isolated PostgreSQL authentication persistence', () => {
 
   it('rolls back identity creation when a credential conflicts and consumes the failed challenge', async () => {
     const sid = randomUUID();
-    const store = new SessionStore(resource.pool);
+    const store = sessionStore(resource.pool);
     const device = authenticator();
-    const passkeys = new Passkeys(resource.db, config);
+    const passkeys = authService(Passkeys, resource.db, config);
 
     await save(store, sid);
     const first = await passkeys.registrationOptions(sid);
@@ -425,9 +426,9 @@ describe('isolated PostgreSQL authentication persistence', () => {
     'rejects a cryptographically constructed response with invalid %s',
     async (invalid) => {
       const sid = randomUUID();
-      const store = new SessionStore(resource.pool);
+      const store = sessionStore(resource.pool);
       const device = authenticator();
-      const passkeys = new Passkeys(resource.db, config);
+      const passkeys = authService(Passkeys, resource.db, config);
 
       await save(store, sid);
       const signup = await passkeys.registrationOptions(sid);
@@ -449,8 +450,8 @@ describe('isolated PostgreSQL authentication persistence', () => {
 
   it('revokes sessions for a removed credential and rejects stale writes and logged-out mutations', async () => {
     const sid = randomUUID();
-    const store = new SessionStore(resource.pool);
-    const passkeys = new Passkeys(resource.db, config);
+    const store = sessionStore(resource.pool);
+    const passkeys = authService(Passkeys, resource.db, config);
     const firstDevice = authenticator();
     const secondDevice = authenticator();
 

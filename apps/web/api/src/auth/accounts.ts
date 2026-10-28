@@ -1,10 +1,17 @@
 import { randomUUID } from 'node:crypto';
 
-import { AuthMail, authSchema, type Database, type SecurityNotice } from '@visomi-stack/backend-shared';
+import {
+  AuthMail,
+  authSchema,
+  DATABASE,
+  inject,
+  type Database,
+  type SecurityNotice,
+} from '@visomi-stack/backend-shared';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 import { and, desc, eq, gt, isNotNull, isNull, ne, sql } from 'drizzle-orm';
 
-import type { AuthConfig } from './config';
+import { AUTH_CONFIG, type AuthConfig } from './config';
 import { Factors, type Factor } from './factors';
 import { Flows, unavailable } from './flows';
 import {
@@ -25,17 +32,11 @@ import { digest, hashPassword, normalizeEmail, verifyPassword } from './secrets'
 const { users, flows, federatedIdentities, sessions, credentials } = authSchema;
 
 export class Accounts {
-  readonly flows: Flows;
-  readonly factors: Factors;
-
-  constructor(
-    private readonly database: Database,
-    private readonly config: AuthConfig,
-    private readonly mail: AuthMail,
-  ) {
-    this.flows = new Flows(database, config, mail);
-    this.factors = new Factors(database, config);
-  }
+  private readonly database = inject<Database>(DATABASE);
+  private readonly config = inject<AuthConfig>(AUTH_CONFIG);
+  private readonly mail = inject(AuthMail);
+  readonly flows = inject(Flows);
+  readonly factors = inject(Factors);
 
   async signup(sid: string, emailInput: string, password: string) {
     const email = normalizeEmail(emailInput);

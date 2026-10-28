@@ -10,6 +10,7 @@ import { AlwaysOnSampler, SimpleSpanProcessor, TracerProvider } from '@opentelem
 import type { SpanExporter } from '@opentelemetry/sdk-trace';
 import pino from 'pino';
 import type { DestinationStream, Logger } from 'pino';
+import { createInjector, inject, InjectionToken } from '@visomi-stack/backend-shared';
 
 import {
   environment,
@@ -38,6 +39,9 @@ const requestKey = createContextKey('visomi-stack.request');
 
 type Registry = { runtime?: Observability; shuttingDown?: boolean };
 
+const OBSERVABILITY_OPTIONS = new InjectionToken<ObservabilityOptions>('observability options');
+const OBSERVABILITY_STATE = new InjectionToken<Registry>('observability state');
+
 function registry(): Registry {
   const host = globalThis as typeof globalThis & { [registryKey]?: Registry };
 
@@ -59,7 +63,11 @@ export function initializeObservability(options: ObservabilityOptions): Observab
     return state.runtime;
   }
 
-  const runtime = new ObservabilityRuntime(options, state);
+  const runtime = createInjector([
+    { provide: OBSERVABILITY_OPTIONS, useValue: options },
+    { provide: OBSERVABILITY_STATE, useValue: state },
+    ObservabilityRuntime,
+  ]).get<ObservabilityRuntime>(ObservabilityRuntime);
 
   state.runtime = runtime;
 
@@ -67,7 +75,8 @@ export function initializeObservability(options: ObservabilityOptions): Observab
 }
 
 class ObservabilityRuntime implements Observability {
-  private readonly state: Registry;
+  private readonly state = inject<Registry>(OBSERVABILITY_STATE);
+
   private readonly manager: AsyncLocalStorageContextManager;
   private readonly metadata: { service: Service; version: string; environment: Environment };
   private readonly logger: Logger;
@@ -82,8 +91,9 @@ class ObservabilityRuntime implements Observability {
   private stopped = false;
   private shutdownPromise: Promise<boolean> | undefined;
 
-  constructor(options: ObservabilityOptions, state: Registry) {
-    this.state = state;
+  constructor() {
+    const options = inject<ObservabilityOptions>(OBSERVABILITY_OPTIONS);
+
     this.manager = new AsyncLocalStorageContextManager().enable();
     this.metadata = {
       service: service(options.service),

@@ -1,4 +1,8 @@
+import { InjectionToken } from '@visomi-stack/backend-shared';
+
 export type AuthConfig = ReturnType<typeof authConfig>;
+
+export const AUTH_CONFIG = new InjectionToken<AuthConfig>('authentication config');
 
 export function authConfig(input: {
   origin: string;

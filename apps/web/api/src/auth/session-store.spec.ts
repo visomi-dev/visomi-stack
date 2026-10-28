@@ -1,12 +1,12 @@
 import type { Pool } from 'pg';
 import { describe, expect, it, vi } from 'vitest';
 
-import { SessionStore } from './session-store';
+import { sessionStore } from '../../tests/support/injection';
 
 describe('PostgreSQL session adapter', () => {
   it('supports fire-and-forget destruction and suppresses the store diagnostic callback', async () => {
     const query = vi.fn().mockResolvedValue({ rowCount: 1 });
-    const store = new SessionStore({ query } as unknown as Pool);
+    const store = sessionStore({ query } as unknown as Pool);
 
     store.destroy('synthetic-sid');
     await vi.waitFor(() => expect(query).toHaveResolved());
@@ -24,7 +24,7 @@ describe('PostgreSQL session adapter', () => {
   });
   it('uses the supplied pool without probing, migrating, pruning or taking ownership', () => {
     const pool = { query: vi.fn(), end: vi.fn() } as unknown as Pool;
-    const store = new SessionStore(pool);
+    const store = sessionStore(pool);
 
     store.close();
     expect(pool.query).not.toHaveBeenCalled();
@@ -33,7 +33,7 @@ describe('PostgreSQL session adapter', () => {
 
   it('turns destruction into a durable tombstone, including an unknown SID', async () => {
     const query = vi.fn().mockResolvedValue({ rowCount: 1 });
-    const store = new SessionStore({ query } as unknown as Pool);
+    const store = sessionStore({ query } as unknown as Pool);
     const error = await new Promise<Error | undefined>((resolve) => store.destroy('synthetic-sid', resolve));
 
     expect(error).toBeUndefined();
@@ -41,14 +41,14 @@ describe('PostgreSQL session adapter', () => {
   });
 
   it('rejects regeneration from an already revoked SID', async () => {
-    const store = new SessionStore({ query: vi.fn().mockResolvedValue({ rowCount: 0 }) } as unknown as Pool);
+    const store = sessionStore({ query: vi.fn().mockResolvedValue({ rowCount: 0 }) } as unknown as Pool);
     const error = await new Promise<Error | undefined>((resolve) => store.destroy('synthetic-sid', resolve));
 
     expect(error?.message).toBe('session_revoked');
   });
 
   it('does not return parameter-bearing database failures to callbacks', async () => {
-    const store = new SessionStore({
+    const store = sessionStore({
       query: vi.fn().mockRejectedValue(new Error('SYNTHETIC_PRIVATE_SQL')),
     } as unknown as Pool);
     const error = await new Promise<Error | undefined>((resolve) => store.destroy('synthetic-sid', resolve));

@@ -1,4 +1,6 @@
-import type { MailTransport } from './smtp';
+import { inject } from '../injection';
+
+import { MAIL_TRANSPORT, type MailTransport } from './smtp';
 import { templates } from './templates.generated';
 
 const copy = {
@@ -51,7 +53,7 @@ export function renderMessage(kind: 'verification' | 'security', title: string, 
 }
 
 export class AuthMail {
-  constructor(private readonly transport?: MailTransport) {}
+  private readonly transport = inject<MailTransport>(MAIL_TRANSPORT, { optional: true });
 
   async code(to: string, purpose: CodePurpose, code: string) {
     if (!this.transport) {
