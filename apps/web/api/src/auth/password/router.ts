@@ -1,15 +1,19 @@
-import { registerRoutes } from '@visomi-stack/web-backend-shared';
+import { routes } from '@visomi-stack/web-backend-shared';
 import { Router } from 'express';
 
-import { anonymous } from '../shared/authorization';
+import { anonymous, type Authorization } from '../shared/authorization';
 
 import { passwordContracts } from './contract';
 import type { PasswordController } from './controller';
 
-export function createPasswordRouter(controller: PasswordController): Router {
+export function createPasswordRouter(
+  controller: PasswordController,
+  authenticated: Authorization['authenticated'],
+): Router {
   const router = Router();
+  const full = authenticated();
 
-  registerRoutes(
+  routes.register(
     router,
     [
       {
@@ -27,14 +31,19 @@ export function createPasswordRouter(controller: PasswordController): Router {
         handler: controller.verifySignIn,
         beforeValidation: [anonymous],
       },
-      { contract: passwordContracts.startReauthentication, handler: controller.startReauthentication },
+      {
+        contract: passwordContracts.startReauthentication,
+        handler: controller.startReauthentication,
+        beforeValidation: [full],
+      },
       {
         contract: passwordContracts.completeReauthentication,
         handler: controller.completeReauthentication,
+        beforeValidation: [full],
       },
-      { contract: passwordContracts.addPassword, handler: controller.addPassword },
-      { contract: passwordContracts.changePassword, handler: controller.changePassword },
-      { contract: passwordContracts.removePassword, handler: controller.removePassword },
+      { contract: passwordContracts.addPassword, handler: controller.addPassword, beforeValidation: [full] },
+      { contract: passwordContracts.changePassword, handler: controller.changePassword, beforeValidation: [full] },
+      { contract: passwordContracts.removePassword, handler: controller.removePassword, beforeValidation: [full] },
     ],
     controller,
   );

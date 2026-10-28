@@ -160,7 +160,7 @@ router per authentication capability. Each capability keeps route registration i
 `router.ts`, an injectable controller class in `controller.ts`, business operations
 in `service.ts`, and the shared routing/validation/documentation contract in
 `contract.ts`. Routers receive their controller explicitly and pass arrays of contract/handler
-objects to `registerRoutes()`, passing the controller once so the utility preserves
+objects to `routes.register()`, passing the controller once so the utility preserves
 `this` for every method. Router construction has no process-wide state or
 import-time resources.
 
@@ -193,6 +193,8 @@ routes or whole routers:
 
 - `auth.anonymous` allows only requests without an identity. Unverified and
   restricted identities are still signed in and are rejected.
+- `identified` is the internal identity-only guard for email verification and
+  restricted enrollment. It validates the principal without granting full access.
 - `auth.authenticated()` requires a valid, full, email-verified principal. It also
   accepts an array of required permission names or a synchronous/asynchronous
   requirement predicate.
@@ -203,7 +205,7 @@ routes or whole routers:
 
 ```ts
 router.use(auth.authenticated());
-registerRoutes(
+routes.register(
   router,
   [
     {
@@ -235,7 +237,10 @@ or `auth.authorized(...)` after a global guard. Predicates also require exactly
 `503 authorization_unavailable`.
 
 Mount the owning runtime's session/Passport middleware first, including with
-inherited composition. Guards run before contract parsing, so predicates/policies
+inherited composition. Controllers behind identity/full-session guards use the native Passport request
+refinement through `IdentifiedRequest` and read `request.user` directly. All route
+authentication checks live in middleware, rather than being repeated in controllers.
+Guards run before contract parsing, so predicates/policies
 must treat raw request values as untrusted and load authoritative resource
 attributes on the server. Domain services keep their transactional identity,
 method, proof and revocation checks; middleware is not a replacement for those
@@ -245,7 +250,7 @@ invariants at mutation time. No policy or customer attributes enter telemetry.
 
 Zod `4.6.6` and `zod-openapi` `6.0.2` are pinned dependencies. Each operation's
 contract defines its method, path, request schema, documented responses and
-security requirements. `registerRoutes()` uses each contract's method/path and parses
+security requirements. `routes.register()` uses each contract's method/path and parses
 one Zod object containing the configured `body`, `params`, `query` and `headers`.
 Each contract exports a named input type inferred from the schema's parsed output.
 The controller imports that type and receives `result.data`:

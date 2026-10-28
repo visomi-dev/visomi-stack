@@ -1,10 +1,10 @@
 import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
 
+import type { IdentifiedRequest } from '../shared/http';
 import { EmailIdentity } from '../email/service';
 import { SessionResponses } from '../sessions/response';
 import { Flows } from '../shared/flows';
-import { requirePrincipal } from '../shared/http';
 import { SecurityNotifications } from '../shared/notifications';
 
 import type {
@@ -21,20 +21,20 @@ export class EmailController {
   private readonly notifications = inject(SecurityNotifications);
   private readonly responses = inject(SessionResponses);
 
-  async requestVerification(request: Request, response: Response, input: RequestVerificationInput) {
+  async requestVerification(request: IdentifiedRequest, response: Response, input: RequestVerificationInput) {
     const pending = await this.email.emailStart(
       request.sessionID,
-      requirePrincipal(request),
+      request.user,
       input.body.email === undefined ? undefined : input.body.email,
     );
 
     response.status(202).json(pending);
   }
 
-  async verifyEmail(request: Request, response: Response, input: VerifyEmailInput) {
+  async verifyEmail(request: IdentifiedRequest, response: Response, input: VerifyEmailInput) {
     const verified = await this.email.emailComplete(
       request.sessionID,
-      requirePrincipal(request),
+      request.user,
       input.body.flowId,
       input.body.code,
     );
@@ -42,16 +42,16 @@ export class EmailController {
     await this.responses.send(request, response, verified.user);
   }
 
-  async requestEmailChange(request: Request, response: Response, input: RequestEmailChangeInput) {
-    const pending = await this.email.emailStart(request.sessionID, requirePrincipal(request), input.body.email, true);
+  async requestEmailChange(request: IdentifiedRequest, response: Response, input: RequestEmailChangeInput) {
+    const pending = await this.email.emailStart(request.sessionID, request.user, input.body.email, true);
 
     response.status(202).json(pending);
   }
 
-  async verifyEmailChange(request: Request, response: Response, input: VerifyEmailChangeInput) {
+  async verifyEmailChange(request: IdentifiedRequest, response: Response, input: VerifyEmailChangeInput) {
     const changed = await this.email.emailComplete(
       request.sessionID,
-      requirePrincipal(request),
+      request.user,
       input.body.flowId,
       input.body.code,
       true,

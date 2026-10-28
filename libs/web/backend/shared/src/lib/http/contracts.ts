@@ -104,7 +104,7 @@ export type RouteRegistration<S extends RequestSchema> = {
 };
 
 // Keep each handler paired with its own schema instead of widening the array to a union.
-export function registerRoutes<const Schemas extends readonly RequestSchema[]>(
+function register<const Schemas extends readonly RequestSchema[]>(
   router: Router,
   routes: { readonly [K in keyof Schemas]: RouteRegistration<Schemas[K]> },
   controller?: object,
@@ -113,6 +113,8 @@ export function registerRoutes<const Schemas extends readonly RequestSchema[]>(
     registerRoute(router, route.contract, route.handler.bind(controller), ...(route.beforeValidation ?? []));
   }
 }
+
+export const routes = Object.freeze({ register });
 
 export function createApiDocument(options: {
   title: string;

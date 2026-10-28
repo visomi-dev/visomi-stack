@@ -1,9 +1,9 @@
 import { inject } from '@visomi-stack/backend-shared';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 
+import type { IdentifiedRequest } from '../shared/http';
 import { SessionResponses } from '../sessions/response';
 import { Flows } from '../shared/flows';
-import { requirePrincipal } from '../shared/http';
 import { SecurityNotifications } from '../shared/notifications';
 import { Factors } from '../totp/service';
 
@@ -15,14 +15,14 @@ export class TotpController {
   private readonly notifications = inject(SecurityNotifications);
   private readonly responses = inject(SessionResponses);
 
-  async setupTotp(request: Request, response: Response) {
-    const setup = await this.factors.setup(request.sessionID, requirePrincipal(request));
+  async setupTotp(request: IdentifiedRequest, response: Response) {
+    const setup = await this.factors.setup(request.sessionID, request.user);
 
     response.status(201).json(setup);
   }
 
-  async confirmTotp(request: Request, response: Response, input: ConfirmTotpInput) {
-    const user = requirePrincipal(request);
+  async confirmTotp(request: IdentifiedRequest, response: Response, input: ConfirmTotpInput) {
+    const user = request.user;
     const id = input.body.enrollmentId;
 
     await this.flows.limit('totp-confirm', id, 5);
@@ -35,16 +35,16 @@ export class TotpController {
     });
   }
 
-  async removeTotp(request: Request, response: Response) {
-    const user = requirePrincipal(request);
+  async removeTotp(request: IdentifiedRequest, response: Response) {
+    const user = request.user;
     const updated = await this.factors.remove(request.sessionID, user);
     const notificationSent = await this.notifications.notify(user.email, 'totp_disabled');
 
     await this.responses.send(request, response, updated, { notificationSent });
   }
 
-  async regenerateRecoveryCodes(request: Request, response: Response) {
-    const updated = await this.factors.regenerate(request.sessionID, requirePrincipal(request));
+  async regenerateRecoveryCodes(request: IdentifiedRequest, response: Response) {
+    const updated = await this.factors.regenerate(request.sessionID, request.user);
 
     await this.responses.send(request, response, updated.user, { recoveryCodes: updated.codes });
   }

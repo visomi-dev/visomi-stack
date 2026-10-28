@@ -2,11 +2,11 @@ import { inject } from '@visomi-stack/backend-shared';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 import type { Request, Response } from 'express';
 
+import type { IdentifiedRequest } from '../shared/http';
 import { EmailIdentity } from '../email/service';
 import { Passkeys } from '../passkeys/service';
 import { SessionResponses } from '../sessions/response';
 import { sessionView } from '../shared/http';
-import { requireFull } from '../shared/identity';
 import { SecurityNotifications } from '../shared/notifications';
 
 import type {
@@ -28,10 +28,6 @@ export class PasskeysController {
       throw new HttpError(400, 'request_invalid');
     }
 
-    if (request.user && !request.user.grantId) {
-      requireFull(request.user);
-    }
-
     const email = 'email' in input.body ? input.body.email : undefined;
 
     if (!request.user && !email) {
@@ -44,10 +40,6 @@ export class PasskeysController {
   }
 
   async registerPasskey(request: Request, response: Response, input: RegisterPasskeyInput) {
-    if (request.user && !request.user.grantId) {
-      requireFull(request.user);
-    }
-
     const result = await this.passkeys.register(
       request.sessionID,
       input.body.challengeId,
@@ -96,19 +88,19 @@ export class PasskeysController {
     response.json(sessionView(request));
   }
 
-  async listPasskeys(request: Request, response: Response) {
-    const result = await this.passkeys.list(request.user!);
+  async listPasskeys(request: IdentifiedRequest, response: Response) {
+    const result = await this.passkeys.list(request.user);
 
     response.json({ credentials: result });
   }
 
-  async renamePasskey(request: Request, response: Response, input: RenamePasskeyInput) {
-    await this.passkeys.rename(request.sessionID, request.user!, input.params.id, input.body.label);
+  async renamePasskey(request: IdentifiedRequest, response: Response, input: RenamePasskeyInput) {
+    await this.passkeys.rename(request.sessionID, request.user, input.params.id, input.body.label);
     response.status(204).end();
   }
 
-  async revokePasskey(request: Request, response: Response, input: RevokePasskeyInput) {
-    await this.passkeys.revoke(request.sessionID, request.user!, input.params.id);
+  async revokePasskey(request: IdentifiedRequest, response: Response, input: RevokePasskeyInput) {
+    await this.passkeys.revoke(request.sessionID, request.user, input.params.id);
     response.status(204).end();
   }
 }

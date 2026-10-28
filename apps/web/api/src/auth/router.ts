@@ -23,14 +23,14 @@ export function createAuthRouter(auth: AuthRuntime): Router {
   router.use(rateLimit(auth.requestLimits, auth.config));
   router.use(csrf(auth.config));
   router.use(json({ limit: '32kb' }));
-  router.use(createPasswordRouter(auth.controllers.password));
-  router.use(createEmailRouter(auth.controllers.email));
-  router.use(createGoogleRouter(auth.controllers.google));
-  router.use(createTotpRouter(auth.controllers.totp));
+  router.use(createPasswordRouter(auth.controllers.password, auth.authenticated));
+  router.use(createEmailRouter(auth.controllers.email, auth.authenticated));
+  router.use(createGoogleRouter(auth.controllers.google, auth.authenticated));
+  router.use(createTotpRouter(auth.controllers.totp, auth.authenticated));
   router.use(createRecoveryRouter(auth.controllers.recovery));
-  router.use(createDeviceRouter(auth.controllers.devices));
-  router.use(createMethodRouter(auth.controllers.methods));
-  router.use(createSessionRouter(auth.controllers.sessions));
+  router.use(createDeviceRouter(auth.controllers.devices, auth.authenticated));
+  router.use(createMethodRouter(auth.controllers.methods, auth.authenticated));
+  router.use(createSessionRouter(auth.controllers.sessions, auth.authenticated));
   router.use(createPasskeyRouter(auth.controllers.passkeys, auth.authenticated));
 
   return router;

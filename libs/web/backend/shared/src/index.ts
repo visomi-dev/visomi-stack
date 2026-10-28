@@ -1,5 +1,5 @@
 export { AuthHttpError } from './lib/http/auth-http-error';
-export { createApiDocument, defineRoute, registerRoute, registerRoutes, validateRequest } from './lib/http/contracts';
+export { createApiDocument, defineRoute, registerRoute, routes, validateRequest } from './lib/http/contracts';
 export type {
   RequestSchema,
   RequestSchemas,

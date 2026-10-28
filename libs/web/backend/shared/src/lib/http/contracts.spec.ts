@@ -6,7 +6,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import type { RouteContract } from './contracts';
-import { createApiDocument, defineRoute, registerRoute, registerRoutes } from './contracts';
+import { createApiDocument, defineRoute, registerRoute, routes } from './contracts';
 import { httpErrorHandler } from './http-error-handler';
 
 function dispatch(app: ReturnType<typeof express>, path = '/example', value?: unknown, method = 'POST') {
@@ -108,7 +108,7 @@ describe('typed HTTP route contracts', () => {
     const app = express();
 
     app.use(json());
-    registerRoutes(app, [
+    routes.register(app, [
       {
         contract,
         handler(_request, response, input) {
@@ -142,7 +142,7 @@ describe('typed HTTP route contracts', () => {
     });
     expect(second).toEqual({ status: 200, body: { id: 7 } });
 
-    registerRoutes(express(), [
+    routes.register(express(), [
       {
         contract,
         // @ts-expect-error The schema produces a numeric count, so this handler is incompatible.
@@ -164,7 +164,7 @@ describe('typed HTTP route contracts', () => {
     const unreachable = vi.fn();
 
     app.use(json());
-    registerRoutes(
+    routes.register(
       app,
       [
         {

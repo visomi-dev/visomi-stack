@@ -1,9 +1,9 @@
 import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
 
+import type { IdentifiedRequest } from '../shared/http';
 import { Recovery } from '../recovery/service';
 import { SessionResponses } from '../sessions/response';
-import { requirePrincipal } from '../shared/http';
 import { SecurityNotifications } from '../shared/notifications';
 
 import type {
@@ -20,16 +20,16 @@ export class RecoveryController {
   private readonly notifications = inject(SecurityNotifications);
   private readonly responses = inject(SessionResponses);
 
-  async stagePassword(request: Request, response: Response, input: StagePasswordInput) {
-    const pending = await this.recovery.password(request.sessionID, requirePrincipal(request), input.body.password);
+  async stagePassword(request: IdentifiedRequest, response: Response, input: StagePasswordInput) {
+    const pending = await this.recovery.password(request.sessionID, request.user, input.body.password);
 
     response.status(202).json(pending);
   }
 
-  async completePassword(request: Request, response: Response, input: CompletePasswordInput) {
+  async completePassword(request: IdentifiedRequest, response: Response, input: CompletePasswordInput) {
     const user = await this.recovery.passwordComplete(
       request.sessionID,
-      requirePrincipal(request),
+      request.user,
       input.body.flowId,
       input.body.password,
       input.body.factor,

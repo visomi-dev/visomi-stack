@@ -1,9 +1,9 @@
 import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
 
+import type { IdentifiedRequest } from '../shared/http';
 import { Google } from '../google/service';
 import { SessionResponses } from '../sessions/response';
-import { requireAnonymousSession, requirePrincipal } from '../shared/http';
 import { SecurityNotifications } from '../shared/notifications';
 
 import type { CompleteGoogleInput, StartGoogleInput, UnlinkGoogleInput, VerifyGoogleEmailInput } from './contract';
@@ -15,10 +15,6 @@ export class GoogleController {
 
   async startGoogle(request: Request, response: Response, input: StartGoogleInput) {
     const intent = input.body.intent;
-
-    if (intent === 'login') {
-      requireAnonymousSession(request);
-    }
 
     const pending = await this.google.start(request.sessionID, intent, request.user);
 
@@ -46,8 +42,8 @@ export class GoogleController {
     await this.responses.send(request, response, user);
   }
 
-  async unlinkGoogle(request: Request, response: Response, input: UnlinkGoogleInput) {
-    const user = requirePrincipal(request);
+  async unlinkGoogle(request: IdentifiedRequest, response: Response, input: UnlinkGoogleInput) {
+    const user = request.user;
     const updated = await this.google.unlink(request.sessionID, user, input.params.id);
     const notificationSent = await this.notifications.notify(user.email, 'google_unlinked');
 

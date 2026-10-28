@@ -60,7 +60,7 @@ separate [shared backend library](../../../backend/shared/README.md).
 
 ## Typed route contracts
 
-`defineRoute`, `registerRoutes`, `validateRequest` and `createApiDocument` connect
+`defineRoute`, `routes.register`, `validateRequest` and `createApiDocument` connect
 Express routes, native Zod inference and OpenAPI 3.1 documentation. Contracts own
 an explicit method/path and a single Zod request object. The registration adapter
 parses the configured HTTP sections and passes `z.output<typeof contract.request>`
@@ -68,13 +68,13 @@ to the handler, including transformed values. It does not mutate `request.query`
 or store per-request data on singleton services. The generic adapter uses the
 schema's actual output; no cast or caller-selected validated-data type is involved.
 
-`registerRoutes(router, routes, controller?)` accepts an ordered array of objects with `contract`,
+`routes.register(router, routes, controller?)` accepts an ordered array of objects with `contract`,
 `handler` and optional `beforeValidation` middleware. Each handler retains its own
 contract's inferred input, even when the array contains different request schemas.
 Pass the controller once to bind all its methods inside the utility:
 
 ```ts
-registerRoutes(
+routes.register(
   router,
   [
     {

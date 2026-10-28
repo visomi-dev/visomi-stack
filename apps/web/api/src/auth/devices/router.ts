@@ -1,15 +1,19 @@
-import { registerRoutes } from '@visomi-stack/web-backend-shared';
+import { routes } from '@visomi-stack/web-backend-shared';
 import { Router } from 'express';
 
-import { anonymous } from '../shared/authorization';
+import { anonymous, type Authorization } from '../shared/authorization';
 
 import { devicesContracts } from './contract';
 import type { DevicesController } from './controller';
 
-export function createDeviceRouter(controller: DevicesController): Router {
+export function createDeviceRouter(
+  controller: DevicesController,
+  authenticated: Authorization['authenticated'],
+): Router {
   const router = Router();
+  const full = authenticated();
 
-  registerRoutes(
+  routes.register(
     router,
     [
       {
@@ -18,9 +22,9 @@ export function createDeviceRouter(controller: DevicesController): Router {
         beforeValidation: [anonymous],
       },
       { contract: devicesContracts.getApprovalStatus, handler: controller.getApprovalStatus },
-      { contract: devicesContracts.reviewApproval, handler: controller.reviewApproval },
-      { contract: devicesContracts.approve, handler: controller.approve },
-      { contract: devicesContracts.deny, handler: controller.deny },
+      { contract: devicesContracts.reviewApproval, handler: controller.reviewApproval, beforeValidation: [full] },
+      { contract: devicesContracts.approve, handler: controller.approve, beforeValidation: [full] },
+      { contract: devicesContracts.deny, handler: controller.deny, beforeValidation: [full] },
       { contract: devicesContracts.cancelApproval, handler: controller.cancelApproval },
       { contract: devicesContracts.consumeApproval, handler: controller.consumeApproval },
     ],

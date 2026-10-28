@@ -16,6 +16,7 @@ import { emailSchema } from './auth/email/schema';
 import { googleContracts } from './auth/google/contract';
 import { loginPasswordSchema, newPasswordSchema } from './auth/password/schema';
 import { SessionResponses } from './auth/sessions/response';
+import { AUTHORIZATION_POLICY, Authorization, denyPermissions } from './auth/shared/authorization';
 import { authContracts, createOpenApiDocument } from './openapi';
 
 function dispatch(app: RequestHandler, path: string, body?: unknown, method = 'GET') {
@@ -94,14 +95,17 @@ describe('authentication contracts and injectable HTTP controllers', () => {
     });
     const injector = createInjector([
       DevicesController,
+      Authorization,
+      { provide: AUTHORIZATION_POLICY, useValue: denyPermissions },
       { provide: Devices, useValue: { request } },
       { provide: SessionResponses, useValue: {} },
     ]);
     const controller = injector.get<DevicesController>(DevicesController);
+    const access = injector.get<Authorization>(Authorization);
     const app = express();
 
     app.use(json());
-    app.use(createDeviceRouter(controller));
+    app.use(createDeviceRouter(controller, access.authenticated.bind(access)));
     app.use(httpErrorHandler);
     const result = await dispatch(app, '/device-approval/request', { email: '  Synthetic@Example.Test  ' }, 'POST');
 

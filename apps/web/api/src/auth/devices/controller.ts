@@ -1,9 +1,9 @@
 import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
 
+import type { IdentifiedRequest } from '../shared/http';
 import { Devices } from '../devices/service';
 import { SessionResponses } from '../sessions/response';
-import { requireAnonymousSession, requirePrincipal } from '../shared/http';
 
 import type {
   ApproveInput,
@@ -20,8 +20,6 @@ export class DevicesController {
   private readonly responses = inject(SessionResponses);
 
   async requestApproval(request: Request, response: Response, input: RequestApprovalInput) {
-    requireAnonymousSession(request);
-
     const pending = await this.devices.request(request.sessionID, input.body.email);
 
     response.status(201).json(pending);
@@ -33,8 +31,8 @@ export class DevicesController {
     response.json(state);
   }
 
-  async reviewApproval(request: Request, response: Response, input: ReviewApprovalInput) {
-    const state = await this.devices.review(request.sessionID, requirePrincipal(request), input.body.requestId);
+  async reviewApproval(request: IdentifiedRequest, response: Response, input: ReviewApprovalInput) {
+    const state = await this.devices.review(request.sessionID, request.user, input.body.requestId);
 
     response.json(state);
   }
@@ -50,25 +48,13 @@ export class DevicesController {
     await this.responses.send(request, response, user);
   }
 
-  async approve(request: Request, response: Response, input: ApproveInput) {
-    await this.devices.decide(
-      request.sessionID,
-      requirePrincipal(request),
-      input.body.requestId,
-      true,
-      input.body.userCode,
-    );
+  async approve(request: IdentifiedRequest, response: Response, input: ApproveInput) {
+    await this.devices.decide(request.sessionID, request.user, input.body.requestId, true, input.body.userCode);
     response.status(204).end();
   }
 
-  async deny(request: Request, response: Response, input: DenyInput) {
-    await this.devices.decide(
-      request.sessionID,
-      requirePrincipal(request),
-      input.body.requestId,
-      false,
-      input.body.userCode,
-    );
+  async deny(request: IdentifiedRequest, response: Response, input: DenyInput) {
+    await this.devices.decide(request.sessionID, request.user, input.body.requestId, false, input.body.userCode);
     response.status(204).end();
   }
 }

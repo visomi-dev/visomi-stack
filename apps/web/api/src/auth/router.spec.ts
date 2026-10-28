@@ -252,6 +252,75 @@ describe('authentication router decisions and delegation', () => {
     expect(pending.status).toBe(202);
   });
 
+  it('guards protected operations before validation or controller delegation', async () => {
+    const fixture = routerFixture();
+    const operations = [
+      ['POST', '/reauth/password/start'],
+      ['POST', '/reauth/password/complete'],
+      ['POST', '/password/add'],
+      ['POST', '/password/change'],
+      ['POST', '/password/remove'],
+      ['POST', '/email/change/request'],
+      ['POST', '/email/change/verify'],
+      ['POST', '/device-approval/review'],
+      ['POST', '/device-approval/approve'],
+      ['POST', '/device-approval/deny'],
+      ['DELETE', `/google/${credentialId}`],
+      ['GET', '/methods'],
+      ['GET', '/sessions'],
+      ['DELETE', `/sessions/${credentialId}`],
+      ['POST', '/sessions/revoke-others'],
+      ['POST', '/totp/setup'],
+      ['POST', '/totp/confirm'],
+      ['DELETE', '/totp'],
+      ['POST', '/recovery-codes/regenerate'],
+    ];
+
+    for (const [method, path] of operations) {
+      const missing = await fixture.dispatch(method, path, {});
+      const unverified = await fixture.dispatch(
+        method,
+        path,
+        {},
+        { user: { ...user, level: 'unverified', emailVerified: false } },
+      );
+
+      expect(missing.body, path).toEqual({ error: 'authentication_required' });
+      expect(missing.status, path).toBe(401);
+      expect(unverified.body, path).toEqual({ error: 'account_verification_required' });
+      expect(unverified.status, path).toBe(403);
+    }
+    for (const path of ['/email/request', '/email/verify', '/recovery/password', '/recovery/password/complete']) {
+      const missing = await fixture.dispatch('POST', path, {});
+
+      expect(missing.status, path).toBe(401);
+    }
+  });
+
+  it('selects Google access middleware by intent while leaving malformed requests to the contract', async () => {
+    const fixture = routerFixture();
+
+    for (const intent of [undefined, null, 'login']) {
+      const anonymous = await fixture.dispatch('POST', '/google/start', { intent });
+      const signedIn = await fixture.dispatch('POST', '/google/start', { intent }, { user });
+
+      expect(anonymous.status).toBe(404);
+      expect(signedIn.body).toEqual({ error: 'anonymous_session_required' });
+    }
+    for (const intent of ['link', 'reauth']) {
+      const missing = await fixture.dispatch('POST', '/google/start', { intent });
+      const signedIn = await fixture.dispatch('POST', '/google/start', { intent }, { user });
+
+      expect(missing.status).toBe(401);
+      expect(signedIn.status).toBe(404);
+    }
+    const missingBody = await fixture.dispatch('POST', '/google/start');
+    const invalidIntent = await fixture.dispatch('POST', '/google/start', { intent: 42 });
+
+    expect(missingBody.status).toBe(400);
+    expect(invalidIntent.body).toEqual({ error: 'intent_invalid' });
+  });
+
   it('uses the runtime database as the only rate-limit source', () => {
     const fixture = routerFixture();
 

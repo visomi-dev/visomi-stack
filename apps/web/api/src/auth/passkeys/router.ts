@@ -1,4 +1,4 @@
-import { registerRoutes } from '@visomi-stack/web-backend-shared';
+import { routes } from '@visomi-stack/web-backend-shared';
 import type { NextFunction, Request, Response } from 'express';
 import { Router } from 'express';
 
@@ -14,10 +14,14 @@ export function createPasskeyRouter(
 ): Router {
   const router = Router();
 
-  registerRoutes(
+  routes.register(
     router,
     [
-      { contract: passkeysContracts.registrationOptions, handler: controller.registrationOptions },
+      {
+        contract: passkeysContracts.registrationOptions,
+        handler: controller.registrationOptions,
+        beforeValidation: [enrollmentOnly],
+      },
       {
         contract: passkeysContracts.registerPasskey,
         handler: controller.registerPasskey,
@@ -29,7 +33,7 @@ export function createPasskeyRouter(
     controller,
   );
   router.use('/passkeys', authenticated());
-  registerRoutes(
+  routes.register(
     router,
     [
       { contract: passkeysContracts.listPasskeys, handler: controller.listPasskeys },

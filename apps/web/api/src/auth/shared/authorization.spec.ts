@@ -2,7 +2,7 @@ import { IncomingMessage, ServerResponse } from 'node:http';
 import { Socket } from 'node:net';
 
 import { createInjector } from '@visomi-stack/backend-shared';
-import { AuthHttpError, httpErrorHandler, registerRoutes } from '@visomi-stack/web-backend-shared';
+import { AuthHttpError, httpErrorHandler, routes } from '@visomi-stack/web-backend-shared';
 import express, { Router, type Request, type RequestHandler, type Response } from 'express';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -12,6 +12,7 @@ import {
   Authorization,
   anonymous,
   denyPermissions,
+  identified,
   type AuthorizationPolicy,
 } from './authorization';
 import type { Principal } from './identity';
@@ -40,7 +41,7 @@ function application(guards: RequestHandler[], global = false) {
     router.use(...guards);
   }
 
-  registerRoutes(router, [
+  routes.register(router, [
     {
       contract: {
         method: 'get',
@@ -93,6 +94,20 @@ describe('composable authentication and authorization middleware', () => {
       const denied = await dispatch(app, { ...principal, level });
 
       expect(denied).toEqual({ status: 403, body: { error: 'anonymous_session_required' } });
+    }
+  });
+
+  it('allows verified and restricted identities through the identity-only guard', async () => {
+    const app = application([identified]);
+    const missing = await dispatch(app);
+    const malformed = await dispatch(app, { id: principal.id, authenticatedAt: Date.now() });
+
+    expect(missing.status).toBe(401);
+    expect(malformed.status).toBe(401);
+    for (const level of ['full', 'unverified', 'recovery', 'enrollment'] as const) {
+      const result = await dispatch(app, { ...principal, level });
+
+      expect(result.status).toBe(200);
     }
   });
 

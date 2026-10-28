@@ -3,7 +3,7 @@ import {
   HttpError,
   httpErrorHandler,
   httpObservability,
-  registerRoutes,
+  routes,
   securityHeaders,
   type Observability,
 } from '@visomi-stack/web-backend-shared';
@@ -14,9 +14,9 @@ import type { AuthRuntime } from './auth/runtime';
 import { createOpenApiDocument, documentationContract, homeContract } from './openapi';
 
 export { createAuthentication } from './auth/runtime';
-export { authConfig } from './auth/shared/config';
 export { anonymous } from './auth/shared/authorization';
-export type { AuthorizationContext, AuthorizationRequirement, AuthorizationPolicy } from './auth/shared/authorization';
+export type { AuthorizationContext, AuthorizationPolicy, AuthorizationRequirement } from './auth/shared/authorization';
+export { authConfig } from './auth/shared/config';
 
 export type AppOptions = {
   observability?: Observability;
@@ -57,7 +57,7 @@ export function createApp(options: AppOptions = {}) {
     app.use('/auth', (_request, _response, next) => next(new HttpError(503, 'authentication_unavailable')));
   }
 
-  registerRoutes(app, [
+  routes.register(app, [
     { contract: documentationContract, handler: (_request, response) => response.json(document) },
     { contract: homeContract, handler: (_request, response) => response.json({ message: 'Hello API' }) },
   ]);

@@ -2,7 +2,7 @@ import { inject, InjectionToken } from '@visomi-stack/backend-shared';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 
-import { requireAnonymousSession } from './http';
+import { requireAnonymousSession, requirePrincipal } from './http';
 import { requireFull, type Principal } from './identity';
 
 export type AuthorizationContext = { principal: Principal; request: Request };
@@ -19,6 +19,15 @@ export function denyPermissions(): boolean {
 export function anonymous(request: Request, _response: Response, next: NextFunction): void {
   try {
     requireAnonymousSession(request);
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+export function identified(request: Request, _response: Response, next: NextFunction): void {
+  try {
+    requirePrincipal(request);
     next();
   } catch (error) {
     next(error);

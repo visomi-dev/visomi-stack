@@ -3,6 +3,8 @@ import type { NextFunction, Request, Response } from 'express';
 
 import { validPrincipal, type Principal } from './identity';
 
+export type IdentifiedRequest = Request & Express.AuthenticatedRequest;
+
 export function saveSession(request: Request): Promise<void> {
   return new Promise((resolve, reject) =>
     request.session.save((error) => (error ? reject(new HttpError(503, 'session_unavailable')) : resolve())),
