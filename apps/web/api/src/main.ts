@@ -73,6 +73,7 @@ async function stop(exitCode: number): Promise<void> {
   const drain = setTimeout(() => server.closeAllConnections(), 3000);
 
   await new Promise<void>((resolve) => server.close(() => resolve()));
+
   clearTimeout(drain);
   let databaseClosed = true;
 

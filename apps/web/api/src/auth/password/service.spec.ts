@@ -47,6 +47,7 @@ it('rejects mismatched purpose, user version, password and email before consumin
   await expect(
     policy.passwords.loginComplete(session.sid, flow.id, { kind: 'email', code: '123456' }),
   ).rejects.toMatchObject({ code: 'verification_failed' });
+
   const wrong = passwords([[user], []], login);
 
   await expect(
@@ -59,6 +60,7 @@ it('rejects reauthentication after another security change or factor replacement
   await expect(
     f.passwords.reauthComplete(session.sid, current, flow.id, { kind: 'email', code: '123456' }),
   ).rejects.toMatchObject({ code: 'verification_failed' });
+
   const changed = passwords([[user], [session], [factor]], {
     ...flow,
     data: { requiredFactor: 'totp', factorId: 'other-factor' },
@@ -67,6 +69,7 @@ it('rejects reauthentication after another security change or factor replacement
   await expect(
     changed.passwords.reauthComplete(session.sid, current, flow.id, { kind: 'totp', code: '123456' }),
   ).rejects.toMatchObject({ code: 'verification_failed' });
+
   const removed = passwords([[user], [session], []], { ...flow, data: { requiredFactor: 'totp' } });
 
   await expect(
@@ -85,6 +88,7 @@ it('rejects claiming an unverified duplicate after another identity verified its
   vi.spyOn(account.flows, 'reserve').mockResolvedValue(pending);
   vi.spyOn(account.flows, 'locked').mockResolvedValue(pending);
   vi.spyOn(account.flows, 'code').mockReturnValue(undefined);
+
   await expect(account.loginComplete(session.sid, flow.id, { kind: 'email', code: '123456' })).rejects.toMatchObject({
     code: 'email_in_use',
   });

@@ -10,6 +10,7 @@ export function saveSession(request: Request): Promise<void> {
     request.session.save((error) => (error ? reject(new HttpError(503, 'session_unavailable')) : resolve())),
   );
 }
+
 export function sessionView(request: Request) {
   const user = request.user;
 

@@ -107,6 +107,7 @@ export class Factors {
         .update(totpEnrollments)
         .set({ status: 'revoked' })
         .where(and(eq(totpEnrollments.userId, user.id), eq(totpEnrollments.status, 'pending')));
+
       await tx.insert(totpEnrollments).values({
         id: enrollmentId,
         userId: user.id,
@@ -158,7 +159,9 @@ export class Factors {
         .update(totpEnrollments)
         .set({ status: 'revoked' })
         .where(and(eq(totpEnrollments.userId, user.id), eq(totpEnrollments.status, 'active')));
+
       await tx.update(totpEnrollments).set({ status: 'active', lastStep: step }).where(eq(totpEnrollments.id, id));
+
       const codes = await this.replaceCodes(tx, user.id);
       const updated = await invalidate(tx, user.id, sid);
 
@@ -174,7 +177,9 @@ export class Factors {
       const user = await lockIdentity(tx, sid, current);
 
       await tx.update(totpEnrollments).set({ status: 'revoked' }).where(eq(totpEnrollments.userId, user.id));
+
       await tx.delete(recoveryCodes).where(eq(recoveryCodes.userId, user.id));
+
       const updated = await invalidate(tx, user.id, sid);
 
       return updatedPrincipal(updated, current);
@@ -185,6 +190,7 @@ export class Factors {
     const codes = Array.from({ length: 10 }, token);
 
     await tx.delete(recoveryCodes).where(eq(recoveryCodes.userId, userId));
+
     await tx.insert(recoveryCodes).values(
       codes.map((code) => ({
         id: randomUUID(),

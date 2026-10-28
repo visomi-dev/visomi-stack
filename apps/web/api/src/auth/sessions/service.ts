@@ -41,6 +41,7 @@ export class Sessions {
 
     return this.database.transaction(async (tx) => {
       await lockIdentity(tx, sid, current);
+
       const rows = await tx
         .select({ sid: sessions.sid })
         .from(sessions)

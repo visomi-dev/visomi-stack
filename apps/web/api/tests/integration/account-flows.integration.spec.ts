@@ -92,7 +92,9 @@ describe('account access through real SMTP and PostgreSQL', () => {
     const result8 = await browser.call('POST', '/logout', {});
 
     expect(result8.status).toBe(204);
+
     await browser.call('GET', '/session');
+
     const pending = await browser.call('POST', '/password/sign-in', { email, password });
     const attempts = await Promise.all(
       Array.from({ length: 8 }, () =>

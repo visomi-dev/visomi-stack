@@ -146,6 +146,7 @@ describe('authentication failures and method lifecycle', () => {
       flowId: login.data.flowId,
       factor: { kind: 'email', code: f.lastCode(email) },
     });
+
     const result14 = await browser.call('GET', '/sessions');
 
     expect(result14.data.sessions).toHaveLength(2);
@@ -172,10 +173,12 @@ describe('authentication failures and method lifecycle', () => {
     const result19 = await browser.call('POST', '/challenges/resend', { flowId: id });
 
     expect(result19.status).toBe(429);
+
     await f.db
       .update(authSchema.flows)
       .set({ lastSentAt: new Date(Date.now() - 61_000) })
       .where(eq(authSchema.flows.id, id));
+
     const result20 = await browser.call('POST', '/challenges/resend', { flowId: id });
 
     expect(result20.status).toBe(202);
@@ -293,6 +296,7 @@ describe('authentication failures and method lifecycle', () => {
           .update(authSchema.deviceApprovals)
           .set({ expiresAt: new Date(0) })
           .where(eq(authSchema.deviceApprovals.id, requestId));
+
         const result36 = await browser.call('POST', '/device-approval/status', { requestId });
 
         expect(result36.data.status).toBe('expired');

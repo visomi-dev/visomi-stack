@@ -102,6 +102,7 @@ export class Google {
         .set({ data: { issuer, subject: payload!.sub, providerEmail: email } })
         .where(eq(flows.id, id));
     });
+
     if (!authoritative) {
       const next = await this.proofs.create(
         sid,
@@ -155,7 +156,9 @@ export class Google {
       }
 
       await lastMethod(tx, user, 'google', identityId, Boolean(this.config.googleClientId));
+
       await tx.update(federatedIdentities).set({ revokedAt: new Date() }).where(eq(federatedIdentities.id, identityId));
+
       const updated = await invalidate(tx, user.id, sid);
 
       return current.method === 'google' && current.methodId === identityId ? null : updatedPrincipal(updated, current);
@@ -180,7 +183,9 @@ export class Google {
 
       // A provider subject can race across sessions with different provider emails.
       await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${issuer + ':' + subject}, 1))`);
+
       await lockEmail(tx, email);
+
       let [linked] = await tx
         .select()
         .from(federatedIdentities)
@@ -258,10 +263,12 @@ export class Google {
       } else if (!user.emailVerifiedAt) {
         // A Google owner must not inherit access planted by an unverified signup.
         await tx.update(credentials).set({ revokedAt: new Date() }).where(eq(credentials.userId, user.id));
+
         await tx
           .update(users)
           .set({ email, emailVerifiedAt: new Date(), passwordHash: null })
           .where(eq(users.id, user.id));
+
         const result6 = await invalidate(tx, user.id);
 
         user = result6;

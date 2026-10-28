@@ -29,6 +29,7 @@ export class PasswordController {
     const user = await this.password.signup(request.sessionID, input.body.email, input.body.password);
 
     await this.responses.establish(request, user);
+
     const verification = await this.email.emailStart(request.sessionID, user);
 
     response.status(201).json({ ...sessionView(request), ...verification });

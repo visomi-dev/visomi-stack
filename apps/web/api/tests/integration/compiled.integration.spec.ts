@@ -15,11 +15,14 @@ const output = join(root, 'dist/apps/web/api');
 describe('API process and compiled boundaries', () => {
   it('imports the deployed CommonJS app under an ESM parent without listeners or telemetry initialization', async () => {
     await mkdir(join(root, 'tmp'), { recursive: true });
+
     const directory = await mkdtemp(join(root, 'tmp/api-boundary-'));
 
     try {
       await cp(output, join(directory, 'api'), { recursive: true });
+
       await writeFile(join(directory, 'package.json'), JSON.stringify({ type: 'module' }));
+
       const script = `
         const net = require('node:net');
         let listens = 0;
@@ -76,6 +79,7 @@ describe('API process and compiled boundaries', () => {
     const probe = createServer();
 
     await new Promise<void>((resolveReady) => probe.listen(0, '127.0.0.1', resolveReady));
+
     const address = probe.address();
 
     if (!address || typeof address === 'string') {
@@ -83,6 +87,7 @@ describe('API process and compiled boundaries', () => {
     }
 
     await new Promise<void>((resolveClosed) => probe.close(() => resolveClosed()));
+
     const child = spawn(process.execPath, [join(output, 'main.js')], {
       cwd: root,
       env: { HOST: '127.0.0.1', PORT: String(address.port), NODE_ENV: 'test' },
@@ -114,6 +119,7 @@ describe('API process and compiled boundaries', () => {
           }
         });
       });
+
       const response = await fetch(`http://127.0.0.1:${address.port}/`);
       const body = await response.json();
 
@@ -133,6 +139,7 @@ describe('API process and compiled boundaries', () => {
     } finally {
       if (child.exitCode === null && child.signalCode === null) {
         child.kill('SIGKILL');
+
         await exit;
       }
     }

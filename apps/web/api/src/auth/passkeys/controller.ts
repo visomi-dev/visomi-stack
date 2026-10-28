@@ -49,6 +49,7 @@ export class PasskeysController {
     );
 
     await this.responses.establish(request, result);
+
     let verification = {};
 
     if (result.level === 'unverified' && result.email) {
@@ -81,6 +82,7 @@ export class PasskeysController {
     const recovering = Boolean(request.user?.grantId);
 
     await this.responses.establish(request, result);
+
     if (recovering && result.level === 'full') {
       await this.notifications.notify(result.email, 'passkey_recovered');
     }
@@ -96,11 +98,13 @@ export class PasskeysController {
 
   async renamePasskey(request: IdentifiedRequest, response: Response, input: RenamePasskeyInput) {
     await this.passkeys.rename(request.sessionID, request.user, input.params.id, input.body.label);
+
     response.status(204).end();
   }
 
   async revokePasskey(request: IdentifiedRequest, response: Response, input: RevokePasskeyInput) {
     await this.passkeys.revoke(request.sessionID, request.user, input.params.id);
+
     response.status(204).end();
   }
 }

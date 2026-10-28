@@ -110,6 +110,7 @@ export class Passkeys {
       }
 
       await this.lockSession(tx, sid);
+
       if (!user) {
         await tx.insert(users).values({ id: pending.subjectId!, email: pending.email });
       }
@@ -167,6 +168,7 @@ export class Passkeys {
       const [identity] = await tx.select().from(users).where(eq(users.id, candidate.userId)).for('update');
 
       await this.lockSession(tx, sid);
+
       const [credential] = await tx
         .select()
         .from(credentials)
@@ -262,9 +264,12 @@ export class Passkeys {
 
   async rename(sid: string, user: Express.User, id: string, label: string) {
     requireFresh(user, this.config);
+
     await this.database.transaction(async (tx) => {
       await this.lockUser(tx, user, sid);
+
       await this.lockSession(tx, sid);
+
       const updated = await tx
         .update(credentials)
         .set({ label, updatedAt: new Date() })
@@ -279,9 +284,12 @@ export class Passkeys {
 
   async revoke(sid: string, user: Express.User, id: string) {
     requireFresh(user, this.config);
+
     await this.database.transaction(async (tx) => {
       await this.lockUser(tx, user, sid);
+
       await this.lockSession(tx, sid);
+
       const owned = await tx
         .select()
         .from(credentials)
@@ -296,6 +304,7 @@ export class Passkeys {
       await lastMethod(tx, identity, 'passkey', id, Boolean(this.config.googleClientId));
 
       await tx.update(credentials).set({ revokedAt: new Date(), updatedAt: new Date() }).where(eq(credentials.id, id));
+
       // Invalidate sessions authenticated with this credential, including a concurrently loaded snapshot.
       await tx
         .update(sessions)
@@ -330,7 +339,9 @@ export class Passkeys {
 
     await this.database.transaction(async (tx) => {
       await this.lockSession(tx, sid);
+
       await tx.delete(challenges).where(eq(challenges.sessionId, sid));
+
       await tx.insert(challenges).values({
         id,
         sessionId: sid,
@@ -349,6 +360,7 @@ export class Passkeys {
     // Consumption commits before cryptographic verification: even a failed attempt cannot reuse it.
     return this.database.transaction(async (tx) => {
       await this.lockSession(tx, sid);
+
       const [pending] = await tx
         .delete(challenges)
         .where(

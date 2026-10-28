@@ -32,8 +32,10 @@ describe('authentication HTTP boundary', () => {
     const save = vi.fn((callback: (error?: Error) => void) => callback());
 
     await saveSession({ session: { save } } as unknown as Request);
+
     expect(save).toHaveBeenCalledOnce();
     save.mockImplementation((callback) => callback(new Error('SYNTHETIC_PRIVATE_SQL')));
+
     await expect(saveSession({ session: { save } } as unknown as Request)).rejects.toMatchObject({
       code: 'session_unavailable',
     });

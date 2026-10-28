@@ -17,6 +17,7 @@ export async function testPostgres(manifest?: string, app: TestCompose['app'] = 
   let compose: TestCompose | undefined;
 
   await writeFile(join(directory, 'test-owner'), 'visomi-stack-isolated-postgres');
+
   await writeFile(join(directory, 'compose.env'), '');
 
   try {
@@ -28,6 +29,7 @@ export async function testPostgres(manifest?: string, app: TestCompose['app'] = 
     }
 
     await runTestCompose(compose, ['up', '-d', 'postgres'], signal);
+
     const { stdout } = await runTestCompose(compose, ['port', 'postgres', '5432'], signal);
     // Docker reports the binding; podman-compose reports only the published port.
     const match = /^(?:127\.0\.0\.1:)?(\d+)$/.exec(stdout.trim());
@@ -44,6 +46,7 @@ export async function testPostgres(manifest?: string, app: TestCompose['app'] = 
       for (let attempt = 0; ; attempt++) {
         try {
           await pool.query('SELECT 1');
+
           break;
         } catch {
           if (attempt === 99) {
@@ -53,6 +56,7 @@ export async function testPostgres(manifest?: string, app: TestCompose['app'] = 
           await delay(100, undefined, { signal });
         }
       }
+
       await migrate(db, {
         migrationsFolder: resolve(__dirname, '../../../../../libs/backend/shared/src/lib/database/migrations'),
       });

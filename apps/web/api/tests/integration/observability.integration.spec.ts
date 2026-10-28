@@ -46,7 +46,9 @@ function fixture(overrides: Partial<ObservabilityOptions> = {}) {
 
 async function listen(app: ReturnType<typeof express>): Promise<string> {
   server = createServer(app);
+
   await new Promise<void>((resolve) => server!.listen(0, '127.0.0.1', resolve));
+
   const address = server.address();
 
   if (!address || typeof address === 'string') {
@@ -59,11 +61,14 @@ async function listen(app: ReturnType<typeof express>): Promise<string> {
 afterEach(async () => {
   if (server) {
     server.closeAllConnections();
+
     await new Promise<void>((resolve) => server!.close(() => resolve()));
+
     server = undefined;
   }
 
   await telemetry?.shutdown();
+
   telemetry = undefined;
   vi.unstubAllEnvs();
 });
@@ -88,6 +93,7 @@ describe('HTTP observability integration', () => {
     const body = await response.json();
 
     await f.reader.forceFlush();
+
     expect(f.lines).toHaveLength(1);
     expect(f.lines[0].requestId).toBe(body.requestId);
     expect(response.headers.get('x-request-id')).toBe(body.requestId);
@@ -112,7 +118,9 @@ describe('HTTP observability integration', () => {
     const response = await fetch(origin);
 
     await response.body!.cancel();
+
     await vi.waitFor(() => expect(f.lines).toHaveLength(1));
+
     expect(f.lines[0].outcome).toBe('aborted');
     expect(f.spans.getFinishedSpans()).toHaveLength(1);
   });
@@ -126,6 +134,7 @@ describe('HTTP observability integration', () => {
       const before = f.telemetry.correlation();
 
       await delay(Number(request.params.wait));
+
       response.json({ before, after: f.telemetry.correlation() });
     });
     const origin = await listen(app);
@@ -187,6 +196,7 @@ describe('HTTP observability integration', () => {
     }
 
     await f.reader.forceFlush();
+
     const spanOutput = f.spans.getFinishedSpans().map((span) => ({
       name: span.name,
       resource: span.resource.attributes,
@@ -280,7 +290,9 @@ describe('HTTP observability integration', () => {
 
     expect(response.status).toBe(422);
     expect(body).toEqual({ error: 'request_invalid', message: marker, body: { fields: [marker] } });
+
     await f.reader.forceFlush();
+
     const spans = f.spans.getFinishedSpans().map((span) => ({
       attributes: span.attributes,
       events: span.events,

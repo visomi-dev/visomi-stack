@@ -33,16 +33,22 @@ export async function serveTestApplication(app: TestCompose['app']) {
 
     postgres = resource;
     controller.signal.throwIfAborted();
+
     await writeFile(join(directory, 'database.json'), JSON.stringify({ url: postgres.url }));
+
     await runTestCompose(postgres.compose, ['build', 'database-init', 'app'], controller.signal);
+
     // Await successful initialization explicitly; some Compose providers mishandle one-shot dependencies.
     await runTestCompose(postgres.compose, ['run', '--rm', '--no-deps', 'database-init'], controller.signal);
+
     await runTestCompose(postgres.compose, ['up', '-d', '--no-deps', 'app'], controller.signal);
+
     await stopped;
   } finally {
     process.off('SIGTERM', stop);
     process.off('SIGINT', stop);
     clearInterval(keepAlive);
+
     await postgres?.stop();
   }
 }

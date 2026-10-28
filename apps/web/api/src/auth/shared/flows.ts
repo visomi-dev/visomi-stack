@@ -52,6 +52,7 @@ export class Flows {
     const code = pin();
 
     await lockSession(tx, sid);
+
     const [flow] = await tx
       .insert(flows)
       .values({
@@ -103,6 +104,7 @@ export class Flows {
 
   async locked(tx: Transaction, sid: string, id: string, purpose?: Flow['purpose']) {
     await lockSession(tx, sid);
+
     const [flow] = await tx
       .select()
       .from(flows)
@@ -144,6 +146,7 @@ export class Flows {
 
   async resend(sid: string, id: string) {
     await this.limit('resend', sid);
+
     const code = pin();
     const flow = await this.database.transaction(async (tx) => {
       const current = await this.locked(tx, sid, id);

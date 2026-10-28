@@ -34,9 +34,11 @@ describe('identity revocation decisions', () => {
     await expect(lockIdentity(otherBrowser.tx, session.sid, granted)).rejects.toMatchObject({
       code: 'authentication_required',
     });
+
     await expect(lockIdentity(storage().tx, session.sid, { id: user.id, authenticatedAt: 0 })).rejects.toMatchObject({
       code: 'authentication_required',
     });
+
     const legacyGrant = storage([[flow]]);
     const result5 = await activeMethod(legacyGrant.db, { ...granted, grantId: undefined });
 
@@ -48,6 +50,7 @@ describe('identity revocation decisions', () => {
     await expect(
       lastMethod(providers.tx, { ...user, passwordHash: null }, 'google', 'target-google'),
     ).resolves.toBeUndefined();
+
     const disabled = storage([[], [{ id: 'other-google' }]]);
 
     await expect(

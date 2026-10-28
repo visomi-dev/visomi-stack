@@ -9,14 +9,18 @@ describe('PostgreSQL session adapter', () => {
     const store = sessionStore({ query } as unknown as Pool);
 
     store.destroy('synthetic-sid');
+
     await vi.waitFor(() => expect(query).toHaveResolved());
+
     const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
     try {
       // Exercise the store's diagnostic hook without connecting to or deleting database rows.
       query.mockRejectedValue(new Error('SYNTHETIC_PRIVATE_SQL'));
       store.pruneSessions();
+
       await vi.waitFor(() => expect(query).toHaveBeenCalledTimes(2));
+
       expect(diagnostic).not.toHaveBeenCalled();
     } finally {
       diagnostic.mockRestore();

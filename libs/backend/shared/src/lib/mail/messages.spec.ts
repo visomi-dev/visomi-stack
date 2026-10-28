@@ -14,12 +14,15 @@ describe('shared authentication mail', () => {
     const security = renderMessage('security', 'Security', 'A setting changed.');
 
     expect(security.text).toContain('recover your account');
+
     await expect(
       createInjector([AuthMail]).get<AuthMail>(AuthMail).code('synthetic@example.test', 'recovery', '123456'),
     ).rejects.toThrow('mail_unavailable');
+
     await expect(
       createInjector([AuthMail]).get<AuthMail>(AuthMail).notice('synthetic@example.test', 'password_changed'),
     ).rejects.toThrow('mail_unavailable');
+
     const mail = createInjector([
       AuthMail,
       {
@@ -36,6 +39,7 @@ describe('shared authentication mail', () => {
     ]).get<AuthMail>(AuthMail);
 
     await expect(mail.code('synthetic@example.test', 'recovery', '123456')).rejects.toThrow('mail_unavailable');
+
     await expect(mail.notice('synthetic@example.test', 'password_changed')).rejects.toThrow('mail_unavailable');
   });
   it('renders and delivers each supported code and security notice through the injected transport', async () => {

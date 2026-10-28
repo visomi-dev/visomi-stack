@@ -64,13 +64,17 @@ describe('passkey capability authorization', () => {
     await expect(passkeys.registrationOptions('synthetic-session', stale)).rejects.toMatchObject({
       code: 'reauthentication_required',
     });
+
     await expect(passkeys.registrationOptions('synthetic-session', stale)).rejects.toBeInstanceOf(AuthHttpError);
+
     await expect(passkeys.rename('synthetic-session', stale, 'credential', 'label')).rejects.toMatchObject({
       code: 'reauthentication_required',
     });
+
     await expect(passkeys.revoke('synthetic-session', stale, 'credential')).rejects.toMatchObject({
       code: 'reauthentication_required',
     });
+
     expect(database.transaction).not.toHaveBeenCalled();
     expect(database.select).not.toHaveBeenCalled();
     expect(database.update).not.toHaveBeenCalled();
@@ -109,7 +113,9 @@ describe('passkey capability authorization', () => {
     const user = { id: randomUUID(), credentialId: randomUUID(), authenticatedAt: Date.now() };
 
     fixture.owned.mockResolvedValue([{ credentialId: 'synthetic_existing_key', transports: ['internal'] }]);
+
     await fixture.passkeys.registrationOptions('synthetic-session', user);
+
     expect(webAuthn.registration).toHaveBeenCalledWith(
       expect.objectContaining({
         userName: user.id,
@@ -145,10 +151,12 @@ describe('passkey capability authorization', () => {
     const fixture = optionsFixture();
 
     fixture.sessionLock.mockResolvedValue([]);
+
     await expect(fixture.passkeys.authenticationOptions('expired-session')).rejects.toMatchObject({
       code: 'session_expired',
       status: 401,
     });
+
     expect(fixture.persist).not.toHaveBeenCalled();
   });
 
@@ -156,9 +164,11 @@ describe('passkey capability authorization', () => {
     const fixture = optionsFixture();
 
     webAuthn.registration.mockRejectedValueOnce(new Error('synthetic_options_failure'));
+
     await expect(fixture.passkeys.registrationOptions('synthetic-session')).rejects.toThrow(
       'synthetic_options_failure',
     );
+
     expect(fixture.database.transaction).not.toHaveBeenCalled();
   });
 });

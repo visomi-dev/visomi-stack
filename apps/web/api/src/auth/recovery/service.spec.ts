@@ -44,9 +44,11 @@ describe('recovery proof binding', () => {
     });
 
     changed.factors.active.mockResolvedValue(factor as never);
+
     await expect(changed.recovery.verify(session.sid, flow.id, '123456')).rejects.toMatchObject({
       code: 'verification_failed',
     });
+
     const removed = recovery([[{ ...user, passwordHash: null }]], { ...flow, purpose: 'password_reset' });
 
     await expect(
@@ -59,6 +61,7 @@ describe('recovery proof binding', () => {
     await expect(f.recovery.password(session.sid, granted, 'Synthetic new password!')).rejects.toMatchObject({
       code: 'verification_failed',
     });
+
     await expect(
       f.recovery.password(session.sid, { ...granted, level: undefined }, 'Synthetic new password!'),
     ).rejects.toMatchObject({ code: 'verification_failed' });
@@ -77,6 +80,7 @@ describe('recovery proof binding', () => {
       const f = recovery([[user], [session], [flow], [flow]], flow);
 
       f.proofs.locked.mockResolvedValueOnce(grant).mockResolvedValueOnce(invalid);
+
       await expect(
         f.recovery.passwordComplete(session.sid, granted, 'proof', password, { kind: 'email', code: '123456' }),
       ).rejects.toMatchObject({ code: 'verification_failed' });
@@ -86,6 +90,7 @@ describe('recovery proof binding', () => {
 
       f.proofs.locked.mockResolvedValueOnce(grant).mockResolvedValueOnce(proof);
       f.factors.active.mockResolvedValue(active as never);
+
       await expect(
         f.recovery.passwordComplete(session.sid, granted, 'proof', password, { kind: 'totp', code: '123456' }),
       ).rejects.toMatchObject({ code: 'verification_failed' });

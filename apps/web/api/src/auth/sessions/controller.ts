@@ -34,12 +34,15 @@ export class SessionsController {
 
   async revokeOtherSessions(request: IdentifiedRequest, response: Response) {
     await this.sessions.closeSessions(request.sessionID, request.user);
+
     response.status(204).end();
   }
 
   async getSession(request: Request, response: Response) {
     request.session.csrf ??= randomBytes(32).toString('base64url');
+
     await saveSession(request);
+
     response.json(sessionView(request));
   }
 

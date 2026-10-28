@@ -28,6 +28,7 @@ const messages: string[] = [];
 
 beforeAll(async () => {
   await mkdir(join(root, 'tmp/api-e2e'), { recursive: true });
+
   const temporary = await mkdtemp(join(root, 'tmp/api-e2e/gateway-'));
   const cluster = await testPostgres(join(temporary, 'postgres.json'));
 
@@ -49,7 +50,9 @@ beforeAll(async () => {
       });
     },
   });
+
   await new Promise<void>((ready) => smtp.listen(0, '127.0.0.1', ready));
+
   smtpPort = ((smtp as unknown as { server: ReturnType<typeof createServer> }).server.address() as AddressInfo).port;
 }, 120000);
 
@@ -59,7 +62,9 @@ afterAll(async () => {
   }
 
   await probe?.close();
+
   await postgres?.stop();
+
   if (directory) {
     await rm(directory, { recursive: true, force: true });
   }
@@ -69,6 +74,7 @@ async function launch(databaseUrl?: string) {
   const portProbe = createServer();
 
   await new Promise<void>((ready) => portProbe.listen(0, '127.0.0.1', ready));
+
   const address = portProbe.address();
 
   if (!address || typeof address === 'string') {
@@ -76,6 +82,7 @@ async function launch(databaseUrl?: string) {
   }
 
   await new Promise<void>((closed) => portProbe.close(() => closed()));
+
   const url = `http://127.0.0.1:${address.port}`;
   const child = spawn(process.execPath, [join(output, 'main.js')], {
     cwd: directory,
@@ -109,6 +116,7 @@ async function launch(databaseUrl?: string) {
   const cleanup = async () => {
     if (child.exitCode === null && child.signalCode === null) {
       child.kill('SIGKILL');
+
       await exit;
     }
   };

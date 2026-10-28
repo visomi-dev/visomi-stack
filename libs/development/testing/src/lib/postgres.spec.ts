@@ -76,6 +76,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   vi.unstubAllEnvs();
+
   await rm(directory, { recursive: true, force: true });
 });
 
@@ -102,7 +103,9 @@ describe('Compose PostgreSQL resource', () => {
     const first = resource.stop();
 
     expect(resource.stop()).toBe(first);
+
     await first;
+
     await expect(stat(resource.directory)).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
@@ -119,6 +122,7 @@ describe('Compose PostgreSQL resource', () => {
     });
     expect(envFile).toBe('');
     expect(resource.compose.app).toBe('web-gateway');
+
     await resource.stop();
   });
 
@@ -129,18 +133,23 @@ describe('Compose PostgreSQL resource', () => {
       const manifest = join(directory, 'postgres.json');
 
       await expect(testPostgres(manifest)).rejects.toThrow('isolated_postgres_setup_failed');
+
       const text = await readFile(manifest, 'utf8');
       const owner = JSON.parse(text);
 
       expect(runTestCompose).toHaveBeenLastCalledWith(owner.compose, ['down', '--volumes', '--remove-orphans']);
+
       await expect(stat(owner.directory)).rejects.toMatchObject({ code: 'ENOENT' });
+
       expect(boundary.clients).toHaveLength(0);
     },
   );
 
   it('removes the owned directory when provider discovery fails before a container can start', async () => {
     vi.mocked(createTestCompose).mockRejectedValue(new Error('SYNTHETIC_PRIVATE_PROVIDER_ERROR'));
+
     await expect(testPostgres(join(directory, 'postgres.json'))).rejects.toThrow('isolated_postgres_setup_failed');
+
     const entries = await readdir(directory);
 
     expect(entries).toEqual([]);
@@ -149,7 +158,9 @@ describe('Compose PostgreSQL resource', () => {
 
   it('cleans even partially created Compose resources when container startup fails', async () => {
     vi.mocked(runTestCompose).mockRejectedValueOnce(new Error('SYNTHETIC_PRIVATE_START_ERROR'));
+
     await expect(testPostgres(join(directory, 'postgres.json'))).rejects.toThrow('isolated_postgres_setup_failed');
+
     expect(vi.mocked(runTestCompose).mock.calls.at(-1)?.[1]).toEqual(['down', '--volumes', '--remove-orphans']);
   });
 
@@ -160,12 +171,15 @@ describe('Compose PostgreSQL resource', () => {
     expect(delay).toHaveBeenCalledExactlyOnceWith(100, undefined, { signal: undefined });
     expect(boundary.clients[0].query).toHaveBeenCalledTimes(2);
     expect(migrate).toHaveBeenCalledOnce();
+
     await resource.stop();
   });
 
   it('bounds readiness retries and cleans the container and pool after a timeout', async () => {
     boundary.failures = 100;
+
     await expect(testPostgres()).rejects.toThrow('isolated_postgres_setup_failed');
+
     expect(boundary.clients[0].query).toHaveBeenCalledTimes(100);
     expect(delay).toHaveBeenCalledTimes(99);
     expect(boundary.clients[0].end).toHaveBeenCalledOnce();
@@ -174,7 +188,9 @@ describe('Compose PostgreSQL resource', () => {
 
   it('sanitizes migration failure and closes the pool before container cleanup', async () => {
     vi.mocked(migrate).mockRejectedValue(new Error('SYNTHETIC_PRIVATE_MIGRATION_ERROR'));
+
     await expect(testPostgres()).rejects.toThrow('isolated_postgres_setup_failed');
+
     expect(boundary.clients[0].end).toHaveBeenCalledOnce();
     expect(vi.mocked(runTestCompose).mock.calls.at(-1)?.[1]).toEqual(['down', '--volumes', '--remove-orphans']);
   });
@@ -183,6 +199,7 @@ describe('Compose PostgreSQL resource', () => {
 describe('Compose cleanup ownership', () => {
   it('rejects a directory outside the owned prefix before touching it', async () => {
     await expect(stopTestPostgres(directory, descriptor(directory))).rejects.toThrow('isolated_postgres_owner_invalid');
+
     expect(readFile).not.toHaveBeenCalled();
     expect(runTestCompose).not.toHaveBeenCalled();
   });
@@ -191,6 +208,7 @@ describe('Compose cleanup ownership', () => {
     const cluster = await owned();
 
     await expect(stopTestPostgres(cluster, descriptor(directory))).rejects.toThrow('isolated_postgres_owner_invalid');
+
     expect(runTestCompose).not.toHaveBeenCalled();
   });
 
@@ -198,7 +216,9 @@ describe('Compose cleanup ownership', () => {
     const cluster = await owned();
 
     await writeFile(join(cluster, 'test-owner'), 'different-owner');
+
     await expect(stopTestPostgres(cluster, descriptor(cluster))).rejects.toThrow('isolated_postgres_owner_invalid');
+
     expect(runTestCompose).not.toHaveBeenCalled();
     const retained = await stat(cluster);
 
@@ -209,6 +229,7 @@ describe('Compose cleanup ownership', () => {
     const cluster = join(directory, 'visomi-auth-test-gone');
 
     await stopTestPostgres(cluster, descriptor(cluster));
+
     expect(runTestCompose).not.toHaveBeenCalled();
   });
 
@@ -217,7 +238,9 @@ describe('Compose cleanup ownership', () => {
     const failure = Object.assign(new Error('synthetic_permission'), { code: 'EACCES' });
 
     vi.mocked(readFile).mockRejectedValueOnce(failure);
+
     await expect(stopTestPostgres(cluster, descriptor(cluster))).rejects.toBe(failure);
+
     expect(runTestCompose).not.toHaveBeenCalled();
   });
 
@@ -225,11 +248,15 @@ describe('Compose cleanup ownership', () => {
     const cluster = await owned();
 
     vi.mocked(runTestCompose).mockRejectedValueOnce(new Error('SYNTHETIC_PRIVATE_STOP_ERROR'));
+
     await expect(stopTestPostgres(cluster, descriptor(cluster))).rejects.toThrow('isolated_postgres_cleanup_failed');
+
     const marker = await readFile(join(cluster, 'test-owner'), 'utf8');
 
     expect(marker).toBe('visomi-stack-isolated-postgres');
+
     await stopTestPostgres(cluster, descriptor(cluster));
+
     await expect(stat(cluster)).rejects.toMatchObject({ code: 'ENOENT' });
   });
 });

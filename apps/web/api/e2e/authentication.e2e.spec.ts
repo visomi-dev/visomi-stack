@@ -218,6 +218,7 @@ test('rejects expired and foreign-session challenges at the HTTP boundary', asyn
     "UPDATE auth_challenges SET created_at = now() - interval '5 minutes', expires_at = now() - interval '1 second' WHERE id = $1",
     [pending.challengeId],
   );
+
   const expired = await request.post('/auth/passkeys/registration/verify', {
     headers,
     data: { challengeId: pending.challengeId, response },
@@ -246,6 +247,7 @@ test('exports no credential, session, identity or SQL material after success and
 
   expect(rejected.status()).toBe(503);
   expect(rejectedBody).toEqual({ error: 'authentication_unavailable' });
+
   await expect
     .poll(async () => {
       const telemetry = await telemetryFiles.read();
@@ -254,6 +256,7 @@ test('exports no credential, session, identity or SQL material after success and
       return telemetry.spans.some((span) => (span.context as { spanId: string }).spanId === log?.spanId);
     })
     .toBe(true);
+
   const telemetry = await telemetryFiles.read();
   const serialized = JSON.stringify(telemetry);
 

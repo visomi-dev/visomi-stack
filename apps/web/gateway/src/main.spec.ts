@@ -77,6 +77,7 @@ afterEach(() => {
 
 async function start() {
   await import('./main');
+
   await vi.advanceTimersByTimeAsync(0);
 }
 
@@ -85,6 +86,7 @@ describe('gateway executable ownership', () => {
     vi.stubEnv('HOST', undefined);
     vi.stubEnv('PORT', undefined);
     vi.stubEnv('API_APP_PATH', '');
+
     await start();
 
     expect(boundary.server.listen).toHaveBeenCalledWith(3000, 'localhost', expect.any(Function));
@@ -100,23 +102,30 @@ describe('gateway executable ownership', () => {
     }
 
     await start();
+
     await boundary.server.listen.mock.calls[0][2]();
+
     expect(boundary.ready).toHaveBeenCalledWith(boundary.server);
     expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.started');
   });
 
   it('reports an idle pool failure using only a controlled operational event', async () => {
     vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+
     await start();
+
     boundary.createDatabase.mock.calls[0][1]();
     expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.failed');
   });
 
   it('handles listener failure and an unsuccessful telemetry flush', async () => {
     await start();
+
     boundary.observability.shutdown.mockResolvedValue(false);
     boundary.events.get('error')!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(process.exitCode).toBe(1);
     expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed', 'startup_failed');
   });
@@ -129,15 +138,20 @@ describe('gateway executable ownership', () => {
         reject = failed;
       }),
     );
+
     await start();
+
     boundary.signals.get('SIGTERM')!();
     reject(new Error('SYNTHETIC_LATE_IMPORT_FAILURE'));
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.server.close).toHaveBeenCalledOnce();
     expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.stopped', 'none');
   });
   it('loads the compiled public API and initializes one host runtime', async () => {
     await start();
+
     expect(boundary.initialize).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ service: 'web-gateway' }));
     expect(boundary.loadApi.mock.calls[0][0].href).toBe('file:///synthetic/compiled/api/app.js');
     expect(boundary.createGatewayApp).toHaveBeenCalledWith({
@@ -155,7 +169,9 @@ describe('gateway executable ownership', () => {
   it('creates one pool and passes the API-owned authentication chain to the host', async () => {
     vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
     vi.stubEnv('AUTH_TRUST_PROXY', '127.0.0.1, ::1');
+
     await start();
+
     expect(boundary.database.pool.query).toHaveBeenCalledExactlyOnceWith('SELECT 1');
     expect(boundary.api.createAuthentication).toHaveBeenCalledExactlyOnceWith({
       database: boundary.database.db,
@@ -166,7 +182,9 @@ describe('gateway executable ownership', () => {
       expect.objectContaining({ auth: boundary.auth, trustProxy: ['127.0.0.1', '::1'] }),
     );
     boundary.signals.get('SIGTERM')!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.database.close).toHaveBeenCalledOnce();
     expect(boundary.database.close.mock.invocationCallOrder[0]).toBeLessThan(
       boundary.observability.shutdown.mock.invocationCallOrder[0],
@@ -175,9 +193,12 @@ describe('gateway executable ownership', () => {
 
   it.each(['SIGTERM', 'SIGINT'])('drains and flushes exactly once on repeated %s', async (signal) => {
     await start();
+
     boundary.signals.get(signal)!();
     boundary.signals.get(signal)!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.server.close).toHaveBeenCalledOnce();
     expect(boundary.observability.shutdown).toHaveBeenCalledExactlyOnceWith(1000);
     expect(process.exitCode).toBe(0);
@@ -186,7 +207,9 @@ describe('gateway executable ownership', () => {
 
   it('sanitizes failed module loading without opening a port', async () => {
     boundary.loadApi.mockRejectedValue(new Error('SYNTHETIC_PRIVATE_PATH'));
+
     await start();
+
     expect(boundary.server.listen).not.toHaveBeenCalled();
     expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.failed', 'startup_failed');
     expect(process.exitCode).toBe(1);
@@ -194,7 +217,9 @@ describe('gateway executable ownership', () => {
 
   it('rejects invalid networking configuration before importing the API', async () => {
     vi.stubEnv('PORT', 'invalid');
+
     await start();
+
     expect(boundary.loadApi).not.toHaveBeenCalled();
     expect(boundary.server.listen).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(1);
@@ -203,7 +228,9 @@ describe('gateway executable ownership', () => {
   it('closes an owned pool after failed database startup', async () => {
     vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
     boundary.database.pool.query.mockRejectedValue(new Error('SYNTHETIC_PRIVATE_DATABASE'));
+
     await start();
+
     expect(boundary.database.close).toHaveBeenCalledOnce();
     expect(boundary.server.listen).not.toHaveBeenCalled();
     expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.failed', 'startup_failed');
@@ -212,10 +239,14 @@ describe('gateway executable ownership', () => {
 
   it('flushes telemetry even when database cleanup fails', async () => {
     vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+
     await start();
+
     boundary.database.close.mockRejectedValue(new Error('SYNTHETIC_PRIVATE_DATABASE'));
     boundary.signals.get('SIGTERM')!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.observability.shutdown).toHaveBeenCalledOnce();
     expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.failed', 'shutdown_failed');
     expect(process.exitCode).toBe(1);
@@ -229,11 +260,17 @@ describe('gateway executable ownership', () => {
         resolve = ready;
       }),
     );
+
     await start();
+
     boundary.signals.get('SIGTERM')!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     resolve(boundary.api);
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.createDatabase).not.toHaveBeenCalled();
     expect(boundary.server.listen).not.toHaveBeenCalled();
   });
@@ -247,11 +284,17 @@ describe('gateway executable ownership', () => {
         resolve = ready;
       }),
     );
+
     await start();
+
     boundary.signals.get('SIGTERM')!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     resolve();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.database.close).toHaveBeenCalledOnce();
     expect(boundary.server.listen).not.toHaveBeenCalled();
   });
@@ -261,10 +304,15 @@ describe('gateway executable ownership', () => {
     const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
 
     await start();
+
     boundary.signals.get('SIGTERM')!();
+
     await vi.advanceTimersByTimeAsync(3000);
+
     expect(boundary.server.closeAllConnections).toHaveBeenCalledOnce();
+
     await vi.advanceTimersByTimeAsync(2000);
+
     expect(exit).toHaveBeenCalledWith(1);
     expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.failed', 'shutdown_timeout');
   });
@@ -284,9 +332,13 @@ it.each([false, true])(
     }
 
     await import('./main');
+
     await vi.advanceTimersByTimeAsync(0);
+
     boundary.signals.get('SIGTERM')!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.createSmtp).toHaveBeenCalledOnce();
     expect(boundary.smtp.close).toHaveBeenCalledOnce();
     expect(boundary.database.close).toHaveBeenCalledOnce();

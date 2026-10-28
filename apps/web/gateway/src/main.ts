@@ -45,6 +45,7 @@ async function stop(exitCode: number): Promise<void> {
   const drain = setTimeout(() => server.closeAllConnections(), 3000);
 
   await new Promise<void>((resolve) => server.close(() => resolve()));
+
   clearTimeout(drain);
   let databaseClosed = true;
 
@@ -108,6 +109,7 @@ async function bootstrap() {
     mail = smtp ? createSmtp(smtp) : undefined;
     database = createDatabase(process.env.DATABASE_URL, () => observability.event('runtime.failed'));
     auth = api.createAuthentication({ database: database.db, pool: database.pool, config, mail });
+
     await database.pool.query('SELECT 1');
   }
 

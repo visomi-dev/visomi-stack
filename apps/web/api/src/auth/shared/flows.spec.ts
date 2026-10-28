@@ -10,6 +10,7 @@ it('rejects a proof lost between reservation and locked consumption', async () =
   const proofs = authService(Flows, f.db, config, [{ provide: AuthMail, useValue: quietMail }]);
 
   await expect(proofs.locked(f.tx, session.sid, flow.id)).rejects.toMatchObject({ code: 'verification_failed' });
+
   const lost = storage([[]]);
 
   await expect(
@@ -17,6 +18,7 @@ it('rejects a proof lost between reservation and locked consumption', async () =
   ).rejects.toMatchObject({
     code: 'verification_failed',
   });
+
   const limited = storage([[{ attempts: 11 }]]);
 
   await expect(

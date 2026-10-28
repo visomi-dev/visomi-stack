@@ -58,6 +58,7 @@ export async function completeEnrollment(
 
   return principal(updated, method, methodId);
 }
+
 export class Recovery {
   private readonly database = inject<Database>(DATABASE);
   private readonly config = inject<AuthConfig>(AUTH_CONFIG);
@@ -68,6 +69,7 @@ export class Recovery {
     const email = normalizeEmail(input);
 
     await this.proofs.limit(reset ? 'password-reset' : 'recovery', email, 5);
+
     const [user] = await this.database
       .select()
       .from(users)
@@ -152,7 +154,9 @@ export class Recovery {
 
       if (current?.id === user.id && current.level === 'full') {
         requireFresh(current, this.config);
+
         await lockIdentity(tx, sid, current);
+
         proven = true;
       }
 
@@ -165,12 +169,14 @@ export class Recovery {
       }
 
       await this.proofs.consume(tx, flow);
+
       if (passwordHash) {
         if (!user.passwordHash) {
           throw unavailable();
         }
 
         await tx.update(users).set({ passwordHash }).where(eq(users.id, user.id));
+
         await invalidate(tx, user.id);
 
         return { user: null, email: user.email };
@@ -200,6 +206,7 @@ export class Recovery {
 
     await this.database.transaction(async (tx) => {
       await lockSession(tx, newSid);
+
       const [moved] = await tx
         .update(flows)
         .set({ sessionId: newSid })
@@ -240,6 +247,7 @@ export class Recovery {
         .set({ data: { ...grant.data, passwordHash } })
         .where(eq(flows.id, grant.id));
     });
+
     const enrollment = await this.factors.active(this.database, current.id);
     const flow = await this.proofs.create(
       sid,

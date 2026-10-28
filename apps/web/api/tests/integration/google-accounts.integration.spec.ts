@@ -40,6 +40,7 @@ function signed(nonce: string, email: string, sub: string, changes = {}) {
 
   return `${header}.${claims}.${signer.sign(pair.privateKey).toString('base64url')}`;
 }
+
 async function login(email: string, sub: string, changes = {}) {
   const browser = await f.client();
   const start = await browser.call('POST', '/google/start', {});
@@ -195,6 +196,7 @@ it('links, reauthenticates, unlinks and explicitly relinks Google without transf
     flowId: passwordLogin.data.flowId,
     factor: { kind: 'email', code: f.lastCode(owner.email) },
   });
+
   const relink = await owner.browser.call('POST', '/google/start', { intent: 'link' });
   const result3 = await owner.browser.call('POST', '/google/complete', {
     flowId: relink.data.flowId,
@@ -213,6 +215,7 @@ it('unlinks Google while retaining a password-authenticated session', async () =
     flowId: begin.data.flowId,
     idToken: signed(begin.data.nonce, `${randomUUID()}@gmail.com`, subject),
   });
+
   const methods = await account.browser.call('GET', '/methods');
   const start = await account.browser.call('POST', '/reauth/password/start', { password: 'Synthetic password 42!' });
 
@@ -220,12 +223,14 @@ it('unlinks Google while retaining a password-authenticated session', async () =
     flowId: start.data.flowId,
     factor: { kind: 'email', code: f.lastCode(account.email) },
   });
+
   const proofTime = Date.now() - 240_000;
 
   await f.pool.query(
     "update auth_sessions set sess = jsonb_set(sess, '{passport,user,authenticatedAt}', to_jsonb($1::bigint)) where sess->>'csrf' = $2",
     [proofTime, account.browser.csrf],
   );
+
   const removed = await account.browser.call('DELETE', `/google/${methods.data.google[0].id}`);
 
   expect(removed.status).toBe(200);
@@ -246,12 +251,14 @@ it('can remove a password when Google remains and rejects password sign-in after
     flowId: start.data.flowId,
     idToken: signed(start.data.nonce, account.email, randomUUID()),
   });
+
   const reauth = await account.browser.call('POST', '/reauth/password/start', { password: 'Synthetic password 42!' });
 
   await account.browser.call('POST', '/reauth/password/complete', {
     flowId: reauth.data.flowId,
     factor: { kind: 'email', code: f.lastCode(account.email) },
   });
+
   const result1 = await account.browser.call('POST', '/password/remove', {});
 
   expect(result1.status).toBe(204);

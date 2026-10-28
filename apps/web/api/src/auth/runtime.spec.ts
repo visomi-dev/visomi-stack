@@ -117,6 +117,7 @@ describe('explicit session and Passport initialization', () => {
       const done = vi.fn();
 
       await callback(serialized, done);
+
       expect(done).toHaveBeenCalledExactlyOnceWith(null, false);
       expect(f.database.select).not.toHaveBeenCalled();
     },
@@ -158,6 +159,7 @@ describe('explicit session and Passport initialization', () => {
       };
 
       await callback(user, done);
+
       if (state === 'unavailable') {
         expect(done).toHaveBeenCalledExactlyOnceWith(new Error('authentication_unavailable'));
       } else {
@@ -240,6 +242,7 @@ it('keeps injected authorization policies isolated between runtimes', async () =
   const denied = vi.fn();
 
   await first.authenticated(['documents.read'])(request, {} as Response, allowed);
+
   await second.authorized(['documents.read'])(request, {} as Response, denied);
 
   expect(allowed).toHaveBeenCalledWith();

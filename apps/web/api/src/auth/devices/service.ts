@@ -47,6 +47,7 @@ export async function validateApproval(tx: Transaction, id: string, userId: stri
 
   return approval;
 }
+
 export class Devices {
   private readonly database = inject<Database>(DATABASE);
   private readonly config = inject<AuthConfig>(AUTH_CONFIG);
@@ -56,11 +57,13 @@ export class Devices {
     const email = normalizeEmail(emailInput);
 
     await this.proofs.limit('device-request', email, 5);
+
     const id = randomUUID();
     const userCode = pin();
 
     await this.database.transaction(async (tx) => {
       await lockSession(tx, sid);
+
       await tx.insert(deviceApprovals).values({
         id,
         email,
@@ -118,7 +121,9 @@ export class Devices {
     const full = requireFull(current);
 
     requireFresh(current, this.config);
+
     await this.proofs.limit('device-approve', full.id, 10);
+
     const [reserved] = await this.database
       .update(deviceApprovals)
       .set({ attempts: sql`${deviceApprovals.attempts}+1` })
@@ -174,6 +179,7 @@ export class Devices {
   async cancel(sid: string, id: string) {
     await this.database.transaction(async (tx) => {
       await lockSession(tx, sid);
+
       const [updated] = await tx
         .update(deviceApprovals)
         .set({ status: 'cancelled' })
@@ -216,11 +222,13 @@ export class Devices {
       const [user] = await tx.select().from(users).where(eq(users.id, reserved.userId!)).for('update');
 
       await lockSession(tx, sid);
+
       if (!user) {
         throw unavailable();
       }
 
       await validateApproval(tx, id, user.id, user.authVersion);
+
       const [consumed] = await tx
         .update(deviceApprovals)
         .set({ status: 'consumed' })

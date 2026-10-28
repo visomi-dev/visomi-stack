@@ -38,6 +38,7 @@ beforeAll(async () => {
 }, 120000);
 afterAll(async () => {
   await resource?.close();
+
   await postgres?.stop();
 });
 
@@ -70,6 +71,7 @@ async function registeredPasskey() {
   const passkeys = authService(Passkeys, resource.db, config);
 
   await save(store, sid);
+
   const signup = await passkeys.registrationOptions(sid);
   const user = await passkeys.register(
     sid,
@@ -90,6 +92,7 @@ async function authenticationAttempt(
   const passkeys = authService(Passkeys, database, config);
 
   await save(fixture.store, sid);
+
   const pending = await passkeys.authenticationOptions(sid);
   const response = fixture.device.authenticate(
     pending.options.challenge,
@@ -119,23 +122,29 @@ describe('isolated PostgreSQL authentication persistence', () => {
     };
 
     await resource.db.insert(users).values({ id: userId });
+
     await resource.db.insert(credentials).values(credential);
+
     await expect(resource.db.insert(credentials).values({ ...credential, id: randomUUID() })).rejects.toThrow();
+
     await expect(
       resource.db
         .insert(credentials)
         .values({ ...credential, id: randomUUID(), credentialId: 'different', userId: randomUUID() }),
     ).rejects.toThrow();
+
     await expect(
       resource.db
         .insert(credentials)
         .values({ ...credential, id: randomUUID(), credentialId: 'bad_backup', backupState: true }),
     ).rejects.toThrow();
+
     await expect(
       resource.db
         .insert(credentials)
         .values({ ...credential, id: randomUUID(), credentialId: 'bad_count', counter: -1 }),
     ).rejects.toThrow();
+
     const [persisted] = await resource.db.select().from(credentials).where(eq(credentials.id, credential.id));
 
     expect(persisted.userId).toBe(userId);
@@ -147,13 +156,17 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const sid = randomUUID();
 
     await save(first, sid);
+
     const stale = await read(first, sid);
 
     expect(stale).toBeTruthy();
+
     await destroy(first, sid);
+
     const second = sessionStore(resource.pool);
 
     await Promise.all([save(second, sid, stale!), new Promise<void>((resolve) => second.touch(sid, stale!, resolve))]);
+
     const after = await read(second, sid);
     const [row] = await resource.db.select().from(sessions).where(eq(sessions.sid, sid));
 
@@ -163,14 +176,18 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const unknown = randomUUID();
 
     await destroy(second, unknown);
+
     await save(first, unknown);
+
     const resurrected = await read(first, unknown);
 
     expect(resurrected).toBeUndefined();
     const racing = randomUUID();
 
     await Promise.all([save(first, racing), destroy(second, racing)]);
+
     await save(first, racing);
+
     const raced = await read(second, racing);
 
     expect(raced).toBeUndefined();
@@ -182,15 +199,20 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const data = payload();
 
     data.cookie.expires = new Date(Date.now() + 24 * 60 * 60_000);
+
     await save(store, sid, data);
+
     const [bounded] = await resource.db.select().from(sessions).where(eq(sessions.sid, sid));
 
     expect(bounded.expire.getTime() - bounded.createdAt.getTime()).toBeLessThanOrEqual(8 * 60 * 60_000);
+
     await resource.db
       .update(sessions)
       .set({ expire: new Date(Date.now() - 1000) })
       .where(eq(sessions.sid, sid));
+
     await save(store, sid, data);
+
     const revived = await read(store, sid);
 
     expect(revived).toBeUndefined();
@@ -202,6 +224,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const passkeys = authService(Passkeys, resource.db, config);
 
     await save(store, sid);
+
     const pending = await passkeys.authenticationOptions(sid);
     const results = await Promise.allSettled([
       passkeys.authenticate(sid, pending.challengeId, { id: 'missing', response: {} } as never),
@@ -223,16 +246,20 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const passkeys = authService(Passkeys, resource.db, config);
 
     await save(store, sid);
+
     await save(store, other);
+
     const pending = await passkeys.authenticationOptions(sid);
 
     await expect(passkeys.authenticate(other, pending.challengeId, { id: 'missing' } as never)).rejects.toMatchObject({
       code: 'challenge_invalid',
     });
+
     await resource.db
       .update(challenges)
       .set({ createdAt: new Date(Date.now() - 10000), expiresAt: new Date(Date.now() - 1000) })
       .where(eq(challenges.id, pending.challengeId));
+
     await expect(passkeys.authenticate(sid, pending.challengeId, { id: 'missing' } as never)).rejects.toMatchObject({
       code: 'challenge_invalid',
     });
@@ -244,6 +271,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const passkeys = authService(Passkeys, resource.db, config);
 
     await save(store, sid);
+
     const signup = await passkeys.registrationOptions(sid);
     const registered = await passkeys.register(
       sid,
@@ -320,6 +348,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const baseline = await authenticationAttempt(fixture, 5);
 
     await baseline.run();
+
     const second = createDatabase(postgres.url);
 
     try {
@@ -338,6 +367,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
       const regression = await authenticationAttempt(fixture, 5);
 
       await expect(regression.run()).rejects.toMatchObject({ code: 'passkey_invalid' });
+
       const [unchanged] = await resource.db
         .select()
         .from(credentials)
@@ -356,6 +386,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
       const sid = randomUUID();
 
       await save(fixture.store, sid);
+
       const pending = await fixture.passkeys.authenticationOptions(sid);
       const response = fixture.device.authenticate(
         pending.options.challenge,
@@ -376,6 +407,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
       await expect(fixture.passkeys.authenticate(sid, pending.challengeId, response)).rejects.toMatchObject({
         code: 'passkey_invalid',
       });
+
       const [persisted] = await resource.db
         .select()
         .from(credentials)
@@ -397,6 +429,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const passkeys = authService(Passkeys, resource.db, config);
 
     await save(store, sid);
+
     const first = await passkeys.registrationOptions(sid);
 
     await passkeys.register(
@@ -405,6 +438,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
       device.register(first.options.challenge, config.origin, config.rpId),
       'First',
     );
+
     const second = await passkeys.registrationOptions(sid);
     const before = await resource.db.select().from(users);
 
@@ -416,6 +450,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
         'Conflicting',
       ),
     ).rejects.toThrow();
+
     const after = await resource.db.select().from(users);
     const challenge = await resource.db.select().from(challenges).where(eq(challenges.id, second.challengeId));
 
@@ -432,6 +467,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
       const passkeys = authService(Passkeys, resource.db, config);
 
       await save(store, sid);
+
       const signup = await passkeys.registrationOptions(sid);
       const response = device.register(
         signup.options.challenge,
@@ -443,6 +479,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
       await expect(passkeys.register(sid, signup.challengeId, response, 'Invalid')).rejects.toMatchObject({
         code: 'passkey_invalid',
       });
+
       const remaining = await resource.db.select().from(challenges).where(eq(challenges.id, signup.challengeId));
 
       expect(remaining).toHaveLength(0);
@@ -457,6 +494,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const secondDevice = authenticator();
 
     await save(store, sid);
+
     const signup = await passkeys.registrationOptions(sid);
     const first = await passkeys.register(
       sid,
@@ -476,19 +514,25 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const stale = { ...payload(), passport: { user: first } };
 
     await save(store, oldSid, stale);
+
     const otherUser = { ...first, id: randomUUID(), credentialId: randomUUID() };
     const otherSid = randomUUID();
     const foreignReferenceSid = randomUUID();
 
     await resource.db.insert(users).values({ id: otherUser.id });
+
     await save(store, otherSid, { ...payload(), passport: { user: otherUser } });
+
     // Even an inconsistent snapshot cannot make one user revoke another user's session.
     await save(store, foreignReferenceSid, {
       ...payload(),
       passport: { user: { ...otherUser, credentialId: first.credentialId } },
     });
+
     await passkeys.revoke(sid, second, first.credentialId);
+
     await save(store, oldSid, stale);
+
     const persisted = await read(store, oldSid);
 
     expect(persisted).toBeUndefined();
@@ -497,7 +541,9 @@ describe('isolated PostgreSQL authentication persistence', () => {
 
     expect(otherSession?.passport?.user.id).toBe(otherUser.id);
     expect(foreignReference?.passport?.user.id).toBe(otherUser.id);
+
     await destroy(store, sid);
+
     await expect(passkeys.rename(sid, second, second.credentialId, 'Denied')).rejects.toMatchObject({
       code: 'session_expired',
     });
@@ -518,6 +564,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
 
     try {
       await resource.db.execute(sql`DELETE FROM auth_rate_limits`);
+
       const results = await Promise.all(
         Array.from({ length: 61 }, (_value, index) => next(index % 2 ? resource.db : second.db)),
       );
@@ -530,14 +577,18 @@ describe('isolated PostgreSQL authentication persistence', () => {
       expect(buckets.map((bucket) => bucket.key)).toEqual(
         expect.arrayContaining(['global', expect.stringMatching(/^[a-f0-9]{64}$/)]),
       );
+
       await resource.db.execute(sql`UPDATE auth_rate_limits SET expires_at = now() - interval '1 second'`);
+
       const renewed = await next(second.db);
 
       expect(renewed).toBeUndefined();
       const reset = await resource.db.select().from(authSchema.rateLimits);
 
       expect(reset.map((bucket) => bucket.attempts)).toEqual([1, 1]);
+
       await resource.db.execute(sql`UPDATE auth_rate_limits SET attempts = 1000 WHERE key = 'global'`);
+
       const globalLimit = await next(resource.db);
 
       expect(globalLimit).toBe('rate_limited');
@@ -547,6 +598,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
   });
   it('applies the explicit Drizzle Kit command to an empty dedicated database and reruns safely', async () => {
     await resource.pool.query('CREATE DATABASE visomi_auth_cli_test');
+
     const url = new URL(postgres.url);
 
     url.pathname = '/visomi_auth_cli_test';
@@ -558,12 +610,15 @@ describe('isolated PostgreSQL authentication persistence', () => {
       });
 
     await command();
+
     const migrated = createDatabase(url.toString());
     const id = randomUUID();
 
     try {
       await migrated.db.insert(users).values({ id });
+
       await command();
+
       const identities = await migrated.db.select().from(users);
 
       expect(identities.map((user) => user.id)).toEqual([id]);

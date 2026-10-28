@@ -13,6 +13,7 @@ describe('Google configuration and proof races', () => {
     const google = authService(Google, f.db, config, [{ provide: Flows, useValue: {} as Flows }]);
 
     await expect(google.start(session.sid, 'login')).rejects.toMatchObject({ code: 'google_disabled' });
+
     await expect(google.complete(session.sid, flow.id, 'synthetic')).rejects.toMatchObject({ code: 'google_disabled' });
   });
   it('rejects non-Google flows and unbound nonces before cryptographic work', async () => {

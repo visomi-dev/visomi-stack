@@ -86,6 +86,7 @@ describe('synthetic ES256 authenticator', () => {
       credentialDeviceType: 'multiDevice',
       credentialBackedUp: true,
     });
+
     await expect(
       verifyRegistrationResponse({
         response: device.register(challenge, origin, rpId, false),

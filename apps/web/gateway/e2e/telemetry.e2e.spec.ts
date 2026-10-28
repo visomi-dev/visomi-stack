@@ -9,6 +9,7 @@ test('exports one completion per concurrent request across both middleware layer
 
   expect(responses.map((response) => response.status())).toEqual([200, 404, 404]);
   expect(new Set(ids).size).toBe(3);
+
   await expect
     .poll(async () => {
       const telemetry = await telemetryFiles.read();
@@ -19,6 +20,7 @@ test('exports one completion per concurrent request across both middleware layer
       ).length;
     })
     .toBe(3);
+
   const telemetry = await telemetryFiles.read();
 
   for (const id of ids) {
@@ -75,6 +77,7 @@ test('keeps request and error material out of local exported telemetry', async (
   expect(rejected.status()).toBe(400);
   expect(body).toEqual({ error: 'request_invalid' });
   expect(id).not.toBe(marker);
+
   await expect
     .poll(async () => {
       const telemetry = await telemetryFiles.read();
@@ -86,6 +89,7 @@ test('keeps request and error material out of local exported telemetry', async (
       );
     })
     .toBe(true);
+
   const telemetry = await telemetryFiles.read();
   const serialized = JSON.stringify(telemetry);
 

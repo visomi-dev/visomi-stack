@@ -21,14 +21,21 @@ describe('password derivation memory budget', () => {
       status: 429,
       code: 'password_capacity',
     });
+
     await expect(verifyPassword('Synthetic password 42!', 'malformed')).rejects.toMatchObject({
       code: 'password_capacity',
     });
+
     finish!('00'.repeat(32));
+
     await Promise.all(pending);
+
     boundary.derive.mockRejectedValueOnce(new Error('synthetic_kdf_failure'));
+
     await expect(hashPassword('Synthetic password 42!')).rejects.toThrow('synthetic_kdf_failure');
+
     boundary.derive.mockResolvedValue('00'.repeat(32));
+
     await expect(hashPassword('Synthetic password 42!')).resolves.toMatch(/^\$argon2id\$/);
   });
 });

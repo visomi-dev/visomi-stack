@@ -9,6 +9,12 @@ import globals from 'globals';
 
 const importXFiles = ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'];
 
+const functionOrClassDeclaration = {
+  selector:
+    ':matches(FunctionDeclaration, ClassDeclaration, ExportNamedDeclaration[declaration.type=/^(FunctionDeclaration|ClassDeclaration)$/], ExportDefaultDeclaration[declaration.type=/^(FunctionDeclaration|ClassDeclaration)$/])',
+};
+const awaitedStatement = { selector: 'ExpressionStatement[expression.type="AwaitExpression"]' };
+
 const moduleBoundaryOptions = {
   enforceBuildableLibDependency: true,
   // Portable primitives and contracts are used statically by routes and lazily by root services.
@@ -238,6 +244,9 @@ export default [
         { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
         { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
         { blankLine: 'always', prev: 'export', next: 'expression' },
+        { blankLine: 'always', prev: functionOrClassDeclaration, next: functionOrClassDeclaration },
+        { blankLine: 'always', prev: '*', next: awaitedStatement },
+        { blankLine: 'always', prev: awaitedStatement, next: '*' },
         { blankLine: 'always', prev: '*', next: ['return', 'throw'] },
         { blankLine: 'always', prev: 'if', next: '*' },
         { blankLine: 'always', prev: '*', next: 'try' },

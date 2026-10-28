@@ -35,11 +35,14 @@ export class Passwords {
     const email = normalizeEmail(emailInput);
 
     await this.flows.limit('signup', email, 5);
+
     const passwordHash = await hashPassword(password);
 
     return this.database.transaction(async (tx) => {
       await lockEmail(tx, email);
+
       await lockSession(tx, sid);
+
       const [user] = await tx.insert(users).values({ id: randomUUID(), email, passwordHash }).returning();
 
       return principal(user, 'password');
@@ -50,6 +53,7 @@ export class Passwords {
     const email = normalizeEmail(emailInput);
 
     await this.flows.limit('password-login', email, 10);
+
     const candidates = await this.database
       .select()
       .from(users)
@@ -161,7 +165,9 @@ export class Passwords {
 
   async reauthStart(sid: string, current: Express.User, password: string) {
     requireFull(current);
+
     await this.flows.limit('reauth', current.id, 10);
+
     const [user] = await this.database.select().from(users).where(eq(users.id, current.id));
     const valid = await verifyPassword(password, user?.passwordHash ?? '');
 
@@ -187,6 +193,7 @@ export class Passwords {
 
   async reauthComplete(sid: string, current: Express.User, id: string, factor: Factor) {
     requireFull(current);
+
     await this.flows.reserve(sid, id, 'reauth');
 
     return this.database.transaction(async (tx) => {
@@ -250,6 +257,7 @@ export class Passwords {
       }
 
       await tx.update(users).set({ passwordHash: hash }).where(eq(users.id, user.id));
+
       const updated = await invalidate(tx, user.id, sid);
 
       return current.method === 'password' && !hash ? null : updatedPrincipal(updated, current);

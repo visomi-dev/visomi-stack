@@ -26,6 +26,7 @@ export class TotpController {
     const id = input.body.enrollmentId;
 
     await this.flows.limit('totp-confirm', id, 5);
+
     const confirmed = await this.factors.confirm(request.sessionID, user, id, input.body.code);
     const notificationSent = await this.notifications.notify(user.email, 'totp_enabled');
 

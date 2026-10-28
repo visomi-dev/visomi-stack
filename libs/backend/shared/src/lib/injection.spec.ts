@@ -13,10 +13,12 @@ const ABSENT = new InjectionToken<string>('absent synthetic value');
 class Dependency {
   readonly resource = inject<Resource>(RESOURCE);
 }
+
 class Consumer {
   readonly dependency = inject(Dependency);
   readonly optional = inject<string>(ABSENT, { optional: true });
 }
+
 class AsyncConsumer {
   private readonly resource = inject<Resource>(RESOURCE);
 
@@ -106,6 +108,7 @@ describe('backend injection without decorators or metadata', () => {
     class First {
       readonly second = inject(Second);
     }
+
     class Second {
       readonly first = inject(First);
     }
@@ -124,10 +127,12 @@ describe('backend injection without decorators or metadata', () => {
     ]);
 
     expect(results).toEqual(['first', 'second']);
+
     await runInInjectionContext(first, async () => {
       const resource = inject<Resource>(RESOURCE);
 
       await Promise.resolve();
+
       expect(resource.value).toBe('first');
       expect(() => inject(RESOURCE)).toThrow(/injection context/);
     });

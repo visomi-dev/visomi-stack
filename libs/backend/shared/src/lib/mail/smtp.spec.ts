@@ -81,8 +81,10 @@ describe('SMTP resource ownership and privacy', () => {
     const message = { to: 'synthetic@example.test', subject: 'Synthetic', html: '<p>Test</p>', text: 'Test' };
 
     await transport.send(message);
+
     expect(sendMail).toHaveBeenCalledWith({ ...message, from: 'auth@example.test' });
     sendMail.mockRejectedValue(new Error('SYNTHETIC_SMTP_CREDENTIALS'));
+
     await expect(transport.send(message)).rejects.toThrow('mail_delivery_failed');
   });
 });

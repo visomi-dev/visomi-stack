@@ -49,6 +49,7 @@ describe('gateway composition', () => {
 
     try {
       await dispatch(createGatewayApp({ api, observability: telemetry }), '/api/');
+
       expect(lines.map((line) => JSON.parse(line))).toEqual([
         expect.objectContaining({ event: 'http.request', outcome: 'success', status: 200 }),
       ]);
@@ -145,6 +146,7 @@ describe('gateway composition', () => {
       const inspect = vi.fn();
 
       await dispatch(createGatewayApp({ api: apiFixture(), helmetMode }), '/', inspect);
+
       const headers = inspect.mock.calls[0][0];
 
       expect(headers['x-content-type-options']).toBe(helmetMode === 'inherited' ? undefined : 'nosniff');

@@ -19,8 +19,11 @@ export class SessionResponses {
     await new Promise<void>((resolve, reject) =>
       request.logIn(user, (error) => (error ? reject(new HttpError(503, 'session_unavailable')) : resolve())),
     );
+
     request.session.csrf = randomBytes(32).toString('base64url');
+
     await saveSession(request);
+
     if (user.grantId) {
       await this.recovery.bindGrant(previous, request.sessionID, user);
     }
@@ -34,9 +37,11 @@ export class SessionResponses {
   ): Promise<void> {
     if (user) {
       await this.establish(request, user);
+
       response.json({ ...sessionView(request), ...extras });
     } else {
       await destroySession(request);
+
       response.clearCookie(this.config.cookieName, {
         httpOnly: true,
         secure: this.config.secure,

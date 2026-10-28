@@ -43,6 +43,7 @@ it.each(['password', 'backups', 'remove-totp', 'replace-totp', 'email', 'passkey
       "update auth_sessions set sess = jsonb_set(sess, '{passport,user,authenticatedAt}', to_jsonb($1::bigint)) where sess->>'csrf' = $2",
       [proofTime, browser.csrf],
     );
+
     let result;
 
     if (operation === 'password') {
@@ -123,6 +124,7 @@ it.each([false, true])(
 
     if (change) {
       await browser.call('POST', '/email/verify', { flowId: created.data.flowId, code: f.lastCode(email) });
+
       targetEmail = `${randomUUID()}@example.test`;
       const pending = await browser.call('POST', `${prefix}/request`, { email: targetEmail });
 
@@ -140,10 +142,12 @@ it.each([false, true])(
     const unchanged = await f.db.select().from(authSchema.flows).where(eq(authSchema.flows.id, originalId));
 
     expect(unchanged[0].consumedAt).toBeNull();
+
     await f.db
       .update(authSchema.flows)
       .set({ attempts: 2, lastSentAt: new Date(Date.now() - 61_000) })
       .where(eq(authSchema.flows.id, originalId));
+
     const replacements = await Promise.all([
       browser.call('POST', `${prefix}/request`, { email: targetEmail }),
       browser.call('POST', `${prefix}/request`, { email: targetEmail }),
@@ -168,10 +172,12 @@ it.each([false, true])(
     const resend = await browser.call('POST', '/challenges/resend', { flowId: active[0].id });
 
     expect(resend.status).toBe(429);
+
     await f.db
       .update(authSchema.flows)
       .set({ attempts: 5, lastSentAt: new Date(Date.now() - 61_000) })
       .where(eq(authSchema.flows.id, active[0].id));
+
     const exhausted = await browser.call('POST', `${prefix}/request`, { email: targetEmail });
 
     expect(exhausted.status).toBe(400);

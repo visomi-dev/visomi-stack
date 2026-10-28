@@ -39,6 +39,7 @@ export class DevicesController {
 
   async cancelApproval(request: Request, response: Response, input: CancelApprovalInput) {
     await this.devices.cancel(request.sessionID, input.body.requestId);
+
     response.status(204).end();
   }
 
@@ -50,11 +51,13 @@ export class DevicesController {
 
   async approve(request: IdentifiedRequest, response: Response, input: ApproveInput) {
     await this.devices.decide(request.sessionID, request.user, input.body.requestId, true, input.body.userCode);
+
     response.status(204).end();
   }
 
   async deny(request: IdentifiedRequest, response: Response, input: DenyInput) {
     await this.devices.decide(request.sessionID, request.user, input.body.requestId, false, input.body.userCode);
+
     response.status(204).end();
   }
 }

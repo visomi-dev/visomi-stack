@@ -56,6 +56,7 @@ async function parentHost(initialize: boolean, options: { origin?: string; trust
   const server = createServer(parent);
 
   await new Promise<void>((ready) => server.listen(0, '127.0.0.1', ready));
+
   const address = server.address();
 
   if (!address || typeof address === 'string') {
@@ -68,7 +69,9 @@ async function parentHost(initialize: boolean, options: { origin?: string; trust
     origin: `http://127.0.0.1:${address.port}/api`,
     close: async () => {
       server.closeAllConnections();
+
       await new Promise<void>((closed) => server.close(() => closed()));
+
       await pool.end();
     },
   };
@@ -160,6 +163,7 @@ test('sets production cookie protections only when TLS forwarding comes from a t
     expect(ignored.headers()['set-cookie']).toBeUndefined();
   } finally {
     await trusted.close();
+
     await untrusted.close();
   }
 });

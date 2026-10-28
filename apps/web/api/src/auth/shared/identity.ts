@@ -176,6 +176,7 @@ export async function lockIdentity(tx: Transaction, sid: string, current: Expres
   const [user] = await tx.select().from(users).where(eq(users.id, current.id)).for('update');
 
   await lockSession(tx, sid);
+
   const active = await activeMethod(tx, current);
 
   if (
@@ -222,6 +223,7 @@ export async function invalidate(tx: Transaction, userId: string, exceptSid?: st
     .returning();
 
   await revokeSessions(tx, userId, exceptSid);
+
   await tx
     .update(flows)
     .set({ consumedAt: new Date() })

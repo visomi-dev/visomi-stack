@@ -33,6 +33,7 @@ describe('public authentication parsing and session projection', () => {
     await expect(destroySession({ session: { destroy } } as unknown as Request)).rejects.toMatchObject({
       code: 'session_unavailable',
     });
+
     expect(identifierSchema.safeParse('invalid').success).toBe(false);
     expect(passwordContracts.signIn.request.shape.body.safeParse([]).success).toBe(false);
   });

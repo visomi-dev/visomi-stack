@@ -14,6 +14,7 @@ it('can finish a pending password signup from a new browser and rejects a confli
   const pendingBrowser = await f.client();
 
   await pendingBrowser.call('POST', '/password/sign-up', { email, password });
+
   const browser = await f.client();
   const login = await browser.call('POST', '/password/sign-in', { email, password });
   const completed = await browser.call('POST', '/password/verify', {
@@ -26,6 +27,7 @@ it('can finish a pending password signup from a new browser and rejects a confli
   const planted = await f.client();
 
   await planted.call('POST', '/password/sign-up', { email, password });
+
   const another = await f.client();
   const conflict = await another.call('POST', '/password/sign-in', { email, password });
 
@@ -86,10 +88,12 @@ it('keeps unknown recovery resend responses uniform even when SMTP is unavailabl
   const result2 = await browser.call('POST', '/challenges/resend', { flowId: pending.data.flowId });
 
   expect(result2.status).toBe(429);
+
   await f.db
     .update(authSchema.flows)
     .set({ lastSentAt: new Date(0) })
     .where(eq(authSchema.flows.id, pending.data.flowId));
+
   const result3 = await browser.call('POST', '/challenges/resend', { flowId: pending.data.flowId });
 
   expect(result3.status).toBe(202);
@@ -156,6 +160,7 @@ it('revokes a selected other session without clearing the current cookie', async
     flowId: login.data.flowId,
     factor: { kind: 'email', code: f.lastCode(email) },
   });
+
   const sessions = await browser.call('GET', '/sessions');
   const target = sessions.data.sessions.find((entry: { current: boolean }) => !entry.current);
   const cookie = browser.cookie;

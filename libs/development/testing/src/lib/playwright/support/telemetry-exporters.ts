@@ -38,6 +38,7 @@ export function createTelemetryOptions(
     for (const deliver of heldSpans.splice(0)) {
       deliver();
     }
+
     await Promise.all([...pendingSpans]);
   };
   const drainMetrics = async () => {

@@ -83,7 +83,9 @@ describe('API executable lifecycle', () => {
   it('uses default networking when no host or port is configured', async () => {
     vi.stubEnv('HOST', undefined);
     vi.stubEnv('PORT', undefined);
+
     await import('./main');
+
     expect(boundary.server.listen).toHaveBeenCalledWith(3000, 'localhost', expect.any(Function));
   });
 
@@ -91,8 +93,11 @@ describe('API executable lifecycle', () => {
     boundary.createApp.mockImplementationOnce(() => {
       throw new Error('SYNTHETIC_COMPOSITION_FAILURE');
     });
+
     await import('./main');
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.server.listen).not.toHaveBeenCalled();
     expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed', 'startup_failed');
     expect(process.exitCode).toBe(1);
@@ -101,7 +106,9 @@ describe('API executable lifecycle', () => {
   it('passes explicit proxy trust and reports idle pool errors without their contents', async () => {
     vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
     vi.stubEnv('AUTH_TRUST_PROXY', '127.0.0.1, ::1');
+
     await import('./main');
+
     const onError = boundary.createDatabase.mock.calls[0][1];
 
     onError();
@@ -111,7 +118,9 @@ describe('API executable lifecycle', () => {
 
   it.each([false, true])('treats Nx readiness as optional when the loader fails: %s', async (fails) => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/synthetic/ready.sock');
+
     await import('./main');
+
     const emitReadySignal = vi.fn();
     const load = fails
       ? vi.fn().mockRejectedValue(new Error('SYNTHETIC_OPTIONAL_IMPORT'))
@@ -122,6 +131,7 @@ describe('API executable lifecycle', () => {
 
     try {
       await boundary.server.listen.mock.calls[0][2]();
+
       expect(load).toHaveBeenCalledWith('@nx/js/ready-signal');
       expect(emitReadySignal).toHaveBeenCalledTimes(fails ? 0 : 1);
       expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.started');
@@ -131,6 +141,7 @@ describe('API executable lifecycle', () => {
   });
   it('owns initialization and starts listening only from the entrypoint', async () => {
     await import('./main');
+
     expect(boundary.initialize).toHaveBeenCalledWith(
       expect.objectContaining({ service: 'web-api', environment: 'test' }),
     );
@@ -145,11 +156,14 @@ describe('API executable lifecycle', () => {
 
   it.each(['SIGTERM', 'SIGINT'])('closes and flushes once on repeated %s', async (name) => {
     await import('./main');
+
     const signal = boundary.signals.get(name)!;
 
     signal();
     signal();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.server.close).toHaveBeenCalledOnce();
     expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.stopped', 'none');
     expect(boundary.observability.shutdown).toHaveBeenCalledExactlyOnceWith(1000);
@@ -159,16 +173,23 @@ describe('API executable lifecycle', () => {
 
   it('reports unsuccessful flushing through the exit code', async () => {
     boundary.observability.shutdown.mockResolvedValue(false);
+
     await import('./main');
+
     boundary.signals.get('SIGTERM')!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(process.exitCode).toBe(1);
   });
 
   it.each(['invalid', '-1', '65536', '1.5'])('rejects invalid port %s without listening', async (port) => {
     vi.stubEnv('PORT', port);
+
     await import('./main');
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.server.listen).not.toHaveBeenCalled();
     expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.failed', 'startup_failed');
     expect(process.exitCode).toBe(1);
@@ -176,8 +197,11 @@ describe('API executable lifecycle', () => {
 
   it('handles listener errors with controlled telemetry and cleanup', async () => {
     await import('./main');
+
     boundary.events.get('error')!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.observability.event).toHaveBeenCalledExactlyOnceWith('runtime.failed', 'startup_failed');
     expect(boundary.observability.shutdown).toHaveBeenCalledOnce();
     expect(process.exitCode).toBe(1);
@@ -188,23 +212,35 @@ describe('API executable lifecycle', () => {
     const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
 
     await import('./main');
+
     boundary.signals.get('SIGTERM')!();
+
     await vi.advanceTimersByTimeAsync(2999);
+
     expect(boundary.server.closeAllConnections).not.toHaveBeenCalled();
+
     await vi.advanceTimersByTimeAsync(1);
+
     expect(boundary.server.closeAllConnections).toHaveBeenCalledOnce();
+
     await vi.advanceTimersByTimeAsync(2000);
+
     expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed', 'shutdown_timeout');
     expect(exit).toHaveBeenCalledExactlyOnceWith(1);
   });
   it('verifies its owned database before listening and closes it after HTTP draining', async () => {
     vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+
     await import('./main');
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.database.pool.query).toHaveBeenCalledWith('SELECT 1');
     expect(boundary.server.listen).toHaveBeenCalledOnce();
     boundary.signals.get('SIGTERM')!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.database.close).toHaveBeenCalledOnce();
     expect(boundary.server.close.mock.invocationCallOrder[0]).toBeLessThan(
       boundary.database.close.mock.invocationCallOrder[0],
@@ -217,8 +253,11 @@ describe('API executable lifecycle', () => {
   it('closes an owned database after startup failure without logging driver errors', async () => {
     vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
     boundary.database.pool.query.mockRejectedValue(new Error('SYNTHETIC_PRIVATE_DATABASE_ERROR'));
+
     await import('./main');
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.server.listen).not.toHaveBeenCalled();
     expect(boundary.database.close).toHaveBeenCalledOnce();
     expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed', 'startup_failed');
@@ -228,10 +267,15 @@ describe('API executable lifecycle', () => {
   it('still flushes telemetry when closing the database fails', async () => {
     vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
     boundary.database.close.mockRejectedValue(new Error('SYNTHETIC_PRIVATE_DATABASE_ERROR'));
+
     await import('./main');
+
     await vi.advanceTimersByTimeAsync(0);
+
     boundary.signals.get('SIGTERM')!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed', 'shutdown_failed');
     expect(boundary.observability.shutdown).toHaveBeenCalledOnce();
     expect(process.exitCode).toBe(1);
@@ -246,10 +290,14 @@ describe('API executable lifecycle', () => {
           ready = resolve;
         }),
     );
+
     await import('./main');
+
     boundary.signals.get('SIGTERM')!();
     ready();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.server.listen).not.toHaveBeenCalled();
     expect(boundary.database.close).toHaveBeenCalledOnce();
   });
@@ -269,9 +317,13 @@ it.each([false, true])(
     }
 
     await import('./main');
+
     await vi.advanceTimersByTimeAsync(0);
+
     boundary.signals.get('SIGTERM')!();
+
     await vi.advanceTimersByTimeAsync(0);
+
     expect(boundary.createSmtp).toHaveBeenCalledOnce();
     expect(boundary.smtp.close).toHaveBeenCalledOnce();
     expect(boundary.database.close).toHaveBeenCalledOnce();

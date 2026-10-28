@@ -19,6 +19,7 @@ test('excludes synthetic private input from exported operational telemetry', asy
   const id = response.headers()['x-request-id'];
 
   expect(response.status()).toBe(404);
+
   await expect
     .poll(async () => {
       const telemetry = await telemetryFiles.read();
@@ -29,6 +30,7 @@ test('excludes synthetic private input from exported operational telemetry', asy
       );
     })
     .toBe(true);
+
   await expect
     .poll(async () => {
       const telemetry = await telemetryFiles.read();
@@ -36,6 +38,7 @@ test('excludes synthetic private input from exported operational telemetry', asy
       return telemetry.metrics.length;
     })
     .toBeGreaterThan(0);
+
   const telemetry = await telemetryFiles.read();
 
   expect(JSON.stringify(telemetry)).not.toContain(marker);

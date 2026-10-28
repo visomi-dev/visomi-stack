@@ -47,7 +47,9 @@ export function authenticationFixture() {
         });
       },
     });
+
     await new Promise<void>((resolve) => smtp.listen(0, '127.0.0.1', resolve));
+
     const port = ((smtp as unknown as { server: Server }).server.address() as AddressInfo).port;
 
     transport = createSmtp({
@@ -58,7 +60,9 @@ export function authenticationFixture() {
       from: 'Visomi <auth@example.test>',
     });
     server = createServer();
+
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+
     origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
     const config = authConfig({
       origin,
@@ -73,6 +77,7 @@ export function authenticationFixture() {
   }, 120000);
   beforeEach(async () => {
     await resource.db.delete(authSchema.rateLimits);
+
     failMail = false;
   });
   afterAll(async () => {
@@ -86,6 +91,7 @@ export function authenticationFixture() {
     }
 
     await resource?.close();
+
     await postgres?.stop();
   });
   const lastCode = (email: string) => {

@@ -11,7 +11,9 @@ describe('explicit PostgreSQL ownership', () => {
     expect(resource.pool.totalCount).toBe(0);
     expect(() => resource.pool.emit('error', new Error('SYNTHETIC_IDLE_FAILURE'))).not.toThrow();
     expect(resource.close()).toBe(first);
+
     await first;
+
     expect(end).toHaveBeenCalledOnce();
   });
 
@@ -21,6 +23,7 @@ describe('explicit PostgreSQL ownership', () => {
 
     resource.pool.emit('error', new Error('SYNTHETIC_PRIVATE_ERROR'));
     expect(onError).toHaveBeenCalledExactlyOnceWith();
+
     await resource.close();
   });
 
@@ -32,7 +35,9 @@ describe('explicit PostgreSQL ownership', () => {
     try {
       expect(first.pool).not.toBe(second.pool);
       expect(first.db).not.toBe(second.db);
+
       await first.close();
+
       expect(endSecond).not.toHaveBeenCalled();
       expect(second.pool.ending).toBe(false);
       expect(second.pool.totalCount).toBe(0);

@@ -36,6 +36,7 @@ describe('device approval revocation and races', () => {
     const gone = storage([[request], []]);
 
     await expect(validateApproval(gone.tx, flow.id, user.id, 1)).rejects.toMatchObject({ code: 'verification_failed' });
+
     const revoked = storage([
       [{ ...request, approver: { ...request.approver, method: 'google', methodId: 'revoked' } }],
       [session],
@@ -65,6 +66,7 @@ describe('device approval revocation and races', () => {
         { provide: Flows, useValue: { limit: vi.fn() } as unknown as Flows },
       ]).decide('approver', current, flow.id, true, '123456'),
     ).rejects.toMatchObject({ code: 'verification_failed' });
+
     const raced = storage([[request], [user], [session], []]);
 
     await expect(
@@ -72,6 +74,7 @@ describe('device approval revocation and races', () => {
         { provide: Flows, useValue: { limit: vi.fn() } as unknown as Flows },
       ]).decide('approver', current, flow.id, true, '123456'),
     ).rejects.toMatchObject({ code: 'verification_failed' });
+
     const cancelled = storage([[session], []]);
 
     await expect(
@@ -90,6 +93,7 @@ describe('device approval revocation and races', () => {
         flow.id,
       ),
     ).rejects.toMatchObject({ code: 'verification_failed' });
+
     const self = storage([[user], [session], [request]]);
 
     await expect(
@@ -99,6 +103,7 @@ describe('device approval revocation and races', () => {
         flow.id,
       ),
     ).rejects.toMatchObject({ code: 'verification_failed' });
+
     const gone = storage([[request], [], [session]]);
 
     await expect(
@@ -108,6 +113,7 @@ describe('device approval revocation and races', () => {
         '123456',
       ),
     ).rejects.toMatchObject({ code: 'verification_failed' });
+
     const race = storage([[request], [user], [session], [request], [session], []]);
 
     await expect(
@@ -139,9 +145,11 @@ describe('restricted enrollment guards', () => {
     ]);
 
     await expect(recovery.bindGrant('previous', session.sid, current)).resolves.toBeUndefined();
+
     await expect(recovery.bindGrant('previous', session.sid, granted)).rejects.toMatchObject({
       code: 'verification_failed',
     });
+
     await expect(recovery.password(session.sid, current, 'Synthetic password 42!')).rejects.toMatchObject({
       code: 'verification_failed',
     });

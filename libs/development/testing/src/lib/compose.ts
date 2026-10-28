@@ -29,9 +29,11 @@ export async function createTestCompose(
   } else {
     try {
       await execute('docker', ['compose', 'version']);
+
       provider = 'docker';
     } catch {
       await execute('podman-compose', ['version']);
+
       provider = 'podman-compose';
     }
   }

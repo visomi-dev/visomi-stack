@@ -12,9 +12,11 @@ it('rejects foreign verification and switching an unverified address', async () 
 
   vi.spyOn(email.flows, 'reserve').mockResolvedValue(pending);
   vi.spyOn(email.flows, 'locked').mockResolvedValue(pending);
+
   await expect(email.emailComplete(session.sid, current, flow.id, '123456')).rejects.toMatchObject({
     code: 'verification_failed',
   });
+
   const change = storage([[{ attempts: 1 }], [user], [session]]);
   const changing = authService(EmailIdentity, change.db, config, [{ provide: AuthMail, useValue: quietMail }]);
 

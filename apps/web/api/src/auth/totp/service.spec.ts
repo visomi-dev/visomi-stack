@@ -13,12 +13,14 @@ it('requires an active factor and its dedicated encryption key', async () => {
   await expect(
     authService(Factors, missing.db, config).verify(missing.tx, user, { kind: 'totp', code: '123456' }),
   ).rejects.toMatchObject({ code: 'verification_failed' });
+
   const absentKey = { ...config, totpKey: undefined };
   const f = storage([[factor]]);
 
   await expect(
     authService(Factors, f.db, absentKey).verify(f.tx, user, { kind: 'totp', code: '123456' }),
   ).rejects.toMatchObject({ code: 'totp_unavailable' });
+
   await expect(authService(Factors, f.db, absentKey).setup(session.sid, current)).rejects.toMatchObject({
     code: 'totp_unavailable',
   });
@@ -35,6 +37,7 @@ it('rejects an invalid pending TOTP proof and a backup consumed by another reque
   ).rejects.toMatchObject({
     code: 'verification_failed',
   });
+
   const code = 'SYNTHETIC';
   const race = storage([[factor], [{ id: 'backup', codeHash: digest(config.secret, `backup:${user.id}`, code) }], []]);
 

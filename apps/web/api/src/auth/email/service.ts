@@ -29,6 +29,7 @@ export class EmailIdentity {
     const email = normalizeEmail(input ?? current.email);
 
     await this.flows.limit('email-delivery', email, 5);
+
     const issued = await this.database.transaction(async (tx) => {
       const user = await lockIdentity(tx, sid, current);
 
@@ -86,6 +87,7 @@ export class EmailIdentity {
     });
 
     await this.flows.deliver(issued.flow, issued.code);
+
     const { flow } = issued;
 
     return { flowId: flow.id, expiresAt: flow.expiresAt };
@@ -101,6 +103,7 @@ export class EmailIdentity {
 
     return this.database.transaction(async (tx) => {
       await lockEmail(tx, reserved.email!);
+
       const user = await lockIdentity(tx, sid, current);
       const flow = await this.flows.locked(tx, sid, id, reserved.purpose);
 
@@ -119,7 +122,9 @@ export class EmailIdentity {
       }
 
       await tx.update(users).set({ email: flow.email, emailVerifiedAt: new Date() }).where(eq(users.id, user.id));
+
       await this.flows.consume(tx, flow);
+
       const updated = await invalidate(tx, user.id, sid);
 
       return {

@@ -15,9 +15,11 @@ let runtime: Observability | undefined;
 
 afterEach(async () => {
   await runtime?.shutdown();
+
   runtime = undefined;
   if (directory) {
     await rm(directory, { recursive: true, force: true });
+
     directory = undefined;
   }
 });
