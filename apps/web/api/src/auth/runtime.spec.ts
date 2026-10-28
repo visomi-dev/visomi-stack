@@ -2,14 +2,14 @@ import { IncomingMessage, ServerResponse } from 'node:http';
 import { Socket } from 'node:net';
 
 import type { Database } from '@visomi-stack/backend-shared';
-import express from 'express';
 import type { Request, Response } from 'express';
-import type { Pool } from 'pg';
+import express from 'express';
 import { Passport } from 'passport';
+import type { Pool } from 'pg';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { authConfig } from './config';
 import { createAuthentication } from './runtime';
+import { authConfig } from './shared/config';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -59,9 +59,20 @@ describe('explicit session and Passport initialization', () => {
     const first = fixture();
     const second = fixture();
 
-    expect(first.runtime.accounts).not.toBe(second.runtime.accounts);
-    expect(first.runtime.accounts.flows).not.toBe(second.runtime.accounts.flows);
-    expect(first.runtime.accounts.factors).not.toBe(second.runtime.accounts.factors);
+    for (const capability of [
+      'password',
+      'email',
+      'sessions',
+      'methods',
+      'notifications',
+      'flows',
+      'factors',
+    ] as const) {
+      expect(first.runtime[capability]).not.toBe(second.runtime[capability]);
+    }
+    expect(first.runtime.password.flows).toBe(first.runtime.flows);
+    expect(first.runtime.email.flows).toBe(first.runtime.flows);
+    expect(first.runtime.password.factors).toBe(first.runtime.factors);
     expect(first.runtime.passkeys).not.toBe(second.runtime.passkeys);
     expect(first.runtime.google).not.toBe(second.runtime.google);
     expect(first.pool.query).not.toHaveBeenCalled();

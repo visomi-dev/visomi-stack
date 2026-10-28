@@ -4,26 +4,30 @@ import {
   DATABASE,
   DATABASE_POOL,
   MAIL_TRANSPORT,
-  type MailTransport,
   type Database,
+  type MailTransport,
 } from '@visomi-stack/backend-shared';
 import { HttpError } from '@visomi-stack/web-backend-shared';
-import type { RequestHandler, Request } from 'express';
+import type { Request, RequestHandler } from 'express';
 import session from 'express-session';
 import { Passport } from 'passport';
 import type { Pool } from 'pg';
 
-import { AUTH_CONFIG, type AuthConfig } from './config';
-import { readPrincipal, requireFull } from './identity';
-import { Google } from './google';
-import { Recovery } from './recovery';
-import { Devices } from './devices';
-import { Accounts } from './accounts';
-import { Passkeys } from './passkeys';
-import { SessionStore } from './session-store';
-import { Flows } from './flows';
-import { Factors } from './factors';
-import { RequestLimitStore } from './request-limit-store';
+import { Devices } from './devices/service';
+import { EmailIdentity } from './email/service';
+import { Google } from './google/service';
+import { Methods } from './methods/service';
+import { Passkeys } from './passkeys/service';
+import { Passwords } from './password/service';
+import { Recovery } from './recovery/service';
+import { Sessions } from './sessions/service';
+import { SessionStore } from './sessions/store';
+import { AUTH_CONFIG, type AuthConfig } from './shared/config';
+import { Flows } from './shared/flows';
+import { readPrincipal, requireFull } from './shared/identity';
+import { SecurityNotifications } from './shared/notifications';
+import { RequestLimitStore } from './shared/request-limit-store';
+import { Factors } from './totp/service';
 
 const initialized = Symbol.for('visomi-stack.authentication.v1');
 
@@ -47,7 +51,11 @@ export function createAuthentication(options: {
     SessionStore,
     Flows,
     Factors,
-    Accounts,
+    Passwords,
+    EmailIdentity,
+    Sessions,
+    Methods,
+    SecurityNotifications,
     Passkeys,
     Google,
     Recovery,
@@ -104,8 +112,6 @@ export function createAuthentication(options: {
     );
   };
 
-  const accounts = injector.get<Accounts>(Accounts);
-
   return {
     database,
     config,
@@ -121,7 +127,13 @@ export function createAuthentication(options: {
       }
     }) as RequestHandler,
     passkeys: injector.get<Passkeys>(Passkeys),
-    accounts,
+    password: injector.get<Passwords>(Passwords),
+    email: injector.get<EmailIdentity>(EmailIdentity),
+    sessions: injector.get<Sessions>(Sessions),
+    methods: injector.get<Methods>(Methods),
+    notifications: injector.get<SecurityNotifications>(SecurityNotifications),
+    flows: injector.get<Flows>(Flows),
+    factors: injector.get<Factors>(Factors),
     google: injector.get<Google>(Google),
     recovery: injector.get<Recovery>(Recovery),
     devices: injector.get<Devices>(Devices),

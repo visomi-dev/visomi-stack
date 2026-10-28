@@ -1,10 +1,10 @@
 import { AuthMail, type Database, createInjector, MAIL_TRANSPORT } from '@visomi-stack/backend-shared';
 import { vi } from 'vitest';
 
-import { authConfig } from '../../src/auth/config';
-import { type Flow } from '../../src/auth/flows';
-import { principal, type Principal, type Transaction, type User } from '../../src/auth/identity';
-import { encryptSecret, totpSetup } from '../../src/auth/secrets';
+import { authConfig } from '../../src/auth/shared/config';
+import { type Flow } from '../../src/auth/shared/flows';
+import { principal, type Principal, type Transaction, type User } from '../../src/auth/shared/identity';
+import { encryptSecret, totpSetup } from '../../src/auth/totp/secrets';
 export function storage(results: unknown[] = []) {
   const run = vi.fn(async () => {
     const next = results.shift();

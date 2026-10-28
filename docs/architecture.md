@@ -37,11 +37,15 @@ DI does not load a metadata polyfill. The HTTP factories retain explicit argumen
 and executable resource ownership and the existing observability registry are
 preserved. No request-wide ambient injector is introduced.
 
-Auth's root router composes capability-specific `*.http.ts` adapters. Their
-factories register routes with inline delegates to named handlers; dependencies
-are passed explicitly per runtime instance. Shared auth HTTP guards and session
-responses live in `auth/http.ts`, while domain operations remain in their
-capability modules.
+Auth is organized by capability under `auth/password`, `email`, `passkeys`,
+`google`, `totp`, `recovery`, `devices`, `sessions` and `methods`. Each owns its
+`router.ts`, named handlers in `controller.ts`, `service.ts` and unit tests.
+Password hashing, email normalization, TOTP secrets and session storage stay with
+their owning capability. Configuration, identity/authorization invariants, shared
+proofs, HTTP helpers, request limits and notification orchestration live in
+`auth/shared`. Runtime/router composition stays at the auth root. The scoped
+injector shares dependencies across capabilities and keeps separate runtimes
+isolated. Cross-capability behavior is verified through the API integration suite.
 
 `libs/backend/shared/drizzle.config.ts` configures Drizzle at the library root.
 `src/lib/database/` owns domain schemas and one migration history for all backend

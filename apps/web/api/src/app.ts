@@ -12,7 +12,7 @@ import { createAuthRouter, authErrorHandler } from './auth/router';
 import type { AuthRuntime } from './auth/runtime';
 
 export { createAuthentication } from './auth/runtime';
-export { authConfig } from './auth/config';
+export { authConfig } from './auth/shared/config';
 
 export type AppOptions = {
   observability?: Observability;

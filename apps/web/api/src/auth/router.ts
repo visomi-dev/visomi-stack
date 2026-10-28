@@ -1,18 +1,19 @@
-import { Router, json } from 'express';
 import type { NextFunction, Request, Response } from 'express';
+import { Router, json } from 'express';
 
-import { createPasswordRouter } from './password.http';
-import { createEmailRouter } from './email.http';
-import { createGoogleRouter } from './google.http';
-import { createTotpRouter } from './totp.http';
-import { createRecoveryRouter } from './recovery.http';
-import { createDeviceRouter } from './devices.http';
-import { createSessionRouter } from './sessions.http';
-import { createPasskeyRouter } from './passkeys.http';
+import { createDeviceRouter } from './devices/router';
+import { createEmailRouter } from './email/router';
+import { createGoogleRouter } from './google/router';
+import { createMethodRouter } from './methods/router';
+import { createPasskeyRouter } from './passkeys/router';
+import { createPasswordRouter } from './password/router';
+import { createRecoveryRouter } from './recovery/router';
 import type { AuthRuntime } from './runtime';
-import { csrf, rateLimit } from './security';
+import { createSessionRouter } from './sessions/router';
+import { csrf, rateLimit } from './shared/security';
+import { createTotpRouter } from './totp/router';
 
-export { authErrorHandler, saveSession } from './http';
+export { authErrorHandler, saveSession } from './shared/http';
 
 export function createAuthRouter(auth: AuthRuntime): Router {
   const router = Router();
@@ -29,6 +30,7 @@ export function createAuthRouter(auth: AuthRuntime): Router {
   router.use(createTotpRouter(auth));
   router.use(createRecoveryRouter(auth));
   router.use(createDeviceRouter(auth));
+  router.use(createMethodRouter(auth));
   router.use(createSessionRouter(auth));
   router.use(createPasskeyRouter(auth));
 

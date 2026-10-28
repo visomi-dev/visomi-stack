@@ -145,8 +145,8 @@ session metadata. Password/Google removal may end the current session.
 
 `createAuthentication()` creates a separate `injection-js` graph per runtime using
 only the DI exports from `backend-shared`. PostgreSQL, the pool, optional SMTP and
-`AUTH_CONFIG` are explicit value providers. Accounts, passkeys, flows, factors,
-Google, recovery, devices and the session adapter resolve dependencies with
+`AUTH_CONFIG` are explicit value providers. Passwords, email identity, sessions,
+method discovery, passkeys, flows, factors, Google, recovery and devices resolve dependencies with
 `inject()` during construction, sharing instances only within that graph.
 Handlers still receive their runtime explicitly. Imports do not construct services
 or open resources, and the standalone/gateway public factory contracts remain the
@@ -154,12 +154,33 @@ same. Service tests use provider overrides instead of positional constructors.
 
 ## HTTP composition
 
-`createAuthRouter()` installs the common security middleware and composes small
-routers for passwords, email identity, Google, TOTP, recovery, devices, sessions
-and passkeys. Each capability's `*.http.ts` keeps route registration separate from
-named handlers, with explicit runtime arguments. `auth/http.ts` owns parsing,
-principal/anonymous guards, session responses and controlled error translation.
-Router construction has no process-wide state or import-time resources.
+`createAuthRouter()` installs the common security middleware and composes one
+router per authentication capability. Each capability keeps route registration in
+`router.ts`, named HTTP handlers in `controller.ts`, and business operations in
+`service.ts`. Handlers receive their runtime explicitly. Router construction has
+no process-wide state or import-time resources.
+
+| Directory        | Responsibility                                                                                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth/password/` | Password registration, login, reauthentication, management and Argon2id.                                                                             |
+| `auth/email/`    | Email normalization, verification and address changes.                                                                                               |
+| `auth/passkeys/` | WebAuthn registration, login and credential management.                                                                                              |
+| `auth/google/`   | Google verification, account linking and unlinking.                                                                                                  |
+| `auth/totp/`     | Authenticator enrollment, replay protection, encrypted secrets and backup codes.                                                                     |
+| `auth/recovery/` | Restricted recovery and replacement-method proofs.                                                                                                   |
+| `auth/devices/`  | Pairing and approval from another authenticated session.                                                                                             |
+| `auth/sessions/` | Current session, logout, session listing/revocation and the PostgreSQL session store.                                                                |
+| `auth/methods/`  | Overview of the account's usable authentication methods.                                                                                             |
+| `auth/shared/`   | Configuration, principal/authorization invariants, proof lifecycle, HTTP parsing/session responses, request limits and common cryptographic helpers. |
+
+Unit tests live beside the capability they verify. Cross-capability HTTP and
+persistence scenarios stay in `tests/integration/`, with the existing E2E suites
+covering standalone, inherited and compiled gateway hosting. The root `auth/`
+contains only runtime and router composition and their tests.
+
+SMTP, typed message content, rendering and MJML resources remain in
+`backend-shared`. Auth's shared notification adapter chooses a security notice and
+reports delivery success without owning the transport or duplicating mail content.
 
 ## Persistence and builds
 

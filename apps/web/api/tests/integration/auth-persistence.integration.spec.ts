@@ -13,11 +13,11 @@ import { authenticator } from '@visomi-stack/dev-testing';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 
 import { authService, sessionStore } from '../support/injection';
-import { authConfig } from '../../src/auth/config';
-import { Passkeys } from '../../src/auth/passkeys';
-import { rateLimit } from '../../src/auth/security';
-import { RequestLimitStore } from '../../src/auth/request-limit-store';
-import { SessionStore } from '../../src/auth/session-store';
+import { authConfig } from '../../src/auth/shared/config';
+import { Passkeys } from '../../src/auth/passkeys/service';
+import { rateLimit } from '../../src/auth/shared/security';
+import { RequestLimitStore } from '../../src/auth/shared/request-limit-store';
+import { SessionStore } from '../../src/auth/sessions/store';
 
 const { challenges, credentials, sessions, users } = authSchema;
 

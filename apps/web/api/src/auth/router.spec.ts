@@ -2,14 +2,14 @@ import { IncomingMessage, ServerResponse } from 'node:http';
 import { Socket } from 'node:net';
 
 import { AuthHttpError, HttpError, httpErrorHandler } from '@visomi-stack/web-backend-shared';
-import express from 'express';
 import type { Request, Response } from 'express';
+import express from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { authConfig } from './config';
 import { authErrorHandler, createAuthRouter, saveSession } from './router';
 import type { AuthRuntime } from './runtime';
-import { rateLimit } from './security';
+import { authConfig } from './shared/config';
+import { rateLimit } from './shared/security';
 
 describe('authentication HTTP boundary', () => {
   it('saves the session before returning and sanitizes failed persistence', async () => {
@@ -51,8 +51,8 @@ describe('authentication HTTP boundary', () => {
   });
 });
 
-vi.mock('./security', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./security')>();
+vi.mock('./shared/security', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./shared/security')>();
 
   return {
     ...actual,
@@ -98,11 +98,19 @@ function routerFixture() {
   const requireInitialized = vi.fn((_request: Request, _response: Response, next: (error?: Error) => void) => next());
   const database = {};
   const requestLimits = {};
-  const accounts = {
-    notify: vi.fn().mockResolvedValue(true),
+  const notifications = { notify: vi.fn().mockResolvedValue(true) };
+  const email = {
     emailStart: vi.fn().mockResolvedValue({ flowId: challengeId }),
   };
-  const auth = { config, passkeys, requireInitialized, database, accounts, requestLimits } as unknown as AuthRuntime;
+  const auth = {
+    config,
+    passkeys,
+    requireInitialized,
+    database,
+    email,
+    notifications,
+    requestLimits,
+  } as unknown as AuthRuntime;
   const app = express();
 
   app.use('/auth', createAuthRouter(auth), authErrorHandler);

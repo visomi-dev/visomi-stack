@@ -8,8 +8,8 @@ import { authenticator } from '@visomi-stack/dev-testing';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 
 import { authService, sessionStore } from '../support/injection';
-import { authConfig } from '../../src/auth/config';
-import { Passkeys } from '../../src/auth/passkeys';
+import { authConfig } from '../../src/auth/shared/config';
+import { Passkeys } from '../../src/auth/passkeys/service';
 
 vi.mock('@simplewebauthn/server', async (original) => {
   const actual = await original<typeof import('@simplewebauthn/server')>();
