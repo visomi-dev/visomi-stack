@@ -2,21 +2,22 @@ import { generate } from 'otplib';
 import { describe, expect, it } from 'vitest';
 
 import {
-  storage,
   config,
-  user,
   current,
-  session,
+  factor,
   flow,
   granted,
-  factor,
   quietMail,
+  session,
+  storage,
+  user,
 } from '../../tests/support/auth-state';
 
 import { Factors } from './factors';
 import { Flows } from './flows';
 import { activeMethod, lastMethod, lockIdentity, principal, readPrincipal } from './identity';
-import { digest, decryptSecret } from './secrets';
+import { decryptSecret, digest } from './secrets';
+
 describe('identity revocation decisions', () => {
   it('rejects absent users, stale versions, removed passwords and revoked methods', async () => {
     for (const rows of [[], [{ ...user, authVersion: 2 }], [{ ...user, passwordHash: null }]]) {

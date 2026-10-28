@@ -1,12 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { storage, config, user, current, session, flow, granted } from '../../tests/support/auth-state';
+import { config, current, flow, granted, session, storage, user } from '../../tests/support/auth-state';
 
 import { Devices, validateApproval } from './devices';
 import { Factors } from './factors';
 import { Flows, type Flow } from './flows';
 import { Recovery, completeEnrollment } from './recovery';
 import { digest } from './secrets';
+
 describe('device approval revocation and races', () => {
   const request = {
     id: flow.id,

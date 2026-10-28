@@ -1,15 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  storage,
   config,
-  user,
   current,
-  session,
+  factor,
   flow,
   granted,
-  factor,
   quietMail,
+  session,
+  storage,
+  user,
 } from '../../tests/support/auth-state';
 
 import { Accounts } from './accounts';
@@ -17,6 +17,7 @@ import { Factors } from './factors';
 import { Flows, type Flow } from './flows';
 import { Recovery } from './recovery';
 import { hashPassword } from './secrets';
+
 describe('password and email proof version binding', () => {
   function accounts(results: unknown[], pending: Flow) {
     const f = storage(results);

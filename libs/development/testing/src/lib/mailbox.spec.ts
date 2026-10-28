@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readMailCode } from './mailbox';
 
 afterEach(() => vi.unstubAllEnvs());
+
 describe('isolated SMTP mailbox reader', () => {
   it('requires an explicitly owned test directory', async () => {
     vi.stubEnv('VISOMI_E2E_TELEMETRY_DIR', undefined);
