@@ -19,7 +19,7 @@ export function createAuthRouter(auth: AuthRuntime): Router {
 
   router.use(disableCaching);
   router.use(auth.requireInitialized);
-  router.use(rateLimit(auth.database, auth.config));
+  router.use(rateLimit(auth.requestLimits, auth.config));
   router.use(csrf(auth.config));
   router.use(json({ limit: '32kb' }));
   router.get('/providers', (request, response) => getProviders(auth, request, response));

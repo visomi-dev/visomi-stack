@@ -23,6 +23,7 @@ import { Passkeys } from './passkeys';
 import { SessionStore } from './session-store';
 import { Flows } from './flows';
 import { Factors } from './factors';
+import { RequestLimitStore } from './request-limit-store';
 
 const initialized = Symbol.for('visomi-stack.authentication.v1');
 
@@ -51,6 +52,7 @@ export function createAuthentication(options: {
     Google,
     Recovery,
     Devices,
+    RequestLimitStore,
   ]);
   const store = injector.get<SessionStore>(SessionStore);
   const owner = {};
@@ -109,6 +111,7 @@ export function createAuthentication(options: {
     config,
     middleware,
     requireInitialized,
+    requestLimits: injector.get<RequestLimitStore>(RequestLimitStore),
     requireVerifiedSession: ((request, _response, next) => {
       try {
         requireFull(request.user);

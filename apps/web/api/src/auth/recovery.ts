@@ -17,7 +17,7 @@ import {
   type User,
 } from './identity';
 import { requireFresh } from './security';
-import { digest, pin, hashPassword, normalizeEmail, verifyPassword } from './secrets';
+import { hashPassword, normalizeEmail, verifyPassword } from './secrets';
 
 const { users, flows, credentials } = authSchema;
 
@@ -87,17 +87,20 @@ export class Recovery {
     }
 
     // Unknown identities have the same public shape, but no usable challenge.
-    const flow = await this.proofs.create(sid, reset ? 'password_reset' : 'recovery', {
-      userId: user?.id,
-      authVersion: user?.authVersion,
-      email,
-      data: { requiredFactor: factor ? 'totp' : 'email', factorId: factor?.id, factorProven },
-    });
-
-    await this.database
-      .update(flows)
-      .set({ codeHash: digest(this.config.secret, flow.id, pin()), lastSentAt: new Date() })
-      .where(eq(flows.id, flow.id));
+    const { flow } = await this.database.transaction((tx) =>
+      this.proofs.issue(
+        tx,
+        sid,
+        reset ? 'password_reset' : 'recovery',
+        {
+          userId: user?.id,
+          authVersion: user?.authVersion,
+          email,
+          data: { requiredFactor: factor ? 'totp' : 'email', factorId: factor?.id, factorProven },
+        },
+        true,
+      ),
+    );
 
     if (user && (!reset || user.passwordHash)) {
       try {

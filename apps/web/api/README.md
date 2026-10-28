@@ -175,6 +175,15 @@ and expiry; failed SMTP delivery permits immediate retry. Shared PostgreSQL limi
 budgets. WebAuthn ceremonies expire after three minutes; sessions have an absolute
 eight-hour limit. Revoked SID tombstones remain immutable and are not pruned.
 
+The auth router uses `express-rate-limit` with an injected PostgreSQL store for
+60 requests per exact address and 1,000 requests globally per minute. Addresses
+are HMACed before reaching storage. Expiration resets counters during an atomic
+upsert; no memory store, maintenance timer or database connection is created by
+the middleware. Storage failures stop the request. Rate-limit diagnostics are
+discarded because they can include client/database values; controlled failures
+continue through the owning HTTP error boundary. The dependency is pinned to
+`8.5.2`, whose request path has no environment-enabled debug output.
+
 ```sh
 pnpm nx run backend-shared:db-generate -- --name describe-schema-change
 DATABASE_URL=postgresql://localhost/visomi_stack_dev pnpm nx run backend-shared:db-migrate

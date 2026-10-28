@@ -17,6 +17,7 @@ import { Flows } from '../../src/auth/flows';
 import { Google } from '../../src/auth/google';
 import { Passkeys } from '../../src/auth/passkeys';
 import { Recovery } from '../../src/auth/recovery';
+import { RequestLimitStore } from '../../src/auth/request-limit-store';
 import { SessionStore } from '../../src/auth/session-store';
 
 export function authService<T>(
@@ -36,6 +37,7 @@ export function authService<T>(
     Recovery,
     Devices,
     Passkeys,
+    RequestLimitStore,
     ...overrides,
   ]).get<T>(service);
 }

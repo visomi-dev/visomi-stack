@@ -196,6 +196,7 @@ describe('compiled ESM gateway and embedded API', () => {
     expect(metadata.dependencies.pg).toBe('8.23.1');
     expect(metadata.dependencies['drizzle-orm']).toBe('1.0.0-rc.5');
     expect(metadata.dependencies['injection-js']).toBe('2.6.1');
+    expect(metadata.dependencies['express-rate-limit']).toBe('8.5.2');
     expect(metadata.dependencies.helmet).toBe('8.3.0');
     const mapFile = await readFile(join(output, 'main.js.map'), 'utf8');
     const map = JSON.parse(mapFile);

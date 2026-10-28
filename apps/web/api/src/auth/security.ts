@@ -1,11 +1,12 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-import type { Database } from '@visomi-stack/backend-shared';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
-import { sql } from 'drizzle-orm';
-import type { RequestHandler } from 'express';
+import { Router } from 'express';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import { rateLimit as expressRateLimit } from 'express-rate-limit';
 
 import type { AuthConfig } from './config';
+import type { RequestLimitStore } from './request-limit-store';
 
 export function csrf(config: AuthConfig): RequestHandler {
   return (request, _response, next) => {
@@ -34,42 +35,46 @@ export function csrf(config: AuthConfig): RequestHandler {
   };
 }
 
-export function rateLimit(database: Database, config: AuthConfig): RequestHandler {
-  return async (request, response, next) => {
-    if (request.method === 'OPTIONS') {
-      next();
+export function rateLimit(store: RequestLimitStore, config: AuthConfig): Router {
+  const router = Router();
+  const options = {
+    windowMs: 60_000,
+    store,
+    legacyHeaders: false,
+    standardHeaders: false,
+    passOnStoreError: false,
+    skip: (request: Request) => request.method === 'OPTIONS',
+    handler: rejectLimitedRequest,
+    // Both limiters share a stateless adapter, with distinct address/global keys.
+    // Address keys deliberately retain the existing exact-address HMAC policy.
+    validate: { unsharedStore: false, keyGeneratorIpFallback: false },
+    // Third-party diagnostics can contain request/database values. HTTP errors
+    // already reach the owner's controlled error boundary; never log these objects.
+    logger: { error: discardLimitDiagnostic, warn: discardLimitDiagnostic },
+  } as const;
 
-      return;
-    }
+  router.use(
+    expressRateLimit({
+      ...options,
+      limit: 60,
+      keyGenerator: (request: Request) =>
+        createHmac('sha256', config.secret)
+          .update(request.ip ?? 'unknown')
+          .digest('hex'),
+    }),
+  );
+  router.use(expressRateLimit({ ...options, limit: 1000, keyGenerator: () => 'global' }));
 
-    // Only keyed digests are persisted; neither addresses nor digests are telemetry fields.
-    const digest = createHmac('sha256', config.secret)
-      .update(request.ip ?? 'unknown')
-      .digest('hex');
+  return router;
+}
 
-    for (const [key, maximum] of [
-      [digest, 60],
-      ['global', 1000],
-    ] as const) {
-      const result = await database.execute<{ attempts: number }>(sql`
-        INSERT INTO auth_rate_limits (key, attempts, expires_at)
-        VALUES (${key}, 1, now() + interval '1 minute')
-        ON CONFLICT (key) DO UPDATE SET
-          attempts = CASE WHEN auth_rate_limits.expires_at <= now() THEN 1
-            ELSE LEAST(auth_rate_limits.attempts + 1, 10001) END,
-          expires_at = CASE WHEN auth_rate_limits.expires_at <= now() THEN now() + interval '1 minute'
-            ELSE auth_rate_limits.expires_at END
-        RETURNING attempts`);
+function rejectLimitedRequest(_request: Request, response: Response, next: NextFunction): void {
+  response.setHeader('Retry-After', '60');
+  next(new HttpError(429, 'rate_limited'));
+}
 
-      if (result.rows[0].attempts > maximum) {
-        response.setHeader('Retry-After', '60');
-        next(new HttpError(429, 'rate_limited'));
-
-        return;
-      }
-    }
-    next();
-  };
+function discardLimitDiagnostic(): void {
+  // Raw library diagnostics are outside the operational telemetry allowlist.
 }
 
 export function requireFresh(user: Express.User | undefined, config: AuthConfig): Express.User {

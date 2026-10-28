@@ -97,11 +97,12 @@ function routerFixture() {
   const logIn = vi.fn((_user: Express.User, callback: (error?: Error) => void) => callback());
   const requireInitialized = vi.fn((_request: Request, _response: Response, next: (error?: Error) => void) => next());
   const database = {};
+  const requestLimits = {};
   const accounts = {
     notify: vi.fn().mockResolvedValue(true),
     emailStart: vi.fn().mockResolvedValue({ flowId: challengeId }),
   };
-  const auth = { config, passkeys, requireInitialized, database, accounts } as unknown as AuthRuntime;
+  const auth = { config, passkeys, requireInitialized, database, accounts, requestLimits } as unknown as AuthRuntime;
   const app = express();
 
   app.use('/auth', createAuthRouter(auth), authErrorHandler);
@@ -159,7 +160,7 @@ function routerFixture() {
     );
   };
 
-  return { dispatch, passkeys, database, save, destroy, logIn, requireInitialized };
+  return { dispatch, passkeys, database, save, destroy, logIn, requireInitialized, requestLimits };
 }
 
 describe('authentication router decisions and delegation', () => {
@@ -201,7 +202,10 @@ describe('authentication router decisions and delegation', () => {
   it('uses the runtime database as the only rate-limit source', () => {
     const fixture = routerFixture();
 
-    expect(rateLimit).toHaveBeenCalledExactlyOnceWith(fixture.database, expect.objectContaining({ rpId: 'localhost' }));
+    expect(rateLimit).toHaveBeenCalledExactlyOnceWith(
+      fixture.requestLimits,
+      expect.objectContaining({ rpId: 'localhost' }),
+    );
   });
 
   it('allows an initialized anonymous session and returns only public session fields', async () => {

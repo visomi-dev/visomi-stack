@@ -16,6 +16,7 @@ import { authService, sessionStore } from '../support/injection';
 import { authConfig } from '../../src/auth/config';
 import { Passkeys } from '../../src/auth/passkeys';
 import { rateLimit } from '../../src/auth/security';
+import { RequestLimitStore } from '../../src/auth/request-limit-store';
 import { SessionStore } from '../../src/auth/session-store';
 
 const { challenges, credentials, sessions, users } = authSchema;
@@ -506,8 +507,8 @@ describe('isolated PostgreSQL authentication persistence', () => {
     const second = createDatabase(postgres.url);
     const next = (database: typeof resource.db) =>
       new Promise<string | undefined>((resolve, reject) => {
-        const work = rateLimit(database, config)(
-          { method: 'POST', ip: 'synthetic-shared-address' } as Request,
+        const work = rateLimit(authService(RequestLimitStore, database, config), config)(
+          { method: 'POST', url: '/', ip: 'synthetic-shared-address' } as Request,
           { setHeader: () => undefined } as unknown as Response,
           (error) => resolve(error?.code),
         );
@@ -523,6 +524,23 @@ describe('isolated PostgreSQL authentication persistence', () => {
 
       expect(results.filter((result) => result === undefined)).toHaveLength(60);
       expect(results.filter((result) => result === 'rate_limited')).toHaveLength(1);
+      const buckets = await resource.db.select().from(authSchema.rateLimits);
+
+      expect(buckets).toHaveLength(2);
+      expect(buckets.map((bucket) => bucket.key)).toEqual(
+        expect.arrayContaining(['global', expect.stringMatching(/^[a-f0-9]{64}$/)]),
+      );
+      await resource.db.execute(sql`UPDATE auth_rate_limits SET expires_at = now() - interval '1 second'`);
+      const renewed = await next(second.db);
+
+      expect(renewed).toBeUndefined();
+      const reset = await resource.db.select().from(authSchema.rateLimits);
+
+      expect(reset.map((bucket) => bucket.attempts)).toEqual([1, 1]);
+      await resource.db.execute(sql`UPDATE auth_rate_limits SET attempts = 1000 WHERE key = 'global'`);
+      const globalLimit = await next(resource.db);
+
+      expect(globalLimit).toBe('rate_limited');
     } finally {
       await second.close();
     }
