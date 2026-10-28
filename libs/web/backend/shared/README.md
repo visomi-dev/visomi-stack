@@ -60,13 +60,33 @@ separate [shared backend library](../../../backend/shared/README.md).
 
 ## Typed route contracts
 
-`defineRoute`, `registerRoute`, `validateRequest` and `createApiDocument` connect
+`defineRoute`, `registerRoutes`, `validateRequest` and `createApiDocument` connect
 Express routes, native Zod inference and OpenAPI 3.1 documentation. Contracts own
 an explicit method/path and a single Zod request object. The registration adapter
 parses the configured HTTP sections and passes `z.output<typeof contract.request>`
 to the handler, including transformed values. It does not mutate `request.query`
 or store per-request data on singleton services. The generic adapter uses the
 schema's actual output; no cast or caller-selected validated-data type is involved.
+
+`registerRoutes(router, routes)` accepts an ordered array of objects with `contract`,
+`handler` and optional `beforeValidation` middleware. Each handler retains its own
+contract's inferred input, even when the array contains different request schemas.
+Bind controller methods to preserve their instance:
+
+```ts
+registerRoutes(router, [
+  {
+    contract: devicesContracts.requestApproval,
+    handler: controller.requestApproval.bind(controller),
+    beforeValidation: [anonymousOnly],
+  },
+  { contract: devicesContracts.getApprovalStatus, handler: controller.getApprovalStatus.bind(controller) },
+]);
+```
+
+Entries and their guards run in declaration order. Where a router has middleware
+between groups of routes, register each group around that existing middleware.
+`registerRoute` remains available for individual operations.
 
 Use strict body objects for operation payloads, and regular object schemas for
 selected headers/query/path parameters. Authorization middleware can run before

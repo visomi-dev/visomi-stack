@@ -159,8 +159,8 @@ or open resources, and standalone/gateway application exports remain unchanged. 
 router per authentication capability. Each capability keeps route registration in
 `router.ts`, an injectable controller class in `controller.ts`, business operations
 in `service.ts`, and the shared routing/validation/documentation contract in
-`contract.ts`. Routers receive their controller explicitly and delegate with inline
-callbacks, preserving `this`. Router construction has no process-wide state or
+`contract.ts`. Routers receive their controller explicitly and pass arrays of contract/handler
+objects to `registerRoutes()`. Bound controller methods preserve `this`. Router construction has no process-wide state or
 import-time resources.
 
 | Directory        | Responsibility                                                                                                                                       |
@@ -189,7 +189,7 @@ reports delivery success without owning the transport or duplicating mail conten
 
 Zod `4.6.6` and `zod-openapi` `6.0.2` are pinned dependencies. Each operation's
 contract defines its method, path, request schema, documented responses and
-security requirements. `registerRoute()` uses that same method/path and parses
+security requirements. `registerRoutes()` uses each contract's method/path and parses
 one Zod object containing the configured `body`, `params`, `query` and `headers`.
 Each contract exports a named input type inferred from the schema's parsed output.
 The controller imports that type and receives `result.data`:

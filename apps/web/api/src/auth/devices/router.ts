@@ -1,4 +1,4 @@
-import { registerRoute } from '@visomi-stack/web-backend-shared';
+import { registerRoutes } from '@visomi-stack/web-backend-shared';
 import type { NextFunction, Request, Response } from 'express';
 import { Router } from 'express';
 
@@ -10,28 +10,19 @@ import type { DevicesController } from './controller';
 export function createDeviceRouter(controller: DevicesController): Router {
   const router = Router();
 
-  registerRoute(
-    router,
-    devicesContracts.requestApproval,
-    (request, response, input) => controller.requestApproval(request, response, input),
-    anonymousOnly,
-  );
-  registerRoute(router, devicesContracts.getApprovalStatus, (request, response, input) =>
-    controller.getApprovalStatus(request, response, input),
-  );
-  registerRoute(router, devicesContracts.reviewApproval, (request, response, input) =>
-    controller.reviewApproval(request, response, input),
-  );
-  registerRoute(router, devicesContracts.approve, (request, response, input) =>
-    controller.approve(request, response, input),
-  );
-  registerRoute(router, devicesContracts.deny, (request, response, input) => controller.deny(request, response, input));
-  registerRoute(router, devicesContracts.cancelApproval, (request, response, input) =>
-    controller.cancelApproval(request, response, input),
-  );
-  registerRoute(router, devicesContracts.consumeApproval, (request, response, input) =>
-    controller.consumeApproval(request, response, input),
-  );
+  registerRoutes(router, [
+    {
+      contract: devicesContracts.requestApproval,
+      handler: controller.requestApproval.bind(controller),
+      beforeValidation: [anonymousOnly],
+    },
+    { contract: devicesContracts.getApprovalStatus, handler: controller.getApprovalStatus.bind(controller) },
+    { contract: devicesContracts.reviewApproval, handler: controller.reviewApproval.bind(controller) },
+    { contract: devicesContracts.approve, handler: controller.approve.bind(controller) },
+    { contract: devicesContracts.deny, handler: controller.deny.bind(controller) },
+    { contract: devicesContracts.cancelApproval, handler: controller.cancelApproval.bind(controller) },
+    { contract: devicesContracts.consumeApproval, handler: controller.consumeApproval.bind(controller) },
+  ]);
 
   return router;
 }

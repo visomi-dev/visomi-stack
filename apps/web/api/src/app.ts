@@ -3,7 +3,7 @@ import {
   HttpError,
   httpErrorHandler,
   httpObservability,
-  registerRoute,
+  registerRoutes,
   securityHeaders,
   type Observability,
 } from '@visomi-stack/web-backend-shared';
@@ -55,12 +55,10 @@ export function createApp(options: AppOptions = {}) {
     app.use('/auth', (_request, _response, next) => next(new HttpError(503, 'authentication_unavailable')));
   }
 
-  registerRoute(app, documentationContract, (_request, response) => {
-    response.json(document);
-  });
-  registerRoute(app, homeContract, (_request, response) => {
-    response.json({ message: 'Hello API' });
-  });
+  registerRoutes(app, [
+    { contract: documentationContract, handler: (_request, response) => response.json(document) },
+    { contract: homeContract, handler: (_request, response) => response.json({ message: 'Hello API' }) },
+  ]);
   app.use((_request, response) => {
     response.status(404).json({ error: 'not_found' });
   });

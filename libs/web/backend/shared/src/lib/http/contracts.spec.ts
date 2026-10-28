@@ -6,7 +6,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import type { RouteContract } from './contracts';
-import { createApiDocument, defineRoute, registerRoute } from './contracts';
+import { createApiDocument, defineRoute, registerRoute, registerRoutes } from './contracts';
 import { httpErrorHandler } from './http-error-handler';
 
 function dispatch(app: ReturnType<typeof express>, path = '/example', value?: unknown, method = 'POST') {
@@ -102,6 +102,101 @@ describe('typed HTTP route contracts', () => {
       },
     });
     expect(guard).toHaveBeenCalledOnce();
+  });
+
+  it('infers each transformed input independently in a heterogeneous route array', async () => {
+    const app = express();
+
+    app.use(json());
+    registerRoutes(app, [
+      {
+        contract,
+        handler(_request, response, input) {
+          expectTypeOf(input.body.count).not.toBeAny();
+          expectTypeOf(input.body.count).toEqualTypeOf<number>();
+          response.json({ count: input.body.count });
+        },
+      },
+      {
+        contract: {
+          ...contract,
+          method: 'get',
+          path: '/other/:id',
+          request: z.object({ params: z.object({ id: z.string().transform(Number) }) }),
+        },
+        handler(_request, response, input) {
+          expectTypeOf(input.params.id).not.toBeAny();
+          expectTypeOf(input.params.id).toEqualTypeOf<number>();
+          response.json({ id: input.params.id });
+        },
+      },
+    ]);
+    app.use(httpErrorHandler);
+
+    const first = await dispatch(app, '/example/synthetic?page=2', { count: '4', label: 'Parsed' });
+    const second = await dispatch(app, '/other/7', undefined, 'GET');
+
+    expect(first).toEqual({
+      status: 200,
+      body: { count: 4 },
+    });
+    expect(second).toEqual({ status: 200, body: { id: 7 } });
+
+    registerRoutes(express(), [
+      {
+        contract,
+        // @ts-expect-error The schema produces a numeric count, so this handler is incompatible.
+        handler: (_request: Request, _response: Response, input: { body: { count: boolean } }) => input.body.count,
+      },
+    ]);
+  });
+
+  it('preserves array order, guards before validation and bound controller state', async () => {
+    const app = express();
+    const calls: string[] = [];
+    const owner = {
+      label: 'Synthetic owner',
+      send(_request: Request, response: Response) {
+        calls.push('handler');
+        response.json({ label: this.label });
+      },
+    };
+    const unreachable = vi.fn();
+
+    app.use(json());
+    registerRoutes(app, [
+      {
+        contract: { ...contract, path: '/ordered', request: z.object({ body: z.never() }) },
+        beforeValidation: [
+          (_request, _response, next) => {
+            calls.push('skip');
+            next('route');
+          },
+        ],
+        handler: unreachable,
+      },
+      {
+        contract: { ...contract, path: '/ordered', request: z.object({ body: z.strictObject({}) }) },
+        beforeValidation: [
+          (_request, _response, next) => {
+            calls.push('first guard');
+            next();
+          },
+          (_request, _response, next) => {
+            calls.push('second guard');
+            next();
+          },
+        ],
+        handler: owner.send.bind(owner),
+      },
+    ]);
+    app.use(httpErrorHandler);
+
+    const result = await dispatch(app, '/ordered', {});
+
+    expect(result).toEqual({ status: 200, body: { label: 'Synthetic owner' } });
+    expect(calls).toEqual(['skip', 'first guard', 'second guard', 'handler']);
+    expect(unreachable).not.toHaveBeenCalled();
   });
 
   it.each([

@@ -1,4 +1,4 @@
-import { registerRoute } from '@visomi-stack/web-backend-shared';
+import { registerRoutes } from '@visomi-stack/web-backend-shared';
 import type { NextFunction, Request, Response } from 'express';
 import { Router } from 'express';
 
@@ -10,31 +10,22 @@ import type { PasskeysController } from './controller';
 export function createPasskeyRouter(controller: PasskeysController): Router {
   const router = Router();
 
-  registerRoute(router, passkeysContracts.registrationOptions, (request, response, input) =>
-    controller.registrationOptions(request, response, input),
-  );
-  registerRoute(
-    router,
-    passkeysContracts.registerPasskey,
-    (request, response, input) => controller.registerPasskey(request, response, input),
-    enrollmentOnly,
-  );
-  registerRoute(router, passkeysContracts.authenticationOptions, (request, response) =>
-    controller.authenticationOptions(request, response),
-  );
-  registerRoute(router, passkeysContracts.authenticatePasskey, (request, response, input) =>
-    controller.authenticatePasskey(request, response, input),
-  );
+  registerRoutes(router, [
+    { contract: passkeysContracts.registrationOptions, handler: controller.registrationOptions.bind(controller) },
+    {
+      contract: passkeysContracts.registerPasskey,
+      handler: controller.registerPasskey.bind(controller),
+      beforeValidation: [enrollmentOnly],
+    },
+    { contract: passkeysContracts.authenticationOptions, handler: controller.authenticationOptions.bind(controller) },
+    { contract: passkeysContracts.authenticatePasskey, handler: controller.authenticatePasskey.bind(controller) },
+  ]);
   router.use('/passkeys', verifiedOnly);
-  registerRoute(router, passkeysContracts.listPasskeys, (request, response) =>
-    controller.listPasskeys(request, response),
-  );
-  registerRoute(router, passkeysContracts.renamePasskey, (request, response, input) =>
-    controller.renamePasskey(request, response, input),
-  );
-  registerRoute(router, passkeysContracts.revokePasskey, (request, response, input) =>
-    controller.revokePasskey(request, response, input),
-  );
+  registerRoutes(router, [
+    { contract: passkeysContracts.listPasskeys, handler: controller.listPasskeys.bind(controller) },
+    { contract: passkeysContracts.renamePasskey, handler: controller.renamePasskey.bind(controller) },
+    { contract: passkeysContracts.revokePasskey, handler: controller.revokePasskey.bind(controller) },
+  ]);
 
   return router;
 }

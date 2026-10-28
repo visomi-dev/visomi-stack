@@ -4,10 +4,11 @@ import { Socket } from 'node:net';
 import type { Observability } from '@visomi-stack/web-backend-shared';
 import { currentObservability, HttpError, httpErrorHandler, httpObservability } from '@visomi-stack/web-backend-shared';
 import type { Request, Response } from 'express';
-import express from 'express';
+import express, { Router } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createApp } from './app';
+import { createAuthRouter } from './auth/router';
 import type { AuthRuntime } from './auth/runtime';
 
 vi.mock('@visomi-stack/web-backend-shared', async (importOriginal) => {
@@ -18,6 +19,12 @@ vi.mock('@visomi-stack/web-backend-shared', async (importOriginal) => {
     currentObservability: vi.fn(),
     httpObservability: vi.fn(() => (_request: unknown, _response: unknown, next: () => void) => next()),
   };
+});
+
+vi.mock('./auth/router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./auth/router')>();
+
+  return { ...actual, createAuthRouter: vi.fn(() => Router()) };
 });
 
 function dispatch(
@@ -85,7 +92,6 @@ describe('API composition', () => {
       const installed = vi.fn((_request, _response, next) => next());
       const requireInitialized = vi.fn((_request, _response, next) => next());
       const auth = {
-        controllers: {} as AuthRuntime['controllers'],
         middleware: [installed],
         requireInitialized,
         config: {},
@@ -95,6 +101,7 @@ describe('API composition', () => {
       const result = await dispatch(createApp({ auth, authMode }), '/');
 
       expect(result.status).toBe(200);
+      expect(createAuthRouter).toHaveBeenCalledExactlyOnceWith(auth);
       expect(installed).toHaveBeenCalledTimes(authMode === 'inherited' ? 0 : 1);
     },
   );

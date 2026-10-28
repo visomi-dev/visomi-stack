@@ -1,4 +1,4 @@
-import { registerRoute } from '@visomi-stack/web-backend-shared';
+import { registerRoutes } from '@visomi-stack/web-backend-shared';
 import type { NextFunction, Request, Response } from 'express';
 import { Router } from 'express';
 
@@ -10,39 +10,31 @@ import type { PasswordController } from './controller';
 export function createPasswordRouter(controller: PasswordController): Router {
   const router = Router();
 
-  registerRoute(
-    router,
-    passwordContracts.signUp,
-    (request, response, input) => controller.signUp(request, response, input),
-    anonymousOnly,
-  );
-  registerRoute(
-    router,
-    passwordContracts.signIn,
-    (request, response, input) => controller.signIn(request, response, input),
-    anonymousOnly,
-  );
-  registerRoute(
-    router,
-    passwordContracts.verifySignIn,
-    (request, response, input) => controller.verifySignIn(request, response, input),
-    anonymousOnly,
-  );
-  registerRoute(router, passwordContracts.startReauthentication, (request, response, input) =>
-    controller.startReauthentication(request, response, input),
-  );
-  registerRoute(router, passwordContracts.completeReauthentication, (request, response, input) =>
-    controller.completeReauthentication(request, response, input),
-  );
-  registerRoute(router, passwordContracts.addPassword, (request, response, input) =>
-    controller.addPassword(request, response, input),
-  );
-  registerRoute(router, passwordContracts.changePassword, (request, response, input) =>
-    controller.changePassword(request, response, input),
-  );
-  registerRoute(router, passwordContracts.removePassword, (request, response, input) =>
-    controller.removePassword(request, response, input),
-  );
+  registerRoutes(router, [
+    {
+      contract: passwordContracts.signUp,
+      handler: controller.signUp.bind(controller),
+      beforeValidation: [anonymousOnly],
+    },
+    {
+      contract: passwordContracts.signIn,
+      handler: controller.signIn.bind(controller),
+      beforeValidation: [anonymousOnly],
+    },
+    {
+      contract: passwordContracts.verifySignIn,
+      handler: controller.verifySignIn.bind(controller),
+      beforeValidation: [anonymousOnly],
+    },
+    { contract: passwordContracts.startReauthentication, handler: controller.startReauthentication.bind(controller) },
+    {
+      contract: passwordContracts.completeReauthentication,
+      handler: controller.completeReauthentication.bind(controller),
+    },
+    { contract: passwordContracts.addPassword, handler: controller.addPassword.bind(controller) },
+    { contract: passwordContracts.changePassword, handler: controller.changePassword.bind(controller) },
+    { contract: passwordContracts.removePassword, handler: controller.removePassword.bind(controller) },
+  ]);
 
   return router;
 }
