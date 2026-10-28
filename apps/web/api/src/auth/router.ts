@@ -31,7 +31,7 @@ export function createAuthRouter(auth: AuthRuntime): Router {
   router.use(createDeviceRouter(auth.controllers.devices));
   router.use(createMethodRouter(auth.controllers.methods));
   router.use(createSessionRouter(auth.controllers.sessions));
-  router.use(createPasskeyRouter(auth.controllers.passkeys));
+  router.use(createPasskeyRouter(auth.controllers.passkeys, auth.authenticated));
 
   return router;
 }

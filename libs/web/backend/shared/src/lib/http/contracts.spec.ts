@@ -164,32 +164,36 @@ describe('typed HTTP route contracts', () => {
     const unreachable = vi.fn();
 
     app.use(json());
-    registerRoutes(app, [
-      {
-        contract: { ...contract, path: '/ordered', request: z.object({ body: z.never() }) },
-        beforeValidation: [
-          (_request, _response, next) => {
-            calls.push('skip');
-            next('route');
-          },
-        ],
-        handler: unreachable,
-      },
-      {
-        contract: { ...contract, path: '/ordered', request: z.object({ body: z.strictObject({}) }) },
-        beforeValidation: [
-          (_request, _response, next) => {
-            calls.push('first guard');
-            next();
-          },
-          (_request, _response, next) => {
-            calls.push('second guard');
-            next();
-          },
-        ],
-        handler: owner.send.bind(owner),
-      },
-    ]);
+    registerRoutes(
+      app,
+      [
+        {
+          contract: { ...contract, path: '/ordered', request: z.object({ body: z.never() }) },
+          beforeValidation: [
+            (_request, _response, next) => {
+              calls.push('skip');
+              next('route');
+            },
+          ],
+          handler: unreachable,
+        },
+        {
+          contract: { ...contract, path: '/ordered', request: z.object({ body: z.strictObject({}) }) },
+          beforeValidation: [
+            (_request, _response, next) => {
+              calls.push('first guard');
+              next();
+            },
+            (_request, _response, next) => {
+              calls.push('second guard');
+              next();
+            },
+          ],
+          handler: owner.send,
+        },
+      ],
+      owner,
+    );
     app.use(httpErrorHandler);
 
     const result = await dispatch(app, '/ordered', {});

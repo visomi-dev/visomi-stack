@@ -15,6 +15,8 @@ import { createOpenApiDocument, documentationContract, homeContract } from './op
 
 export { createAuthentication } from './auth/runtime';
 export { authConfig } from './auth/shared/config';
+export { anonymous } from './auth/shared/authorization';
+export type { AuthorizationContext, AuthorizationRequirement, AuthorizationPolicy } from './auth/shared/authorization';
 
 export type AppOptions = {
   observability?: Observability;

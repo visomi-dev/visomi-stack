@@ -7,13 +7,17 @@ import type { SessionsController } from './controller';
 export function createSessionRouter(controller: SessionsController): Router {
   const router = Router();
 
-  registerRoutes(router, [
-    { contract: sessionsContracts.getSession, handler: controller.getSession.bind(controller) },
-    { contract: sessionsContracts.logout, handler: controller.logout.bind(controller) },
-    { contract: sessionsContracts.listSessions, handler: controller.listSessions.bind(controller) },
-    { contract: sessionsContracts.closeSession, handler: controller.closeSession.bind(controller) },
-    { contract: sessionsContracts.revokeOtherSessions, handler: controller.revokeOtherSessions.bind(controller) },
-  ]);
+  registerRoutes(
+    router,
+    [
+      { contract: sessionsContracts.getSession, handler: controller.getSession },
+      { contract: sessionsContracts.logout, handler: controller.logout },
+      { contract: sessionsContracts.listSessions, handler: controller.listSessions },
+      { contract: sessionsContracts.closeSession, handler: controller.closeSession },
+      { contract: sessionsContracts.revokeOtherSessions, handler: controller.revokeOtherSessions },
+    ],
+    controller,
+  );
 
   return router;
 }

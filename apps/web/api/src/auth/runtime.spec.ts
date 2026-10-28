@@ -9,14 +9,16 @@ import type { Pool } from 'pg';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createAuthentication } from './runtime';
+import type { AuthorizationPolicy } from './shared/authorization';
 import { authConfig } from './shared/config';
 
 afterEach(() => vi.restoreAllMocks());
 
-function fixture() {
+function fixture(authorize?: AuthorizationPolicy) {
   const pool = { query: vi.fn(), end: vi.fn() } as unknown as Pool;
   const database = { select: vi.fn() } as unknown as Database;
   const runtime = createAuthentication({
+    authorize,
     pool,
     database,
     config: authConfig({
@@ -219,4 +221,27 @@ it('exposes a full-session guard that rejects anonymous and unverified sessions'
       expect(next.mock.calls[0][0]).toBeInstanceOf(Error);
     }
   }
+});
+
+it('keeps injected authorization policies isolated between runtimes', async () => {
+  const first = fixture(() => true).runtime;
+  const second = fixture(() => false).runtime;
+  const request = {
+    user: {
+      id: 'synthetic',
+      version: 1,
+      authenticatedAt: Date.now(),
+      method: 'password',
+      level: 'full',
+      emailVerified: true,
+    },
+  } as Request;
+  const allowed = vi.fn();
+  const denied = vi.fn();
+
+  await first.authenticated(['documents.read'])(request, {} as Response, allowed);
+  await second.authorized(['documents.read'])(request, {} as Response, denied);
+
+  expect(allowed).toHaveBeenCalledWith();
+  expect(denied.mock.calls[0][0]).toMatchObject({ status: 403, code: 'permission_denied' });
 });

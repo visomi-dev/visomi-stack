@@ -160,7 +160,8 @@ router per authentication capability. Each capability keeps route registration i
 `router.ts`, an injectable controller class in `controller.ts`, business operations
 in `service.ts`, and the shared routing/validation/documentation contract in
 `contract.ts`. Routers receive their controller explicitly and pass arrays of contract/handler
-objects to `registerRoutes()`. Bound controller methods preserve `this`. Router construction has no process-wide state or
+objects to `registerRoutes()`, passing the controller once so the utility preserves
+`this` for every method. Router construction has no process-wide state or
 import-time resources.
 
 | Directory        | Responsibility                                                                                                                                       |
@@ -184,6 +185,61 @@ contains only runtime and router composition and their tests.
 SMTP, typed message content, rendering and MJML resources remain in
 `backend-shared`. Auth's shared notification adapter chooses a security notice and
 reports delivery success without owning the transport or duplicating mail content.
+
+## Authentication and authorization middleware
+
+The authentication runtime exposes reusable Express middleware for individual
+routes or whole routers:
+
+- `auth.anonymous` allows only requests without an identity. Unverified and
+  restricted identities are still signed in and are rejected.
+- `auth.authenticated()` requires a valid, full, email-verified principal. It also
+  accepts an array of required permission names or a synchronous/asynchronous
+  requirement predicate.
+- `auth.authorized(requirements)` checks additional requirements after a router's
+  global authentication guard. It retains a cheap full-principal prerequisite so
+  missing/misordered guards fail closed, without repeating Passport deserialization
+  or the database session load.
+
+```ts
+router.use(auth.authenticated());
+registerRoutes(
+  router,
+  [
+    {
+      contract: documentContracts.read,
+      handler: controller.read,
+      beforeValidation: [auth.authorized(['documents.read'])],
+    },
+  ],
+  controller,
+);
+
+anonymousRouter.use(auth.anonymous);
+// On a mixed router: beforeValidation: [auth.anonymous] or [auth.authenticated(...)].
+```
+
+The executable can supply `createAuthentication({ ...resources, authorize })`.
+`authorize(permission, { principal, request })` returns a boolean or promise for
+one permission in the current context. This is the integration point for ABAC;
+no roles, policy tables, policy engine or permission claims in serialized sessions
+are introduced. Every permission in an array must yield exactly `true`. Without
+a policy, nonempty permission arrays are denied. Decisions run again on each
+request, so policy changes are not hidden by session-level permission caching.
+
+A route can instead use a predicate:
+`auth.authenticated(({ principal, request }) => accessPolicy.allows(principal, request))`
+or `auth.authorized(...)` after a global guard. Predicates also require exactly
+`true`; exceptions become a controlled authorization error. Explicit public
+`HttpError` decisions retain their status/code. Arbitrary errors are sanitized as
+`503 authorization_unavailable`.
+
+Mount the owning runtime's session/Passport middleware first, including with
+inherited composition. Guards run before contract parsing, so predicates/policies
+must treat raw request values as untrusted and load authoritative resource
+attributes on the server. Domain services keep their transactional identity,
+method, proof and revocation checks; middleware is not a replacement for those
+invariants at mutation time. No policy or customer attributes enter telemetry.
 
 ## Validated contracts and OpenAPI
 

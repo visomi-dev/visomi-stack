@@ -21,6 +21,7 @@ import { RecoveryController } from './recovery/controller';
 import { authErrorHandler, createAuthRouter, saveSession } from './router';
 import type { AuthRuntime } from './runtime';
 import { SessionsController } from './sessions/controller';
+import { Authorization } from './shared/authorization';
 import { authConfig } from './shared/config';
 import { SecurityNotifications } from './shared/notifications';
 import { rateLimit } from './shared/security';
@@ -133,7 +134,9 @@ function routerFixture() {
     { provide: EmailIdentity, useValue: email },
     { provide: SecurityNotifications, useValue: notifications },
   ]);
+  const authorization = injector.get<Authorization>(Authorization);
   const auth = {
+    authenticated: authorization.authenticated.bind(authorization),
     controllers: {
       devices: injector.get<DevicesController>(DevicesController),
       email: injector.get<EmailController>(EmailController),

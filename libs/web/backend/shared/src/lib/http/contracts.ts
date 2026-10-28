@@ -107,9 +107,10 @@ export type RouteRegistration<S extends RequestSchema> = {
 export function registerRoutes<const Schemas extends readonly RequestSchema[]>(
   router: Router,
   routes: { readonly [K in keyof Schemas]: RouteRegistration<Schemas[K]> },
+  controller?: object,
 ): void {
   for (const route of routes) {
-    registerRoute(router, route.contract, route.handler, ...(route.beforeValidation ?? []));
+    registerRoute(router, route.contract, route.handler.bind(controller), ...(route.beforeValidation ?? []));
   }
 }
 

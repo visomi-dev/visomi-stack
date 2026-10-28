@@ -49,7 +49,13 @@ injector shares dependencies across capabilities and keeps separate runtimes
 isolated. `SessionResponses` handles HTTP authentication responses without a
 controller depending on the whole auth runtime. Controllers capture dependencies
 at construction and keep each request's state in method arguments/local variables.
-Cross-capability behavior is verified through the API integration suite.
+Cross-capability behavior is verified through the API integration suite. Reusable
+`anonymous`, `authenticated` and `authorized` middleware can guard a route or a
+router. Permission arrays are evaluated individually against an injected policy
+with the current principal/request context; predicates can check additional
+requirements. The boundary is ready for ABAC without introducing policy storage
+or adding static permission claims to sessions. Domain mutation checks remain
+transactional.
 
 `web-backend-shared` provides the route-contract adapter and OpenAPI generator.
 Each contract's Zod request object supplies native `z.input`/`z.output` types,

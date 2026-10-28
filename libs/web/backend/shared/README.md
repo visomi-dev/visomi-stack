@@ -68,20 +68,24 @@ to the handler, including transformed values. It does not mutate `request.query`
 or store per-request data on singleton services. The generic adapter uses the
 schema's actual output; no cast or caller-selected validated-data type is involved.
 
-`registerRoutes(router, routes)` accepts an ordered array of objects with `contract`,
+`registerRoutes(router, routes, controller?)` accepts an ordered array of objects with `contract`,
 `handler` and optional `beforeValidation` middleware. Each handler retains its own
 contract's inferred input, even when the array contains different request schemas.
-Bind controller methods to preserve their instance:
+Pass the controller once to bind all its methods inside the utility:
 
 ```ts
-registerRoutes(router, [
-  {
-    contract: devicesContracts.requestApproval,
-    handler: controller.requestApproval.bind(controller),
-    beforeValidation: [anonymousOnly],
-  },
-  { contract: devicesContracts.getApprovalStatus, handler: controller.getApprovalStatus.bind(controller) },
-]);
+registerRoutes(
+  router,
+  [
+    {
+      contract: devicesContracts.requestApproval,
+      handler: controller.requestApproval,
+      beforeValidation: [anonymous],
+    },
+    { contract: devicesContracts.getApprovalStatus, handler: controller.getApprovalStatus },
+  ],
+  controller,
+);
 ```
 
 Entries and their guards run in declaration order. Where a router has middleware

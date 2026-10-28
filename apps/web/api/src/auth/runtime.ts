@@ -31,9 +31,16 @@ import { SessionsController } from './sessions/controller';
 import { SessionResponses } from './sessions/response';
 import { Sessions } from './sessions/service';
 import { SessionStore } from './sessions/store';
+import {
+  AUTHORIZATION_POLICY,
+  Authorization,
+  anonymous,
+  denyPermissions,
+  type AuthorizationPolicy,
+} from './shared/authorization';
 import { AUTH_CONFIG, type AuthConfig } from './shared/config';
 import { Flows } from './shared/flows';
-import { readPrincipal, requireFull } from './shared/identity';
+import { readPrincipal } from './shared/identity';
 import { SecurityNotifications } from './shared/notifications';
 import { RequestLimitStore } from './shared/request-limit-store';
 import { TotpController } from './totp/controller';
@@ -49,6 +56,7 @@ export function createAuthentication(options: {
   pool: Pool;
   config: AuthConfig;
   mail?: MailTransport;
+  authorize?: AuthorizationPolicy;
 }) {
   const { database, pool, config } = options;
   const passport = new Passport();
@@ -57,6 +65,8 @@ export function createAuthentication(options: {
     { provide: DATABASE_POOL, useValue: pool },
     { provide: AUTH_CONFIG, useValue: config },
     { provide: MAIL_TRANSPORT, useValue: options.mail },
+    { provide: AUTHORIZATION_POLICY, useValue: options.authorize ?? denyPermissions },
+    Authorization,
     AuthMail,
     SessionStore,
     Flows,
@@ -83,6 +93,7 @@ export function createAuthentication(options: {
     PasskeysController,
   ]);
   const store = injector.get<SessionStore>(SessionStore);
+  const authorization = injector.get<Authorization>(Authorization);
   const owner = {};
 
   passport.serializeUser<Express.User>((user, done) =>
@@ -149,14 +160,10 @@ export function createAuthentication(options: {
     middleware,
     requireInitialized,
     requestLimits: injector.get<RequestLimitStore>(RequestLimitStore),
-    requireVerifiedSession: ((request, _response, next) => {
-      try {
-        requireFull(request.user);
-        next();
-      } catch (error) {
-        next(error);
-      }
-    }) satisfies RequestHandler,
+    anonymous,
+    authenticated: authorization.authenticated.bind(authorization),
+    authorized: authorization.authorized.bind(authorization),
+    requireVerifiedSession: authorization.authenticated(),
     passkeys: injector.get<Passkeys>(Passkeys),
     password: injector.get<Passwords>(Passwords),
     email: injector.get<EmailIdentity>(EmailIdentity),

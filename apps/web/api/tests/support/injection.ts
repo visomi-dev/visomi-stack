@@ -27,6 +27,7 @@ import { SessionsController } from '../../src/auth/sessions/controller';
 import { SessionResponses } from '../../src/auth/sessions/response';
 import { Sessions } from '../../src/auth/sessions/service';
 import { SessionStore } from '../../src/auth/sessions/store';
+import { AUTHORIZATION_POLICY, Authorization, denyPermissions } from '../../src/auth/shared/authorization';
 import { AUTH_CONFIG, type AuthConfig } from '../../src/auth/shared/config';
 import { Flows } from '../../src/auth/shared/flows';
 import { SecurityNotifications } from '../../src/auth/shared/notifications';
@@ -38,6 +39,8 @@ export function authInjector(database: Database, config: AuthConfig, overrides: 
   return createInjector([
     { provide: DATABASE, useValue: database },
     { provide: AUTH_CONFIG, useValue: config },
+    { provide: AUTHORIZATION_POLICY, useValue: denyPermissions },
+    Authorization,
     AuthMail,
     Passwords,
     EmailIdentity,

@@ -7,12 +7,16 @@ import type { TotpController } from './controller';
 export function createTotpRouter(controller: TotpController): Router {
   const router = Router();
 
-  registerRoutes(router, [
-    { contract: totpContracts.setupTotp, handler: controller.setupTotp.bind(controller) },
-    { contract: totpContracts.confirmTotp, handler: controller.confirmTotp.bind(controller) },
-    { contract: totpContracts.removeTotp, handler: controller.removeTotp.bind(controller) },
-    { contract: totpContracts.regenerateRecoveryCodes, handler: controller.regenerateRecoveryCodes.bind(controller) },
-  ]);
+  registerRoutes(
+    router,
+    [
+      { contract: totpContracts.setupTotp, handler: controller.setupTotp },
+      { contract: totpContracts.confirmTotp, handler: controller.confirmTotp },
+      { contract: totpContracts.removeTotp, handler: controller.removeTotp },
+      { contract: totpContracts.regenerateRecoveryCodes, handler: controller.regenerateRecoveryCodes },
+    ],
+    controller,
+  );
 
   return router;
 }
