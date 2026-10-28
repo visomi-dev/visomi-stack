@@ -1,6 +1,5 @@
 import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
-import type { z } from 'zod';
 
 import { SessionResponses } from '../sessions/response';
 import { Flows } from '../shared/flows';
@@ -8,7 +7,7 @@ import { requirePrincipal } from '../shared/http';
 import { SecurityNotifications } from '../shared/notifications';
 import { Factors } from '../totp/service';
 
-import { totpContracts } from './contract';
+import type { ConfirmTotpInput } from './contract';
 
 export class TotpController {
   private readonly factors = inject(Factors);
@@ -22,7 +21,7 @@ export class TotpController {
     response.status(201).json(setup);
   }
 
-  async confirmTotp(request: Request, response: Response, input: z.output<typeof totpContracts.confirmTotp.request>) {
+  async confirmTotp(request: Request, response: Response, input: ConfirmTotpInput) {
     const user = requirePrincipal(request);
     const id = input.body.enrollmentId;
 

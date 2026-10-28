@@ -191,13 +191,20 @@ Zod `4.6.6` and `zod-openapi` `6.0.2` are pinned dependencies. Each operation's
 contract defines its method, path, request schema, documented responses and
 security requirements. `registerRoute()` uses that same method/path and parses
 one Zod object containing the configured `body`, `params`, `query` and `headers`.
-The controller receives `result.data` with the schema's native output type:
+Each contract exports a named input type inferred from the schema's parsed output.
+The controller imports that type and receives `result.data`:
 
 ```ts
+// devices/contract.ts
+export type RequestApprovalInput = z.output<typeof devicesContracts.requestApproval.request>;
+
+// devices/controller.ts
+import type { RequestApprovalInput } from './contract';
+
 async requestApproval(
   request: Request,
   response: Response,
-  input: z.output<typeof devicesContracts.requestApproval.request>,
+  input: RequestApprovalInput,
 ) {
   const pending = await this.devices.request(request.sessionID, input.body.email);
   response.status(201).json(pending);
@@ -205,7 +212,7 @@ async requestApproval(
 ```
 
 Input and output may differ after normalization or coercion: use `z.input` for
-unparsed contract input and `z.output` inside controllers. No cast, request-wide
+unparsed contract input and `z.output` to define the exported controller input types. No cast, request-wide
 validated-data bag or second parse is needed. Request bodies remain strict at
 operation boundaries; parsed parameters/query/header values are passed separately
 without mutating Express's query getter. Domain authorization, proof lifetimes,

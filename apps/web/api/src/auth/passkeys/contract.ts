@@ -216,3 +216,9 @@ export const passkeysContracts = {
     },
   }),
 };
+
+export type RegistrationOptionsInput = z.output<typeof passkeysContracts.registrationOptions.request>;
+export type RegisterPasskeyInput = z.output<typeof passkeysContracts.registerPasskey.request>;
+export type AuthenticatePasskeyInput = z.output<typeof passkeysContracts.authenticatePasskey.request>;
+export type RenamePasskeyInput = z.output<typeof passkeysContracts.renamePasskey.request>;
+export type RevokePasskeyInput = z.output<typeof passkeysContracts.revokePasskey.request>;

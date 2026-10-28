@@ -97,3 +97,5 @@ export const totpContracts = {
     },
   }),
 };
+
+export type ConfirmTotpInput = z.output<typeof totpContracts.confirmTotp.request>;

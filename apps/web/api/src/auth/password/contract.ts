@@ -164,3 +164,12 @@ export const passwordContracts = {
     },
   }),
 };
+
+export type SignUpInput = z.output<typeof passwordContracts.signUp.request>;
+export type SignInInput = z.output<typeof passwordContracts.signIn.request>;
+export type VerifySignInInput = z.output<typeof passwordContracts.verifySignIn.request>;
+export type StartReauthenticationInput = z.output<typeof passwordContracts.startReauthentication.request>;
+export type CompleteReauthenticationInput = z.output<typeof passwordContracts.completeReauthentication.request>;
+export type AddPasswordInput = z.output<typeof passwordContracts.addPassword.request>;
+export type ChangePasswordInput = z.output<typeof passwordContracts.changePassword.request>;
+export type RemovePasswordInput = z.output<typeof passwordContracts.removePassword.request>;

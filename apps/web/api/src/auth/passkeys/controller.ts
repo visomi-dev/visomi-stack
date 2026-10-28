@@ -1,7 +1,6 @@
 import { inject } from '@visomi-stack/backend-shared';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 import type { Request, Response } from 'express';
-import type { z } from 'zod';
 
 import { EmailIdentity } from '../email/service';
 import { Passkeys } from '../passkeys/service';
@@ -10,7 +9,13 @@ import { sessionView } from '../shared/http';
 import { requireFull } from '../shared/identity';
 import { SecurityNotifications } from '../shared/notifications';
 
-import { passkeysContracts } from './contract';
+import type {
+  AuthenticatePasskeyInput,
+  RegisterPasskeyInput,
+  RegistrationOptionsInput,
+  RenamePasskeyInput,
+  RevokePasskeyInput,
+} from './contract';
 
 export class PasskeysController {
   private readonly passkeys = inject(Passkeys);
@@ -18,11 +23,7 @@ export class PasskeysController {
   private readonly notifications = inject(SecurityNotifications);
   private readonly responses = inject(SessionResponses);
 
-  async registrationOptions(
-    request: Request,
-    response: Response,
-    input: z.output<typeof passkeysContracts.registrationOptions.request>,
-  ) {
+  async registrationOptions(request: Request, response: Response, input: RegistrationOptionsInput) {
     if (request.user && Object.keys(input.body).length) {
       throw new HttpError(400, 'request_invalid');
     }
@@ -42,11 +43,7 @@ export class PasskeysController {
     response.json(result);
   }
 
-  async registerPasskey(
-    request: Request,
-    response: Response,
-    input: z.output<typeof passkeysContracts.registerPasskey.request>,
-  ) {
+  async registerPasskey(request: Request, response: Response, input: RegisterPasskeyInput) {
     if (request.user && !request.user.grantId) {
       requireFull(request.user);
     }
@@ -77,11 +74,7 @@ export class PasskeysController {
     response.json(result);
   }
 
-  async authenticatePasskey(
-    request: Request,
-    response: Response,
-    input: z.output<typeof passkeysContracts.authenticatePasskey.request>,
-  ) {
+  async authenticatePasskey(request: Request, response: Response, input: AuthenticatePasskeyInput) {
     const result = await this.passkeys.authenticate(
       request.sessionID,
       input.body.challengeId,
@@ -109,20 +102,12 @@ export class PasskeysController {
     response.json({ credentials: result });
   }
 
-  async renamePasskey(
-    request: Request,
-    response: Response,
-    input: z.output<typeof passkeysContracts.renamePasskey.request>,
-  ) {
+  async renamePasskey(request: Request, response: Response, input: RenamePasskeyInput) {
     await this.passkeys.rename(request.sessionID, request.user!, input.params.id, input.body.label);
     response.status(204).end();
   }
 
-  async revokePasskey(
-    request: Request,
-    response: Response,
-    input: z.output<typeof passkeysContracts.revokePasskey.request>,
-  ) {
+  async revokePasskey(request: Request, response: Response, input: RevokePasskeyInput) {
     await this.passkeys.revoke(request.sessionID, request.user!, input.params.id);
     response.status(204).end();
   }

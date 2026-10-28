@@ -101,3 +101,8 @@ export const googleContracts = {
     },
   }),
 };
+
+export type StartGoogleInput = z.output<typeof googleContracts.startGoogle.request>;
+export type CompleteGoogleInput = z.output<typeof googleContracts.completeGoogle.request>;
+export type VerifyGoogleEmailInput = z.output<typeof googleContracts.verifyGoogleEmail.request>;
+export type UnlinkGoogleInput = z.output<typeof googleContracts.unlinkGoogle.request>;

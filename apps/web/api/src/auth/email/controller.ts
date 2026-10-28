@@ -1,6 +1,5 @@
 import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
-import type { z } from 'zod';
 
 import { EmailIdentity } from '../email/service';
 import { SessionResponses } from '../sessions/response';
@@ -8,7 +7,13 @@ import { Flows } from '../shared/flows';
 import { requirePrincipal } from '../shared/http';
 import { SecurityNotifications } from '../shared/notifications';
 
-import { emailContracts } from './contract';
+import type {
+  RequestEmailChangeInput,
+  RequestVerificationInput,
+  ResendChallengeInput,
+  VerifyEmailChangeInput,
+  VerifyEmailInput,
+} from './contract';
 
 export class EmailController {
   private readonly email = inject(EmailIdentity);
@@ -16,11 +21,7 @@ export class EmailController {
   private readonly notifications = inject(SecurityNotifications);
   private readonly responses = inject(SessionResponses);
 
-  async requestVerification(
-    request: Request,
-    response: Response,
-    input: z.output<typeof emailContracts.requestVerification.request>,
-  ) {
+  async requestVerification(request: Request, response: Response, input: RequestVerificationInput) {
     const pending = await this.email.emailStart(
       request.sessionID,
       requirePrincipal(request),
@@ -30,7 +31,7 @@ export class EmailController {
     response.status(202).json(pending);
   }
 
-  async verifyEmail(request: Request, response: Response, input: z.output<typeof emailContracts.verifyEmail.request>) {
+  async verifyEmail(request: Request, response: Response, input: VerifyEmailInput) {
     const verified = await this.email.emailComplete(
       request.sessionID,
       requirePrincipal(request),
@@ -41,21 +42,13 @@ export class EmailController {
     await this.responses.send(request, response, verified.user);
   }
 
-  async requestEmailChange(
-    request: Request,
-    response: Response,
-    input: z.output<typeof emailContracts.requestEmailChange.request>,
-  ) {
+  async requestEmailChange(request: Request, response: Response, input: RequestEmailChangeInput) {
     const pending = await this.email.emailStart(request.sessionID, requirePrincipal(request), input.body.email, true);
 
     response.status(202).json(pending);
   }
 
-  async verifyEmailChange(
-    request: Request,
-    response: Response,
-    input: z.output<typeof emailContracts.verifyEmailChange.request>,
-  ) {
+  async verifyEmailChange(request: Request, response: Response, input: VerifyEmailChangeInput) {
     const changed = await this.email.emailComplete(
       request.sessionID,
       requirePrincipal(request),
@@ -68,11 +61,7 @@ export class EmailController {
     await this.responses.send(request, response, changed.user, { notificationSent });
   }
 
-  async resendChallenge(
-    request: Request,
-    response: Response,
-    input: z.output<typeof emailContracts.resendChallenge.request>,
-  ) {
+  async resendChallenge(request: Request, response: Response, input: ResendChallengeInput) {
     const pending = await this.flows.resend(request.sessionID, input.body.flowId);
 
     response.status(202).json(pending);

@@ -94,3 +94,5 @@ export const sessionsContracts = {
     responses: { ...commonErrors, 204: { description: 'Other sessions revoked after recent authentication.' } },
   }),
 };
+
+export type CloseSessionInput = z.output<typeof sessionsContracts.closeSession.request>;

@@ -132,3 +132,10 @@ export const recoveryContracts = {
     },
   }),
 };
+
+export type RequestRecoveryInput = z.output<typeof recoveryContracts.requestRecovery.request>;
+export type VerifyRecoveryInput = z.output<typeof recoveryContracts.verifyRecovery.request>;
+export type RequestResetInput = z.output<typeof recoveryContracts.requestReset.request>;
+export type CompleteResetInput = z.output<typeof recoveryContracts.completeReset.request>;
+export type StagePasswordInput = z.output<typeof recoveryContracts.stagePassword.request>;
+export type CompletePasswordInput = z.output<typeof recoveryContracts.completePassword.request>;

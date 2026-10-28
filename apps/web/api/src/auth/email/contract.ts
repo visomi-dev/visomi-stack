@@ -106,3 +106,9 @@ export const emailContracts = {
     },
   }),
 };
+
+export type RequestVerificationInput = z.output<typeof emailContracts.requestVerification.request>;
+export type VerifyEmailInput = z.output<typeof emailContracts.verifyEmail.request>;
+export type RequestEmailChangeInput = z.output<typeof emailContracts.requestEmailChange.request>;
+export type VerifyEmailChangeInput = z.output<typeof emailContracts.verifyEmailChange.request>;
+export type ResendChallengeInput = z.output<typeof emailContracts.resendChallenge.request>;

@@ -1,34 +1,32 @@
 import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
-import type { z } from 'zod';
 
 import { Recovery } from '../recovery/service';
 import { SessionResponses } from '../sessions/response';
 import { requirePrincipal } from '../shared/http';
 import { SecurityNotifications } from '../shared/notifications';
 
-import { recoveryContracts } from './contract';
+import type {
+  CompletePasswordInput,
+  CompleteResetInput,
+  RequestRecoveryInput,
+  RequestResetInput,
+  StagePasswordInput,
+  VerifyRecoveryInput,
+} from './contract';
 
 export class RecoveryController {
   private readonly recovery = inject(Recovery);
   private readonly notifications = inject(SecurityNotifications);
   private readonly responses = inject(SessionResponses);
 
-  async stagePassword(
-    request: Request,
-    response: Response,
-    input: z.output<typeof recoveryContracts.stagePassword.request>,
-  ) {
+  async stagePassword(request: Request, response: Response, input: StagePasswordInput) {
     const pending = await this.recovery.password(request.sessionID, requirePrincipal(request), input.body.password);
 
     response.status(202).json(pending);
   }
 
-  async completePassword(
-    request: Request,
-    response: Response,
-    input: z.output<typeof recoveryContracts.completePassword.request>,
-  ) {
+  async completePassword(request: Request, response: Response, input: CompletePasswordInput) {
     const user = await this.recovery.passwordComplete(
       request.sessionID,
       requirePrincipal(request),
@@ -41,31 +39,19 @@ export class RecoveryController {
     await this.responses.send(request, response, user, { notificationSent });
   }
 
-  async requestRecovery(
-    request: Request,
-    response: Response,
-    input: z.output<typeof recoveryContracts.requestRecovery.request>,
-  ) {
+  async requestRecovery(request: Request, response: Response, input: RequestRecoveryInput) {
     const pending = await this.recovery.request(request.sessionID, input.body.email, false, request.user);
 
     response.status(202).json(pending);
   }
 
-  async requestReset(
-    request: Request,
-    response: Response,
-    input: z.output<typeof recoveryContracts.requestReset.request>,
-  ) {
+  async requestReset(request: Request, response: Response, input: RequestResetInput) {
     const pending = await this.recovery.request(request.sessionID, input.body.email, true, request.user);
 
     response.status(202).json(pending);
   }
 
-  async verifyRecovery(
-    request: Request,
-    response: Response,
-    input: z.output<typeof recoveryContracts.verifyRecovery.request>,
-  ) {
+  async verifyRecovery(request: Request, response: Response, input: VerifyRecoveryInput) {
     const recovered = await this.recovery.verify(
       request.sessionID,
       input.body.flowId,
@@ -80,11 +66,7 @@ export class RecoveryController {
     await this.responses.send(request, response, user, { notificationSent });
   }
 
-  async completeReset(
-    request: Request,
-    response: Response,
-    input: z.output<typeof recoveryContracts.completeReset.request>,
-  ) {
+  async completeReset(request: Request, response: Response, input: CompleteResetInput) {
     const recovered = await this.recovery.verify(
       request.sessionID,
       input.body.flowId,

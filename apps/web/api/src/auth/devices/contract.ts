@@ -134,3 +134,11 @@ export const devicesContracts = {
     },
   }),
 };
+
+export type RequestApprovalInput = z.output<typeof devicesContracts.requestApproval.request>;
+export type GetApprovalStatusInput = z.output<typeof devicesContracts.getApprovalStatus.request>;
+export type ReviewApprovalInput = z.output<typeof devicesContracts.reviewApproval.request>;
+export type ApproveInput = z.output<typeof devicesContracts.approve.request>;
+export type DenyInput = z.output<typeof devicesContracts.deny.request>;
+export type CancelApprovalInput = z.output<typeof devicesContracts.cancelApproval.request>;
+export type ConsumeApprovalInput = z.output<typeof devicesContracts.consumeApproval.request>;

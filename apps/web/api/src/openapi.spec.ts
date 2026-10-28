@@ -8,7 +8,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import type { z } from 'zod';
 
 import { createApp } from './app';
-import { devicesContracts } from './auth/devices/contract';
+import { devicesContracts, type RequestApprovalInput } from './auth/devices/contract';
 import { DevicesController } from './auth/devices/controller';
 import { createDeviceRouter } from './auth/devices/router';
 import { Devices } from './auth/devices/service';
@@ -84,7 +84,8 @@ describe('authentication contracts and injectable HTTP controllers', () => {
   });
 
   it('passes normalized, inferred contract output to a class controller before service invocation', async () => {
-    expectTypeOf<z.output<typeof devicesContracts.requestApproval.request>['body']['email']>().toEqualTypeOf<string>();
+    expectTypeOf<RequestApprovalInput>().toEqualTypeOf<z.output<typeof devicesContracts.requestApproval.request>>();
+    expectTypeOf<RequestApprovalInput>().toEqualTypeOf<Parameters<DevicesController['requestApproval']>[2]>();
     expectTypeOf<Parameters<DevicesController['requestApproval']>[2]['body']['email']>().toEqualTypeOf<string>();
     const request = vi.fn().mockResolvedValue({
       requestId: '11111111-1111-4111-8111-111111111111',

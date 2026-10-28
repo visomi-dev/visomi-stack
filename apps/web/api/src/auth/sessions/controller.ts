@@ -2,14 +2,13 @@ import { randomBytes } from 'node:crypto';
 
 import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
-import type { z } from 'zod';
 
 import { SessionResponses } from '../sessions/response';
 import { Sessions } from '../sessions/service';
 import { AUTH_CONFIG, type AuthConfig } from '../shared/config';
 import { requirePrincipal, saveSession, sessionView } from '../shared/http';
 
-import { sessionsContracts } from './contract';
+import type { CloseSessionInput } from './contract';
 
 export class SessionsController {
   private readonly sessions = inject(Sessions);
@@ -22,11 +21,7 @@ export class SessionsController {
     response.json({ sessions });
   }
 
-  async closeSession(
-    request: Request,
-    response: Response,
-    input: z.output<typeof sessionsContracts.closeSession.request>,
-  ) {
+  async closeSession(request: Request, response: Response, input: CloseSessionInput) {
     const self = await this.sessions.closeSessions(request.sessionID, requirePrincipal(request), input.params.id);
 
     if (self) {
