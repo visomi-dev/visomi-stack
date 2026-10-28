@@ -243,6 +243,9 @@ export default [
         'error',
         { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
         { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
+        // Separate the import block from code without splitting imports or their attached comments.
+        { blankLine: 'always', prev: 'import', next: '*' },
+        { blankLine: 'any', prev: 'import', next: 'import' },
         { blankLine: 'always', prev: 'export', next: 'expression' },
         { blankLine: 'always', prev: functionOrClassDeclaration, next: functionOrClassDeclaration },
         { blankLine: 'always', prev: '*', next: awaitedStatement },

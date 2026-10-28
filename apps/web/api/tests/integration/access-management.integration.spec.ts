@@ -7,6 +7,7 @@ import { generate } from 'otplib';
 import { expect, it } from 'vitest';
 
 import { authenticationFixture, password } from './support/auth';
+
 const f = authenticationFixture();
 
 it('can finish a pending password signup from a new browser and rejects a conflicting verified owner', async () => {

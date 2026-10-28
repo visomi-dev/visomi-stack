@@ -7,6 +7,7 @@ import { generate } from 'otplib';
 import { describe, expect, it } from 'vitest';
 
 import { authenticationFixture, password } from './support/auth';
+
 const f = authenticationFixture();
 
 describe('authentication failures and method lifecycle', () => {
