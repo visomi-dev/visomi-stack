@@ -2,7 +2,13 @@
 // @nx-target-name: serve
 import { createServer } from 'node:http';
 
-import { createDatabase, type DatabaseResource } from '@visomi-stack/backend-shared';
+import {
+  createDatabase,
+  createSmtp,
+  smtpConfig,
+  type MailTransport,
+  type DatabaseResource,
+} from '@visomi-stack/backend-shared';
 import { initializeObservability } from '@visomi-stack/web-backend-shared';
 
 import packageJson from '../package.json' with { type: 'json' };
@@ -16,6 +22,7 @@ const observability = initializeObservability({
   environment: process.env.NODE_ENV,
 });
 let database: DatabaseResource | undefined;
+let mail: MailTransport | undefined;
 let auth: AuthRuntime | undefined;
 let startupFailed = false;
 let application: ReturnType<typeof createApp> | undefined;
@@ -26,10 +33,15 @@ try {
       origin: process.env.AUTH_ORIGIN!,
       rpId: process.env.AUTH_RP_ID!,
       secret: process.env.SESSION_SECRET!,
+      googleClientId: process.env.GOOGLE_AUTH_CLIENT_ID || undefined,
+      totpKey: process.env.AUTH_TOTP_ENCRYPTION_KEY || undefined,
     });
 
+    const smtp = smtpConfig(process.env);
+
+    mail = smtp ? createSmtp(smtp) : undefined;
     database = createDatabase(process.env.DATABASE_URL, () => observability.event('runtime.failed'));
-    auth = createAuthentication({ database: database.db, pool: database.pool, config });
+    auth = createAuthentication({ database: database.db, pool: database.pool, config, mail });
   }
 
   application = createApp({
@@ -61,8 +73,15 @@ async function stop(exitCode: number): Promise<void> {
   const drain = setTimeout(() => server.closeAllConnections(), 3000);
 
   await new Promise<void>((resolve) => server.close(() => resolve()));
+
   clearTimeout(drain);
   let databaseClosed = true;
+
+  try {
+    mail?.close();
+  } catch {
+    databaseClosed = false;
+  }
 
   try {
     await database?.close();

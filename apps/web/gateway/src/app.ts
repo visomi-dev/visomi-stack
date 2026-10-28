@@ -1,6 +1,6 @@
 import {
-  httpObservability,
   httpErrorHandler,
+  httpObservability,
   securityHeaders,
   type Observability,
 } from '@visomi-stack/web-backend-shared';
@@ -39,6 +39,7 @@ export function createGatewayApp(options: {
   app.use(
     '/api',
     options.api.createApp({
+      basePath: '/api',
       authMode: 'inherited',
       errorMode: 'inherited',
       helmetMode: 'inherited',

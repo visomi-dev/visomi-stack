@@ -17,7 +17,9 @@ async function startStandalone(directory: string, runDirectory: string) {
   const probe = createServer();
 
   await mkdir(directory, { recursive: true });
+
   await new Promise<void>((resolveReady) => probe.listen(0, '127.0.0.1', resolveReady));
+
   const address = probe.address();
 
   if (!address || typeof address === 'string') {
@@ -25,6 +27,7 @@ async function startStandalone(directory: string, runDirectory: string) {
   }
 
   await new Promise<void>((resolveClosed) => probe.close(() => resolveClosed()));
+
   const child = spawn(
     process.execPath,
     [
@@ -55,6 +58,7 @@ async function startStandalone(directory: string, runDirectory: string) {
 async function closeStandalone(child: ReturnType<typeof spawn>, exited: Promise<unknown>) {
   if (child.exitCode === null && child.signalCode === null) {
     child.kill('SIGKILL');
+
     await exited;
   }
 }
@@ -84,6 +88,7 @@ test('the compiled executable delivers pending telemetry within its shutdown lim
         return telemetry.logs.some((log) => log.event === 'runtime.started');
       })
       .toBe(true);
+
     const active = await pool.query(
       "SELECT count(*)::int AS count FROM pg_stat_activity WHERE application_name = 'visomi_e2e_shutdown'",
     );
@@ -93,6 +98,7 @@ test('the compiled executable delivers pending telemetry within its shutdown lim
     const id = response.headers()['x-request-id'];
 
     expect(response.status()).toBe(200);
+
     await expect
       .poll(async () => {
         const telemetry = await telemetryFiles.read(directory);
@@ -100,6 +106,7 @@ test('the compiled executable delivers pending telemetry within its shutdown lim
         return telemetry.pending.some((entry) => entry.file === 'spans.jsonl');
       })
       .toBe(true);
+
     const beforeShutdown = await telemetryFiles.read(directory);
 
     expect(beforeShutdown.spans).toHaveLength(0);
@@ -126,6 +133,7 @@ test('the compiled executable delivers pending telemetry within its shutdown lim
         return closed.rows[0].count;
       })
       .toBe(0);
+
     expect(exitResult[0]).toBe(0);
     expect(performance.now() - started).toBeLessThan(5000);
     expect(errors).toBe('');
@@ -136,6 +144,7 @@ test('the compiled executable delivers pending telemetry within its shutdown lim
     expect((telemetry.spans[0].context as { spanId: string }).spanId).toBe(completion[0].spanId);
   } finally {
     await closeStandalone(child, exited);
+
     await pool.end();
   }
 });

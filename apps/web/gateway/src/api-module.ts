@@ -1,4 +1,4 @@
-import type { Database } from '@visomi-stack/backend-shared';
+import type { Database, MailTransport } from '@visomi-stack/backend-shared';
 import type { Observability } from '@visomi-stack/web-backend-shared';
 import type { RequestHandler } from 'express';
 import type { Pool } from 'pg';
@@ -8,13 +8,25 @@ export type EmbeddedAuthentication = { middleware: RequestHandler[] };
 export type ApiModule = {
   createApp(options: {
     observability?: Observability;
+    basePath?: string;
     auth?: EmbeddedAuthentication;
     authMode: 'inherited';
     errorMode: 'inherited';
     helmetMode: 'inherited';
   }): RequestHandler;
-  authConfig(input: { origin: string; rpId: string; secret: string }): unknown;
-  createAuthentication(input: { database: Database; pool: Pool; config: unknown }): EmbeddedAuthentication;
+  authConfig(input: {
+    origin: string;
+    rpId: string;
+    secret: string;
+    googleClientId?: string;
+    totpKey?: string;
+  }): unknown;
+  createAuthentication(input: {
+    database: Database;
+    pool: Pool;
+    config: unknown;
+    mail?: MailTransport;
+  }): EmbeddedAuthentication;
 };
 
 export function resolveApiModule(namespace: unknown): ApiModule {

@@ -19,6 +19,7 @@ test('concurrent requests own distinct correlation and ignore external trace con
   expect(responses.map((response) => response.status())).toEqual(Array(8).fill(200));
   expect(new Set(ids).size).toBe(8);
   expect(ids).not.toContain('12345678-1234-4234-8234-123456789abc');
+
   await expect
     .poll(async () => {
       const telemetry = await telemetryFiles.read();
@@ -26,11 +27,13 @@ test('concurrent requests own distinct correlation and ignore external trace con
       return telemetry.logs.filter((log) => ids.includes(log.requestId as string)).length;
     })
     .toBe(8);
+
   const telemetry = await telemetryFiles.read();
   const completions = telemetry.logs.filter((log) => ids.includes(log.requestId as string));
 
   expect(new Set(completions.map((log) => log.traceId)).size).toBe(8);
   expect(completions.map((log) => log.traceId)).not.toContain('f'.repeat(32));
+
   await expect
     .poll(async () => {
       const exported = await telemetryFiles.read();

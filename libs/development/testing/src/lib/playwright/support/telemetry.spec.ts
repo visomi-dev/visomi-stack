@@ -37,9 +37,13 @@ describe('isolated telemetry file reader', () => {
 
   it('reads JSONL records and flattens exported span batches from the selected destination', async () => {
     await writeFile(join(directory, 'logs.jsonl'), '{"event":"runtime.started"}\n{"event":"http.request"}\n');
+
     await writeFile(join(directory, 'spans.jsonl'), '[{"name":"http.request"}]\n[]\n');
+
     await writeFile(join(directory, 'metrics.jsonl'), '{"scopeMetrics":[]}\n');
+
     await writeFile(join(directory, 'pending.jsonl'), '{"file":"spans.jsonl"}\n');
+
     const telemetry = await readTelemetry(directory);
 
     expect(telemetry).toEqual({
@@ -52,6 +56,7 @@ describe('isolated telemetry file reader', () => {
 
   it('surfaces invalid exporter output instead of silently losing coverage', async () => {
     await writeFile(join(directory, 'spans.jsonl'), '{invalid');
+
     await expect(readTelemetry(directory)).rejects.toThrow(SyntaxError);
   });
 });

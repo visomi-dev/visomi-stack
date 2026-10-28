@@ -1,3 +1,4 @@
+import { DATABASE_POOL, inject } from '@visomi-stack/backend-shared';
 import connectPgSimple from 'connect-pg-simple';
 import session from 'express-session';
 import type { Pool } from 'pg';
@@ -8,7 +9,9 @@ const PgStore = connectPgSimple(session);
 export class SessionStore extends PgStore {
   private readonly pool: Pool;
 
-  constructor(pool: Pool) {
+  constructor() {
+    const pool = inject<Pool>(DATABASE_POOL);
+
     super({
       pool,
       tableName: 'auth_sessions',

@@ -41,7 +41,9 @@ afterEach(() => {
 describe('owned E2E process teardown', () => {
   it('does nothing without an isolated run directory', async () => {
     vi.stubEnv('VISOMI_E2E_TELEMETRY_DIR', undefined);
+
     await teardown();
+
     expect(readFile).not.toHaveBeenCalled();
     expect(signal).not.toHaveBeenCalled();
     expect(stopTestPostgres).not.toHaveBeenCalled();
@@ -49,6 +51,7 @@ describe('owned E2E process teardown', () => {
 
   it('stops the watcher and app before cleaning the recorded database', async () => {
     await teardown();
+
     expect(signal.mock.calls).toEqual([
       [owner.parentPid, 'SIGTERM'],
       [owner.pid, 'SIGTERM'],
@@ -68,7 +71,9 @@ describe('owned E2E process teardown', () => {
 
       return JSON.stringify(file === 'owner.json' ? cluster : owner);
     });
+
     await teardown();
+
     expect(signal).toHaveBeenCalledTimes(file === 'owner.json' ? 0 : 3);
     expect(stopTestPostgres).toHaveBeenCalledTimes(file === 'owner.json' ? 1 : 0);
   });
@@ -77,13 +82,17 @@ describe('owned E2E process teardown', () => {
     signal.mockImplementation(() => {
       throw Object.assign(new Error('synthetic_exited'), { code: 'ESRCH' });
     });
+
     await teardown();
+
     expect(stopTestPostgres).toHaveBeenCalledOnce();
   });
 
   it('bounds graceful termination and kills only the recorded application if it stays alive', async () => {
     signal.mockReturnValue(true);
+
     await teardown();
+
     expect(delay).toHaveBeenCalledTimes(60);
     expect(signal).toHaveBeenLastCalledWith(owner.pid, 'SIGKILL');
     expect(stopTestPostgres).toHaveBeenCalledOnce();
@@ -96,7 +105,9 @@ describe('owned E2E process teardown', () => {
       throw failure;
     });
     vi.mocked(stopTestPostgres).mockRejectedValue(new Error('synthetic_database_failure'));
+
     await expect(teardown()).rejects.toBe(failure);
+
     expect(stopTestPostgres).toHaveBeenCalledOnce();
   });
 
@@ -112,14 +123,18 @@ describe('owned E2E process teardown', () => {
 
         return JSON.stringify(file === 'owner.json' ? cluster : owner);
       });
+
       await expect(teardown()).rejects.toBe(failure);
+
       expect(stopTestPostgres).toHaveBeenCalledTimes(file === 'owner.json' ? 1 : 0);
     },
   );
 
   it('reports malformed owner data while still attempting database cleanup', async () => {
     vi.mocked(readFile).mockResolvedValueOnce('{invalid');
+
     await expect(teardown()).rejects.toBeInstanceOf(SyntaxError);
+
     expect(stopTestPostgres).toHaveBeenCalledOnce();
   });
 });

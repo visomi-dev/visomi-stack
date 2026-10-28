@@ -17,6 +17,7 @@ afterEach(async () => {
   vi.unstubAllEnvs();
   if (directory) {
     await rm(directory, { recursive: true, force: true });
+
     directory = undefined;
   }
 });
@@ -27,6 +28,7 @@ describe('shared Playwright telemetry fixture', () => {
     const use = vi.fn();
 
     await expect(fixture({}, use)).rejects.toThrow('isolated_telemetry_directory_required');
+
     expect(use).not.toHaveBeenCalled();
   });
 
@@ -37,7 +39,9 @@ describe('shared Playwright telemetry fixture', () => {
     vi.stubEnv('VISOMI_E2E_TELEMETRY_DIR', directory);
     const use = vi.fn(async (telemetry) => {
       expect(telemetry.directory).toBe(directory);
+
       await writeFile(join(temporary, 'logs.jsonl'), '{"event":"runtime.started"}\n');
+
       const first = await telemetry.read();
       const other = await telemetry.read(join(temporary, 'not-yet-exported'));
 
@@ -46,6 +50,7 @@ describe('shared Playwright telemetry fixture', () => {
     });
 
     await fixture({}, use);
+
     expect(use).toHaveBeenCalledOnce();
   });
 });

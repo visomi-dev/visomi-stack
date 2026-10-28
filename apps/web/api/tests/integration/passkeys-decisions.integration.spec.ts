@@ -7,9 +7,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { authenticator } from '@visomi-stack/dev-testing';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 
-import { authConfig } from '../../src/auth/config';
-import { Passkeys } from '../../src/auth/passkeys';
-import { SessionStore } from '../../src/auth/session-store';
+import { authService, sessionStore } from '../support/injection';
+import { authConfig } from '../../src/auth/shared/config';
+import { Passkeys } from '../../src/auth/passkeys/service';
 
 vi.mock('@simplewebauthn/server', async (original) => {
   const actual = await original<typeof import('@simplewebauthn/server')>();
@@ -36,17 +36,18 @@ beforeAll(async () => {
 
   postgres = isolated;
   resource = createDatabase(postgres.url);
-  passkeys = new Passkeys(resource.db, config);
+  passkeys = authService(Passkeys, resource.db, config);
 }, 120000);
 
 afterAll(async () => {
   await resource?.close();
+
   await postgres?.stop();
 });
 
 async function session() {
   const sid = randomUUID();
-  const store = new SessionStore(resource.pool);
+  const store = sessionStore(resource.pool);
 
   await new Promise<void>((resolve, reject) =>
     store.set(sid, { cookie: { maxAge: 60000 } } as never, (error) => (error ? reject(error) : resolve())),
@@ -72,6 +73,7 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
     const f = await registered();
 
     await passkeys.rename(f.sid, f.user, f.user.credentialId, 'Synthetic renamed passkey');
+
     const listed = await passkeys.list(f.user);
 
     expect(listed).toEqual([
@@ -99,15 +101,18 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
         status: 404,
         code: 'credential_not_found',
       });
+
       await expect(passkeys.revoke(first.sid, first.user, id)).rejects.toMatchObject({
         status: 404,
         code: 'credential_not_found',
       });
     }
+
     await expect(passkeys.revoke(first.sid, first.user, first.user.credentialId)).rejects.toMatchObject({
       status: 409,
-      code: 'last_credential',
+      code: 'last_access_method',
     });
+
     const [unchanged] = await resource.db.select().from(credentials).where(eq(credentials.id, other.user.credentialId));
 
     expect(unchanged.label).toBe('Synthetic first passkey');
@@ -118,6 +123,7 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
     const f = await registered();
 
     await resource.db.update(credentials).set({ revokedAt: new Date() }).where(eq(credentials.id, f.user.credentialId));
+
     await expect(passkeys.rename(f.sid, f.user, f.user.credentialId, 'Denied')).rejects.toMatchObject({
       status: 401,
       code: 'authentication_required',
@@ -139,6 +145,7 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
         other.user,
       ),
     ).rejects.toMatchObject({ code: 'challenge_invalid' });
+
     const remaining = await resource.db.select().from(challenges).where(eq(challenges.id, pending.challengeId));
 
     expect(remaining).toHaveLength(0);
@@ -161,6 +168,7 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
       .update(credentials)
       .set({ rpId: 'other.example.test' })
       .where(eq(credentials.id, f.user.credentialId));
+
     await expect(
       passkeys.authenticate(
         f.sid,
@@ -177,6 +185,7 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
     const device = authenticator();
 
     vi.mocked(verifyRegistrationResponse).mockResolvedValueOnce({ verified: false });
+
     await expect(
       passkeys.register(
         sid,
@@ -185,6 +194,7 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
         'Denied',
       ),
     ).rejects.toMatchObject({ code: 'passkey_invalid' });
+
     const remaining = await resource.db.select().from(challenges).where(eq(challenges.id, pending.challengeId));
 
     expect(remaining).toHaveLength(0);
@@ -195,6 +205,7 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
     const pending = await passkeys.authenticationOptions(f.sid);
 
     vi.mocked(verifyAuthenticationResponse).mockResolvedValueOnce({ verified: false } as never);
+
     await expect(
       passkeys.authenticate(
         f.sid,
@@ -202,6 +213,7 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
         f.device.authenticate(pending.options.challenge, config.origin, config.rpId, f.user.id),
       ),
     ).rejects.toMatchObject({ code: 'passkey_invalid' });
+
     const [unchanged] = await resource.db.select().from(credentials).where(eq(credentials.id, f.user.credentialId));
 
     expect(unchanged.counter).toBe(0);

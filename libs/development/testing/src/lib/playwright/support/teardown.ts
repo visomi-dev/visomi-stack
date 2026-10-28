@@ -45,6 +45,7 @@ async function stopApplication() {
     } catch {
       return;
     }
+
     await delay(100);
   }
   signal(owner.pid, 'SIGKILL');

@@ -30,6 +30,31 @@
     "test-ci": {
       "executor": "nx:noop",
       "dependsOn": ["test"]
+    },
+    "emails-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx libs/backend/shared/tools/mail/build-templates.ts"
+      },
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/src/lib/mail/templates/*.mjml",
+        "{projectRoot}/tools/mail/build-templates.ts",
+        {
+          "externalDependencies": ["mjml", "prettier"]
+        },
+        "{workspaceRoot}/.prettierrc.json"
+      ],
+      "outputs": ["{projectRoot}/src/lib/mail/templates.generated.ts"]
+    },
+    "emails-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx libs/backend/shared/tools/mail/build-templates.ts --check"
+      }
+    },
+    "test": {
+      "dependsOn": ["emails-build"]
     }
   }
 }

@@ -14,7 +14,7 @@ apps/
     gateway/      # web-gateway: ESM host mounting the compiled API at /api
 libs/
   backend/
-    shared/       # backend-shared: infrastructure independent of HTTP, including Drizzle
+    shared/       # backend-shared: HTTP-independent database and email capabilities
   web/backend/
     shared/       # web-backend-shared: shared infrastructure and observability
 ```
@@ -23,10 +23,48 @@ libs/
 an Express application without opening a listener or initializing telemetry.
 `main.ts` owns standalone telemetry initialization, listening, SIGINT/SIGTERM
 handling, HTTP draining, and bounded telemetry shutdown. The public `GET /` endpoint returns a static JSON greeting. The authentication
-capability provides passkey signup/sign-in, session inspection/logout, and owned
-credential management under `/auth`, backed by PostgreSQL. Unknown routes and
+capability provides passkey and password signup/sign-in, email verification,
+Google account unification, TOTP and backup codes, restricted recovery/device
+enrollment, and method/session management under `/auth`, backed by PostgreSQL. Unknown routes and
 application errors return fixed responses. See the [API guide](../apps/web/api/README.md)
 for the schema, migration commands and managed/inherited ownership contract.
+
+`backend-shared` exposes the pinned `injection-js` DI surface and database/SMTP
+resource tokens. Auth composes a graph per runtime, with property-injected services
+and explicit value providers. Observability uses the same DI surface only when its
+owner initializes it. Backend projects disable decorators and metadata emission;
+DI does not load a metadata polyfill. The HTTP factories retain explicit arguments,
+and executable resource ownership and the existing observability registry are
+preserved. No request-wide ambient injector is introduced.
+
+Auth is organized by capability under `auth/password`, `email`, `passkeys`,
+`google`, `totp`, `recovery`, `devices`, `sessions` and `methods`. Each owns its
+`router.ts`, an injectable `controller.ts` class, `service.ts`, `contract.ts` and
+capability tests.
+Password hashing, email normalization, TOTP secrets and session storage stay with
+their owning capability. Configuration, identity/authorization invariants, shared
+proofs, HTTP helpers, request limits and notification orchestration live in
+`auth/shared`. Runtime/router composition stays at the auth root. The scoped
+injector shares dependencies across capabilities and keeps separate runtimes
+isolated. `SessionResponses` handles HTTP authentication responses without a
+controller depending on the whole auth runtime. Controllers capture dependencies
+at construction and keep each request's state in method arguments/local variables.
+Cross-capability behavior is verified through the API integration suite. Reusable
+`anonymous`, `authenticated` and `authorized` middleware can guard a route or a
+router. Permission arrays are evaluated individually against an injected policy
+with the current principal/request context; predicates can check additional
+requirements. The boundary is ready for ABAC without introducing policy storage
+or adding static permission claims to sessions. Domain mutation checks remain
+transactional.
+
+`web-backend-shared` provides the route-contract adapter and OpenAPI generator.
+Each contract's Zod request object supplies native `z.input`/`z.output` types,
+runtime validation and documentation. The controller receives parsed output
+without casts. Operation method/path metadata is shared with route registration;
+response schemas describe the existing wire format. The API assembles its document
+without resources at `/openapi.json`; its compiled gateway mount exposes
+`/api/openapi.json` with an explicit `/api` server base. Raw validation errors are
+translated to controlled public codes and never captured by telemetry.
 
 `libs/backend/shared/drizzle.config.ts` configures Drizzle at the library root.
 `src/lib/database/` owns domain schemas and one migration history for all backend
@@ -35,6 +73,12 @@ authentication schema through the shared library. Database initialization remain
 explicit: each executable creates and closes its own pool and supplies it to the
 modules it composes. Imports do not open connections or run migrations; separate
 processes share PostgreSQL state, not JavaScript resources.
+
+`libs/backend/shared/src/lib/mail/` owns SMTP delivery, typed authentication mail
+content, MJML templates, escaped HTML/plain-text rendering and generated resources.
+Its `emails-build` target runs before the API build. Auth decides when to send
+messages and translates mail failures to HTTP; the executables create and close
+the injected transport.
 
 The API's Rolldown build preserves named `app` and `main` entries with stable
 `app.js` and `main.js` filenames, CommonJS output, external runtime dependencies,
@@ -49,7 +93,7 @@ exports without changing that API contract. Preserve both complete sibling outpu
 directories and their declared runtime dependencies.
 
 `createGatewayApp()` composes Express without starting resources. Gateway
-`main.ts` owns the listener, telemetry and optional database pool; it creates the
+`main.ts` owns the listener, telemetry, optional SMTP transport and database pool; it creates the
 API's auth runtime and installs its middleware before mounting at `/api` with
 `authMode: inherited`. Helmet policy and HTTP error classes/handling live in
 `web-backend-shared/src/lib/http/`. The API also delegates headers and error

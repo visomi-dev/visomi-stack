@@ -1,0 +1,1 @@
+<mjml><mj-head><mj-title>Account security</mj-title></mj-head><mj-body background-color="#f5f5f5"><mj-section><mj-column background-color="#ffffff"><mj-text font-size="24px">{{title}}</mj-text><mj-text>{{description}}</mj-text><mj-text>If you did not make this change, recover your account from the sign-in page.</mj-text></mj-column></mj-section></mj-body></mjml>

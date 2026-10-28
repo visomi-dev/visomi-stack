@@ -4,6 +4,10 @@ services:
     build:
       target: test-runtime
     environment:
+      SMTP_HOST: 127.0.0.1
+      SMTP_PORT: '2525'
+      SMTP_FROM: auth@example.test
+      SMTP_ALLOW_INSECURE_LOCAL: 'true'
       NODE_ENV: test
       AUTH_TRUST_PROXY: ''
       NODE_OPTIONS: --require /workspace/${VISOMI_TEST_APP_ROOT}/e2e/support/telemetry-preload.cjs

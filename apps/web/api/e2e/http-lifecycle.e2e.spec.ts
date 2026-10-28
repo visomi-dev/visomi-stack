@@ -12,6 +12,7 @@ test('exports one completion, span and metric contribution per successful or fai
   expect(success.status()).toBe(200);
   expect(body).toEqual({ message: 'Hello API' });
   expect(missing.status()).toBe(404);
+
   await expect
     .poll(async () => {
       const telemetry = await telemetryFiles.read();
@@ -22,6 +23,7 @@ test('exports one completion, span and metric contribution per successful or fai
       ).length;
     })
     .toBe(2);
+
   const telemetry = await telemetryFiles.read();
   const completions = telemetry.logs.filter((log) => ids.includes(log.requestId as string));
 

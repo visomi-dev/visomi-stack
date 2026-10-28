@@ -1,5 +1,7 @@
+import { randomUUID } from 'node:crypto';
+
 import type { APIRequestContext } from '@playwright/test';
-import { authenticator } from '@visomi-stack/dev-testing';
+import { authenticator, readMailCode } from '@visomi-stack/dev-testing';
 
 import { expect, authTest as test } from './fixtures/http';
 
@@ -18,7 +20,12 @@ async function session(request: APIRequestContext) {
 
 async function enroll(request: APIRequestContext, token: string, device = authenticator()) {
   const headers = { origin, 'x-csrf-token': token };
-  const begin = await request.post('/auth/passkeys/registration/options', { headers, data: {} });
+  const state = await session(request);
+  const email = `${randomUUID()}@example.test`;
+  const begin = await request.post('/auth/passkeys/registration/options', {
+    headers,
+    data: state.authenticated ? {} : { email },
+  });
   const options = await begin.json();
 
   expect(begin.status()).toBe(200);
@@ -27,9 +34,21 @@ async function enroll(request: APIRequestContext, token: string, device = authen
     headers,
     data: { challengeId: options.challengeId, response, label: marker },
   });
-  const result = await verify.json();
+  let result = await verify.json();
 
   expect(verify.status()).toBe(201);
+  if (result.access === 'unverified') {
+    const code = await readMailCode(email);
+    const verified = await request.post('/auth/email/verify', {
+      headers: { origin, 'x-csrf-token': result.csrfToken },
+      data: { flowId: result.flowId, code },
+    });
+
+    expect(verified.status()).toBe(200);
+    const result1 = await verified.json();
+
+    result = result1;
+  }
 
   return { device, result, response, challengeId: options.challengeId };
 }
@@ -104,7 +123,7 @@ test('rejects anonymous access, CSRF, identity injection and invalid WebAuthn or
   expect(injected.status()).toBe(400);
   const begin = await request.post('/auth/passkeys/registration/options', {
     headers: { origin, 'x-csrf-token': state.csrfToken },
-    data: {},
+    data: { email: `${randomUUID()}@example.test` },
   });
   const pending = await begin.json();
   const response = authenticator().register(pending.options.challenge, `https://${marker}.invalid`, rpId);
@@ -174,7 +193,10 @@ test('rejects expired and foreign-session challenges at the HTTP boundary', asyn
 }) => {
   const state = await session(request);
   const headers = { origin, 'x-csrf-token': state.csrfToken };
-  const begin = await request.post('/auth/passkeys/registration/options', { headers, data: {} });
+  const begin = await request.post('/auth/passkeys/registration/options', {
+    headers,
+    data: { email: `${randomUUID()}@example.test` },
+  });
   const pending = await begin.json();
   const device = authenticator();
   const response = device.register(pending.options.challenge, origin, rpId);
@@ -196,6 +218,7 @@ test('rejects expired and foreign-session challenges at the HTTP boundary', asyn
     "UPDATE auth_challenges SET created_at = now() - interval '5 minutes', expires_at = now() - interval '1 second' WHERE id = $1",
     [pending.challengeId],
   );
+
   const expired = await request.post('/auth/passkeys/registration/verify', {
     headers,
     data: { challengeId: pending.challengeId, response },
@@ -224,6 +247,7 @@ test('exports no credential, session, identity or SQL material after success and
 
   expect(rejected.status()).toBe(503);
   expect(rejectedBody).toEqual({ error: 'authentication_unavailable' });
+
   await expect
     .poll(async () => {
       const telemetry = await telemetryFiles.read();
@@ -232,6 +256,7 @@ test('exports no credential, session, identity or SQL material after success and
       return telemetry.spans.some((span) => (span.context as { spanId: string }).spanId === log?.spanId);
     })
     .toBe(true);
+
   const telemetry = await telemetryFiles.read();
   const serialized = JSON.stringify(telemetry);
 
@@ -255,4 +280,65 @@ test('rate-limits anonymous session creation even through implicit HEAD routes',
 
   expect(statuses.filter((status) => status === 200)).toHaveLength(60);
   expect(statuses.filter((status) => status === 429)).toHaveLength(1);
+});
+
+test('verifies a password signup and requires its second factor through the compiled host', async ({
+  request,
+  telemetry: telemetryFiles,
+}) => {
+  const email = `${randomUUID()}@example.test`;
+  const password = 'Synthetic e2e password 42!';
+  const initial = await request.get('/auth/session');
+  const state = await initial.json();
+  const signup = await request.post('/auth/password/sign-up', {
+    headers: { origin, 'x-csrf-token': state.csrfToken },
+    data: { email, password },
+  });
+  const pending = await signup.json();
+
+  expect(signup.status()).toBe(201);
+  expect(pending.access).toBe('unverified');
+  const denied = await request.get('/auth/methods');
+
+  expect(denied.status()).toBe(403);
+  const signupCode = await readMailCode(email);
+  const verification = await request.post('/auth/email/verify', {
+    headers: { origin, 'x-csrf-token': pending.csrfToken },
+    data: { flowId: pending.flowId, code: signupCode },
+  });
+  const verified = await verification.json();
+
+  expect(verification.status()).toBe(200);
+  expect(verified.access).toBe('full');
+  const logout = await request.post('/auth/logout', {
+    headers: { origin, 'x-csrf-token': verified.csrfToken },
+    data: {},
+  });
+
+  expect(logout.status()).toBe(204);
+  const next = await request.get('/auth/session');
+  const anonymous = await next.json();
+  const headers = { origin, 'x-csrf-token': anonymous.csrfToken };
+  const start = await request.post('/auth/password/sign-in', { headers, data: { email, password } });
+  const challenge = await start.json();
+
+  expect(start.status()).toBe(202);
+  const stillDenied = await request.get('/auth/methods');
+
+  expect(stillDenied.status()).toBe(401);
+  const loginCode = await readMailCode(email);
+  const login = await request.post('/auth/password/verify', {
+    headers,
+    data: { flowId: challenge.flowId, factor: { kind: 'email', code: loginCode } },
+  });
+  const signedIn = await login.json();
+
+  expect(login.status()).toBe(200);
+  expect(signedIn).toMatchObject({ access: 'full', method: 'password', user: { id: verified.user.id } });
+  const telemetry = await telemetryFiles.read();
+  const exported = JSON.stringify(telemetry);
+
+  for (const secret of [email, password, signupCode, loginCode, verified.user.id]) {
+    expect(exported).not.toContain(secret);
+  }
 });

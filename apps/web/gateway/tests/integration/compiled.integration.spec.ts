@@ -1,16 +1,18 @@
 import { execFile, spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
-import { mkdtemp, mkdir, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import type { AddressInfo } from 'node:net';
 import { createServer } from 'node:net';
 import { join, resolve } from 'node:path';
-import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
-import { randomUUID } from 'node:crypto';
+import { promisify } from 'node:util';
 
 import { createDatabase } from '@visomi-stack/backend-shared';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { authenticator } from '@visomi-stack/dev-testing';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
+import { SMTPServer } from 'smtp-server';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadApi } from '../../src/api-module';
 
@@ -20,20 +22,49 @@ const output = join(root, 'dist/apps/web/gateway');
 let directory: string;
 let postgres: Awaited<ReturnType<typeof testPostgres>>;
 let probe: ReturnType<typeof createDatabase>;
+let smtp: SMTPServer;
+let smtpPort: number;
+const messages: string[] = [];
 
 beforeAll(async () => {
   await mkdir(join(root, 'tmp/api-e2e'), { recursive: true });
+
   const temporary = await mkdtemp(join(root, 'tmp/api-e2e/gateway-'));
   const cluster = await testPostgres(join(temporary, 'postgres.json'));
 
   directory = temporary;
   postgres = cluster;
   probe = createDatabase(postgres.url);
+  smtp = new SMTPServer({
+    disabledCommands: ['AUTH', 'STARTTLS'],
+    logger: false,
+    onData(stream, _session, callback) {
+      let raw = '';
+
+      stream.on('data', (chunk) => {
+        raw += String(chunk);
+      });
+      stream.on('end', () => {
+        messages.push(raw);
+        callback();
+      });
+    },
+  });
+
+  await new Promise<void>((ready) => smtp.listen(0, '127.0.0.1', ready));
+
+  smtpPort = ((smtp as unknown as { server: ReturnType<typeof createServer> }).server.address() as AddressInfo).port;
 }, 120000);
 
 afterAll(async () => {
+  if (smtp) {
+    await new Promise<void>((ready) => smtp.close(ready));
+  }
+
   await probe?.close();
+
   await postgres?.stop();
+
   if (directory) {
     await rm(directory, { recursive: true, force: true });
   }
@@ -43,6 +74,7 @@ async function launch(databaseUrl?: string) {
   const portProbe = createServer();
 
   await new Promise<void>((ready) => portProbe.listen(0, '127.0.0.1', ready));
+
   const address = portProbe.address();
 
   if (!address || typeof address === 'string') {
@@ -50,6 +82,7 @@ async function launch(databaseUrl?: string) {
   }
 
   await new Promise<void>((closed) => portProbe.close(() => closed()));
+
   const url = `http://127.0.0.1:${address.port}`;
   const child = spawn(process.execPath, [join(output, 'main.js')], {
     cwd: directory,
@@ -59,6 +92,10 @@ async function launch(databaseUrl?: string) {
       NODE_ENV: 'test',
       ...(databaseUrl
         ? {
+            SMTP_HOST: '127.0.0.1',
+            SMTP_PORT: String(smtpPort),
+            SMTP_FROM: 'auth@example.test',
+            SMTP_ALLOW_INSECURE_LOCAL: 'true',
             DATABASE_URL: databaseUrl,
             AUTH_ORIGIN: url,
             AUTH_RP_ID: '127.0.0.1',
@@ -79,6 +116,7 @@ async function launch(databaseUrl?: string) {
   const cleanup = async () => {
     if (child.exitCode === null && child.signalCode === null) {
       child.kill('SIGKILL');
+
       await exit;
     }
   };
@@ -165,6 +203,10 @@ describe('compiled ESM gateway and embedded API', () => {
     expect(metadata.exports).toEqual({ '.': './app.js', './app': './app.js' });
     expect(metadata.dependencies.pg).toBe('8.23.1');
     expect(metadata.dependencies['drizzle-orm']).toBe('1.0.0-rc.5');
+    expect(metadata.dependencies['injection-js']).toBe('2.6.1');
+    expect(metadata.dependencies['express-rate-limit']).toBe('8.5.2');
+    expect(metadata.dependencies.zod).toBe('4.6.6');
+    expect(metadata.dependencies['zod-openapi']).toBe('6.0.2');
     expect(metadata.dependencies.helmet).toBe('8.3.0');
     const mapFile = await readFile(join(output, 'main.js.map'), 'utf8');
     const map = JSON.parse(mapFile);
@@ -177,6 +219,12 @@ describe('compiled ESM gateway and embedded API', () => {
     const gateway = await launch();
 
     try {
+      const specification = await fetch(gateway.url + '/api/openapi.json');
+      const document = await specification.json();
+
+      expect(specification.status).toBe(200);
+      expect(document.servers).toEqual([{ url: '/api' }]);
+      expect(document.paths['/auth/session'].get.operationId).toBe('sessions_getSession');
       const paths = ['/api/', '/api/auth/session', '/api/missing', '/'];
       const responses = await Promise.all(paths.map((path) => fetch(gateway.url + path)));
 
@@ -196,7 +244,7 @@ describe('compiled ESM gateway and embedded API', () => {
       const requests = result.events.filter((event) => event.event === 'http.request');
 
       expect(result.code).toBe(0);
-      expect(requests).toHaveLength(paths.length);
+      expect(requests).toHaveLength(paths.length + 1);
       expect(result.events.every((event) => event.service === 'web-gateway')).toBe(true);
       expect(result.events.filter((event) => event.event === 'runtime.started')).toHaveLength(1);
       expect(result.events.filter((event) => event.event === 'runtime.stopped')).toHaveLength(1);
@@ -256,7 +304,7 @@ describe('compiled ESM gateway and embedded API', () => {
       token = csrfToken;
       expect(forbidden.status).toBe(403);
       expect(forbidden.body).toEqual({ error: 'csrf_invalid' });
-      const signup = await request('POST', '/passkeys/registration/options', {});
+      const signup = await request('POST', '/passkeys/registration/options', { email: `${randomUUID()}@example.test` });
       const originalCookie = cookie;
       const registered = await request('POST', '/passkeys/registration/verify', {
         challengeId: signup.body.challengeId,
@@ -266,6 +314,11 @@ describe('compiled ESM gateway and embedded API', () => {
       expect(registered.status).toBe(201);
       expect(cookie).not.toBe(originalCookie);
       token = registered.body.csrfToken;
+      const code = messages[messages.length - 1].match(/\b\d{6}\b/)![0];
+      const verified = await request('POST', '/email/verify', { flowId: registered.body.flowId, code });
+
+      expect(verified.status).toBe(200);
+      token = verified.body.csrfToken;
       const listed = await request('GET', '/passkeys');
 
       expect(listed.status).toBe(200);

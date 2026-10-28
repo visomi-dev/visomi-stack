@@ -2,22 +2,40 @@ import { IncomingMessage, ServerResponse } from 'node:http';
 import { Socket } from 'node:net';
 
 import { AuthHttpError, HttpError, httpErrorHandler } from '@visomi-stack/web-backend-shared';
-import express from 'express';
 import type { Request, Response } from 'express';
+import express from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { authConfig } from './config';
-import { authErrorHandler, authRouter, saveSession } from './router';
+import { storage } from '../../tests/support/auth-state';
+import { authInjector } from '../../tests/support/injection';
+
+import { DevicesController } from './devices/controller';
+import { EmailController } from './email/controller';
+import { EmailIdentity } from './email/service';
+import { GoogleController } from './google/controller';
+import { MethodsController } from './methods/controller';
+import { PasskeysController } from './passkeys/controller';
+import { Passkeys } from './passkeys/service';
+import { PasswordController } from './password/controller';
+import { RecoveryController } from './recovery/controller';
+import { authErrorHandler, createAuthRouter, saveSession } from './router';
 import type { AuthRuntime } from './runtime';
-import { rateLimit } from './security';
+import { SessionsController } from './sessions/controller';
+import { Authorization } from './shared/authorization';
+import { authConfig } from './shared/config';
+import { SecurityNotifications } from './shared/notifications';
+import { rateLimit } from './shared/security';
+import { TotpController } from './totp/controller';
 
 describe('authentication HTTP boundary', () => {
   it('saves the session before returning and sanitizes failed persistence', async () => {
     const save = vi.fn((callback: (error?: Error) => void) => callback());
 
     await saveSession({ session: { save } } as unknown as Request);
+
     expect(save).toHaveBeenCalledOnce();
     save.mockImplementation((callback) => callback(new Error('SYNTHETIC_PRIVATE_SQL')));
+
     await expect(saveSession({ session: { save } } as unknown as Request)).rejects.toMatchObject({
       code: 'session_unavailable',
     });
@@ -51,8 +69,8 @@ describe('authentication HTTP boundary', () => {
   });
 });
 
-vi.mock('./security', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./security')>();
+vi.mock('./shared/security', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./shared/security')>();
 
   return {
     ...actual,
@@ -64,8 +82,29 @@ beforeEach(() => vi.clearAllMocks());
 
 const challengeId = '11111111-1111-4111-8111-111111111111';
 const credentialId = '22222222-2222-4222-8222-222222222222';
-const user = { id: '33333333-3333-4333-8333-333333333333', credentialId, authenticatedAt: 123456 };
-const response = { id: 'synthetic_public_key', response: {} };
+const user = {
+  id: '33333333-3333-4333-8333-333333333333',
+  credentialId,
+  method: 'passkey' as const,
+  methodId: credentialId,
+  version: 1,
+  level: 'full' as const,
+  email: 'synthetic@example.test',
+  emailVerified: true,
+  authenticatedAt: 123456,
+};
+const response = {
+  id: 'synthetic_public_key',
+  rawId: 'synthetic_public_key',
+  type: 'public-key',
+  clientExtensionResults: {},
+  response: {
+    clientDataJSON: 'synthetic',
+    attestationObject: 'synthetic',
+    authenticatorData: 'synthetic',
+    signature: 'synthetic',
+  },
+};
 
 function routerFixture() {
   const config = authConfig({
@@ -86,11 +125,42 @@ function routerFixture() {
   const destroy = vi.fn((callback: (error?: Error) => void) => callback());
   const logIn = vi.fn((_user: Express.User, callback: (error?: Error) => void) => callback());
   const requireInitialized = vi.fn((_request: Request, _response: Response, next: (error?: Error) => void) => next());
-  const database = {};
-  const auth = { config, passkeys, requireInitialized, database } as unknown as AuthRuntime;
+  const database = storage().db;
+  const requestLimits = {};
+  const notifications = { notify: vi.fn().mockResolvedValue(true) };
+  const email = {
+    emailStart: vi.fn().mockResolvedValue({ flowId: challengeId }),
+  };
+  const injector = authInjector(database, config, [
+    { provide: Passkeys, useValue: passkeys },
+    { provide: EmailIdentity, useValue: email },
+    { provide: SecurityNotifications, useValue: notifications },
+  ]);
+  const authorization = injector.get<Authorization>(Authorization);
+  const auth = {
+    authenticated: authorization.authenticated.bind(authorization),
+    controllers: {
+      devices: injector.get<DevicesController>(DevicesController),
+      email: injector.get<EmailController>(EmailController),
+      google: injector.get<GoogleController>(GoogleController),
+      methods: injector.get<MethodsController>(MethodsController),
+      passkeys: injector.get<PasskeysController>(PasskeysController),
+      password: injector.get<PasswordController>(PasswordController),
+      recovery: injector.get<RecoveryController>(RecoveryController),
+      sessions: injector.get<SessionsController>(SessionsController),
+      totp: injector.get<TotpController>(TotpController),
+    },
+    config,
+    passkeys,
+    requireInitialized,
+    database,
+    email,
+    notifications,
+    requestLimits,
+  } as unknown as AuthRuntime;
   const app = express();
 
-  app.use('/auth', authRouter(auth), authErrorHandler);
+  app.use('/auth', createAuthRouter(auth), authErrorHandler);
   app.use(httpErrorHandler);
 
   const dispatch = (
@@ -116,8 +186,11 @@ function routerFixture() {
       sessionID: 'synthetic-session',
       session: { csrf: 'synthetic_csrf', save, destroy },
       user: options.user,
-      isAuthenticated: () => Boolean(options.user),
-      logIn,
+      isAuthenticated: () => Boolean(request.user),
+      logIn: (user: Express.User, callback: (error?: Error) => void) => {
+        request.user = user;
+        logIn(user, callback);
+      },
     });
 
     return new Promise<{ status: number; body: unknown; headers: ReturnType<ServerResponse['getHeaders']> }>(
@@ -142,14 +215,121 @@ function routerFixture() {
     );
   };
 
-  return { dispatch, passkeys, database, save, destroy, logIn, requireInitialized };
+  return { dispatch, passkeys, database, save, destroy, logIn, requireInitialized, requestLimits };
 }
 
 describe('authentication router decisions and delegation', () => {
+  it('keeps separately composed runtimes isolated when their routes run concurrently', async () => {
+    const first = routerFixture();
+    const second = routerFixture();
+
+    first.passkeys.list.mockResolvedValue([{ id: credentialId, label: 'First runtime' }]);
+    second.passkeys.list.mockResolvedValue([{ id: credentialId, label: 'Second runtime' }]);
+    const [firstResponse, secondResponse] = await Promise.all([
+      first.dispatch('GET', '/passkeys', undefined, { user }),
+      second.dispatch('GET', '/passkeys', undefined, { user }),
+    ]);
+
+    expect(firstResponse.body).toEqual({ credentials: [{ id: credentialId, label: 'First runtime' }] });
+    expect(secondResponse.body).toEqual({ credentials: [{ id: credentialId, label: 'Second runtime' }] });
+    expect(first.passkeys.list).toHaveBeenCalledExactlyOnceWith(user);
+    expect(second.passkeys.list).toHaveBeenCalledExactlyOnceWith(user);
+  });
+
+  it('reports disabled providers and rejects unsupported Google intent', async () => {
+    const fixture = routerFixture();
+    const providers = await fixture.dispatch('GET', '/providers');
+
+    expect(providers.body).toMatchObject({ google: { enabled: false, clientId: null }, totp: false });
+    const invalid = await fixture.dispatch('POST', '/google/start', { intent: 'unsupported' });
+
+    expect(invalid.status).toBe(403);
+    const pending = await fixture.dispatch(
+      'POST',
+      '/email/request',
+      { email: 'synthetic@example.test' },
+      { user: { ...user, email: null, level: 'unverified', emailVerified: false } },
+    );
+
+    expect(pending.status).toBe(202);
+  });
+
+  it('guards protected operations before validation or controller delegation', async () => {
+    const fixture = routerFixture();
+    const operations = [
+      ['POST', '/reauth/password/start'],
+      ['POST', '/reauth/password/complete'],
+      ['POST', '/password/add'],
+      ['POST', '/password/change'],
+      ['POST', '/password/remove'],
+      ['POST', '/email/change/request'],
+      ['POST', '/email/change/verify'],
+      ['POST', '/device-approval/review'],
+      ['POST', '/device-approval/approve'],
+      ['POST', '/device-approval/deny'],
+      ['DELETE', `/google/${credentialId}`],
+      ['GET', '/methods'],
+      ['GET', '/sessions'],
+      ['DELETE', `/sessions/${credentialId}`],
+      ['POST', '/sessions/revoke-others'],
+      ['POST', '/totp/setup'],
+      ['POST', '/totp/confirm'],
+      ['DELETE', '/totp'],
+      ['POST', '/recovery-codes/regenerate'],
+    ];
+
+    for (const [method, path] of operations) {
+      const missing = await fixture.dispatch(method, path, {});
+      const unverified = await fixture.dispatch(
+        method,
+        path,
+        {},
+        { user: { ...user, level: 'unverified', emailVerified: false } },
+      );
+
+      expect(missing.body, path).toEqual({ error: 'authentication_required' });
+      expect(missing.status, path).toBe(401);
+      expect(unverified.body, path).toEqual({ error: 'account_verification_required' });
+      expect(unverified.status, path).toBe(403);
+    }
+    for (const path of ['/email/request', '/email/verify', '/recovery/password', '/recovery/password/complete']) {
+      const missing = await fixture.dispatch('POST', path, {});
+
+      expect(missing.status, path).toBe(401);
+    }
+  });
+
+  it('selects Google access middleware by intent while leaving malformed requests to the contract', async () => {
+    const fixture = routerFixture();
+
+    for (const intent of [undefined, null, 'login']) {
+      const anonymous = await fixture.dispatch('POST', '/google/start', { intent });
+      const signedIn = await fixture.dispatch('POST', '/google/start', { intent }, { user });
+
+      expect(anonymous.status).toBe(404);
+      expect(signedIn.body).toEqual({ error: 'anonymous_session_required' });
+    }
+    for (const intent of ['link', 'reauth']) {
+      const missing = await fixture.dispatch('POST', '/google/start', { intent });
+      const signedIn = await fixture.dispatch('POST', '/google/start', { intent }, { user });
+
+      expect(missing.status).toBe(401);
+      expect(signedIn.status).toBe(404);
+    }
+    const missingBody = await fixture.dispatch('POST', '/google/start');
+    const invalidIntent = await fixture.dispatch('POST', '/google/start', { intent: 42 });
+
+    expect(missingBody.status).toBe(400);
+    expect(invalidIntent.body).toEqual({ error: 'intent_invalid' });
+  });
+
   it('uses the runtime database as the only rate-limit source', () => {
     const fixture = routerFixture();
 
-    expect(rateLimit).toHaveBeenCalledExactlyOnceWith(fixture.database, expect.objectContaining({ rpId: 'localhost' }));
+    expect(rateLimit).toHaveBeenCalledExactlyOnceWith(
+      fixture.requestLimits,
+      expect.objectContaining({ rpId: 'localhost' }),
+    );
   });
 
   it('allows an initialized anonymous session and returns only public session fields', async () => {
@@ -157,8 +337,12 @@ describe('authentication router decisions and delegation', () => {
     const anonymous = await fixture.dispatch('GET', '/session');
     const authenticated = await fixture.dispatch('GET', '/session', undefined, { user });
 
-    expect(anonymous.body).toEqual({ authenticated: false, user: null, csrfToken: 'synthetic_csrf' });
-    expect(authenticated.body).toEqual({ authenticated: true, user: { id: user.id }, csrfToken: 'synthetic_csrf' });
+    expect(anonymous.body).toMatchObject({ authenticated: false, user: null, csrfToken: 'synthetic_csrf' });
+    expect(authenticated.body).toMatchObject({
+      authenticated: true,
+      user: { id: user.id },
+      csrfToken: 'synthetic_csrf',
+    });
     expect(anonymous.headers['cache-control']).toBe('no-store');
     expect(fixture.save).toHaveBeenCalledTimes(2);
   });
@@ -185,7 +369,7 @@ describe('authentication router decisions and delegation', () => {
 
     expect(result.status).toBe(200);
     expect(fixture.passkeys[operation]).toHaveBeenCalledExactlyOnceWith(
-      ...(operation === 'registrationOptions' ? ['synthetic-session', user] : ['synthetic-session']),
+      ...(operation === 'registrationOptions' ? ['synthetic-session', user, undefined] : ['synthetic-session']),
     );
     expect(fixture.logIn).not.toHaveBeenCalled();
   });
@@ -210,7 +394,7 @@ describe('authentication router decisions and delegation', () => {
       expect(fixture.logIn).toHaveBeenCalledWith(user, expect.any(Function));
       expect(fixture.save).toHaveBeenCalledOnce();
       expect(result.status).toBe(201);
-      expect(result.body).toEqual({ authenticated: true, user: { id: user.id }, csrfToken: expect.any(String) });
+      expect(result.body).toMatchObject({ authenticated: true, user: { id: user.id }, csrfToken: expect.any(String) });
       expect((result.body as { csrfToken: string }).csrfToken).not.toBe('synthetic_csrf');
     },
   );
@@ -219,14 +403,20 @@ describe('authentication router decisions and delegation', () => {
     const fixture = routerFixture();
     const result = await fixture.dispatch('POST', '/passkeys/authentication/verify', { challengeId, response });
 
-    expect(fixture.passkeys.authenticate).toHaveBeenCalledExactlyOnceWith('synthetic-session', challengeId, response);
+    expect(fixture.passkeys.authenticate).toHaveBeenCalledExactlyOnceWith(
+      'synthetic-session',
+      challengeId,
+      response,
+      undefined,
+    );
     expect(fixture.logIn).toHaveBeenCalledWith(user, expect.any(Function));
     expect(result.status).toBe(200);
-    expect(result.body).toEqual({ authenticated: true, user: { id: user.id }, csrfToken: expect.any(String) });
+    expect(result.body).toMatchObject({ authenticated: true, user: { id: user.id }, csrfToken: expect.any(String) });
   });
 
   it.each([
     ['POST', '/passkeys/registration/options', { userId: user.id }],
+    ['POST', '/passkeys/registration/options', { email: 'synthetic@example.test' }],
     ['POST', '/passkeys/authentication/options', []],
     ['POST', '/passkeys/registration/verify', { challengeId: 'invalid', response }],
     ['POST', '/passkeys/registration/verify', { challengeId, response, label: ' ' }],
@@ -284,6 +474,19 @@ describe('authentication router decisions and delegation', () => {
     expect(fixture.passkeys.revoke).toHaveBeenCalledExactlyOnceWith('synthetic-session', user, credentialId);
     expect(renamed.status).toBe(204);
     expect(revoked.status).toBe(204);
+  });
+
+  it('rejects switching the authenticated subject during a passkey reauthentication', async () => {
+    const fixture = routerFixture();
+    const result = await fixture.dispatch(
+      'POST',
+      '/passkeys/authentication/verify',
+      { challengeId, response },
+      { user: { ...user, id: '44444444-4444-4444-8444-444444444444' } },
+    );
+
+    expect(result.status).toBe(403);
+    expect(fixture.logIn).not.toHaveBeenCalled();
   });
 
   it('revokes the session and clears its cookie on logout', async () => {

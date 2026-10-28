@@ -120,6 +120,14 @@
     "test-ci": {
       "executor": "nx:noop",
       "dependsOn": ["test"]
+    },
+    "build": {
+      "dependsOn": [
+        {
+          "projects": ["backend-shared"],
+          "target": "emails-build"
+        }
+      ]
     }
   }
 }

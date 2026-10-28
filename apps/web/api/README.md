@@ -1,124 +1,361 @@
 # API authentication and persistence
 
-The baseline is PR #2. Its observability runtime, import-safe `createApp`, stable CommonJS `app.js`/`main.js` exports, and test boundaries are retained.
+Authentication uses Express 5, Passport, PostgreSQL-backed sessions, Drizzle and
+SimpleWebAuthn. The application factory is import-safe. The standalone executable
+and gateway each own their database pool, SMTP transport, listener and shutdown.
 
-## Dependencies and database commands
+## Configuration and ownership
 
-Drizzle belongs to the shared backend database module at `libs/backend/shared/src/lib/database/`, not to the API. The library-level `libs/backend/shared/drizzle.config.ts` sits alongside `src/`; the database module owns the domain schema in `schema-auth.ts`, the schema discovery barrel `schema.ts`, and the single `migrations/` history. API authentication consumes `authSchema` through `@visomi-stack/backend-shared`; other backend modules use the same shared definitions and migration history.
+Supply configuration to the owning executable; imports do not load environment
+files, connect resources, migrate schemas or create seeds.
 
-Runtime dependencies are pinned in both workspace and API manifests: Drizzle ORM `1.0.0-rc.5`, `pg` `8.23.1`, SimpleWebAuthn server `14.0.3`, Passport `0.7.0`, express-session `1.19.0`, and connect-pg-simple `10.0.0`. Drizzle Kit is pinned to `1.0.0-rc.5`. Generated runtime package metadata includes the external dependencies.
+| Variable                     | Purpose                                                                                         |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`               | PostgreSQL connection. Without it, public routes remain available and `/auth` returns 503.      |
+| `AUTH_ORIGIN`                | Exact browser origin, without a trailing slash; HTTPS except loopback development.              |
+| `AUTH_RP_ID`                 | WebAuthn relying party host or permitted parent domain.                                         |
+| `SESSION_SECRET`             | Shared high-entropy session/HMAC secret, at least 32 bytes.                                     |
+| `AUTH_TRUST_PROXY`           | Optional explicit proxy addresses/CIDRs, comma separated.                                       |
+| `SMTP_HOST`, `SMTP_PORT`     | SMTP server; port defaults to 587.                                                              |
+| `SMTP_SECURE`                | `true` for implicit TLS, usually port 465; otherwise STARTTLS is required.                      |
+| `SMTP_FROM`                  | Sender address.                                                                                 |
+| `SMTP_USER`, `SMTP_PASSWORD` | Optional paired SMTP credentials.                                                               |
+| `SMTP_ALLOW_INSECURE_LOCAL`  | Test/development exception for loopback hosts only.                                             |
+| `GOOGLE_AUTH_CLIENT_ID`      | Optional Google Identity Services client ID.                                                    |
+| `AUTH_TOTP_ENCRYPTION_KEY`   | Optional dedicated 32-byte key encoded as 43 base64url characters. Required to enroll/use TOTP. |
 
-From the workspace root:
+Keep the TOTP key stable while enrollments exist. It is independent of the session
+secret; replacing it requires an explicit re-enrollment/key migration procedure.
+Changing the session secret also changes challenge, backup-code and rate-limit HMAC
+verifiers and invalidates existing sessions/proofs. Do not rotate either casually.
 
-```sh
-pnpm install --frozen-lockfile
-pnpm nx run backend-shared:db-generate -- --name describe-schema-change
-DATABASE_URL=postgresql://localhost/visomi_stack_dev pnpm nx run backend-shared:db-migrate
-pnpm nx serve web-api
-```
+SMTP construction does not connect. The owning executable closes its transport
+and database after draining HTTP work, then flushes telemetry. Missing mail
+configuration never substitutes an in-memory production transport. Email-dependent
+operations fail closed; public recovery responses intentionally hide delivery and
+account-existence differences. Security changes report `notificationSent` when
+notification delivery is attempted after the committed change.
 
-The database URL above is an example for a separately created local development database, not a test target or an instruction to migrate an existing database. Supply `DATABASE_URL`, `AUTH_ORIGIN`, `AUTH_RP_ID`, and `SESSION_SECRET` in the owning process environment before serving. No `.env` loader, schema push, synchronization, or automatic migration runs during imports or startup. The shared Nx targets run Kit from `libs/backend/shared/` with its checked-in `drizzle.config.ts`; generation needs no connection. Migrations use the [Drizzle v1 directory/snapshot layout](https://orm.drizzle.team/docs/upgrade-v1), not a legacy journal. Relocation preserves all existing migration identifiers, SQL and snapshots; it does not introduce another migration history.
+Production cookies are secure, HttpOnly, host-only `__Host-visomi.sid`, with
+SameSite=Strict and path `/`. Loopback HTTP uses `visomi.sid`. Only configured
+proxy addresses may influence forwarded-protocol handling.
 
-`AUTH_ORIGIN` is one canonical origin without a trailing slash; HTTP is allowed only for loopback development. `AUTH_RP_ID` must equal that host or a permitted parent domain. `SESSION_SECRET` must contain at least 32 bytes and must match across instances; supply a high-entropy value outside the repository. Production origins require HTTPS and secure `__Host-visomi.sid` cookies. Local HTTP uses `visomi.sid`. Cookies are HttpOnly, SameSite=Strict, host-only, and scoped to `/`.
+## Identity and authorization
 
-Forwarded headers are untrusted by default. Behind TLS termination, set `AUTH_TRUST_PROXY` to the explicit trusted proxy addresses/CIDRs, separated by commas. Imported hosts can set `trustProxy` or configure their own Express host before installing authentication. Do not trust arbitrary forwarded headers to enable secure cookies or derive rate-limit addresses.
+Registration asks for email before creating the initial passkey or password.
+A completed credential registration establishes an `unverified` session. It can
+inspect its state, request verification, verify its email and log out, but cannot
+enter protected account routes. Email verification enables a `full` session.
+Existing reboot users retain their passkeys and must add/verify an email. Sessions
+serialized in the previous format require a new login. Legacy reference databases
+are not imported.
 
-Without `DATABASE_URL`, standalone startup retains the public greeting and `/auth` returns a fixed 503. There is no memory-store fallback. With database configuration, `main.ts` creates the pool, checks connectivity before listening, drains HTTP work, closes that pool, then shuts down telemetry within the existing deadline. Construction never connects until explicitly used. Database queries and parameter-bearing errors are not logged.
+`GET /auth/session` retains `authenticated`, `user` and `csrfToken`, and adds
+`access`, `method` and `nextStep`. A non-anonymous session is not necessarily
+fully authorized. Protected hosts should use the runtime's
+`requireVerifiedSession` guard rather than relying on `isAuthenticated()` alone.
+Passport rechecks the user's security version and current authentication method
+against PostgreSQL on every request.
 
-Shared infrastructure does not create a global connection on import. The owning executable calls `createDatabase()` and passes its database/pool to the modules it composes. An imported API never closes caller-owned resources. Separate processes own separate pools and connect to the same PostgreSQL database; no JavaScript object is shared across processes.
+Passkeys are the primary method. Passwords are optional and use Argon2id, NFC
+normalization and a 12–128 Unicode-character policy. Four concurrent derivations
+per process bound memory usage; excess work receives a retryable 429. Password login always needs a
+second step: email code, or TOTP/one-use backup when TOTP is active. Email cannot
+bypass an active TOTP enrollment. TOTP secrets are authenticated-encrypted;
+accepted time steps cannot be replayed, including across concurrent requests.
+Ten high-entropy backup codes are displayed once; regeneration invalidates all
+previous codes. TOTP and backups are not standalone primary login methods.
 
-## Schema and transaction boundaries
+Google tokens are verified by `google-auth-library`, including audience, issuer,
+expiry and a session-bound nonce. A linked `(issuer, subject)` always determines
+the identity, even when Google changes its email. Otherwise a proven matching
+email automatically links Google to the existing account, retaining its ID and
+verified methods. Gmail and Workspace may establish email ownership directly;
+external addresses also need our SMTP code. A previously unverified signup has
+its planted credentials and sessions revoked before Google enables access.
+A revoked Google identity requires explicit authenticated relinking; it cannot be
+silently transferred to another user.
 
-- `auth_users`: server-generated UUID identity and creation timestamp. No email, password, tenant, account, membership or provider model is introduced.
-- `auth_credentials`: user FK, unique WebAuthn credential ID, COSE public key, counter, transports, RP, label, backup eligibility/state, and creation/update/use/revocation timestamps. Constraints enforce bounded nonnegative counters, valid identifiers/transports and consistent backup flags; owner/revocation lookup is indexed.
-- `auth_sessions`: the established session store's SID/JSON/expiration columns plus creation and revocation timestamps. Expiry and serialized-user lookups are indexed. A migration trigger enforces an eight-hour absolute lifetime and immutable, empty, expired revocation tombstones. Only `destroy` is adapted to persist tombstones, including unknown SIDs; ordinary get/set/touch use connect-pg-simple. Automatic pruning is disabled so arbitrarily delayed writes cannot resurrect a deleted SID.
-- `auth_challenges`: one pending ceremony per session, session FK, purpose, server-selected subject, challenge hash and three-minute expiry. A conditional `DELETE ... RETURNING` consumes it atomically under the session row lock. Consumption commits before cryptographic verification, so failed attempts also burn the challenge. Starting another ceremony supersedes the previous one.
-- `auth_rate_limits`: indexed, expiring shared PostgreSQL counters. Atomic upserts enforce 60 authentication requests/minute per keyed address digest and 1,000/minute globally across instances. Missing storage fails closed. No rate-limit keys or addresses enter telemetry.
+Security changes require authentication within five minutes. Management changes
+retain the timestamp and factor evidence of the last authentication proof. Reauthenticate with
+a passkey assertion, linked Google, or password plus the configured second factor.
+Removing the last usable primary method is rejected transactionally. Password,
+email and factor changes invalidate stale proofs and other sessions. Credential
+revocation immediately invalidates sessions authenticated with that credential.
 
-A signup allocates the identity on the server and inserts the user and first credential together only after WebAuthn verification. Bodies cannot choose an existing user or attach an email. An authenticated enrollment binds its subject to the current user and requires a passkey session authenticated within five minutes. Signing in verifies a discoverable credential, RP, origin, user verification, user handle where supplied, counter and backup consistency. SimpleWebAuthn performs cryptographic verification; its supported algorithms are retained.
+Recovery proves the verified email and creates only a restricted enrollment
+session. When TOTP is active, also prove TOTP/a backup, or use an authenticated
+primary method or approved device. Losing every factor, backup and authenticated
+device does not permit email-only bypass of TOTP. Recovery does not decrypt data.
+A replacement password must be proved with its second factor; a replacement
+passkey must sign an authentication assertion before activation. Completing
+recovery invalidates previous sessions and pending permissions.
 
-User security mutations and authentication serialize on the user, session and credential rows in that order. Credential conflicts roll back identity creation. Removing the last active credential is rejected. Removing another credential revokes all sessions authenticated by it in the same transaction. Logout and Passport login rotation tombstone the old SID; an already revoked SID cannot establish a replacement login. Passport deserialization rechecks credential ownership and revocation on each request.
-
-Credential-session revocation filters by both the serialized owner ID and credential ID, matching the existing `auth_sessions_user_idx` expression. Other users' sessions remain outside that transaction's update scope. Counter concurrency is tested with independently signed assertions from separate sessions and challenges; replay of one challenge is a separate invariant.
-
-Expired challenges and rate buckets may be removed by explicit maintenance. Neither expired SID rows nor revocation tombstones may be deleted under this stale-write contract. A bounded retention protocol and recovery after losing every passkey are separate future decisions.
+New-device requests are browser-bound and paired with a six-digit code. A different
+full session reviews and approves with fresh authentication. Approval is one-use,
+expires, and is rechecked against the approver's live session, method and security
+version. It grants enrollment permission, never direct full access.
 
 ## HTTP contract
 
-Paths are relative to the app mount. The standalone API uses `/auth`; a host mounting at `/api` exposes `/api/auth`.
+Paths below are relative to `/auth`; the gateway mounts the same API at `/api/auth`.
+First fetch `/session`, retain its cookie and send its `csrfToken` as
+`X-CSRF-Token`, together with the configured `Origin`, on every mutation. Replace
+the CSRF token after session rotation. Responses disable caching. JSON is bounded
+to 32 KiB and rejects unexpected fields.
 
-| Method | Path                                    | Behavior                                                                                                 |
-| ------ | --------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| GET    | `/auth/session`                         | Anonymous or authenticated session inspection, minimal user identity and synchronizer CSRF token         |
-| POST   | `/auth/passkeys/registration/options`   | Begin a new identity or fresh authenticated credential enrollment; body `{}`                             |
-| POST   | `/auth/passkeys/registration/verify`    | Verify `{challengeId, response, label?}`, persist credential, rotate session and return a new CSRF token |
-| POST   | `/auth/passkeys/authentication/options` | Begin discoverable passkey sign-in; body `{}`                                                            |
-| POST   | `/auth/passkeys/authentication/verify`  | Verify `{challengeId, response}`, update counter/backup metadata and rotate session                      |
-| GET    | `/auth/passkeys`                        | List the current user's active credential metadata                                                       |
-| PATCH  | `/auth/passkeys/:id`                    | Rename an owned credential with `{label}` and fresh authentication                                       |
-| DELETE | `/auth/passkeys/:id`                    | Revoke an owned credential with fresh authentication; refuse the last credential                         |
-| POST   | `/auth/logout`                          | Revoke the current session and clear its cookie; body `{}`                                               |
+| Method         | Path                                                                            | Input / result                                                                       |
+| -------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| GET            | `/session`, `/providers`                                                        | Session state / public provider capabilities.                                        |
+| POST           | `/passkeys/registration/options`                                                | `{email}` anonymously; `{}` for enrollment.                                          |
+| POST           | `/passkeys/registration/verify`                                                 | `{challengeId,response,label?}`; session plus email challenge when unverified.       |
+| POST           | `/passkeys/authentication/options`                                              | `{}`; discoverable WebAuthn options.                                                 |
+| POST           | `/passkeys/authentication/verify`                                               | `{challengeId,response}`; rotated session. Also passkey reauthentication.            |
+| GET            | `/passkeys`, `/methods`                                                         | Owned active public method metadata.                                                 |
+| PATCH / DELETE | `/passkeys/:id`                                                                 | Rename with `{label}` / revoke.                                                      |
+| POST           | `/password/sign-up`                                                             | `{email,password}`; unverified session and email challenge.                          |
+| POST           | `/password/sign-in`                                                             | `{email,password}`; pending `{flowId,factor,expiresAt}`.                             |
+| POST           | `/password/verify`                                                              | `{flowId,factor:{kind,code}}`; full session after proof.                             |
+| POST           | `/email/request`, `/email/verify`                                               | `{email?}` / `{flowId,code}`. Existing passkey users can supply their missing email. |
+| POST           | `/email/change/request`, `/email/change/verify`                                 | `{email}` / `{flowId,code}`. Notify the previous address.                            |
+| POST           | `/challenges/resend`                                                            | `{flowId}`; replaces code without resetting attempt budget.                          |
+| POST           | `/reauth/password/start`, `/reauth/password/complete`                           | `{password}` / `{flowId,factor:{kind,code}}`.                                        |
+| POST           | `/password/add`, `/password/change`, `/password/remove`                         | `{password}` / `{password}` / `{}`.                                                  |
+| POST           | `/google/start`                                                                 | `{intent?: 'login' \| 'link' \| 'reauth'}`; public client ID and nonce.              |
+| POST           | `/google/complete`, `/google/email/verify`                                      | `{flowId,idToken}` / `{flowId,code}` for external email.                             |
+| DELETE         | `/google/:id`                                                                   | Unlink owned provider identity.                                                      |
+| POST           | `/totp/setup`, `/totp/confirm`                                                  | `{}` / `{enrollmentId,code}`; confirmation returns one-time backup codes.            |
+| DELETE         | `/totp`                                                                         | Remove TOTP and invalidate backups.                                                  |
+| POST           | `/recovery-codes/regenerate`                                                    | `{}`; replace backup set.                                                            |
+| POST           | `/password/reset/request`, `/password/reset/complete`                           | `{email}` / `{flowId,code,password,factor?}`; reset does not sign in.                |
+| POST           | `/recovery/request`, `/recovery/verify`                                         | `{email}` / `{flowId,code,factor?}`; restricted session.                             |
+| POST           | `/recovery/password`, `/recovery/password/complete`                             | `{password}` / `{flowId,password,factor}`; stage then prove replacement.             |
+| POST           | `/device-approval/request`                                                      | `{email}`; `{requestId,userCode,expiresAt}`.                                         |
+| POST           | `/device-approval/status`, `/device-approval/review`                            | `{requestId}`; requester / authenticated owner.                                      |
+| POST           | `/device-approval/approve`, `/device-approval/deny`, `/device-approval/consume` | `{requestId,userCode}`.                                                              |
+| POST           | `/device-approval/cancel`                                                       | `{requestId}` from the requester.                                                    |
+| GET / DELETE   | `/sessions`, `/sessions/:id`                                                    | Minimal sessions with opaque public handles / revoke selected session.               |
+| POST           | `/sessions/revoke-others`, `/logout`                                            | `{}`.                                                                                |
 
-First fetch `/auth/session`, retain its cookie and token, then send the configured `Origin` and `X-CSRF-Token` on every mutation. Use the newly returned token after login or enrollment rotation. All authentication responses disable caching. JSON bodies are limited to 32 KiB. Authentication does not unlock or decrypt a vault.
+Factor kinds are `email`, `totp`, and `recovery_code`. Public session handles are
+not SIDs and cannot be used as cookies. No IP address or user agent is retained as
+session metadata. Password/Google removal may end the current session.
 
-## Managed and inherited ownership
+## Service composition
 
-`createApp({ auth, authMode })` has one implementation. `authMode` defaults to `managed`: the supplied auth runtime installs session, Passport initialization, and Passport session handling before authentication-dependent routes. With no supplied runtime, those routes fail closed with 503 and public greeting/import compatibility remains available.
+`createAuthentication()` creates a separate `injection-js` graph per runtime using
+only the DI exports from `backend-shared`. PostgreSQL, the pool, optional SMTP and
+`AUTH_CONFIG` are explicit value providers. Passwords, email identity, sessions,
+method discovery, passkeys, flows, factors, Google, recovery and devices resolve dependencies with
+`inject()` during construction, sharing instances only within that graph.
+Controller classes resolve only their own dependencies from the same graph.
+`SessionResponses` owns HTTP session establishment, CSRF rotation and logout
+responses. Controllers retain no request state. Imports do not construct services
+or open resources, and standalone/gateway application exports remain unchanged. Service tests use provider overrides instead of positional constructors.
 
-In `inherited`, install the same runtime on the real parent before mounting the API.
-In a workspace host, shared-library imports are bundled by its build; `api` below
-is the compiled `app.js` module loaded by the host, as in the gateway:
+## HTTP composition
+
+`createAuthRouter()` installs the common security middleware and composes one
+router per authentication capability. Each capability keeps route registration in
+`router.ts`, an injectable controller class in `controller.ts`, business operations
+in `service.ts`, and the shared routing/validation/documentation contract in
+`contract.ts`. Routers receive their controller explicitly and pass arrays of contract/handler
+objects to `routes.register()`, passing the controller once so the utility preserves
+`this` for every method. Router construction has no process-wide state or
+import-time resources.
+
+| Directory        | Responsibility                                                                                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth/password/` | Password registration, login, reauthentication, management and Argon2id.                                                                             |
+| `auth/email/`    | Email normalization, verification and address changes.                                                                                               |
+| `auth/passkeys/` | WebAuthn registration, login and credential management.                                                                                              |
+| `auth/google/`   | Google verification, account linking and unlinking.                                                                                                  |
+| `auth/totp/`     | Authenticator enrollment, replay protection, encrypted secrets and backup codes.                                                                     |
+| `auth/recovery/` | Restricted recovery and replacement-method proofs.                                                                                                   |
+| `auth/devices/`  | Pairing and approval from another authenticated session.                                                                                             |
+| `auth/sessions/` | Current session, logout, session listing/revocation, HTTP session responses and the PostgreSQL session store.                                        |
+| `auth/methods/`  | Overview of the account's usable authentication methods.                                                                                             |
+| `auth/shared/`   | Configuration, principal/authorization invariants, proof lifecycle, HTTP parsing/session responses, request limits and common cryptographic helpers. |
+
+Unit tests live beside the capability they verify. Cross-capability HTTP and
+persistence scenarios stay in `tests/integration/`, with the existing E2E suites
+covering standalone, inherited and compiled gateway hosting. The root `auth/`
+contains only runtime and router composition and their tests.
+
+SMTP, typed message content, rendering and MJML resources remain in
+`backend-shared`. Auth's shared notification adapter chooses a security notice and
+reports delivery success without owning the transport or duplicating mail content.
+
+## Authentication and authorization middleware
+
+The authentication runtime exposes reusable Express middleware for individual
+routes or whole routers:
+
+- `auth.anonymous` allows only requests without an identity. Unverified and
+  restricted identities are still signed in and are rejected.
+- `identified` is the internal identity-only guard for email verification and
+  restricted enrollment. It validates the principal without granting full access.
+- `auth.authenticated()` requires a valid, full, email-verified principal. It also
+  accepts an array of required permission names or a synchronous/asynchronous
+  requirement predicate.
+- `auth.authorized(requirements)` checks additional requirements after a router's
+  global authentication guard. It retains a cheap full-principal prerequisite so
+  missing/misordered guards fail closed, without repeating Passport deserialization
+  or the database session load.
 
 ```ts
-import { securityHeaders, httpErrorHandler } from '@visomi-stack/web-backend-shared';
-
-const auth = api.createAuthentication({ database, pool, config: api.authConfig(trustedConfiguration) });
-host.use(securityHeaders());
-host.use(auth.middleware);
-host.use(
-  '/api',
-  api.createApp({
-    auth,
-    authMode: 'inherited',
-    helmetMode: 'inherited',
-    errorMode: 'inherited',
-  }),
+router.use(auth.authenticated());
+routes.register(
+  router,
+  [
+    {
+      contract: documentContracts.read,
+      handler: controller.read,
+      beforeValidation: [auth.authorized(['documents.read'])],
+    },
+  ],
+  controller,
 );
-host.use(httpErrorHandler);
+
+anonymousRouter.use(auth.anonymous);
+// On a mixed router: beforeValidation: [auth.anonymous] or [auth.authenticated(...)].
 ```
 
-The host owns `database` and `pool`; the imported app never closes them. An explicit per-request initialization marker checks that this runtime's full chain ran. The API does not inspect Express internals or infer initialization from `req.user`. Missing initialization returns `503 auth_initialization_missing`, while properly initialized anonymous sessions work and protected routes still return 401. There is no second session/Passport chain in inherited mode.
+The executable can supply `createAuthentication({ ...resources, authorize })`.
+`authorize(permission, { principal, request })` returns a boolean or promise for
+one permission in the current context. This is the integration point for ABAC;
+no roles, policy tables, policy engine or permission claims in serialized sessions
+are introduced. Every permission in an array must yield exactly `true`. Without
+a policy, nonempty permission arrays are denied. Decisions run again on each
+request, so policy changes are not hidden by session-level permission caching.
 
-The current `web-gateway` implements this contract at `/api`: its ESM executable
-loads the compiled API's CommonJS `app.js`, creates the auth runtime using the
-host-owned pool and installs the middleware before mounting. `pnpm nx serve
-web-gateway` builds the API first. Gateway process integration tests verify real
-PostgreSQL-backed authentication and cleanup; Angular SSR remains unimplemented.
+A route can instead use a predicate:
+`auth.authenticated(({ principal, request }) => accessPolicy.allows(principal, request))`
+or `auth.authorized(...)` after a global guard. Predicates also require exactly
+`true`; exceptions become a controlled authorization error. Explicit public
+`HttpError` decisions retain their status/code. Arbitrary errors are sanitized as
+`503 authorization_unavailable`.
 
-`helmetMode` and `errorMode` also default to `managed`, independently of
-`authMode`. In inherited mode the parent must install security headers before
-the API and the shared error handler after it. Authentication guards stay active.
-Auth normalizes private persistence and parser failures to public `HttpError`
-values, then delegates the response to its owner. `AuthHttpError` is used for
-401/403; validation and challenge failures retain 400, with conflicts, rate limits
-and availability errors retaining their existing statuses. Existing code-only
-responses remain compatible; explicit public messages and JSON bodies are
-optional. See the [shared HTTP contract](../../../libs/web/backend/shared/README.md).
+Mount the owning runtime's session/Passport middleware first, including with
+inherited composition. Controllers behind identity/full-session guards use the native Passport request
+refinement through `IdentifiedRequest` and read `request.user` directly. All route
+authentication checks live in middleware, rather than being repeated in controllers.
+Guards run before contract parsing, so predicates/policies
+must treat raw request values as untrusted and load authoritative resource
+attributes on the server. Domain services keep their transactional identity,
+method, proof and revocation checks; middleware is not a replacement for those
+invariants at mutation time. No policy or customer attributes enter telemetry.
 
-## Verification and reference differences
+## Validated contracts and OpenAPI
+
+Zod `4.6.6` and `zod-openapi` `6.0.2` are pinned dependencies. Each operation's
+contract defines its method, path, request schema, documented responses and
+security requirements. `routes.register()` uses each contract's method/path and parses
+one Zod object containing the configured `body`, `params`, `query` and `headers`.
+Each contract exports a named input type inferred from the schema's parsed output.
+The controller imports that type and receives `result.data`:
+
+```ts
+// devices/contract.ts
+export type RequestApprovalInput = z.output<typeof devicesContracts.requestApproval.request>;
+
+// devices/controller.ts
+import type { RequestApprovalInput } from './contract';
+
+async requestApproval(
+  request: Request,
+  response: Response,
+  input: RequestApprovalInput,
+) {
+  const pending = await this.devices.request(request.sessionID, input.body.email);
+  response.status(201).json(pending);
+}
+```
+
+Input and output may differ after normalization or coercion: use `z.input` for
+unparsed contract input and `z.output` to define the exported controller input types. No cast, request-wide
+validated-data bag or second parse is needed. Request bodies remain strict at
+operation boundaries; parsed parameters/query/header values are passed separately
+without mutating Express's query getter. Domain authorization, proof lifetimes,
+password policy and cryptographic verification remain enforced by the services.
+WebAuthn request schemas preserve extension fields and use `satisfies` to check
+compatibility with SimpleWebAuthn's types; the SDK verifies signatures and claims.
+
+The shared adapter maps only explicitly allowlisted validation codes to public
+HTTP errors. It never returns or logs raw Zod issues, paths or input values.
+Origin/CSRF checks and shared request limits run before operation validation;
+route guards preserve anonymous and passkey authorization boundaries.
+
+`GET /openapi.json` is available without database, SMTP or Google configuration.
+The gateway serves the same compiled API at `/api/openapi.json`, with a server
+base of `/api` and unchanged `/auth/...` operation paths. The document includes
+cookie/CSRF schemes, provider capabilities, account access levels, payloads,
+responses, proof restrictions and controlled errors. Document composition is
+local to each application instance and does not inspect Express internals or
+maintain a global mutable route registry. A documentation UI is not installed.
+
+## Persistence and builds
+
+`backend-shared` owns `authSchema` and the single migration history. Each owner
+creates its own pool; imports never run migrations. Authentication and mutations
+serialize on user/session/proof rows. Email and provider-subject claims also use
+transaction advisory locks to prevent duplicate identities during concurrent
+unification. Challenges and grants are scoped to a purpose, browser session and
+security version. Six-digit codes expire in ten minutes, allow five attempts and
+have a sixty-second resend cooldown, including replacement requests through the
+email verification/change routes. Replacements retain the original attempt budget
+and expiry; failed SMTP delivery permits immediate retry. Shared PostgreSQL limits supplement those
+budgets. WebAuthn ceremonies expire after three minutes; sessions have an absolute
+eight-hour limit. Revoked SID tombstones remain immutable and are not pruned.
+
+The auth router uses `express-rate-limit` with an injected PostgreSQL store for
+60 requests per exact address and 1,000 requests globally per minute. Addresses
+are HMACed before reaching storage. Expiration resets counters during an atomic
+upsert; no memory store, maintenance timer or database connection is created by
+the middleware. Storage failures stop the request. Rate-limit diagnostics are
+discarded because they can include client/database values; controlled failures
+continue through the owning HTTP error boundary. The dependency is pinned to
+`8.5.2`, whose request path has no environment-enabled debug output.
 
 ```sh
-pnpm nx test backend-shared
-pnpm nx test web-backend-shared
-pnpm nx test web-api
-pnpm nx test web-api -- auth-persistence.integration.spec.ts
-pnpm nx e2e web-api
-pnpm nx run-many -t lint typecheck typecheck-tests -p web-api web-backend-shared backend-shared
-pnpm nx build web-api
+pnpm nx run backend-shared:db-generate -- --name describe-schema-change
+DATABASE_URL=postgresql://localhost/visomi_stack_dev pnpm nx run backend-shared:db-migrate
+pnpm nx run backend-shared:emails-build
+pnpm nx run backend-shared:emails-check
 ```
 
-Integration and Playwright setup create an isolated Compose project using the PostgreSQL image from `compose.yaml`, apply the shared database module's checked-in migrations, and stop/remove only that project's containers and volumes. They never use developer `DATABASE_URL`. Docker with Compose v2 or Podman with `podman-compose`, an unprivileged local user with engine access, and free loopback ports are required. Native PostgreSQL binaries and `PG_BIN` are not used. The explicit `backend-shared:db-migrate` command is also exercised against a new database within the owned cluster and rerun to verify that existing state is retained.
+Use an explicitly provisioned development database for migrations; tests never
+use developer `DATABASE_URL`. `backend-shared` owns the SMTP adapter, authentication email content, MJML
+templates, rendering and generation tooling. Auth selects typed message purposes
+and translates delivery failures into controlled HTTP responses. MJML is a
+development-only dependency. Its strict compiler embeds HTML in generated
+TypeScript; runtime rendering escapes values and adds a plain-text alternative.
+Templates contain no tracking pixels or remote fonts. Regenerate resources after
+editing templates. The API build depends on the library's generation target.
 
-Playwright retains the API's existing configuration and request fixtures. A test-only wrapper starts isolated Compose PostgreSQL, builds the selected application image, runs the Compose database initializer, and launches the compiled application in a container. The parent-Express inherited fixture imports the compiled app; it establishes no gateway/Angular SSR/i18n claim. A synthetic software authenticator produces real ES256 signatures verified by SimpleWebAuthn. These are not mocked verifier successes, physical authenticator tests or full FIDO/browser certification. Colocated units cover each logic module; schema, declarations, barrels and static Kit configuration are validated through typing/integration rather than artificial unit suites.
+Managed mode installs session and Passport middleware in the API. Inherited mode
+installs the same runtime once on the real parent, before mounting the API, with
+`authMode`, `helmetMode` and `errorMode` set to `inherited`. The runtime is exported
+from compiled `app.js`. The gateway never imports API TypeScript or `main.js`.
+Generated runtime manifests include external dependencies; retain complete output
+directories and chunks when deploying the CommonJS API beside the ESM gateway.
 
-Unlike v0, no tenancy, OTP, social login, recovery, vault orchestration, module-import database singleton, optional auto-migration, insecure SSL override, custom session authority framework, or process-local rate-limit Map is carried over. There is one PostgreSQL source of truth for each stateful responsibility. The shared observability remains the only operational telemetry path, with no parallel auth logger or SQL instrumentation.
+## Verification and privacy
+
+```sh
+pnpm nx run-many -t lint typecheck typecheck-tests -p web-api web-gateway backend-shared dev-testing
+pnpm nx run-many -t test -p web-api web-gateway backend-shared dev-testing
+pnpm nx run-many -t build e2e -p web-api web-gateway
+```
+
+Integration uses isolated Compose PostgreSQL and loopback SMTP, real Argon2id,
+real ES256 assertions and Google tokens signed with synthetic RSA keys. Only the
+Google certificate retrieval boundary is replaced; token verification is real.
+Container E2E uses a test-only loopback SMTP mailbox loaded by its preload; it is
+absent from production startup. All identities, messages and credentials are
+synthetic. These checks are not physical-authenticator or email-client certification.
+
+The shared observability path remains the only operational telemetry. It excludes
+bodies, email addresses, customer identifiers, credential material, codes, tokens,
+SIDs, database values, raw errors and SMTP protocol traffic. The test mailbox is
+stored separately from telemetry and must never receive production data.

@@ -35,6 +35,7 @@ function fixture(overrides: Partial<ObservabilityOptions> = {}) {
 
 afterEach(async () => {
   await telemetry?.shutdown();
+
   telemetry = undefined;
   vi.unstubAllEnvs();
 });
@@ -68,6 +69,7 @@ describe('observability runtime', () => {
 
     expect(success).toBe(true);
     expect(currentObservability()).toBeUndefined();
+
     // The unused fixture reader is still owned by this test.
     await f.reader.shutdown();
   });
@@ -88,11 +90,13 @@ describe('observability runtime', () => {
     });
 
     expect(result).toBe('completed');
+
     await expect(
       f.telemetry.runJob(boundary, async () => {
         throw failure;
       }),
     ).rejects.toBe(failure);
+
     http.finish('success', 200);
     const spans = f.spans.getFinishedSpans();
 
@@ -163,6 +167,7 @@ describe('observability runtime', () => {
           ? vi.spyOn(destination, 'flush')
           : vi.spyOn(exporter, 'shutdown').mockImplementation(async () => {
               await pending;
+
               await originalShutdown();
             });
 
@@ -177,12 +182,16 @@ describe('observability runtime', () => {
 
         expect(flushed).toBe(false);
         expect(performance.now() - started).toBeLessThan(1000);
+
         await delay(10);
+
         expect(currentObservability()).toBe(f.telemetry);
         expect(initialize).toThrow('observability_shutdown_incomplete');
         expect(cleanup).toHaveBeenCalledOnce();
         release();
+
         await vi.waitFor(() => expect(currentObservability()).toBeUndefined());
+
         telemetry = initialize();
 
         expect(telemetry).not.toBe(f.telemetry);
@@ -190,6 +199,7 @@ describe('observability runtime', () => {
         expect(currentObservability()).toBe(telemetry);
       } finally {
         release();
+
         await vi.waitFor(() => expect(currentObservability()).not.toBe(f.telemetry));
       }
     },
@@ -235,6 +245,7 @@ describe('observability runtime', () => {
     const carrier = run(captureJobContext);
 
     await Promise.resolve('runtime.started' as const).then(event);
+
     const child = await runJob(carrier, async () => {
       await delay(1);
 
@@ -269,6 +280,7 @@ describe('observability runtime', () => {
           const before = correlation();
 
           await delay(index === 0 ? 10 : 1);
+
           const after = correlation();
 
           expect(after).toEqual(before);
@@ -294,7 +306,9 @@ describe('observability runtime', () => {
     expect(result?.traceId).not.toBe(invalid.traceId);
     expect(result?.requestId).not.toBe(invalid.requestId);
     expect(Object.isFrozen(result)).toBe(true);
+
     await f.reader.forceFlush();
+
     const metrics = f.metrics.getMetrics()[0].scopeMetrics[0].metrics;
     const count = metrics.find((metric) => metric.descriptor.name === 'job.executions');
     const duration = metrics.find((metric) => metric.descriptor.name === 'job.duration');

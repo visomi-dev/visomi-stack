@@ -57,9 +57,11 @@ describe('test Compose command ownership', () => {
 
   it('rejects an unsupported provider instead of interpreting a shell command', async () => {
     vi.stubEnv('VISOMI_TEST_COMPOSE', 'synthetic; unsafe');
+
     await expect(createTestCompose(owner.directory, owner.telemetryDirectory, 'web-api')).rejects.toThrow(
       'test_compose_provider_invalid',
     );
+
     expect(execFile).not.toHaveBeenCalled();
   });
 
@@ -67,7 +69,9 @@ describe('test Compose command ownership', () => {
     vi.stubEnv('APP_DATABASE_URL', 'postgresql://synthetic-development/never-use');
     vi.stubEnv('POSTGRES_DB', 'synthetic-development');
     vi.stubEnv('HOST_BINDING', '0.0.0.0:');
+
     await runTestCompose({ ...owner, app }, ['up', '-d', '--build', 'app']);
+
     const [command, args, options] = vi.mocked(execFile).mock.calls[0] as unknown as [
       string,
       string[],
@@ -102,6 +106,7 @@ describe('test Compose command ownership', () => {
 
   it('invokes the Podman provider directly with the same owned project', async () => {
     await runTestCompose({ ...owner, provider: 'podman-compose' }, ['down', '--volumes']);
+
     const [command, args] = vi.mocked(execFile).mock.calls[0];
 
     expect(command).toBe('podman-compose');

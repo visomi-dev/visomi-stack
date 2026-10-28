@@ -1,6 +1,8 @@
 const { writeFileSync } = require('node:fs');
 const { join } = require('node:path');
 
+const { startTestSmtp } = require('../../../../../libs/backend/shared/tests/support/smtp.cjs');
+
 // Only the owning application process installs test exporters, never Nx or its watchers.
 const entry = process.argv[1]?.replaceAll('\\', '/');
 const directory = process.env.VISOMI_E2E_TELEMETRY_DIR;
@@ -13,6 +15,10 @@ if (directory && /\/api\/(src\/)?main\.(ts|js)$/.test(entry ?? '')) {
 
   if (process.env.VISOMI_E2E_CONTAINER !== 'true') {
     writeFileSync(join(directory, 'owner.json'), JSON.stringify({ pid: process.pid, parentPid: process.ppid }));
+  }
+
+  if (process.env.VISOMI_E2E_CONTAINER === 'true') {
+    startTestSmtp();
   }
 
   initializeObservability(

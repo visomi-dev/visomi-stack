@@ -48,7 +48,9 @@ afterEach(() => {
 describe('Compose E2E server lifecycle', () => {
   it('requires an isolated telemetry directory before starting resources', async () => {
     vi.stubEnv('VISOMI_E2E_TELEMETRY_DIR', undefined);
+
     await expect(serveTestApplication('web-api')).rejects.toThrow('isolated_telemetry_directory_required');
+
     expect(testPostgres).not.toHaveBeenCalled();
   });
 
@@ -56,6 +58,7 @@ describe('Compose E2E server lifecycle', () => {
     const serving = serveTestApplication('web-gateway');
 
     await vi.waitFor(() => expect(runTestCompose).toHaveBeenCalledTimes(3));
+
     expect(testPostgres).toHaveBeenCalledExactlyOnceWith(
       '/synthetic/telemetry/postgres.json',
       'web-gateway',
@@ -72,7 +75,9 @@ describe('Compose E2E server lifecycle', () => {
     ]);
     handlers.get(signal)!();
     handlers.get(signal)!();
+
     await serving;
+
     expect(stop).toHaveBeenCalledOnce();
   });
 
@@ -80,7 +85,9 @@ describe('Compose E2E server lifecycle', () => {
     const failure = new Error('synthetic_build_failure');
 
     vi.mocked(runTestCompose).mockRejectedValueOnce(failure);
+
     await expect(serveTestApplication('web-api')).rejects.toBe(failure);
+
     expect(stop).toHaveBeenCalledOnce();
   });
 
@@ -88,7 +95,9 @@ describe('Compose E2E server lifecycle', () => {
     const failure = new Error('synthetic_migration_failure');
 
     vi.mocked(runTestCompose).mockResolvedValueOnce({ stdout: '', stderr: '' }).mockRejectedValueOnce(failure);
+
     await expect(serveTestApplication('web-api')).rejects.toBe(failure);
+
     expect(runTestCompose).toHaveBeenCalledTimes(2);
     expect(stop).toHaveBeenCalledOnce();
   });
@@ -98,10 +107,14 @@ describe('Compose E2E server lifecycle', () => {
     const serving = serveTestApplication('web-api');
 
     await vi.waitFor(() => expect(runTestCompose).toHaveBeenCalledTimes(3));
+
     await vi.advanceTimersByTimeAsync(1000);
+
     expect(stop).not.toHaveBeenCalled();
     handlers.get('SIGTERM')!();
+
     await serving;
+
     expect(vi.getTimerCount()).toBe(0);
     expect(stop).toHaveBeenCalledOnce();
   });
@@ -111,7 +124,9 @@ describe('Compose E2E server lifecycle', () => {
     const rejected = expect(serving).rejects.toMatchObject({ name: 'AbortError' });
 
     handlers.get('SIGINT')!();
+
     await rejected;
+
     expect(runTestCompose).not.toHaveBeenCalled();
     expect(stop).toHaveBeenCalledOnce();
   });
@@ -129,8 +144,11 @@ describe('Compose E2E server lifecycle', () => {
     const rejected = expect(serving).rejects.toBe(failure);
 
     await vi.waitFor(() => expect(runTestCompose).toHaveBeenCalledOnce());
+
     handlers.get('SIGTERM')!();
+
     await rejected;
+
     expect(stop).toHaveBeenCalledOnce();
   });
 
@@ -138,7 +156,9 @@ describe('Compose E2E server lifecycle', () => {
     const failure = new Error('synthetic_database_failure');
 
     vi.mocked(testPostgres).mockRejectedValueOnce(failure);
+
     await expect(serveTestApplication('web-api')).rejects.toBe(failure);
+
     expect(runTestCompose).not.toHaveBeenCalled();
     expect(stop).not.toHaveBeenCalled();
   });
@@ -149,8 +169,10 @@ describe('Compose E2E server lifecycle', () => {
     const rejected = expect(serving).rejects.toBe(failure);
 
     await vi.waitFor(() => expect(runTestCompose).toHaveBeenCalledTimes(3));
+
     stop.mockRejectedValue(failure);
     handlers.get('SIGTERM')!();
+
     await rejected;
   });
 });

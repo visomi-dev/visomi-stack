@@ -4,8 +4,10 @@ import type { Database } from '@visomi-stack/backend-shared';
 import { AuthHttpError } from '@visomi-stack/web-backend-shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { authConfig } from './config';
-import { Passkeys } from './passkeys';
+import { authService } from '../../../tests/support/injection';
+import { authConfig } from '../shared/config';
+
+import { Passkeys } from './service';
 
 const webAuthn = vi.hoisted(() => ({ registration: vi.fn(), authentication: vi.fn() }));
 
@@ -44,25 +46,35 @@ function optionsFixture() {
     select: () => ({ from: () => ({ where: owned }) }),
   };
 
-  return { database, owned, sessionLock, persist, passkeys: new Passkeys(database as unknown as Database, config) };
+  return {
+    database,
+    owned,
+    sessionLock,
+    persist,
+    passkeys: authService(Passkeys, database as unknown as Database, config),
+  };
 }
 
 describe('passkey capability authorization', () => {
   it('requires fresh passkey authentication before offering enrollment or changing credentials', async () => {
     const database = { transaction: vi.fn(), select: vi.fn(), update: vi.fn() } as unknown as Database;
-    const passkeys = new Passkeys(database, config);
+    const passkeys = authService(Passkeys, database, config);
     const stale = { id: 'synthetic-user', credentialId: 'synthetic-credential', authenticatedAt: Date.now() - 600000 };
 
     await expect(passkeys.registrationOptions('synthetic-session', stale)).rejects.toMatchObject({
       code: 'reauthentication_required',
     });
+
     await expect(passkeys.registrationOptions('synthetic-session', stale)).rejects.toBeInstanceOf(AuthHttpError);
+
     await expect(passkeys.rename('synthetic-session', stale, 'credential', 'label')).rejects.toMatchObject({
       code: 'reauthentication_required',
     });
+
     await expect(passkeys.revoke('synthetic-session', stale, 'credential')).rejects.toMatchObject({
       code: 'reauthentication_required',
     });
+
     expect(database.transaction).not.toHaveBeenCalled();
     expect(database.select).not.toHaveBeenCalled();
     expect(database.update).not.toHaveBeenCalled();
@@ -101,7 +113,9 @@ describe('passkey capability authorization', () => {
     const user = { id: randomUUID(), credentialId: randomUUID(), authenticatedAt: Date.now() };
 
     fixture.owned.mockResolvedValue([{ credentialId: 'synthetic_existing_key', transports: ['internal'] }]);
+
     await fixture.passkeys.registrationOptions('synthetic-session', user);
+
     expect(webAuthn.registration).toHaveBeenCalledWith(
       expect.objectContaining({
         userName: user.id,
@@ -137,10 +151,12 @@ describe('passkey capability authorization', () => {
     const fixture = optionsFixture();
 
     fixture.sessionLock.mockResolvedValue([]);
+
     await expect(fixture.passkeys.authenticationOptions('expired-session')).rejects.toMatchObject({
       code: 'session_expired',
       status: 401,
     });
+
     expect(fixture.persist).not.toHaveBeenCalled();
   });
 
@@ -148,9 +164,54 @@ describe('passkey capability authorization', () => {
     const fixture = optionsFixture();
 
     webAuthn.registration.mockRejectedValueOnce(new Error('synthetic_options_failure'));
+
     await expect(fixture.passkeys.registrationOptions('synthetic-session')).rejects.toThrow(
       'synthetic_options_failure',
     );
+
     expect(fixture.database.transaction).not.toHaveBeenCalled();
   });
+});
+
+it('rejects an enrollment grant revoked after assertion verification starts', async () => {
+  const { storage, config: trusted, user, session, flow } = await import('../../../tests/support/auth-state');
+  const { verifyAuthenticationResponse } = await import('@simplewebauthn/server');
+
+  vi.mocked(verifyAuthenticationResponse).mockResolvedValue({
+    verified: true,
+    authenticationInfo: { credentialDeviceType: 'singleDevice', newCounter: 1, credentialBackedUp: false },
+  } as never);
+  const candidate = {
+    id: 'synthetic-key',
+    userId: user.id,
+    credentialId: 'synthetic-key',
+    rpId: trusted.rpId,
+    publicKey: 'synthetic',
+    counter: 0,
+    backupEligible: false,
+    pendingGrantId: flow.id,
+  };
+  const pending = { ...flow, subjectId: user.id, purpose: 'authentication', challengeHash: 'synthetic' };
+  const f = storage([[session], [pending], [candidate], [user], [session], [candidate], [], []]);
+  const enrollment = {
+    ...user,
+    id: user.id,
+    method: 'passkey' as const,
+    methodId: candidate.id,
+    credentialId: candidate.id,
+    authenticatedAt: Date.now(),
+    version: 1,
+    level: 'enrollment' as const,
+    emailVerified: true,
+    grantId: flow.id,
+  };
+
+  await expect(
+    authService(Passkeys, f.db, trusted).authenticate(
+      session.sid,
+      flow.id,
+      { id: candidate.credentialId, response: {} } as never,
+      enrollment,
+    ),
+  ).rejects.toMatchObject({ code: 'challenge_invalid' });
 });

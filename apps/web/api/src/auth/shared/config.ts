@@ -1,11 +1,28 @@
+import { InjectionToken } from '@visomi-stack/backend-shared';
+
 export type AuthConfig = ReturnType<typeof authConfig>;
 
-export function authConfig(input: { origin: string; rpId: string; secret: string }) {
+export const AUTH_CONFIG = new InjectionToken<AuthConfig>('authentication config');
+
+export function authConfig(input: {
+  origin: string;
+  rpId: string;
+  secret: string;
+  googleClientId?: string;
+  totpKey?: string;
+}) {
   let origin: URL;
 
   try {
     origin = new URL(input.origin);
   } catch {
+    throw new Error('auth_configuration_invalid');
+  }
+
+  if (
+    input.totpKey !== undefined &&
+    (!/^[A-Za-z0-9_-]{43}$/.test(input.totpKey) || Buffer.from(input.totpKey, 'base64url').length !== 32)
+  ) {
     throw new Error('auth_configuration_invalid');
   }
 
@@ -29,6 +46,7 @@ export function authConfig(input: { origin: string; rpId: string; secret: string
     ...input,
     secure: origin.protocol === 'https:',
     cookieName: origin.protocol === 'https:' ? '__Host-visomi.sid' : 'visomi.sid',
+    flowMaxAge: 10 * 60_000,
     sessionMaxAge: 8 * 60 * 60_000,
     challengeMaxAge: 3 * 60_000,
     freshMaxAge: 5 * 60_000,
