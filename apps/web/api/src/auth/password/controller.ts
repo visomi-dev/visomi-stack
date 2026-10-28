@@ -1,80 +1,110 @@
+import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
+import type { z } from 'zod';
 
-import { normalizeEmail } from '../email/normalization';
-import type { AuthRuntime } from '../runtime';
-import {
-  body,
-  establishSession,
-  factor,
-  identifier,
-  requireAnonymousSession,
-  requirePrincipal,
-  sendAuthenticationResult,
-  sessionView,
-  text,
-} from '../shared/http';
+import { EmailIdentity } from '../email/service';
+import { Passwords } from '../password/service';
+import { SessionResponses } from '../sessions/response';
+import { requireAnonymousSession, requirePrincipal, sessionView } from '../shared/http';
+import { SecurityNotifications } from '../shared/notifications';
 
-export async function signUp(auth: AuthRuntime, request: Request, response: Response) {
-  requireAnonymousSession(request);
-  const input = body(request, ['email', 'password']);
-  const user = await auth.password.signup(request.sessionID, normalizeEmail(input.email), text(input.password));
+import { passwordContracts } from './contract';
 
-  await establishSession(request, user, auth);
-  const verification = await auth.email.emailStart(request.sessionID, user);
+export class PasswordController {
+  private readonly password = inject(Passwords);
+  private readonly email = inject(EmailIdentity);
+  private readonly notifications = inject(SecurityNotifications);
+  private readonly responses = inject(SessionResponses);
 
-  response.status(201).json({ ...sessionView(request), ...verification });
-}
+  async signUp(request: Request, response: Response, input: z.output<typeof passwordContracts.signUp.request>) {
+    requireAnonymousSession(request);
 
-export async function signIn(auth: AuthRuntime, request: Request, response: Response) {
-  requireAnonymousSession(request);
-  const input = body(request, ['email', 'password']);
-  const pending = await auth.password.signIn(request.sessionID, normalizeEmail(input.email), text(input.password));
+    const user = await this.password.signup(request.sessionID, input.body.email, input.body.password);
 
-  response.status(202).json(pending);
-}
+    await this.responses.establish(request, user);
+    const verification = await this.email.emailStart(request.sessionID, user);
 
-export async function verifySignIn(auth: AuthRuntime, request: Request, response: Response) {
-  requireAnonymousSession(request);
-  const input = body(request, ['flowId', 'factor']);
-  const user = await auth.password.loginComplete(request.sessionID, identifier(input.flowId), factor(input.factor));
+    response.status(201).json({ ...sessionView(request), ...verification });
+  }
 
-  await sendAuthenticationResult(auth, request, response, user);
-}
+  async signIn(request: Request, response: Response, input: z.output<typeof passwordContracts.signIn.request>) {
+    requireAnonymousSession(request);
 
-export async function startReauthentication(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['password']);
-  const pending = await auth.password.reauthStart(request.sessionID, requirePrincipal(request), text(input.password));
+    const pending = await this.password.signIn(request.sessionID, input.body.email, input.body.password);
 
-  response.status(202).json(pending);
-}
+    response.status(202).json(pending);
+  }
 
-export async function completeReauthentication(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['flowId', 'factor']);
-  const user = await auth.password.reauthComplete(
-    request.sessionID,
-    requirePrincipal(request),
-    identifier(input.flowId),
-    factor(input.factor),
-  );
+  async verifySignIn(
+    request: Request,
+    response: Response,
+    input: z.output<typeof passwordContracts.verifySignIn.request>,
+  ) {
+    requireAnonymousSession(request);
 
-  await sendAuthenticationResult(auth, request, response, user);
-}
+    const user = await this.password.loginComplete(request.sessionID, input.body.flowId, input.body.factor);
 
-export async function updatePassword(
-  auth: AuthRuntime,
-  request: Request,
-  response: Response,
-  operation: 'add' | 'change' | 'remove',
-) {
-  const input = body(request, operation === 'remove' ? [] : ['password']);
-  const user = requirePrincipal(request);
-  const updated = await auth.password.passwordChange(
-    request.sessionID,
-    user,
-    operation === 'remove' ? null : text(input.password),
-    operation === 'add',
-  );
-  const notificationSent = await auth.notifications.notify(user.email, 'password_changed');
+    await this.responses.send(request, response, user);
+  }
 
-  await sendAuthenticationResult(auth, request, response, updated, { notificationSent });
+  async startReauthentication(
+    request: Request,
+    response: Response,
+    input: z.output<typeof passwordContracts.startReauthentication.request>,
+  ) {
+    const pending = await this.password.reauthStart(request.sessionID, requirePrincipal(request), input.body.password);
+
+    response.status(202).json(pending);
+  }
+
+  async completeReauthentication(
+    request: Request,
+    response: Response,
+    input: z.output<typeof passwordContracts.completeReauthentication.request>,
+  ) {
+    const user = await this.password.reauthComplete(
+      request.sessionID,
+      requirePrincipal(request),
+      input.body.flowId,
+      input.body.factor,
+    );
+
+    await this.responses.send(request, response, user);
+  }
+
+  async addPassword(
+    request: Request,
+    response: Response,
+    input: z.output<typeof passwordContracts.addPassword.request>,
+  ) {
+    const user = requirePrincipal(request);
+    const updated = await this.password.passwordChange(request.sessionID, user, input.body.password, true);
+    const notificationSent = await this.notifications.notify(user.email, 'password_changed');
+
+    await this.responses.send(request, response, updated, { notificationSent });
+  }
+
+  async changePassword(
+    request: Request,
+    response: Response,
+    input: z.output<typeof passwordContracts.changePassword.request>,
+  ) {
+    const user = requirePrincipal(request);
+    const updated = await this.password.passwordChange(request.sessionID, user, input.body.password, false);
+    const notificationSent = await this.notifications.notify(user.email, 'password_changed');
+
+    await this.responses.send(request, response, updated, { notificationSent });
+  }
+
+  async removePassword(
+    request: Request,
+    response: Response,
+    _input: z.output<typeof passwordContracts.removePassword.request>,
+  ) {
+    const user = requirePrincipal(request);
+    const updated = await this.password.passwordChange(request.sessionID, user, null, false);
+    const notificationSent = await this.notifications.notify(user.email, 'password_changed');
+
+    await this.responses.send(request, response, updated, { notificationSent });
+  }
 }

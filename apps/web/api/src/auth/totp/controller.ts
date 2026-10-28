@@ -1,41 +1,52 @@
+import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
+import type { z } from 'zod';
 
-import type { AuthRuntime } from '../runtime';
-import { body, identifier, requirePrincipal, sendAuthenticationResult, text } from '../shared/http';
+import { SessionResponses } from '../sessions/response';
+import { Flows } from '../shared/flows';
+import { requirePrincipal } from '../shared/http';
+import { SecurityNotifications } from '../shared/notifications';
+import { Factors } from '../totp/service';
 
-export async function setupTotp(auth: AuthRuntime, request: Request, response: Response) {
-  body(request, []);
-  const setup = await auth.factors.setup(request.sessionID, requirePrincipal(request));
+import { totpContracts } from './contract';
 
-  response.status(201).json(setup);
-}
+export class TotpController {
+  private readonly factors = inject(Factors);
+  private readonly flows = inject(Flows);
+  private readonly notifications = inject(SecurityNotifications);
+  private readonly responses = inject(SessionResponses);
 
-export async function confirmTotp(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['enrollmentId', 'code']);
-  const user = requirePrincipal(request);
-  const id = identifier(input.enrollmentId);
+  async setupTotp(request: Request, response: Response) {
+    const setup = await this.factors.setup(request.sessionID, requirePrincipal(request));
 
-  await auth.flows.limit('totp-confirm', id, 5);
-  const confirmed = await auth.factors.confirm(request.sessionID, user, id, text(input.code, 6));
-  const notificationSent = await auth.notifications.notify(user.email, 'totp_enabled');
+    response.status(201).json(setup);
+  }
 
-  await sendAuthenticationResult(auth, request, response, confirmed.user, {
-    recoveryCodes: confirmed.codes,
-    notificationSent,
-  });
-}
+  async confirmTotp(request: Request, response: Response, input: z.output<typeof totpContracts.confirmTotp.request>) {
+    const user = requirePrincipal(request);
+    const id = input.body.enrollmentId;
 
-export async function removeTotp(auth: AuthRuntime, request: Request, response: Response) {
-  const user = requirePrincipal(request);
-  const updated = await auth.factors.remove(request.sessionID, user);
-  const notificationSent = await auth.notifications.notify(user.email, 'totp_disabled');
+    await this.flows.limit('totp-confirm', id, 5);
+    const confirmed = await this.factors.confirm(request.sessionID, user, id, input.body.code);
+    const notificationSent = await this.notifications.notify(user.email, 'totp_enabled');
 
-  await sendAuthenticationResult(auth, request, response, updated, { notificationSent });
-}
+    await this.responses.send(request, response, confirmed.user, {
+      recoveryCodes: confirmed.codes,
+      notificationSent,
+    });
+  }
 
-export async function regenerateRecoveryCodes(auth: AuthRuntime, request: Request, response: Response) {
-  body(request, []);
-  const updated = await auth.factors.regenerate(request.sessionID, requirePrincipal(request));
+  async removeTotp(request: Request, response: Response) {
+    const user = requirePrincipal(request);
+    const updated = await this.factors.remove(request.sessionID, user);
+    const notificationSent = await this.notifications.notify(user.email, 'totp_disabled');
 
-  await sendAuthenticationResult(auth, request, response, updated.user, { recoveryCodes: updated.codes });
+    await this.responses.send(request, response, updated, { notificationSent });
+  }
+
+  async regenerateRecoveryCodes(request: Request, response: Response) {
+    const updated = await this.factors.regenerate(request.sessionID, requirePrincipal(request));
+
+    await this.responses.send(request, response, updated.user, { recoveryCodes: updated.codes });
+  }
 }

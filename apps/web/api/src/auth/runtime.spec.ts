@@ -70,6 +70,9 @@ describe('explicit session and Passport initialization', () => {
     ] as const) {
       expect(first.runtime[capability]).not.toBe(second.runtime[capability]);
     }
+    for (const capability of Object.keys(first.runtime.controllers) as (keyof typeof first.runtime.controllers)[]) {
+      expect(first.runtime.controllers[capability]).not.toBe(second.runtime.controllers[capability]);
+    }
     expect(first.runtime.password.flows).toBe(first.runtime.flows);
     expect(first.runtime.email.flows).toBe(first.runtime.flows);
     expect(first.runtime.password.factors).toBe(first.runtime.factors);

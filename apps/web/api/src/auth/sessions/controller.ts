@@ -1,44 +1,53 @@
 import { randomBytes } from 'node:crypto';
 
+import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
+import type { z } from 'zod';
 
-import type { AuthRuntime } from '../runtime';
-import { body, requirePrincipal, saveSession, sendAuthenticationResult, sessionView, text } from '../shared/http';
+import { SessionResponses } from '../sessions/response';
+import { Sessions } from '../sessions/service';
+import { AUTH_CONFIG, type AuthConfig } from '../shared/config';
+import { requirePrincipal, saveSession, sessionView } from '../shared/http';
 
-export async function listSessions(auth: AuthRuntime, request: Request, response: Response) {
-  const sessions = await auth.sessions.listSessions(request.sessionID, requirePrincipal(request));
+import { sessionsContracts } from './contract';
 
-  response.json({ sessions });
-}
+export class SessionsController {
+  private readonly sessions = inject(Sessions);
+  private readonly responses = inject(SessionResponses);
+  private readonly config = inject<AuthConfig>(AUTH_CONFIG);
 
-export async function closeSession(auth: AuthRuntime, request: Request, response: Response) {
-  const self = await auth.sessions.closeSessions(
-    request.sessionID,
-    requirePrincipal(request),
-    text(request.params.id, 64),
-  );
+  async listSessions(request: Request, response: Response) {
+    const sessions = await this.sessions.listSessions(request.sessionID, requirePrincipal(request));
 
-  if (self) {
-    response.clearCookie(auth.config.cookieName, { path: '/' });
+    response.json({ sessions });
   }
 
-  response.status(204).end();
-}
+  async closeSession(
+    request: Request,
+    response: Response,
+    input: z.output<typeof sessionsContracts.closeSession.request>,
+  ) {
+    const self = await this.sessions.closeSessions(request.sessionID, requirePrincipal(request), input.params.id);
 
-export async function revokeOtherSessions(auth: AuthRuntime, request: Request, response: Response) {
-  body(request, []);
-  await auth.sessions.closeSessions(request.sessionID, requirePrincipal(request));
-  response.status(204).end();
-}
+    if (self) {
+      response.clearCookie(this.config.cookieName, { path: '/' });
+    }
 
-export async function getSession(request: Request, response: Response) {
-  request.session.csrf ??= randomBytes(32).toString('base64url');
-  await saveSession(request);
-  response.json(sessionView(request));
-}
+    response.status(204).end();
+  }
 
-export async function logout(auth: AuthRuntime, request: Request, response: Response) {
-  body(request, []);
+  async revokeOtherSessions(request: Request, response: Response) {
+    await this.sessions.closeSessions(request.sessionID, requirePrincipal(request));
+    response.status(204).end();
+  }
 
-  await sendAuthenticationResult(auth, request, response, null);
+  async getSession(request: Request, response: Response) {
+    request.session.csrf ??= randomBytes(32).toString('base64url');
+    await saveSession(request);
+    response.json(sessionView(request));
+  }
+
+  async logout(request: Request, response: Response) {
+    await this.responses.send(request, response, null);
+  }
 }

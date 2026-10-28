@@ -72,6 +72,7 @@ describe('gateway composition', () => {
     expect(result).toEqual({ status: 200, body: { path: '/auth/session', initialized: true } });
     expect(authenticate).toHaveBeenCalledOnce();
     expect(api.createApp).toHaveBeenCalledExactlyOnceWith({
+      basePath: '/api',
       authMode: 'inherited',
       errorMode: 'inherited',
       helmetMode: 'inherited',

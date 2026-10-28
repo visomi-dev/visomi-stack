@@ -1,14 +1,17 @@
 import type { Request } from 'express';
 import { describe, expect, it, vi } from 'vitest';
 
-import { body, destroySession, factor, identifier, sessionView, text } from './http';
+import { passwordContracts } from '../password/contract';
+
+import { factorSchema, identifierSchema } from './contracts';
+import { destroySession, sessionView } from './http';
 import { requireFull, validPrincipal } from './identity';
 
 describe('public authentication parsing and session projection', () => {
   it.each([null, [], {}, { kind: 'other', code: '123456' }, { kind: 'email', code: '123456', unexpected: true }])(
     'rejects invalid factor %j',
     (input) => {
-      expect(() => factor(input)).toThrow('request_invalid');
+      expect(factorSchema.safeParse(input).success).toBe(false);
     },
   );
   it('projects only public state for a migrated user who still needs an email', () => {
@@ -30,11 +33,8 @@ describe('public authentication parsing and session projection', () => {
     await expect(destroySession({ session: { destroy } } as unknown as Request)).rejects.toMatchObject({
       code: 'session_unavailable',
     });
-    expect(() => text(1)).toThrow('request_invalid');
-    expect(() => text('')).toThrow('request_invalid');
-    expect(() => text('long', 2)).toThrow('request_invalid');
-    expect(() => identifier('invalid')).toThrow('request_invalid');
-    expect(() => body({ body: [] } as Request, [])).toThrow('request_invalid');
+    expect(identifierSchema.safeParse('invalid').success).toBe(false);
+    expect(passwordContracts.signIn.request.shape.body.safeParse([]).success).toBe(false);
   });
   it.each([
     { id: 'synthetic', version: 1, authenticatedAt: 1 },

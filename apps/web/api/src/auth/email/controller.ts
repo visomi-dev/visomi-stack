@@ -1,62 +1,80 @@
+import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
+import type { z } from 'zod';
 
-import type { AuthRuntime } from '../runtime';
-import { body, identifier, requirePrincipal, sendAuthenticationResult, text } from '../shared/http';
+import { EmailIdentity } from '../email/service';
+import { SessionResponses } from '../sessions/response';
+import { Flows } from '../shared/flows';
+import { requirePrincipal } from '../shared/http';
+import { SecurityNotifications } from '../shared/notifications';
 
-import { normalizeEmail } from './normalization';
+import { emailContracts } from './contract';
 
-export async function requestVerification(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['email']);
-  const pending = await auth.email.emailStart(
-    request.sessionID,
-    requirePrincipal(request),
-    input.email === undefined ? undefined : normalizeEmail(input.email),
-  );
+export class EmailController {
+  private readonly email = inject(EmailIdentity);
+  private readonly flows = inject(Flows);
+  private readonly notifications = inject(SecurityNotifications);
+  private readonly responses = inject(SessionResponses);
 
-  response.status(202).json(pending);
-}
+  async requestVerification(
+    request: Request,
+    response: Response,
+    input: z.output<typeof emailContracts.requestVerification.request>,
+  ) {
+    const pending = await this.email.emailStart(
+      request.sessionID,
+      requirePrincipal(request),
+      input.body.email === undefined ? undefined : input.body.email,
+    );
 
-export async function verifyEmail(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['flowId', 'code']);
-  const verified = await auth.email.emailComplete(
-    request.sessionID,
-    requirePrincipal(request),
-    identifier(input.flowId),
-    text(input.code, 6),
-  );
+    response.status(202).json(pending);
+  }
 
-  await sendAuthenticationResult(auth, request, response, verified.user);
-}
+  async verifyEmail(request: Request, response: Response, input: z.output<typeof emailContracts.verifyEmail.request>) {
+    const verified = await this.email.emailComplete(
+      request.sessionID,
+      requirePrincipal(request),
+      input.body.flowId,
+      input.body.code,
+    );
 
-export async function requestEmailChange(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['email']);
-  const pending = await auth.email.emailStart(
-    request.sessionID,
-    requirePrincipal(request),
-    normalizeEmail(input.email),
-    true,
-  );
+    await this.responses.send(request, response, verified.user);
+  }
 
-  response.status(202).json(pending);
-}
+  async requestEmailChange(
+    request: Request,
+    response: Response,
+    input: z.output<typeof emailContracts.requestEmailChange.request>,
+  ) {
+    const pending = await this.email.emailStart(request.sessionID, requirePrincipal(request), input.body.email, true);
 
-export async function verifyEmailChange(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['flowId', 'code']);
-  const changed = await auth.email.emailComplete(
-    request.sessionID,
-    requirePrincipal(request),
-    identifier(input.flowId),
-    text(input.code, 6),
-    true,
-  );
-  const notificationSent = await auth.notifications.notify(changed.previousEmail, 'email_changed');
+    response.status(202).json(pending);
+  }
 
-  await sendAuthenticationResult(auth, request, response, changed.user, { notificationSent });
-}
+  async verifyEmailChange(
+    request: Request,
+    response: Response,
+    input: z.output<typeof emailContracts.verifyEmailChange.request>,
+  ) {
+    const changed = await this.email.emailComplete(
+      request.sessionID,
+      requirePrincipal(request),
+      input.body.flowId,
+      input.body.code,
+      true,
+    );
+    const notificationSent = await this.notifications.notify(changed.previousEmail, 'email_changed');
 
-export async function resendChallenge(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['flowId']);
-  const pending = await auth.flows.resend(request.sessionID, identifier(input.flowId));
+    await this.responses.send(request, response, changed.user, { notificationSent });
+  }
 
-  response.status(202).json(pending);
+  async resendChallenge(
+    request: Request,
+    response: Response,
+    input: z.output<typeof emailContracts.resendChallenge.request>,
+  ) {
+    const pending = await this.flows.resend(request.sessionID, input.body.flowId);
+
+    response.status(202).json(pending);
+  }
 }

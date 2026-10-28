@@ -3,8 +3,12 @@ import { randomUUID } from 'node:crypto';
 import { authSchema } from '@visomi-stack/backend-shared';
 import { authenticator } from '@visomi-stack/dev-testing';
 import { eq } from 'drizzle-orm';
-import { describe, expect, it } from 'vitest';
 import { generate } from 'otplib';
+import { describe, expect, it } from 'vitest';
+
+import { emailContracts } from '../../src/auth/email/contract';
+import { methodsContracts } from '../../src/auth/methods/contract';
+import { passwordContracts } from '../../src/auth/password/contract';
 
 import { authenticationFixture, password } from './support/auth';
 
@@ -18,6 +22,9 @@ describe('account access through real SMTP and PostgreSQL', () => {
     const created = await browser.call('POST', '/password/sign-up', { email, password });
 
     expect(created.status).toBe(201);
+    expect(
+      passwordContracts.signUp.responses[201].content['application/json'].schema.safeParse(created.data).success,
+    ).toBe(true);
     expect(created.data).toMatchObject({ authenticated: true, access: 'unverified', nextStep: 'verify_email' });
     expect(browser.cookie).not.toBe(before);
     const result1 = await browser.call('GET', '/methods');
@@ -32,12 +39,18 @@ describe('account access through real SMTP and PostgreSQL', () => {
     expect(result2.status).toBe(400);
     const verified = await browser.call('POST', '/email/verify', { flowId: created.data.flowId, code });
 
+    expect(
+      emailContracts.verifyEmail.responses[200].content['application/json'].schema.safeParse(verified.data).success,
+    ).toBe(true);
     expect(verified.data).toMatchObject({ access: 'full', user: { emailVerified: true, email } });
     const result3 = await browser.call('POST', '/email/verify', { flowId: created.data.flowId, code });
 
     expect(result3.status).toBe(400);
     const methods = await browser.call('GET', '/methods');
 
+    expect(
+      methodsContracts.getMethods.responses[200].content['application/json'].schema.safeParse(methods.data).success,
+    ).toBe(true);
     expect(methods.data).toEqual({ password: true, google: [], passkeys: [], totp: false });
     const result4 = await browser.call('POST', '/password/remove', {});
 
@@ -53,6 +66,9 @@ describe('account access through real SMTP and PostgreSQL', () => {
     const login = await browser.call('POST', '/password/sign-in', { email, password });
 
     expect(login.status).toBe(202);
+    expect(
+      passwordContracts.signIn.responses[202].content['application/json'].schema.safeParse(login.data).success,
+    ).toBe(true);
     const result6 = await browser.call('GET', '/methods');
 
     expect(result6.status).toBe(401);

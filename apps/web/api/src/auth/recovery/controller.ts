@@ -1,56 +1,105 @@
+import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
+import type { z } from 'zod';
 
-import { normalizeEmail } from '../email/normalization';
-import type { AuthRuntime } from '../runtime';
-import { body, factor, identifier, requirePrincipal, sendAuthenticationResult, text } from '../shared/http';
+import { Recovery } from '../recovery/service';
+import { SessionResponses } from '../sessions/response';
+import { requirePrincipal } from '../shared/http';
+import { SecurityNotifications } from '../shared/notifications';
 
-export async function requestRecovery(auth: AuthRuntime, request: Request, response: Response, reset: boolean) {
-  const input = body(request, ['email']);
-  const pending = await auth.recovery.request(request.sessionID, normalizeEmail(input.email), reset, request.user);
+import { recoveryContracts } from './contract';
 
-  response.status(202).json(pending);
-}
+export class RecoveryController {
+  private readonly recovery = inject(Recovery);
+  private readonly notifications = inject(SecurityNotifications);
+  private readonly responses = inject(SessionResponses);
 
-export async function verifyRecovery(auth: AuthRuntime, request: Request, response: Response, reset: boolean) {
-  const input = body(request, reset ? ['flowId', 'code', 'factor', 'password'] : ['flowId', 'code', 'factor']);
-  const recovered = await auth.recovery.verify(
-    request.sessionID,
-    identifier(input.flowId),
-    text(input.code, 6),
-    input.factor === undefined ? undefined : factor(input.factor),
-    reset ? text(input.password) : undefined,
-    request.user,
-  );
-  const user = recovered.user;
-  const notificationSent = await auth.notifications.notify(
-    recovered.email,
-    reset ? 'password_reset' : 'recovery_authorized',
-  );
+  async stagePassword(
+    request: Request,
+    response: Response,
+    input: z.output<typeof recoveryContracts.stagePassword.request>,
+  ) {
+    const pending = await this.recovery.password(request.sessionID, requirePrincipal(request), input.body.password);
 
-  if (!user && !request.user) {
-    response.json({ passwordReset: true, notificationSent });
-  } else {
-    await sendAuthenticationResult(auth, request, response, user, { notificationSent });
+    response.status(202).json(pending);
   }
-}
 
-export async function stagePassword(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['password']);
-  const pending = await auth.recovery.password(request.sessionID, requirePrincipal(request), text(input.password));
+  async completePassword(
+    request: Request,
+    response: Response,
+    input: z.output<typeof recoveryContracts.completePassword.request>,
+  ) {
+    const user = await this.recovery.passwordComplete(
+      request.sessionID,
+      requirePrincipal(request),
+      input.body.flowId,
+      input.body.password,
+      input.body.factor,
+    );
+    const notificationSent = await this.notifications.notify(user.email, 'password_recovered');
 
-  response.status(202).json(pending);
-}
+    await this.responses.send(request, response, user, { notificationSent });
+  }
 
-export async function completePassword(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['flowId', 'password', 'factor']);
-  const user = await auth.recovery.passwordComplete(
-    request.sessionID,
-    requirePrincipal(request),
-    identifier(input.flowId),
-    text(input.password),
-    factor(input.factor),
-  );
-  const notificationSent = await auth.notifications.notify(user.email, 'password_recovered');
+  async requestRecovery(
+    request: Request,
+    response: Response,
+    input: z.output<typeof recoveryContracts.requestRecovery.request>,
+  ) {
+    const pending = await this.recovery.request(request.sessionID, input.body.email, false, request.user);
 
-  await sendAuthenticationResult(auth, request, response, user, { notificationSent });
+    response.status(202).json(pending);
+  }
+
+  async requestReset(
+    request: Request,
+    response: Response,
+    input: z.output<typeof recoveryContracts.requestReset.request>,
+  ) {
+    const pending = await this.recovery.request(request.sessionID, input.body.email, true, request.user);
+
+    response.status(202).json(pending);
+  }
+
+  async verifyRecovery(
+    request: Request,
+    response: Response,
+    input: z.output<typeof recoveryContracts.verifyRecovery.request>,
+  ) {
+    const recovered = await this.recovery.verify(
+      request.sessionID,
+      input.body.flowId,
+      input.body.code,
+      input.body.factor,
+      undefined,
+      request.user,
+    );
+    const user = recovered.user;
+    const notificationSent = await this.notifications.notify(recovered.email, 'recovery_authorized');
+
+    await this.responses.send(request, response, user, { notificationSent });
+  }
+
+  async completeReset(
+    request: Request,
+    response: Response,
+    input: z.output<typeof recoveryContracts.completeReset.request>,
+  ) {
+    const recovered = await this.recovery.verify(
+      request.sessionID,
+      input.body.flowId,
+      input.body.code,
+      input.body.factor,
+      input.body.password,
+      request.user,
+    );
+    const user = recovered.user;
+    const notificationSent = await this.notifications.notify(recovered.email, 'password_reset');
+
+    if (!request.user) {
+      response.json({ passwordReset: true, notificationSent });
+    } else {
+      await this.responses.send(request, response, user, { notificationSent });
+    }
+  }
 }

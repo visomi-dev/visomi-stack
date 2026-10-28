@@ -1,3 +1,10 @@
 import baseConfig from '../../../../eslint.config.mjs';
 
-export default [...baseConfig];
+export default [
+  ...baseConfig,
+  {
+    settings: {
+      'import-x/internal-regex': '^@visomi-stack/',
+    },
+  },
+];

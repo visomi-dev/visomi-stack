@@ -13,13 +13,22 @@ import session from 'express-session';
 import { Passport } from 'passport';
 import type { Pool } from 'pg';
 
+import { DevicesController } from './devices/controller';
 import { Devices } from './devices/service';
+import { EmailController } from './email/controller';
 import { EmailIdentity } from './email/service';
+import { GoogleController } from './google/controller';
 import { Google } from './google/service';
+import { MethodsController } from './methods/controller';
 import { Methods } from './methods/service';
+import { PasskeysController } from './passkeys/controller';
 import { Passkeys } from './passkeys/service';
+import { PasswordController } from './password/controller';
 import { Passwords } from './password/service';
+import { RecoveryController } from './recovery/controller';
 import { Recovery } from './recovery/service';
+import { SessionsController } from './sessions/controller';
+import { SessionResponses } from './sessions/response';
 import { Sessions } from './sessions/service';
 import { SessionStore } from './sessions/store';
 import { AUTH_CONFIG, type AuthConfig } from './shared/config';
@@ -27,6 +36,7 @@ import { Flows } from './shared/flows';
 import { readPrincipal, requireFull } from './shared/identity';
 import { SecurityNotifications } from './shared/notifications';
 import { RequestLimitStore } from './shared/request-limit-store';
+import { TotpController } from './totp/controller';
 import { Factors } from './totp/service';
 
 const initialized = Symbol.for('visomi-stack.authentication.v1');
@@ -61,6 +71,16 @@ export function createAuthentication(options: {
     Recovery,
     Devices,
     RequestLimitStore,
+    SessionResponses,
+    DevicesController,
+    PasswordController,
+    EmailController,
+    GoogleController,
+    TotpController,
+    RecoveryController,
+    SessionsController,
+    MethodsController,
+    PasskeysController,
   ]);
   const store = injector.get<SessionStore>(SessionStore);
   const owner = {};
@@ -113,6 +133,17 @@ export function createAuthentication(options: {
   };
 
   return {
+    controllers: {
+      devices: injector.get<DevicesController>(DevicesController),
+      password: injector.get<PasswordController>(PasswordController),
+      email: injector.get<EmailController>(EmailController),
+      google: injector.get<GoogleController>(GoogleController),
+      totp: injector.get<TotpController>(TotpController),
+      recovery: injector.get<RecoveryController>(RecoveryController),
+      sessions: injector.get<SessionsController>(SessionsController),
+      methods: injector.get<MethodsController>(MethodsController),
+      passkeys: injector.get<PasskeysController>(PasskeysController),
+    },
     database,
     config,
     middleware,
@@ -125,7 +156,7 @@ export function createAuthentication(options: {
       } catch (error) {
         next(error);
       }
-    }) as RequestHandler,
+    }) satisfies RequestHandler,
     passkeys: injector.get<Passkeys>(Passkeys),
     password: injector.get<Passwords>(Passwords),
     email: injector.get<EmailIdentity>(EmailIdentity),

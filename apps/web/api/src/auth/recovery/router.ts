@@ -1,18 +1,30 @@
+import { registerRoute } from '@visomi-stack/web-backend-shared';
 import { Router } from 'express';
 
-import type { AuthRuntime } from '../runtime';
+import { recoveryContracts } from './contract';
+import type { RecoveryController } from './controller';
 
-import { completePassword, requestRecovery, stagePassword, verifyRecovery } from './controller';
-
-export function createRecoveryRouter(auth: AuthRuntime): Router {
+export function createRecoveryRouter(controller: RecoveryController): Router {
   const router = Router();
 
-  router.post('/recovery/request', (request, response) => requestRecovery(auth, request, response, false));
-  router.post('/recovery/verify', (request, response) => verifyRecovery(auth, request, response, false));
-  router.post('/password/reset/request', (request, response) => requestRecovery(auth, request, response, true));
-  router.post('/password/reset/complete', (request, response) => verifyRecovery(auth, request, response, true));
-  router.post('/recovery/password', (request, response) => stagePassword(auth, request, response));
-  router.post('/recovery/password/complete', (request, response) => completePassword(auth, request, response));
+  registerRoute(router, recoveryContracts.requestRecovery, (request, response, input) =>
+    controller.requestRecovery(request, response, input),
+  );
+  registerRoute(router, recoveryContracts.verifyRecovery, (request, response, input) =>
+    controller.verifyRecovery(request, response, input),
+  );
+  registerRoute(router, recoveryContracts.requestReset, (request, response, input) =>
+    controller.requestReset(request, response, input),
+  );
+  registerRoute(router, recoveryContracts.completeReset, (request, response, input) =>
+    controller.completeReset(request, response, input),
+  );
+  registerRoute(router, recoveryContracts.stagePassword, (request, response, input) =>
+    controller.stagePassword(request, response, input),
+  );
+  registerRoute(router, recoveryContracts.completePassword, (request, response, input) =>
+    controller.completePassword(request, response, input),
+  );
 
   return router;
 }

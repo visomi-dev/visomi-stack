@@ -1,31 +1,53 @@
+import { registerRoute } from '@visomi-stack/web-backend-shared';
+import type { NextFunction, Request, Response } from 'express';
 import { Router } from 'express';
 
-import type { AuthRuntime } from '../runtime';
+import { requireFull } from '../shared/identity';
 
-import {
-  authenticatePasskey,
-  authenticationOptions,
-  listPasskeys,
-  registerPasskey,
-  registrationOptions,
-  renamePasskey,
-  requireVerifiedSession,
-  revokePasskey,
-} from './controller';
+import { passkeysContracts } from './contract';
+import type { PasskeysController } from './controller';
 
-export function createPasskeyRouter(auth: AuthRuntime): Router {
+export function createPasskeyRouter(controller: PasskeysController): Router {
   const router = Router();
 
-  router.post('/passkeys/registration/options', (request, response) => registrationOptions(auth, request, response));
-  router.post('/passkeys/registration/verify', (request, response) => registerPasskey(auth, request, response));
-  router.post('/passkeys/authentication/options', (request, response) =>
-    authenticationOptions(auth, request, response),
+  registerRoute(router, passkeysContracts.registrationOptions, (request, response, input) =>
+    controller.registrationOptions(request, response, input),
   );
-  router.post('/passkeys/authentication/verify', (request, response) => authenticatePasskey(auth, request, response));
-  router.use('/passkeys', requireVerifiedSession);
-  router.get('/passkeys', (request, response) => listPasskeys(auth, request, response));
-  router.patch('/passkeys/:id', (request, response) => renamePasskey(auth, request, response));
-  router.delete('/passkeys/:id', (request, response) => revokePasskey(auth, request, response));
+  registerRoute(
+    router,
+    passkeysContracts.registerPasskey,
+    (request, response, input) => controller.registerPasskey(request, response, input),
+    enrollmentOnly,
+  );
+  registerRoute(router, passkeysContracts.authenticationOptions, (request, response) =>
+    controller.authenticationOptions(request, response),
+  );
+  registerRoute(router, passkeysContracts.authenticatePasskey, (request, response, input) =>
+    controller.authenticatePasskey(request, response, input),
+  );
+  router.use('/passkeys', verifiedOnly);
+  registerRoute(router, passkeysContracts.listPasskeys, (request, response) =>
+    controller.listPasskeys(request, response),
+  );
+  registerRoute(router, passkeysContracts.renamePasskey, (request, response, input) =>
+    controller.renamePasskey(request, response, input),
+  );
+  registerRoute(router, passkeysContracts.revokePasskey, (request, response, input) =>
+    controller.revokePasskey(request, response, input),
+  );
 
   return router;
+}
+
+function verifiedOnly(request: Request, _response: Response, next: NextFunction): void {
+  requireFull(request.user);
+  next();
+}
+
+function enrollmentOnly(request: Request, _response: Response, next: NextFunction): void {
+  if (request.user && !request.user.grantId) {
+    requireFull(request.user);
+  }
+
+  next();
 }

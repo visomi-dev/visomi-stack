@@ -8,6 +8,7 @@ export type EmbeddedAuthentication = { middleware: RequestHandler[] };
 export type ApiModule = {
   createApp(options: {
     observability?: Observability;
+    basePath?: string;
     auth?: EmbeddedAuthentication;
     authMode: 'inherited';
     errorMode: 'inherited';

@@ -1,17 +1,23 @@
+import { registerRoute } from '@visomi-stack/web-backend-shared';
 import { Router } from 'express';
 
-import type { AuthRuntime } from '../runtime';
+import { sessionsContracts } from './contract';
+import type { SessionsController } from './controller';
 
-import { closeSession, getSession, listSessions, logout, revokeOtherSessions } from './controller';
-
-export function createSessionRouter(auth: AuthRuntime): Router {
+export function createSessionRouter(controller: SessionsController): Router {
   const router = Router();
 
-  router.get('/sessions', (request, response) => listSessions(auth, request, response));
-  router.delete('/sessions/:id', (request, response) => closeSession(auth, request, response));
-  router.post('/sessions/revoke-others', (request, response) => revokeOtherSessions(auth, request, response));
-  router.get('/session', getSession);
-  router.post('/logout', (request, response) => logout(auth, request, response));
+  registerRoute(router, sessionsContracts.getSession, (request, response) => controller.getSession(request, response));
+  registerRoute(router, sessionsContracts.logout, (request, response) => controller.logout(request, response));
+  registerRoute(router, sessionsContracts.listSessions, (request, response) =>
+    controller.listSessions(request, response),
+  );
+  registerRoute(router, sessionsContracts.closeSession, (request, response, input) =>
+    controller.closeSession(request, response, input),
+  );
+  registerRoute(router, sessionsContracts.revokeOtherSessions, (request, response) =>
+    controller.revokeOtherSessions(request, response),
+  );
 
   return router;
 }

@@ -98,6 +98,27 @@ describe('authentication failures and method lifecycle', () => {
     expect(result12.status).toBe(401);
   });
 
+  it('keeps a reset session revoked if repeated SID destruction is refused', async () => {
+    const { browser, email } = await f.signup();
+    const pending = await browser.call('POST', '/password/reset/request', { email });
+    const replacement = 'New synthetic password 42!';
+    const reset = await browser.call('POST', '/password/reset/complete', {
+      flowId: pending.data.flowId,
+      code: f.lastCode(email),
+      password: replacement,
+    });
+
+    // The store rejects destroying an already-revoked SID; that cleanup failure must never restore access.
+    expect(reset.status).toBe(503);
+    expect(reset.data.error).toBe('session_unavailable');
+    const session = await browser.call('GET', '/session');
+
+    expect(session.data.authenticated).toBe(false);
+    const pendingLogin = await browser.call('POST', '/password/sign-in', { email, password: replacement });
+
+    expect(pendingLogin.status).toBe(202);
+  });
+
   it('reauthenticates with password plus email and invalidates other sessions explicitly', async () => {
     const { browser, email } = await f.signup();
     const result13 = await browser.call('POST', '/reauth/password/start', { password: 'invalid' });

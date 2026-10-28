@@ -1,65 +1,69 @@
-import { AuthHttpError } from '@visomi-stack/web-backend-shared';
+import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
+import type { z } from 'zod';
 
-import type { AuthRuntime } from '../runtime';
-import {
-  body,
-  identifier,
-  requireAnonymousSession,
-  requirePrincipal,
-  sendAuthenticationResult,
-  text,
-} from '../shared/http';
+import { Google } from '../google/service';
+import { SessionResponses } from '../sessions/response';
+import { requireAnonymousSession, requirePrincipal } from '../shared/http';
+import { SecurityNotifications } from '../shared/notifications';
 
-export async function startGoogle(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['intent']);
-  const intent = input.intent ?? 'login';
+import { googleContracts } from './contract';
 
-  if (!['login', 'link', 'reauth'].includes(String(intent))) {
-    throw new AuthHttpError(403, 'intent_invalid');
+export class GoogleController {
+  private readonly google = inject(Google);
+  private readonly notifications = inject(SecurityNotifications);
+  private readonly responses = inject(SessionResponses);
+
+  async startGoogle(request: Request, response: Response, input: z.output<typeof googleContracts.startGoogle.request>) {
+    const intent = input.body.intent;
+
+    if (intent === 'login') {
+      requireAnonymousSession(request);
+    }
+
+    const pending = await this.google.start(request.sessionID, intent, request.user);
+
+    response.status(201).json(pending);
   }
 
-  if (intent === 'login') {
-    requireAnonymousSession(request);
+  async completeGoogle(
+    request: Request,
+    response: Response,
+    input: z.output<typeof googleContracts.completeGoogle.request>,
+  ) {
+    const completed = await this.google.complete(
+      request.sessionID,
+      input.body.flowId,
+      input.body.idToken,
+      request.user,
+    );
+
+    if (completed.pending) {
+      response.status(202).json(completed.pending);
+    } else {
+      await this.responses.send(request, response, completed.user!);
+    }
   }
 
-  const pending = await auth.google.start(request.sessionID, intent as 'login' | 'link' | 'reauth', request.user);
+  async verifyGoogleEmail(
+    request: Request,
+    response: Response,
+    input: z.output<typeof googleContracts.verifyGoogleEmail.request>,
+  ) {
+    const user = await this.google.emailComplete(request.sessionID, input.body.flowId, input.body.code, request.user);
 
-  response.status(201).json(pending);
-}
-
-export async function completeGoogle(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['flowId', 'idToken']);
-  const completed = await auth.google.complete(
-    request.sessionID,
-    identifier(input.flowId),
-    text(input.idToken, 16384),
-    request.user,
-  );
-
-  if (completed.pending) {
-    response.status(202).json(completed.pending);
-  } else {
-    await sendAuthenticationResult(auth, request, response, completed.user!);
+    await this.responses.send(request, response, user);
   }
-}
 
-export async function verifyGoogleEmail(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['flowId', 'code']);
-  const user = await auth.google.emailComplete(
-    request.sessionID,
-    identifier(input.flowId),
-    text(input.code, 6),
-    request.user,
-  );
+  async unlinkGoogle(
+    request: Request,
+    response: Response,
+    input: z.output<typeof googleContracts.unlinkGoogle.request>,
+  ) {
+    const user = requirePrincipal(request);
+    const updated = await this.google.unlink(request.sessionID, user, input.params.id);
+    const notificationSent = await this.notifications.notify(user.email, 'google_unlinked');
 
-  await sendAuthenticationResult(auth, request, response, user);
-}
-
-export async function unlinkGoogle(auth: AuthRuntime, request: Request, response: Response) {
-  const user = requirePrincipal(request);
-  const updated = await auth.google.unlink(request.sessionID, user, identifier(request.params.id));
-  const notificationSent = await auth.notifications.notify(user.email, 'google_unlinked');
-
-  await sendAuthenticationResult(auth, request, response, updated, { notificationSent });
+    await this.responses.send(request, response, updated, { notificationSent });
+  }
 }

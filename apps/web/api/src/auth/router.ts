@@ -23,16 +23,15 @@ export function createAuthRouter(auth: AuthRuntime): Router {
   router.use(rateLimit(auth.requestLimits, auth.config));
   router.use(csrf(auth.config));
   router.use(json({ limit: '32kb' }));
-  router.get('/providers', (request, response) => getProviders(auth, request, response));
-  router.use(createPasswordRouter(auth));
-  router.use(createEmailRouter(auth));
-  router.use(createGoogleRouter(auth));
-  router.use(createTotpRouter(auth));
-  router.use(createRecoveryRouter(auth));
-  router.use(createDeviceRouter(auth));
-  router.use(createMethodRouter(auth));
-  router.use(createSessionRouter(auth));
-  router.use(createPasskeyRouter(auth));
+  router.use(createPasswordRouter(auth.controllers.password));
+  router.use(createEmailRouter(auth.controllers.email));
+  router.use(createGoogleRouter(auth.controllers.google));
+  router.use(createTotpRouter(auth.controllers.totp));
+  router.use(createRecoveryRouter(auth.controllers.recovery));
+  router.use(createDeviceRouter(auth.controllers.devices));
+  router.use(createMethodRouter(auth.controllers.methods));
+  router.use(createSessionRouter(auth.controllers.sessions));
+  router.use(createPasskeyRouter(auth.controllers.passkeys));
 
   return router;
 }
@@ -40,13 +39,4 @@ export function createAuthRouter(auth: AuthRuntime): Router {
 function disableCaching(_request: Request, response: Response, next: NextFunction): void {
   response.setHeader('Cache-Control', 'no-store');
   next();
-}
-
-function getProviders(auth: AuthRuntime, _request: Request, response: Response): void {
-  response.json({
-    passkey: true,
-    password: true,
-    google: { enabled: Boolean(auth.config.googleClientId), clientId: auth.config.googleClientId ?? null },
-    totp: Boolean(auth.config.totpKey),
-  });
 }

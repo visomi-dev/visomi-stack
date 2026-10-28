@@ -61,6 +61,8 @@ describe('API process and compiled boundaries', () => {
       expect(metadata.dependencies['drizzle-orm']).toBe('1.0.0-rc.5');
       expect(metadata.dependencies['injection-js']).toBe('2.6.1');
       expect(metadata.dependencies['express-rate-limit']).toBe('8.5.2');
+      expect(metadata.dependencies.zod).toBe('4.6.6');
+      expect(metadata.dependencies['zod-openapi']).toBe('6.0.2');
       expect(metadata.dependencies.pg).toBe('8.23.1');
       expect(metadata.dependencies['@simplewebauthn/server']).toBe('14.0.3');
       expect(metadata.dependencies.pino).toBeDefined();

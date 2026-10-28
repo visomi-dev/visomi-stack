@@ -10,7 +10,6 @@ import { AlwaysOnSampler, SimpleSpanProcessor, TracerProvider } from '@opentelem
 import type { SpanExporter } from '@opentelemetry/sdk-trace';
 import pino from 'pino';
 import type { DestinationStream, Logger } from 'pino';
-import { createInjector, inject, InjectionToken } from '@visomi-stack/backend-shared';
 
 import {
   environment,
@@ -24,6 +23,8 @@ import {
   version,
 } from './policy';
 import type { Correlation, Environment, ErrorCode, Operation, Outcome, RuntimeEvent, Service } from './policy';
+
+import { createInjector, inject, InjectionToken } from '@visomi-stack/backend-shared';
 
 export type ObservabilityOptions = {
   service: Service;

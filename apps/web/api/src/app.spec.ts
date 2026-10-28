@@ -1,14 +1,14 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
 import { Socket } from 'node:net';
 
-import { currentObservability, httpObservability, httpErrorHandler, HttpError } from '@visomi-stack/web-backend-shared';
 import type { Observability } from '@visomi-stack/web-backend-shared';
+import { currentObservability, HttpError, httpErrorHandler, httpObservability } from '@visomi-stack/web-backend-shared';
 import type { Request, Response } from 'express';
 import express from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { AuthRuntime } from './auth/runtime';
 import { createApp } from './app';
+import type { AuthRuntime } from './auth/runtime';
 
 vi.mock('@visomi-stack/web-backend-shared', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@visomi-stack/web-backend-shared')>();
@@ -85,6 +85,7 @@ describe('API composition', () => {
       const installed = vi.fn((_request, _response, next) => next());
       const requireInitialized = vi.fn((_request, _response, next) => next());
       const auth = {
+        controllers: {} as AuthRuntime['controllers'],
         middleware: [installed],
         requireInitialized,
         config: {},

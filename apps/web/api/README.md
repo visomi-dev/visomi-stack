@@ -148,17 +148,20 @@ only the DI exports from `backend-shared`. PostgreSQL, the pool, optional SMTP a
 `AUTH_CONFIG` are explicit value providers. Passwords, email identity, sessions,
 method discovery, passkeys, flows, factors, Google, recovery and devices resolve dependencies with
 `inject()` during construction, sharing instances only within that graph.
-Handlers still receive their runtime explicitly. Imports do not construct services
-or open resources, and the standalone/gateway public factory contracts remain the
-same. Service tests use provider overrides instead of positional constructors.
+Controller classes resolve only their own dependencies from the same graph.
+`SessionResponses` owns HTTP session establishment, CSRF rotation and logout
+responses. Controllers retain no request state. Imports do not construct services
+or open resources, and standalone/gateway application exports remain unchanged. Service tests use provider overrides instead of positional constructors.
 
 ## HTTP composition
 
 `createAuthRouter()` installs the common security middleware and composes one
 router per authentication capability. Each capability keeps route registration in
-`router.ts`, named HTTP handlers in `controller.ts`, and business operations in
-`service.ts`. Handlers receive their runtime explicitly. Router construction has
-no process-wide state or import-time resources.
+`router.ts`, an injectable controller class in `controller.ts`, business operations
+in `service.ts`, and the shared routing/validation/documentation contract in
+`contract.ts`. Routers receive their controller explicitly and delegate with inline
+callbacks, preserving `this`. Router construction has no process-wide state or
+import-time resources.
 
 | Directory        | Responsibility                                                                                                                                       |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -169,7 +172,7 @@ no process-wide state or import-time resources.
 | `auth/totp/`     | Authenticator enrollment, replay protection, encrypted secrets and backup codes.                                                                     |
 | `auth/recovery/` | Restricted recovery and replacement-method proofs.                                                                                                   |
 | `auth/devices/`  | Pairing and approval from another authenticated session.                                                                                             |
-| `auth/sessions/` | Current session, logout, session listing/revocation and the PostgreSQL session store.                                                                |
+| `auth/sessions/` | Current session, logout, session listing/revocation, HTTP session responses and the PostgreSQL session store.                                        |
 | `auth/methods/`  | Overview of the account's usable authentication methods.                                                                                             |
 | `auth/shared/`   | Configuration, principal/authorization invariants, proof lifecycle, HTTP parsing/session responses, request limits and common cryptographic helpers. |
 
@@ -181,6 +184,47 @@ contains only runtime and router composition and their tests.
 SMTP, typed message content, rendering and MJML resources remain in
 `backend-shared`. Auth's shared notification adapter chooses a security notice and
 reports delivery success without owning the transport or duplicating mail content.
+
+## Validated contracts and OpenAPI
+
+Zod `4.6.6` and `zod-openapi` `6.0.2` are pinned dependencies. Each operation's
+contract defines its method, path, request schema, documented responses and
+security requirements. `registerRoute()` uses that same method/path and parses
+one Zod object containing the configured `body`, `params`, `query` and `headers`.
+The controller receives `result.data` with the schema's native output type:
+
+```ts
+async requestApproval(
+  request: Request,
+  response: Response,
+  input: z.output<typeof devicesContracts.requestApproval.request>,
+) {
+  const pending = await this.devices.request(request.sessionID, input.body.email);
+  response.status(201).json(pending);
+}
+```
+
+Input and output may differ after normalization or coercion: use `z.input` for
+unparsed contract input and `z.output` inside controllers. No cast, request-wide
+validated-data bag or second parse is needed. Request bodies remain strict at
+operation boundaries; parsed parameters/query/header values are passed separately
+without mutating Express's query getter. Domain authorization, proof lifetimes,
+password policy and cryptographic verification remain enforced by the services.
+WebAuthn request schemas preserve extension fields and use `satisfies` to check
+compatibility with SimpleWebAuthn's types; the SDK verifies signatures and claims.
+
+The shared adapter maps only explicitly allowlisted validation codes to public
+HTTP errors. It never returns or logs raw Zod issues, paths or input values.
+Origin/CSRF checks and shared request limits run before operation validation;
+route guards preserve anonymous and passkey authorization boundaries.
+
+`GET /openapi.json` is available without database, SMTP or Google configuration.
+The gateway serves the same compiled API at `/api/openapi.json`, with a server
+base of `/api` and unchanged `/auth/...` operation paths. The document includes
+cookie/CSRF schemes, provider capabilities, account access levels, payloads,
+responses, proof restrictions and controlled errors. Document composition is
+local to each application instance and does not inspect Express internals or
+maintain a global mutable route registry. A documentation UI is not installed.
 
 ## Persistence and builds
 

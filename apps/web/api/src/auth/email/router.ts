@@ -1,17 +1,27 @@
+import { registerRoute } from '@visomi-stack/web-backend-shared';
 import { Router } from 'express';
 
-import type { AuthRuntime } from '../runtime';
+import { emailContracts } from './contract';
+import type { EmailController } from './controller';
 
-import { requestEmailChange, requestVerification, resendChallenge, verifyEmail, verifyEmailChange } from './controller';
-
-export function createEmailRouter(auth: AuthRuntime): Router {
+export function createEmailRouter(controller: EmailController): Router {
   const router = Router();
 
-  router.post('/email/request', (request, response) => requestVerification(auth, request, response));
-  router.post('/email/verify', (request, response) => verifyEmail(auth, request, response));
-  router.post('/email/change/request', (request, response) => requestEmailChange(auth, request, response));
-  router.post('/email/change/verify', (request, response) => verifyEmailChange(auth, request, response));
-  router.post('/challenges/resend', (request, response) => resendChallenge(auth, request, response));
+  registerRoute(router, emailContracts.requestVerification, (request, response, input) =>
+    controller.requestVerification(request, response, input),
+  );
+  registerRoute(router, emailContracts.verifyEmail, (request, response, input) =>
+    controller.verifyEmail(request, response, input),
+  );
+  registerRoute(router, emailContracts.requestEmailChange, (request, response, input) =>
+    controller.requestEmailChange(request, response, input),
+  );
+  registerRoute(router, emailContracts.verifyEmailChange, (request, response, input) =>
+    controller.verifyEmailChange(request, response, input),
+  );
+  registerRoute(router, emailContracts.resendChallenge, (request, response, input) =>
+    controller.resendChallenge(request, response, input),
+  );
 
   return router;
 }

@@ -1,66 +1,87 @@
+import { inject } from '@visomi-stack/backend-shared';
 import type { Request, Response } from 'express';
+import type { z } from 'zod';
 
-import { normalizeEmail } from '../email/normalization';
-import type { AuthRuntime } from '../runtime';
-import {
-  body,
-  identifier,
-  requireAnonymousSession,
-  requirePrincipal,
-  sendAuthenticationResult,
-  text,
-} from '../shared/http';
+import { Devices } from '../devices/service';
+import { SessionResponses } from '../sessions/response';
+import { requireAnonymousSession, requirePrincipal } from '../shared/http';
 
-export async function requestApproval(auth: AuthRuntime, request: Request, response: Response) {
-  requireAnonymousSession(request);
-  const input = body(request, ['email']);
-  const pending = await auth.devices.request(request.sessionID, normalizeEmail(input.email));
+import { devicesContracts } from './contract';
 
-  response.status(201).json(pending);
-}
+export class DevicesController {
+  private readonly devices = inject(Devices);
+  private readonly responses = inject(SessionResponses);
 
-export async function getApprovalStatus(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['requestId']);
-  const state = await auth.devices.status(request.sessionID, identifier(input.requestId));
+  async requestApproval(
+    request: Request,
+    response: Response,
+    input: z.output<typeof devicesContracts.requestApproval.request>,
+  ) {
+    requireAnonymousSession(request);
 
-  response.json(state);
-}
+    const pending = await this.devices.request(request.sessionID, input.body.email);
 
-export async function reviewApproval(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['requestId']);
-  const state = await auth.devices.review(request.sessionID, requirePrincipal(request), identifier(input.requestId));
+    response.status(201).json(pending);
+  }
 
-  response.json(state);
-}
+  async getApprovalStatus(
+    request: Request,
+    response: Response,
+    input: z.output<typeof devicesContracts.getApprovalStatus.request>,
+  ) {
+    const state = await this.devices.status(request.sessionID, input.body.requestId);
 
-export async function decideApproval(
-  auth: AuthRuntime,
-  request: Request,
-  response: Response,
-  operation: 'approve' | 'deny',
-) {
-  const input = body(request, ['requestId', 'userCode']);
+    response.json(state);
+  }
 
-  await auth.devices.decide(
-    request.sessionID,
-    requirePrincipal(request),
-    identifier(input.requestId),
-    operation === 'approve',
-    text(input.userCode, 6),
-  );
-  response.status(204).end();
-}
+  async reviewApproval(
+    request: Request,
+    response: Response,
+    input: z.output<typeof devicesContracts.reviewApproval.request>,
+  ) {
+    const state = await this.devices.review(request.sessionID, requirePrincipal(request), input.body.requestId);
 
-export async function cancelApproval(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['requestId']);
+    response.json(state);
+  }
 
-  await auth.devices.cancel(request.sessionID, identifier(input.requestId));
-  response.status(204).end();
-}
+  async cancelApproval(
+    request: Request,
+    response: Response,
+    input: z.output<typeof devicesContracts.cancelApproval.request>,
+  ) {
+    await this.devices.cancel(request.sessionID, input.body.requestId);
+    response.status(204).end();
+  }
 
-export async function consumeApproval(auth: AuthRuntime, request: Request, response: Response) {
-  const input = body(request, ['requestId', 'userCode']);
-  const user = await auth.devices.consume(request.sessionID, identifier(input.requestId), text(input.userCode, 6));
+  async consumeApproval(
+    request: Request,
+    response: Response,
+    input: z.output<typeof devicesContracts.consumeApproval.request>,
+  ) {
+    const user = await this.devices.consume(request.sessionID, input.body.requestId, input.body.userCode);
 
-  await sendAuthenticationResult(auth, request, response, user);
+    await this.responses.send(request, response, user);
+  }
+
+  async approve(request: Request, response: Response, input: z.output<typeof devicesContracts.approve.request>) {
+    await this.devices.decide(
+      request.sessionID,
+      requirePrincipal(request),
+      input.body.requestId,
+      true,
+      input.body.userCode,
+    );
+    response.status(204).end();
+  }
+
+  async deny(request: Request, response: Response, input: z.output<typeof devicesContracts.deny.request>) {
+    await this.devices.decide(
+      request.sessionID,
+      requirePrincipal(request),
+      input.body.requestId,
+      false,
+      input.body.userCode,
+    );
+    response.status(204).end();
+  }
 }

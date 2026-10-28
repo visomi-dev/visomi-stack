@@ -1,18 +1,18 @@
 import { execFile, spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
-import { mkdtemp, mkdir, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import type { AddressInfo } from 'node:net';
 import { createServer } from 'node:net';
 import { join, resolve } from 'node:path';
-import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
-import { randomUUID } from 'node:crypto';
-import type { AddressInfo } from 'node:net';
+import { promisify } from 'node:util';
 
 import { createDatabase } from '@visomi-stack/backend-shared';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { authenticator } from '@visomi-stack/dev-testing';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 import { SMTPServer } from 'smtp-server';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadApi } from '../../src/api-module';
 
@@ -197,6 +197,8 @@ describe('compiled ESM gateway and embedded API', () => {
     expect(metadata.dependencies['drizzle-orm']).toBe('1.0.0-rc.5');
     expect(metadata.dependencies['injection-js']).toBe('2.6.1');
     expect(metadata.dependencies['express-rate-limit']).toBe('8.5.2');
+    expect(metadata.dependencies.zod).toBe('4.6.6');
+    expect(metadata.dependencies['zod-openapi']).toBe('6.0.2');
     expect(metadata.dependencies.helmet).toBe('8.3.0');
     const mapFile = await readFile(join(output, 'main.js.map'), 'utf8');
     const map = JSON.parse(mapFile);
@@ -209,6 +211,12 @@ describe('compiled ESM gateway and embedded API', () => {
     const gateway = await launch();
 
     try {
+      const specification = await fetch(gateway.url + '/api/openapi.json');
+      const document = await specification.json();
+
+      expect(specification.status).toBe(200);
+      expect(document.servers).toEqual([{ url: '/api' }]);
+      expect(document.paths['/auth/session'].get.operationId).toBe('sessions_getSession');
       const paths = ['/api/', '/api/auth/session', '/api/missing', '/'];
       const responses = await Promise.all(paths.map((path) => fetch(gateway.url + path)));
 
@@ -228,7 +236,7 @@ describe('compiled ESM gateway and embedded API', () => {
       const requests = result.events.filter((event) => event.event === 'http.request');
 
       expect(result.code).toBe(0);
-      expect(requests).toHaveLength(paths.length);
+      expect(requests).toHaveLength(paths.length + 1);
       expect(result.events.every((event) => event.service === 'web-gateway')).toBe(true);
       expect(result.events.filter((event) => event.event === 'runtime.started')).toHaveLength(1);
       expect(result.events.filter((event) => event.event === 'runtime.stopped')).toHaveLength(1);

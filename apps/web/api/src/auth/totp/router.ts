@@ -1,16 +1,20 @@
+import { registerRoute } from '@visomi-stack/web-backend-shared';
 import { Router } from 'express';
 
-import type { AuthRuntime } from '../runtime';
+import { totpContracts } from './contract';
+import type { TotpController } from './controller';
 
-import { confirmTotp, regenerateRecoveryCodes, removeTotp, setupTotp } from './controller';
-
-export function createTotpRouter(auth: AuthRuntime): Router {
+export function createTotpRouter(controller: TotpController): Router {
   const router = Router();
 
-  router.post('/totp/setup', (request, response) => setupTotp(auth, request, response));
-  router.post('/totp/confirm', (request, response) => confirmTotp(auth, request, response));
-  router.delete('/totp', (request, response) => removeTotp(auth, request, response));
-  router.post('/recovery-codes/regenerate', (request, response) => regenerateRecoveryCodes(auth, request, response));
+  registerRoute(router, totpContracts.setupTotp, (request, response) => controller.setupTotp(request, response));
+  registerRoute(router, totpContracts.confirmTotp, (request, response, input) =>
+    controller.confirmTotp(request, response, input),
+  );
+  registerRoute(router, totpContracts.removeTotp, (request, response) => controller.removeTotp(request, response));
+  registerRoute(router, totpContracts.regenerateRecoveryCodes, (request, response) =>
+    controller.regenerateRecoveryCodes(request, response),
+  );
 
   return router;
 }

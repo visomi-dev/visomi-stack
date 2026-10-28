@@ -38,7 +38,9 @@
     "otplib": "13.5.0",
     "passport": "0.7.0",
     "pg": "8.23.1",
-    "pino": "10.4.0"
+    "pino": "10.4.0",
+    "zod": "4.6.6",
+    "zod-openapi": "6.0.2"
   },
   "devDependencies": {
     "@angular-devkit/core": "~22.2.0",

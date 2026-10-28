@@ -1,27 +1,53 @@
+import { registerRoute } from '@visomi-stack/web-backend-shared';
+import type { NextFunction, Request, Response } from 'express';
 import { Router } from 'express';
 
-import type { AuthRuntime } from '../runtime';
+import { requireAnonymousSession } from '../shared/http';
 
-import {
-  completeReauthentication,
-  signIn,
-  signUp,
-  startReauthentication,
-  updatePassword,
-  verifySignIn,
-} from './controller';
+import { passwordContracts } from './contract';
+import type { PasswordController } from './controller';
 
-export function createPasswordRouter(auth: AuthRuntime): Router {
+export function createPasswordRouter(controller: PasswordController): Router {
   const router = Router();
 
-  router.post('/password/sign-up', (request, response) => signUp(auth, request, response));
-  router.post('/password/sign-in', (request, response) => signIn(auth, request, response));
-  router.post('/password/verify', (request, response) => verifySignIn(auth, request, response));
-  router.post('/reauth/password/start', (request, response) => startReauthentication(auth, request, response));
-  router.post('/reauth/password/complete', (request, response) => completeReauthentication(auth, request, response));
-  router.post('/password/add', (request, response) => updatePassword(auth, request, response, 'add'));
-  router.post('/password/change', (request, response) => updatePassword(auth, request, response, 'change'));
-  router.post('/password/remove', (request, response) => updatePassword(auth, request, response, 'remove'));
+  registerRoute(
+    router,
+    passwordContracts.signUp,
+    (request, response, input) => controller.signUp(request, response, input),
+    anonymousOnly,
+  );
+  registerRoute(
+    router,
+    passwordContracts.signIn,
+    (request, response, input) => controller.signIn(request, response, input),
+    anonymousOnly,
+  );
+  registerRoute(
+    router,
+    passwordContracts.verifySignIn,
+    (request, response, input) => controller.verifySignIn(request, response, input),
+    anonymousOnly,
+  );
+  registerRoute(router, passwordContracts.startReauthentication, (request, response, input) =>
+    controller.startReauthentication(request, response, input),
+  );
+  registerRoute(router, passwordContracts.completeReauthentication, (request, response, input) =>
+    controller.completeReauthentication(request, response, input),
+  );
+  registerRoute(router, passwordContracts.addPassword, (request, response, input) =>
+    controller.addPassword(request, response, input),
+  );
+  registerRoute(router, passwordContracts.changePassword, (request, response, input) =>
+    controller.changePassword(request, response, input),
+  );
+  registerRoute(router, passwordContracts.removePassword, (request, response, input) =>
+    controller.removePassword(request, response, input),
+  );
 
   return router;
+}
+
+function anonymousOnly(request: Request, _response: Response, next: NextFunction): void {
+  requireAnonymousSession(request);
+  next();
 }

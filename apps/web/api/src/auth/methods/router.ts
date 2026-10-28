@@ -1,13 +1,16 @@
+import { registerRoute } from '@visomi-stack/web-backend-shared';
 import { Router } from 'express';
 
-import type { AuthRuntime } from '../runtime';
+import { methodsContracts } from './contract';
+import type { MethodsController } from './controller';
 
-import { getMethods } from './controller';
-
-export function createMethodRouter(auth: AuthRuntime): Router {
+export function createMethodRouter(controller: MethodsController): Router {
   const router = Router();
 
-  router.get('/methods', (request, response) => getMethods(auth, request, response));
+  registerRoute(router, methodsContracts.getProviders, (request, response) =>
+    controller.getProviders(request, response),
+  );
+  registerRoute(router, methodsContracts.getMethods, (request, response) => controller.getMethods(request, response));
 
   return router;
 }

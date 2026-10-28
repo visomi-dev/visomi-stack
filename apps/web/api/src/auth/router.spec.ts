@@ -6,10 +6,25 @@ import type { Request, Response } from 'express';
 import express from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { storage } from '../../tests/support/auth-state';
+import { authInjector } from '../../tests/support/injection';
+
+import { DevicesController } from './devices/controller';
+import { EmailController } from './email/controller';
+import { EmailIdentity } from './email/service';
+import { GoogleController } from './google/controller';
+import { MethodsController } from './methods/controller';
+import { PasskeysController } from './passkeys/controller';
+import { Passkeys } from './passkeys/service';
+import { PasswordController } from './password/controller';
+import { RecoveryController } from './recovery/controller';
 import { authErrorHandler, createAuthRouter, saveSession } from './router';
 import type { AuthRuntime } from './runtime';
+import { SessionsController } from './sessions/controller';
 import { authConfig } from './shared/config';
+import { SecurityNotifications } from './shared/notifications';
 import { rateLimit } from './shared/security';
+import { TotpController } from './totp/controller';
 
 describe('authentication HTTP boundary', () => {
   it('saves the session before returning and sanitizes failed persistence', async () => {
@@ -75,7 +90,18 @@ const user = {
   emailVerified: true,
   authenticatedAt: 123456,
 };
-const response = { id: 'synthetic_public_key', response: {} };
+const response = {
+  id: 'synthetic_public_key',
+  rawId: 'synthetic_public_key',
+  type: 'public-key',
+  clientExtensionResults: {},
+  response: {
+    clientDataJSON: 'synthetic',
+    attestationObject: 'synthetic',
+    authenticatorData: 'synthetic',
+    signature: 'synthetic',
+  },
+};
 
 function routerFixture() {
   const config = authConfig({
@@ -96,13 +122,29 @@ function routerFixture() {
   const destroy = vi.fn((callback: (error?: Error) => void) => callback());
   const logIn = vi.fn((_user: Express.User, callback: (error?: Error) => void) => callback());
   const requireInitialized = vi.fn((_request: Request, _response: Response, next: (error?: Error) => void) => next());
-  const database = {};
+  const database = storage().db;
   const requestLimits = {};
   const notifications = { notify: vi.fn().mockResolvedValue(true) };
   const email = {
     emailStart: vi.fn().mockResolvedValue({ flowId: challengeId }),
   };
+  const injector = authInjector(database, config, [
+    { provide: Passkeys, useValue: passkeys },
+    { provide: EmailIdentity, useValue: email },
+    { provide: SecurityNotifications, useValue: notifications },
+  ]);
   const auth = {
+    controllers: {
+      devices: injector.get<DevicesController>(DevicesController),
+      email: injector.get<EmailController>(EmailController),
+      google: injector.get<GoogleController>(GoogleController),
+      methods: injector.get<MethodsController>(MethodsController),
+      passkeys: injector.get<PasskeysController>(PasskeysController),
+      password: injector.get<PasswordController>(PasswordController),
+      recovery: injector.get<RecoveryController>(RecoveryController),
+      sessions: injector.get<SessionsController>(SessionsController),
+      totp: injector.get<TotpController>(TotpController),
+    },
     config,
     passkeys,
     requireInitialized,
@@ -300,6 +342,7 @@ describe('authentication router decisions and delegation', () => {
 
   it.each([
     ['POST', '/passkeys/registration/options', { userId: user.id }],
+    ['POST', '/passkeys/registration/options', { email: 'synthetic@example.test' }],
     ['POST', '/passkeys/authentication/options', []],
     ['POST', '/passkeys/registration/verify', { challengeId: 'invalid', response }],
     ['POST', '/passkeys/registration/verify', { challengeId, response, label: ' ' }],
