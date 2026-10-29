@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en-US" target-language="es" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="language" datatype="html">
+        <source>Language</source>
+        <target>Idioma</target>
+      </trans-unit>
+      <trans-unit id="title" datatype="html">
+        <source>One visual language.</source>
+        <target>Un mismo lenguaje visual.</target>
+      </trans-unit>
+      <trans-unit id="intro" datatype="html">
+        <source>A calm foundation for everything you build. Explore the type, surfaces and everyday details that make a workspace feel consistent.</source>
+        <target>Una base serena para todo lo que construyas. Explora la tipografía, las superficies y los detalles que dan coherencia a tu espacio de trabajo.</target>
+      </trans-unit>
+      <trans-unit id="foundations" datatype="html">
+        <source>Design foundations</source>
+        <target>Fundamentos de diseño</target>
+      </trans-unit>
+      <trans-unit id="theme" datatype="html">
+        <source>Appearance</source>
+        <target>Apariencia</target>
+      </trans-unit>
+      <trans-unit id="system" datatype="html">
+        <source>System</source>
+        <target>Sistema</target>
+      </trans-unit>
+      <trans-unit id="light" datatype="html">
+        <source>Light</source>
+        <target>Claro</target>
+      </trans-unit>
+      <trans-unit id="dark" datatype="html">
+        <source>Dark</source>
+        <target>Oscuro</target>
+      </trans-unit>
+      <trans-unit id="skip" datatype="html">
+        <source>Skip to content</source>
+        <target>Saltar al contenido</target>
+      </trans-unit>
+      <trans-unit id="type" datatype="html">
+        <source>Typography</source>
+        <target>Tipografía</target>
+      </trans-unit>
+      <trans-unit id="typeNote" datatype="html">
+        <source>Clear at every scale.</source>
+        <target>Claridad a cualquier escala.</target>
+      </trans-unit>
+      <trans-unit id="body" datatype="html">
+        <source>Body text brings clarity to everyday work.</source>
+        <target>El texto aporta claridad al trabajo de cada día.</target>
+      </trans-unit>
+      <trans-unit id="mono" datatype="html">
+        <source>Details, precisely.</source>
+        <target>Detalles, con precisión.</target>
+      </trans-unit>
+      <trans-unit id="surfaces" datatype="html">
+        <source>Surfaces</source>
+        <target>Superficies</target>
+      </trans-unit>
+      <trans-unit id="surfaceNote" datatype="html">
+        <source>A little depth. A clear hierarchy.</source>
+        <target>Un poco de profundidad. Una jerarquía clara.</target>
+      </trans-unit>
+      <trans-unit id="canvas" datatype="html">
+        <source>Canvas</source>
+        <target>Lienzo</target>
+      </trans-unit>
+      <trans-unit id="panel" datatype="html">
+        <source>Panel</source>
+        <target>Panel</target>
+      </trans-unit>
+      <trans-unit id="raised" datatype="html">
+        <source>Raised panel</source>
+        <target>Panel elevado</target>
+      </trans-unit>
+      <trans-unit id="palette" datatype="html">
+        <source>Color &amp; feedback</source>
+        <target>Color y estados</target>
+      </trans-unit>
+      <trans-unit id="paletteNote" datatype="html">
+        <source>Meaning beyond color.</source>
+        <target>El significado va más allá del color.</target>
+      </trans-unit>
+      <trans-unit id="brand" datatype="html">
+        <source>Primary action</source>
+        <target>Acción principal</target>
+      </trans-unit>
+      <trans-unit id="success" datatype="html">
+        <source>✓ Ready</source>
+        <target>✓ Listo</target>
+      </trans-unit>
+      <trans-unit id="warning" datatype="html">
+        <source>! Needs attention</source>
+        <target>! Requiere atención</target>
+      </trans-unit>
+      <trans-unit id="danger" datatype="html">
+        <source>× Something went wrong</source>
+        <target>× Algo salió mal</target>
+      </trans-unit>
+      <trans-unit id="footer" datatype="html">
+        <source>Built with care. Made to be yours.</source>
+        <target>Hecho con cuidado. Para hacerlo tuyo.</target>
+      </trans-unit>
+      <trans-unit id="top" datatype="html">
+        <source>Back to top</source>
+        <target>Volver arriba</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

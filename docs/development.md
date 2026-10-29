@@ -69,7 +69,7 @@ budget and five-second total deadline as the standalone API.
 The container runtime defaults to the standalone API. Set `APP_NAME=web-gateway`
 to build the gateway and its API dependency, copy both compiled outputs, and run
 the gateway's `main.js`. Set `APP_PORT` to change the published port and align
-`AUTH_ORIGIN` with that public URL. This adds no Angular SSR, Astro, realtime or
+`AUTH_ORIGIN` with that public URL. This tunnel configuration adds no frontend mounts, realtime or
 worker mounts.
 
 ## Container database initialization
@@ -299,3 +299,8 @@ When persistence and release workflows are introduced, preserve applied migratio
 history, make environment changes explicit, and verify backup restoration before
 relying on it. Initializer reruns, key rotation, destructive database operations,
 and deployment are not implicit maintenance steps.
+
+## Web foundations
+
+See [Web foundations](web-foundations.md) for the independent Angular SSR app,
+Astro development server, compiled Astro/Express composition, themes and UI checks.

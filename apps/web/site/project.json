@@ -1,0 +1,69 @@
+{
+  "name": "web-site",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/web/site/src",
+  "tags": ["scope:web-frontend", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "production",
+        "{workspaceRoot}/styles.base.css",
+        "{workspaceRoot}/theme.base.js",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/pnpm-lock.yaml"
+      ],
+      "outputs": ["{workspaceRoot}/dist/apps/web/site"],
+      "options": {
+        "command": "pnpm exec astro build --root apps/web/site",
+        "env": {
+          "ASTRO_TELEMETRY_DISABLED": "1"
+        }
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "pnpm exec astro dev --host 127.0.0.1 --port 4200 --ignore-lock",
+        "cwd": "apps/web/site",
+        "env": {
+          "ASTRO_TELEMETRY_DISABLED": "1"
+        }
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "production",
+        "{workspaceRoot}/styles.base.css",
+        "{workspaceRoot}/theme.base.js",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/pnpm-lock.yaml"
+      ],
+      "options": {
+        "command": "pnpm exec astro check --root apps/web/site",
+        "env": {
+          "ASTRO_TELEMETRY_DISABLED": "1"
+        }
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint apps/web/site theme.base.js"
+      }
+    },
+    "e2e": {
+      "dependsOn": [
+        {
+          "projects": ["web-gateway"],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

@@ -33,6 +33,7 @@
 - Use the local kiss skill for simplicity decisions; see .agents/skills/README.md for routing and optional workflows.
 - Check installed versions, actual files, and configured targets before copying commands or examples. Do not downgrade or migrate tooling merely to match a skill.
 - UI accessibility and the existing design system take precedence over decorative recipes. Financial UX, marketing animation, SEO, PRDs, and exhaustive plans are conditional, not universal requirements.
+- For UI work, follow the responsibilities and precedence in .agents/skills/README.md. Use ui-ux-pro-max for UX/UI design proposals, the framework skills for implementation, accessibility for accessibility requirements, web-design-reviewer for inspection, and impeccable-design-polish for requested refinement. Load only the roles needed for the current task.
 - The Nx task preference below applies to project tasks. It does not replace the intentionally file-scoped ESLint/Prettier commands in lint-staged.
 - Keep this agreement outside the generated Nx section so generator updates do not erase it.
 

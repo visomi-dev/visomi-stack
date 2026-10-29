@@ -15,6 +15,7 @@ import { SMTPServer } from 'smtp-server';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadApi } from '../../src/api-module';
+import { loadSite } from '../../src/site-module';
 
 const execute = promisify(execFile);
 const root = resolve(import.meta.dirname, '../../../../..');
@@ -163,6 +164,25 @@ async function launch(databaseUrl?: string) {
 }
 
 describe('compiled ESM gateway and embedded API', () => {
+  it('loads the compiled Astro handler and resolves its public assets without listening', async () => {
+    const site = await loadSite(pathToFileURL(join(root, 'dist/apps/web/site/server/entry.mjs')));
+
+    expect(site.handler).toBeTypeOf('function');
+    expect(site.clientDirectory).toBe(join(root, 'dist/apps/web/site/client/'));
+    const script = `
+      import net from 'node:net';
+      net.Server.prototype.listen = () => { throw new Error('unexpected listener'); };
+      net.Socket.prototype.connect = () => { throw new Error('unexpected connection'); };
+      const site = await import(${JSON.stringify(pathToFileURL(join(root, 'dist/apps/web/site/server/entry.mjs')).href)});
+      console.log(typeof site.handler);
+    `;
+    const result = await execute(process.execPath, ['--input-type=module', '-e', script], {
+      cwd: directory,
+      timeout: 5000,
+    });
+
+    expect(result.stdout.trim()).toBe('function');
+  });
   it('loads the actual compiled API through the gateway module boundary without starting it', async () => {
     const api = await loadApi(pathToFileURL(join(root, 'dist/apps/web/api/app.js')));
 
@@ -226,9 +246,9 @@ describe('compiled ESM gateway and embedded API', () => {
       expect(document.servers).toEqual([{ url: '/api' }]);
       expect(document.paths['/auth/session'].get.operationId).toBe('sessions_getSession');
       const paths = ['/api/', '/api/auth/session', '/api/missing', '/'];
-      const responses = await Promise.all(paths.map((path) => fetch(gateway.url + path)));
+      const responses = await Promise.all(paths.map((path) => fetch(gateway.url + path, { redirect: 'manual' })));
 
-      expect(responses.map((response) => response.status)).toEqual([200, 503, 404, 404]);
+      expect(responses.map((response) => response.status)).toEqual([200, 503, 404, 302]);
       for (const response of responses) {
         expect(response.headers.get('x-content-type-options')).toBe('nosniff');
         expect(response.headers.get('content-security-policy')).toContain("script-src 'self'");

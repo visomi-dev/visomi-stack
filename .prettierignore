@@ -9,3 +9,5 @@ resources
 /Dockerfile
 # open-design skills are vendored documentation shipped as-is
 .opencode
+
+**/.astro/

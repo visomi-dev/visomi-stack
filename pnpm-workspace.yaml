@@ -4,3 +4,7 @@ allowBuilds:
   unrs-resolver: true
   '@parcel/watcher': false
   esbuild: true
+  lmdb: false
+  msgpackr-extract: false
+minimumReleaseAgeExclude:
+  - '@angular/ssr@22.2.5'

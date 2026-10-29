@@ -1,0 +1,122 @@
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter/latin-600.css';
+@import '@fontsource/manrope/latin-600.css';
+@import '@fontsource/manrope/latin-700.css';
+@import '@fontsource/jetbrains-mono/latin-400.css';
+@import 'tailwindcss' source(none);
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Manrope', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-control: 0.5rem;
+  --radius-panel: 0.75rem;
+  --shadow-sm: 0 1px 2px rgb(9 9 11 / 0.06), 0 1px 1px rgb(9 9 11 / 0.04);
+  --shadow-md: 0 16px 40px rgb(9 9 11 / 0.12);
+  --shadow-panel: 0 32px 64px -12px rgb(9 9 11 / 0.08);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --radius: 0.5rem;
+    --container-max: 1440px;
+    --content-max: 1152px;
+    --motion-fast: 100ms ease;
+    --motion-base: 200ms ease;
+    --motion-enter: 300ms ease-in-out;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+  html {
+    min-height: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--color-white);
+    color: var(--color-zinc-950);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  html.dark body {
+    background: var(--color-zinc-950);
+    color: var(--color-zinc-50);
+  }
+  a,
+  button:not(:disabled),
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: var(--color-blue-700);
+    color: var(--color-white);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --motion-fast: 1ms;
+      --motion-base: 1ms;
+      --motion-enter: 1ms;
+    }
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+@utility ui-focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+  &:focus-visible {
+    outline-color: var(--color-blue-600);
+  }
+  html.dark &:focus-visible {
+    outline-color: var(--color-blue-400);
+  }
+}
+
+@utility ui-panel {
+  background: var(--color-zinc-50);
+  color: var(--color-zinc-950);
+  border: 1px solid var(--color-zinc-200);
+  border-radius: var(--radius-panel);
+  html.dark & {
+    background: var(--color-zinc-900);
+    color: var(--color-zinc-50);
+    border-color: var(--color-zinc-700);
+  }
+}
+
+@utility ui-panel-raised {
+  background: var(--color-zinc-100);
+  color: var(--color-zinc-950);
+  border: 1px solid var(--color-zinc-200);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+  html.dark & {
+    background: var(--color-zinc-800);
+    color: var(--color-zinc-50);
+    border-color: var(--color-zinc-700);
+  }
+}
+
+@utility ui-touch-target {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+@utility ui-text-rhythm {
+  text-wrap: pretty;
+  line-height: 1.7;
+}

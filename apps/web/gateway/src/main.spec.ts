@@ -16,6 +16,8 @@ const boundary = vi.hoisted(() => ({
   createServer: vi.fn(),
   createGatewayApp: vi.fn(),
   loadApi: vi.fn(),
+  loadSite: vi.fn(),
+  site: { handler: vi.fn(), clientDirectory: '/synthetic/site/client' },
   ready: vi.fn(),
 }));
 
@@ -27,6 +29,7 @@ vi.mock('@visomi-stack/backend-shared', () => ({
   createSmtp: boundary.createSmtp,
 }));
 vi.mock('./api-module', () => ({ loadApi: boundary.loadApi }));
+vi.mock('./site-module', () => ({ loadSite: boundary.loadSite }));
 vi.mock('./app', () => ({ createGatewayApp: boundary.createGatewayApp }));
 vi.mock('@nx/js/ready-signal', () => ({ emitReadySignal: boundary.ready }));
 
@@ -38,6 +41,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.stubEnv('DATABASE_URL', '');
   vi.stubEnv('API_APP_PATH', '/synthetic/compiled/api/app.js');
+  vi.stubEnv('SITE_APP_PATH', '/synthetic/compiled/site/server/entry.mjs');
   vi.stubEnv('AUTH_TRUST_PROXY', '');
   vi.stubEnv('HOST', '127.0.0.1');
   vi.stubEnv('PORT', '3456');
@@ -56,6 +60,7 @@ beforeEach(() => {
   boundary.api.authConfig.mockReturnValue({});
   boundary.api.createAuthentication.mockReturnValue(boundary.auth);
   boundary.loadApi.mockResolvedValue(boundary.api);
+  boundary.loadSite.mockResolvedValue(boundary.site);
   boundary.createGatewayApp.mockReturnValue('synthetic-app');
   boundary.createServer.mockReturnValue(boundary.server);
   boundary.server.once.mockImplementation((name, callback) => boundary.events.set(name, callback));
@@ -86,11 +91,13 @@ describe('gateway executable ownership', () => {
     vi.stubEnv('HOST', undefined);
     vi.stubEnv('PORT', undefined);
     vi.stubEnv('API_APP_PATH', '');
+    vi.stubEnv('SITE_APP_PATH', '');
 
     await start();
 
     expect(boundary.server.listen).toHaveBeenCalledWith(3000, 'localhost', expect.any(Function));
     expect(boundary.loadApi.mock.calls[0][0].pathname).toMatch(/\/api\/app.js$/);
+    expect(boundary.loadSite.mock.calls[0][0].pathname).toMatch(/\/site\/server\/entry.mjs$/);
   });
 
   it.each([false, true])('does not fail startup if optional Nx readiness fails: %s', async (fails) => {
@@ -156,6 +163,7 @@ describe('gateway executable ownership', () => {
     expect(boundary.loadApi.mock.calls[0][0].href).toBe('file:///synthetic/compiled/api/app.js');
     expect(boundary.createGatewayApp).toHaveBeenCalledWith({
       api: boundary.api,
+      site: boundary.site,
       auth: undefined,
       observability: boundary.observability,
     });

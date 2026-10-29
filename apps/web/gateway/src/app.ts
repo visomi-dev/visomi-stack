@@ -4,12 +4,14 @@ import {
   securityHeaders,
   type Observability,
 } from '@visomi-stack/web-backend-shared';
-import express from 'express';
+import express, { static as serveStatic } from 'express';
 
 import type { ApiModule, EmbeddedAuthentication } from './api-module';
+import type { SiteModule } from './site-module';
 
 export function createGatewayApp(options: {
   api: ApiModule;
+  site?: SiteModule;
   auth?: EmbeddedAuthentication;
   observability?: Observability;
   trustProxy?: string[];
@@ -47,6 +49,13 @@ export function createGatewayApp(options: {
       observability: options.observability,
     }),
   );
+  // Public pages must never turn missing API or future application routes into site responses.
+  app.use(['/api', '/app'], (_request, response) => response.status(404).json({ error: 'not_found' }));
+  if (options.site) {
+    app.use(serveStatic(options.site.clientDirectory, { index: false, redirect: false }));
+    app.use(options.site.handler);
+  }
+
   app.use((_request, response) => response.status(404).json({ error: 'not_found' }));
   if ((options.errorMode ?? 'managed') === 'managed') {
     app.use(httpErrorHandler);

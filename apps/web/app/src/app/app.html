@@ -1,0 +1,112 @@
+<a
+  href="#main"
+  class="sr-only ui-focus-ring focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-control focus:bg-white focus:p-4 focus:text-zinc-950"
+  i18n="@@skip"
+>
+  Skip to content
+</a>
+<div id="top" class="mx-auto max-w-(--content-max) px-6 sm:px-10">
+  <header class="flex flex-wrap items-center justify-between gap-6 border-b border-zinc-200 py-6 dark:border-zinc-800">
+    <a
+      href="#top"
+      class="inline-flex ui-touch-target items-center gap-3 rounded-control font-heading text-sm font-bold tracking-widest ui-focus-ring"
+    >
+      <span class="rounded-control bg-blue-600 px-3 py-2 text-white">V</span>
+      VISOMI
+      <span class="font-sans font-normal tracking-normal text-zinc-500 dark:text-zinc-400">/ Stack</span>
+    </a>
+    <div class="flex flex-wrap items-center gap-5 text-sm">
+      <nav aria-label="Language" i18n-aria-label="@@language" class="flex gap-3">
+        <a
+          href="/app/en/"
+          lang="en"
+          hreflang="en"
+          class="inline-flex ui-touch-target items-center rounded-control px-2 ui-focus-ring"
+        >
+          EN
+        </a>
+        <a
+          href="/app/es/"
+          lang="es"
+          hreflang="es"
+          class="inline-flex ui-touch-target items-center rounded-control px-2 ui-focus-ring"
+        >
+          ES
+        </a>
+      </nav>
+      <label class="flex items-center gap-3">
+        <span class="text-zinc-600 dark:text-zinc-300" i18n="@@theme">Appearance</span>
+        <select
+          data-theme-select
+          class="ui-touch-target rounded-control border border-zinc-500 bg-white px-3 text-zinc-950 ui-focus-ring dark:border-zinc-500 dark:bg-zinc-900 dark:text-zinc-50"
+        >
+          <option value="system" i18n="@@system">System</option>
+          <option value="light" i18n="@@light">Light</option>
+          <option value="dark" i18n="@@dark">Dark</option>
+        </select>
+      </label>
+    </div>
+  </header>
+  <main id="main" class="py-14 sm:py-20">
+    <div class="mb-5 flex items-center gap-3 font-mono text-xs tracking-wider text-blue-700 dark:text-blue-400">
+      <span aria-hidden="true" class="h-px w-8 bg-current"></span>
+      01 /
+      <span i18n="@@foundations">Design foundations</span>
+    </div>
+    <h1 class="max-w-3xl font-heading text-4xl leading-tight font-semibold tracking-tight sm:text-6xl" i18n="@@title">
+      One visual language.
+    </h1>
+    <p class="mt-6 max-w-2xl text-base ui-text-rhythm text-zinc-600 sm:text-lg dark:text-zinc-400" i18n="@@intro">
+      A calm foundation for everything you build. Explore the type, surfaces and everyday details that make a workspace
+      feel consistent.
+    </p>
+    <div class="mt-14 grid gap-5 lg:grid-cols-3">
+      <section class="ui-panel p-6 sm:p-7">
+        <h2 class="font-heading text-lg font-semibold" i18n="@@type">Typography</h2>
+        <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400" i18n="@@typeNote">Clear at every scale.</p>
+        <div class="mt-10 font-heading text-6xl font-semibold tracking-tight">Aa</div>
+        <p class="mt-6 text-sm leading-7" i18n="@@body">Body text brings clarity to everyday work.</p>
+        <p
+          class="mt-6 border-t border-zinc-200 pt-4 font-mono text-xs text-zinc-600 dark:border-zinc-700 dark:text-zinc-400"
+          i18n="@@mono"
+        >
+          Details, precisely.
+        </p>
+      </section>
+      <section class="ui-panel p-6 sm:p-7">
+        <h2 class="font-heading text-lg font-semibold" i18n="@@surfaces">Surfaces</h2>
+        <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400" i18n="@@surfaceNote">
+          A little depth. A clear hierarchy.
+        </p>
+        <div class="mt-8 grid gap-3 text-sm">
+          <div
+            class="rounded-panel border border-zinc-300 bg-white p-4 dark:border-zinc-600 dark:bg-zinc-950"
+            i18n="@@canvas"
+          >
+            Canvas
+          </div>
+          <div class="ui-panel p-4" i18n="@@panel">Panel</div>
+          <div class="ui-panel-raised p-4" i18n="@@raised">Raised panel</div>
+        </div>
+      </section>
+      <section class="ui-panel p-6 sm:p-7">
+        <h2 class="font-heading text-lg font-semibold" i18n="@@palette">Color &amp; feedback</h2>
+        <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400" i18n="@@paletteNote">Meaning beyond color.</p>
+        <div class="mt-8 rounded-control bg-blue-600 p-4 text-sm font-medium text-white" i18n="@@brand">
+          Primary action
+        </div>
+        <ul class="mt-6 space-y-4 text-sm">
+          <li class="text-green-800 dark:text-green-300" i18n="@@success">✓ Ready</li>
+          <li class="text-amber-800 dark:text-amber-300" i18n="@@warning">! Needs attention</li>
+          <li class="text-red-700 dark:text-red-300" i18n="@@danger">× Something went wrong</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+  <footer
+    class="flex flex-wrap justify-between gap-4 border-t border-zinc-200 py-7 text-xs text-zinc-600 dark:border-zinc-800 dark:text-zinc-400"
+  >
+    <p i18n="@@footer">Built with care. Made to be yours.</p>
+    <a href="#top" class="rounded-control underline underline-offset-4 ui-focus-ring" i18n="@@top">Back to top</a>
+  </footer>
+</div>
