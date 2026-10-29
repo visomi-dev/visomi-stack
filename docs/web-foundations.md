@@ -69,6 +69,13 @@ API handling and reserved `/api` and `/app` 404s precede public static assets an
 Astro SSR. The gateway owns the listener, security headers, authentication chain,
 telemetry and resource shutdown. The shared error handler remains last.
 
+The pinned Astro packages have pnpm patches for the gateway's runtime policy:
+middleware errors delegate to Express, importing the site installs no global
+rejection handler, and failed stream cancellation never logs URLs or exception
+details. The configured site logger emits controlled event codes only. See
+[patch maintenance](../patches/README.md); keep these files in dependency installs
+and build-cache inputs until replacement versions pass the regressions.
+
 Nx builds `web-site` and `web-api` before the gateway. Preserve all three sibling
 output directories, including site chunks and client assets. The existing Docker
 build copies `dist/apps/web` into the runtime image; dependencies required there

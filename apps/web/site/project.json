@@ -14,6 +14,7 @@
         "{workspaceRoot}/theme.base.js",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/pnpm-lock.yaml",
+        "{workspaceRoot}/patches/**/*",
         "^production"
       ],
       "outputs": ["{workspaceRoot}/dist/apps/web/site"],
@@ -44,6 +45,7 @@
         "{workspaceRoot}/theme.base.js",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/pnpm-lock.yaml",
+        "{workspaceRoot}/patches/**/*",
         "^production"
       ],
       "options": {

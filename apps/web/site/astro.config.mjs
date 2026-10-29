@@ -4,6 +4,7 @@ import { defineConfig } from 'astro/config';
 
 export default defineConfig({
   adapter: node({ mode: 'middleware' }),
+  logger: { entrypoint: new URL('./src/logger.js', import.meta.url) },
   output: 'server',
   outDir: '../../../dist/apps/web/site',
   trailingSlash: 'always',
