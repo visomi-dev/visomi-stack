@@ -1,0 +1,27 @@
+---
+import themeScript from '../../../../../theme.base.js?url&no-inline';
+import '../styles/global.css';
+
+type Props = {
+  locale: 'en' | 'es';
+  title: string;
+  description?: string;
+};
+
+const { locale, title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {description && <meta name="description" content={description} />}
+    <title>{title} · Visomi Stack</title>
+    <script is:inline src={themeScript}></script>
+    <slot name="head" />
+  </head>
+  <body class="min-h-screen bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
+    <slot />
+  </body>
+</html>

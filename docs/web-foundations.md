@@ -7,7 +7,9 @@ It imports self-hosted Latin fonts: Inter for body text, Manrope for headings,
 and JetBrains Mono for technical details. It customizes typography and defines the shared `ui-focus-ring` accessibility utility.
 Radii, shadows, spacing and content widths use Tailwind's standard scales.
 Surfaces, touch targets and text rhythm are composed with Tailwind classes in
-templates; visual component recipes belong to the UI library.
+templates; visual component recipes belong to the UI library. The body canvas,
+text colors and minimum viewport height belong to Angular's `src/index.html` and
+Astro's `src/layouts/base.astro`, expressed with Tailwind utilities.
 
 Use Tailwind's standard zinc surfaces, blue actions and green/red/amber status
 colors. Status meanings also need visible labels. Component classes can use

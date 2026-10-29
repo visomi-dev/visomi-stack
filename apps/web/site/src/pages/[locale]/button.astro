@@ -1,9 +1,8 @@
 ---
-import themeScript from '../../../../../../theme.base.js?url&no-inline';
+import BaseLayout from '../../layouts/base.astro';
 
 import Button from '../../components/button.astro';
 import demoScript from '../../scripts/button-demo.js?url&no-inline';
-import '../../styles/global.css';
 
 const locale = Astro.params.locale;
 if (locale !== 'en' && locale !== 'es') return new Response(null, { status: 404 });
@@ -41,58 +40,49 @@ const text = spanish
     };
 ---
 
-<!doctype html>
-<html lang={locale}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{text.title} · Visomi Stack</title>
-    <script is:inline src={themeScript}></script>
-    <script is:inline type="module" src={demoScript}></script>
-  </head>
-  <body>
-    <main class="mx-auto max-w-6xl px-6 py-12 sm:px-10">
-      <a href={`/${locale}/`} class="ui-focus-ring rounded-lg text-blue-700 underline dark:text-blue-400">
-        {text.home}
-      </a>
-      <h1 class="mt-8 font-heading text-3xl font-semibold">{text.title}</h1>
-      <p class="mt-4 max-w-2xl text-zinc-600 dark:text-zinc-400">{text.description}</p>
-      <section class="mt-8 rounded-xl border border-zinc-200 p-6 dark:border-zinc-700" data-button-demo>
-        <div class="flex flex-wrap gap-4">
-          <Button data-increment>{text.increment}</Button>
-          <Button variant="secondary" size="sm" data-reset>
-            {text.reset}
-          </Button>
-          <Button disabled data-disabled>
-            {text.disabled}
-          </Button>
-        </div>
-        <p class="mt-5">
-          {text.count}{' '}
-          <output aria-live="polite" data-count>
-            0
-          </output>
-        </p>
-        <form method="get" action={`/${locale}/button/`} class="mt-6">
-          <Button type="submit" name="action" value="submit" variant="secondary" size="sm">
-            {text.submit}
-          </Button>
-        </form>
-        <p class="mt-4" role="status">
-          {Astro.url.searchParams.get('action') === 'submit' ? text.submitted : ''}
-        </p>
-      </section>
-      <label class="mt-8 flex items-center gap-3">
-        {text.theme}
-        <select
-          data-theme-select
-          class="ui-focus-ring min-h-11 rounded-lg border border-zinc-500 bg-white px-3 text-zinc-950 dark:bg-zinc-900 dark:text-zinc-50"
-        >
-          <option value="system">{text.system}</option>
-          <option value="light">{text.light}</option>
-          <option value="dark">{text.dark}</option>
-        </select>
-      </label>
-    </main>
-  </body>
-</html>
+<BaseLayout locale={locale} title={text.title}>
+  <script slot="head" is:inline type="module" src={demoScript}></script>
+  <main class="mx-auto max-w-6xl px-6 py-12 sm:px-10">
+    <a href={`/${locale}/`} class="ui-focus-ring rounded-lg text-blue-700 underline dark:text-blue-400">
+      {text.home}
+    </a>
+    <h1 class="mt-8 font-heading text-3xl font-semibold">{text.title}</h1>
+    <p class="mt-4 max-w-2xl text-zinc-600 dark:text-zinc-400">{text.description}</p>
+    <section class="mt-8 rounded-xl border border-zinc-200 p-6 dark:border-zinc-700" data-button-demo>
+      <div class="flex flex-wrap gap-4">
+        <Button data-increment>{text.increment}</Button>
+        <Button variant="secondary" size="sm" data-reset>
+          {text.reset}
+        </Button>
+        <Button disabled data-disabled>
+          {text.disabled}
+        </Button>
+      </div>
+      <p class="mt-5">
+        {text.count}{' '}
+        <output aria-live="polite" data-count>
+          0
+        </output>
+      </p>
+      <form method="get" action={`/${locale}/button/`} class="mt-6">
+        <Button type="submit" name="action" value="submit" variant="secondary" size="sm">
+          {text.submit}
+        </Button>
+      </form>
+      <p class="mt-4" role="status">
+        {Astro.url.searchParams.get('action') === 'submit' ? text.submitted : ''}
+      </p>
+    </section>
+    <label class="mt-8 flex items-center gap-3">
+      {text.theme}
+      <select
+        data-theme-select
+        class="ui-focus-ring min-h-11 rounded-lg border border-zinc-500 bg-white px-3 text-zinc-950 dark:bg-zinc-900 dark:text-zinc-50"
+      >
+        <option value="system">{text.system}</option>
+        <option value="light">{text.light}</option>
+        <option value="dark">{text.dark}</option>
+      </select>
+    </label>
+  </main>
+</BaseLayout>

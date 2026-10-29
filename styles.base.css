@@ -29,16 +29,8 @@
   }
 
   body {
-    min-height: 100vh;
-    background: var(--color-white);
-    color: var(--color-zinc-950);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-  }
-
-  html.dark body {
-    background: var(--color-zinc-950);
-    color: var(--color-zinc-50);
   }
 
   ::selection {

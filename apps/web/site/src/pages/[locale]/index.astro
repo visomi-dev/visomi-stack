@@ -1,132 +1,121 @@
 ---
-import themeScript from '../../../../../../theme.base.js?url&no-inline';
+import BaseLayout from '../../layouts/base.astro';
 
 import { messages } from '../../i18n';
-import '../../styles/global.css';
 
 const locale = Astro.params.locale;
 if (locale !== 'en' && locale !== 'es') return new Response(null, { status: 404 });
 const text = messages[locale];
 ---
 
-<!doctype html>
-<html lang={locale}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={text.intro} />
-    <title>{text.foundations} · Visomi Stack</title>
-    <script is:inline src={themeScript}></script>
-  </head>
-  <body>
-    <a
-      href="#main"
-      class="cursor-pointer ui-focus-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-white focus:p-4 focus:text-zinc-950"
-    >
-      {text.skip}
-    </a>
-    <div id="top" class="mx-auto max-w-6xl px-6 sm:px-10">
-      <header class="flex flex-wrap items-center justify-between gap-6 border-b border-zinc-200 py-6 dark:border-zinc-800">
+<BaseLayout locale={locale} title={text.foundations} description={text.intro}>
+  <a
+    href="#main"
+    class="cursor-pointer ui-focus-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-white focus:p-4 focus:text-zinc-950"
+  >
+    {text.skip}
+  </a>
+  <div id="top" class="mx-auto max-w-6xl px-6 sm:px-10">
+    <header class="flex flex-wrap items-center justify-between gap-6 border-b border-zinc-200 py-6 dark:border-zinc-800">
+      <a
+        href="#top"
+        class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center gap-3 rounded-lg font-heading text-sm font-bold tracking-widest"
+      >
+        <span class="rounded-lg bg-blue-600 px-3 py-2 text-white">V</span> VISOMI{' '}
+        <span class="font-sans font-normal tracking-normal text-zinc-500 dark:text-zinc-400">/ Stack</span>
+      </a>
+      <div class="flex flex-wrap items-center gap-5 text-sm">
         <a
-          href="#top"
-          class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center gap-3 rounded-lg font-heading text-sm font-bold tracking-widest"
+          href={`/${locale}/ui/`}
+          class="ui-focus-ring inline-flex min-h-11 items-center rounded-lg underline underline-offset-4"
         >
-          <span class="rounded-lg bg-blue-600 px-3 py-2 text-white">V</span> VISOMI{' '}
-          <span class="font-sans font-normal tracking-normal text-zinc-500 dark:text-zinc-400">/ Stack</span>
+          {text.components}
         </a>
-        <div class="flex flex-wrap items-center gap-5 text-sm">
+        <nav aria-label={text.language} class="flex gap-3">
           <a
-            href={`/${locale}/ui/`}
-            class="ui-focus-ring inline-flex min-h-11 items-center rounded-lg underline underline-offset-4"
+            href="/en/"
+            aria-current={locale === 'en' ? 'page' : undefined}
+            lang="en"
+            hreflang="en"
+            class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center rounded-lg px-2"
           >
-            {text.components}
+            EN
           </a>
-          <nav aria-label={text.language} class="flex gap-3">
-            <a
-              href="/en/"
-              aria-current={locale === 'en' ? 'page' : undefined}
-              lang="en"
-              hreflang="en"
-              class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center rounded-lg px-2"
-            >
-              EN
-            </a>
-            <a
-              href="/es/"
-              aria-current={locale === 'es' ? 'page' : undefined}
-              lang="es"
-              hreflang="es"
-              class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center rounded-lg px-2"
-            >
-              ES
-            </a>
-          </nav>
-          <label class="flex items-center gap-3">
-            <span class="text-zinc-600 dark:text-zinc-300">{text.theme}</span>
-            <select
-              data-theme-select
-              class="cursor-pointer ui-focus-ring min-h-11 min-w-11 rounded-lg border border-zinc-500 bg-white px-3 text-zinc-950 dark:border-zinc-500 dark:bg-zinc-900 dark:text-zinc-50"
-            >
-              <option value="system">{text.system}</option>
-              <option value="light">{text.light}</option>
-              <option value="dark">{text.dark}</option>
-            </select>
-          </label>
-        </div>
-      </header>
-      <main id="main" class="py-14 sm:py-20">
-        <div class="mb-5 flex items-center gap-3 font-mono text-xs tracking-wider text-blue-700 dark:text-blue-400">
-          <span aria-hidden="true" class="h-px w-8 bg-current"></span>01 / {text.foundations}
-        </div>
-        <h1 class="max-w-3xl font-heading text-4xl leading-tight font-semibold tracking-tight sm:text-6xl">
-          {text.title}
-        </h1>
-        <p class="text-pretty leading-[1.7] sm:leading-7 mt-6 max-w-2xl text-base text-zinc-600 sm:text-lg dark:text-zinc-400">
-          {text.intro}
-        </p>
-        <div class="mt-14 grid gap-5 lg:grid-cols-3">
-          <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
-            <h2 class="font-heading text-lg font-semibold">{text.type}</h2>
-            <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.typeNote}</p>
-            <div class="mt-10 font-heading text-6xl font-semibold tracking-tight">Aa</div>
-            <p class="mt-6 text-sm leading-7">{text.body}</p>
-            <p class="mt-6 border-t border-zinc-200 pt-4 font-mono text-xs text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
-              {text.mono}
-            </p>
-          </section>
-          <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
-            <h2 class="font-heading text-lg font-semibold">{text.surfaces}</h2>
-            <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.surfaceNote}</p>
-            <div class="mt-8 grid gap-3 text-sm">
-              <div class="rounded-xl border border-zinc-300 bg-white p-4 dark:border-zinc-600 dark:bg-zinc-950">
-                {text.canvas}
-              </div>
-              <div class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-4">
-                {text.panel}
-              </div>
-              <div class="rounded-xl border border-zinc-200 bg-zinc-100 text-zinc-950 shadow-2xl shadow-zinc-950/8 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 p-4">
-                {text.raised}
-              </div>
+          <a
+            href="/es/"
+            aria-current={locale === 'es' ? 'page' : undefined}
+            lang="es"
+            hreflang="es"
+            class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center rounded-lg px-2"
+          >
+            ES
+          </a>
+        </nav>
+        <label class="flex items-center gap-3">
+          <span class="text-zinc-600 dark:text-zinc-300">{text.theme}</span>
+          <select
+            data-theme-select
+            class="cursor-pointer ui-focus-ring min-h-11 min-w-11 rounded-lg border border-zinc-500 bg-white px-3 text-zinc-950 dark:border-zinc-500 dark:bg-zinc-900 dark:text-zinc-50"
+          >
+            <option value="system">{text.system}</option>
+            <option value="light">{text.light}</option>
+            <option value="dark">{text.dark}</option>
+          </select>
+        </label>
+      </div>
+    </header>
+    <main id="main" class="py-14 sm:py-20">
+      <div class="mb-5 flex items-center gap-3 font-mono text-xs tracking-wider text-blue-700 dark:text-blue-400">
+        <span aria-hidden="true" class="h-px w-8 bg-current"></span>01 / {text.foundations}
+      </div>
+      <h1 class="max-w-3xl font-heading text-4xl leading-tight font-semibold tracking-tight sm:text-6xl">
+        {text.title}
+      </h1>
+      <p class="text-pretty leading-[1.7] sm:leading-7 mt-6 max-w-2xl text-base text-zinc-600 sm:text-lg dark:text-zinc-400">
+        {text.intro}
+      </p>
+      <div class="mt-14 grid gap-5 lg:grid-cols-3">
+        <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
+          <h2 class="font-heading text-lg font-semibold">{text.type}</h2>
+          <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.typeNote}</p>
+          <div class="mt-10 font-heading text-6xl font-semibold tracking-tight">Aa</div>
+          <p class="mt-6 text-sm leading-7">{text.body}</p>
+          <p class="mt-6 border-t border-zinc-200 pt-4 font-mono text-xs text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
+            {text.mono}
+          </p>
+        </section>
+        <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
+          <h2 class="font-heading text-lg font-semibold">{text.surfaces}</h2>
+          <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.surfaceNote}</p>
+          <div class="mt-8 grid gap-3 text-sm">
+            <div class="rounded-xl border border-zinc-300 bg-white p-4 dark:border-zinc-600 dark:bg-zinc-950">
+              {text.canvas}
             </div>
-          </section>
-          <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
-            <h2 class="font-heading text-lg font-semibold">{text.palette}</h2>
-            <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.paletteNote}</p>
-            <div class="mt-8 rounded-lg bg-blue-600 p-4 text-sm font-medium text-white">{text.brand}</div>
-            <ul class="mt-6 space-y-4 text-sm">
-              <li class="text-green-800 dark:text-green-300">✓ {text.success}</li>
-              <li class="text-amber-800 dark:text-amber-300">! {text.warning}</li>
-              <li class="text-red-700 dark:text-red-300">× {text.danger}</li>
-            </ul>
-          </section>
-        </div>
-      </main>
-      <footer class="flex flex-wrap justify-between gap-4 border-t border-zinc-200 py-7 text-xs text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-        <p>{text.footer}</p>
-        <a href="#top" class="cursor-pointer ui-focus-ring rounded-lg underline underline-offset-4">
-          {text.top}
-        </a>
-      </footer>
-    </div>
-  </body>
-</html>
+            <div class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-4">
+              {text.panel}
+            </div>
+            <div class="rounded-xl border border-zinc-200 bg-zinc-100 text-zinc-950 shadow-2xl shadow-zinc-950/8 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 p-4">
+              {text.raised}
+            </div>
+          </div>
+        </section>
+        <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
+          <h2 class="font-heading text-lg font-semibold">{text.palette}</h2>
+          <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.paletteNote}</p>
+          <div class="mt-8 rounded-lg bg-blue-600 p-4 text-sm font-medium text-white">{text.brand}</div>
+          <ul class="mt-6 space-y-4 text-sm">
+            <li class="text-green-800 dark:text-green-300">✓ {text.success}</li>
+            <li class="text-amber-800 dark:text-amber-300">! {text.warning}</li>
+            <li class="text-red-700 dark:text-red-300">× {text.danger}</li>
+          </ul>
+        </section>
+      </div>
+    </main>
+    <footer class="flex flex-wrap justify-between gap-4 border-t border-zinc-200 py-7 text-xs text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
+      <p>{text.footer}</p>
+      <a href="#top" class="cursor-pointer ui-focus-ring rounded-lg underline underline-offset-4">
+        {text.top}
+      </a>
+    </footer>
+  </div>
+</BaseLayout>
