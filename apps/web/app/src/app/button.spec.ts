@@ -8,7 +8,7 @@ import type { ButtonSize, ButtonVariant } from '@visomi-stack/web-frontend-ui';
 @Component({
   imports: [Button],
   template: `<button
-    ui
+    appUi
     [variant]="variant()"
     [size]="size()"
     [disabled]="disabled()"

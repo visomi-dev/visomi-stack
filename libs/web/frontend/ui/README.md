@@ -24,7 +24,7 @@ Tailwind `@source` declarations. Extra layout classes can live at the call site;
 the order of conflicting utilities in a class string does not define precedence.
 
 Angular's adapter is `apps/web/app/src/app/ui/button.ts`: a directive on a native
-button, used as `<button ui variant="secondary" size="sm">…</button>`.
+button, used as `<button appUi variant="secondary" size="sm">…</button>`.
 Astro's adapter is `apps/web/site/src/components/button.astro`: a server-rendered
 component with the same visual options and native button attributes. Its recipe
 does not ship to the browser. The isolated demo adds only native click handlers.

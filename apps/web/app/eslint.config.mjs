@@ -28,20 +28,6 @@ export default [
     },
   },
   {
-    files: ['src/app/ui/button.ts'],
-    rules: {
-      // The native button uses the standalone `ui` marker rather than an app-prefixed name.
-      '@angular-eslint/directive-selector': [
-        'error',
-        {
-          type: 'attribute',
-          prefix: [],
-          style: 'camelCase',
-        },
-      ],
-    },
-  },
-  {
     files: ['**/*.html'],
     // Override or add rules here
     rules: {},
