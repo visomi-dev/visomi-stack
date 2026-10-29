@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { linkButton as styles, type ButtonSize, type ButtonVariant } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'a'> & { variant?: ButtonVariant; size?: ButtonSize; href: string };
+
+const { variant = 'primary', size = 'md', class: className, ...attributes } = Astro.props;
+---
+
+<a {...attributes} class:list={[styles.classes({ variant: variant, size: size }), className]}>
+  <slot />
+</a>

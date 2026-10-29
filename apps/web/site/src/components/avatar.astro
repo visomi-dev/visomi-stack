@@ -1,0 +1,27 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { avatar as styles, type AvatarSize } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'span'> & {
+  uiSize?: AvatarSize;
+  shape?: 'circle' | 'rounded';
+  src?: string;
+  label: string;
+};
+
+const { uiSize = 'md', shape = 'circle', src, label, class: className, ...attributes } = Astro.props;
+---
+
+{src ? (
+  <img {...attributes} src={src} alt={label} class:list={[styles.classes({ size: uiSize, shape: shape }), className]} />
+) : (
+  <span
+    {...attributes}
+    role="img"
+    aria-label={label}
+    class:list={[styles.classes({ size: uiSize, shape: shape }), className]}
+  >
+    <slot />
+  </span>
+)}

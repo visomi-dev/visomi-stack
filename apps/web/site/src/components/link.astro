@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { link as styles } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'a'> & { href: string };
+
+const { class: className, ...attributes } = Astro.props;
+---
+
+<a {...attributes} class:list={[styles.classes(), className]}>
+  <slot />
+</a>

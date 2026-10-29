@@ -1,0 +1,88 @@
+---
+import { uiDocs, type UiLocale } from '../../ui-docs';
+import Alert from '../alert.astro';
+import Loader from '../loader.astro';
+import Disclosure from '../disclosure.astro';
+import Dialog from '../dialog.astro';
+import Button from '../button.astro';
+import Heading from '../heading.astro';
+import Text from '../text.astro';
+import Preview from './preview.astro';
+type Props = { locale: UiLocale };
+const { locale } = Astro.props;
+const labels = uiDocs[locale];
+---
+
+<Preview
+  id="alert"
+  locale={locale}
+  angular={'<div appUI="alert" tone="success" role="status"><strong>Ready</strong><p>Visible feedback.</p></div>'}
+  astro={'<Alert tone="success" role="status"><strong>Ready</strong><p>Visible feedback.</p></Alert>'}
+>
+  <div class="grid gap-3">
+    <Alert tone="success">
+      <strong class="font-medium">{labels.alertTitle}</strong>
+      <p>{labels.alertBody}</p>
+    </Alert>
+    <Alert tone="warning">
+      <strong class="font-medium">{labels.warning}</strong>
+      <p>{labels.alertBody}</p>
+    </Alert>
+    <Alert tone="danger">
+      <strong class="font-medium">{labels.danger}</strong>
+      <p>{labels.alertBody}</p>
+    </Alert>
+  </div>
+</Preview>
+<Preview
+  id="loader"
+  locale={locale}
+  angular={
+    '<span role="status"><span appUI="loader" aria-hidden="true"></span><span class="sr-only">Loading</span></span>'
+  }
+  astro={'<Loader label="Loading example" />'}
+>
+  <div class="flex items-center gap-3">
+    <Loader label={labels.loading} />
+    <span class="text-sm text-zinc-600 dark:text-zinc-400">{labels.loading}</span>
+  </div>
+</Preview>
+<Preview
+  id="disclosure"
+  locale={locale}
+  angular={'<details appUI><summary>What is shared?</summary><p>The class recipes.</p></details>'}
+  astro={'<Disclosure summary="What is shared?"><p>The class recipes.</p></Disclosure>'}
+>
+  <Disclosure summary={labels.disclosureSummary}>
+    <Text uiSize="sm" tone="muted">
+      {labels.disclosureBody}
+    </Text>
+  </Disclosure>
+</Preview>
+<Preview
+  id="dialog"
+  locale={locale}
+  angular={
+    '<button appUI (click)="example.showModal()">Open dialog</button>\n<dialog appUI #example="appUIDialog" aria-labelledby="dialog-title"><h2 id="dialog-title">Review</h2><form method="dialog"><button appUI type="submit">Close</button></form></dialog>'
+  }
+  astro={
+    '<Button disabled data-ui-dialog-open="example-dialog">Open dialog</Button>\n<Dialog id="example-dialog" aria-labelledby="dialog-title"><h2 id="dialog-title">Review</h2><form method="dialog"><Button type="submit">Close</Button></form></Dialog>\n<!-- The docs enhancement script calls showModal(). -->'
+  }
+>
+  <Button disabled data-ui-dialog-open="example-dialog">
+    {labels.openDialog}
+  </Button>
+  <Dialog id="example-dialog" aria-labelledby="example-dialog-title" aria-describedby="example-dialog-body">
+    <Heading as="h4" uiSize="md" id="example-dialog-title">
+      {labels.dialogTitle}
+    </Heading>
+    <Text id="example-dialog-body" tone="muted" uiSize="sm" class="mt-4">
+      {labels.dialogBody}
+    </Text>
+    <form method="dialog" class="mt-6 flex justify-end">
+      <Button type="submit" value="close" autofocus>
+        {labels.close}
+      </Button>
+    </form>
+  </Dialog>
+</Preview>

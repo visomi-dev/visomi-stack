@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { heading as styles, type HeadingSize } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'h2'> & { uiSize?: HeadingSize; as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' };
+
+const { uiSize = 'lg', as: Tag = 'h2', class: className, ...attributes } = Astro.props;
+---
+
+<Tag {...attributes} class:list={[styles.classes({ size: uiSize }), className]}>
+  <slot />
+</Tag>

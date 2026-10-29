@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { fieldset as styles } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'fieldset'>;
+
+const { class: className, ...attributes } = Astro.props;
+---
+
+<fieldset {...attributes} class:list={[styles.classes(), className]}>
+  <slot />
+</fieldset>

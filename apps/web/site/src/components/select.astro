@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { select as styles, type ControlSize } from '@visomi-stack/web-frontend-ui';
+
+type Props = Omit<HTMLAttributes<'select'>, 'value'> & { uiSize?: ControlSize };
+
+const { uiSize = 'md', class: className, ...attributes } = Astro.props;
+---
+
+<select {...attributes} class:list={[styles.classes({ size: uiSize }), className]}>
+  <slot />
+</select>

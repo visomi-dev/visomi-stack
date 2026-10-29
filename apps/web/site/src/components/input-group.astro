@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { inputGroup as styles } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'div'>;
+
+const { class: className, ...attributes } = Astro.props;
+---
+
+<div {...attributes} class:list={[styles.classes(), className]}>
+  <slot />
+</div>

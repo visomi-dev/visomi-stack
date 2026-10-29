@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { container as styles, type ContainerWidth } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'div'> & { width?: ContainerWidth };
+
+const { width = 'lg', class: className, ...attributes } = Astro.props;
+---
+
+<div {...attributes} class:list={[styles.classes({ width: width }), className]}>
+  <slot />
+</div>

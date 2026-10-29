@@ -4,6 +4,7 @@ export const messages = {
     intro:
       'A calm foundation for everything you build. Explore the type, surfaces and everyday details that make a workspace feel consistent.',
     foundations: 'Design foundations',
+    components: 'Components',
     language: 'Language',
     theme: 'Appearance',
     system: 'System',
@@ -33,6 +34,7 @@ export const messages = {
     intro:
       'Una base serena para todo lo que construyas. Explora la tipografía, las superficies y los detalles que dan coherencia a tu espacio de trabajo.',
     foundations: 'Fundamentos de diseño',
+    components: 'Componentes',
     language: 'Idioma',
     theme: 'Apariencia',
     system: 'Sistema',

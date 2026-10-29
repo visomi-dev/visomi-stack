@@ -35,6 +35,12 @@ const text = messages[locale];
           <span class="font-sans font-normal tracking-normal text-zinc-500 dark:text-zinc-400">/ Stack</span>
         </a>
         <div class="flex flex-wrap items-center gap-5 text-sm">
+          <a
+            href={`/${locale}/ui/`}
+            class="ui-focus-ring inline-flex min-h-11 items-center rounded-lg underline underline-offset-4"
+          >
+            {text.components}
+          </a>
           <nav aria-label={text.language} class="flex gap-3">
             <a
               href="/en/"

@@ -1,0 +1,115 @@
+---
+import { uiDocs, type UiLocale } from '../../ui-docs';
+import Badge from '../badge.astro';
+import Avatar from '../avatar.astro';
+import Table from '../table.astro';
+import DescriptionList from '../description-list.astro';
+import Pagination from '../pagination.astro';
+import LinkButton from '../link-button.astro';
+import Preview from './preview.astro';
+type Props = { locale: UiLocale };
+const { locale } = Astro.props;
+const labels = uiDocs[locale];
+const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
+---
+
+<Preview
+  id="badge"
+  locale={locale}
+  angular={'<span appUI="badge" tone="success">Ready</span>'}
+  astro={'<Badge tone="success">Ready</Badge>'}
+>
+  <div class="flex flex-wrap gap-3">
+    {tones.map((tone) => (
+      <Badge tone={tone}>{labels[tone]}</Badge>
+    ))}
+  </div>
+</Preview>
+<Preview
+  id="avatar"
+  locale={locale}
+  angular={
+    '<span appUI="avatar" uiSize="md" role="img" aria-label="Morgan Lee">ML</span>\n<img appUI src="/favicon.svg" alt="Demo workspace" />'
+  }
+  astro={'<Avatar label="Morgan Lee" uiSize="md">ML</Avatar>\n<Avatar src="/favicon.svg" label="Demo workspace" />'}
+>
+  <div class="flex flex-wrap items-center gap-4">
+    <Avatar label={labels.sampleName} uiSize="sm">
+      ML
+    </Avatar>
+    <Avatar label={labels.sampleName}>ML</Avatar>
+    <Avatar label={labels.sampleName} uiSize="lg" shape="rounded">
+      ML
+    </Avatar>
+    <Avatar label={labels.workspace} src="/favicon.svg" />
+  </div>
+</Preview>
+<Preview
+  id="table"
+  locale={locale}
+  angular={'<table appUI striped><caption>Workspaces</caption>…</table>'}
+  astro={'<Table striped><caption>Workspaces</caption>…</Table>'}
+>
+  <div class="overflow-x-auto">
+    <Table striped>
+      <caption>{labels.tableCaption}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{labels.workspace}</th>
+          <th scope="col">{labels.status}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">{labels.studio}</th>
+          <td>
+            <Badge tone="success">{labels.success}</Badge>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">{labels.sandbox}</th>
+          <td>
+            <Badge>{labels.neutral}</Badge>
+          </td>
+        </tr>
+      </tbody>
+    </Table>
+  </div>
+</Preview>
+<Preview
+  id="description-list"
+  locale={locale}
+  angular={'<dl appUI><dt>Plan</dt><dd>Team</dd></dl>'}
+  astro={'<DescriptionList><dt>Plan</dt><dd>Team</dd></DescriptionList>'}
+>
+  <DescriptionList>
+    <dt>{labels.plan}</dt>
+    <dd>{labels.team}</dd>
+    <dt>{labels.members}</dt>
+    <dd>8</dd>
+    <dt>{labels.status}</dt>
+    <dd>{labels.success}</dd>
+  </DescriptionList>
+</Preview>
+<Preview
+  id="pagination"
+  locale={locale}
+  angular={
+    '<nav appUI="pagination" aria-label="Pages"><a appUI="button" href="?page=2" aria-current="page">2</a></nav>'
+  }
+  astro={'<Pagination aria-label="Pages"><LinkButton href="?page=2" aria-current="page">2</LinkButton></Pagination>'}
+>
+  <Pagination aria-label={labels.names.pagination}>
+    <LinkButton href="#pagination" variant="ghost" size="sm">
+      {labels.previous}
+    </LinkButton>
+    {[1, 2, 3].map((page) => (
+      <LinkButton href="#pagination" variant="secondary" size="sm" aria-current={page === 2 ? 'page' : undefined}>
+        {page}
+      </LinkButton>
+    ))}
+    <LinkButton href="#pagination" variant="ghost" size="sm">
+      {labels.next}
+    </LinkButton>
+  </Pagination>
+</Preview>

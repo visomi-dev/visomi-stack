@@ -130,3 +130,26 @@ no browser JavaScript to Astro. The Playwright script-payload test records these
 resources in `javascript-cost.json`; CSS, fonts and HTTP headers are excluded.
 Astro's tsconfig explicitly includes `src/**/*.astro` so Vite can apply the
 workspace-generated import paths to those files.
+
+## Component catalog
+
+The website's `/en/ui/` and `/es/ui/` routes document 32 shared recipe families,
+with live previews and usage for both frameworks. The homepage links to them.
+The [compendium](frontend-ui-catalog.md) records the reference comparison,
+selection, behavior contracts and deferred widgets; the
+[library README](../libs/web/frontend/ui/README.md) lists typed options.
+
+Angular adapters use native elements selected with `appUI` and a static marker
+where necessary. Form controls use `uiSize` for visual size, preserving native
+numeric `size`. Integration tests cover selector isolation, form values,
+attributes, events, visual changes and native modal delegation. The catalog
+renders entirely through Astro SSR; only the external theme and small native
+demo script run in the browser, within the existing CSP. The tests cover all
+families, both languages, JavaScript-disabled controls, dialog focus and Escape,
+local validation, reduced motion and mobile/desktop layouts in both themes.
+
+The compiled catalog loads 2,831 bytes of script bodies: the existing 1,470-byte
+theme script and a 1,361-byte documentation enhancement. The recipes add no
+browser JavaScript. These measurements exclude CSS, fonts and HTTP headers;
+the browser test checks that only those two scripts load and caps their combined
+raw size at 6 KiB.

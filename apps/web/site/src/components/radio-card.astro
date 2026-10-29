@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { radioCard as styles } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'label'>;
+
+const { class: className, ...attributes } = Astro.props;
+---
+
+<label {...attributes} class:list={[styles.classes(), className]}>
+  <slot />
+</label>

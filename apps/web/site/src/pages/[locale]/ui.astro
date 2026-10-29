@@ -1,0 +1,157 @@
+---
+import themeScript from '../../../../../../theme.base.js?url&no-inline';
+
+import Actions from '../../components/ui-docs/actions.astro';
+import Typography from '../../components/ui-docs/typography.astro';
+import Layout from '../../components/ui-docs/layout.astro';
+import Data from '../../components/ui-docs/data.astro';
+import Forms from '../../components/ui-docs/forms.astro';
+import Feedback from '../../components/ui-docs/feedback.astro';
+import script from '../../scripts/ui-docs.js?url&no-inline';
+import { componentGroups, uiDocs } from '../../ui-docs';
+import '../../styles/global.css';
+
+const locale = Astro.params.locale;
+if (locale !== 'en' && locale !== 'es') return new Response(null, { status: 404 });
+const labels = uiDocs[locale];
+const groups = [
+  { id: 'actions', Component: Actions },
+  { id: 'typography', Component: Typography },
+  { id: 'layout', Component: Layout },
+  { id: 'data', Component: Data },
+  { id: 'forms', Component: Forms },
+  { id: 'feedback', Component: Feedback },
+] as const;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={labels.intro} />
+    <title>{labels.documentation} · Visomi Stack</title>
+    <script is:inline src={themeScript}></script>
+    <script is:inline type="module" src={script}></script>
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="ui-focus-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-white focus:p-4 focus:text-zinc-950"
+    >
+      {locale === 'es' ? 'Saltar al contenido' : 'Skip to content'}
+    </a>
+    <div class="mx-auto max-w-7xl px-5 sm:px-8">
+      <header class="flex flex-wrap items-center justify-between gap-5 border-b border-zinc-200 py-6 dark:border-zinc-800">
+        <a
+          href={`/${locale}/`}
+          class="ui-focus-ring inline-flex min-h-11 items-center gap-3 rounded-lg font-heading text-sm font-bold tracking-widest"
+        >
+          <span class="rounded-lg bg-blue-600 px-3 py-2 text-white">V</span>VISOMI
+          <span class="font-sans font-normal tracking-normal text-zinc-500 dark:text-zinc-400">/ UI</span>
+        </a>
+        <div class="flex flex-wrap items-center gap-5 text-sm">
+          <a href={`/${locale}/`} class="ui-focus-ring rounded-lg underline underline-offset-4">
+            {labels.back}
+          </a>
+          <nav aria-label={locale === 'es' ? 'Idioma' : 'Language'} class="flex gap-3">
+            <a
+              href="/en/ui/"
+              lang="en"
+              hreflang="en"
+              aria-current={locale === 'en' ? 'page' : undefined}
+              class="ui-focus-ring inline-flex min-h-11 items-center rounded-lg px-2"
+            >
+              EN
+            </a>
+            <a
+              href="/es/ui/"
+              lang="es"
+              hreflang="es"
+              aria-current={locale === 'es' ? 'page' : undefined}
+              class="ui-focus-ring inline-flex min-h-11 items-center rounded-lg px-2"
+            >
+              ES
+            </a>
+          </nav>
+          <label class="flex items-center gap-3">
+            <span class="text-zinc-600 dark:text-zinc-300">{labels.theme}</span>
+            <select
+              data-theme-select
+              class="ui-focus-ring min-h-11 rounded-lg border border-zinc-500 bg-white px-3 text-zinc-950 dark:bg-zinc-900 dark:text-zinc-50"
+            >
+              <option value="system">{labels.system}</option>
+              <option value="light">{labels.light}</option>
+              <option value="dark">{labels.dark}</option>
+            </select>
+          </label>
+        </div>
+      </header>
+      <div class="grid gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-12">
+        <aside class="hidden py-12 lg:block">
+          <nav aria-label={labels.navigation} class="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto p-1 pr-4">
+            <h2 class="mb-5 font-heading text-sm font-semibold">{labels.contents}</h2>
+            {groups.map(({ id }) => (
+              <div class="mb-6">
+                <p class="mb-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+                  {labels.categories[id]}
+                </p>
+                <ul class="space-y-1">
+                  {componentGroups[id].map((component) => (
+                    <li>
+                      <a
+                        href={`#${component}`}
+                        class="ui-focus-ring flex min-h-11 items-center rounded-lg px-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
+                      >
+                        {labels.names[component]}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
+        </aside>
+        <main id="main" class="min-w-0 py-12 sm:py-16">
+          <div class="mb-12">
+            <p class="mb-5 font-mono text-xs tracking-wide text-blue-700 dark:text-blue-400">VISOMI / FRONTEND UI</p>
+            <h1 class="max-w-3xl font-heading text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
+              {labels.title}
+            </h1>
+            <p class="mt-6 max-w-2xl text-base leading-7 text-pretty text-zinc-600 dark:text-zinc-400">
+              {labels.intro}
+            </p>
+            <p class="mt-4 text-sm font-medium">
+              32 {locale === 'es' ? 'familias de componentes' : 'component families'}
+            </p>
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">{labels.note}</p>
+            <nav aria-label={labels.navigation} class="mt-6 flex flex-wrap gap-2 lg:hidden">
+              {groups.map(({ id }) => (
+                <a
+                  href={`#${id}`}
+                  class="ui-focus-ring inline-flex min-h-11 items-center rounded-lg border border-zinc-300 px-3 text-sm dark:border-zinc-700"
+                >
+                  {labels.categories[id]}
+                </a>
+              ))}
+            </nav>
+          </div>
+          {groups.map(({ id, Component }) => (
+            <section id={id} class="scroll-mt-8">
+              <div class="mt-12 mb-2 flex flex-wrap items-center justify-between gap-3">
+                <h2 class="font-heading text-2xl font-semibold">{labels.categories[id]}</h2>
+                <span class="font-mono text-xs text-zinc-500 dark:text-zinc-400">
+                  {String(componentGroups[id].length).padStart(2, '0')}
+                </span>
+              </div>
+              <Component locale={locale} />
+            </section>
+          ))}
+        </main>
+      </div>
+      <footer class="border-t border-zinc-200 py-7 text-xs text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
+        {labels.types}
+      </footer>
+    </div>
+  </body>
+</html>
