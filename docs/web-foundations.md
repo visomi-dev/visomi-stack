@@ -104,7 +104,7 @@ mobile layout and JavaScript-disabled content. Screenshots stay in local
 complete Tailwind classes, defaulting to `primary` and `md`. It has no framework
 runtime dependencies and no independent build artifact.
 
-Angular uses a native `<button appUi>` directive; Astro uses its own
+Angular uses a native `<button appUI>` directive; Astro uses its own
 `button.astro` component. Both receive the same typed variants and sizes and
 retain native disabled, focus, keyboard and form behavior. Interaction belongs
 to each application. Astro evaluates the recipe on the server and needs no
