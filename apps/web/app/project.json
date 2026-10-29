@@ -72,6 +72,7 @@
       },
       "inputs": [
         "production",
+        "^production",
         "{workspaceRoot}/styles.base.css",
         "{workspaceRoot}/theme.base.js",
         "{workspaceRoot}/package.json",

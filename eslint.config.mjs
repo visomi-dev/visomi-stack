@@ -80,7 +80,8 @@ export default [
     settings: {
       'import-x/ignore': ['^astro:'],
       // Keep workspace alias grouping independent of the lint cwd and generated resolver paths.
-      'import-x/internal-regex': '^(?:web-shared|web-shared-common|web-frontend-shared|web-backend-shared)(?:/|$)',
+      'import-x/internal-regex':
+        '^(?:@visomi-stack/web-frontend-ui|web-shared|web-shared-common|web-frontend-shared|web-backend-shared)(?:/|$)',
     },
     rules: {
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
@@ -292,7 +293,7 @@ export default [
     },
   },
   {
-    files: ['libs/web/frontend/shared/src/**/*.ts'],
+    files: ['libs/web/frontend/shared/src/**/*.ts', 'libs/web/frontend/ui/src/**/*.ts'],
     ignores: ['**/*.spec.ts'],
     rules: {
       'no-restricted-imports': [

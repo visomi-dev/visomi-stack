@@ -13,7 +13,8 @@
         "{workspaceRoot}/styles.base.css",
         "{workspaceRoot}/theme.base.js",
         "{workspaceRoot}/package.json",
-        "{workspaceRoot}/pnpm-lock.yaml"
+        "{workspaceRoot}/pnpm-lock.yaml",
+        "^production"
       ],
       "outputs": ["{workspaceRoot}/dist/apps/web/site"],
       "options": {
@@ -42,7 +43,8 @@
         "{workspaceRoot}/styles.base.css",
         "{workspaceRoot}/theme.base.js",
         "{workspaceRoot}/package.json",
-        "{workspaceRoot}/pnpm-lock.yaml"
+        "{workspaceRoot}/pnpm-lock.yaml",
+        "^production"
       ],
       "options": {
         "command": "pnpm exec astro check --root apps/web/site",
@@ -65,5 +67,6 @@
         }
       ]
     }
-  }
+  },
+  "implicitDependencies": ["web-frontend-ui"]
 }

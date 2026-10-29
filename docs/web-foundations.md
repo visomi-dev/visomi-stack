@@ -4,20 +4,21 @@
 
 `styles.base.css` at the workspace root is the shared Tailwind v4 entry point.
 It imports self-hosted Latin fonts: Inter for body text, Manrope for headings,
-and JetBrains Mono for technical details. It defines the v0 radii, shadows,
-content widths, motion values and `ui-focus-ring`, `ui-panel`, `ui-panel-raised`,
-`ui-touch-target` and `ui-text-rhythm` utilities.
+and JetBrains Mono for technical details. It customizes typography and defines the shared `ui-focus-ring` accessibility utility.
+Radii, shadows, spacing and content widths use Tailwind's standard scales.
+Surfaces, touch targets and text rhythm are composed with Tailwind classes in
+templates; visual component recipes belong to the UI library.
 
 Use Tailwind's standard zinc surfaces, blue actions and green/red/amber status
 colors. Status meanings also need visible labels. Component classes can use
-`font-sans`, `font-heading`, `font-mono`, `rounded-control` and `rounded-panel`.
-Keep the standard spacing scale. No Nive palettes, compatibility aliases,
-component validation rules or component catalog are included.
+`font-sans`, `font-heading`, `font-mono`, `rounded-lg` and `rounded-xl`.
+Keep the standard spacing scale. No Nive palettes, compatibility aliases or
+application-specific validation rules are included.
 
 The Angular and Astro style entry points import this base and explicitly scan
-only their own source files. Tailwind automatic scanning is disabled at the
+their own source files and the shared UI library. Tailwind automatic scanning is disabled at the
 shared entry point so unrelated applications and backend code do not influence
-bundles. Add shared UI source paths explicitly when actual components are added.
+bundles. The shared UI source path is explicitly included in both entry points.
 Astro Nx commands explicitly disable CLI telemetry. Its development target stays
 in the foreground so Nx owns its lifetime. Angular uses the root PostCSS configuration. Astro uses the Tailwind Vite plugin
 and disables PostCSS plugin discovery to avoid processing Tailwind twice.
@@ -40,8 +41,8 @@ over system changes. Blocked storage affects persistence only. The script applie
 It is guarded against server execution. It does not expose a global API.
 
 Use semantic landmarks, translated labels, visible keyboard focus, adequate
-contrast and 44px control targets. Motion tokens and scrolling respect reduced
-motion. The initial pages are readable without JavaScript. The checks described
+contrast and 44px control targets. Scrolling respects reduced motion; components must apply the same preference
+to any animation they introduce. The initial pages are readable without JavaScript. The checks described
 below do not constitute a full accessibility conformance audit.
 
 ## Routes and runtime boundaries
@@ -94,3 +95,31 @@ both languages, real SSR and Angular hydration, static assets, strict site CSP,
 reserved routes, theme choices, blocked storage, reduced motion, keyboard focus,
 mobile layout and JavaScript-disabled content. Screenshots stay in local
 `dist/.playwright` test output; fixtures contain no customer data.
+
+## Shared component styles
+
+`web-frontend-ui` is a framework-independent TypeScript library generated with
+`@nx/js:library`. Import `button` from `@visomi-stack/web-frontend-ui` and call
+`button.classes({ variant: 'secondary', size: 'sm' })`. The function composes
+complete Tailwind classes, defaulting to `primary` and `md`. It has no framework
+runtime dependencies and no independent build artifact.
+
+Angular uses a native `<button ui>` directive; Astro uses its own
+`button.astro` component. Both receive the same typed variants and sizes and
+retain native disabled, focus, keyboard and form behavior. Interaction belongs
+to each application. Astro evaluates the recipe on the server and needs no
+client hydration for the styled button itself. Angular hydrates its native
+button normally.
+
+The Angular foundations page includes the sample. The isolated Astro sample is
+available at `/en/button/` and `/es/button/`; it includes a small counter script
+and a native GET form that works without JavaScript. No Angular Elements runtime
+is loaded. See the [library README](../libs/web/frontend/ui/README.md) for usage
+and verification commands.
+
+The production gateway sample loads 1,818 bytes of script bodies: 1,470 bytes for
+the existing theme script and 348 bytes for the counter. The shared recipe adds
+no browser JavaScript to Astro. The Playwright script-payload test records these
+resources in `javascript-cost.json`; CSS, fonts and HTTP headers are excluded.
+Astro's tsconfig explicitly includes `src/**/*.astro` so Vite can apply the
+workspace-generated import paths to those files.

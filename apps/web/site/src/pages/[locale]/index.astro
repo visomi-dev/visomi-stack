@@ -21,17 +21,17 @@ const text = messages[locale];
   <body>
     <a
       href="#main"
-      class="ui-focus-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-control focus:bg-white focus:p-4 focus:text-zinc-950"
+      class="cursor-pointer ui-focus-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-white focus:p-4 focus:text-zinc-950"
     >
       {text.skip}
     </a>
-    <div id="top" class="mx-auto max-w-(--content-max) px-6 sm:px-10">
+    <div id="top" class="mx-auto max-w-6xl px-6 sm:px-10">
       <header class="flex flex-wrap items-center justify-between gap-6 border-b border-zinc-200 py-6 dark:border-zinc-800">
         <a
           href="#top"
-          class="ui-focus-ring ui-touch-target inline-flex items-center gap-3 rounded-control font-heading text-sm font-bold tracking-widest"
+          class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center gap-3 rounded-lg font-heading text-sm font-bold tracking-widest"
         >
-          <span class="rounded-control bg-blue-600 px-3 py-2 text-white">V</span> VISOMI{' '}
+          <span class="rounded-lg bg-blue-600 px-3 py-2 text-white">V</span> VISOMI{' '}
           <span class="font-sans font-normal tracking-normal text-zinc-500 dark:text-zinc-400">/ Stack</span>
         </a>
         <div class="flex flex-wrap items-center gap-5 text-sm">
@@ -41,7 +41,7 @@ const text = messages[locale];
               aria-current={locale === 'en' ? 'page' : undefined}
               lang="en"
               hreflang="en"
-              class="ui-focus-ring ui-touch-target inline-flex items-center rounded-control px-2"
+              class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center rounded-lg px-2"
             >
               EN
             </a>
@@ -50,7 +50,7 @@ const text = messages[locale];
               aria-current={locale === 'es' ? 'page' : undefined}
               lang="es"
               hreflang="es"
-              class="ui-focus-ring ui-touch-target inline-flex items-center rounded-control px-2"
+              class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center rounded-lg px-2"
             >
               ES
             </a>
@@ -59,7 +59,7 @@ const text = messages[locale];
             <span class="text-zinc-600 dark:text-zinc-300">{text.theme}</span>
             <select
               data-theme-select
-              class="ui-focus-ring ui-touch-target rounded-control border border-zinc-500 bg-white px-3 text-zinc-950 dark:border-zinc-500 dark:bg-zinc-900 dark:text-zinc-50"
+              class="cursor-pointer ui-focus-ring min-h-11 min-w-11 rounded-lg border border-zinc-500 bg-white px-3 text-zinc-950 dark:border-zinc-500 dark:bg-zinc-900 dark:text-zinc-50"
             >
               <option value="system">{text.system}</option>
               <option value="light">{text.light}</option>
@@ -75,9 +75,11 @@ const text = messages[locale];
         <h1 class="max-w-3xl font-heading text-4xl leading-tight font-semibold tracking-tight sm:text-6xl">
           {text.title}
         </h1>
-        <p class="ui-text-rhythm mt-6 max-w-2xl text-base text-zinc-600 sm:text-lg dark:text-zinc-400">{text.intro}</p>
+        <p class="text-pretty leading-[1.7] sm:leading-7 mt-6 max-w-2xl text-base text-zinc-600 sm:text-lg dark:text-zinc-400">
+          {text.intro}
+        </p>
         <div class="mt-14 grid gap-5 lg:grid-cols-3">
-          <section class="ui-panel p-6 sm:p-7">
+          <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
             <h2 class="font-heading text-lg font-semibold">{text.type}</h2>
             <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.typeNote}</p>
             <div class="mt-10 font-heading text-6xl font-semibold tracking-tight">Aa</div>
@@ -86,21 +88,25 @@ const text = messages[locale];
               {text.mono}
             </p>
           </section>
-          <section class="ui-panel p-6 sm:p-7">
+          <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
             <h2 class="font-heading text-lg font-semibold">{text.surfaces}</h2>
             <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.surfaceNote}</p>
             <div class="mt-8 grid gap-3 text-sm">
-              <div class="rounded-panel border border-zinc-300 bg-white p-4 dark:border-zinc-600 dark:bg-zinc-950">
+              <div class="rounded-xl border border-zinc-300 bg-white p-4 dark:border-zinc-600 dark:bg-zinc-950">
                 {text.canvas}
               </div>
-              <div class="ui-panel p-4">{text.panel}</div>
-              <div class="ui-panel-raised p-4">{text.raised}</div>
+              <div class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-4">
+                {text.panel}
+              </div>
+              <div class="rounded-xl border border-zinc-200 bg-zinc-100 text-zinc-950 shadow-2xl shadow-zinc-950/8 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 p-4">
+                {text.raised}
+              </div>
             </div>
           </section>
-          <section class="ui-panel p-6 sm:p-7">
+          <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
             <h2 class="font-heading text-lg font-semibold">{text.palette}</h2>
             <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.paletteNote}</p>
-            <div class="mt-8 rounded-control bg-blue-600 p-4 text-sm font-medium text-white">{text.brand}</div>
+            <div class="mt-8 rounded-lg bg-blue-600 p-4 text-sm font-medium text-white">{text.brand}</div>
             <ul class="mt-6 space-y-4 text-sm">
               <li class="text-green-800 dark:text-green-300">✓ {text.success}</li>
               <li class="text-amber-800 dark:text-amber-300">! {text.warning}</li>
@@ -111,7 +117,7 @@ const text = messages[locale];
       </main>
       <footer class="flex flex-wrap justify-between gap-4 border-t border-zinc-200 py-7 text-xs text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
         <p>{text.footer}</p>
-        <a href="#top" class="ui-focus-ring rounded-control underline underline-offset-4">
+        <a href="#top" class="cursor-pointer ui-focus-ring rounded-lg underline underline-offset-4">
           {text.top}
         </a>
       </footer>

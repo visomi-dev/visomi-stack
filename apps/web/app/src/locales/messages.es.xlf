@@ -106,6 +106,30 @@
         <source>Back to top</source>
         <target>Volver arriba</target>
       </trans-unit>
+      <trans-unit id="buttonExperiment" datatype="html">
+        <source>Shared button styles</source>
+        <target>Estilos del botón compartido</target>
+      </trans-unit>
+      <trans-unit id="buttonExplanation" datatype="html">
+        <source>Native Angular controls using shared Tailwind classes.</source>
+        <target>Controles nativos de Angular con clases Tailwind compartidas.</target>
+      </trans-unit>
+      <trans-unit id="buttonIncrement" datatype="html">
+        <source>Add one</source>
+        <target>Sumar uno</target>
+      </trans-unit>
+      <trans-unit id="buttonReset" datatype="html">
+        <source>Reset</source>
+        <target>Reiniciar</target>
+      </trans-unit>
+      <trans-unit id="buttonDisabled" datatype="html">
+        <source>Unavailable</source>
+        <target>No disponible</target>
+      </trans-unit>
+      <trans-unit id="buttonActivations" datatype="html">
+        <source>Activations:</source>
+        <target>Activaciones:</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
