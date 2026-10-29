@@ -56,9 +56,11 @@
 @utility ui-focus-ring {
   outline: 2px solid transparent;
   outline-offset: 3px;
+
   &:focus-visible {
     outline-color: var(--color-blue-600);
   }
+
   html.dark &:focus-visible {
     outline-color: var(--color-blue-400);
   }
