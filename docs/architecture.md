@@ -103,10 +103,11 @@ and routes, then installs the shared error handler last. Domain-specific failure
 translation stays with auth. The same observability instance crosses both bundles,
 with one completion record per request. Shutdown drains HTTP work, closes the
 owned pool, and flushes telemetry. Auth routes fail closed without a configured
-database. Paths outside `/api` currently return 404. Process integration tests
+database. The gateway also serves compiled Astro public pages at `/en/` and `/es/`,
+with `/` redirecting to English. `/app` remains reserved until Angular integration. Process integration tests
 exercise the actual compiled gateway and API, including real PostgreSQL and
 cryptographically valid WebAuthn; the API's own import harness remains separate.
-Angular SSR, Astro, background workers, and realtime delivery remain unimplemented.
+Angular SSR now runs independently. Background workers and realtime delivery remain unimplemented.
 The container runtime starts the standalone API. Compose applies versioned
 migrations through a separate one-shot database initializer before starting it;
 the API does not own schema migration or seed execution.
@@ -196,8 +197,8 @@ five seconds); failures cannot rewrite application results or expose raw errors.
 Angular SSR, Astro, Express, and separate gateway, worker, and realtime
 responsibilities are the agreed direction for the reboot. The following paths
 and public mounts describe the intended organization. The API and gateway
-directories exist, and the gateway currently composes only the API. Frontend,
-worker and realtime composition remain future work.
+directories exist, and the gateway composes the API and Astro site. Angular runs
+independently; its gateway mount, worker and realtime composition remain future work.
 Future Nx project names must be checked when projects are created.
 
 | Boundary    | Intended location   | Responsibility                                                                        |
@@ -210,8 +211,7 @@ Future Nx project names must be checked when projects are created.
 | Realtime    | `apps/web/realtime` | Connection authorization, subscriptions, and delivery of authorized events.           |
 
 The gateway provides a common public origin while keeping feature logic in its
-own boundary. The standalone API currently serves `/`; the intended `/api` mount
-does not exist yet. Realtime protocol and path, worker startup, process management,
+own boundary. The standalone API serves `/`; the gateway mounts it at `/api`. Realtime protocol and path, worker startup, process management,
 and scaling remain implementation decisions for later steps.
 
 As shared code is introduced, keep browser utilities free of backend dependencies
@@ -227,7 +227,7 @@ The topology does not select:
 - Authentication beyond the implemented passkey/session slice, recovery, and domain authorization policy.
 - Tenant boundaries, domain database isolation, and storage beyond the implemented PostgreSQL/Drizzle authentication slice.
 - Queue and realtime libraries, delivery guarantees, or event contracts.
-- UI components, styling foundations, localization, or PWA behavior.
+- UI components and PWA behavior beyond the shared Tailwind foundations and English/Spanish localization.
 - Encryption, browser vaults, local-agent integration, or synchronization protocols.
 - Hosting, ingress, deployment composition, external telemetry exporters/providers, or release controls.
 
@@ -250,3 +250,6 @@ Both reference projects remain read-only for this reboot step.
 Update these documents as capabilities land. Add a separate decision record only
 when a consequential choice needs lasting rationale; routine work does not require
 a spec collection.
+
+Shared styling, themes and the current frontend runtime boundaries are documented
+in [Web foundations](web-foundations.md).

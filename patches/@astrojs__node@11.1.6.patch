@@ -1,0 +1,111 @@
+diff --git a/dist/middleware.js b/dist/middleware.js
+index d43bd3d696a25dc84652d08093368763afc2bd1e..5cc868439ee5430a07671988916f2a30e3836400 100644
+--- a/dist/middleware.js
++++ b/dist/middleware.js
+@@ -15,8 +15,8 @@ function createMiddleware(app, options) {
+     try {
+       await handler(req, res, next, locals);
+     } catch (err) {
+-      logger.error(`Could not render ${req.url}`);
+-      console.error(err);
++      if (next) return next(err);
++      logger.error("site_request_failed");
+       if (!res.headersSent) {
+         res.writeHead(500, `Server error`);
+         res.end();
+diff --git a/dist/serve-app.js b/dist/serve-app.js
+index fd5679b472a2cf3cb97dbe8886bfcbef035a6e51..3bad87bc061a1df46f819334029ad01ac3e5b86b 100644
+--- a/dist/serve-app.js
++++ b/dist/serve-app.js
+@@ -1,4 +1,3 @@
+-import { AsyncLocalStorage } from "node:async_hooks";
+ import { createReadStream } from "node:fs";
+ import path from "node:path";
+ import { Readable } from "node:stream";
+@@ -32,15 +31,7 @@ async function readErrorPageFromDisk(client, status) {
+ }
+ function createAppHandler(app, options) {
+   const logger = app.adapterLogger;
+-  const requestContext = new AsyncLocalStorage();
+   const abortedRequestErrors = /* @__PURE__ */ new WeakSet();
+-  process.on("unhandledRejection", (reason) => {
+-    const requestUrl = requestContext.getStore();
+-    if (!requestUrl || reason instanceof Error && abortedRequestErrors.has(reason)) return;
+-    const error = reason instanceof Error ? reason.stack || reason.message : String(reason);
+-    logger.error(`Unhandled rejection while rendering ${requestUrl}
+-${error}`);
+-  });
+   const client = resolveClientDir(options);
+   const prerenderedErrorPageFetch = async (url) => {
+     const { pathname } = new URL(url);
+@@ -67,8 +58,8 @@ ${error}`);
+         port: options.port
+       });
+     } catch (err) {
+-      logger.error(`Could not render ${req.url}`);
+-      console.error(err);
++      if (next) return next(err);
++      logger.error("site_request_failed");
+       res.statusCode = 500;
+       res.end("Internal Server Error");
+       return;
+@@ -79,33 +70,29 @@ ${error}`);
+         routeData = app.match(request);
+       }
+       if (routeData) {
+-        await requestContext.run(request.url, async () => {
+-          const response = await app.render(request, {
+-            addCookieHeader: true,
+-            locals,
+-            routeData,
+-            prerenderedErrorPageFetch
+-          });
+-          await writeResponse(response, res);
++        const response = await app.render(request, {
++          addCookieHeader: true,
++          locals,
++          routeData,
++          prerenderedErrorPageFetch
+         });
++        await writeResponse(response, res);
+       } else if (next) {
+         const cleanup = getAbortControllerCleanup(req);
+         if (cleanup) cleanup();
+         return next();
+       } else {
+-        await requestContext.run(request.url, async () => {
+-          const response = await app.render(request, {
+-            addCookieHeader: true,
+-            prerenderedErrorPageFetch
+-          });
+-          await writeResponse(response, res);
++        const response = await app.render(request, {
++          addCookieHeader: true,
++          prerenderedErrorPageFetch
+         });
++        await writeResponse(response, res);
+       }
+     } catch (err) {
+       if (err instanceof Error && abortedRequestErrors.has(err)) return;
+-      const error = err instanceof Error ? err.stack || err.message : String(err);
+-      logger.error(`Could not render ${request.url}
+-${error}`);
++      getAbortControllerCleanup(req)?.();
++      if (next) return next(err);
++      logger.error("site_request_failed");
+       if (!res.headersSent) {
+         res.statusCode = 500;
+         res.end("Internal Server Error");
+diff --git a/dist/server.js b/dist/server.js
+index 2539053c66f2de662f5dbbfc816957e6b760b1c6..1d44b22b77226b8c630c877e6f67c8071adadfd2 100644
+--- a/dist/server.js
++++ b/dist/server.js
+@@ -6,6 +6,8 @@ import { readHeadersJson } from "./shared.js";
+ import _startServer, { createStandaloneHandler } from "./standalone.js";
+ setGetEnv((key) => process.env[key]);
+ const app = createApp({ streaming: !options.experimentalDisableStreaming });
++// Resolve the configured destination before handling any requests.
++await app.getLogger();
+ const headersMap = options.staticHeaders ? readHeadersJson(app.manifest.outDir) : void 0;
+ const handler = options.mode === "middleware" ? createMiddleware(app, options) : createStandaloneHandler(app, options, headersMap);
+ const startServer = () => _startServer(app, options, headersMap);

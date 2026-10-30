@@ -18,6 +18,7 @@ import packageJson from '../package.json' with { type: 'json' };
 import { loadApi } from './api-module';
 import type { EmbeddedAuthentication } from './api-module';
 import { createGatewayApp } from './app';
+import { loadSite } from './site-module';
 
 const observability = initializeObservability({
   service: 'web-gateway',
@@ -89,7 +90,10 @@ async function bootstrap() {
   const entry = process.env.API_APP_PATH
     ? pathToFileURL(resolve(process.env.API_APP_PATH))
     : new URL('../api/app.js', import.meta.url);
-  const api = await loadApi(entry);
+  const siteEntry = process.env.SITE_APP_PATH
+    ? pathToFileURL(resolve(process.env.SITE_APP_PATH))
+    : new URL('../site/server/entry.mjs', import.meta.url);
+  const [api, site] = await Promise.all([loadApi(entry), loadSite(siteEntry)]);
 
   if (stopping) {
     return;
@@ -119,6 +123,7 @@ async function bootstrap() {
 
   const application = createGatewayApp({
     api,
+    site,
     auth,
     observability,
     ...(process.env.AUTH_TRUST_PROXY

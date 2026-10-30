@@ -38,6 +38,26 @@ function apiFixture(handler: RequestHandler = (request, response) => response.js
 }
 
 describe('gateway composition', () => {
+  it('mounts public middleware after reserved routes and sanitizes its failures', async () => {
+    const handler = vi.fn<RequestHandler>((_request, response) => response.json({ page: 'synthetic_site' }));
+    const site = { handler, clientDirectory: '/synthetic/missing/client' };
+    const api = apiFixture((_request, _response, next) => next());
+    const app = createGatewayApp({ api, site });
+
+    for (const path of ['/api/missing', '/app', '/app/es/missing']) {
+      const result = await dispatch(app, path);
+
+      expect(result).toEqual({ status: 404, body: { error: 'not_found' } });
+    }
+    expect(handler).not.toHaveBeenCalled();
+    const rendered = await dispatch(app, '/en/');
+
+    expect(rendered).toEqual({ status: 200, body: { page: 'synthetic_site' } });
+    handler.mockImplementation((_request, _response, next) => next(new Error('synthetic_private_site_error')));
+    const failed = await dispatch(app, '/es/');
+
+    expect(failed).toEqual({ status: 500, body: { error: 'internal_error' } });
+  });
   it('uses the supplied observability runtime for HTTP completion and forwards it to the API', async () => {
     const lines: string[] = [];
     const telemetry = initializeObservability({

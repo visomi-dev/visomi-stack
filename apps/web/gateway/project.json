@@ -50,7 +50,8 @@
       },
       "options": {
         "env": {
-          "API_APP_PATH": "../../../dist/apps/web/api/app.js"
+          "API_APP_PATH": "../../../dist/apps/web/api/app.js",
+          "SITE_APP_PATH": "../../../dist/apps/web/site/server/entry.mjs"
         }
       }
     },
@@ -116,7 +117,10 @@
     "test-ci": {
       "executor": "nx:noop",
       "dependsOn": ["test"]
+    },
+    "build": {
+      "dependsOn": ["^build"]
     }
   },
-  "implicitDependencies": ["web-api"]
+  "implicitDependencies": ["web-api", "web-site"]
 }

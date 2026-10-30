@@ -11,6 +11,7 @@ FROM base AS deps
 WORKDIR /workspace
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches ./patches
 
 RUN HUSKY=0 pnpm install --frozen-lockfile
 
@@ -54,6 +55,7 @@ ENV PORT=8080
 ENV APP_NAME=${APP_NAME}
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches ./patches
 
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
