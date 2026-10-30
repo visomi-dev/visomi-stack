@@ -57,8 +57,8 @@ start. The API never migrates or seeds during startup. See
 [container database initialization](docs/development.md#container-database-initialization)
 for reruns and seed ownership.
 
-The serve command and HTTP response have been checked with the existing local
-dependencies. A fresh-checkout installation has not yet been verified.
+The serve command and HTTP response have been checked. A fresh worktree
+installation with `pnpm install --frozen-lockfile` has also been verified.
 
 ## Build and remaining gaps
 
