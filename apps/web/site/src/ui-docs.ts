@@ -89,7 +89,25 @@ export const uiDocs = {
     search: 'Search example',
     optional: 'Optional',
     disabled: 'Disabled example',
+    shellTitle: 'A place for your daily work',
+    shellNote: 'Desktop sidebar, mobile bottom navigation. Native links, shared styles, no layout runtime.',
+    openShell: 'Open the full layout',
+    home: 'Overview',
+    activity: 'Activity',
+    settings: 'Settings',
+    primaryNavigation: 'Primary navigation',
+    skipContent: 'Skip to content',
+    catalogLink: 'Back to components',
+    shellAction: 'Preview action',
+    shellActionCount: 'Activations',
+    shellFooter: 'Example workspace · Synthetic content',
     names: {
+      'app-shell': 'Application shells',
+      sidebar: 'Sidebars',
+      topbar: 'Application headers',
+      navbar: 'Mobile navigation',
+      'nav-item': 'Navigation items',
+
       button: 'Buttons',
       'link-button': 'Button links',
       heading: 'Headings',
@@ -124,6 +142,7 @@ export const uiDocs = {
       dialog: 'Dialogs',
     },
     categories: {
+      shell: 'Application shell',
       actions: 'Actions',
       typography: 'Typography',
       layout: 'Layout',
@@ -222,7 +241,26 @@ export const uiDocs = {
     search: 'Buscar ejemplo',
     optional: 'Opcional',
     disabled: 'Ejemplo deshabilitado',
+    shellTitle: 'Un espacio para tu trabajo diario',
+    shellNote:
+      'Barra lateral en escritorio e inferior en móvil. Enlaces nativos, estilos compartidos y sin runtime de layout.',
+    openShell: 'Abrir el layout completo',
+    home: 'Resumen',
+    activity: 'Actividad',
+    settings: 'Ajustes',
+    primaryNavigation: 'Navegación principal',
+    skipContent: 'Saltar al contenido',
+    catalogLink: 'Volver a componentes',
+    shellAction: 'Acción de ejemplo',
+    shellActionCount: 'Activaciones',
+    shellFooter: 'Espacio de ejemplo · Datos ficticios',
     names: {
+      'app-shell': 'Estructuras de aplicación',
+      sidebar: 'Barras laterales',
+      topbar: 'Cabeceras de aplicación',
+      navbar: 'Navegación móvil',
+      'nav-item': 'Elementos de navegación',
+
       button: 'Botones',
       'link-button': 'Enlaces con apariencia de botón',
       heading: 'Encabezados',
@@ -257,6 +295,7 @@ export const uiDocs = {
       dialog: 'Diálogos',
     },
     categories: {
+      shell: 'Estructura de aplicación',
       actions: 'Acciones',
       typography: 'Tipografía',
       layout: 'Composición',
@@ -268,6 +307,7 @@ export const uiDocs = {
 } as const;
 
 export const componentGroups = {
+  shell: ['app-shell', 'sidebar', 'topbar', 'navbar', 'nav-item'],
   actions: ['button', 'link-button'],
   typography: ['heading', 'text', 'code', 'link', 'divider'],
   layout: ['container', 'card', 'page-header'],
@@ -291,6 +331,11 @@ export const componentGroups = {
 } as const;
 
 export const recipeNames = {
+  'app-shell': 'appShell',
+  sidebar: 'sidebar',
+  topbar: 'topbar',
+  navbar: 'navbar',
+  'nav-item': 'navItem',
   button: 'button',
   'link-button': 'linkButton',
   heading: 'heading',

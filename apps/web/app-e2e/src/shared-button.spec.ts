@@ -30,9 +30,13 @@ for (const locale of ['en', 'es']) {
       await expect(page.locator('button[data-increment]')).toBeVisible();
 
       await page.evaluate(() => {
-        const probe = window as typeof window & { sharedButtonBeforeHydration?: Element | null };
+        const probe = window as typeof window & {
+          sharedButtonBeforeHydration?: Element | null;
+          shellBeforeHydration?: Element | null;
+        };
 
         probe.sharedButtonBeforeHydration = document.querySelector('button[data-increment]');
+        probe.shellBeforeHydration = document.querySelector('main');
       });
     } finally {
       release();
@@ -49,9 +53,15 @@ for (const locale of ['en', 'es']) {
     await expect(page.locator('[data-count]')).toHaveText('1');
 
     const reused = await page.evaluate(() => {
-      const probe = window as typeof window & { sharedButtonBeforeHydration?: Element | null };
+      const probe = window as typeof window & {
+        sharedButtonBeforeHydration?: Element | null;
+        shellBeforeHydration?: Element | null;
+      };
 
-      return probe.sharedButtonBeforeHydration === document.querySelector('button[data-increment]');
+      return (
+        probe.sharedButtonBeforeHydration === document.querySelector('button[data-increment]') &&
+        probe.shellBeforeHydration === document.querySelector('main')
+      );
     });
 
     expect(reused).toBe(true);

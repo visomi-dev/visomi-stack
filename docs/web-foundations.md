@@ -135,7 +135,7 @@ workspace-generated import paths to those files.
 
 ## Component catalog
 
-The website's `/en/ui/` and `/es/ui/` routes document 32 shared recipe families,
+The website's `/en/ui/` and `/es/ui/` routes document 37 shared recipe families,
 with live previews and usage for both frameworks. The homepage links to them.
 The [compendium](frontend-ui-catalog.md) records the reference comparison,
 selection, behavior contracts and deferred widgets; the
@@ -167,3 +167,9 @@ The component/directive choice is documented in the repository working agreement
 Field components own label/description/error markup and stable IDs, while the
 consumer owns native control bindings and validation. The shared library README
 contains Angular `appField` reference helpers and equivalent Astro markup.
+
+The component catalog also links to full-page shell examples at `/en/ui/shell/`
+and `/es/ui/shell/`. These exercise the shared sidebar, application header and
+mobile navbar recipes through Express SSR. Angular's foundation page uses the
+matching composition, with native routing and hydration. Shell layout needs no
+website client script; only the existing appearance preference script is loaded.

@@ -7,7 +7,7 @@ for (const locale of ['en', 'es']) {
 
     expect(response.status()).toBe(200);
     expect(html).toContain(`<html lang="${locale}"`);
-    expect(html.match(/data-component=/g)).toHaveLength(32);
+    expect(html.match(/data-component=/g)).toHaveLength(37);
     expect(html).toContain('aria-describedby="input-email-help input-email-error"');
     expect(html).not.toContain('astro-island');
     expect(html).not.toContain('ng-version');
@@ -34,7 +34,7 @@ for (const locale of ['en', 'es']) {
 
     await page.goto(`/${locale}/ui/`);
 
-    await expect(page.locator('[data-component]')).toHaveCount(32);
+    await expect(page.locator('[data-component]')).toHaveCount(37);
 
     await expect(page.locator('[data-ui-dialog-open]')).toBeEnabled();
 

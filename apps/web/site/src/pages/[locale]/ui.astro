@@ -4,6 +4,7 @@ import BaseLayout from '../../layouts/base.astro';
 import Actions from '../../components/ui-docs/actions.astro';
 import Typography from '../../components/ui-docs/typography.astro';
 import Layout from '../../components/ui-docs/layout.astro';
+import Shell from '../../components/ui-docs/shell.astro';
 import Data from '../../components/ui-docs/data.astro';
 import Forms from '../../components/ui-docs/forms.astro';
 import Feedback from '../../components/ui-docs/feedback.astro';
@@ -17,6 +18,7 @@ const groups = [
   { id: 'actions', Component: Actions },
   { id: 'typography', Component: Typography },
   { id: 'layout', Component: Layout },
+  { id: 'shell', Component: Shell },
   { id: 'data', Component: Data },
   { id: 'forms', Component: Forms },
   { id: 'feedback', Component: Feedback },
@@ -110,7 +112,8 @@ const groups = [
           </h1>
           <p class="mt-6 max-w-2xl text-base leading-7 text-pretty text-zinc-600 dark:text-zinc-400">{labels.intro}</p>
           <p class="mt-4 text-sm font-medium">
-            32 {locale === 'es' ? 'familias de componentes' : 'component families'}
+            {Object.values(componentGroups).flat().length}{' '}
+            {locale === 'es' ? 'familias de componentes' : 'component families'}
           </p>
           <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">{labels.note}</p>
           <nav aria-label={labels.navigation} class="mt-6 flex flex-wrap gap-2 lg:hidden">

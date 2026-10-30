@@ -25,74 +25,79 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
 @Component({
   imports: [UI_IMPORTS, ReactiveFormsModule],
   template: `
-    <button appUI variant="danger" size="icon" aria-label="Delete">×</button>
-    <a appUI="button" href="#example">Button link</a><a appUI href="#example">Text link</a>
-    <h2 appUI uiSize="xl">Heading</h2>
-    <p appUI>Text</p>
-    <span appUI="text">Inline</span> <code appUI block>const value = 1;</code>
-    <hr appUI soft />
-    <span appUI="badge" [tone]="tone()">Ready</span>
-    <span appUI="avatar" role="img" aria-label="Example person">EP</span>
-    <table appUI density="compact" striped [mobileCards]="cards()" [stickyHeaders]="cards()">
-      <caption>
-        Example
-      </caption>
-      <tbody>
-        <tr>
-          <th scope="row">Item</th>
-          <td>Ready</td>
-        </tr>
-      </tbody>
-    </table>
-    <dl appUI>
-      <dt>State</dt>
-      <dd>Ready</dd>
-    </dl>
-    <nav appUI="pagination" aria-label="Pages"></nav>
-    <div appUI="container" width="sm"><article appUI padding="sm">Card</article></div>
-    <header appUI>Header</header>
-    <fieldset appUI>
-      <legend appUI>Preferences</legend>
-      <app-field
-        #exampleField="appField"
-        controlId="email"
-        label="Email"
-        description="Example address"
-        error="Invalid address"
-        [compact]="compact()"
-        [manualError]="manualError()"
-      >
-        <input
-          appUI
-          type="email"
-          [id]="exampleField.controlId()"
-          [size]="24"
-          [uiSize]="size()"
-          [formControl]="email"
-          [attr.aria-describedby]="exampleField.describedBy()"
-          class="example-layout"
-        />
-      </app-field>
-      <textarea appUI uiSize="sm" aria-label="Notes" rows="3"></textarea>
-      <select appUI aria-label="Region">
-        <option value="am">Americas</option>
-      </select>
-      <label appUI inline><input appUI type="checkbox" [formControl]="checked" /> Updates</label>
-      <label appUI inline><input appUI type="radio" name="kind" value="one" /> One</label>
-      <label appUI inline><input appUI="switch" type="checkbox" /> Notifications</label>
-      <label appUI="radio-card"><input appUI type="radio" name="kind" value="two" /> Two</label>
-      <div appUI="input-group"><span data-slot="prefix">$</span><input appUI aria-label="Amount" /></div>
-    </fieldset>
-    <div appUI="alert" tone="success" role="status">Ready</div>
-    <span role="status"><span appUI="loader" aria-hidden="true"></span>Loading</span>
-    <details appUI>
-      <summary>More</summary>
-      <p>Details</p>
-    </details>
-    <dialog appUI aria-label="Review">
-      <form method="dialog"><button appUI type="submit">Close</button></form>
-    </dialog>
-    <input appUI type="file" aria-label="File" /><input type="text" aria-label="Unstyled" />
+    <app-shell contentId="catalog-main" skipLabel="Skip to content">
+      <app-sidebar label="Primary"><a appUI="nav-item" href="#example" aria-current="page">Home</a></app-sidebar>
+      <header app-topbar><span data-slot="title">Workspace</span></header>
+      <nav appUI="navbar" aria-label="Primary"><a appUI="nav-item" placement="navbar" href="#example">Home</a></nav>
+      <button appUI variant="danger" size="icon" aria-label="Delete">×</button>
+      <a appUI="button" href="#example">Button link</a><a appUI href="#example">Text link</a>
+      <h2 appUI uiSize="xl">Heading</h2>
+      <p appUI>Text</p>
+      <span appUI="text">Inline</span> <code appUI block>const value = 1;</code>
+      <hr appUI soft />
+      <span appUI="badge" [tone]="tone()">Ready</span>
+      <span appUI="avatar" role="img" aria-label="Example person">EP</span>
+      <table appUI density="compact" striped [mobileCards]="cards()" [stickyHeaders]="cards()">
+        <caption>
+          Example
+        </caption>
+        <tbody>
+          <tr>
+            <th scope="row">Item</th>
+            <td>Ready</td>
+          </tr>
+        </tbody>
+      </table>
+      <dl appUI>
+        <dt>State</dt>
+        <dd>Ready</dd>
+      </dl>
+      <nav appUI="pagination" aria-label="Pages"></nav>
+      <div appUI="container" width="sm"><article appUI padding="sm">Card</article></div>
+      <header appUI>Header</header>
+      <fieldset appUI>
+        <legend appUI>Preferences</legend>
+        <app-field
+          #exampleField="appField"
+          controlId="email"
+          label="Email"
+          description="Example address"
+          error="Invalid address"
+          [compact]="compact()"
+          [manualError]="manualError()"
+        >
+          <input
+            appUI
+            type="email"
+            [id]="exampleField.controlId()"
+            [size]="24"
+            [uiSize]="size()"
+            [formControl]="email"
+            [attr.aria-describedby]="exampleField.describedBy()"
+            class="example-layout"
+          />
+        </app-field>
+        <textarea appUI uiSize="sm" aria-label="Notes" rows="3"></textarea>
+        <select appUI aria-label="Region">
+          <option value="am">Americas</option>
+        </select>
+        <label appUI inline><input appUI type="checkbox" [formControl]="checked" /> Updates</label>
+        <label appUI inline><input appUI type="radio" name="kind" value="one" /> One</label>
+        <label appUI inline><input appUI="switch" type="checkbox" /> Notifications</label>
+        <label appUI="radio-card"><input appUI type="radio" name="kind" value="two" /> Two</label>
+        <div appUI="input-group"><span data-slot="prefix">$</span><input appUI aria-label="Amount" /></div>
+      </fieldset>
+      <div appUI="alert" tone="success" role="status">Ready</div>
+      <span role="status"><span appUI="loader" aria-hidden="true"></span>Loading</span>
+      <details appUI>
+        <summary>More</summary>
+        <p>Details</p>
+      </details>
+      <dialog appUI aria-label="Review">
+        <form method="dialog"><button appUI type="submit">Close</button></form>
+      </dialog>
+      <input appUI type="file" aria-label="File" /><input type="text" aria-label="Unstyled" />
+    </app-shell>
   `,
 })
 class Catalog {

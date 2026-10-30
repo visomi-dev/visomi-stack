@@ -145,6 +145,11 @@
       <trans-unit id="tableReady" datatype="html"><source>Ready</source><target>Listo</target></trans-unit>
       <trans-unit id="tableSandbox" datatype="html"><source>Sandbox</source><target>Pruebas</target></trans-unit>
       <trans-unit id="tableDraft" datatype="html"><source>Draft</source><target>Borrador</target></trans-unit>
+      <trans-unit id="shellPrimary" datatype="html"><source>Primary navigation</source><target>Navegación principal</target></trans-unit>
+      <trans-unit id="shellNote" datatype="html"><source> Native navigation. Shared visual recipes. </source><target>Navegación nativa. Estilos compartidos.</target></trans-unit>
+      <trans-unit id="shellHome" datatype="html"><source>Home</source><target>Inicio</target></trans-unit>
+      <trans-unit id="shellFields" datatype="html"><source>Fields</source><target>Campos</target></trans-unit>
+      <trans-unit id="shellTable" datatype="html"><source>Table</source><target>Tabla</target></trans-unit>
     </body>
   </file>
 </xliff>

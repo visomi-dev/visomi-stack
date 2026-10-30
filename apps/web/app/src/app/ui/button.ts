@@ -3,7 +3,7 @@ import { computed, Directive, input } from '@angular/core';
 import { button, type ButtonSize, type ButtonVariant } from '@visomi-stack/web-frontend-ui';
 
 @Directive({
-  selector: 'button[appUI]',
+  selector: 'button[appUI]:not([appUI=nav-item])',
   host: {
     type: 'button',
     '[class]': 'classes()',

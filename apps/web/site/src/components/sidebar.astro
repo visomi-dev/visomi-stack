@@ -1,0 +1,14 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { sidebar } from '@visomi-stack/web-frontend-ui';
+type Props = HTMLAttributes<'aside'> & { label: string };
+const { label, class: className, ...attributes } = Astro.props;
+---
+
+<aside {...attributes} class:list={[sidebar.classes(), className]}>
+  <slot name="brand" />
+  <nav aria-label={label} class={sidebar.navigationClasses()}>
+    <slot />
+  </nav>
+  <slot name="footer" />
+</aside>

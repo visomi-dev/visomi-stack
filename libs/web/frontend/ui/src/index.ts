@@ -23,5 +23,7 @@ export {
 } from './lib/forms';
 export type { ControlSize } from './lib/forms';
 export { alert, loader } from './lib/feedback';
+export { appShell, sidebar, topbar, navbar, navItem } from './lib/shell';
+export type { ShellLayout, NavigationPlacement } from './lib/shell';
 export { disclosure, dialog } from './lib/overlays';
 export type { DialogSize } from './lib/overlays';

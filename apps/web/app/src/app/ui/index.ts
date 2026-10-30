@@ -1,3 +1,8 @@
+export { NavItem } from './nav-item';
+export { Navbar } from './navbar';
+export { Topbar } from './topbar';
+export { Sidebar } from './sidebar';
+export { AppShell } from './app-shell';
 export { Button } from './button';
 export { LinkButton } from './link-button';
 export { Heading } from './heading';
@@ -31,6 +36,11 @@ export { Loader } from './loader';
 export { Disclosure } from './disclosure';
 export { Dialog } from './dialog';
 
+import { NavItem } from './nav-item';
+import { Navbar } from './navbar';
+import { Topbar } from './topbar';
+import { Sidebar } from './sidebar';
+import { AppShell } from './app-shell';
 import { Button } from './button';
 import { LinkButton } from './link-button';
 import { Heading } from './heading';
@@ -65,6 +75,11 @@ import { Disclosure } from './disclosure';
 import { Dialog } from './dialog';
 
 export const UI_IMPORTS = [
+  AppShell,
+  Sidebar,
+  Topbar,
+  Navbar,
+  NavItem,
   Button,
   LinkButton,
   Heading,

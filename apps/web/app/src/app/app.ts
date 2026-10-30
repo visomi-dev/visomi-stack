@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { email, form, FormField, required } from '@angular/forms/signals';
 
-import { Button, Field, Input, Table } from './ui';
+import { Button, Field, Input, Table, AppShell, Sidebar, Topbar, Navbar, NavItem } from './ui';
 
 @Component({
-  imports: [Button, Field, Input, Table, FormField],
+  imports: [Button, Field, Input, Table, AppShell, Sidebar, Topbar, Navbar, NavItem, FormField],
   selector: 'app-root',
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

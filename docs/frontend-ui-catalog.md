@@ -38,6 +38,11 @@ validation, events, disabled behavior and submission semantics.
 | Container              | `container`       | Nive/v0                                            | `div`                                  |
 | Card                   | `card`            | Nive/v0; Catalyst surface composition              | `article`, `section`                   |
 | Page header            | `pageHeader`      | Nive/v0                                            | `header`                               |
+| Application shell      | `appShell`        | Nive/v0, composition refactored                    | One main, skip link, responsive slots  |
+| Sidebar                | `sidebar`         | Nive/v0                                            | Labelled nav, brand and footer slots   |
+| Application header     | `topbar`          | Nive/v0                                            | Native header, title and action slots  |
+| Mobile navigation      | `navbar`          | Nive/v0 bottom navigation                          | Labelled native nav                    |
+| Navigation item        | `navItem`         | Nive/v0 sidebar and bottom items                   | Native anchor or action button         |
 | Fieldset and legend    | `fieldset`        | All three                                          | `fieldset`, `legend`                   |
 | Field                  | `field`           | All three                                          | `app-field` / Astro `div`              |
 | Label                  | `label`           | All three                                          | `label`, `legend`                      |
@@ -85,11 +90,31 @@ keyboard contracts beyond their CSS. They are not represented as equivalent
 widgets by a styled native select or disclosure. Their headless primitive choice
 needs its own implementation and accessibility validation.
 
-Application shells, sidebars, top bars, bottom navigation, authentication layouts,
-password strength, PIN input, specialized password/color controls and financial
+Authentication layouts, password strength, PIN input, specialized password/color controls and financial
 formatting remain application-specific compositions. The catalog does not port
 Nive's product logic or authentication flows. Native controls compose with the
 application's Signal Forms or Reactive Forms model.
+
+## Shell reference refactor
+
+The Nive/v0 shell, sidebar, topbar, bottom-navigation and stacked-layout files
+were inspected as read-only references. Their layout responsibilities are kept,
+while their routing facades, product navigation, icon runtime, component tokens
+and off-canvas overlay implementation are not copied. A CSS-translated drawer
+without focus containment is not an accessible modal navigation solution.
+
+The new shell uses a desktop sidebar and an alternative mobile navbar. It owns
+layout, a skip link, one main landmark and safe-area spacing. Sidebar and Topbar
+own their projected structure. Native navigation items and Navbar only add
+appearance, so Angular implements them as directives. Routing, current-page
+matching, actions and navigation content stay with the application. A stacked
+shell variant supports layouts that provide desktop navigation in the header.
+
+See the [library usage](../libs/web/frontend/ui/README.md#application-shell-and-navigation)
+for slots, required labels, stable IDs, routing and viewport behavior. The
+localized full-page Astro demos at `/en/ui/shell/` and `/es/ui/shell/` avoid nesting
+main landmarks in the catalog. The Angular foundation page uses the same shell.
+No framework runtime or new JavaScript is added to the website for layout.
 
 ## Documentation and verification
 

@@ -36,6 +36,9 @@ of conflicting utilities in a class string does not define precedence.
 | `input`, `textarea`, `select`                                                                                                                                                      | `size: sm \| md \| lg` (md)                                                                            |
 | `label`                                                                                                                                                                            | `inline: boolean` (false)                                                                              |
 | `dialog`                                                                                                                                                                           | `size: sm \| md \| lg` (md)                                                                            |
+| `appShell`                                                                                                                                                                         | `layout: sidebar \| stacked` (sidebar), on its frame/sidebar parts                                     |
+| `navItem`                                                                                                                                                                          | `placement: sidebar \| navbar` (sidebar)                                                               |
+| `sidebar`, `topbar`, `navbar`                                                                                                                                                      | No visual options                                                                                      |
 | `field`                                                                                                                                                                            | `compact: boolean` (false)                                                                             |
 | `link`, `pageHeader`, `descriptionList`, `pagination`, `fieldset`, `description`, `errorMessage`, `checkbox`, `radio`, `toggle`, `radioCard`, `inputGroup`, `loader`, `disclosure` | No visual options                                                                                      |
 
@@ -91,6 +94,80 @@ Markers include `badge`, `avatar`, `text` (span), `container`, `card` (section),
 `loader`. Use `details appUI` for disclosure and
 `dialog appUI #example="appUIDialog"` with `example.showModal()` / `example.close()`
 for modal actions. Host class bindings preserve additional caller classes.
+
+## Application shell and navigation
+
+`AppShell`, `Sidebar` and `Topbar` own composition markup. Angular uses
+`app-shell`, `app-sidebar` and the native `header[app-topbar]` component.
+`Navbar` (`nav[appUI=navbar]`) and `NavItem`
+(`a[appUI=nav-item]`, `button[appUI=nav-item]`) are appearance directives.
+Astro has matching server adapters: `app-shell.astro`, `sidebar.astro`,
+`topbar.astro`, `navbar.astro` and `nav-item.astro` (a native anchor).
+
+```html
+<app-shell contentId="workspace-main" skipLabel="Skip to content">
+  <app-sidebar label="Primary navigation">
+    <a data-slot="brand" href="/app/en/">Workspace</a>
+    <a appUI="nav-item" routerLink="/settings" routerLinkActive ariaCurrentWhenActive="page">Settings</a>
+    <p data-slot="footer">Example workspace</p>
+  </app-sidebar>
+  <header app-topbar>
+    <h1 data-slot="title">Overview</h1>
+    <button appUI>Save</button>
+  </header>
+  <p>Page content goes directly into the shell-owned main.</p>
+  <footer data-shell-footer>Page footer</footer>
+  <nav appUI="navbar" aria-label="Primary navigation">
+    <a appUI="nav-item" placement="navbar" routerLink="/settings" routerLinkActive ariaCurrentWhenActive="page"
+      >Settings</a
+    >
+  </nav>
+</app-shell>
+```
+
+The Angular consumer imports `RouterLink` / `RouterLinkActive` when using them;
+the adapters do not wrap routing or copy its input API. The shell also accepts
+`data-shell-sidebar`, `data-shell-header` and `data-shell-mobile` markers for
+custom projected compositions. Astro uses named `sidebar`, `header`, `mobile`
+and `footer` slots, with default content projected into its own main. Sidebar
+uses `brand` and `footer` slots, and Topbar uses a `title` slot.
+
+Both shell adapters require a stable unique `contentId` and localized
+`skipLabel`. They own one focusable main and its skip link; do not nest a main
+inside them. Sidebar requires a localized `label`; native nav elements require
+an accessible name. Desktop starts at `lg` (1024px): the sidebar is sticky with
+an independently scrollable navigation region, the header is sticky, and mobile
+navigation leaves the accessibility tree. Below `lg`, the sidebar is hidden and
+the shell docks the mobile slot at the bottom. Content padding and safe-area
+spacing keep final actions clear of the dock. The header flows normally on
+mobile, avoiding a tall sticky header covering content on narrow screens.
+
+`layout="stacked"` removes the desktop sidebar column; supply desktop navigation
+in the header for that layout. Without a shell, Sidebar, Topbar and Navbar remain
+ordinary in-flow compositions suitable for previews or alternate page layouts.
+Use three to five short labelled destinations in a mobile navbar. Keep all
+necessary destinations reachable in both responsive layouts. Icons belong to
+the consumer and should be decorative when paired with visible labels.
+
+`navItem.classes({ placement: 'sidebar' | 'navbar' })` defaults to `sidebar`.
+Current-page styling follows native `aria-current="page"`; callers own route
+matching. Links keep href, RouterLink, query parameters, target and download.
+Actions use native buttons with explicit `type="button"` and `disabled`; the
+recipe does not simulate disabled links or turn navigation into an ARIA menu.
+
+The shell recipe exposes `classes()`, `frameClasses({ layout })`,
+`sidebarClasses({ layout })`, `headerClasses()`, `contentClasses()`,
+`mobileClasses()` and `skipClasses()` for its owned parts. Sidebar also exposes
+`navigationClasses()` and Topbar exposes `titleClasses()` / `actionsClasses()`.
+The framework adapters own these wrappers; consumers only project meaningful
+content. No route discovery, global navigation state, duplicated IDs, DOM
+rewriting, modal drawer or client layout script is introduced.
+
+Full Astro examples live at `/en/ui/shell/` and `/es/ui/shell/`; Angular's existing
+localized foundation pages demonstrate the same shell. The Astro page loads
+only the existing theme script, and works without JavaScript. Navigation markup
+exists in both desktop and mobile slots, with exactly one version visible and
+accessible at a time. There is no shared framework runtime.
 
 ## Field validation and responsive tables
 
@@ -170,7 +247,7 @@ requires `label`, `Loader` requires `label`, and `Disclosure` requires `summary`
 `Dialog` requires `id` and browser code calling `showModal()` to open it.
 Native attributes and slots are forwarded. No framework hydration is needed.
 
-The website catalog at `/en/ui/` and `/es/ui/` contains all 32 families with live
+The website catalog at `/en/ui/` and `/es/ui/` contains all 37 families with live
 previews and Angular/Astro/recipe examples. Only the theme and small native demo
 enhancements execute in the browser. The comparison, selection and exclusions
 are documented in [the compendium](../../../../docs/frontend-ui-catalog.md).

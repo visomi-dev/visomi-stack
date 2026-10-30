@@ -1,8 +1,8 @@
 import * as ui from '../index';
 
 describe('portable UI recipes', () => {
-  it('exports 32 recipes without requiring a browser or framework', () => {
-    expect(Object.keys(ui)).toHaveLength(32);
+  it('exports 37 recipes without requiring a browser or framework', () => {
+    expect(Object.keys(ui)).toHaveLength(37);
 
     for (const recipe of Object.values(ui)) {
       const classes = recipe.classes().split(' ');
