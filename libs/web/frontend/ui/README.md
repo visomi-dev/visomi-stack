@@ -46,63 +46,102 @@ link. Icon-only buttons need an accessible name. Input groups use
 
 ## Angular adapters
 
-Import individual directives from `apps/web/app/src/app/ui`, or import the
-`UI_DIRECTIVES` tuple in a component's `imports` for the complete set. The native
-element determines the directive. Ambiguous elements use a static marker:
+Import individual primitives from `apps/web/app/src/app/ui`, or import the
+`UI_IMPORTS` tuple in a component's `imports` for the complete set. Directives
+extend existing elements when they only need appearance or behavior. Components
+own required internal markup. Both use the same portable class recipes.
 
 ```html
 <button appUI variant="secondary" size="sm">Cancel</button>
 <a appUI="button" href="/app/en/">Continue</a>
-<div appUI="field">
-  <label appUI for="email">Email</label>
-  <input appUI id="email" type="email" uiSize="sm" [size]="24" />
-  <p appUI="description">Use a synthetic address.</p>
-</div>
+<app-field
+  #emailField="appField"
+  controlId="email"
+  label="Email"
+  description="Use a synthetic address."
+  error="Enter a valid email address."
+>
+  <input
+    appUI
+    [id]="emailField.controlId()"
+    type="email"
+    uiSize="sm"
+    [size]="24"
+    [attr.aria-describedby]="emailField.describedBy()"
+  />
+</app-field>
+<p app-error>Standalone error message.</p>
 <label appUI inline><input appUI="switch" type="checkbox" /> Updates</label>
 ```
 
-Visual size is `uiSize` except on buttons and button links, whose existing API
-uses `size`. Native input `size` remains numeric. Directives compose with Angular
-forms on native controls and do not provide their own value accessors.
+`Field` is an `app-field` composition component. `ErrorMessage` is a component
+on the native `p[app-error]` host and creates its own inner animation span. The
+consumer never supplies that implementation wrapper. Components use kebab-case
+selectors; directives retain the `appUI` convention. ESLint validates both
+component selector kinds with the normal `app` prefix rule.
+
+Visual size is `uiSize` except on buttons and button links, whose API uses `size`.
+Native input `size` remains numeric. Projected controls keep their own native
+attributes, events and Angular form bindings. The field adds no value accessor.
 
 Use static input types: Angular selects directives at compile time. Changing a
 text input's type into checkbox/radio dynamically does not swap directives.
 Markers include `badge`, `avatar`, `text` (span), `container`, `card` (section),
-`pagination`, `field`, `description`, `error`, `switch`, `radio-card`,
-`input-group`, `alert` and `loader`. Use `details appUI` for disclosure and
+`pagination`, `description`, `switch`, `radio-card`, `input-group`, `alert` and
+`loader`. Use `details appUI` for disclosure and
 `dialog appUI #example="appUIDialog"` with `example.showModal()` / `example.close()`
-for modal actions. Modal behavior is native; label the dialog and include a
-close button. Host class bindings preserve additional caller classes.
+for modal actions. Host class bindings preserve additional caller classes.
 
 ## Field validation and responsive tables
 
-`field.classes()` scopes control/error state styles to the field. Adapters add
-`data-control`, `data-slot="control"` and `data-slot="error"` automatically.
-The Angular and Astro field adapters accept `compact`, `invalid` and
-`manualError` (string or null). The latter two expose programmatic state; the
-consumer still owns the message and the control's `aria-invalid` value.
+The Angular `Field` and Astro `Field` components require `controlId` and `label`.
+They own the label, optional `description`, and `error` presentation, while
+projecting the native control. They also accept `compact`, `invalid` and
+`manualError` (string or null). A nonempty manual error overrides the normal
+error text. Validation and the control's `aria-invalid` remain consumer-owned.
+
+Provide a unique, stable control ID. Both components derive description and
+error IDs as `<controlId>-help` and `<controlId>-error`. Angular exports the
+instance as `appField`; bind the projected control's ID and `aria-describedby`
+to its `controlId()` and `describedBy()` helpers. The latter omits empty message
+IDs. Astro consumers use the same explicit IDs in their server markup. No global
+ID counter or DOM rewriting is used, so SSR and hydration share the same IDs.
 
 Errors stay collapsed while the field has focus and while its control is valid.
 They reveal after blur for nonempty native `:user-invalid` or `aria-invalid`
 controls and manual field errors. Set `data-submitted` on the form or an ancestor
 when a submission/check is attempted so empty required fields also reveal errors
 on blur. Remove that attribute when resetting the form. Empty required fields
-need a placeholder for the pre-submission empty guard. No value accessor or
-form-model abstraction is added.
-
-Associate messages using `aria-describedby`. Do not toggle `hidden` on the error:
-CSS animates its grid track, opacity and spacing, with no fixed message-height
-cap. Reduced motion disables the transition. A direct inner span provides the
-collapsible content; Astro's `ErrorMessage` wraps its slot automatically.
+need a placeholder for the pre-submission empty guard. Components remove empty
+message space; CSS animates nonempty messages' grid tracks, opacity and spacing
+without a fixed height cap. Reduced motion disables the transition.
 
 ```html
 <form [attr.data-submitted]="attempted() ? '' : null">
-  <div appUI="field">
-    <label appUI for="email">Email</label>
-    <input appUI type="email" id="email" required placeholder="demo@example.test" aria-describedby="email-error" />
-    <p appUI="error" id="email-error"><span>Enter a valid email address.</span></p>
-  </div>
+  <app-field
+    #emailField="appField"
+    controlId="email"
+    label="Email"
+    [error]="emailError()"
+    [manualError]="serverError()"
+  >
+    <input
+      appUI
+      type="email"
+      [id]="emailField.controlId()"
+      required
+      placeholder="demo@example.test"
+      [formField]="fields.email"
+      [attr.aria-describedby]="emailField.describedBy()"
+    />
+  </app-field>
 </form>
+```
+
+```astro
+<Field controlId="email" label="Email" description="Use an example address." error="Enter a valid email address.">
+  <Input type="email" id="email" required placeholder="demo@example.test" aria-describedby="email-help email-error" />
+</Field>
 ```
 
 `table.classes({ mobileCards: true, stickyHeaders: true })` converts body rows to

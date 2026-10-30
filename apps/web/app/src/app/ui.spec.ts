@@ -1,11 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { disabled, form, FormField } from '@angular/forms/signals';
 import { By } from '@angular/platform-browser';
 
 import {
-  UI_DIRECTIVES,
+  UI_IMPORTS,
   Input,
   Checkbox,
   Radio,
@@ -23,7 +23,7 @@ import {
 import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
 
 @Component({
-  imports: [UI_DIRECTIVES, ReactiveFormsModule],
+  imports: [UI_IMPORTS, ReactiveFormsModule],
   template: `
     <button appUI variant="danger" size="icon" aria-label="Delete">×</button>
     <a appUI="button" href="#example">Button link</a><a appUI href="#example">Text link</a>
@@ -53,21 +53,26 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
     <header appUI>Header</header>
     <fieldset appUI>
       <legend appUI>Preferences</legend>
-      <div appUI="field" [compact]="compact()" [manualError]="manualError()">
-        <label appUI for="email">Email</label>
+      <app-field
+        #exampleField="appField"
+        controlId="email"
+        label="Email"
+        description="Example address"
+        error="Invalid address"
+        [compact]="compact()"
+        [manualError]="manualError()"
+      >
         <input
           appUI
           type="email"
-          id="email"
+          [id]="exampleField.controlId()"
           [size]="24"
           [uiSize]="size()"
           [formControl]="email"
-          aria-describedby="email-help"
+          [attr.aria-describedby]="exampleField.describedBy()"
           class="example-layout"
         />
-        <p appUI="description" id="email-help">Example address</p>
-        <p appUI="error" id="email-error"><span>Invalid address</span></p>
-      </div>
+      </app-field>
       <textarea appUI uiSize="sm" aria-label="Notes" rows="3"></textarea>
       <select appUI aria-label="Region">
         <option value="am">Americas</option>
@@ -117,7 +122,77 @@ class SignalFields {
   });
 }
 
+@Component({
+  imports: [Field, Input, ReactiveFormsModule],
+  template: `
+    <form [formGroup]="group">
+      <app-field #emailField="appField" controlId="group-email" label="Email">
+        <input appUI formControlName="email" [id]="emailField.controlId()" />
+      </app-field>
+    </form>
+  `,
+})
+class ProjectedGroup {
+  readonly group = new FormGroup({ email: new FormControl('demo@example.test', { nonNullable: true }) });
+}
+
 describe('native Angular UI catalog', () => {
+  it('owns message structure and deterministic association IDs', async () => {
+    const fixture = TestBed.createComponent(Field);
+
+    fixture.componentRef.setInput('controlId', 'customer-email');
+    fixture.componentRef.setInput('label', 'Email');
+    fixture.componentRef.setInput('description', 'Example address');
+    fixture.componentRef.setInput('error', 'Invalid example');
+
+    await fixture.whenStable();
+
+    const component = fixture.componentInstance;
+    const element = fixture.nativeElement as HTMLElement;
+    const message = element.querySelector('[data-slot=error]') as HTMLParagraphElement;
+
+    expect(element.hasAttribute('data-control')).toBe(true);
+    expect(element.querySelector('label')?.htmlFor).toBe('customer-email');
+    expect(component.describedBy()).toBe('customer-email-help customer-email-error');
+    expect(message.tagName).toBe('P');
+    expect(message.children).toHaveLength(1);
+    expect(message.firstElementChild?.tagName).toBe('SPAN');
+    expect(message.textContent?.trim()).toBe('Invalid example');
+    fixture.componentRef.setInput('error', '  ');
+    fixture.componentRef.setInput('description', '');
+
+    await fixture.whenStable();
+
+    expect(component.describedBy()).toBeNull();
+    expect(message.hidden).toBe(true);
+    fixture.componentRef.setInput('controlId', 'updated-email');
+    fixture.componentRef.setInput('manualError', 'Manual example error');
+
+    await fixture.whenStable();
+
+    expect(component.describedBy()).toBe('updated-email-error');
+    expect(element.querySelector('label')?.htmlFor).toBe('updated-email');
+    expect(message.id).toBe('updated-email-error');
+    expect(message.hidden).toBe(false);
+    expect(message.textContent?.trim()).toBe('Manual example error');
+    expect(element.querySelector('[data-slot=error]')).toBe(message);
+  });
+
+  it('keeps projected controls connected to their parent FormGroup', async () => {
+    const fixture = TestBed.createComponent(ProjectedGroup);
+
+    await fixture.whenStable();
+
+    const element = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(element.closest('app-field')).not.toBeNull();
+    expect(element.value).toBe('demo@example.test');
+    expect(element.labels?.[0].htmlFor).toBe(element.id);
+    element.value = 'changed@example.test';
+    element.dispatchEvent(new Event('input'));
+    expect(fixture.componentInstance.group.getRawValue()).toEqual({ email: 'changed@example.test' });
+  });
+
   it('composes with Signal Forms without a custom value accessor', async () => {
     const fixture = TestBed.createComponent(SignalFields);
 
@@ -145,8 +220,8 @@ describe('native Angular UI catalog', () => {
 
     await fixture.whenStable();
 
-    for (const directive of UI_DIRECTIVES) {
-      expect(fixture.debugElement.queryAll(By.directive(directive)).length).toBeGreaterThan(0);
+    for (const primitive of UI_IMPORTS) {
+      expect(fixture.debugElement.queryAll(By.directive(primitive)).length).toBeGreaterThan(0);
     }
 
     const instances = (type: Parameters<typeof By.directive>[0]) => fixture.debugElement.queryAll(By.directive(type));
@@ -174,7 +249,7 @@ describe('native Angular UI catalog', () => {
 
     expect(element.size).toBe(24);
     expect(element.labels?.[0].textContent).toBe('Email');
-    expect(element.getAttribute('aria-describedby')).toBe('email-help');
+    expect(element.getAttribute('aria-describedby')).toBe('email-help email-error');
     expect(element.classList.contains('example-layout')).toBe(true);
     element.value = 'changed@example.test';
     element.dispatchEvent(new Event('input'));

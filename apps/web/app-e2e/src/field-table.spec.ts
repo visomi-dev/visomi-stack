@@ -9,6 +9,10 @@ for (const locale of ['en', 'es']) {
     const response = await request.get(path);
     const html = await response.text();
 
+    expect(html).toContain('<app-field');
+    expect(html).toContain('for="angular-email"');
+    expect(html).toContain('aria-describedby="angular-email-error"');
+    expect(html).toContain('id="angular-email-error"');
     expect(html).toContain('data-control');
     expect(html).toContain('data-slot="error"');
     expect(html).toContain('role="table"');

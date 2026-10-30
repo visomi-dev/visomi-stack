@@ -224,128 +224,128 @@
         <source>Example email</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">153,154</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="fieldManualError" datatype="html">
-        <source>This example address is unavailable.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">166,167</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="fieldError" datatype="html">
-        <source>Enter a valid email address.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">168,170</context>
+          <context context-type="linenumber">155,156</context>
         </context-group>
       </trans-unit>
       <trans-unit id="fieldCheck" datatype="html">
         <source>Check example</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">174,175</context>
+          <context context-type="linenumber">171,172</context>
         </context-group>
       </trans-unit>
       <trans-unit id="fieldManual" datatype="html">
         <source> Show manual error </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">176,177</context>
+          <context context-type="linenumber">173,174</context>
         </context-group>
       </trans-unit>
       <trans-unit id="fieldReset" datatype="html">
         <source>Reset example</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">178,180</context>
+          <context context-type="linenumber">175,177</context>
         </context-group>
       </trans-unit>
       <trans-unit id="tableBehaviorTitle" datatype="html">
         <source>Responsive table</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">183,184</context>
+          <context context-type="linenumber">180,181</context>
         </context-group>
       </trans-unit>
       <trans-unit id="tableCaption" datatype="html">
         <source>Example workspaces</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">186,187</context>
+          <context context-type="linenumber">183,184</context>
         </context-group>
       </trans-unit>
       <trans-unit id="tableWorkspace" datatype="html">
         <source>Workspace</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">189,190</context>
+          <context context-type="linenumber">186,187</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">196,197</context>
+          <context context-type="linenumber">193,194</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">206,207</context>
+          <context context-type="linenumber">203,204</context>
         </context-group>
       </trans-unit>
       <trans-unit id="tableStatus" datatype="html">
         <source>Status</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">190,192</context>
+          <context context-type="linenumber">187,189</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">200,201</context>
+          <context context-type="linenumber">197,198</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">210,211</context>
+          <context context-type="linenumber">207,208</context>
         </context-group>
       </trans-unit>
       <trans-unit id="tableStudio" datatype="html">
         <source>Studio</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">197,198</context>
+          <context context-type="linenumber">194,195</context>
         </context-group>
       </trans-unit>
       <trans-unit id="tableReady" datatype="html">
         <source>Ready</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">201,202</context>
+          <context context-type="linenumber">198,199</context>
         </context-group>
       </trans-unit>
       <trans-unit id="tableSandbox" datatype="html">
         <source>Sandbox</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">207,208</context>
+          <context context-type="linenumber">204,205</context>
         </context-group>
       </trans-unit>
       <trans-unit id="tableDraft" datatype="html">
         <source>Draft</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">211,212</context>
+          <context context-type="linenumber">208,209</context>
         </context-group>
       </trans-unit>
       <trans-unit id="footer" datatype="html">
         <source>Built with care. Made to be yours.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">222,223</context>
+          <context context-type="linenumber">219,220</context>
         </context-group>
       </trans-unit>
       <trans-unit id="top" datatype="html">
         <source> Back to top </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">224,226</context>
+          <context context-type="linenumber">221,223</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fieldError" datatype="html">
+        <source>Enter a valid email address.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.ts</context>
+          <context context-type="linenumber">23</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fieldManualError" datatype="html">
+        <source>This example address is unavailable.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.ts</context>
+          <context context-type="linenumber">24</context>
         </context-group>
       </trans-unit>
     </body>

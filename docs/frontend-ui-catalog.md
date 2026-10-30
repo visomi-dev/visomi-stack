@@ -39,7 +39,7 @@ validation, events, disabled behavior and submission semantics.
 | Card                   | `card`            | Nive/v0; Catalyst surface composition              | `article`, `section`                   |
 | Page header            | `pageHeader`      | Nive/v0                                            | `header`                               |
 | Fieldset and legend    | `fieldset`        | All three                                          | `fieldset`, `legend`                   |
-| Field                  | `field`           | All three                                          | `div`                                  |
+| Field                  | `field`           | All three                                          | `app-field` / Astro `div`              |
 | Label                  | `label`           | All three                                          | `label`, `legend`                      |
 | Description            | `description`     | All three                                          | `p`                                    |
 | Error message          | `errorMessage`    | All three                                          | `p`                                    |
@@ -105,8 +105,9 @@ Field error behavior follows the Nive/v0 interaction policy: native user-invalid
 ARIA-invalid and manual errors reveal after blur; editing collapses the message;
 submitted forms also expose errors for empty required controls. A `compact`
 option adjusts both field gaps and collapsed error spacing. The caller owns the
-submitted flag, validation values and error text. Angular error markup includes
-an inner span; Astro wraps its message slot. An intrinsic CSS Grid transition
+submitted flag and validation values. Field components own their label,
+description and error markup and project the native control. Both error-message
+adapters generate their inner animation span. An intrinsic CSS Grid transition
 replaces the references' fixed `max-height` cap, so long messages are not clipped.
 Empty messages collapse and reduced motion disables the transition. All state
 selectors live in the shared recipes rather than `styles.base.css`.
@@ -124,3 +125,22 @@ also includes a Signal Forms validation sample and the same responsive table.
 Browser coverage checks native and Signal Forms errors, focus/reset/submission,
 empty and long messages, reduced motion, no-JavaScript validation, mobile labels,
 header semantics and actual header position while scrolling.
+
+## Choosing the Angular abstraction
+
+The repository's durable rule is in `AGENTS.md`, mirrored in `CLAUDE.md`.
+Choose a directive to extend an existing element without owning a template;
+choose a component for required markup or structural accessibility behavior.
+A native host and a component are compatible: `ErrorMessage` is a component on
+`p[app-error]`, while `Field` is a composition component with projected controls.
+Buttons, inputs, selects and the styling-only table remain directives.
+
+`Field` takes a small presentation API (`controlId`, `label`, `description`,
+`error`, `compact`, `invalid`, `manualError`). It derives stable association IDs
+and exposes Angular helpers for native bindings. It does not take ownership of
+form values, validators or submission policy. Projected Signal Forms and
+Reactive Forms controls remain native; no new form abstraction is introduced.
+
+Angular references: [directive responsibilities](https://angular.dev/guide/directives),
+[native component selectors](https://angular.dev/guide/components/selectors#when-to-use-an-attribute-selector)
+and [content projection](https://angular.dev/guide/components/content-projection).

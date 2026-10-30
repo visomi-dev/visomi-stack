@@ -4,7 +4,6 @@ import Fieldset from '../fieldset.astro';
 import Field from '../field.astro';
 import Label from '../label.astro';
 import Description from '../description.astro';
-import ErrorMessage from '../error-message.astro';
 import Input from '../input.astro';
 import Textarea from '../textarea.astro';
 import Select from '../select.astro';
@@ -40,16 +39,14 @@ const labels = uiDocs[locale];
   id="field"
   locale={locale}
   angular={
-    '<div appUI="field"><label appUI for="name">Name</label><input appUI id="name" aria-describedby="name-help" /><p appUI="description" id="name-help">Visible name.</p></div>'
+    '<app-field #nameField="appField" controlId="name" label="Name" description="Visible name."><input appUI [id]="nameField.controlId()" [attr.aria-describedby]="nameField.describedBy()" /></app-field>'
   }
   astro={
-    '<Field><Label for="name">Name</Label><Input id="name" aria-describedby="name-help" /><Description id="name-help">Visible name.</Description></Field>'
+    '<Field controlId="name" label="Name" description="Visible name."><Input id="name" aria-describedby="name-help" /></Field>'
   }
 >
-  <Field>
-    <Label for="field-name">{labels.name}</Label>
+  <Field controlId="field-name" label={labels.name} description={labels.nameHint}>
     <Input id="field-name" value={labels.sampleName} aria-describedby="field-name-help" />
-    <Description id="field-name-help">{labels.nameHint}</Description>
   </Field>
 </Preview>
 <Preview
@@ -58,10 +55,10 @@ const labels = uiDocs[locale];
   angular={'<label appUI for="label-example">Name</label><input appUI id="label-example" />'}
   astro={'<Label for="label-example">Name</Label><Input id="label-example" />'}
 >
-  <Field>
+  <div class="grid gap-2">
     <Label for="label-example">{labels.name}</Label>
     <Input id="label-example" placeholder={labels.sampleName} />
-  </Field>
+  </div>
 </Preview>
 <Preview
   id="description"
@@ -73,26 +70,30 @@ const labels = uiDocs[locale];
     '<Input id="email" aria-label="Email" aria-describedby="email-help" /><Description id="email-help">Use an example address.</Description>'
   }
 >
-  <Field>
+  <div class="grid gap-2">
     <Label for="description-email">{labels.email}</Label>
     <Input type="email" id="description-email" aria-describedby="description-help" placeholder="demo@example.test" />
     <Description id="description-help">{labels.emailHint}</Description>
-  </Field>
+  </div>
 </Preview>
 <Preview
   id="error-message"
   locale={locale}
   angular={
-    '<input appUI id="email" aria-label="Email" aria-invalid="true" aria-describedby="email-error" /><p appUI="error" id="email-error"><span>Enter a valid address.</span></p>'
+    '<input appUI id="email" aria-label="Email" aria-invalid="true" aria-describedby="email-error" /><p app-error id="email-error">Enter a valid address.</p>'
   }
   astro={
     '<Input id="email" aria-label="Email" aria-invalid="true" aria-describedby="email-error" /><ErrorMessage id="email-error">Enter a valid address.</ErrorMessage>'
   }
 >
-  <Field>
-    <Label for="error-email">{labels.email}</Label>
-    <Input type="email" id="error-email" value="invalid-example" aria-invalid="true" aria-describedby="email-error" />
-    <ErrorMessage id="email-error">{labels.emailError}</ErrorMessage>
+  <Field controlId="error-email" label={labels.email} error={labels.emailError}>
+    <Input
+      type="email"
+      id="error-email"
+      value="invalid-example"
+      aria-invalid="true"
+      aria-describedby="error-email-error"
+    />
   </Field>
 </Preview>
 <Preview
@@ -103,8 +104,7 @@ const labels = uiDocs[locale];
 >
   <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{labels.fieldBehavior}</p>
   <div id="validation-fields" class="grid gap-4">
-    <Field>
-      <Label for="input-email">{labels.email}</Label>
+    <Field controlId="input-email" label={labels.email} description={labels.emailHint} error={labels.emailError}>
       <Input
         type="email"
         id="input-email"
@@ -116,8 +116,6 @@ const labels = uiDocs[locale];
         uiSize="sm"
         aria-describedby="input-email-help input-email-error"
       />
-      <Description id="input-email-help">{labels.emailHint}</Description>
-      <ErrorMessage id="input-email-error">{labels.emailError}</ErrorMessage>
     </Field>
     <Input disabled value={labels.disabled} aria-label={labels.disabled} />
     <div>
@@ -140,12 +138,10 @@ const labels = uiDocs[locale];
   angular={'<textarea appUI uiSize="md" id="message" rows="3" aria-label="Message"></textarea>'}
   astro={'<Textarea uiSize="md" id="message" rows={3} aria-label="Message">Example text.</Textarea>'}
 >
-  <Field>
-    <Label for="message-example">{labels.message}</Label>
-    <Textarea id="message-example" rows={3} aria-describedby="message-help">
+  <Field controlId="message-example" label={labels.message} description={labels.messageHint}>
+    <Textarea id="message-example" rows={3} aria-describedby="message-example-help">
       {labels.body}
     </Textarea>
-    <Description id="message-help">{labels.messageHint}</Description>
   </Field>
 </Preview>
 <Preview
@@ -154,8 +150,7 @@ const labels = uiDocs[locale];
   angular={'<select appUI uiSize="md" aria-label="Region"><option value="am">Americas</option></select>'}
   astro={'<Select uiSize="md" aria-label="Region"><option value="am" selected>Americas</option></Select>'}
 >
-  <Field>
-    <Label for="region-example">{labels.region}</Label>
+  <Field controlId="region-example" label={labels.region}>
     <Select id="region-example" name="example-region">
       <option value="">{labels.choose}</option>
       <option value="am" selected>
@@ -254,8 +249,7 @@ const labels = uiDocs[locale];
   }
   astro={'<InputGroup><span data-slot="prefix" aria-hidden="true">$</span><Input aria-label="Amount" /></InputGroup>'}
 >
-  <Field>
-    <Label for="amount-example">{labels.amount}</Label>
+  <Field controlId="amount-example" label={labels.amount}>
     <InputGroup>
       <span data-slot="prefix" aria-hidden="true">
         $

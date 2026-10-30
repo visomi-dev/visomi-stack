@@ -141,8 +141,9 @@ The [compendium](frontend-ui-catalog.md) records the reference comparison,
 selection, behavior contracts and deferred widgets; the
 [library README](../libs/web/frontend/ui/README.md) lists typed options.
 
-Angular adapters use native elements selected with `appUI` and a static marker
-where necessary. Form controls use `uiSize` for visual size, preserving native
+Angular control and styling adapters use native elements selected with `appUI`
+and a static marker where necessary. `app-field` owns field composition and
+projects the native control; `p[app-error]` owns the message animation wrapper. Form controls use `uiSize` for visual size, preserving native
 numeric `size`. Integration tests cover selector isolation, form values,
 attributes, events, visual changes and native modal delegation. The catalog
 renders entirely through Astro SSR; only the external theme and small native
@@ -161,3 +162,8 @@ README. Their state and layout selectors remain in the component recipes.
 The website catalog and Angular sample demonstrate error reveal/collapse,
 Signal Forms, `mobileCards` and `stickyHeaders`; the website requires no client
 code for error transitions or table layout conversion.
+
+The component/directive choice is documented in the repository working agreement.
+Field components own label/description/error markup and stable IDs, while the
+consumer owns native control bindings and validation. The shared library README
+contains Angular `appField` reference helpers and equivalent Astro markup.

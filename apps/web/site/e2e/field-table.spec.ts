@@ -51,7 +51,7 @@ test('error expansion has no fixed height cap and reduced motion removes its tra
 
   await page.goto('/en/ui/');
 
-  const error = page.locator('#email-error');
+  const error = page.locator('#error-email-error');
 
   await error.locator('span').evaluate((element) => {
     element.textContent = 'Synthetic validation message that wraps on a narrow viewport. '.repeat(12);

@@ -64,7 +64,7 @@ import { Loader } from './loader';
 import { Disclosure } from './disclosure';
 import { Dialog } from './dialog';
 
-export const UI_DIRECTIVES = [
+export const UI_IMPORTS = [
   Button,
   LinkButton,
   Heading,

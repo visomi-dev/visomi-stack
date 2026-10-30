@@ -149,27 +149,24 @@
         [attr.data-submitted]="attempted() ? '' : null"
         class="mt-6 space-y-4"
       >
-        <div appUI="field" [invalid]="manualInvalid()">
-          <label appUI for="angular-email" i18n="@@fieldEmail">Example email</label>
+        <app-field
+          #exampleField="appField"
+          controlId="angular-email"
+          label="Example email"
+          i18n-label="@@fieldEmail"
+          [error]="emailError"
+          [manualError]="manualInvalid() ? manualEmailError : null"
+        >
           <input
             appUI
-            id="angular-email"
+            [id]="exampleField.controlId()"
             type="email"
             [formField]="emailForm.email"
             [attr.aria-invalid]="manualInvalid() || emailForm.email().invalid() ? 'true' : null"
             placeholder="demo@example.test"
-            aria-describedby="angular-email-error"
+            [attr.aria-describedby]="exampleField.describedBy()"
           />
-          <p appUI="error" id="angular-email-error">
-            <span>
-              @if (manualInvalid()) {
-                <span i18n="@@fieldManualError">This example address is unavailable.</span>
-              } @else {
-                <span i18n="@@fieldError">Enter a valid email address.</span>
-              }
-            </span>
-          </p>
-        </div>
+        </app-field>
         <div class="flex flex-wrap gap-3">
           <button appUI type="submit" i18n="@@fieldCheck">Check example</button>
           <button appUI variant="secondary" (click)="manualInvalid.set(true)" i18n="@@fieldManual">
