@@ -1,0 +1,108 @@
+---
+import { uiDocs, type UiLocale } from '../../ui-docs';
+import Preview from './preview.astro';
+import Sidebar from '../sidebar.astro';
+import Topbar from '../topbar.astro';
+import Navbar from '../navbar.astro';
+import NavItem from '../nav-item.astro';
+import LinkButton from '../link-button.astro';
+type Props = { locale: UiLocale };
+const { locale } = Astro.props;
+const labels = uiDocs[locale];
+---
+
+<Preview
+  id="app-shell"
+  locale={locale}
+  angular={
+    '<app-shell contentId="main" skipLabel="Skip to content">\n  <app-sidebar label="Primary">...</app-sidebar>\n  <header app-topbar>...</header>\n  <h1>Workspace</h1>\n  <nav appUI="navbar" aria-label="Primary">...</nav>\n</app-shell>'
+  }
+  astro={
+    '<AppShell contentId="main" skipLabel="Skip to content">\n  <Sidebar slot="sidebar" label="Primary">...</Sidebar>\n  <Topbar slot="header">...</Topbar>\n  <h1>Workspace</h1>\n  <Navbar slot="mobile" aria-label="Primary">...</Navbar>\n</AppShell>'
+  }
+>
+  <div class="grid gap-5">
+    <p class="max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">{labels.shellNote}</p>
+    <LinkButton href={`/${locale}/ui/shell/`}>{labels.openShell}</LinkButton>
+  </div>
+</Preview>
+<Preview
+  id="sidebar"
+  locale={locale}
+  angular={
+    '<app-sidebar label="Primary">\n  <strong data-slot="brand">VISOMI</strong>\n  <a appUI="nav-item" href="/app/en/" aria-current="page">Overview</a>\n  <a data-slot="footer" href="/help">Help</a>\n</app-sidebar>'
+  }
+  astro={
+    '<Sidebar label="Primary">\n  <strong slot="brand">VISOMI</strong>\n  <NavItem href="/en/" aria-current="page">Overview</NavItem>\n  <a slot="footer" href="/help">Help</a>\n</Sidebar>'
+  }
+>
+  <div class="h-80 max-w-xs overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
+    <Sidebar label={labels.primaryNavigation}>
+      <strong slot="brand" class="font-heading tracking-wide">
+        VISOMI
+      </strong>
+      <div class="space-y-1">
+        <NavItem href={`/${locale}/ui/shell/`} aria-current="page">
+          {labels.home}
+        </NavItem>
+        <NavItem href={`/${locale}/ui/shell/#shell-activity`}>{labels.activity}</NavItem>
+        <NavItem href={`/${locale}/ui/shell/#shell-settings`}>{labels.settings}</NavItem>
+      </div>
+      <p slot="footer" class="text-xs text-zinc-600 dark:text-zinc-400">
+        {labels.shellFooter}
+      </p>
+    </Sidebar>
+  </div>
+</Preview>
+<Preview
+  id="topbar"
+  locale={locale}
+  angular={'<header app-topbar>\n  <span data-slot="title">Workspace</span>\n  <button appUI>Save</button>\n</header>'}
+  astro={'<Topbar>\n  <span slot="title">Workspace</span>\n  <Button>Save</Button>\n</Topbar>'}
+>
+  <Topbar class="rounded-t-lg">
+    <span slot="title">{labels.workspace}</span>
+    <LinkButton href={`/${locale}/ui/shell/`} variant="secondary" size="sm">
+      {labels.openShell}
+    </LinkButton>
+  </Topbar>
+</Preview>
+<Preview
+  id="navbar"
+  locale={locale}
+  angular={
+    '<nav appUI="navbar" aria-label="Primary">\n  <a appUI="nav-item" placement="navbar" href="/app/en/" aria-current="page">Overview</a>\n  <a appUI="nav-item" placement="navbar" href="/app/en/settings/">Settings</a>\n</nav>'
+  }
+  astro={
+    '<Navbar aria-label="Primary">\n  <NavItem placement="navbar" href="/en/" aria-current="page">Overview</NavItem>\n  <NavItem placement="navbar" href="/en/settings/">Settings</NavItem>\n</Navbar>'
+  }
+>
+  <Navbar aria-label={labels.primaryNavigation}>
+    <NavItem placement="navbar" href={`/${locale}/ui/shell/`} aria-current="page">
+      {labels.home}
+    </NavItem>
+    <NavItem placement="navbar" href={`/${locale}/ui/shell/#shell-activity`}>
+      {labels.activity}
+    </NavItem>
+    <NavItem placement="navbar" href={`/${locale}/ui/shell/#shell-settings`}>
+      {labels.settings}
+    </NavItem>
+  </Navbar>
+</Preview>
+<Preview
+  id="nav-item"
+  locale={locale}
+  angular={
+    '<a appUI="nav-item" routerLink="/settings" routerLinkActive ariaCurrentWhenActive="page">Settings</a>\n<button appUI="nav-item" type="button" (click)="openHelp()">Help</button>'
+  }
+  astro={
+    '<NavItem href="/en/settings/" aria-current="page">Settings</NavItem>\n<button type="button" class={navItem.classes()}>Help</button>'
+  }
+>
+  <nav aria-label={labels.primaryNavigation} class="max-w-xs space-y-1">
+    <NavItem href={`/${locale}/ui/shell/`} aria-current="page">
+      {labels.home}
+    </NavItem>
+    <NavItem href={`/${locale}/ui/shell/#shell-settings`}>{labels.settings}</NavItem>
+  </nav>
+</Preview>

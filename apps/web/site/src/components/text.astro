@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { text as styles, type TextSize, type TextTone } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'p'> & { uiSize?: TextSize; tone?: TextTone; as?: 'p' | 'span' };
+
+const { uiSize = 'md', tone = 'default', as: Tag = 'p', class: className, ...attributes } = Astro.props;
+---
+
+<Tag {...attributes} class:list={[styles.classes({ size: uiSize, tone: tone }), className]}>
+  <slot />
+</Tag>

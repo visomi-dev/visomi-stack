@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { App } from './app';
 
-describe('application shell', () => {
+describe('design foundations', () => {
   it('provides a labelled native theme control and both localized entry points', async () => {
     const fixture = TestBed.createComponent(App);
 

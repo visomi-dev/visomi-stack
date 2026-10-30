@@ -3,60 +3,399 @@
   <file source-language="en-US" datatype="plaintext" original="ng2.template">
     <body>
       <trans-unit id="skip" datatype="html">
-        <source> Skip to content
-</source>
+        <source>Skip to content</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">6,8</context>
+          <context context-type="linenumber">1</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="title" datatype="html">
-        <source>Web app ready.</source>
+      <trans-unit id="shellPrimary" datatype="html">
+        <source>Primary navigation</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">9,10</context>
+          <context context-type="linenumber">2</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">286</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="intro" datatype="html">
-        <source>Angular SSR and hydration are configured.</source>
+      <trans-unit id="foundations" datatype="html">
+        <source>Design foundations</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">10,11</context>
+          <context context-type="linenumber">23,25</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">106,108</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fieldBehaviorTitle" datatype="html">
+        <source>Field validation</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">36,38</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">201,204</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableBehaviorTitle" datatype="html">
+        <source>Responsive table</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">49,52</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">240,241</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="shellNote" datatype="html">
+        <source> Native navigation. Shared visual recipes. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">57,59</context>
         </context-group>
       </trans-unit>
       <trans-unit id="language" datatype="html">
         <source>Language</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">11</context>
+          <context context-type="linenumber">71</context>
         </context-group>
       </trans-unit>
       <trans-unit id="theme" datatype="html">
         <source>Appearance</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">20,22</context>
+          <context context-type="linenumber">90,91</context>
         </context-group>
       </trans-unit>
       <trans-unit id="system" datatype="html">
         <source>System</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">25,26</context>
+          <context context-type="linenumber">95,96</context>
         </context-group>
       </trans-unit>
       <trans-unit id="light" datatype="html">
         <source>Light</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">26,27</context>
+          <context context-type="linenumber">96,97</context>
         </context-group>
       </trans-unit>
       <trans-unit id="dark" datatype="html">
         <source>Dark</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
-          <context context-type="linenumber">27,28</context>
+          <context context-type="linenumber">97,98</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="title" datatype="html">
+        <source> One visual language. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">109,112</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="intro" datatype="html">
+        <source> A calm foundation for everything you build. Explore the type, surfaces and everyday details that make a workspace feel consistent. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">115,118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="type" datatype="html">
+        <source>Typography</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">122,123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="typeNote" datatype="html">
+        <source>Clear at every scale.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">123,124</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="body" datatype="html">
+        <source>Body text brings clarity to everyday work.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">125,127</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="mono" datatype="html">
+        <source> Details, precisely. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">130,132</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="surfaces" datatype="html">
+        <source>Surfaces</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">136,137</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="surfaceNote" datatype="html">
+        <source> A little depth. A clear hierarchy. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">138,140</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="canvas" datatype="html">
+        <source> Canvas </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">145,146</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="panel" datatype="html">
+        <source> Panel </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">151,152</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="raised" datatype="html">
+        <source> Raised panel </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">157,158</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="palette" datatype="html">
+        <source>Color &amp; feedback</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">164,165</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="paletteNote" datatype="html">
+        <source>Meaning beyond color.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">165,166</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="brand" datatype="html">
+        <source>Primary action</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">166,167</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="success" datatype="html">
+        <source>✓ Ready</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">168,169</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="warning" datatype="html">
+        <source>! Needs attention</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">169,170</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="danger" datatype="html">
+        <source>× Something went wrong</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">170,172</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="buttonExperiment" datatype="html">
+        <source> Shared button styles </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">180,182</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="buttonExplanation" datatype="html">
+        <source> Native Angular controls using shared Tailwind classes. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">183,185</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="buttonIncrement" datatype="html">
+        <source>Add one</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">186,187</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="buttonReset" datatype="html">
+        <source>Reset</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">187,188</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="buttonDisabled" datatype="html">
+        <source>Unavailable</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">188,190</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="buttonActivations" datatype="html">
+        <source>Activations:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">191,192</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fieldEmail" datatype="html">
+        <source>Example email</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">211,212</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fieldCheck" datatype="html">
+        <source>Check example</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">227,228</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fieldManual" datatype="html">
+        <source> Show manual error </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">229,230</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fieldReset" datatype="html">
+        <source>Reset example</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">231,233</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableCaption" datatype="html">
+        <source>Example workspaces</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">243,244</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableWorkspace" datatype="html">
+        <source>Workspace</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">246,247</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">253,254</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">263,264</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableStatus" datatype="html">
+        <source>Status</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">247,249</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">257,258</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">267,268</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableStudio" datatype="html">
+        <source>Studio</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">254,256</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableReady" datatype="html">
+        <source>Ready</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">258,259</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableSandbox" datatype="html">
+        <source>Sandbox</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">264,266</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableDraft" datatype="html">
+        <source>Draft</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">268,269</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="footer" datatype="html">
+        <source>Built with care. Made to be yours.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">280,281</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="top" datatype="html">
+        <source> Back to top </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">282,284</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="shellHome" datatype="html">
+        <source>Home</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">291,293</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="shellFields" datatype="html">
+        <source>Fields</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">297,299</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="shellTable" datatype="html">
+        <source>Table</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">303,305</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fieldError" datatype="html">
+        <source>Enter a valid email address.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.ts</context>
+          <context context-type="linenumber">23</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fieldManualError" datatype="html">
+        <source>This example address is unavailable.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.ts</context>
+          <context context-type="linenumber">24</context>
         </context-group>
       </trans-unit>
     </body>

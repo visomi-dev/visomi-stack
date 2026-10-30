@@ -1,13 +1,13 @@
 # Web foundations
 
-## Shared Tailwind configuration
+## Shared design contract
 
 `styles.base.css` at the workspace root is the shared Tailwind v4 entry point.
 It imports self-hosted Latin fonts: Inter for body text, Manrope for headings,
 and JetBrains Mono for technical details. It customizes typography and defines the shared `ui-focus-ring` accessibility utility.
 Radii, shadows, spacing and content widths use Tailwind's standard scales.
 Surfaces, touch targets and text rhythm are composed with Tailwind classes in
-templates; the component library is deferred. The body canvas,
+templates; visual component recipes belong to the UI library. The body canvas,
 text colors and minimum viewport height belong to Angular's `src/index.html` and
 Astro's `src/layouts/base.astro`, expressed with Tailwind utilities.
 
@@ -18,9 +18,10 @@ Keep the standard spacing scale. No Nive palettes, compatibility aliases or
 application-specific validation rules are included.
 
 The Angular and Astro style entry points import this base and explicitly scan
-their own source files. Tailwind automatic scanning is disabled at the
+their own source files and the shared UI library. Tailwind automatic scanning is disabled at the
 shared entry point so unrelated applications and backend code do not influence
-bundles. Astro Nx commands explicitly disable CLI telemetry. Its development target stays
+bundles. The shared UI source path is explicitly included in both entry points.
+Astro Nx commands explicitly disable CLI telemetry. Its development target stays
 in the foreground so Nx owns its lifetime. Angular uses the root PostCSS configuration. Astro uses the Tailwind Vite plugin
 and disables PostCSS plugin discovery to avoid processing Tailwind twice.
 Prettier reads the same stylesheet for custom utility ordering.
@@ -103,3 +104,72 @@ both languages, real SSR and Angular hydration, static assets, strict site CSP,
 reserved routes, theme choices, blocked storage, reduced motion, keyboard focus,
 mobile layout and JavaScript-disabled content. Screenshots stay in local
 `dist/.playwright` test output; fixtures contain no customer data.
+
+## Shared component styles
+
+`web-frontend-ui` is a framework-independent TypeScript library generated with
+`@nx/js:library`. Import `button` from `@visomi-stack/web-frontend-ui` and call
+`button.classes({ variant: 'secondary', size: 'sm' })`. The function composes
+complete Tailwind classes, defaulting to `primary` and `md`. It has no framework
+runtime dependencies and no independent build artifact.
+
+Angular uses a native `<button appUI>` directive; Astro uses its own
+`button.astro` component. Both receive the same typed variants and sizes and
+retain native disabled, focus, keyboard and form behavior. Interaction belongs
+to each application. Astro evaluates the recipe on the server and needs no
+client hydration for the styled button itself. Angular hydrates its native
+button normally.
+
+The Angular foundations page includes the sample. The isolated Astro sample is
+available at `/en/button/` and `/es/button/`; it includes a small counter script
+and a native GET form that works without JavaScript. No Angular Elements runtime
+is loaded. See the [library README](../libs/web/frontend/ui/README.md) for usage
+and verification commands.
+
+The production gateway sample loads 1,818 bytes of script bodies: 1,470 bytes for
+the existing theme script and 348 bytes for the counter. The shared recipe adds
+no browser JavaScript to Astro. The Playwright script-payload test records these
+resources in `javascript-cost.json`; CSS, fonts and HTTP headers are excluded.
+Astro's tsconfig explicitly includes `src/**/*.astro` so Vite can apply the
+workspace-generated import paths to those files.
+
+## Component catalog
+
+The website's `/en/ui/` and `/es/ui/` routes document 37 shared recipe families,
+with live previews and usage for both frameworks. The homepage links to them.
+The [compendium](frontend-ui-catalog.md) records the reference comparison,
+selection, behavior contracts and deferred widgets; the
+[library README](../libs/web/frontend/ui/README.md) lists typed options.
+
+Angular control and styling adapters use native elements selected with `appUI`
+and a static marker where necessary. `app-field` owns field composition and
+projects the native control; `p[app-error]` owns the message animation wrapper. Form controls use `uiSize` for visual size, preserving native
+numeric `size`. Integration tests cover selector isolation, form values,
+attributes, events, visual changes and native modal delegation. The catalog
+renders entirely through Astro SSR; only the external theme and small native
+demo script run in the browser, within the existing CSP. The tests cover all
+families, both languages, JavaScript-disabled controls, dialog focus and Escape,
+local validation, reduced motion and mobile/desktop layouts in both themes.
+
+The compiled catalog loads 2,749 bytes of script bodies: the existing 1,470-byte
+theme script and a 1,279-byte documentation enhancement. The recipes add no
+browser JavaScript. These measurements exclude CSS, fonts and HTTP headers;
+the browser test checks that only those two scripts load and caps their combined
+raw size at 6 KiB.
+
+Field errors and responsive table options are described in the shared library
+README. Their state and layout selectors remain in the component recipes.
+The website catalog and Angular sample demonstrate error reveal/collapse,
+Signal Forms, `mobileCards` and `stickyHeaders`; the website requires no client
+code for error transitions or table layout conversion.
+
+The component/directive choice is documented in the repository working agreement.
+Field components own label/description/error markup and stable IDs, while the
+consumer owns native control bindings and validation. The shared library README
+contains Angular `appField` reference helpers and equivalent Astro markup.
+
+The component catalog also links to full-page shell examples at `/en/ui/shell/`
+and `/es/ui/shell/`. These exercise the shared sidebar, application header and
+mobile navbar recipes through Express SSR. Angular's foundation page uses the
+matching composition, with native routing and hydration. Shell layout needs no
+website client script; only the existing appearance preference script is loaded.

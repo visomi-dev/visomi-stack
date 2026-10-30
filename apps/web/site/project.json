@@ -69,5 +69,6 @@
         }
       ]
     }
-  }
+  },
+  "implicitDependencies": ["web-frontend-ui"]
 }

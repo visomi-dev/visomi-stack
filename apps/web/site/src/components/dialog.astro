@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { dialog as styles, type DialogSize } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'dialog'> & { uiSize?: DialogSize; id: string };
+
+const { uiSize = 'md', class: className, ...attributes } = Astro.props;
+---
+
+<dialog {...attributes} class:list={[styles.classes({ size: uiSize }), className]}>
+  <slot />
+</dialog>

@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { alert as styles, type Tone } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'div'> & { tone?: Tone };
+
+const { tone = 'accent', class: className, ...attributes } = Astro.props;
+---
+
+<div {...attributes} class:list={[styles.classes({ tone: tone }), className]}>
+  <slot />
+</div>

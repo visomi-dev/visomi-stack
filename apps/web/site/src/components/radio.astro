@@ -1,0 +1,11 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { radio as styles } from '@visomi-stack/web-frontend-ui';
+
+type Props = Omit<HTMLAttributes<'input'>, 'type'>;
+
+const { class: className, ...attributes } = Astro.props;
+---
+
+<input {...attributes} data-slot="control" type="radio" class:list={[styles.classes(), className]} />

@@ -12,7 +12,7 @@ for (const locale of ['en', 'es']) {
 
     expect(response.status()).toBe(200);
     expect(markup).toContain(`<html lang="${locale}"`);
-    expect(markup).toContain(locale === 'en' ? 'Website ready.' : 'Website listo.');
+    expect(markup).toContain(locale === 'en' ? 'One visual language.' : 'Un mismo lenguaje visual.');
     const errors: string[] = [];
 
     page.on('pageerror', (error) => errors.push(error.message));
@@ -25,7 +25,7 @@ for (const locale of ['en', 'es']) {
     await page.goto(path);
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      locale === 'en' ? 'Website ready.' : 'Website listo.',
+      locale === 'en' ? 'One visual language.' : 'Un mismo lenguaje visual.',
     );
 
     await page.evaluate(() => document.fonts.ready);
@@ -161,7 +161,7 @@ test('serves readable content with JavaScript disabled', async ({ browser }, inf
 
     await page.goto(route('es'));
 
-    await expect(page.getByRole('heading', { name: 'Website listo.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Un mismo lenguaje visual.' })).toBeVisible();
   } finally {
     await context.close();
   }

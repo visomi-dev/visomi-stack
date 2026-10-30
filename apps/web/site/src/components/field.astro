@@ -1,0 +1,47 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { field as styles } from '@visomi-stack/web-frontend-ui';
+
+import Description from './description.astro';
+import ErrorMessage from './error-message.astro';
+import Label from './label.astro';
+
+type Props = HTMLAttributes<'div'> & {
+  controlId: string;
+  label: string;
+  description?: string;
+  error?: string;
+  compact?: boolean;
+  invalid?: boolean;
+  manualError?: string | null;
+};
+
+const {
+  controlId,
+  label,
+  description = '',
+  error = '',
+  compact = false,
+  invalid = false,
+  manualError,
+  class: className,
+  ...attributes
+} = Astro.props;
+const message = manualError?.trim() || error.trim();
+---
+
+<div
+  {...attributes}
+  data-control
+  data-invalid={invalid ? '' : undefined}
+  data-manual-invalid={manualError?.trim() ? '' : undefined}
+  class:list={[styles.classes({ compact }), className]}
+>
+  <Label for={controlId}>{label}</Label>
+  <slot />
+  {description && <Description id={`${controlId}-help`}>{description}</Description>}
+  <ErrorMessage id={`${controlId}-error`} hidden={!message}>
+    {message}
+  </ErrorMessage>
+</div>

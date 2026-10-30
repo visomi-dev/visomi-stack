@@ -1,0 +1,15 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { topbar } from '@visomi-stack/web-frontend-ui';
+type Props = HTMLAttributes<'header'>;
+const { class: className, ...attributes } = Astro.props;
+---
+
+<header {...attributes} class:list={[topbar.classes(), className]}>
+  <div class={topbar.titleClasses()}>
+    <slot name="title" />
+  </div>
+  <div class={topbar.actionsClasses()}>
+    <slot />
+  </div>
+</header>

@@ -1,30 +1,306 @@
-<a
-  href="#main"
-  class="sr-only ui-focus-ring focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:bg-white focus:p-4 focus:text-zinc-950"
-  i18n="@@skip"
->
-  Skip to content
-</a>
-<main id="main" class="mx-auto max-w-3xl px-6 py-12">
-  <h1 class="font-heading text-3xl font-semibold" i18n="@@title">Web app ready.</h1>
-  <p class="mt-4 text-zinc-600 dark:text-zinc-400" i18n="@@intro">Angular SSR and hydration are configured.</p>
-  <nav aria-label="Language" i18n-aria-label="@@language" class="mt-8 flex gap-4">
-    <a href="/app/en/" lang="en" hreflang="en" class="inline-flex min-h-11 items-center rounded px-2 ui-focus-ring">
-      EN
+<app-shell id="top" contentId="main" skipLabel="Skip to content" i18n-skipLabel="@@skip">
+  <app-sidebar label="Primary navigation" i18n-label="@@shellPrimary">
+    <a
+      data-slot="brand"
+      href="#top"
+      class="flex min-h-11 items-center gap-3 rounded-lg font-heading font-bold ui-focus-ring"
+    >
+      <span class="rounded-lg bg-blue-600 px-3 py-2 text-white">V</span>
+      VISOMI
     </a>
-    <a href="/app/es/" lang="es" hreflang="es" class="inline-flex min-h-11 items-center rounded px-2 ui-focus-ring">
-      ES
+    <div class="space-y-1">
+      <a appUI="nav-item" href="./" aria-current="page">
+        <svg
+          data-slot="icon"
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path d="M3 10 12 3l9 7v11h-6v-7H9v7H3Z" />
+        </svg>
+        <span i18n="@@foundations">Design foundations</span>
+      </a>
+      <a appUI="nav-item" href="#field-example">
+        <svg
+          data-slot="icon"
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path d="M4 4h16v16H4zM4 9h16M9 9v11" />
+        </svg>
+        <span i18n="@@fieldBehaviorTitle">Field validation</span>
+      </a>
+      <a appUI="nav-item" href="#responsive-table">
+        <svg
+          data-slot="icon"
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path d="M4 5h16M4 12h16M4 19h16M8 3v4M16 10v4M10 17v4" />
+        </svg>
+        <span i18n="@@tableBehaviorTitle">Responsive table</span>
+      </a>
+    </div>
+    <p
+      data-slot="footer"
+      class="border-t border-zinc-200 pt-4 text-xs text-zinc-600 dark:border-zinc-700 dark:text-zinc-400"
+      i18n="@@shellNote"
+    >
+      Native navigation. Shared visual recipes.
+    </p>
+  </app-sidebar>
+  <header app-topbar>
+    <a
+      href="#top"
+      data-slot="title"
+      class="inline-flex min-h-11 min-w-11 cursor-pointer items-center gap-3 rounded-lg font-heading text-sm font-bold tracking-widest ui-focus-ring"
+    >
+      <span class="rounded-lg bg-blue-600 px-3 py-2 text-white">V</span>
+      VISOMI
+      <span class="font-sans font-normal tracking-normal text-zinc-500 dark:text-zinc-400">/ Stack</span>
+    </a>
+    <div class="flex flex-wrap items-center gap-5 text-sm">
+      <nav aria-label="Language" i18n-aria-label="@@language" class="flex gap-3">
+        <a
+          href="/app/en/"
+          lang="en"
+          hreflang="en"
+          class="inline-flex min-h-11 min-w-11 cursor-pointer items-center rounded-lg px-2 ui-focus-ring"
+        >
+          EN
+        </a>
+        <a
+          href="/app/es/"
+          lang="es"
+          hreflang="es"
+          class="inline-flex min-h-11 min-w-11 cursor-pointer items-center rounded-lg px-2 ui-focus-ring"
+        >
+          ES
+        </a>
+      </nav>
+      <label class="flex items-center gap-3">
+        <span class="text-zinc-600 dark:text-zinc-300" i18n="@@theme">Appearance</span>
+        <select
+          data-theme-select
+          class="min-h-11 min-w-11 cursor-pointer rounded-lg border border-zinc-500 bg-white px-3 text-zinc-950 ui-focus-ring dark:border-zinc-500 dark:bg-zinc-900 dark:text-zinc-50"
+        >
+          <option value="system" i18n="@@system">System</option>
+          <option value="light" i18n="@@light">Light</option>
+          <option value="dark" i18n="@@dark">Dark</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <div class="mb-5 flex items-center gap-3 font-mono text-xs tracking-wider text-blue-700 dark:text-blue-400">
+    <span aria-hidden="true" class="h-px w-8 bg-current"></span>
+    01 /
+    <span i18n="@@foundations">Design foundations</span>
+  </div>
+  <h1 class="max-w-3xl font-heading text-4xl leading-tight font-semibold tracking-tight sm:text-6xl" i18n="@@title">
+    One visual language.
+  </h1>
+  <p
+    class="mt-6 max-w-2xl text-base leading-[1.7] text-pretty text-zinc-600 sm:text-lg sm:leading-7 dark:text-zinc-400"
+    i18n="@@intro"
+  >
+    A calm foundation for everything you build. Explore the type, surfaces and everyday details that make a workspace
+    feel consistent.
+  </p>
+  <div class="mt-14 grid gap-5 lg:grid-cols-3">
+    <section
+      class="rounded-xl border border-zinc-200 bg-zinc-50 p-6 text-zinc-950 sm:p-7 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+    >
+      <h2 class="font-heading text-lg font-semibold" i18n="@@type">Typography</h2>
+      <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400" i18n="@@typeNote">Clear at every scale.</p>
+      <div class="mt-10 font-heading text-6xl font-semibold tracking-tight">Aa</div>
+      <p class="mt-6 text-sm leading-7" i18n="@@body">Body text brings clarity to everyday work.</p>
+      <p
+        class="mt-6 border-t border-zinc-200 pt-4 font-mono text-xs text-zinc-600 dark:border-zinc-700 dark:text-zinc-400"
+        i18n="@@mono"
+      >
+        Details, precisely.
+      </p>
+    </section>
+    <section
+      class="rounded-xl border border-zinc-200 bg-zinc-50 p-6 text-zinc-950 sm:p-7 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+    >
+      <h2 class="font-heading text-lg font-semibold" i18n="@@surfaces">Surfaces</h2>
+      <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400" i18n="@@surfaceNote">
+        A little depth. A clear hierarchy.
+      </p>
+      <div class="mt-8 grid gap-3 text-sm">
+        <div
+          class="rounded-xl border border-zinc-300 bg-white p-4 dark:border-zinc-600 dark:bg-zinc-950"
+          i18n="@@canvas"
+        >
+          Canvas
+        </div>
+        <div
+          class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+          i18n="@@panel"
+        >
+          Panel
+        </div>
+        <div
+          class="rounded-xl border border-zinc-200 bg-zinc-100 p-4 text-zinc-950 shadow-2xl shadow-zinc-950/8 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+          i18n="@@raised"
+        >
+          Raised panel
+        </div>
+      </div>
+    </section>
+    <section
+      class="rounded-xl border border-zinc-200 bg-zinc-50 p-6 text-zinc-950 sm:p-7 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+    >
+      <h2 class="font-heading text-lg font-semibold" i18n="@@palette">Color &amp; feedback</h2>
+      <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400" i18n="@@paletteNote">Meaning beyond color.</p>
+      <div class="mt-8 rounded-lg bg-blue-600 p-4 text-sm font-medium text-white" i18n="@@brand">Primary action</div>
+      <ul class="mt-6 space-y-4 text-sm">
+        <li class="text-green-800 dark:text-green-300" i18n="@@success">✓ Ready</li>
+        <li class="text-amber-800 dark:text-amber-300" i18n="@@warning">! Needs attention</li>
+        <li class="text-red-700 dark:text-red-300" i18n="@@danger">× Something went wrong</li>
+      </ul>
+    </section>
+  </div>
+  <section
+    class="mt-12 rounded-xl border border-zinc-200 p-6 dark:border-zinc-700"
+    aria-labelledby="button-heading"
+    data-button-demo
+  >
+    <h2 id="button-heading" class="font-heading text-xl font-semibold" i18n="@@buttonExperiment">
+      Shared button styles
+    </h2>
+    <p class="mt-3 text-zinc-600 dark:text-zinc-400" i18n="@@buttonExplanation">
+      Native Angular controls using shared Tailwind classes.
+    </p>
+    <div class="mt-6 flex flex-wrap gap-4">
+      <button appUI (click)="increment()" data-increment i18n="@@buttonIncrement">Add one</button>
+      <button appUI variant="secondary" size="sm" (click)="reset()" data-reset i18n="@@buttonReset">Reset</button>
+      <button appUI disabled data-disabled i18n="@@buttonDisabled">Unavailable</button>
+    </div>
+    <p class="mt-5">
+      <span i18n="@@buttonActivations">Activations:</span>
+      <output aria-live="polite" data-count>{{ count() }}</output>
+    </p>
+  </section>
+
+  <section
+    class="mt-12 rounded-xl border border-zinc-200 p-6 dark:border-zinc-700"
+    data-field-example
+    id="field-example"
+  >
+    <h2 class="font-heading text-xl font-semibold" i18n="@@fieldBehaviorTitle">Field validation</h2>
+    <form
+      novalidate
+      (submit)="checkField($event)"
+      [attr.data-submitted]="attempted() ? '' : null"
+      class="mt-6 space-y-4"
+    >
+      <app-field
+        #exampleField="appField"
+        controlId="angular-email"
+        label="Example email"
+        i18n-label="@@fieldEmail"
+        [error]="emailError"
+        [manualError]="manualInvalid() ? manualEmailError : null"
+      >
+        <input
+          appUI
+          [id]="exampleField.controlId()"
+          type="email"
+          [formField]="emailForm.email"
+          [attr.aria-invalid]="manualInvalid() || emailForm.email().invalid() ? 'true' : null"
+          placeholder="demo@example.test"
+          [attr.aria-describedby]="exampleField.describedBy()"
+        />
+      </app-field>
+      <div class="flex flex-wrap gap-3">
+        <button appUI type="submit" i18n="@@fieldCheck">Check example</button>
+        <button appUI variant="secondary" (click)="manualInvalid.set(true)" i18n="@@fieldManual">
+          Show manual error
+        </button>
+        <button appUI variant="secondary" (click)="resetField()" i18n="@@fieldReset">Reset example</button>
+      </div>
+    </form>
+  </section>
+  <section
+    class="mt-12 rounded-xl border border-zinc-200 p-6 dark:border-zinc-700"
+    data-responsive-table
+    id="responsive-table"
+  >
+    <h2 class="mb-6 font-heading text-xl font-semibold" i18n="@@tableBehaviorTitle">Responsive table</h2>
+    <div class="max-h-96 overflow-auto">
+      <table appUI mobileCards stickyHeaders role="table">
+        <caption i18n="@@tableCaption">Example workspaces</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th role="columnheader" scope="col" id="angular-workspace" i18n="@@tableWorkspace">Workspace</th>
+            <th role="columnheader" scope="col" id="angular-status" i18n="@@tableStatus">Status</th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th role="rowheader" scope="row" id="angular-studio">
+              <span data-slot="label" aria-hidden="true" i18n="@@tableWorkspace">Workspace</span>
+              <span i18n="@@tableStudio">Studio</span>
+            </th>
+            <td role="cell" headers="angular-status angular-studio">
+              <span data-slot="label" aria-hidden="true" i18n="@@tableStatus">Status</span>
+              <span i18n="@@tableReady">Ready</span>
+            </td>
+          </tr>
+          <tr role="row">
+            <th role="rowheader" scope="row" id="angular-sandbox">
+              <span data-slot="label" aria-hidden="true" i18n="@@tableWorkspace">Workspace</span>
+              <span i18n="@@tableSandbox">Sandbox</span>
+            </th>
+            <td role="cell" headers="angular-status angular-sandbox">
+              <span data-slot="label" aria-hidden="true" i18n="@@tableStatus">Status</span>
+              <span i18n="@@tableDraft">Draft</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer
+    data-shell-footer
+    class="flex flex-wrap justify-between gap-4 border-t border-zinc-200 px-5 py-7 text-xs text-zinc-600 sm:px-8 dark:border-zinc-800 dark:text-zinc-400"
+  >
+    <p i18n="@@footer">Built with care. Made to be yours.</p>
+    <a href="#top" class="cursor-pointer rounded-lg underline underline-offset-4 ui-focus-ring" i18n="@@top">
+      Back to top
+    </a>
+  </footer>
+
+  <nav appUI="navbar" aria-label="Primary navigation" i18n-aria-label="@@shellPrimary">
+    <a appUI="nav-item" placement="navbar" href="./" aria-current="page">
+      <svg data-slot="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 10 12 3l9 7v11h-6v-7H9v7H3Z" />
+      </svg>
+      <span i18n="@@shellHome">Home</span>
+    </a>
+    <a appUI="nav-item" placement="navbar" href="#field-example">
+      <svg data-slot="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M4 4h16v16H4zM4 9h16M9 9v11" />
+      </svg>
+      <span i18n="@@shellFields">Fields</span>
+    </a>
+    <a appUI="nav-item" placement="navbar" href="#responsive-table">
+      <svg data-slot="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M4 5h16M4 12h16M4 19h16M8 3v4M16 10v4M10 17v4" />
+      </svg>
+      <span i18n="@@shellTable">Table</span>
     </a>
   </nav>
-  <label class="mt-6 flex flex-wrap items-center gap-3">
-    <span i18n="@@theme">Appearance</span>
-    <select
-      data-theme-select
-      class="min-h-11 rounded border border-zinc-500 bg-white px-3 text-zinc-950 ui-focus-ring dark:bg-zinc-900 dark:text-zinc-50"
-    >
-      <option value="system" i18n="@@system">System</option>
-      <option value="light" i18n="@@light">Light</option>
-      <option value="dark" i18n="@@dark">Dark</option>
-    </select>
-  </label>
-</main>
+</app-shell>

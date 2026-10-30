@@ -1,0 +1,16 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { disclosure as styles } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'details'> & { summary: string };
+
+const { summary, class: className, ...attributes } = Astro.props;
+---
+
+<details {...attributes} class:list={[styles.classes(), className]}>
+  <summary>{summary}</summary>
+  <div>
+    <slot />
+  </div>
+</details>

@@ -1,0 +1,15 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { errorMessage as styles } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'p'>;
+
+const { class: className, ...attributes } = Astro.props;
+---
+
+<p {...attributes} data-slot="error" aria-live="polite" aria-atomic="true" class:list={[styles.classes(), className]}>
+  <span>
+    <slot />
+  </span>
+</p>

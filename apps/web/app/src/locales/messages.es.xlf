@@ -2,21 +2,21 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
   <file source-language="en-US" target-language="es" datatype="plaintext" original="ng2.template">
     <body>
-      <trans-unit id="skip" datatype="html">
-        <source>Skip to content</source>
-        <target>Saltar al contenido</target>
-      </trans-unit>
-      <trans-unit id="title" datatype="html">
-        <source>Web app ready.</source>
-        <target>Aplicación web lista.</target>
-      </trans-unit>
-      <trans-unit id="intro" datatype="html">
-        <source>Angular SSR and hydration are configured.</source>
-        <target>Angular SSR y la hidratación están configurados.</target>
-      </trans-unit>
       <trans-unit id="language" datatype="html">
         <source>Language</source>
         <target>Idioma</target>
+      </trans-unit>
+      <trans-unit id="title" datatype="html">
+        <source>One visual language.</source>
+        <target>Un mismo lenguaje visual.</target>
+      </trans-unit>
+      <trans-unit id="intro" datatype="html">
+        <source>A calm foundation for everything you build. Explore the type, surfaces and everyday details that make a workspace feel consistent.</source>
+        <target>Una base serena para todo lo que construyas. Explora la tipografía, las superficies y los detalles que dan coherencia a tu espacio de trabajo.</target>
+      </trans-unit>
+      <trans-unit id="foundations" datatype="html">
+        <source>Design foundations</source>
+        <target>Fundamentos de diseño</target>
       </trans-unit>
       <trans-unit id="theme" datatype="html">
         <source>Appearance</source>
@@ -34,6 +34,122 @@
         <source>Dark</source>
         <target>Oscuro</target>
       </trans-unit>
+      <trans-unit id="skip" datatype="html">
+        <source>Skip to content</source>
+        <target>Saltar al contenido</target>
+      </trans-unit>
+      <trans-unit id="type" datatype="html">
+        <source>Typography</source>
+        <target>Tipografía</target>
+      </trans-unit>
+      <trans-unit id="typeNote" datatype="html">
+        <source>Clear at every scale.</source>
+        <target>Claridad a cualquier escala.</target>
+      </trans-unit>
+      <trans-unit id="body" datatype="html">
+        <source>Body text brings clarity to everyday work.</source>
+        <target>El texto aporta claridad al trabajo de cada día.</target>
+      </trans-unit>
+      <trans-unit id="mono" datatype="html">
+        <source>Details, precisely.</source>
+        <target>Detalles, con precisión.</target>
+      </trans-unit>
+      <trans-unit id="surfaces" datatype="html">
+        <source>Surfaces</source>
+        <target>Superficies</target>
+      </trans-unit>
+      <trans-unit id="surfaceNote" datatype="html">
+        <source>A little depth. A clear hierarchy.</source>
+        <target>Un poco de profundidad. Una jerarquía clara.</target>
+      </trans-unit>
+      <trans-unit id="canvas" datatype="html">
+        <source>Canvas</source>
+        <target>Lienzo</target>
+      </trans-unit>
+      <trans-unit id="panel" datatype="html">
+        <source>Panel</source>
+        <target>Panel</target>
+      </trans-unit>
+      <trans-unit id="raised" datatype="html">
+        <source>Raised panel</source>
+        <target>Panel elevado</target>
+      </trans-unit>
+      <trans-unit id="palette" datatype="html">
+        <source>Color &amp; feedback</source>
+        <target>Color y estados</target>
+      </trans-unit>
+      <trans-unit id="paletteNote" datatype="html">
+        <source>Meaning beyond color.</source>
+        <target>El significado va más allá del color.</target>
+      </trans-unit>
+      <trans-unit id="brand" datatype="html">
+        <source>Primary action</source>
+        <target>Acción principal</target>
+      </trans-unit>
+      <trans-unit id="success" datatype="html">
+        <source>✓ Ready</source>
+        <target>✓ Listo</target>
+      </trans-unit>
+      <trans-unit id="warning" datatype="html">
+        <source>! Needs attention</source>
+        <target>! Requiere atención</target>
+      </trans-unit>
+      <trans-unit id="danger" datatype="html">
+        <source>× Something went wrong</source>
+        <target>× Algo salió mal</target>
+      </trans-unit>
+      <trans-unit id="footer" datatype="html">
+        <source>Built with care. Made to be yours.</source>
+        <target>Hecho con cuidado. Para hacerlo tuyo.</target>
+      </trans-unit>
+      <trans-unit id="top" datatype="html">
+        <source>Back to top</source>
+        <target>Volver arriba</target>
+      </trans-unit>
+      <trans-unit id="buttonExperiment" datatype="html">
+        <source>Shared button styles</source>
+        <target>Estilos del botón compartido</target>
+      </trans-unit>
+      <trans-unit id="buttonExplanation" datatype="html">
+        <source>Native Angular controls using shared Tailwind classes.</source>
+        <target>Controles nativos de Angular con clases Tailwind compartidas.</target>
+      </trans-unit>
+      <trans-unit id="buttonIncrement" datatype="html">
+        <source>Add one</source>
+        <target>Sumar uno</target>
+      </trans-unit>
+      <trans-unit id="buttonReset" datatype="html">
+        <source>Reset</source>
+        <target>Reiniciar</target>
+      </trans-unit>
+      <trans-unit id="buttonDisabled" datatype="html">
+        <source>Unavailable</source>
+        <target>No disponible</target>
+      </trans-unit>
+      <trans-unit id="buttonActivations" datatype="html">
+        <source>Activations:</source>
+        <target>Activaciones:</target>
+      </trans-unit>
+      <trans-unit id="fieldBehaviorTitle" datatype="html"><source>Field validation</source><target>Validación de campos</target></trans-unit>
+      <trans-unit id="fieldEmail" datatype="html"><source>Example email</source><target>Correo de ejemplo</target></trans-unit>
+      <trans-unit id="fieldManualError" datatype="html"><source>This example address is unavailable.</source><target>Esta dirección de ejemplo no está disponible.</target></trans-unit>
+      <trans-unit id="fieldError" datatype="html"><source>Enter a valid email address.</source><target>Escribe un correo electrónico válido.</target></trans-unit>
+      <trans-unit id="fieldCheck" datatype="html"><source>Check example</source><target>Comprobar ejemplo</target></trans-unit>
+      <trans-unit id="fieldManual" datatype="html"><source>Show manual error</source><target>Mostrar error manual</target></trans-unit>
+      <trans-unit id="fieldReset" datatype="html"><source>Reset example</source><target>Reiniciar ejemplo</target></trans-unit>
+      <trans-unit id="tableBehaviorTitle" datatype="html"><source>Responsive table</source><target>Tabla adaptable</target></trans-unit>
+      <trans-unit id="tableCaption" datatype="html"><source>Example workspaces</source><target>Espacios de ejemplo</target></trans-unit>
+      <trans-unit id="tableWorkspace" datatype="html"><source>Workspace</source><target>Espacio</target></trans-unit>
+      <trans-unit id="tableStatus" datatype="html"><source>Status</source><target>Estado</target></trans-unit>
+      <trans-unit id="tableStudio" datatype="html"><source>Studio</source><target>Estudio</target></trans-unit>
+      <trans-unit id="tableReady" datatype="html"><source>Ready</source><target>Listo</target></trans-unit>
+      <trans-unit id="tableSandbox" datatype="html"><source>Sandbox</source><target>Pruebas</target></trans-unit>
+      <trans-unit id="tableDraft" datatype="html"><source>Draft</source><target>Borrador</target></trans-unit>
+      <trans-unit id="shellPrimary" datatype="html"><source>Primary navigation</source><target>Navegación principal</target></trans-unit>
+      <trans-unit id="shellNote" datatype="html"><source> Native navigation. Shared visual recipes. </source><target>Navegación nativa. Estilos compartidos.</target></trans-unit>
+      <trans-unit id="shellHome" datatype="html"><source>Home</source><target>Inicio</target></trans-unit>
+      <trans-unit id="shellFields" datatype="html"><source>Fields</source><target>Campos</target></trans-unit>
+      <trans-unit id="shellTable" datatype="html"><source>Table</source><target>Tabla</target></trans-unit>
     </body>
   </file>
 </xliff>

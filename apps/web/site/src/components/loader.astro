@@ -1,0 +1,14 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { loader as styles } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'span'> & { label: string };
+
+const { label, class: className, ...attributes } = Astro.props;
+---
+
+<span {...attributes} role="status" class:list={['inline-flex items-center', className]}>
+  <span aria-hidden="true" class={styles.classes()}></span>
+  <span class="sr-only">{label}</span>
+</span>

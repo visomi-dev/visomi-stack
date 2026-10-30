@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { button, type ButtonOptions } from '@visomi-stack/web-frontend-ui';
+
+type Props = ButtonOptions & HTMLAttributes<'button'>;
+
+const { variant, size, type = 'button', class: className, ...attributes } = Astro.props;
+---
+
+<button {...attributes} type={type} class:list={[button.classes({ variant, size }), className]}>
+  <slot />
+</button>

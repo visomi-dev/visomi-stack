@@ -1,0 +1,28 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { table as styles, type TableDensity } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'table'> & {
+  density?: TableDensity;
+  striped?: boolean;
+  mobileCards?: boolean;
+  stickyHeaders?: boolean;
+};
+
+const {
+  density = 'comfortable',
+  striped = false,
+  mobileCards = false,
+  stickyHeaders = false,
+  class: className,
+  ...attributes
+} = Astro.props;
+---
+
+<table
+  {...attributes}
+  class:list={[styles.classes({ density: density, striped: striped, mobileCards, stickyHeaders }), className]}
+>
+  <slot />
+</table>

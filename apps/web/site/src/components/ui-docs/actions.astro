@@ -1,0 +1,50 @@
+---
+import type { UiLocale } from '../../ui-docs';
+import { uiDocs } from '../../ui-docs';
+import Button from '../button.astro';
+import LinkButton from '../link-button.astro';
+import Preview from './preview.astro';
+type Props = { locale: UiLocale };
+const { locale } = Astro.props;
+const labels = uiDocs[locale];
+---
+
+<Preview
+  id="button"
+  locale={locale}
+  angular={
+    '<button appUI variant="secondary" size="sm">Cancel</button>\n<button appUI size="icon" aria-label="Edit">…</button>'
+  }
+  astro={'<Button variant="secondary" size="sm">Cancel</Button>\n<Button size="icon" aria-label="Edit">…</Button>'}
+>
+  <div class="flex flex-wrap items-center gap-3">
+    <Button>{labels.save}</Button>
+    <Button variant="secondary">{labels.cancel}</Button>
+    <Button variant="ghost">{labels.continue}</Button>
+    <Button variant="danger">{labels.remove}</Button>
+    <Button disabled>{labels.disabled}</Button>
+    <Button size="icon" aria-label={labels.edit}>
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-5">
+        <path d="m16 4 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z" />
+      </svg>
+    </Button>
+  </div>
+  <div class="mt-5 flex flex-wrap items-center gap-3">
+    <Button size="sm">sm</Button>
+    <Button size="md">md</Button>
+    <Button size="lg">lg</Button>
+  </div>
+</Preview>
+<Preview
+  id="link-button"
+  locale={locale}
+  angular={'<a appUI="button" href="#example" variant="secondary">Continue</a>'}
+  astro={'<LinkButton href="#example" variant="secondary">Continue</LinkButton>'}
+>
+  <div class="flex flex-wrap gap-3">
+    <LinkButton href="#typography">{labels.continue}</LinkButton>
+    <LinkButton href="#forms" variant="secondary">
+      {labels.names.input}
+    </LinkButton>
+  </div>
+</Preview>

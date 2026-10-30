@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { label as styles } from '@visomi-stack/web-frontend-ui';
+
+type Props = HTMLAttributes<'label'> & { inline?: boolean; as?: 'label' | 'legend' };
+
+const { inline = false, as: Tag = 'label', class: className, ...attributes } = Astro.props;
+---
+
+<Tag {...attributes} class:list={[styles.classes({ inline: inline }), className]}>
+  <slot />
+</Tag>

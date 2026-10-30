@@ -1,0 +1,263 @@
+---
+import { uiDocs, type UiLocale } from '../../ui-docs';
+import Fieldset from '../fieldset.astro';
+import Field from '../field.astro';
+import Label from '../label.astro';
+import Description from '../description.astro';
+import Input from '../input.astro';
+import Textarea from '../textarea.astro';
+import Select from '../select.astro';
+import Checkbox from '../checkbox.astro';
+import Radio from '../radio.astro';
+import Toggle from '../toggle.astro';
+import RadioCard from '../radio-card.astro';
+import InputGroup from '../input-group.astro';
+import Button from '../button.astro';
+import Preview from './preview.astro';
+type Props = { locale: UiLocale };
+const { locale } = Astro.props;
+const labels = uiDocs[locale];
+---
+
+<Preview
+  id="fieldset"
+  locale={locale}
+  angular={
+    '<fieldset appUI><legend appUI>Preferences</legend><label appUI inline><input appUI type="checkbox" /> Updates</label></fieldset>'
+  }
+  astro={'<Fieldset><Label as="legend">Preferences</Label><Label inline><Checkbox /> Updates</Label></Fieldset>'}
+>
+  <Fieldset>
+    <Label as="legend">{labels.fieldsetLegend}</Label>
+    <Label inline>
+      <Checkbox checked />
+      {labels.notify}
+    </Label>
+  </Fieldset>
+</Preview>
+<Preview
+  id="field"
+  locale={locale}
+  angular={
+    '<app-field #nameField="appField" controlId="name" label="Name" description="Visible name."><input appUI [id]="nameField.controlId()" [attr.aria-describedby]="nameField.describedBy()" /></app-field>'
+  }
+  astro={
+    '<Field controlId="name" label="Name" description="Visible name."><Input id="name" aria-describedby="name-help" /></Field>'
+  }
+>
+  <Field controlId="field-name" label={labels.name} description={labels.nameHint}>
+    <Input id="field-name" value={labels.sampleName} aria-describedby="field-name-help" />
+  </Field>
+</Preview>
+<Preview
+  id="label"
+  locale={locale}
+  angular={'<label appUI for="label-example">Name</label><input appUI id="label-example" />'}
+  astro={'<Label for="label-example">Name</Label><Input id="label-example" />'}
+>
+  <div class="grid gap-2">
+    <Label for="label-example">{labels.name}</Label>
+    <Input id="label-example" placeholder={labels.sampleName} />
+  </div>
+</Preview>
+<Preview
+  id="description"
+  locale={locale}
+  angular={
+    '<input appUI id="email" aria-label="Email" aria-describedby="email-help" /><p appUI="description" id="email-help">Use an example address.</p>'
+  }
+  astro={
+    '<Input id="email" aria-label="Email" aria-describedby="email-help" /><Description id="email-help">Use an example address.</Description>'
+  }
+>
+  <div class="grid gap-2">
+    <Label for="description-email">{labels.email}</Label>
+    <Input type="email" id="description-email" aria-describedby="description-help" placeholder="demo@example.test" />
+    <Description id="description-help">{labels.emailHint}</Description>
+  </div>
+</Preview>
+<Preview
+  id="error-message"
+  locale={locale}
+  angular={
+    '<input appUI id="email" aria-label="Email" aria-invalid="true" aria-describedby="email-error" /><p app-error id="email-error">Enter a valid address.</p>'
+  }
+  astro={
+    '<Input id="email" aria-label="Email" aria-invalid="true" aria-describedby="email-error" /><ErrorMessage id="email-error">Enter a valid address.</ErrorMessage>'
+  }
+>
+  <Field controlId="error-email" label={labels.email} error={labels.emailError}>
+    <Input
+      type="email"
+      id="error-email"
+      value="invalid-example"
+      aria-invalid="true"
+      aria-describedby="error-email-error"
+    />
+  </Field>
+</Preview>
+<Preview
+  id="input"
+  locale={locale}
+  angular={'<input appUI type="email" uiSize="sm" [size]="24" required />'}
+  astro={'<Input type="email" uiSize="sm" size={24} required />'}
+>
+  <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{labels.fieldBehavior}</p>
+  <div id="validation-fields" class="grid gap-4">
+    <Field controlId="input-email" label={labels.email} description={labels.emailHint} error={labels.emailError}>
+      <Input
+        type="email"
+        id="input-email"
+        name="example-email"
+        placeholder="demo@example.test"
+        value="demo@example.test"
+        required
+        size={24}
+        uiSize="sm"
+        aria-describedby="input-email-help input-email-error"
+      />
+    </Field>
+    <Input disabled value={labels.disabled} aria-label={labels.disabled} />
+    <div>
+      <Button variant="secondary" size="sm" data-ui-validate="validation-fields">
+        {labels.validate}
+      </Button>
+    </div>
+    <p
+      role="status"
+      data-ui-validation-status
+      data-valid={labels.valid}
+      data-invalid={labels.invalid}
+      class="text-sm text-zinc-600 dark:text-zinc-400"
+    ></p>
+  </div>
+</Preview>
+<Preview
+  id="textarea"
+  locale={locale}
+  angular={'<textarea appUI uiSize="md" id="message" rows="3" aria-label="Message"></textarea>'}
+  astro={'<Textarea uiSize="md" id="message" rows={3} aria-label="Message">Example text.</Textarea>'}
+>
+  <Field controlId="message-example" label={labels.message} description={labels.messageHint}>
+    <Textarea id="message-example" rows={3} aria-describedby="message-example-help">
+      {labels.body}
+    </Textarea>
+  </Field>
+</Preview>
+<Preview
+  id="select"
+  locale={locale}
+  angular={'<select appUI uiSize="md" aria-label="Region"><option value="am">Americas</option></select>'}
+  astro={'<Select uiSize="md" aria-label="Region"><option value="am" selected>Americas</option></Select>'}
+>
+  <Field controlId="region-example" label={labels.region}>
+    <Select id="region-example" name="example-region">
+      <option value="">{labels.choose}</option>
+      <option value="am" selected>
+        {labels.regionOne}
+      </option>
+      <option value="eu">{labels.regionTwo}</option>
+      <option value="ap">{labels.regionThree}</option>
+    </Select>
+  </Field>
+</Preview>
+<Preview
+  id="checkbox"
+  locale={locale}
+  angular={'<label appUI inline><input appUI type="checkbox" name="updates" /> Receive updates</label>'}
+  astro={'<Label inline><Checkbox name="updates" /> Receive updates</Label>'}
+>
+  <div class="grid gap-2">
+    <Label inline>
+      <Checkbox name="example-updates" checked />
+      {labels.notify}
+    </Label>
+    <Label inline>
+      <Checkbox disabled />
+      {labels.disabled}
+    </Label>
+  </div>
+</Preview>
+<Preview
+  id="radio"
+  locale={locale}
+  angular={
+    '<fieldset appUI><legend>Workspace type</legend><label appUI inline><input appUI type="radio" name="kind" value="personal" /> Personal</label></fieldset>'
+  }
+  astro={
+    '<Fieldset><legend>Workspace type</legend><Label inline><Radio name="kind" value="personal" /> Personal</Label></Fieldset>'
+  }
+>
+  <Fieldset>
+    <legend>{labels.radioLegend}</legend>
+    <div class="flex flex-wrap gap-6">
+      <Label inline>
+        <Radio name="example-kind" value="personal" checked />
+        {labels.personal}
+      </Label>
+      <Label inline>
+        <Radio name="example-kind" value="shared" />
+        {labels.shared}
+      </Label>
+    </div>
+  </Fieldset>
+</Preview>
+<Preview
+  id="toggle"
+  locale={locale}
+  angular={'<label appUI inline><input appUI="switch" type="checkbox" /> Enable notifications</label>'}
+  astro={'<Label inline><Toggle /> Enable notifications</Label>'}
+>
+  <Label inline>
+    <Toggle name="example-notifications" checked />
+    {labels.enabled}
+  </Label>
+</Preview>
+<Preview
+  id="radio-card"
+  locale={locale}
+  angular={
+    '<label appUI="radio-card"><input appUI type="radio" name="plan" value="standard" /><span>Standard</span></label>'
+  }
+  astro={'<RadioCard><Radio name="plan" value="standard" /><span>Standard</span></RadioCard>'}
+>
+  <fieldset>
+    <legend class="sr-only">{labels.radioLegend}</legend>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <RadioCard>
+        <Radio name="example-plan" value="standard" checked />
+        <span>
+          <strong class="block font-medium">{labels.radioCardTitle}</strong>
+          <span class="mt-1 block text-zinc-600 dark:text-zinc-400">{labels.radioCardDescription}</span>
+        </span>
+      </RadioCard>
+      <RadioCard>
+        <Radio name="example-plan" value="shared" />
+        <span>
+          <strong class="block font-medium">{labels.shared}</strong>
+          <span class="mt-1 block text-zinc-600 dark:text-zinc-400">{labels.radioCardDescription}</span>
+        </span>
+      </RadioCard>
+    </div>
+  </fieldset>
+</Preview>
+<Preview
+  id="input-group"
+  locale={locale}
+  angular={
+    '<div appUI="input-group"><span data-slot="prefix" aria-hidden="true">$</span><input appUI aria-label="Amount" /></div>'
+  }
+  astro={'<InputGroup><span data-slot="prefix" aria-hidden="true">$</span><Input aria-label="Amount" /></InputGroup>'}
+>
+  <Field controlId="amount-example" label={labels.amount}>
+    <InputGroup>
+      <span data-slot="prefix" aria-hidden="true">
+        $
+      </span>
+      <Input id="amount-example" inputmode="decimal" value="125.00" />
+      <span data-slot="suffix" aria-hidden="true">
+        USD
+      </span>
+    </InputGroup>
+  </Field>
+</Preview>

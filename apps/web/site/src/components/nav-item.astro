@@ -1,0 +1,10 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { navItem, type NavigationPlacement } from '@visomi-stack/web-frontend-ui';
+type Props = HTMLAttributes<'a'> & { href: string; placement?: NavigationPlacement };
+const { placement = 'sidebar', class: className, ...attributes } = Astro.props;
+---
+
+<a {...attributes} class:list={[navItem.classes({ placement }), className]}>
+  <slot />
+</a>

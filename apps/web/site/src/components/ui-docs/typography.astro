@@ -1,0 +1,76 @@
+---
+import { uiDocs, type UiLocale } from '../../ui-docs';
+import Heading from '../heading.astro';
+import Text from '../text.astro';
+import Code from '../code.astro';
+import Link from '../link.astro';
+import Divider from '../divider.astro';
+import Preview from './preview.astro';
+type Props = { locale: UiLocale };
+const { locale } = Astro.props;
+const labels = uiDocs[locale];
+---
+
+<Preview
+  id="heading"
+  locale={locale}
+  angular={'<h2 appUI uiSize="lg">A clear hierarchy</h2>'}
+  astro={'<Heading as="h2" uiSize="lg">A clear hierarchy</Heading>'}
+>
+  <div class="grid gap-4">
+    <Heading as="h4" uiSize="xl">
+      {labels.subheading}
+    </Heading>
+    <Heading as="h4" uiSize="lg">
+      {labels.subheading}
+    </Heading>
+    <Heading as="h4" uiSize="md">
+      {labels.subheading}
+    </Heading>
+    <Heading as="h4" uiSize="sm">
+      {labels.subheading}
+    </Heading>
+  </div>
+</Preview>
+<Preview
+  id="text"
+  locale={locale}
+  angular={'<p appUI uiSize="md">Good defaults.</p>\n<p appUI tone="muted" uiSize="sm">Supporting text.</p>'}
+  astro={'<Text uiSize="md">Good defaults.</Text>\n<Text tone="muted" uiSize="sm">Supporting text.</Text>'}
+>
+  <div class="grid gap-3">
+    <Text uiSize="lg">{labels.body}</Text>
+    <Text>{labels.body}</Text>
+    <Text tone="muted" uiSize="sm">
+      {labels.muted}
+    </Text>
+  </div>
+</Preview>
+<Preview
+  id="code"
+  locale={locale}
+  angular={'<code appUI>button.classes()</code>\n<pre><code appUI block>const ready = true;</code></pre>'}
+  astro={'<Code>button.classes()</Code>\n<pre><Code block>const ready = true;</Code></pre>'}
+>
+  <Code>button.classes()</Code>
+  <pre class="mt-4"><Code block>{"const ready = true;\nbutton.classes({ variant: 'primary', size: 'md' });"}</Code></pre>
+</Preview>
+<Preview
+  id="link"
+  locale={locale}
+  angular={'<a appUI href="#forms">Learn more</a>'}
+  astro={'<Link href="#forms">Learn more</Link>'}
+>
+  <Link href="#forms">{labels.learn}</Link>
+</Preview>
+<Preview
+  id="divider"
+  locale={locale}
+  angular={'<hr appUI />\n<hr appUI soft />'}
+  astro={'<Divider />\n<Divider soft />'}
+>
+  <div class="grid gap-6 py-3">
+    <Divider />
+    <Divider soft />
+  </div>
+</Preview>

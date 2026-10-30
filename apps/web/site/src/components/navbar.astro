@@ -1,0 +1,10 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { navbar } from '@visomi-stack/web-frontend-ui';
+type Props = HTMLAttributes<'nav'> & { 'aria-label': string };
+const { class: className, ...attributes } = Astro.props;
+---
+
+<nav {...attributes} class:list={[navbar.classes(), className]}>
+  <slot />
+</nav>

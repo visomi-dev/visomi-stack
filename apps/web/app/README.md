@@ -2,7 +2,7 @@
 
 `web-app` is an Angular 22.2 standalone, zoneless application with SSR,
 hydration and native compile-time localization. It runs independently of the
-gateway in this slice. Its minimal initial route verifies the localized application shell;
+gateway in this slice. Its initial route demonstrates the shared foundations;
 it does not represent an authenticated workspace or implement auth UI.
 
 Run from the workspace root:

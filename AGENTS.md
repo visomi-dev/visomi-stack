@@ -37,6 +37,16 @@
 - The Nx task preference below applies to project tasks. It does not replace the intentionally file-scoped ESLint/Prettier commands in lint-staged.
 - Keep this agreement outside the generated Nx section so generator updates do not erase it.
 
+## Frontend composition
+
+- Choose an attribute directive when adding reusable appearance or behavior to an existing element without owning a template. Choose a component when it owns markup, projected parts, or structural accessibility responsibilities. Component size alone does not decide this, and not every UI primitive must use the same abstraction.
+- Preserve native controls and their attributes, events, focus and form bindings. A component may use an attribute selector on a native host when it needs its own template; a custom tag is not required. Component selectors use the `app` prefix and kebab-case; attribute directives keep the existing prefixed camelCase convention, including `appUI`.
+- Use composition components such as `Field` to own labels, descriptions, error presentation and stable association IDs while projecting the native control. Keep validation values, submission policy and form models with the consumer; do not republish every native control property through a generic wrapper.
+- Internal markup required for behavior or animation belongs in the component template. Consumers must not have to reproduce implementation-only wrappers such as an error message's inner span.
+- Keep shared visual recipes framework-independent. Angular and Astro may own different markup adapters around the same recipes; do not introduce a shared framework runtime to avoid a small amount of framework-specific markup.
+- Keep SSR and hydration deterministic. Derive association IDs from stable caller-provided IDs, and use templates and host bindings rather than DOM rewriting to create component structure. Verify native semantics and relevant interaction after changing an abstraction.
+- Prefer the smallest abstraction that owns the current responsibility. Do not convert every directive into a component, add speculative configuration, or make performance claims without measurements.
+
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
 

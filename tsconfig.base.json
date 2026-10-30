@@ -20,7 +20,8 @@
       "@visomi-stack/dev-testing": ["./libs/development/testing/src/index.ts"],
       "@visomi-stack/dev-testing/playwright": ["./libs/development/testing/src/playwright.ts"],
       "@visomi-stack/dev-testing/postgres": ["./libs/development/testing/src/postgres.ts"],
-      "@visomi-stack/dev-testing/telemetry": ["./libs/development/testing/src/telemetry.ts"]
+      "@visomi-stack/dev-testing/telemetry": ["./libs/development/testing/src/telemetry.ts"],
+      "@visomi-stack/web-frontend-ui": ["./libs/web/frontend/ui/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

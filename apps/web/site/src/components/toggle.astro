@@ -1,0 +1,11 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+import { toggle as styles } from '@visomi-stack/web-frontend-ui';
+
+type Props = Omit<HTMLAttributes<'input'>, 'type' | 'role'>;
+
+const { class: className, ...attributes } = Astro.props;
+---
+
+<input {...attributes} data-slot="control" type="checkbox" role="switch" class:list={[styles.classes(), className]} />
