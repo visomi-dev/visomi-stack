@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, RouterLink } from '@angular/router';
 
-import { AppShell, Sidebar, Topbar, Navbar, NavItem, Button, Link } from './ui';
+import { AppShell, Sidebar, Topbar, Navbar, NavItem, Button, Link } from '../index';
 
 import type { ShellLayout } from '@visomi-stack/web-frontend-ui';
 

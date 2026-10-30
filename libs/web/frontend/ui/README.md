@@ -54,6 +54,13 @@ Import individual primitives from `apps/web/app/src/app/ui`, or import the
 extend existing elements when they only need appearance or behavior. Components
 own required internal markup. Both use the same portable class recipes.
 
+The Angular adapters are grouped by responsibility under `app/ui/`:
+`actions/`, `typography/`, `layout/` (including shell and navigation), `data/`,
+`forms/`, `feedback/` and `overlays/`. Focused tests live beside their subject;
+`ui.spec.ts` covers the complete catalog. The root `ui/index.ts` remains the
+public entry point for individual exports and `UI_IMPORTS`. Implementation files
+import their siblings directly rather than importing the public barrel.
+
 ```html
 <button appUI variant="secondary" size="sm">Cancel</button>
 <a appUI="button" href="/app/en/">Continue</a>

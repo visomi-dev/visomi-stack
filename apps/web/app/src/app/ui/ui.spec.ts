@@ -18,7 +18,7 @@ import {
   Dialog,
   Field,
   Table,
-} from './ui';
+} from './index';
 
 import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
 

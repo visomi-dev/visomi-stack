@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { Button } from './ui/button';
+import { Button } from './button';
 
 import type { ButtonSize, ButtonVariant } from '@visomi-stack/web-frontend-ui';
 
