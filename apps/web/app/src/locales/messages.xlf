@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en-US" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="skip" datatype="html">
+        <source> Skip to content
+</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">6,8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="title" datatype="html">
+        <source>Web app ready.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">9,10</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="intro" datatype="html">
+        <source>Angular SSR and hydration are configured.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">10,11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="language" datatype="html">
+        <source>Language</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="theme" datatype="html">
+        <source>Appearance</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">20,22</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="system" datatype="html">
+        <source>System</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">25,26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="light" datatype="html">
+        <source>Light</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">26,27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="dark" datatype="html">
+        <source>Dark</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/app.html</context>
+          <context context-type="linenumber">27,28</context>
+        </context-group>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

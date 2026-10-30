@@ -1,0 +1,19 @@
+diff --git a/dist/core/app/node.js b/dist/core/app/node.js
+index 7c6caa6c28eb0eecff2aa02d55f9ef2f95b036f5..ee165856f44f6917406dc5a4b389886424ef0259 100644
+--- a/dist/core/app/node.js
++++ b/dist/core/app/node.js
+@@ -158,12 +158,8 @@ async function writeResponse(source, destination) {
+   try {
+     const reader = body.getReader();
+     destination.on("close", () => {
+-      reader.cancel().catch((err) => {
+-        console.error(
+-          "There was an uncaught error in the middle of the stream while rendering %s.",
+-          destination.req.url,
+-          err
+-        );
++      reader.cancel().catch(() => {
++        console.error("site_response_cancel_failed");
+       });
+     });
+     let result = await reader.read();

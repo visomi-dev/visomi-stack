@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en-US" target-language="es" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="skip" datatype="html">
+        <source>Skip to content</source>
+        <target>Saltar al contenido</target>
+      </trans-unit>
+      <trans-unit id="title" datatype="html">
+        <source>Web app ready.</source>
+        <target>Aplicación web lista.</target>
+      </trans-unit>
+      <trans-unit id="intro" datatype="html">
+        <source>Angular SSR and hydration are configured.</source>
+        <target>Angular SSR y la hidratación están configurados.</target>
+      </trans-unit>
+      <trans-unit id="language" datatype="html">
+        <source>Language</source>
+        <target>Idioma</target>
+      </trans-unit>
+      <trans-unit id="theme" datatype="html">
+        <source>Appearance</source>
+        <target>Apariencia</target>
+      </trans-unit>
+      <trans-unit id="system" datatype="html">
+        <source>System</source>
+        <target>Sistema</target>
+      </trans-unit>
+      <trans-unit id="light" datatype="html">
+        <source>Light</source>
+        <target>Claro</target>
+      </trans-unit>
+      <trans-unit id="dark" datatype="html">
+        <source>Dark</source>
+        <target>Oscuro</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

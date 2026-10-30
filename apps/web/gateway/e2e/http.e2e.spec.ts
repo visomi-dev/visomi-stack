@@ -1,10 +1,10 @@
 import { expect, test } from './fixtures/http';
 
-test('mounts only the API and applies the host Helmet policy to successes and failures', async ({ request }) => {
+test('mounts the API and public site with the host Helmet policy', async ({ request }) => {
   for (const [path, status] of [
     ['/api/', 200],
     ['/api/missing', 404],
-    ['/', 404],
+    ['/en/', 200],
     ['/api/auth/passkeys', 401],
   ] as const) {
     const response = await request.get(path);

@@ -1,0 +1,30 @@
+<a
+  href="#main"
+  class="sr-only ui-focus-ring focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:bg-white focus:p-4 focus:text-zinc-950"
+  i18n="@@skip"
+>
+  Skip to content
+</a>
+<main id="main" class="mx-auto max-w-3xl px-6 py-12">
+  <h1 class="font-heading text-3xl font-semibold" i18n="@@title">Web app ready.</h1>
+  <p class="mt-4 text-zinc-600 dark:text-zinc-400" i18n="@@intro">Angular SSR and hydration are configured.</p>
+  <nav aria-label="Language" i18n-aria-label="@@language" class="mt-8 flex gap-4">
+    <a href="/app/en/" lang="en" hreflang="en" class="inline-flex min-h-11 items-center rounded px-2 ui-focus-ring">
+      EN
+    </a>
+    <a href="/app/es/" lang="es" hreflang="es" class="inline-flex min-h-11 items-center rounded px-2 ui-focus-ring">
+      ES
+    </a>
+  </nav>
+  <label class="mt-6 flex flex-wrap items-center gap-3">
+    <span i18n="@@theme">Appearance</span>
+    <select
+      data-theme-select
+      class="min-h-11 rounded border border-zinc-500 bg-white px-3 text-zinc-950 ui-focus-ring dark:bg-zinc-900 dark:text-zinc-50"
+    >
+      <option value="system" i18n="@@system">System</option>
+      <option value="light" i18n="@@light">Light</option>
+      <option value="dark" i18n="@@dark">Dark</option>
+    </select>
+  </label>
+</main>

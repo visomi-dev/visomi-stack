@@ -1,0 +1,52 @@
+---
+import { messages } from '../../i18n';
+import BaseLayout from '../../layouts/base.astro';
+
+const locale = Astro.params.locale;
+if (locale !== 'en' && locale !== 'es') return new Response(null, { status: 404 });
+const text = messages[locale];
+---
+
+<BaseLayout locale={locale} title={text.title} description={text.intro}>
+  <a
+    href="#main"
+    class="ui-focus-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:bg-white focus:p-4 focus:text-zinc-950"
+  >
+    {text.skip}
+  </a>
+  <main id="main" class="mx-auto max-w-3xl px-6 py-12">
+    <h1 class="font-heading text-3xl font-semibold">{text.title}</h1>
+    <p class="mt-4 text-zinc-600 dark:text-zinc-400">{text.intro}</p>
+    <nav aria-label={text.language} class="mt-8 flex gap-4">
+      <a
+        href="/en/"
+        lang="en"
+        hreflang="en"
+        aria-current={locale === 'en' ? 'page' : undefined}
+        class="ui-focus-ring inline-flex min-h-11 items-center rounded px-2"
+      >
+        EN
+      </a>
+      <a
+        href="/es/"
+        lang="es"
+        hreflang="es"
+        aria-current={locale === 'es' ? 'page' : undefined}
+        class="ui-focus-ring inline-flex min-h-11 items-center rounded px-2"
+      >
+        ES
+      </a>
+    </nav>
+    <label class="mt-6 flex flex-wrap items-center gap-3">
+      <span>{text.theme}</span>
+      <select
+        data-theme-select
+        class="ui-focus-ring min-h-11 rounded border border-zinc-500 bg-white px-3 text-zinc-950 dark:bg-zinc-900 dark:text-zinc-50"
+      >
+        <option value="system">{text.system}</option>
+        <option value="light">{text.light}</option>
+        <option value="dark">{text.dark}</option>
+      </select>
+    </label>
+  </main>
+</BaseLayout>

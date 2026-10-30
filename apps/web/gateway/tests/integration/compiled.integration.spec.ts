@@ -2,6 +2,7 @@ import { execFile, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { request as nodeRequest } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { createServer } from 'node:net';
 import { join, resolve } from 'node:path';
@@ -15,6 +16,7 @@ import { SMTPServer } from 'smtp-server';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadApi } from '../../src/api-module';
+import { loadSite } from '../../src/site-module';
 
 const execute = promisify(execFile);
 const root = resolve(import.meta.dirname, '../../../../..');
@@ -107,12 +109,15 @@ async function launch(databaseUrl?: string) {
   });
   const exit = once(child, 'exit');
   let logs = '';
+  let diagnostics = '';
 
   child.stdout.on('data', (chunk) => {
     logs += String(chunk);
   });
-  // Drain stderr without exposing dependency warnings or test diagnostics in telemetry.
-  child.stderr.on('data', () => undefined);
+  // Synthetic subprocess diagnostics are captured for privacy regression assertions only.
+  child.stderr.on('data', (chunk) => {
+    diagnostics += String(chunk);
+  });
   const cleanup = async () => {
     if (child.exitCode === null && child.signalCode === null) {
       child.kill('SIGKILL');
@@ -152,6 +157,7 @@ async function launch(databaseUrl?: string) {
 
       return {
         code,
+        diagnostics,
         events: logs
           .trim()
           .split('\n')
@@ -163,6 +169,80 @@ async function launch(databaseUrl?: string) {
 }
 
 describe('compiled ESM gateway and embedded API', () => {
+  it('loads the compiled Astro handler and resolves its public assets without listening', async () => {
+    const site = await loadSite(pathToFileURL(join(root, 'dist/apps/web/site/server/entry.mjs')));
+
+    expect(site.handler).toBeTypeOf('function');
+    expect(site.clientDirectory).toBe(join(root, 'dist/apps/web/site/client/'));
+    const script = `
+      import net from 'node:net';
+      net.Server.prototype.listen = () => { throw new Error('unexpected listener'); };
+      net.Socket.prototype.connect = () => { throw new Error('unexpected connection'); };
+      const rejections = process.listenerCount('unhandledRejection');
+      const site = await import(${JSON.stringify(pathToFileURL(join(root, 'dist/apps/web/site/server/entry.mjs')).href)});
+      console.log(JSON.stringify({ handler: typeof site.handler,
+        rejectionListeners: process.listenerCount('unhandledRejection') - rejections }));
+    `;
+    const result = await execute(process.execPath, ['--input-type=module', '-e', script], {
+      cwd: directory,
+      timeout: 5000,
+    });
+
+    expect(JSON.parse(result.stdout)).toEqual({ handler: 'function', rejectionListeners: 0 });
+  });
+  it('preserves Node failure behavior for unhandled rejections outside SSR', async () => {
+    const script = `
+      await import(${JSON.stringify(pathToFileURL(join(root, 'dist/apps/web/site/server/entry.mjs')).href)});
+      Promise.reject(new Error('synthetic_unhandled_failure'));
+      setTimeout(() => console.log('unexpected_continuation'), 20);
+    `;
+
+    await expect(
+      execute(process.execPath, ['--input-type=module', '-e', script], {
+        cwd: directory,
+        timeout: 5000,
+      }),
+    ).rejects.toMatchObject({ code: 1 });
+  });
+  it('delegates real Astro conversion errors without recording the query or exception', async () => {
+    const gateway = await launch();
+
+    try {
+      const response = await new Promise<{ status: number; body: string }>((resolve, reject) => {
+        const request = nodeRequest(
+          gateway.url + '/en/?reviewMarker=synthetic_private_query',
+          {
+            method: 'TRACE',
+          },
+          (response) => {
+            let body = '';
+
+            response.on('data', (chunk) => {
+              body += String(chunk);
+            });
+            response.on('end', () => resolve({ status: response.statusCode!, body }));
+          },
+        );
+
+        request.on('error', reject);
+        request.end();
+      });
+
+      expect(response).toEqual({ status: 500, body: JSON.stringify({ error: 'internal_error' }) });
+      const result = await gateway.stop('SIGTERM');
+
+      expect(result.code).toBe(0);
+      const logs = JSON.stringify(result.events);
+
+      expect(logs).not.toContain('synthetic_private_query');
+      expect(logs).not.toContain('TypeError');
+      expect(result.diagnostics).not.toContain('synthetic_private_query');
+      expect(result.diagnostics).not.toContain('TypeError');
+      expect(result.events).toContainEqual(expect.objectContaining({ event: 'http.request', status: 500 }));
+    } finally {
+      await gateway.cleanup();
+    }
+  });
   it('loads the actual compiled API through the gateway module boundary without starting it', async () => {
     const api = await loadApi(pathToFileURL(join(root, 'dist/apps/web/api/app.js')));
 
@@ -226,9 +306,9 @@ describe('compiled ESM gateway and embedded API', () => {
       expect(document.servers).toEqual([{ url: '/api' }]);
       expect(document.paths['/auth/session'].get.operationId).toBe('sessions_getSession');
       const paths = ['/api/', '/api/auth/session', '/api/missing', '/'];
-      const responses = await Promise.all(paths.map((path) => fetch(gateway.url + path)));
+      const responses = await Promise.all(paths.map((path) => fetch(gateway.url + path, { redirect: 'manual' })));
 
-      expect(responses.map((response) => response.status)).toEqual([200, 503, 404, 404]);
+      expect(responses.map((response) => response.status)).toEqual([200, 503, 404, 302]);
       for (const response of responses) {
         expect(response.headers.get('x-content-type-options')).toBe('nosniff');
         expect(response.headers.get('content-security-policy')).toContain("script-src 'self'");

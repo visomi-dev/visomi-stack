@@ -15,8 +15,10 @@ The `web-gateway` application mounts the compiled API at `/api` and owns its
 HTTP listener, shared telemetry and optional PostgreSQL pool. Authentication
 runs once in the host; the embedded API uses inherited mode.
 
-Angular tooling is installed, but Angular SSR, Astro, worker, and realtime
-applications have not been implemented. The API now supports PostgreSQL-backed passkey authentication and durable sessions.
+The Astro website (`web-site`) is mounted by the gateway at `/en/` and `/es/`.
+The Angular SSR application (`web-app`) runs independently at `/app/en/` and
+`/app/es/`. Both use shared Tailwind foundations and light/dark/system themes.
+Worker and realtime applications remain unimplemented. The API now supports PostgreSQL-backed passkey authentication and durable sessions.
 Business domains remain future work; this slice does not demonstrate a complete DDD model.
 
 The agreed topology is documented in [Architecture](docs/architecture.md).
@@ -55,8 +57,8 @@ start. The API never migrates or seeds during startup. See
 [container database initialization](docs/development.md#container-database-initialization)
 for reruns and seed ownership.
 
-The serve command and HTTP response have been checked with the existing local
-dependencies. A fresh-checkout installation has not yet been verified.
+The serve command and HTTP response have been checked. A fresh worktree
+installation with `pnpm install --frozen-lockfile` has also been verified.
 
 ## Build and remaining gaps
 
@@ -66,7 +68,8 @@ dependencies. A fresh-checkout installation has not yet been verified.
 - The gateway emits ESM `app.js` and `main.js` under `dist/apps/web/gateway`.
   Keep the API output as its sibling directory; the gateway imports `../api/app.js`.
   Process integration tests verify that mount, inherited authentication, shared
-  telemetry and resource cleanup. Angular SSR and other frontend mounts remain pending.
+  telemetry and resource cleanup. It also imports `../site/server/entry.mjs` and
+  serves its sibling `client` directory. Angular gateway mounting remains pending.
 - API and gateway Playwright request suites verify their HTTP contracts using
   separate owned Compose projects with container PostgreSQL, the compiled
   application, and local telemetry destinations. Run
@@ -80,6 +83,7 @@ dependencies. A fresh-checkout installation has not yet been verified.
 
 - [API authentication and persistence](apps/web/api/README.md): schema, migrations, endpoints, ownership and verification.
 - [Shared backend infrastructure](libs/backend/shared/README.md): database module, shared schemas and explicit migration commands.
+- [Web foundations](docs/web-foundations.md): styling, themes, localized UI, SSR and Express integration.
 - [Architecture](docs/architecture.md): current structure, intended topology, and open decisions.
 - [Development](docs/development.md): project discovery, verification, contribution conventions, and maintenance.
 - [Agent guidance](AGENTS.md): repository instructions for coding agents.
