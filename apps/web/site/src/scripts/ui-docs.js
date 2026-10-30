@@ -26,11 +26,6 @@ for (const button of document.querySelectorAll('[data-ui-validate]')) {
       const invalid = !control.validity.valid;
 
       control.setAttribute('aria-invalid', String(invalid));
-      const error = document.getElementById(control.id + '-error');
-
-      if (error) {
-        error.hidden = !invalid;
-      }
     }
   }
 
@@ -39,6 +34,7 @@ for (const button of document.querySelectorAll('[data-ui-validate]')) {
   }
 
   button.addEventListener('click', () => {
+    fields.setAttribute('data-submitted', '');
     update();
     const invalid = controls.find((control) => !control.validity.valid);
 

@@ -83,7 +83,7 @@ const labels = uiDocs[locale];
   id="error-message"
   locale={locale}
   angular={
-    '<input appUI id="email" aria-label="Email" aria-invalid="true" aria-describedby="email-error" /><p appUI="error" id="email-error">Enter a valid address.</p>'
+    '<input appUI id="email" aria-label="Email" aria-invalid="true" aria-describedby="email-error" /><p appUI="error" id="email-error"><span>Enter a valid address.</span></p>'
   }
   astro={
     '<Input id="email" aria-label="Email" aria-invalid="true" aria-describedby="email-error" /><ErrorMessage id="email-error">Enter a valid address.</ErrorMessage>'
@@ -101,6 +101,7 @@ const labels = uiDocs[locale];
   angular={'<input appUI type="email" uiSize="sm" [size]="24" required />'}
   astro={'<Input type="email" uiSize="sm" size={24} required />'}
 >
+  <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{labels.fieldBehavior}</p>
   <div id="validation-fields" class="grid gap-4">
     <Field>
       <Label for="input-email">{labels.email}</Label>
@@ -108,6 +109,7 @@ const labels = uiDocs[locale];
         type="email"
         id="input-email"
         name="example-email"
+        placeholder="demo@example.test"
         value="demo@example.test"
         required
         size={24}
@@ -115,9 +117,7 @@ const labels = uiDocs[locale];
         aria-describedby="input-email-help input-email-error"
       />
       <Description id="input-email-help">{labels.emailHint}</Description>
-      <ErrorMessage id="input-email-error" hidden>
-        {labels.emailError}
-      </ErrorMessage>
+      <ErrorMessage id="input-email-error">{labels.emailError}</ErrorMessage>
     </Field>
     <Input disabled value={labels.disabled} aria-label={labels.disabled} />
     <div>

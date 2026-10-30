@@ -1,15 +1,35 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { email, form, FormField, required } from '@angular/forms/signals';
 
-import { Button } from './ui/button';
+import { Button, Field, Input, Label, ErrorMessage, Table } from './ui';
 
 @Component({
-  imports: [Button],
+  imports: [Button, Field, Input, Label, ErrorMessage, Table, FormField],
   selector: 'app-root',
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
   readonly count = signal(0);
+  readonly emailModel = signal({ email: '' });
+  readonly attempted = signal(false);
+  readonly manualInvalid = signal(false);
+
+  readonly emailForm = form(this.emailModel, (path) => {
+    required(path.email);
+    email(path.email);
+  });
+
+  checkField(event: Event): void {
+    event.preventDefault();
+    this.attempted.set(true);
+  }
+
+  resetField(): void {
+    this.emailForm().reset({ email: '' });
+    this.attempted.set(false);
+    this.manualInvalid.set(false);
+  }
 
   increment() {
     this.count.update((value) => value + 1);

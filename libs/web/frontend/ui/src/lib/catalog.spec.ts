@@ -50,6 +50,23 @@ describe('portable UI recipes', () => {
     expect(ui.toggle.classes()).toContain('forced-colors:appearance-auto');
   });
 
+  it('keeps field spacing and table layout options independent of validation and density', () => {
+    expect(ui.field.classes({ compact: true })).toContain('gap-1.5');
+    expect(ui.field.classes({ compact: true })).not.toContain('gap-2');
+    expect(ui.field.classes()).toContain('data-submitted');
+    expect(ui.errorMessage.classes()).toContain('motion-reduce:transition-none');
+    expect(ui.errorMessage.classes()).not.toContain('max-h-');
+    const cards = ui.table.classes({ mobileCards: true, stickyHeaders: true, density: 'compact', striped: true });
+
+    expect(cards).toContain('grid-cols-1');
+    expect(cards).toContain('md:');
+    expect(cards).toContain('sticky');
+    expect(cards).toContain('[&_td]:py-2');
+    expect(cards).toContain('nth-child(even)');
+    expect(ui.table.classes()).not.toContain('grid-cols-1');
+    expect(ui.table.classes()).not.toContain('sticky');
+  });
+
   it('retains native dialog visibility and reduced-motion support', () => {
     for (const size of ['sm', 'md', 'lg'] as const) {
       expect(ui.dialog.classes({ size }).split(' ')).not.toEqual(expect.arrayContaining(['block']));

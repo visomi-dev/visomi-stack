@@ -47,28 +47,53 @@ const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
 <Preview
   id="table"
   locale={locale}
-  angular={'<table appUI striped><caption>Workspaces</caption>…</table>'}
-  astro={'<Table striped><caption>Workspaces</caption>…</Table>'}
+  angular={
+    '<table appUI mobileCards stickyHeaders role="table"><caption>Workspaces</caption>…</table>\n<!-- Keep native header associations and explicit row/cell roles. Cell labels use <span data-slot="label" aria-hidden="true">…</span>. -->'
+  }
+  astro={
+    '<Table mobileCards stickyHeaders role="table"><caption>Workspaces</caption>…</Table>\n<!-- Keep native header associations and explicit row/cell roles. Cell labels use <span data-slot="label" aria-hidden="true">…</span>. -->'
+  }
 >
-  <div class="overflow-x-auto">
-    <Table striped>
+  <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{labels.tableBehavior}</p>
+  <div data-table-scroll class="max-h-96 overflow-auto">
+    <Table striped mobileCards stickyHeaders role="table">
       <caption>{labels.tableCaption}</caption>
-      <thead>
-        <tr>
-          <th scope="col">{labels.workspace}</th>
-          <th scope="col">{labels.status}</th>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader" id="docs-workspace">
+            {labels.workspace}
+          </th>
+          <th scope="col" role="columnheader" id="docs-status">
+            {labels.status}
+          </th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <th scope="row">{labels.studio}</th>
-          <td>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader" id="docs-studio">
+            <span data-slot="label" aria-hidden="true">
+              {labels.workspace}
+            </span>
+            {labels.studio}
+          </th>
+          <td role="cell" headers="docs-status docs-studio">
+            <span data-slot="label" aria-hidden="true">
+              {labels.status}
+            </span>
             <Badge tone="success">{labels.success}</Badge>
           </td>
         </tr>
-        <tr>
-          <th scope="row">{labels.sandbox}</th>
-          <td>
+        <tr role="row">
+          <th scope="row" role="rowheader" id="docs-sandbox">
+            <span data-slot="label" aria-hidden="true">
+              {labels.workspace}
+            </span>
+            {labels.sandbox}
+          </th>
+          <td role="cell" headers="docs-status docs-sandbox">
+            <span data-slot="label" aria-hidden="true">
+              {labels.status}
+            </span>
             <Badge>{labels.neutral}</Badge>
           </td>
         </tr>

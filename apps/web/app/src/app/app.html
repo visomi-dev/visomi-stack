@@ -140,6 +140,81 @@
         <output aria-live="polite" data-count>{{ count() }}</output>
       </p>
     </section>
+
+    <section class="mt-12 rounded-xl border border-zinc-200 p-6 dark:border-zinc-700" data-field-example>
+      <h2 class="font-heading text-xl font-semibold" i18n="@@fieldBehaviorTitle">Field validation</h2>
+      <form
+        novalidate
+        (submit)="checkField($event)"
+        [attr.data-submitted]="attempted() ? '' : null"
+        class="mt-6 space-y-4"
+      >
+        <div appUI="field" [invalid]="manualInvalid()">
+          <label appUI for="angular-email" i18n="@@fieldEmail">Example email</label>
+          <input
+            appUI
+            id="angular-email"
+            type="email"
+            [formField]="emailForm.email"
+            [attr.aria-invalid]="manualInvalid() || emailForm.email().invalid() ? 'true' : null"
+            placeholder="demo@example.test"
+            aria-describedby="angular-email-error"
+          />
+          <p appUI="error" id="angular-email-error">
+            <span>
+              @if (manualInvalid()) {
+                <span i18n="@@fieldManualError">This example address is unavailable.</span>
+              } @else {
+                <span i18n="@@fieldError">Enter a valid email address.</span>
+              }
+            </span>
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <button appUI type="submit" i18n="@@fieldCheck">Check example</button>
+          <button appUI variant="secondary" (click)="manualInvalid.set(true)" i18n="@@fieldManual">
+            Show manual error
+          </button>
+          <button appUI variant="secondary" (click)="resetField()" i18n="@@fieldReset">Reset example</button>
+        </div>
+      </form>
+    </section>
+    <section class="mt-12 rounded-xl border border-zinc-200 p-6 dark:border-zinc-700" data-responsive-table>
+      <h2 class="mb-6 font-heading text-xl font-semibold" i18n="@@tableBehaviorTitle">Responsive table</h2>
+      <div class="max-h-96 overflow-auto">
+        <table appUI mobileCards stickyHeaders role="table">
+          <caption i18n="@@tableCaption">Example workspaces</caption>
+          <thead role="rowgroup">
+            <tr role="row">
+              <th role="columnheader" scope="col" id="angular-workspace" i18n="@@tableWorkspace">Workspace</th>
+              <th role="columnheader" scope="col" id="angular-status" i18n="@@tableStatus">Status</th>
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row">
+              <th role="rowheader" scope="row" id="angular-studio">
+                <span data-slot="label" aria-hidden="true" i18n="@@tableWorkspace">Workspace</span>
+                <span i18n="@@tableStudio">Studio</span>
+              </th>
+              <td role="cell" headers="angular-status angular-studio">
+                <span data-slot="label" aria-hidden="true" i18n="@@tableStatus">Status</span>
+                <span i18n="@@tableReady">Ready</span>
+              </td>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row" id="angular-sandbox">
+                <span data-slot="label" aria-hidden="true" i18n="@@tableWorkspace">Workspace</span>
+                <span i18n="@@tableSandbox">Sandbox</span>
+              </th>
+              <td role="cell" headers="angular-status angular-sandbox">
+                <span data-slot="label" aria-hidden="true" i18n="@@tableStatus">Status</span>
+                <span i18n="@@tableDraft">Draft</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </main>
   <footer
     class="flex flex-wrap justify-between gap-4 border-t border-zinc-200 py-7 text-xs text-zinc-600 dark:border-zinc-800 dark:text-zinc-400"

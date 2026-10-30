@@ -16,6 +16,8 @@ import {
   Link,
   LinkButton,
   Dialog,
+  Field,
+  Table,
 } from './ui';
 
 import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
@@ -31,7 +33,7 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
     <hr appUI soft />
     <span appUI="badge" [tone]="tone()">Ready</span>
     <span appUI="avatar" role="img" aria-label="Example person">EP</span>
-    <table appUI density="compact" striped>
+    <table appUI density="compact" striped [mobileCards]="cards()" [stickyHeaders]="cards()">
       <caption>
         Example
       </caption>
@@ -51,7 +53,7 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
     <header appUI>Header</header>
     <fieldset appUI>
       <legend appUI>Preferences</legend>
-      <div appUI="field">
+      <div appUI="field" [compact]="compact()" [manualError]="manualError()">
         <label appUI for="email">Email</label>
         <input
           appUI
@@ -64,7 +66,7 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
           class="example-layout"
         />
         <p appUI="description" id="email-help">Example address</p>
-        <p appUI="error" id="email-error">Invalid address</p>
+        <p appUI="error" id="email-error"><span>Invalid address</span></p>
       </div>
       <textarea appUI uiSize="sm" aria-label="Notes" rows="3"></textarea>
       <select appUI aria-label="Region">
@@ -89,6 +91,9 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
   `,
 })
 class Catalog {
+  readonly cards = signal(false);
+  readonly compact = signal(false);
+  readonly manualError = signal<string | null>(null);
   readonly size = signal<ControlSize>('sm');
   readonly tone = signal<Tone>('success');
 
@@ -188,6 +193,40 @@ describe('native Angular UI catalog', () => {
     expect(element.size).toBe(24);
     expect(fixture.nativeElement.querySelector('[appUI=badge]').className).toContain('bg-red-50');
     expect(fixture.nativeElement.querySelector('[appUI=switch]').getAttribute('role')).toBe('switch');
+  });
+
+  it('updates field state and responsive table options without replacing native controls', async () => {
+    const fixture = TestBed.createComponent(Catalog);
+
+    await fixture.whenStable();
+
+    const field = fixture.debugElement.query(By.directive(Field)).nativeElement as HTMLElement;
+    const table = fixture.debugElement.query(By.directive(Table)).nativeElement as HTMLTableElement;
+    const input = fixture.nativeElement.querySelector('#email') as HTMLInputElement;
+
+    expect(field.hasAttribute('data-control')).toBe(true);
+    expect(field.hasAttribute('data-manual-invalid')).toBe(false);
+    expect(input.dataset['slot']).toBe('control');
+    expect(fixture.nativeElement.querySelector('#email-error').dataset.slot).toBe('error');
+    fixture.componentInstance.compact.set(true);
+    fixture.componentInstance.manualError.set('Synthetic validation error');
+    fixture.componentInstance.cards.set(true);
+
+    await fixture.whenStable();
+
+    expect(field.hasAttribute('data-manual-invalid')).toBe(true);
+    expect(field.classList.contains('gap-1.5')).toBe(true);
+    expect(table.className).toContain('grid-cols-1');
+    expect(table.className).toContain('sticky');
+    expect(fixture.nativeElement.querySelector('#email')).toBe(input);
+    fixture.componentInstance.manualError.set(null);
+    fixture.componentInstance.cards.set(false);
+
+    await fixture.whenStable();
+
+    expect(field.hasAttribute('data-manual-invalid')).toBe(false);
+    expect(table.className).not.toContain('grid-cols-1');
+    expect(table.className).not.toContain('sticky');
   });
 
   it('delegates dialog behavior to the native element only when called', async () => {

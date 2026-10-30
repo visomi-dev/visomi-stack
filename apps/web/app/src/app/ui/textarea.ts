@@ -4,7 +4,7 @@ import { textarea as styles, type ControlSize } from '@visomi-stack/web-frontend
 
 @Directive({
   selector: 'textarea[appUI]',
-  host: { '[class]': 'classes()' },
+  host: { 'data-slot': 'control', '[class]': 'classes()' },
 })
 export class Textarea {
   readonly uiSize = input<ControlSize>('md');

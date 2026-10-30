@@ -150,8 +150,14 @@ demo script run in the browser, within the existing CSP. The tests cover all
 families, both languages, JavaScript-disabled controls, dialog focus and Escape,
 local validation, reduced motion and mobile/desktop layouts in both themes.
 
-The compiled catalog loads 2,831 bytes of script bodies: the existing 1,470-byte
-theme script and a 1,361-byte documentation enhancement. The recipes add no
+The compiled catalog loads 2,749 bytes of script bodies: the existing 1,470-byte
+theme script and a 1,279-byte documentation enhancement. The recipes add no
 browser JavaScript. These measurements exclude CSS, fonts and HTTP headers;
 the browser test checks that only those two scripts load and caps their combined
 raw size at 6 KiB.
+
+Field errors and responsive table options are described in the shared library
+README. Their state and layout selectors remain in the component recipes.
+The website catalog and Angular sample demonstrate error reveal/collapse,
+Signal Forms, `mobileCards` and `stickyHeaders`; the website requires no client
+code for error transitions or table layout conversion.

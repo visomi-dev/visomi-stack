@@ -130,6 +130,21 @@
         <source>Activations:</source>
         <target>Activaciones:</target>
       </trans-unit>
+      <trans-unit id="fieldBehaviorTitle" datatype="html"><source>Field validation</source><target>Validación de campos</target></trans-unit>
+      <trans-unit id="fieldEmail" datatype="html"><source>Example email</source><target>Correo de ejemplo</target></trans-unit>
+      <trans-unit id="fieldManualError" datatype="html"><source>This example address is unavailable.</source><target>Esta dirección de ejemplo no está disponible.</target></trans-unit>
+      <trans-unit id="fieldError" datatype="html"><source>Enter a valid email address.</source><target>Escribe un correo electrónico válido.</target></trans-unit>
+      <trans-unit id="fieldCheck" datatype="html"><source>Check example</source><target>Comprobar ejemplo</target></trans-unit>
+      <trans-unit id="fieldManual" datatype="html"><source>Show manual error</source><target>Mostrar error manual</target></trans-unit>
+      <trans-unit id="fieldReset" datatype="html"><source>Reset example</source><target>Reiniciar ejemplo</target></trans-unit>
+      <trans-unit id="tableBehaviorTitle" datatype="html"><source>Responsive table</source><target>Tabla adaptable</target></trans-unit>
+      <trans-unit id="tableCaption" datatype="html"><source>Example workspaces</source><target>Espacios de ejemplo</target></trans-unit>
+      <trans-unit id="tableWorkspace" datatype="html"><source>Workspace</source><target>Espacio</target></trans-unit>
+      <trans-unit id="tableStatus" datatype="html"><source>Status</source><target>Estado</target></trans-unit>
+      <trans-unit id="tableStudio" datatype="html"><source>Studio</source><target>Estudio</target></trans-unit>
+      <trans-unit id="tableReady" datatype="html"><source>Ready</source><target>Listo</target></trans-unit>
+      <trans-unit id="tableSandbox" datatype="html"><source>Sandbox</source><target>Pruebas</target></trans-unit>
+      <trans-unit id="tableDraft" datatype="html"><source>Draft</source><target>Borrador</target></trans-unit>
     </body>
   </file>
 </xliff>

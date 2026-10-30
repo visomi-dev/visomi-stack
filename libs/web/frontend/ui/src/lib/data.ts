@@ -31,11 +31,27 @@ export const avatar = {
 } as const;
 
 export const table = {
-  classes({ density = 'comfortable', striped = false }: { density?: TableDensity; striped?: boolean } = {}): string {
+  classes({
+    density = 'comfortable',
+    striped = false,
+    mobileCards = false,
+    stickyHeaders = false,
+  }: {
+    density?: TableDensity;
+    striped?: boolean;
+    mobileCards?: boolean;
+    stickyHeaders?: boolean;
+  } = {}): string {
     return [
-      'w-full border-collapse text-left text-sm text-zinc-950 dark:text-zinc-50 [&_caption]:pb-4 [&_caption]:text-left [&_caption]:font-medium [&_th]:font-semibold [&_th]:text-zinc-600 dark:[&_th]:text-zinc-300 [&_th]:px-4 [&_td]:px-4 [&_tr]:border-b [&_tr]:border-zinc-200 dark:[&_tr]:border-zinc-700',
+      'w-full border-collapse text-left text-sm text-zinc-950 tabular-nums dark:text-zinc-50 [&_caption]:pb-4 [&_caption]:text-left [&_caption]:font-medium [&_th]:font-semibold [&_th]:text-zinc-600 dark:[&_th]:text-zinc-300 [&_tr]:border-b [&_tr]:border-zinc-200 dark:[&_tr]:border-zinc-700',
+      mobileCards
+        ? '[&_thead]:sr-only md:[&_thead]:not-sr-only md:[&_thead]:table-header-group [&_tbody]:block md:[&_tbody]:table-row-group [&_tbody_tr]:mb-3 [&_tbody_tr]:grid [&_tbody_tr]:grid-cols-1 [&_tbody_tr]:gap-x-4 [&_tbody_tr]:rounded-lg [&_tbody_tr]:border [&_tbody_tr]:p-4 sm:[&_tbody_tr]:grid-cols-2 md:[&_tbody_tr]:mb-0 md:[&_tbody_tr]:table-row md:[&_tbody_tr]:rounded-none md:[&_tbody_tr]:border-0 md:[&_tbody_tr]:border-b md:[&_tbody_tr]:p-0 [&_tbody_td]:block [&_tbody_th]:block md:[&_tbody_td]:table-cell md:[&_tbody_th]:table-cell [&_td]:min-w-0 [&_td]:break-words [&_th]:min-w-0 [&_th]:break-words md:[&_th]:px-4 md:[&_td]:px-4 [&_[data-slot=label]]:mb-1 [&_[data-slot=label]]:block [&_[data-slot=label]]:text-xs [&_[data-slot=label]]:font-semibold [&_[data-slot=label]]:text-zinc-600 dark:[&_[data-slot=label]]:text-zinc-400 md:[&_[data-slot=label]]:hidden'
+        : '[&_th]:px-4 [&_td]:px-4 [&_[data-slot=label]]:hidden',
       density === 'compact' ? '[&_th]:py-2 [&_td]:py-2' : '[&_th]:py-3 [&_td]:py-4',
       striped ? '[&_tbody_tr:nth-child(even)]:bg-zinc-50 dark:[&_tbody_tr:nth-child(even)]:bg-zinc-900' : '',
+      stickyHeaders
+        ? 'md:[&_thead_th]:sticky md:[&_thead_th]:top-0 md:[&_thead_th]:z-10 md:[&_thead_th]:bg-white dark:md:[&_thead_th]:bg-zinc-900'
+        : '',
     ]
       .filter(Boolean)
       .join(' ');

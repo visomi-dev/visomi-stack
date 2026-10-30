@@ -8,6 +8,8 @@ type Props = HTMLAttributes<'p'>;
 const { class: className, ...attributes } = Astro.props;
 ---
 
-<p {...attributes} class:list={[styles.classes(), className]}>
-  <slot />
+<p {...attributes} data-slot="error" aria-live="polite" aria-atomic="true" class:list={[styles.classes(), className]}>
+  <span>
+    <slot />
+  </span>
 </p>

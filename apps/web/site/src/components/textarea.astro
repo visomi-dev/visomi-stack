@@ -8,4 +8,8 @@ type Props = Omit<HTMLAttributes<'textarea'>, 'value'> & { uiSize?: ControlSize 
 const { uiSize = 'md', class: className, ...attributes } = Astro.props;
 ---
 
-<textarea {...attributes} class:list={[styles.classes({ size: uiSize }), className]}><slot /></textarea>
+<textarea
+  {...attributes}
+  data-slot="control"
+  class:list={[styles.classes({ size: uiSize }), className]}
+><slot /></textarea>

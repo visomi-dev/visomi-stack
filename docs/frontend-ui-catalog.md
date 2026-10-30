@@ -88,7 +88,8 @@ needs its own implementation and accessibility validation.
 Application shells, sidebars, top bars, bottom navigation, authentication layouts,
 password strength, PIN input, specialized password/color controls and financial
 formatting remain application-specific compositions. The catalog does not port
-Nive's product logic, Signal Forms integration or authentication flows.
+Nive's product logic or authentication flows. Native controls compose with the
+application's Signal Forms or Reactive Forms model.
 
 ## Documentation and verification
 
@@ -97,3 +98,29 @@ The website provides localized live examples and Angular/Astro usage at
 The Angular adapters are checked through native-control integration tests; the
 website examples exercise the same shared recipes with SSR and small native
 browser enhancements only.
+
+## Field and table behavior
+
+Field error behavior follows the Nive/v0 interaction policy: native user-invalid,
+ARIA-invalid and manual errors reveal after blur; editing collapses the message;
+submitted forms also expose errors for empty required controls. A `compact`
+option adjusts both field gaps and collapsed error spacing. The caller owns the
+submitted flag, validation values and error text. Angular error markup includes
+an inner span; Astro wraps its message slot. An intrinsic CSS Grid transition
+replaces the references' fixed `max-height` cap, so long messages are not clipped.
+Empty messages collapse and reduced motion disables the transition. All state
+selectors live in the shared recipes rather than `styles.base.css`.
+
+The reference table's `mobileCards` option is implemented as a responsive layout:
+body rows become labelled cards below `md`, then restore columns. It does not
+expand and collapse row details. `stickyHeaders` fixes desktop column headings
+within an overflow container. Native headers, caption, explicit roles and
+header/cell associations remain in the markup; decorative mobile labels are
+hidden from assistive technology. Neither feature adds a website framework or
+client table-conversion script.
+
+The website catalog demonstrates both behaviors. Angular's foundations page
+also includes a Signal Forms validation sample and the same responsive table.
+Browser coverage checks native and Signal Forms errors, focus/reset/submission,
+empty and long messages, reduced motion, no-JavaScript validation, mobile labels,
+header semantics and actual header position while scrolling.

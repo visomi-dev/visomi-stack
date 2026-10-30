@@ -4,7 +4,7 @@ import { select as styles, type ControlSize } from '@visomi-stack/web-frontend-u
 
 @Directive({
   selector: 'select[appUI]',
-  host: { '[class]': 'classes()' },
+  host: { 'data-slot': 'control', '[class]': 'classes()' },
 })
 export class Select {
   readonly uiSize = input<ControlSize>('md');

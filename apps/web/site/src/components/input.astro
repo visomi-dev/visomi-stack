@@ -8,4 +8,4 @@ type Props = HTMLAttributes<'input'> & { uiSize?: ControlSize };
 const { uiSize = 'md', class: className, ...attributes } = Astro.props;
 ---
 
-<input {...attributes} class:list={[styles.classes({ size: uiSize }), className]} />
+<input {...attributes} data-slot="control" class:list={[styles.classes({ size: uiSize }), className]} />

@@ -48,8 +48,19 @@ export const fieldset = {
   },
 } as const;
 export const field = {
-  classes(): string {
-    return 'grid min-w-0 gap-2';
+  classes({ compact = false }: { compact?: boolean } = {}): string {
+    return [
+      'flex min-w-0 flex-col',
+      '[&_[data-slot=error]]:grid-rows-[0fr] [&_[data-slot=error]]:invisible [&_[data-slot=error]]:opacity-0',
+      '[&:not(:focus-within):has([data-slot=control]:user-invalid:not(:placeholder-shown):not(:autofill))_[data-slot=error]]:grid-rows-[1fr] [&:not(:focus-within):has([data-slot=control]:user-invalid:not(:placeholder-shown):not(:autofill))_[data-slot=error]]:visible [&:not(:focus-within):has([data-slot=control]:user-invalid:not(:placeholder-shown):not(:autofill))_[data-slot=error]]:opacity-100 [&:not(:focus-within):has([data-slot=control]:user-invalid:not(:placeholder-shown):not(:autofill))_[data-slot=error]]:mt-0',
+      '[&:not(:focus-within):is([data-invalid],[data-manual-invalid]):not(:has([data-slot=control]:placeholder-shown))_[data-slot=error]]:grid-rows-[1fr] [&:not(:focus-within):is([data-invalid],[data-manual-invalid]):not(:has([data-slot=control]:placeholder-shown))_[data-slot=error]]:visible [&:not(:focus-within):is([data-invalid],[data-manual-invalid]):not(:has([data-slot=control]:placeholder-shown))_[data-slot=error]]:opacity-100 [&:not(:focus-within):is([data-invalid],[data-manual-invalid]):not(:has([data-slot=control]:placeholder-shown))_[data-slot=error]]:mt-0',
+      '[&:not(:focus-within):has([data-slot=control][aria-invalid=true]:not(:placeholder-shown))_[data-slot=error]]:grid-rows-[1fr] [&:not(:focus-within):has([data-slot=control][aria-invalid=true]:not(:placeholder-shown))_[data-slot=error]]:visible [&:not(:focus-within):has([data-slot=control][aria-invalid=true]:not(:placeholder-shown))_[data-slot=error]]:opacity-100 [&:not(:focus-within):has([data-slot=control][aria-invalid=true]:not(:placeholder-shown))_[data-slot=error]]:mt-0',
+      '[[data-submitted]_&:not(:focus-within):has([data-slot=control]:invalid,[data-slot=control][aria-invalid=true])_[data-slot=error]]:grid-rows-[1fr] [[data-submitted]_&:not(:focus-within):has([data-slot=control]:invalid,[data-slot=control][aria-invalid=true])_[data-slot=error]]:visible [[data-submitted]_&:not(:focus-within):has([data-slot=control]:invalid,[data-slot=control][aria-invalid=true])_[data-slot=error]]:opacity-100 [[data-submitted]_&:not(:focus-within):has([data-slot=control]:invalid,[data-slot=control][aria-invalid=true])_[data-slot=error]]:mt-0',
+      '[&:is([data-invalid],[data-manual-invalid])_:is([data-slot=control],[data-slot=radio-card])]:border-red-600 dark:[&:is([data-invalid],[data-manual-invalid])_:is([data-slot=control],[data-slot=radio-card])]:border-red-400',
+      '[&:not(:focus-within):has([data-slot=control]:user-invalid:not(:placeholder-shown):not(:autofill))_:is([data-slot=control],[data-slot=radio-card])]:border-red-600 dark:[&:not(:focus-within):has([data-slot=control]:user-invalid:not(:placeholder-shown):not(:autofill))_:is([data-slot=control],[data-slot=radio-card])]:border-red-400',
+      '[[data-submitted]_&:has([data-slot=control]:invalid,[data-slot=control][aria-invalid=true])_:is([data-slot=control],[data-slot=radio-card])]:border-red-600 dark:[[data-submitted]_&:has([data-slot=control]:invalid,[data-slot=control][aria-invalid=true])_:is([data-slot=control],[data-slot=radio-card])]:border-red-400',
+      compact ? 'gap-1.5 [&_[data-slot=error]]:-mt-1.5' : 'gap-2 [&_[data-slot=error]]:-mt-2',
+    ].join(' ');
   },
 } as const;
 export const label = {
@@ -67,7 +78,7 @@ export const description = {
 } as const;
 export const errorMessage = {
   classes(): string {
-    return 'text-sm leading-6 text-red-700 dark:text-red-300';
+    return 'grid min-h-0 grid-rows-[1fr] text-sm leading-6 text-red-700 transition-[grid-template-rows,opacity,margin-top,visibility] duration-200 empty:hidden has-[>span:empty]:hidden motion-reduce:transition-none dark:text-red-300 [&>span]:min-h-0 [&>span]:overflow-hidden';
   },
 } as const;
 export const inputGroup = {

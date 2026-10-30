@@ -8,4 +8,4 @@ type Props = Omit<HTMLAttributes<'input'>, 'type'>;
 const { class: className, ...attributes } = Astro.props;
 ---
 
-<input {...attributes} type="checkbox" class:list={[styles.classes(), className]} />
+<input {...attributes} data-slot="control" type="checkbox" class:list={[styles.classes(), className]} />

@@ -21,22 +21,23 @@ of conflicting utilities in a class string does not define precedence.
 
 ## Recipes and options
 
-| Exports                                                                                                                                                                                     | Options and defaults                                                                              |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `button`, `linkButton`                                                                                                                                                                      | `variant: primary \| secondary \| danger \| ghost` (primary), `size: sm \| md \| lg \| icon` (md) |
-| `heading`                                                                                                                                                                                   | `size: sm \| md \| lg \| xl` (lg)                                                                 |
-| `text`                                                                                                                                                                                      | `size: sm \| md \| lg` (md), `tone: default \| muted` (default)                                   |
-| `code`                                                                                                                                                                                      | `block: boolean` (false)                                                                          |
-| `divider`                                                                                                                                                                                   | `soft: boolean` (false)                                                                           |
-| `container`                                                                                                                                                                                 | `width: sm \| md \| lg \| full` (lg)                                                              |
-| `card`                                                                                                                                                                                      | `tone: default \| raised \| ghost` (default), `padding: sm \| md \| lg` (md)                      |
-| `badge`, `alert`                                                                                                                                                                            | `tone: neutral \| accent \| success \| warning \| danger` (neutral / accent)                      |
-| `avatar`                                                                                                                                                                                    | `size: sm \| md \| lg` (md), `shape: circle \| rounded` (circle)                                  |
-| `table`                                                                                                                                                                                     | `density: comfortable \| compact` (comfortable), `striped: boolean` (false)                       |
-| `input`, `textarea`, `select`                                                                                                                                                               | `size: sm \| md \| lg` (md)                                                                       |
-| `label`                                                                                                                                                                                     | `inline: boolean` (false)                                                                         |
-| `dialog`                                                                                                                                                                                    | `size: sm \| md \| lg` (md)                                                                       |
-| `link`, `pageHeader`, `descriptionList`, `pagination`, `fieldset`, `field`, `description`, `errorMessage`, `checkbox`, `radio`, `toggle`, `radioCard`, `inputGroup`, `loader`, `disclosure` | No visual options                                                                                 |
+| Exports                                                                                                                                                                            | Options and defaults                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `button`, `linkButton`                                                                                                                                                             | `variant: primary \| secondary \| danger \| ghost` (primary), `size: sm \| md \| lg \| icon` (md)      |
+| `heading`                                                                                                                                                                          | `size: sm \| md \| lg \| xl` (lg)                                                                      |
+| `text`                                                                                                                                                                             | `size: sm \| md \| lg` (md), `tone: default \| muted` (default)                                        |
+| `code`                                                                                                                                                                             | `block: boolean` (false)                                                                               |
+| `divider`                                                                                                                                                                          | `soft: boolean` (false)                                                                                |
+| `container`                                                                                                                                                                        | `width: sm \| md \| lg \| full` (lg)                                                                   |
+| `card`                                                                                                                                                                             | `tone: default \| raised \| ghost` (default), `padding: sm \| md \| lg` (md)                           |
+| `badge`, `alert`                                                                                                                                                                   | `tone: neutral \| accent \| success \| warning \| danger` (neutral / accent)                           |
+| `avatar`                                                                                                                                                                           | `size: sm \| md \| lg` (md), `shape: circle \| rounded` (circle)                                       |
+| `table`                                                                                                                                                                            | `density: comfortable \| compact` (comfortable), `striped`, `mobileCards`, `stickyHeaders` (all false) |
+| `input`, `textarea`, `select`                                                                                                                                                      | `size: sm \| md \| lg` (md)                                                                            |
+| `label`                                                                                                                                                                            | `inline: boolean` (false)                                                                              |
+| `dialog`                                                                                                                                                                           | `size: sm \| md \| lg` (md)                                                                            |
+| `field`                                                                                                                                                                            | `compact: boolean` (false)                                                                             |
+| `link`, `pageHeader`, `descriptionList`, `pagination`, `fieldset`, `description`, `errorMessage`, `checkbox`, `radio`, `toggle`, `radioCard`, `inputGroup`, `loader`, `disclosure` | No visual options                                                                                      |
 
 Buttons retain a minimum 44px target (48px for lg). Links use separate recipes
 with native hover states and navigation semantics; there is no simulated disabled
@@ -72,6 +73,54 @@ Markers include `badge`, `avatar`, `text` (span), `container`, `card` (section),
 `dialog appUI #example="appUIDialog"` with `example.showModal()` / `example.close()`
 for modal actions. Modal behavior is native; label the dialog and include a
 close button. Host class bindings preserve additional caller classes.
+
+## Field validation and responsive tables
+
+`field.classes()` scopes control/error state styles to the field. Adapters add
+`data-control`, `data-slot="control"` and `data-slot="error"` automatically.
+The Angular and Astro field adapters accept `compact`, `invalid` and
+`manualError` (string or null). The latter two expose programmatic state; the
+consumer still owns the message and the control's `aria-invalid` value.
+
+Errors stay collapsed while the field has focus and while its control is valid.
+They reveal after blur for nonempty native `:user-invalid` or `aria-invalid`
+controls and manual field errors. Set `data-submitted` on the form or an ancestor
+when a submission/check is attempted so empty required fields also reveal errors
+on blur. Remove that attribute when resetting the form. Empty required fields
+need a placeholder for the pre-submission empty guard. No value accessor or
+form-model abstraction is added.
+
+Associate messages using `aria-describedby`. Do not toggle `hidden` on the error:
+CSS animates its grid track, opacity and spacing, with no fixed message-height
+cap. Reduced motion disables the transition. A direct inner span provides the
+collapsible content; Astro's `ErrorMessage` wraps its slot automatically.
+
+```html
+<form [attr.data-submitted]="attempted() ? '' : null">
+  <div appUI="field">
+    <label appUI for="email">Email</label>
+    <input appUI type="email" id="email" required placeholder="demo@example.test" aria-describedby="email-error" />
+    <p appUI="error" id="email-error"><span>Enter a valid email address.</span></p>
+  </div>
+</form>
+```
+
+`table.classes({ mobileCards: true, stickyHeaders: true })` converts body rows to
+cards below `md`; from `md` it restores native column layout and optionally fixes
+column headers within the nearest scrolling ancestor. `density` and `striped`
+remain independent. The Angular `table[appUI]` and Astro `Table` adapters accept
+the same boolean options. With both false, the existing table layout is retained.
+
+Keep the caption, `scope` and `headers` associations. Use explicit `table`,
+`rowgroup`, `row`, `columnheader`, `rowheader` and `cell` roles when applying the
+responsive display changes. Column headers are visually clipped on mobile and
+remain in the accessibility tree. Put each visible mobile label in a
+`<span data-slot="label" aria-hidden="true">…</span>` inside its cell. This label
+is hidden on desktop and does not duplicate the accessible cell value.
+Use an overflow container for sticky headers and wider non-collapsing tables.
+
+See the website table preview for complete native markup and both applications'
+field samples for native validation and Signal Forms behavior.
 
 ## Astro adapters and documentation
 

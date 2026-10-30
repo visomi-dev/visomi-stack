@@ -45,6 +45,10 @@ export const uiDocs = {
     cardGhost: 'Transparent surface',
     pageTitle: 'Workspace settings',
     pageDescription: 'A reusable heading and action layout.',
+    fieldBehavior:
+      'Errors expand after leaving an invalid field or checking the form. They collapse while editing and when valid.',
+    tableBehavior:
+      'Rows become labelled cards below the md breakpoint. Column headers remain available to assistive technology.',
     fieldsetLegend: 'Example preferences',
     name: 'Display name',
     nameHint: 'Visible to your example workspace.',
@@ -174,6 +178,10 @@ export const uiDocs = {
     cardGhost: 'Superficie transparente',
     pageTitle: 'Ajustes del espacio',
     pageDescription: 'Una cabecera reutilizable con acciones.',
+    fieldBehavior:
+      'Los errores se expanden al salir de un campo inválido o comprobar el formulario. Se ocultan al editar y cuando el campo es válido.',
+    tableBehavior:
+      'Las filas se convierten en tarjetas con etiquetas antes de md. Las cabeceras siguen disponibles para tecnologías de asistencia.',
     fieldsetLegend: 'Preferencias de ejemplo',
     name: 'Nombre visible',
     nameHint: 'Visible en tu espacio de ejemplo.',

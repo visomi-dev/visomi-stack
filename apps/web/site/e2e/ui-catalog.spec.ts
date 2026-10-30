@@ -164,9 +164,13 @@ test('local validation associates errors without sending data', async ({ page })
 
   await expect(input).toHaveAttribute('aria-invalid', 'true');
 
-  await expect(error).toBeVisible();
-
   await expect(input).toBeFocused();
+
+  await expect(error).not.toBeVisible();
+
+  await page.locator('#input h3').click();
+
+  await expect(error).toBeVisible();
 
   await expect(page.locator('[data-ui-validation-status]')).toHaveText('Review the highlighted example field.');
 
