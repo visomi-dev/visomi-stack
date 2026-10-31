@@ -46,6 +46,10 @@ if (telemetry) {
   app.use('/telemetry', browserTelemetry.router);
 }
 
+app.get('/telemetry/config', (_request, response) =>
+  response.set('cache-control', 'no-store').json({ enabled: false }),
+);
+
 app.use((request, response, next) => {
   if (decodeURIComponent(request.path).toLowerCase().endsWith('.map')) {
     response.sendStatus(404);

@@ -324,7 +324,9 @@ and [BullMQ production guidance](https://docs.bullmq.io/guide/going-to-productio
 ### Browser error reporting
 
 Browser error reporting is separately opt-in. Set `VISOMI_BROWSER_TELEMETRY=true`
-and `BROWSER_TELEMETRY_ORIGIN=https://stack.visomi.dev` on the gateway after the
+to enable the intake. Without it, `/telemetry/config` returns `{ "enabled": false }`
+and browser reports are not transmitted. Set
+`BROWSER_TELEMETRY_ORIGIN=https://stack.visomi.dev` on the gateway after the
 new executable is deployed. The desired IaC configuration includes these fields;
 merging the code does not apply `.railway/railway.ts`. Keep native Railway tracing
 disabled. `VISOMI_OTLP_TRACING=true` and the existing private OTLP credentials are

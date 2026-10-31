@@ -50,6 +50,11 @@ export function createGatewayApp(options: {
     app.use('/telemetry', options.browserTelemetry.router);
   }
 
+  // Disabled capture must not produce a failed resource request on every page.
+  app.get('/telemetry/config', (_request, response) =>
+    response.set('cache-control', 'no-store').json({ enabled: false }),
+  );
+
   if (options.auth) {
     app.use(options.auth.middleware);
   }

@@ -38,6 +38,24 @@ function apiFixture(handler: RequestHandler = (request, response) => response.js
 }
 
 describe('gateway composition', () => {
+  it('serves a silent disabled configuration without entering authentication', async () => {
+    const authenticate = vi.fn<RequestHandler>();
+    const inspect = vi.fn();
+    const result = await dispatch(
+      createGatewayApp({
+        api: apiFixture(),
+        auth: {
+          middleware: [authenticate],
+        } as EmbeddedAuthentication,
+      }),
+      '/telemetry/config',
+      inspect,
+    );
+
+    expect(result).toEqual({ status: 200, body: { enabled: false } });
+    expect(inspect.mock.calls[0][0]['cache-control']).toBe('no-store');
+    expect(authenticate).not.toHaveBeenCalled();
+  });
   it.each(['/main.js.map', '/main.js%2Emap'])('keeps source maps private for %s', async (path) => {
     const handler = vi.fn<RequestHandler>();
     const result = await dispatch(
