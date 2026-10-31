@@ -1,4 +1,6 @@
-FROM node:24.15.0-bookworm-slim AS base
+FROM node:24.15.0-bookworm-slim@sha256:4e6b70dd6cbfc88c8157ba19aa3d9f9cce6ba4703576d55459e45efcbc9c5f5d AS node-runtime
+
+FROM node-runtime AS base
 
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
@@ -43,7 +45,16 @@ ENV APP_NAME=${APP_NAME}
 
 CMD ["sh", "-c", "exec node \"$(cat app-entrypoint)\""]
 
-FROM base AS runtime
+FROM base AS production-deps
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches ./patches
+
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+
+FROM node-runtime AS runtime
 
 ARG APP_NAME=web-gateway
 
@@ -54,13 +65,12 @@ ENV HOST=0.0.0.0
 ENV PORT=8080
 ENV APP_NAME=${APP_NAME}
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY patches ./patches
-
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
-
+COPY --from=production-deps /app/node_modules ./node_modules
+COPY package.json ./
 COPY --from=build /workspace/dist/apps/web ./dist/apps/web
 COPY --from=build /workspace/app-entrypoint ./app-entrypoint
+
+USER node
 
 EXPOSE 8080
 

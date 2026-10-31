@@ -51,7 +51,14 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "node --import tsx libs/backend/shared/tools/mail/build-templates.ts --check"
-      }
+      },
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.prettierrc.json",
+        {
+          "externalDependencies": ["mjml", "prettier"]
+        }
+      ]
     },
     "test": {
       "dependsOn": ["emails-build"]

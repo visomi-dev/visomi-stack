@@ -99,7 +99,11 @@
         "{workspaceRoot}/compose.test.yaml",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/pnpm-lock.yaml",
-        "{workspaceRoot}/pnpm-workspace.yaml"
+        "{workspaceRoot}/pnpm-workspace.yaml",
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
       ]
     },
     "lint": {

@@ -12,6 +12,20 @@
           "projects": ["web-app"],
           "target": "build"
         }
+      ],
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "externalDependencies": ["@playwright/test"]
+        },
+        {
+          "env": "CI"
+        },
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
       ]
     },
     "typecheck": {
