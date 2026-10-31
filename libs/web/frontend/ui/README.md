@@ -98,7 +98,7 @@ import their siblings directly rather than importing the public barrel.
 <a appUI="button" href="/app/en/">Continue</a>
 <app-field
   #emailField="appField"
-  controlId="email"
+  control-id="email"
   label="Email"
   description="Use a synthetic address."
   error="Enter a valid email address."
@@ -122,6 +122,11 @@ consumer never supplies that implementation wrapper. Components use kebab-case
 selectors; directives retain the `appUI` convention. ESLint validates both
 component selector kinds with the normal `app` prefix rule.
 
+Component input names use kebab-case in templates: `control-id`, `manual-error`,
+`content-id` and `skip-label`. Signal members and template helpers remain
+camelCase in TypeScript. The no-input-rename lint rule allows these explicit
+component aliases; directive selectors and directive inputs retain camelCase.
+
 Visual size is `uiSize` except on buttons and button links, whose API uses `size`.
 Native input `size` remains numeric. Projected controls keep their own native
 attributes, events and Angular form bindings. The field adds no value accessor.
@@ -144,7 +149,7 @@ Astro has matching server adapters: `app-shell.astro`, `sidebar.astro`,
 `topbar.astro`, `navbar.astro` and `nav-item.astro` (a native anchor).
 
 ```html
-<app-shell contentId="workspace-main" skipLabel="Skip to content">
+<app-shell content-id="workspace-main" skip-label="Skip to content">
   <app-sidebar label="Primary navigation">
     <a data-slot="brand" href="/app/en/">Workspace</a>
     <a appUI="nav-item" routerLink="/settings" routerLinkActive ariaCurrentWhenActive="page">Settings</a>
@@ -172,7 +177,7 @@ and `footer` slots, with default content projected into its own main. Sidebar
 uses `brand` and `footer` slots, and Topbar uses a `title` slot.
 
 Both shell adapters require a stable unique content ID and localized skip label:
-Angular uses `contentId` / `skipLabel`, and Astro uses `content-id` / `skip-label`.
+Both Angular and Astro use `content-id` / `skip-label` in templates.
 They own one focusable main and its skip link; do not nest a main
 inside them. Sidebar requires a localized `label`; native nav elements require
 an accessible name. Desktop starts at `lg` (1024px): the sidebar is sticky with
@@ -245,11 +250,10 @@ they are not forced into a text-link style. No disabled-link behavior is added.
 
 ## Field validation and responsive tables
 
-The Angular `Field` requires `controlId` and `label`; Astro's `Field` requires
-`control-id` and `label`.
+The Angular and Astro `Field` components require `control-id` and `label`.
 They own the label, optional `description`, and `error` presentation, while
 projecting the native control. They also accept `compact`, `invalid` and
-`manualError` in Angular or `manual-error` in Astro (string or null). A nonempty manual error overrides the normal
+`manual-error` (string or null). A nonempty manual error overrides the normal
 error text. Validation and the control's `aria-invalid` remain consumer-owned.
 
 Provide a unique, stable control ID. Both components derive description and
@@ -272,10 +276,10 @@ without a fixed height cap. Reduced motion disables the transition.
 <form [attr.data-submitted]="attempted() ? '' : null">
   <app-field
     #emailField="appField"
-    controlId="email"
+    control-id="email"
     label="Email"
     [error]="emailError()"
-    [manualError]="serverError()"
+    [manual-error]="serverError()"
   >
     <input
       appUI
@@ -325,8 +329,9 @@ Native attributes and slots are forwarded. No framework hydration is needed.
 Multiword Astro props use kebab-case. Destructure them into camelCase TypeScript
 locals where needed, for example `const { 'ui-size': uiSize = 'md' } = Astro.props`.
 The multiword public props are `ui-size`, `control-id`, `manual-error`, `content-id`,
-`skip-label`, `mobile-cards` and `sticky-headers`. Angular inputs and the shared
-recipe options retain their camelCase names.
+`skip-label`, `mobile-cards` and `sticky-headers`. Angular component inputs also
+use kebab-case; Angular directive inputs and shared recipe options retain their
+camelCase names.
 
 The website catalog at `/en/ui/` and `/es/ui/` contains all 37 families with live
 previews and Angular/Astro/recipe examples. Only the theme and small native demo

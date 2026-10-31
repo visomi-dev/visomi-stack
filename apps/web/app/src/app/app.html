@@ -1,4 +1,4 @@
-<app-shell id="top" contentId="main" skipLabel="Skip to content" i18n-skipLabel="@@skip">
+<app-shell id="top" content-id="main" skip-label="Skip to content" i18n-skip-label="@@skip">
   <app-sidebar label="Primary navigation" i18n-label="@@shellPrimary">
     <a
       data-slot="brand"
@@ -179,11 +179,11 @@
     >
       <app-field
         #exampleField="appField"
-        controlId="angular-email"
+        control-id="angular-email"
         label="Example email"
         i18n-label="@@fieldEmail"
         [error]="emailError"
-        [manualError]="manualInvalid() ? manualEmailError : null"
+        [manual-error]="manualInvalid() ? manualEmailError : null"
       >
         <input
           appUI

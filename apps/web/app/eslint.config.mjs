@@ -28,6 +28,16 @@ export default [
     },
   },
   {
+    files: ['**/ui/forms/field.ts', '**/ui/layout/app-shell.ts'],
+    rules: {
+      // Component template APIs use kebab-case while TypeScript members remain camelCase.
+      '@angular-eslint/no-input-rename': [
+        'error',
+        { allowedNames: ['control-id', 'manual-error', 'content-id', 'skip-label'] },
+      ],
+    },
+  },
+  {
     files: ['**/*.html'],
     // Override or add rules here
     rules: {},

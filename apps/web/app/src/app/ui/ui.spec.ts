@@ -25,7 +25,7 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
 @Component({
   imports: [UI_IMPORTS, ReactiveFormsModule],
   template: `
-    <app-shell contentId="catalog-main" skipLabel="Skip to content">
+    <app-shell content-id="catalog-main" skip-label="Skip to content">
       <app-sidebar label="Primary"><a appUI="nav-item" href="#example" aria-current="page">Home</a></app-sidebar>
       <header app-topbar><span data-slot="title">Workspace</span></header>
       <nav appUI="navbar" aria-label="Primary"><a appUI="nav-item" placement="navbar" href="#example">Home</a></nav>
@@ -59,12 +59,12 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
         <legend appUI>Preferences</legend>
         <app-field
           #exampleField="appField"
-          controlId="email"
+          control-id="email"
           label="Email"
           description="Example address"
           error="Invalid address"
           [compact]="compact()"
-          [manualError]="manualError()"
+          [manual-error]="manualError()"
         >
           <input
             appUI
@@ -145,7 +145,7 @@ class SignalFields {
   imports: [Field, Input, ReactiveFormsModule],
   template: `
     <form [formGroup]="group">
-      <app-field #emailField="appField" controlId="group-email" label="Email">
+      <app-field #emailField="appField" control-id="group-email" label="Email">
         <input appUI formControlName="email" [id]="emailField.controlId()" />
       </app-field>
     </form>
@@ -159,7 +159,7 @@ describe('native Angular UI catalog', () => {
   it('owns message structure and deterministic association IDs', async () => {
     const fixture = TestBed.createComponent(Field);
 
-    fixture.componentRef.setInput('controlId', 'customer-email');
+    fixture.componentRef.setInput('control-id', 'customer-email');
     fixture.componentRef.setInput('label', 'Email');
     fixture.componentRef.setInput('description', 'Example address');
     fixture.componentRef.setInput('error', 'Invalid example');
@@ -184,8 +184,8 @@ describe('native Angular UI catalog', () => {
 
     expect(component.describedBy()).toBeNull();
     expect(message.hidden).toBe(true);
-    fixture.componentRef.setInput('controlId', 'updated-email');
-    fixture.componentRef.setInput('manualError', 'Manual example error');
+    fixture.componentRef.setInput('control-id', 'updated-email');
+    fixture.componentRef.setInput('manual-error', 'Manual example error');
 
     await fixture.whenStable();
 

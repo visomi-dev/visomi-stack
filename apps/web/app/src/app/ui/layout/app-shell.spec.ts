@@ -10,7 +10,7 @@ import type { ShellLayout } from '@visomi-stack/web-frontend-ui';
 @Component({
   imports: [AppShell, Sidebar, Topbar, Navbar, NavItem, Button, Link, RouterLink],
   template: `
-    <app-shell contentId="workspace-main" skipLabel="Skip navigation" [layout]="layout()">
+    <app-shell content-id="workspace-main" skip-label="Skip navigation" [layout]="layout()">
       <app-sidebar label="Primary">
         <a data-slot="brand" href="/">Brand</a>
         <a appUI="nav-item" [routerLink]="['/settings']" [queryParams]="{ tab: 'profile' }" aria-current="page"

@@ -161,9 +161,10 @@ A native host and a component are compatible: `ErrorMessage` is a component on
 `p[app-error]`, while `Field` is a composition component with projected controls.
 Buttons, inputs, selects and the styling-only table remain directives.
 
-`Field` takes a small presentation API (`controlId`, `label`, `description`,
-`error`, `compact`, `invalid`, `manualError`). Astro spells the multiword props
-`control-id` and `manual-error`. The components derive stable association IDs;
+`Field` takes a small presentation API (`control-id`, `label`, `description`,
+`error`, `compact`, `invalid`, `manual-error`) in both framework templates.
+Angular keeps camelCase TypeScript members behind explicit input aliases.
+The components derive stable association IDs;
 Angular also exposes helpers for native bindings. They do not take ownership of
 form values, validators or submission policy. Projected Signal Forms and
 Reactive Forms controls remain native; no new form abstraction is introduced.

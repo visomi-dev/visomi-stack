@@ -41,7 +41,7 @@ const labels = uiDocs[locale];
   id="field"
   locale={locale}
   angular={
-    '<app-field #nameField="appField" controlId="name" label="Name" description="Visible name."><input appUI [id]="nameField.controlId()" [attr.aria-describedby]="nameField.describedBy()" /></app-field>'
+    '<app-field #nameField="appField" control-id="name" label="Name" description="Visible name."><input appUI [id]="nameField.controlId()" [attr.aria-describedby]="nameField.describedBy()" /></app-field>'
   }
   astro={
     '<Field control-id="name" label="Name" description="Visible name."><Input id="name" aria-describedby="name-help" /></Field>'
