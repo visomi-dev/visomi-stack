@@ -43,9 +43,12 @@ test('reports browser failures without private data and keeps source maps privat
   });
 
   await page.evaluate((asset) => {
+    const error = new RangeError('SYNTHETIC_PRIVATE_BROWSER_MARKER');
+
+    error.stack = `RangeError: SYNTHETIC_PRIVATE_BROWSER_MARKER\n at synthetic (${window.location.origin}${asset.path}:1:1)`;
     window.dispatchEvent(
       new ErrorEvent('error', {
-        error: new RangeError('SYNTHETIC_PRIVATE_BROWSER_MARKER'),
+        error,
         filename: window.location.origin + asset.path,
         lineno: 1,
         colno: 1,
@@ -58,7 +61,7 @@ test('reports browser failures without private data and keeps source maps privat
   expect(reports.map((report) => report.status)).toEqual([202, 202, 202]);
   expect(reports.map((report) => report.payload)).toEqual([
     { application: 'web-app', code: 'unhandled_exception', kind: 'TypeError', screen: 'home' },
-    { application: 'web-app', code: 'unhandled_rejection', kind: 'unknown', screen: 'home' },
+    { application: 'web-app', code: 'unhandled_exception', kind: 'unknown', screen: 'home' },
     {
       application: 'web-app',
       code: 'unhandled_exception',

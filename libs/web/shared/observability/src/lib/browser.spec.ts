@@ -136,6 +136,45 @@ describe('browser error capture policy', () => {
     f.reporter.stop();
   });
 
+  it('lets frameworks own global listeners and shares in-flight reports of the same error', async () => {
+    const browser = Object.assign(new EventTarget(), {
+      fetch: vi.fn<typeof fetch>().mockResolvedValue(new Response(undefined, { status: 202 })),
+      location: new URL('https://frontend.example.test/app/en/'),
+    });
+    let resolveConfiguration!: (response: Response) => void;
+
+    browser.fetch.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveConfiguration = resolve;
+        }),
+    );
+    const add = vi.spyOn(browser, 'addEventListener');
+    const remove = vi.spyOn(browser, 'removeEventListener');
+    const reporter = createBrowserReporter('web-app', browser as unknown as Window, { globalErrors: false });
+    const error = new TypeError(marker);
+    const frameworkReport = reporter.report('unhandled_exception', error);
+    const startupReport = reporter.report('startup_failed', error);
+
+    expect(startupReport).toBe(frameworkReport);
+
+    await vi.waitFor(() => expect(browser.fetch).toHaveBeenCalledOnce());
+
+    resolveConfiguration(Response.json(config));
+
+    await startupReport.finally(() => reporter.stop());
+
+    expect(browser.fetch).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(String(browser.fetch.mock.calls[1][1]?.body))).toEqual({
+      application: 'web-app',
+      code: 'unhandled_exception',
+      kind: 'TypeError',
+      screen: 'home',
+    });
+    expect(add).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
+  });
+
   it.each([
     {},
     null,

@@ -338,6 +338,23 @@ public origin. It owns its telemetry runtime and closes it on SIGTERM/SIGINT.
 service version is `unknown`. Only the Node entrypoint can import backend telemetry;
 Angular browser code uses the portable TypeScript capture library.
 
+Angular uses `provideBrowserGlobalErrorListeners()` and a custom `ErrorHandler`
+that delegates to the `BrowserTelemetry` service. The browser entrypoint creates
+one reporter, supplies it through dependency injection, and reuses it if bootstrap
+fails. The same error object shares its pending report across those paths; shutdown
+waits for that report. The service stops the reporter when Angular is destroyed.
+No reporter is supplied during SSR. Raw diagnostics are printed only in browser
+development builds; production browser reporting and SSR logs stay filtered.
+
+Angular forwards both global errors and unhandled rejection reasons to the same
+handler, so both use `unhandled_exception`; Astro's own listeners distinguish
+`unhandled_rejection`. Source positions come from approved asset frames in the
+error's stack, inspected locally without exporting the stack. Angular's native
+handler does not forward the original `ErrorEvent` source fields when it already
+has an error object. The functional HTTP interceptor observes same-origin `/api/`
+network failures and 5xx errors, then propagates the original error to consumers.
+It does not change request bodies, headers, or application error handling.
+
 The browser POSTs individual reports to `/telemetry/errors`; it never receives
 collector credentials. `/telemetry/config` supplies a short-lived reporting permit
 and a public build asset allowlist with `Cache-Control: no-store`. POSTs require the

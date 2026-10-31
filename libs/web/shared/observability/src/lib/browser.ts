@@ -75,13 +75,18 @@ export function browserLocation(
   return undefined;
 }
 
-export function createBrowserReporter(application: BrowserApplication, browser: Window) {
+export function createBrowserReporter(
+  application: BrowserApplication,
+  browser: Window,
+  options: { globalErrors?: boolean } = {},
+) {
   const transport = browser.fetch.bind(browser);
   let configuration: BrowserTelemetryConfig | undefined;
   let stopped = false;
   let windowStart = Date.now();
   let count = 0;
   const seen = new Set<string>();
+  const errorReports = new WeakMap<object, Promise<void>>();
   let refreshedAt = Date.now();
   let ready = loadConfiguration();
 
@@ -126,7 +131,31 @@ export function createBrowserReporter(application: BrowserApplication, browser: 
       .catch(() => undefined);
   }
 
-  async function report(
+  function report(
+    code: BrowserErrorCode,
+    error?: unknown,
+    source?: { filename: string; lineno: number; colno: number },
+    correlation?: string,
+  ): Promise<void> {
+    if (typeof error !== 'object' || error === null) {
+      return sendReport(code, error, source, correlation);
+    }
+
+    const existing = errorReports.get(error);
+
+    if (existing) {
+      return existing;
+    }
+
+    // Framework error handling and bootstrap rejection can observe the same failure.
+    const pending = sendReport(code, error, source, correlation);
+
+    errorReports.set(error, pending);
+
+    return pending;
+  }
+
+  async function sendReport(
     code: BrowserErrorCode,
     error?: unknown,
     source?: { filename: string; lineno: number; colno: number },
@@ -196,8 +225,10 @@ export function createBrowserReporter(application: BrowserApplication, browser: 
     void report('unhandled_rejection', event.reason);
   }
 
-  browser.addEventListener('error', onError);
-  browser.addEventListener('unhandledrejection', onRejection);
+  if (options.globalErrors !== false) {
+    browser.addEventListener('error', onError);
+    browser.addEventListener('unhandledrejection', onRejection);
+  }
 
   return {
     report,
@@ -224,8 +255,10 @@ export function createBrowserReporter(application: BrowserApplication, browser: 
     },
     stop(): void {
       stopped = true;
-      browser.removeEventListener('error', onError);
-      browser.removeEventListener('unhandledrejection', onRejection);
+      if (options.globalErrors !== false) {
+        browser.removeEventListener('error', onError);
+        browser.removeEventListener('unhandledrejection', onRejection);
+      }
     },
   };
 }

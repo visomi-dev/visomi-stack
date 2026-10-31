@@ -1,23 +1,13 @@
-import { isPlatformBrowser, DOCUMENT } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
-import { DestroyRef, ErrorHandler, Service, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { ErrorHandler, Service, PLATFORM_ID, inject, isDevMode } from '@angular/core';
 
-import { createBrowserReporter } from '@visomi-stack/web-shared-observability';
+import { BrowserTelemetry } from './browser-telemetry';
 
 @Service()
 export class BrowserErrors implements ErrorHandler {
-  private readonly document = inject(DOCUMENT);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly telemetry = inject(BrowserTelemetry);
 
-  private readonly browser = isPlatformBrowser(inject(PLATFORM_ID)) ? this.document.defaultView : null;
-  private readonly reporter =
-    this.browser && typeof this.browser.fetch === 'function'
-      ? createBrowserReporter('web-app', this.browser)
-      : undefined;
-
-  constructor() {
-    this.destroyRef.onDestroy(() => this.reporter?.stop());
-  }
+  private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
 
   handleError(error: unknown): void {
     if (!this.browser) {
@@ -26,29 +16,10 @@ export class BrowserErrors implements ErrorHandler {
       return;
     }
 
-    void this.reporter?.report('unhandled_exception', error);
-  }
-
-  requestFailed(url: string, error: unknown): void {
-    if (!this.browser || !(error instanceof HttpErrorResponse) || (error.status !== 0 && error.status < 500)) {
-      return;
+    if (isDevMode()) {
+      console.error(error);
     }
 
-    let endpoint: URL;
-
-    try {
-      endpoint = new URL(url, this.browser.location.origin);
-    } catch {
-      return;
-    }
-
-    if (endpoint.origin === this.browser.location.origin && endpoint.pathname.startsWith('/api/')) {
-      void this.reporter?.report(
-        'request_failed',
-        undefined,
-        undefined,
-        error.headers.get('x-telemetry-context') ?? undefined,
-      );
-    }
+    this.telemetry.report('unhandled_exception', error);
   }
 }
