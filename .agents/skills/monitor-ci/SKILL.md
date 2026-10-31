@@ -19,12 +19,6 @@ $ARGUMENTS
 
 **Important:** If user provides specific instructions, respect them over default behaviors described below.
 
-## Read-only default and action authorization
-
-A request to check, watch, or monitor CI authorizes observation and reporting only. Do not apply fixes, commit, push, reject proposed fixes, rerun workflows, or change configuration unless the user explicitly included those actions. The action recipes below describe capabilities, not permission. In read-only mode, report the proposed action and continue or stop according to the requested monitoring scope.
-
-Use this skill only when Nx Cloud is configured. Otherwise use the actual CI provider for the requested read-only check; do not block ordinary CI inspection or require a cloud subscription.
-
 ## Configuration Defaults
 
 | Setting                   | Default       | Description                                                               |
@@ -50,10 +44,10 @@ Before starting the monitoring loop, verify the workspace is connected to Nx Clo
 2. **If `nx.json` missing OR neither property exists** → exit with:
 
    ```
-   Nx Cloud is not configured for this workspace. Use the configured CI provider for this request.
+   Nx Cloud not connected. Unlock 70% faster CI and auto-fix broken PRs with https://nx.dev/nx-cloud
    ```
 
-3. **If connected** → continue to main loop, preserving the read-only default unless changes were explicitly requested.
+3. **If connected** → continue to main loop
 
 ## Architecture Overview
 
@@ -105,7 +99,7 @@ The `ci_information` tool accepts `branch` (optional, defaults to current git br
 
 The `update_self_healing_fix` tool accepts a `shortLink` and an action: `APPLY`, `REJECT`, or `RERUN_ENVIRONMENT_STATE`.
 
-## Status handling and gated action recipes
+## Default Behaviors by Status
 
 The decision script returns one of the following statuses. This table defines the **default behavior** for each. User instructions can override any of these.
 
@@ -228,7 +222,7 @@ When decision script returns `action == "done"`:
 1. Run cycle-check (Step 4) **before** handling the code
 2. Check the returned `code`
 3. Look up default behavior in the table above
-4. Check the authorized scope. In read-only mode, report any proposed mutation instead of executing it.
+4. Check if user instructions override the default
 5. Execute the appropriate action
 6. **If action expects new CI Attempt**, update tracking (see Step 3a)
 7. If action results in looping, go to Step 2

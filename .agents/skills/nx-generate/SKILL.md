@@ -52,9 +52,26 @@ Pay attention to required options, defaults that might need overriding, and opti
 
 ### Library Buildability
 
-Prefer a non-buildable internal library when its consumer compiles the source and no independent artifact is required. Use a buildable library when it needs its own artifact, publication, or another verified build boundary.
+**Default to non-buildable libraries** unless there's a specific reason for buildable.
 
-Generator defaults and flags differ by plugin and version. Inspect the selected generator's installed help/schema; do not infer non-buildability from an omitted bundler flag. For a Node generator that exposes buildable, set --buildable=false explicitly when requested. Preserve the separate rule that the gateway imports compiled application exports; an internal source library and an executable application's public artifact are different boundaries.
+| Type                        | When to use                                                       | Generator flags                     |
+| --------------------------- | ----------------------------------------------------------------- | ----------------------------------- |
+| **Non-buildable** (default) | Internal monorepo libs consumed by apps                           | No `--bundler` flag                 |
+| **Buildable**               | Publishing to npm, cross-repo sharing, stable libs for cache hits | `--bundler=vite` or `--bundler=swc` |
+
+Non-buildable libs:
+
+- Export `.ts`/`.tsx` source directly
+- Consumer's bundler compiles them
+- Faster dev experience, less config
+
+Buildable libs:
+
+- Have their own build target
+- Useful for stable libs that rarely change (cache hits)
+- Required for npm publishing
+
+**If unclear, ask the user:** "Should this library be buildable (own build step, better caching) or non-buildable (source consumed directly, simpler setup)?"
 
 ### 4. Read Generator Source Code
 
@@ -105,7 +122,7 @@ npx nx g @nx/react:library --directory=libs/my-lib --dry-run --no-interactive
 
 Review the output carefully. If files would be created in the wrong location, adjust your options based on what you learned from the generator source code.
 
-Note: Some generators don't support dry-run (e.g., if they install npm packages). If dry-run fails for this reason, explain the side effects and confirm the existing request covers them before a real run; a failed preview is not additional authorization.
+Note: Some generators don't support dry-run (e.g., if they install npm packages). If dry-run fails for this reason, proceed to running the generator for real.
 
 ### 7. Run the Generator
 
@@ -132,10 +149,10 @@ Generators provide a starting point. Modify the output as needed to:
 Format all generated/modified files:
 
 ```bash
-pnpm nx format:write --files=path/to/changed-file.ts
+nx format --fix
 ```
 
-Use the repository's configured formatter. Check the diff afterward because Nx formatting can also touch root configuration files. For intentionally staged-only formatting, preserve the existing lint-staged workflow instead.
+This example is for built-in nx formatting with prettier. There might be other formatting tools for this workspace, use these when appropriate.
 
 Then verify the generated code works. Keep in mind that the changes you make with a generator or subsequent modifications might impact various projects so it's usually not enough to only run targets for the artifact you just created.
 
