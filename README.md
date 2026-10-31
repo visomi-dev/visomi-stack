@@ -87,4 +87,5 @@ installation with `pnpm install --frozen-lockfile` has also been verified.
 - [Web foundations](docs/web-foundations.md): styling, themes, localized UI, SSR and Express integration.
 - [Architecture](docs/architecture.md): current structure, intended topology, and open decisions.
 - [Development](docs/development.md): project discovery, verification, contribution conventions, and maintenance.
+- [Railway deployment](docs/railway.md): CI checks, production container, infrastructure plans, and release setup.
 - [Agent guidance](AGENTS.md): repository instructions for coding agents.

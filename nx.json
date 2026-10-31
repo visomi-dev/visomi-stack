@@ -8,7 +8,18 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json"
     ],
-    "sharedGlobals": []
+    "sharedGlobals": [
+      "{workspaceRoot}/.github/workflows/ci.yml",
+      "{workspaceRoot}/nx.json",
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/pnpm-lock.yaml",
+      "{workspaceRoot}/pnpm-workspace.yaml",
+      "{workspaceRoot}/.node-version",
+      "{workspaceRoot}/patches/**/*"
+    ],
+    "webStyles": ["{workspaceRoot}/styles.base.css", "{workspaceRoot}/theme.base.js", "{workspaceRoot}/.postcssrc.json"]
   },
   "plugins": [
     {

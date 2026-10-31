@@ -5,6 +5,30 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "deployment-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc --noEmit --module nodenext --moduleResolution nodenext --target es2022 --skipLibCheck .railway/railway.ts",
+          "eslint .railway/railway.ts tools/deployment/*.mjs",
+          "bash -n tools/deployment/container.sh",
+          "node --test tools/deployment/affected.spec.mjs"
+        ],
+        "parallel": false
+      },
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.railway/**/*",
+        "{workspaceRoot}/tools/deployment/**/*",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        {
+          "externalDependencies": ["typescript", "eslint", "railway"]
+        },
+        "{workspaceRoot}/apps/web/*/project.json",
+        "{workspaceRoot}/libs/**/project.json"
+      ]
+    },
     "prune-lockfile": {
       "dependsOn": ["build"],
       "cache": true,
@@ -89,7 +113,11 @@
         "{workspaceRoot}/compose.test.yaml",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/pnpm-lock.yaml",
-        "{workspaceRoot}/pnpm-workspace.yaml"
+        "{workspaceRoot}/pnpm-workspace.yaml",
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
       ]
     },
     "typecheck-tests": {
@@ -120,6 +148,25 @@
     },
     "build": {
       "dependsOn": ["^build"]
+    },
+    "container-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "production",
+        "^production",
+        "webStyles",
+        "{workspaceRoot}/libs/backend/shared/**/*",
+        "{workspaceRoot}/libs/web/backend/shared/**/*",
+        "{workspaceRoot}/libs/web/frontend/ui/**/*",
+        "{workspaceRoot}/Dockerfile",
+        "{workspaceRoot}/.dockerignore",
+        "{workspaceRoot}/tools/deployment/**/*",
+        "{workspaceRoot}/.railway/**/*"
+      ],
+      "options": {
+        "command": "bash tools/deployment/container.sh"
+      }
     }
   },
   "implicitDependencies": ["web-api", "web-site"]

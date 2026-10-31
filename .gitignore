@@ -53,3 +53,6 @@ __screenshots__/
 
 # Astro generated declarations and caches
 **/.astro/
+
+# Generated infrastructure plans are reviewed in CI artifacts.
+/railway-plan*.json

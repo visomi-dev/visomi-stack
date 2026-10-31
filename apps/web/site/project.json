@@ -59,13 +59,37 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "eslint apps/web/site theme.base.js"
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/theme.base.js",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        {
+          "externalDependencies": ["eslint"]
+        }
+      ]
     },
     "e2e": {
       "dependsOn": [
         {
           "projects": ["web-gateway"],
           "target": "build"
+        }
+      ],
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "externalDependencies": ["@playwright/test"]
+        },
+        {
+          "env": "CI"
+        },
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
         }
       ]
     }

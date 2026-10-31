@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NX_DAEMON: 'false'
+  ASTRO_TELEMETRY_DISABLED: '1'
+  VISOMI_TEST_COMPOSE: docker
+  NX_TASK_COMMAND: ${{ github.event_name == 'workflow_dispatch' && 'run-many' || 'affected' }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      e2e-projects: ${{ steps.selection.outputs.e2e-projects }}
+      has-e2e: ${{ steps.selection.outputs.has-e2e }}
+      has-container: ${{ steps.selection.outputs.has-container }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: nrwl/nx-set-shas@e602fada7ad5987b0f7b1905e7a99ea1c661514c # v5.1.0
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Select affected E2E and container checks
+        id: selection
+        env:
+          FULL_CHECK: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          selection=()
+          if [ "$FULL_CHECK" != true ]; then
+            selection+=(--affected)
+          fi
+          pnpm nx show projects "${selection[@]}" -t e2e --json > "$RUNNER_TEMP/e2e-projects.json"
+          pnpm nx show projects "${selection[@]}" -t container-check --json > "$RUNNER_TEMP/container-projects.json"
+          echo "e2e-projects=$(jq -c . "$RUNNER_TEMP/e2e-projects.json")" >> "$GITHUB_OUTPUT"
+          echo "has-e2e=$(jq 'length > 0' "$RUNNER_TEMP/e2e-projects.json")" >> "$GITHUB_OUTPUT"
+          echo "has-container=$(jq 'length > 0' "$RUNNER_TEMP/container-projects.json")" >> "$GITHUB_OUTPUT"
+      - name: Check changed-file formatting
+        run: pnpm nx format:check --base="$NX_BASE" --head="$NX_HEAD"
+      - name: Lint affected projects
+        run: pnpm nx "$NX_TASK_COMMAND" -t lint --parallel=2
+      - name: Check affected types and generated email templates
+        run: pnpm nx "$NX_TASK_COMMAND" -t typecheck typecheck-tests emails-check deployment-check --parallel=2
+      - name: Build affected applications
+        run: pnpm nx "$NX_TASK_COMMAND" -t build --parallel=2
+      - name: Run affected unit and isolated PostgreSQL integration tests
+        run: pnpm nx "$NX_TASK_COMMAND" -t test --parallel=2
+
+  e2e:
+    needs: verify
+    if: needs.verify.outputs.has-e2e == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.verify.outputs.e2e-projects) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        if: matrix.project == 'web-site' || matrix.project == 'web-app-e2e'
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run end-to-end tests
+        env:
+          E2E_PROJECT: ${{ matrix.project }}
+        run: pnpm nx run "$E2E_PROJECT:e2e"
+
+  container:
+    needs: verify
+    if: needs.verify.outputs.has-container == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build and verify the production image
+        run: pnpm nx run web-gateway:container-check
+
+  required:
+    if: always()
+    needs: [verify, e2e, container]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every selected verification job
+        env:
+          VERIFY_RESULT: ${{ needs.verify.result }}
+          E2E_RESULT: ${{ needs.e2e.result }}
+          CONTAINER_RESULT: ${{ needs.container.result }}
+          HAS_E2E: ${{ needs.verify.outputs.has-e2e }}
+          HAS_CONTAINER: ${{ needs.verify.outputs.has-container }}
+        run: |
+          test "$VERIFY_RESULT" = success
+          if [ "$HAS_E2E" = true ]; then
+            test "$E2E_RESULT" = success
+          else
+            test "$HAS_E2E" = false && test "$E2E_RESULT" = skipped
+          fi
+          if [ "$HAS_CONTAINER" = true ]; then
+            test "$CONTAINER_RESULT" = success
+          else
+            test "$HAS_CONTAINER" = false && test "$CONTAINER_RESULT" = skipped
+          fi
