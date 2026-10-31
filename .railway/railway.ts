@@ -1,4 +1,12 @@
-import { defineRailway, github, project, service } from 'railway/iac';
+import { readFileSync } from 'node:fs';
+
+import { defineRailway, github, image, preserve, project, service, volume } from 'railway/iac';
+
+import { privateTracingCheck } from './private-tracing-check.mts';
+
+export const jaegerImage =
+  'jaegertracing/jaeger:2.22.0@sha256:4d9387a02389204ef9a256cf291a36cfbae91983010e403b4d300202d07eff2a';
+export const jaegerConfig = readFileSync(new URL('./jaeger.yaml', import.meta.url), 'utf8');
 
 export const watchPatterns = [
   '/apps/web/gateway/**',
@@ -8,7 +16,6 @@ export const watchPatterns = [
   '/libs/web/backend/shared/**',
   '/libs/web/frontend/ui/**',
   '/styles.base.css',
-  '/theme.base.js',
   '/.postcssrc.json',
   '/package.json',
   '/pnpm-lock.yaml',
@@ -23,10 +30,37 @@ export const watchPatterns = [
 ];
 
 export default defineRailway(() => {
+  const traces = volume('jaeger-data', { sizeMB: 1024, region: 'us-east4-eqdc4a' });
+  const jaeger = service('jaeger', {
+    source: image(jaegerImage),
+    tracing: { enabled: false, autoInstrumentation: false },
+    replicas: { 'us-east4-eqdc4a': 1 },
+    volumeMounts: { '/badger': traces },
+    deploy: {
+      startCommand: '/cmd/jaeger/jaeger-linux --config env:JAEGER_CONFIG',
+      limitOverride: { containers: { cpu: 0.5, memoryBytes: 500000000 } },
+      healthcheckPath: '/status',
+      healthcheckTimeout: 60,
+      restartPolicyType: 'ON_FAILURE',
+      restartPolicyMaxRetries: 3,
+      drainingSeconds: 10,
+      sleepApplication: false,
+    },
+    env: {
+      PORT: '13133',
+      // Railway volumes are root-owned; this private storage process owns its mounted data.
+      RAILWAY_RUN_UID: '0',
+      JAEGER_CONFIG: jaegerConfig,
+      JAEGER_HTPASSWD: preserve(),
+      OTLP_AUTH_HEADER: preserve(),
+    },
+  });
   const gateway = service('web-gateway', {
     source: github('visomi-dev/visomi-stack', { branch: 'main', commitSha: null, checkSuites: true }),
+    root: '/',
     // Native edge tracing retains raw paths and client trace IDs independently of the application.
     tracing: { enabled: false, autoInstrumentation: false },
+    domains: [{ domain: 'stack.visomi.dev', port: 8080 }],
     build: { builder: 'DOCKERFILE', dockerfilePath: 'Dockerfile', watchPatterns },
     deploy: {
       startCommand: 'node dist/apps/web/gateway/main.js',
@@ -43,11 +77,14 @@ export default defineRailway(() => {
       PORT: '8080',
       NODE_ENV: 'production',
       ASTRO_TELEMETRY_DISABLED: '1',
-      VISOMI_RAILWAY_TRACING: 'false',
+      VISOMI_RAILWAY_TRACING: 'true',
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://${{jaeger.RAILWAY_PRIVATE_DOMAIN}}:4318',
+      OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
+      OTEL_EXPORTER_OTLP_HEADERS: jaeger.env.OTLP_AUTH_HEADER,
       OTEL_METRICS_EXPORTER: 'none',
       OTEL_LOGS_EXPORTER: 'none',
     },
   });
 
-  return project('visomi-stack', { resources: [gateway] });
+  return project('visomi-stack', { resources: [gateway, jaeger, privateTracingCheck] });
 });

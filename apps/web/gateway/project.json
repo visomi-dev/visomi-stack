@@ -5,12 +5,25 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "jaeger-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build"],
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/.railway/jaeger.yaml",
+        "{workspaceRoot}/tools/deployment/jaeger-check.mjs",
+        { "dependentTasksOutputFiles": "**/*", "transitive": true }
+      ],
+      "options": { "command": "node tools/deployment/jaeger-check.mjs" }
+    },
     "deployment-check": {
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "tsc --noEmit --module nodenext --moduleResolution nodenext --target es2022 --skipLibCheck .railway/railway.ts",
-          "eslint .railway/railway.ts tools/deployment/*.mjs",
+          "tsc --noEmit --module esnext --moduleResolution bundler --allowImportingTsExtensions --target es2022 --types node --skipLibCheck .railway/railway.ts",
+          "eslint .railway tools/deployment/*.mjs",
           "bash -n tools/deployment/container.sh",
           "node --test tools/deployment/affected.spec.mjs"
         ],
@@ -91,7 +104,7 @@
           "env": "CI"
         },
         {
-          "dependentTasksOutputFiles": "**/*.js",
+          "dependentTasksOutputFiles": "**/*",
           "transitive": true
         }
       ]

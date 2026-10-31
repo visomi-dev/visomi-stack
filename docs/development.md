@@ -93,8 +93,8 @@ its startup. Redis and MinIO remain available as separate services but are not
 dependencies of the current API. Use `up app` for this slice; starting every
 service also includes those legacy integrations.
 
-Use Docker Compose with support for these dependency conditions. On the current
-development hosts, the `podman-compose` provider can fail to start the application after the one-shot dependency exits.
+Use Docker Compose with support for these dependency conditions. Older `podman-compose`
+providers can fail to start the application after the one-shot dependency exits.
 Docker Compose v2 can use the host's Podman API socket instead; this is a local
 provider limitation, not a reason to move initialization into the API.
 
@@ -108,8 +108,19 @@ Both services use the same database URL, with container DNS `postgres:5432`.
 The default URL is composed from the same `POSTGRES_USER`, `POSTGRES_PASSWORD`
 and `POSTGRES_DB` values as PostgreSQL. Set `APP_DATABASE_URL` when credentials
 need URL encoding or when using a different connection target. Both services
-receive the same URL. Nested defaults require Docker Compose v2; the older local
-`podman-compose` provider does not interpolate them correctly.
+receive the same URL. Podman Compose 1.3 does not interpolate nested or empty defaults correctly and
+its `port` command fails for dynamically allocated host ports. Use Docker Compose
+v2 or Podman Compose 1.6.0 for the isolated test fixtures. To install the latter
+for the current user without replacing distribution packages:
+
+```sh
+uv tool install podman-compose==1.6.0
+podman-compose --version
+```
+
+Ensure `~/.local/bin` precedes `/usr/bin` in `PATH`. This updates the Compose
+provider independently of the Podman engine; it does not upgrade the engine or
+restart unrelated containers.
 The API defaults to `AUTH_ORIGIN=http://localhost:8080` and `AUTH_RP_ID=localhost`
 for this local setup; override both together when needed. Compose supplies only
 the declared settings to the API and does not require an `env_file`.
