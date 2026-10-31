@@ -24,6 +24,9 @@ const { locale, title, description } = Astro.props;
     <meta property="og:locale" content={locale === 'en' ? 'en_US' : 'es_ES'} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <slot name="head" />
+    <script>
+      import '../observability';
+    </script>
   </head>
   <body class="min-h-screen bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
     <slot />

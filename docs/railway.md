@@ -239,7 +239,8 @@ Receiver failures do not block HTTP requests. An unsuccessful final flush can
 still make shutdown exit unsuccessfully; export is best effort, not durable
 application delivery. Explicit test exporters retain precedence.
 
-The application capture policy permits only:
+The HTTP/job capture policy permits only the following fields. Browser errors use
+the separate explicit allowlist under [Browser error reporting](#browser-error-reporting):
 
 - Span names `http.request` and `job.execute`, random trace/span IDs, timing,
   kind and status code; no status messages, events, links or baggage.
@@ -319,3 +320,82 @@ References: [Jaeger storage](https://www.jaegertracing.io/docs/2.22/storage/badg
 [Railway tracing variables](https://docs.railway.com/variables/reference#tracing-variables),
 [Collector Docker images](https://opentelemetry.io/docs/collector/install/docker/),
 and [BullMQ production guidance](https://docs.bullmq.io/guide/going-to-production).
+
+### Browser error reporting
+
+Browser error reporting is separately opt-in. Set `VISOMI_BROWSER_TELEMETRY=true`
+and `BROWSER_TELEMETRY_ORIGIN=https://stack.visomi.dev` on the gateway after the
+new executable is deployed. The desired IaC configuration includes these fields;
+merging the code does not apply `.railway/railway.ts`. Keep native Railway tracing
+disabled. `VISOMI_OTLP_TRACING=true` and the existing private OTLP credentials are
+still required to persist reports in Jaeger.
+
+The independent Angular Node executable supports the same flags and its own
+public origin. It owns its telemetry runtime and closes it on SIGTERM/SIGINT.
+`APP_VERSION` optionally supplies a bounded numeric service version; otherwise the
+service version is `unknown`. Only the Node entrypoint can import backend telemetry;
+Angular browser code uses the portable TypeScript capture library.
+
+The browser POSTs individual reports to `/telemetry/errors`; it never receives
+collector credentials. `/telemetry/config` supplies a short-lived reporting permit
+and a public build asset allowlist with `Cache-Control: no-store`. POSTs require the
+configured Origin, JSON content, a valid HMAC-signed permit and at most 2 KiB of
+uncompressed input. Extra fields and arbitrary values are rejected with fixed
+error codes. The process has a shared budget of 120 intake requests per minute,
+including configuration reads; this deliberately avoids retaining IPs or browser
+identifiers. Exhaustion drops telemetry while normal application routes continue.
+This public reporting endpoint is not proof of a human user or trustworthy error.
+
+The approved `frontend.error` span has only:
+
+- `operation=frontend.error`, `outcome=client_error` and the existing three resource fields.
+- `frontend.application`: `web-site` or `web-app`.
+- `frontend.error.code`: `unhandled_exception`, `unhandled_rejection`, `request_failed` or `startup_failed`.
+- `frontend.error.kind`: `Error`, `TypeError`, `RangeError`, `ReferenceError`, `SyntaxError` or `unknown`.
+- `frontend.screen`: `home`, `ui` or `unknown`; no raw route or history.
+- An optional verified `code.asset` build fingerprint, `code.line` and `code.column`.
+- `frontend.release`: the current approved asset-set fingerprint when a code location
+  was verified, otherwise `unknown`. It is not a client-provided release value.
+
+No raw error object, message, stack, URL, query, body, credential, cookie, IP,
+user agent, customer identifier, baggage, event or exception is exported. Source
+positions are accepted only when the asset exists in the executable's immutable
+build and the position is inside that file. Third-party scripts and stale assets
+produce unlocated reports rather than unverified code references. There is no
+session replay, interaction tracking, persistent browser ID or external RUM SDK.
+
+For explicitly observed API failures, `x-telemetry-context` carries a server-issued
+HMAC-signed reference to that request's random trace/span IDs. The intake verifies
+its signature, purpose and five-minute expiry before linking a browser error to
+that backend trace. Invalid references are discarded and the browser error starts
+a fresh root trace. Incoming `traceparent` remains ignored. Signing keys are random
+and process-local: restarting or crossing replicas invalidates old references and
+permits. Such reports may be dropped until the next permit refresh; there is no
+shared key store or cross-replica guarantee in this single-replica deployment.
+
+Angular and Astro production builds emit hidden source maps. The gateway and
+Angular Node executable reject direct and percent-encoded `.map` requests before
+static/SSR handling. Keep the matching build artifact privately while debugging;
+rebuilding different source is not equivalent. Jaeger stores only code fingerprints
+and positions, not the source maps or source contents. To resolve a location locally:
+
+```sh
+node tools/deployment/resolve-browser-error.mjs \
+  --directory dist/apps/web/site/client \
+  --asset <code.asset> --line <code.line> --column <code.column>
+```
+
+For Angular use `dist/apps/web/app/browser`. The command uses Node's built-in
+source-map reader and prints the original source path and line/column. It does not
+upload source maps or print source content. Keep source maps available only to
+operators with access to the private build artifact; review source paths before
+sharing resolved locations.
+
+Verification includes portable reporter tests, Angular adapter tests, real browser
+requests accepted by each executable, denial of source-map HTTP access, intake
+privacy/authentication/abuse tests, and the pinned Jaeger integration check. The
+latter stores and inspects an accepted browser error linked to its backend request,
+then also checks restart persistence and collector outages. Initial failures before
+the reporting script starts and telemetry delivery after leaving a page remain
+best effort. Error grouping and a dedicated error-tracking dashboard are outside
+this initial implementation.

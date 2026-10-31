@@ -1,11 +1,32 @@
 import { configs } from '@nx/eslint-plugin';
 
-import baseConfig from '../../../eslint.config.mjs';
+import baseConfig, { moduleBoundaryOptions } from '../../../eslint.config.mjs';
 
 export default [
   ...configs['flat/angular'],
   ...configs['flat/angular-template'],
   ...baseConfig,
+  {
+    files: ['src/server.ts'],
+    settings: { 'import-x/internal-regex': '^@visomi-stack/(?:web-backend-shared|web-shared-observability)(?:/|$)' },
+    rules: {
+      // The Node executable owns server telemetry; browser application code cannot import backend modules.
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          ...moduleBoundaryOptions,
+          depConstraints: moduleBoundaryOptions.depConstraints.map((constraint) =>
+            constraint.sourceTag === 'scope:web-frontend'
+              ? {
+                  ...constraint,
+                  onlyDependOnLibsWithTags: ['scope:web-frontend', 'scope:web-shared', 'scope:web-backend'],
+                }
+              : constraint,
+          ),
+        },
+      ],
+    },
+  },
   {
     files: ['**/*.ts'],
     rules: {

@@ -17,7 +17,7 @@ describe('operational capture policy', () => {
     expect(environment(value)).toBe(value);
   });
 
-  it.each(['web-api', 'web-gateway', 'worker', 'realtime'])('accepts the controlled service %s', (value) => {
+  it.each(['web-api', 'web-gateway', 'web-app', 'worker', 'realtime'])('accepts the controlled service %s', (value) => {
     expect(service(value)).toBe(value);
   });
 

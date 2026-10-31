@@ -1,0 +1,16 @@
+{
+  "name": "web-shared-observability",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/shared/observability/src",
+  "projectType": "library",
+  "tags": ["scope:web-shared", "type:util"],
+  "targets": {
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/web/shared/observability",
+        "command": "tsc -p tsconfig.spec.json --noEmit"
+      }
+    }
+  }
+}

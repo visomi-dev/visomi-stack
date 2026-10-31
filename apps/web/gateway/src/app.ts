@@ -1,5 +1,6 @@
 import {
   httpErrorHandler,
+  type createBrowserTelemetry,
   httpObservability,
   securityHeaders,
   type Observability,
@@ -14,6 +15,7 @@ export function createGatewayApp(options: {
   site?: SiteModule;
   auth?: EmbeddedAuthentication;
   observability?: Observability;
+  browserTelemetry?: ReturnType<typeof createBrowserTelemetry>;
   trustProxy?: string[];
   helmetMode?: 'managed' | 'inherited';
   errorMode?: 'managed' | 'inherited';
@@ -32,6 +34,20 @@ export function createGatewayApp(options: {
 
   if ((options.helmetMode ?? 'managed') === 'managed') {
     app.use(securityHeaders());
+  }
+
+  app.use((request, response, next) => {
+    if (decodeURIComponent(request.path).toLowerCase().endsWith('.map')) {
+      response.status(404).json({ error: 'not_found' });
+
+      return;
+    }
+
+    next();
+  });
+  if (options.browserTelemetry) {
+    app.use(options.browserTelemetry.context);
+    app.use('/telemetry', options.browserTelemetry.router);
   }
 
   if (options.auth) {

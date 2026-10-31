@@ -1,6 +1,6 @@
-export type Service = 'web-api' | 'web-gateway' | 'worker' | 'realtime';
+export type Service = 'web-api' | 'web-gateway' | 'web-app' | 'worker' | 'realtime';
 export type Environment = 'development' | 'test' | 'production' | 'unknown';
-export type Operation = 'http.request' | 'job.execute';
+export type Operation = 'http.request' | 'job.execute' | 'frontend.error';
 export type Outcome = 'success' | 'client_error' | 'server_error' | 'aborted' | 'job_failed';
 export type RuntimeEvent = 'runtime.started' | 'runtime.stopped' | 'runtime.failed';
 export type ErrorCode = 'none' | 'startup_failed' | 'shutdown_failed' | 'shutdown_timeout';
@@ -13,7 +13,9 @@ export function environment(value: unknown): Environment {
 }
 
 export function service(value: unknown): Service {
-  return value === 'web-gateway' || value === 'worker' || value === 'realtime' ? value : 'web-api';
+  return value === 'web-gateway' || value === 'web-app' || value === 'worker' || value === 'realtime'
+    ? value
+    : 'web-api';
 }
 
 export function version(value: unknown): string {
@@ -46,18 +48,23 @@ export function jobContext(value: unknown): JobContext | undefined {
   const input = value as Record<string, unknown>;
 
   if (
-    input.version !== 1 ||
-    typeof input.requestId !== 'string' ||
-    !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(input.requestId) ||
-    typeof input.traceId !== 'string' ||
-    !/^(?!0{32}$)[a-f0-9]{32}$/.test(input.traceId) ||
-    typeof input.spanId !== 'string' ||
-    !/^(?!0{16}$)[a-f0-9]{16}$/.test(input.spanId)
+    input['version'] !== 1 ||
+    typeof input['requestId'] !== 'string' ||
+    !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(input['requestId']) ||
+    typeof input['traceId'] !== 'string' ||
+    !/^(?!0{32}$)[a-f0-9]{32}$/.test(input['traceId']) ||
+    typeof input['spanId'] !== 'string' ||
+    !/^(?!0{16}$)[a-f0-9]{16}$/.test(input['spanId'])
   ) {
     return;
   }
 
-  return Object.freeze({ version: 1, requestId: input.requestId, traceId: input.traceId, spanId: input.spanId });
+  return Object.freeze({
+    version: 1,
+    requestId: input['requestId'],
+    traceId: input['traceId'],
+    spanId: input['spanId'],
+  });
 }
 
 export function isolate(work: () => void): void {

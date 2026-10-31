@@ -17,12 +17,18 @@ const boundary = vi.hoisted(() => ({
   createGatewayApp: vi.fn(),
   loadApi: vi.fn(),
   loadSite: vi.fn(),
+  browserAssets: vi.fn(),
+  browserTelemetry: vi.fn(),
   site: { handler: vi.fn(), clientDirectory: '/synthetic/site/client' },
   ready: vi.fn(),
 }));
 
 vi.mock('node:http', () => ({ createServer: boundary.createServer }));
-vi.mock('@visomi-stack/web-backend-shared', () => ({ initializeObservability: boundary.initialize }));
+vi.mock('@visomi-stack/web-backend-shared', () => ({
+  initializeObservability: boundary.initialize,
+  browserAssets: boundary.browserAssets,
+  createBrowserTelemetry: boundary.browserTelemetry,
+}));
 vi.mock('@visomi-stack/backend-shared', () => ({
   createDatabase: boundary.createDatabase,
   smtpConfig: boundary.smtpConfig,
@@ -47,6 +53,10 @@ beforeEach(() => {
   vi.stubEnv('PORT', '3456');
   vi.stubEnv('NODE_ENV', 'test');
   vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
+  vi.stubEnv('VISOMI_BROWSER_TELEMETRY', '');
+  vi.stubEnv('BROWSER_TELEMETRY_ORIGIN', undefined);
+  boundary.browserAssets.mockResolvedValue(new Map());
+  boundary.browserTelemetry.mockReturnValue({ context: 'synthetic-context', router: 'synthetic-router' });
   boundary.signals.clear();
   boundary.events.clear();
   boundary.initialize.mockReturnValue(boundary.observability);
@@ -87,6 +97,40 @@ async function start() {
 }
 
 describe('gateway executable ownership', () => {
+  it.each([undefined, 'https://frontend.example.test'])(
+    'owns opt-in browser telemetry using origin %s',
+    async (origin) => {
+      vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
+      vi.stubEnv('BROWSER_TELEMETRY_ORIGIN', origin);
+
+      await start();
+
+      expect(boundary.browserAssets).toHaveBeenCalledWith(boundary.site.clientDirectory);
+      expect(boundary.browserTelemetry).toHaveBeenCalledWith({
+        observability: boundary.observability,
+        application: 'web-site',
+        assets: new Map(),
+        origin: origin ?? 'https://stack.visomi.dev',
+      });
+      expect(boundary.createGatewayApp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          browserTelemetry: {
+            context: 'synthetic-context',
+            router: 'synthetic-router',
+          },
+        }),
+      );
+    },
+  );
+
+  it('does not create browser telemetry when the website is unavailable', async () => {
+    vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
+    boundary.loadSite.mockResolvedValue(undefined);
+
+    await start();
+
+    expect(boundary.browserTelemetry).not.toHaveBeenCalled();
+  });
   it('uses default networking and the adjacent compiled API when no overrides are configured', async () => {
     vi.stubEnv('HOST', undefined);
     vi.stubEnv('PORT', undefined);

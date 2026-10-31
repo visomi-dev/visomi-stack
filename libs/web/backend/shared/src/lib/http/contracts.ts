@@ -79,7 +79,7 @@ export function validateRequest<S extends RequestSchema>(
 
       return handler(request, response, input);
     } catch (error) {
-      next(error);
+      return next(error);
     }
   };
 }

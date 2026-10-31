@@ -11,7 +11,7 @@ import {
   type MailTransport,
   type DatabaseResource,
 } from '@visomi-stack/backend-shared';
-import { initializeObservability } from '@visomi-stack/web-backend-shared';
+import { browserAssets, createBrowserTelemetry, initializeObservability } from '@visomi-stack/web-backend-shared';
 
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -121,11 +121,25 @@ async function bootstrap() {
     return;
   }
 
+  let browserTelemetry;
+
+  if (process.env.VISOMI_BROWSER_TELEMETRY === 'true' && site) {
+    const assets = await browserAssets(site.clientDirectory);
+
+    browserTelemetry = createBrowserTelemetry({
+      observability,
+      application: 'web-site',
+      assets,
+      origin: process.env.BROWSER_TELEMETRY_ORIGIN ?? 'https://stack.visomi.dev',
+    });
+  }
+
   const application = createGatewayApp({
     api,
     site,
     auth,
     observability,
+    ...(browserTelemetry ? { browserTelemetry } : {}),
     ...(process.env.AUTH_TRUST_PROXY
       ? { trustProxy: process.env.AUTH_TRUST_PROXY.split(',').map((value) => value.trim()) }
       : {}),
