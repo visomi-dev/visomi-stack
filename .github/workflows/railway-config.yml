@@ -1,0 +1,77 @@
+name: Railway config
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths:
+      - '.railway/**'
+      - '.github/workflows/railway-config.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  RAILWAY_CALLER: skill:use-railway@1.7.0
+  RAILWAY_AGENT_SESSION: github-${{ github.run_id }}
+
+jobs:
+  plan:
+    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Save the infrastructure plan for review
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: pnpm dlx @railway/cli@5.71.0 config plan --out railway-plan.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: railway-plan-${{ github.event.pull_request.head.sha }}
+          path: railway-plan.json
+          retention-days: 14
+          if-no-files-found: error
+
+  apply:
+    if: github.event.action == 'closed' && github.event.pull_request.merged && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Find the successful plan for this PR revision
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          run_id=$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/railway-config.yml/runs" \
+            -f event=pull_request -f head_sha="$PR_HEAD_SHA" -f status=success --jq '.workflow_runs[0].id')
+          test "$run_id" != null
+          echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v8
+        with:
+          name: railway-plan-${{ github.event.pull_request.head.sha }}
+          run-id: ${{ steps.plan.outputs.run-id }}
+          github-token: ${{ github.token }}
+      - name: Apply the reviewed plan
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: pnpm dlx @railway/cli@5.71.0 config apply --plan railway-plan.json --yes

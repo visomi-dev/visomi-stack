@@ -5,6 +5,16 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "deployment-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc --noEmit --module nodenext --moduleResolution nodenext --target es2022 --skipLibCheck .railway/railway.ts",
+          "eslint .railway/railway.ts tools/deployment/smoke.mjs"
+        ],
+        "parallel": false
+      }
+    },
     "prune-lockfile": {
       "dependsOn": ["build"],
       "cache": true,

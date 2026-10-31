@@ -25,7 +25,7 @@ CMD ["pnpm", "nx", "run", "backend-shared:db-migrate", "--output-style=static"]
 
 FROM workspace AS build
 
-ARG APP_NAME=web-api
+ARG APP_NAME=web-gateway
 
 RUN case "$APP_NAME" in \
       web-api) printf '%s\n' 'dist/apps/web/api/main.js' > app-entrypoint ;; \
@@ -37,7 +37,7 @@ RUN case "$APP_NAME" in \
 # Test-only tooling supplies local exporters; the compiled executable still owns startup.
 FROM build AS test-runtime
 
-ARG APP_NAME=web-api
+ARG APP_NAME=web-gateway
 
 ENV APP_NAME=${APP_NAME}
 
@@ -45,7 +45,7 @@ CMD ["sh", "-c", "exec node \"$(cat app-entrypoint)\""]
 
 FROM base AS runtime
 
-ARG APP_NAME=web-api
+ARG APP_NAME=web-gateway
 
 WORKDIR /app
 

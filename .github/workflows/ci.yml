@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NX_DAEMON: 'false'
+  ASTRO_TELEMETRY_DISABLED: '1'
+  VISOMI_TEST_COMPOSE: docker
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: nrwl/nx-set-shas@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check changed-file formatting
+        run: pnpm nx format:check --base="$NX_BASE" --head="$NX_HEAD"
+      - name: Lint workspace
+        run: pnpm nx run-many -t lint --parallel=2
+      - name: Check types and generated email templates
+        run: pnpm nx run-many -t typecheck typecheck-tests emails-check deployment-check --parallel=2
+      - name: Build applications
+        run: pnpm nx run-many -t build --parallel=2
+      - name: Run unit and isolated PostgreSQL integration tests
+        run: pnpm nx run-many -t test --parallel=2
+
+  e2e:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [web-api, web-gateway, web-site, web-app-e2e]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        if: matrix.project == 'web-site' || matrix.project == 'web-app-e2e'
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run end-to-end tests
+        env:
+          E2E_PROJECT: ${{ matrix.project }}
+        run: pnpm nx run "$E2E_PROJECT:e2e"
+
+  container:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      - name: Build and verify the production image
+        run: |
+          docker build --target runtime --tag visomi-stack:ci .
+          docker run --detach --name visomi-stack-ci --publish 127.0.0.1:8080:8080 visomi-stack:ci
+          trap 'docker rm --force visomi-stack-ci >/dev/null' EXIT
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8080/api/ >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          node tools/deployment/smoke.mjs http://127.0.0.1:8080
+          docker stop --time 10 visomi-stack-ci >/dev/null
+          test "$(docker inspect --format '{{.State.ExitCode}}' visomi-stack-ci)" = 0
+
+  required:
+    if: always()
+    needs: [verify, e2e, container]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every verification job
+        env:
+          VERIFY_RESULT: ${{ needs.verify.result }}
+          E2E_RESULT: ${{ needs.e2e.result }}
+          CONTAINER_RESULT: ${{ needs.container.result }}
+        run: test "$VERIFY_RESULT" = success && test "$E2E_RESULT" = success && test "$CONTAINER_RESULT" = success
