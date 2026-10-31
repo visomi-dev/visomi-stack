@@ -8,23 +8,23 @@ import ErrorMessage from './error-message.astro';
 import Label from './label.astro';
 
 type Props = HTMLAttributes<'div'> & {
-  controlId: string;
+  'control-id': string;
   label: string;
   description?: string;
   error?: string;
   compact?: boolean;
   invalid?: boolean;
-  manualError?: string | null;
+  'manual-error'?: string | null;
 };
 
 const {
-  controlId,
+  'control-id': controlId,
   label,
   description = '',
   error = '',
   compact = false,
   invalid = false,
-  manualError,
+  'manual-error': manualError,
   class: className,
   ...attributes
 } = Astro.props;

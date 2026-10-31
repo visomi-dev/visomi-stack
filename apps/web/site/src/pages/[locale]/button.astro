@@ -51,10 +51,10 @@ const text = spanish
   <script slot="head" is:inline type="module" src={demoScript}></script>
   <main class:list={[container.classes(), 'py-12']}>
     <Link href={`/${locale}/foundations/`}>{text.home}</Link>
-    <Heading as="h1" uiSize="title" class="mt-8">
+    <Heading as="h1" ui-size="title" class="mt-8">
       {text.title}
     </Heading>
-    <Text uiSize="inherit" tone="muted" class="mt-4 max-w-2xl">
+    <Text ui-size="inherit" tone="muted" class="mt-4 max-w-2xl">
       {text.description}
     </Text>
     <Card as="section" tone="default" padding="lg" layout="plain" data-button-demo class="mt-8">
@@ -67,7 +67,7 @@ const text = spanish
           {text.disabled}
         </Button>
       </div>
-      <Text uiSize="inherit" tone="inherit" class="mt-5">
+      <Text ui-size="inherit" tone="inherit" class="mt-5">
         {text.count}{' '}
         <output aria-live="polite" data-count>
           0
@@ -78,13 +78,13 @@ const text = spanish
           {text.submit}
         </Button>
       </form>
-      <Text uiSize="inherit" tone="inherit" role="status" class="mt-4">
+      <Text ui-size="inherit" tone="inherit" role="status" class="mt-4">
         {Astro.url.searchParams.get('action') === 'submit' ? text.submitted : ''}
       </Text>
     </Card>
     <Label inline class="mt-8">
       {text.theme}
-      <ThemeSelect uiSize="xs" inline>
+      <ThemeSelect ui-size="xs" inline>
         <option value="system">{text.system}</option>
         <option value="light">{text.light}</option>
         <option value="dark">{text.dark}</option>

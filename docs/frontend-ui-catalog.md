@@ -69,7 +69,8 @@ validation, events, disabled behavior and submission semantics.
 - Angular uses element-specific `appUI` directives. Ambiguous wrappers use values
   such as `appUI="card"`; checkbox and radio selectors are disjoint from text
   inputs and switches.
-- Native inputs retain numeric `size`. Their visual size uses `uiSize`; the
+- Native inputs retain numeric `size`. Their visual size uses `uiSize` in Angular
+  and `ui-size` in Astro; the
   shared recipe option remains `size`. Native `type`, `name`, `value`, `required`,
   `disabled`, labels and ARIA attributes are not replaced with form abstractions.
 - Error appearance follows `aria-invalid`; messages must be associated through
@@ -161,8 +162,9 @@ A native host and a component are compatible: `ErrorMessage` is a component on
 Buttons, inputs, selects and the styling-only table remain directives.
 
 `Field` takes a small presentation API (`controlId`, `label`, `description`,
-`error`, `compact`, `invalid`, `manualError`). It derives stable association IDs
-and exposes Angular helpers for native bindings. It does not take ownership of
+`error`, `compact`, `invalid`, `manualError`). Astro spells the multiword props
+`control-id` and `manual-error`. The components derive stable association IDs;
+Angular also exposes helpers for native bindings. They do not take ownership of
 form values, validators or submission policy. Projected Signal Forms and
 Reactive Forms controls remain native; no new form abstraction is introduced.
 

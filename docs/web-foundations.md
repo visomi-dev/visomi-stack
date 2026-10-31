@@ -157,7 +157,7 @@ selection, behavior contracts and deferred widgets; the
 
 Angular control and styling adapters use native elements selected with `appUI`
 and a static marker where necessary. `app-field` owns field composition and
-projects the native control; `p[app-error]` owns the message animation wrapper. Form controls use `uiSize` for visual size, preserving native
+projects the native control; `p[app-error]` owns the message animation wrapper. Form controls use `uiSize` in Angular and `ui-size` in Astro for visual size, preserving native
 numeric `size`. Integration tests cover selector isolation, form values,
 attributes, events, visual changes and native modal delegation. The catalog
 renders entirely through Astro SSR; only the external theme-control script and small native
@@ -173,7 +173,8 @@ CSS, fonts and HTTP headers.
 Field errors and responsive table options are described in the shared library
 README. Their state and layout selectors remain in the component recipes.
 The website catalog and Angular sample demonstrate error reveal/collapse,
-Signal Forms, `mobileCards` and `stickyHeaders`; the website requires no client
+Signal Forms and the responsive table options (`mobileCards` / `stickyHeaders`
+in Angular, `mobile-cards` / `sticky-headers` in Astro); the website requires no client
 code for error transitions or table layout conversion.
 
 The component/directive choice is documented in the repository working agreement.

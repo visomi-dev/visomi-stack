@@ -6,15 +6,15 @@ import { table as styles, type TableDensity } from '@visomi-stack/web-frontend-u
 type Props = HTMLAttributes<'table'> & {
   density?: TableDensity;
   striped?: boolean;
-  mobileCards?: boolean;
-  stickyHeaders?: boolean;
+  'mobile-cards'?: boolean;
+  'sticky-headers'?: boolean;
 };
 
 const {
   density = 'comfortable',
   striped = false,
-  mobileCards = false,
-  stickyHeaders = false,
+  'mobile-cards': mobileCards = false,
+  'sticky-headers': stickyHeaders = false,
   class: className,
   ...attributes
 } = Astro.props;

@@ -3,9 +3,9 @@ import type { HTMLAttributes } from 'astro/types';
 
 import { textarea as styles, type ControlSize } from '@visomi-stack/web-frontend-ui';
 
-type Props = Omit<HTMLAttributes<'textarea'>, 'value'> & { uiSize?: ControlSize };
+type Props = Omit<HTMLAttributes<'textarea'>, 'value'> & { 'ui-size'?: ControlSize };
 
-const { uiSize = 'md', class: className, ...attributes } = Astro.props;
+const { 'ui-size': uiSize = 'md', class: className, ...attributes } = Astro.props;
 ---
 
 <textarea

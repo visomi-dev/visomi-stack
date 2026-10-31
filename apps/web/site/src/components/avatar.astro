@@ -4,13 +4,13 @@ import type { HTMLAttributes } from 'astro/types';
 import { avatar as styles, type AvatarSize } from '@visomi-stack/web-frontend-ui';
 
 type Props = HTMLAttributes<'span'> & {
-  uiSize?: AvatarSize;
+  'ui-size'?: AvatarSize;
   shape?: 'circle' | 'rounded';
   src?: string;
   label: string;
 };
 
-const { uiSize = 'md', shape = 'circle', src, label, class: className, ...attributes } = Astro.props;
+const { 'ui-size': uiSize = 'md', shape = 'circle', src, label, class: className, ...attributes } = Astro.props;
 ---
 
 {src ? (

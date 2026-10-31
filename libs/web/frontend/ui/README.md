@@ -171,8 +171,9 @@ custom projected compositions. Astro uses named `sidebar`, `header`, `mobile`
 and `footer` slots, with default content projected into its own main. Sidebar
 uses `brand` and `footer` slots, and Topbar uses a `title` slot.
 
-Both shell adapters require a stable unique `contentId` and localized
-`skipLabel`. They own one focusable main and its skip link; do not nest a main
+Both shell adapters require a stable unique content ID and localized skip label:
+Angular uses `contentId` / `skipLabel`, and Astro uses `content-id` / `skip-label`.
+They own one focusable main and its skip link; do not nest a main
 inside them. Sidebar requires a localized `label`; native nav elements require
 an accessible name. Desktop starts at `lg` (1024px): the sidebar is sticky with
 an independently scrollable navigation region, the header is sticky, and mobile
@@ -244,10 +245,11 @@ they are not forced into a text-link style. No disabled-link behavior is added.
 
 ## Field validation and responsive tables
 
-The Angular `Field` and Astro `Field` components require `controlId` and `label`.
+The Angular `Field` requires `controlId` and `label`; Astro's `Field` requires
+`control-id` and `label`.
 They own the label, optional `description`, and `error` presentation, while
 projecting the native control. They also accept `compact`, `invalid` and
-`manualError` (string or null). A nonempty manual error overrides the normal
+`manualError` in Angular or `manual-error` in Astro (string or null). A nonempty manual error overrides the normal
 error text. Validation and the control's `aria-invalid` remain consumer-owned.
 
 Provide a unique, stable control ID. Both components derive description and
@@ -289,7 +291,7 @@ without a fixed height cap. Reduced motion disables the transition.
 ```
 
 ```astro
-<Field controlId="email" label="Email" description="Use an example address." error="Enter a valid email address.">
+<Field control-id="email" label="Email" description="Use an example address." error="Enter a valid email address.">
   <Input type="email" id="email" required placeholder="demo@example.test" aria-describedby="email-help email-error" />
 </Field>
 ```
@@ -315,10 +317,16 @@ field samples for native validation and Signal Forms behavior.
 
 Import the corresponding server component from
 `apps/web/site/src/components/<name>.astro`. Visual options mirror Angular;
-`Input` preserves numeric `size`, while `uiSize` selects appearance. `Avatar`
+`Input` preserves numeric `size`, while `ui-size` selects appearance. `Avatar`
 requires `label`, `Loader` requires `label`, and `Disclosure` requires `summary`.
 `Dialog` requires `id` and browser code calling `showModal()` to open it.
 Native attributes and slots are forwarded. No framework hydration is needed.
+
+Multiword Astro props use kebab-case. Destructure them into camelCase TypeScript
+locals where needed, for example `const { 'ui-size': uiSize = 'md' } = Astro.props`.
+The multiword public props are `ui-size`, `control-id`, `manual-error`, `content-id`,
+`skip-label`, `mobile-cards` and `sticky-headers`. Angular inputs and the shared
+recipe options retain their camelCase names.
 
 The website catalog at `/en/ui/` and `/es/ui/` contains all 37 families with live
 previews and Angular/Astro/recipe examples. Only the theme and small native demo

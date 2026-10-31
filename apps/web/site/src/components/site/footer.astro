@@ -16,12 +16,12 @@ const copy = siteCopy[locale];
     <div class="grid gap-10 pb-12 md:grid-cols-[1.5fr_1fr_1fr] md:gap-16">
       <div>
         <Brand locale={locale} />
-        <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-5 max-w-sm">
+        <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-5 max-w-sm">
           {copy.footerBody}
         </Text>
       </div>
       <nav aria-label={copy.footerExplore}>
-        <Heading as="h2" uiSize="label" class="mb-3">
+        <Heading as="h2" ui-size="label" class="mb-3">
           {copy.footerExplore}
         </Heading>
         <ul>
@@ -40,7 +40,7 @@ const copy = siteCopy[locale];
         </ul>
       </nav>
       <nav aria-label={copy.footerBuild}>
-        <Heading as="h2" uiSize="label" class="mb-3">
+        <Heading as="h2" ui-size="label" class="mb-3">
           {copy.footerBuild}
         </Heading>
         <ul>
@@ -79,10 +79,10 @@ const copy = siteCopy[locale];
       </nav>
     </div>
     <div class="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 pt-5 text-xs leading-6 text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-      <Text uiSize="inherit" tone="inherit">
+      <Text ui-size="inherit" tone="inherit">
         © {new Date().getUTCFullYear()} Visomi Stack
       </Text>
-      <Text uiSize="inherit" tone="inherit">
+      <Text ui-size="inherit" tone="inherit">
         {copy.footer}
       </Text>
       <Link href="#top" variant="muted" underline="none" class="inline-flex min-h-11 items-center">
