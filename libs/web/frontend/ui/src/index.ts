@@ -1,9 +1,20 @@
 export { button, linkButton } from './lib/button';
 export type { ButtonOptions, ButtonSize, ButtonVariant } from './lib/button';
 export { heading, text, link, divider, code } from './lib/typography';
-export type { TextSize, TextTone, HeadingSize } from './lib/typography';
+export type {
+  TextSize,
+  TextTone,
+  HeadingSize,
+  HeadingTone,
+  TextWeight,
+  TextLeading,
+  CodeVariant,
+  LinkVariant,
+  LinkUnderline,
+  LinkOptions,
+} from './lib/typography';
 export { container, card, pageHeader } from './lib/layout';
-export type { ContainerWidth, SurfaceTone, Padding } from './lib/layout';
+export type { ContainerWidth, ContainerGutter, SurfaceTone, Padding, CardLayout } from './lib/layout';
 export { badge, avatar, table, descriptionList, pagination } from './lib/data';
 export type { Tone, AvatarSize, TableDensity } from './lib/data';
 export {

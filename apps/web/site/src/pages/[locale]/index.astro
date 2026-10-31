@@ -1,121 +1,358 @@
 ---
-import BaseLayout from '../../layouts/base.astro';
-
-import { messages } from '../../i18n';
-
+import { text } from '@visomi-stack/web-frontend-ui';
+import Code from '../../components/code.astro';
+import Label from '../../components/label.astro';
+import Container from '../../components/container.astro';
+import Card from '../../components/card.astro';
+import Text from '../../components/text.astro';
+import Heading from '../../components/heading.astro';
+import SiteLayout from '../../layouts/site.astro';
+import { isSiteLocale, siteCopy, sitePath } from '../../content/site';
+import ProductPreview from '../../components/site/product-preview.astro';
+import RuntimeMap from '../../components/site/runtime-map.astro';
+import SectionHeading from '../../components/site/section-heading.astro';
+import Terminal from '../../components/site/terminal.astro';
+import Icon from '../../components/site/icon.astro';
+import LinkButton from '../../components/link-button.astro';
+import Link from '../../components/link.astro';
+import Field from '../../components/field.astro';
+import Input from '../../components/input.astro';
+import Checkbox from '../../components/checkbox.astro';
+import Disclosure from '../../components/disclosure.astro';
+import { componentGroups } from '../../ui-docs';
 const locale = Astro.params.locale;
-if (locale !== 'en' && locale !== 'es') return new Response(null, { status: 404 });
-const text = messages[locale];
+if (!isSiteLocale(locale)) return new Response(null, { status: 404 });
+const labels = siteCopy[locale];
+const copy = labels.home;
+const count = Object.values(componentGroups).flat().length;
 ---
 
-<BaseLayout locale={locale} title={text.foundations} description={text.intro}>
-  <a
-    href="#main"
-    class="cursor-pointer ui-focus-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-white focus:p-4 focus:text-zinc-950"
+<SiteLayout locale={locale} page="home" title={copy.title} description={copy.description}>
+  <section
+    class="relative isolate overflow-hidden border-b border-zinc-200 dark:border-zinc-800"
+    aria-labelledby="hero-title"
   >
-    {text.skip}
-  </a>
-  <div id="top" class="mx-auto max-w-6xl px-6 sm:px-10">
-    <header class="flex flex-wrap items-center justify-between gap-6 border-b border-zinc-200 py-6 dark:border-zinc-800">
-      <a
-        href="#top"
-        class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center gap-3 rounded-lg font-heading text-sm font-bold tracking-widest"
-      >
-        <span class="rounded-lg bg-blue-600 px-3 py-2 text-white">V</span> VISOMI{' '}
-        <span class="font-sans font-normal tracking-normal text-zinc-500 dark:text-zinc-400">/ Stack</span>
-      </a>
-      <div class="flex flex-wrap items-center gap-5 text-sm">
-        <a
-          href={`/${locale}/ui/`}
-          class="ui-focus-ring inline-flex min-h-11 items-center rounded-lg underline underline-offset-4"
+    <div
+      class="pointer-events-none absolute inset-y-0 right-0 -z-10 w-1/2 bg-linear-to-l from-blue-50/70 to-transparent dark:from-blue-950/25"
+      aria-hidden="true"
+    ></div>
+    <Container
+      as="div"
+      width="xl"
+      gutter="compact"
+      class="grid items-center gap-14 pt-14 pb-16 sm:py-20 lg:grid-cols-[1.15fr_1fr] lg:gap-16 lg:pt-20 lg:pb-24"
+    >
+      <div class="min-w-0">
+        <Text
+          uiSize="xs"
+          tone="accent"
+          mono
+          leading="relaxed"
+          class="mb-7 flex items-center gap-3 tracking-widest sm:text-xs"
         >
-          {text.components}
-        </a>
-        <nav aria-label={text.language} class="flex gap-3">
-          <a
-            href="/en/"
-            aria-current={locale === 'en' ? 'page' : undefined}
-            lang="en"
-            hreflang="en"
-            class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center rounded-lg px-2"
-          >
-            EN
-          </a>
-          <a
-            href="/es/"
-            aria-current={locale === 'es' ? 'page' : undefined}
-            lang="es"
-            hreflang="es"
-            class="cursor-pointer ui-focus-ring min-h-11 min-w-11 inline-flex items-center rounded-lg px-2"
-          >
-            ES
-          </a>
-        </nav>
-        <label class="flex items-center gap-3">
-          <span class="text-zinc-600 dark:text-zinc-300">{text.theme}</span>
-          <select
-            data-theme-select
-            class="cursor-pointer ui-focus-ring min-h-11 min-w-11 rounded-lg border border-zinc-500 bg-white px-3 text-zinc-950 dark:border-zinc-500 dark:bg-zinc-900 dark:text-zinc-50"
-          >
-            <option value="system">{text.system}</option>
-            <option value="light">{text.light}</option>
-            <option value="dark">{text.dark}</option>
-          </select>
-        </label>
+          <span class="h-px w-7 shrink-0 bg-current" aria-hidden="true"></span>
+          {copy.eyebrow}
+        </Text>
+        <Heading as="h1" uiSize="hero" id="hero-title" class="max-w-2xl">
+          {copy.headline}{' '}
+          <Text as="span" uiSize="inherit" tone="accent" class="mt-2 block">
+            {copy.accent}
+          </Text>
+        </Heading>
+        <Text uiSize="lead" tone="muted" leading="relaxed" class="mt-7 max-w-xl">
+          {copy.intro}
+        </Text>
+        <div class="mt-9 flex flex-wrap gap-3">
+          <LinkButton href={sitePath(locale, 'docs')}>
+            {labels.start}
+            <Icon name="arrow-right" class="size-4" />
+          </LinkButton>
+          <LinkButton href={sitePath(locale, 'architecture')} variant="secondary">
+            {copy.secondary}
+          </LinkButton>
+        </div>
+        <ul class="mt-9 grid gap-3 text-xs leading-5 text-zinc-600 sm:text-sm dark:text-zinc-400">
+          {copy.facts.map((fact) => (
+            <li class="flex items-center gap-2">
+              <Icon name="check" class="size-4 shrink-0 text-blue-700 dark:text-blue-400" />
+              {fact}
+            </li>
+          ))}
+        </ul>
       </div>
-    </header>
-    <main id="main" class="py-14 sm:py-20">
-      <div class="mb-5 flex items-center gap-3 font-mono text-xs tracking-wider text-blue-700 dark:text-blue-400">
-        <span aria-hidden="true" class="h-px w-8 bg-current"></span>01 / {text.foundations}
+      <ProductPreview locale={locale} />
+    </Container>
+  </section>
+  <Container as="div" width="xl" gutter="compact" class="py-9">
+    <Text uiSize="xs" tone="subtle" mono class="mb-6 text-center tracking-widest">
+      {copy.stackLabel}
+    </Text>
+    <ul class="grid grid-cols-3 gap-x-6 gap-y-5 text-center font-heading text-base font-semibold text-zinc-600 sm:grid-cols-6 sm:text-lg dark:text-zinc-300">
+      {['Nx', 'Angular', 'Astro', 'Express', 'PostgreSQL', 'Tailwind'].map((name) => (
+        <li>{name}</li>
+      ))}
+    </ul>
+  </Container>
+  <section
+    id="foundation"
+    class="border-y border-zinc-200 bg-zinc-50/70 py-16 sm:py-24 dark:border-zinc-800 dark:bg-zinc-900/30"
+    aria-labelledby="foundation-title"
+  >
+    <Container as="div" width="xl" gutter="compact">
+      <SectionHeading
+        kicker={copy.foundationKicker}
+        title={copy.foundationTitle}
+        description={copy.foundationIntro}
+        id="foundation-title"
+      />
+      <div class="mt-12 grid gap-5 md:grid-cols-3">
+        {copy.features.map((feature) => (
+          <Card as="article" tone="default" padding="lg" layout="plain" class="flex flex-col">
+            <span class="mb-8 flex size-11 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-400">
+              <Icon name={feature.icon} />
+            </span>
+            <Heading as="h3" uiSize="md">
+              {feature.title}
+            </Heading>
+            <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-4 flex-1">
+              {feature.body}
+            </Text>
+            <Text
+              uiSize="xs"
+              tone="subtle"
+              mono
+              leading="relaxed"
+              class="mt-7 border-t border-zinc-200 pt-5 dark:border-zinc-800"
+            >
+              {feature.detail}
+            </Text>
+          </Card>
+        ))}
       </div>
-      <h1 class="max-w-3xl font-heading text-4xl leading-tight font-semibold tracking-tight sm:text-6xl">
-        {text.title}
-      </h1>
-      <p class="text-pretty leading-[1.7] sm:leading-7 mt-6 max-w-2xl text-base text-zinc-600 sm:text-lg dark:text-zinc-400">
-        {text.intro}
-      </p>
-      <div class="mt-14 grid gap-5 lg:grid-cols-3">
-        <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
-          <h2 class="font-heading text-lg font-semibold">{text.type}</h2>
-          <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.typeNote}</p>
-          <div class="mt-10 font-heading text-6xl font-semibold tracking-tight">Aa</div>
-          <p class="mt-6 text-sm leading-7">{text.body}</p>
-          <p class="mt-6 border-t border-zinc-200 pt-4 font-mono text-xs text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
-            {text.mono}
-          </p>
-        </section>
-        <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
-          <h2 class="font-heading text-lg font-semibold">{text.surfaces}</h2>
-          <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.surfaceNote}</p>
-          <div class="mt-8 grid gap-3 text-sm">
-            <div class="rounded-xl border border-zinc-300 bg-white p-4 dark:border-zinc-600 dark:bg-zinc-950">
-              {text.canvas}
-            </div>
-            <div class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-4">
-              {text.panel}
-            </div>
-            <div class="rounded-xl border border-zinc-200 bg-zinc-100 text-zinc-950 shadow-2xl shadow-zinc-950/8 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 p-4">
-              {text.raised}
-            </div>
+    </Container>
+  </section>
+  <Container
+    as="section"
+    width="xl"
+    gutter="compact"
+    aria-labelledby="architecture-title"
+    class="grid items-center gap-12 py-16 sm:py-24 lg:grid-cols-2 lg:gap-20"
+  >
+    <div>
+      <SectionHeading
+        kicker={copy.architectureKicker}
+        title={copy.architectureTitle}
+        description={copy.architectureBody}
+        id="architecture-title"
+      />
+      <Link
+        href={sitePath(locale, 'architecture')}
+        underline="none"
+        class="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold"
+      >
+        {copy.architectureLink}
+        <Icon name="arrow-right" class="size-4" />
+      </Link>
+    </div>
+    <RuntimeMap locale={locale} />
+  </Container>
+  <section
+    class="border-y border-zinc-200 bg-zinc-50 py-16 sm:py-24 dark:border-zinc-800 dark:bg-zinc-900/30"
+    aria-labelledby="design-title"
+  >
+    <Container
+      as="div"
+      width="xl"
+      gutter="compact"
+      class="grid items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-20"
+    >
+      <div>
+        <SectionHeading
+          kicker={copy.designKicker}
+          title={copy.designTitle}
+          description={copy.designBody}
+          id="design-title"
+        />
+        <Text uiSize="inherit" tone="inherit" class="mt-7 flex items-baseline gap-3">
+          <Heading as="span" uiSize="xl" tone="accent">
+            {count}
+          </Heading>
+          <Text as="span" uiSize="sm" tone="subtle" class="max-w-40">
+            {copy.designCount}
+          </Text>
+        </Text>
+        <Link
+          href={sitePath(locale, 'ui')}
+          underline="none"
+          class="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold"
+        >
+          {copy.designLink}
+          <Icon name="arrow-right" class="size-4" />
+        </Link>
+      </div>
+      <Card as="div" tone="default" padding="none" layout="plain" class="overflow-hidden shadow-xl shadow-zinc-950/5">
+        <div class="border-b border-zinc-200 px-6 py-5 dark:border-zinc-800">
+          <Heading as="h3" uiSize="sm">
+            {copy.sampleTitle}
+          </Heading>
+          <Text uiSize="sm" tone="subtle" class="mt-2">
+            {copy.sampleDescription}
+          </Text>
+        </div>
+        <div class="space-y-6 p-6 sm:p-8">
+          <Field controlId="preview-workspace" label={copy.sampleLabel} description={copy.sampleHint}>
+            <Input id="preview-workspace" value={copy.sampleValue} aria-describedby="preview-workspace-help" />
+          </Field>
+          <Label inline>
+            <Checkbox checked />
+            {copy.sampleCheckbox}
+          </Label>
+          <div class="flex flex-wrap gap-3">
+            <LinkButton href={sitePath(locale, 'ui')} size="sm">
+              {copy.sampleSave}
+            </LinkButton>
+            <LinkButton href={sitePath(locale, 'foundations')} size="sm" variant="secondary">
+              {copy.sampleCancel}
+            </LinkButton>
           </div>
-        </section>
-        <section class="rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 p-6 sm:p-7">
-          <h2 class="font-heading text-lg font-semibold">{text.palette}</h2>
-          <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{text.paletteNote}</p>
-          <div class="mt-8 rounded-lg bg-blue-600 p-4 text-sm font-medium text-white">{text.brand}</div>
-          <ul class="mt-6 space-y-4 text-sm">
-            <li class="text-green-800 dark:text-green-300">✓ {text.success}</li>
-            <li class="text-amber-800 dark:text-amber-300">! {text.warning}</li>
-            <li class="text-red-700 dark:text-red-300">× {text.danger}</li>
-          </ul>
-        </section>
+        </div>
+        <div class="overflow-x-auto border-t border-zinc-200 bg-zinc-50 px-6 py-5 font-mono text-[0.65rem] leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
+          <Code variant="plain" class:list={[text.classes({ size: 'inherit', tone: 'inherit' })]}>
+            {"button.classes({ variant: 'secondary', size: 'sm' });"}
+          </Code>
+        </div>
+      </Card>
+    </Container>
+  </section>
+  <Container as="section" width="xl" gutter="compact" aria-labelledby="start-title" class="py-16 sm:py-24">
+    <div class="grid items-start gap-12 lg:grid-cols-2 lg:gap-20">
+      <div>
+        <SectionHeading
+          kicker={copy.startKicker}
+          title={copy.startTitle}
+          description={copy.startBody}
+          id="start-title"
+        />
+        <Link
+          href={sitePath(locale, 'docs')}
+          underline="none"
+          class="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold"
+        >
+          {copy.startLink}
+          <Icon name="arrow-right" class="size-4" />
+        </Link>
       </div>
-    </main>
-    <footer class="flex flex-wrap justify-between gap-4 border-t border-zinc-200 py-7 text-xs text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-      <p>{text.footer}</p>
-      <a href="#top" class="cursor-pointer ui-focus-ring rounded-lg underline underline-offset-4">
-        {text.top}
-      </a>
-    </footer>
-  </div>
-</BaseLayout>
+      <ol class="grid gap-8">
+        {copy.startSteps.map(([title, body], i) => (
+          <li class="flex gap-5">
+            <Text
+              as="span"
+              uiSize="xs"
+              tone="accent"
+              mono
+              class="flex size-10 shrink-0 items-center justify-center rounded-full border border-zinc-300 dark:border-zinc-700"
+            >
+              0{i + 1}
+            </Text>
+            <div>
+              <Heading as="h3" uiSize="sm">
+                {title}
+              </Heading>
+              <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-2">
+                {body}
+              </Text>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+    <div class="mt-12">
+      <Terminal
+        title="visomi-stack / terminal"
+        code={`pnpm install --frozen-lockfile
+pnpm nx serve web-site`}
+      />
+    </div>
+  </Container>
+  <section class="bg-blue-700 text-white dark:bg-blue-600" aria-labelledby="vision-title">
+    <Container
+      as="div"
+      width="xl"
+      gutter="compact"
+      class="grid gap-12 py-16 sm:py-24 lg:grid-cols-[1.15fr_1fr] lg:gap-20"
+    >
+      <div>
+        <Text uiSize="xs" tone="inverse" mono class="mb-5 tracking-widest">
+          {copy.visionKicker}
+        </Text>
+        <Heading as="h2" uiSize="xl" tone="inverse" id="vision-title" class="max-w-xl">
+          {copy.visionTitle}
+        </Heading>
+        <Text uiSize="md" tone="inverse" leading="relaxed" class="mt-6 max-w-xl">
+          {copy.visionBody}
+        </Text>
+        <Link
+          href={`${sitePath(locale, 'architecture')}#direction`}
+          variant="inverse"
+          class="mt-6 inline-flex min-h-11 items-center text-xs leading-6 decoration-white/50"
+        >
+          {copy.visionNote}
+        </Link>
+      </div>
+      <ul class="grid content-center gap-6">
+        {copy.visionItems.map(([title, body], i) => (
+          <li class="flex gap-4 border-t border-white/25 pt-6">
+            <Text as="span" uiSize="xs" tone="inverse" mono>
+              0{i + 1}
+            </Text>
+            <div>
+              <Heading as="h3" uiSize="md" tone="inverse">
+                {title}
+              </Heading>
+              <Text uiSize="sm" tone="inverse" leading="relaxed" class="mt-2">
+                {body}
+              </Text>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Container>
+  </section>
+  <Container
+    as="section"
+    width="xl"
+    gutter="compact"
+    aria-labelledby="faq-title"
+    class="grid gap-10 py-16 sm:py-24 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20"
+  >
+    <Heading as="h2" uiSize="section" id="faq-title" class="max-w-md">
+      {copy.faqTitle}
+    </Heading>
+    <div class="grid gap-3">
+      {copy.faq.map(([question, answer]) => (
+        <Disclosure summary={question}>
+          <Text uiSize="sm" tone="muted" leading="relaxed">
+            {answer}
+          </Text>
+        </Disclosure>
+      ))}
+    </div>
+  </Container>
+  <section class="border-t border-zinc-200 bg-zinc-50 px-5 py-16 text-center sm:px-8 sm:py-20 dark:border-zinc-800 dark:bg-zinc-900/30">
+    <Heading as="h2" uiSize="xl">
+      {copy.finalTitle}
+    </Heading>
+    <Text uiSize="md" tone="muted" class="mx-auto mt-5 max-w-xl">
+      {copy.finalBody}
+    </Text>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <LinkButton href={sitePath(locale, 'docs')}>
+        {labels.start}
+        <Icon name="arrow-right" class="size-4" />
+      </LinkButton>
+      <LinkButton href={sitePath(locale, 'ui')} variant="secondary">
+        {labels.nav.ui}
+      </LinkButton>
+    </div>
+  </section>
+</SiteLayout>

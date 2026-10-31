@@ -1,13 +1,25 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
 
-import { card as styles, type Padding, type SurfaceTone } from '@visomi-stack/web-frontend-ui';
+import { card as styles, type Padding, type SurfaceTone, type CardLayout } from '@visomi-stack/web-frontend-ui';
 
-type Props = HTMLAttributes<'article'> & { tone?: SurfaceTone; padding?: Padding; as?: 'article' | 'section' };
+type Props = HTMLAttributes<'article'> & {
+  tone?: SurfaceTone;
+  padding?: Padding;
+  layout?: CardLayout;
+  as?: 'article' | 'section' | 'div' | 'figure';
+};
 
-const { tone = 'default', padding = 'md', as: Tag = 'article', class: className, ...attributes } = Astro.props;
+const {
+  tone = 'default',
+  padding = 'md',
+  layout = 'stack',
+  as: Tag = 'article',
+  class: className,
+  ...attributes
+} = Astro.props;
 ---
 
-<Tag {...attributes} class:list={[styles.classes({ tone: tone, padding: padding }), className]}>
+<Tag {...attributes} class:list={[styles.classes({ tone: tone, padding, layout }), className]}>
   <slot />
 </Tag>

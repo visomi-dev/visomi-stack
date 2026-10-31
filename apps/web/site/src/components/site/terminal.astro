@@ -1,0 +1,18 @@
+---
+import Card from '../card.astro';
+import { code as styles } from '@visomi-stack/web-frontend-ui';
+type Props = { title: string; code: string };
+const { title, code } = Astro.props;
+---
+
+<Card as="figure" tone="inverse" padding="none" layout="plain" class="overflow-hidden shadow-xl shadow-zinc-950/5">
+  <figcaption class:list={[styles.captionClasses(), 'flex items-center gap-3 border-b border-zinc-800 px-5 py-4']}>
+    <span aria-hidden="true" class="size-2 rounded-full bg-blue-400"></span>
+    {title}
+  </figcaption>
+  <pre
+    tabindex="0"
+    aria-label={title}
+    class={styles.classes({ block: true, variant: 'terminal' })}
+  ><code>{code}</code></pre>
+</Card>

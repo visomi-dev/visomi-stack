@@ -50,6 +50,15 @@ const labels = uiDocs[locale];
       </Text>
     </Card>
   </div>
+  <div class="mt-4 grid gap-4 sm:grid-cols-3">
+    {(['subtle', 'accent', 'inverse'] as const).map((tone) => (
+      <Card tone={tone} padding="sm" layout="plain">
+        <Text uiSize="sm" tone="inherit">
+          {labels.cardBody}
+        </Text>
+      </Card>
+    ))}
+  </div>
   <Card tone="ghost" padding="sm" class="mt-4">
     <Text uiSize="sm" tone="muted">
       {labels.cardGhost}

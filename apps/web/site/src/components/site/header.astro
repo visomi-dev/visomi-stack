@@ -1,0 +1,96 @@
+---
+import { card, linkButton } from '@visomi-stack/web-frontend-ui';
+import Label from '../label.astro';
+import Select from '../select.astro';
+import Container from '../container.astro';
+import Text from '../text.astro';
+import Brand from './brand.astro';
+import Link from '../link.astro';
+import Icon from './icon.astro';
+import { siteCopy, sitePath, type SiteLocale, type SitePage } from '../../content/site';
+type Props = { locale: SiteLocale; page: SitePage };
+const { locale, page } = Astro.props;
+const copy = siteCopy[locale];
+const pages = ['home', 'architecture', 'docs', 'ui'] as const;
+---
+
+<header
+  class="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 dark:border-zinc-800 dark:bg-zinc-950/95"
+  data-site-header
+>
+  <Container as="div" width="xl" gutter="compact" class="flex min-h-20 items-center justify-between gap-2">
+    <Brand locale={locale} compact />
+    <nav aria-label={copy.menu} class="hidden lg:flex lg:items-center lg:gap-1">
+      {pages.map((destination) => (
+        <Link
+          href={sitePath(locale, destination)}
+          variant="muted"
+          underline="none"
+          class="inline-flex min-h-11 items-center px-3 text-sm"
+          aria-current={page === destination ? 'page' : undefined}
+        >
+          {copy.nav[destination]}
+        </Link>
+      ))}
+    </nav>
+    <div class="flex items-center gap-1.5 sm:gap-3">
+      <nav aria-label={copy.language} class="flex gap-0.5 text-xs font-medium">
+        {(['en', 'es'] as const).map((language) => (
+          <Link
+            href={sitePath(language, page)}
+            hreflang={language}
+            lang={language}
+            aria-current={locale === language ? 'page' : undefined}
+            variant="muted"
+            underline="none"
+            class="inline-flex min-h-11 min-w-11 items-center justify-center"
+          >
+            {language.toUpperCase()}
+          </Link>
+        ))}
+      </nav>
+      <Label>
+        <Text as="span" uiSize="inherit" tone="inherit" class="sr-only">
+          {copy.theme}
+        </Text>
+        <Select uiSize="xs" inline data-theme-select>
+          <option value="system">{copy.system}</option>
+          <option value="light">{copy.light}</option>
+          <option value="dark">{copy.dark}</option>
+        </Select>
+      </Label>
+      <details class="group relative lg:hidden" data-site-menu>
+        <summary
+          class:list={[
+            linkButton.classes({ variant: 'secondary', size: 'icon' }),
+            'cursor-pointer list-none [&::-webkit-details-marker]:hidden',
+          ]}
+        >
+          <Text as="span" uiSize="inherit" tone="inherit" class="sr-only">
+            {copy.menu}
+          </Text>
+          <Icon name="menu" />
+        </summary>
+        <nav
+          aria-label={copy.menu}
+          class:list={[
+            card.classes({ padding: 'sm', layout: 'plain' }),
+            'absolute top-14 right-0 grid w-64 max-w-[calc(100vw-2.5rem)] gap-1 shadow-xl shadow-zinc-950/10',
+          ]}
+        >
+          {pages.map((destination) => (
+            <Link
+              href={sitePath(locale, destination)}
+              variant="muted"
+              underline="none"
+              class="inline-flex min-h-11 items-center px-3 text-sm"
+              aria-current={page === destination ? 'page' : undefined}
+            >
+              {copy.nav[destination]}
+            </Link>
+          ))}
+        </nav>
+      </details>
+    </div>
+  </Container>
+</header>

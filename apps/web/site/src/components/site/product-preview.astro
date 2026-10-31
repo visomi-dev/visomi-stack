@@ -1,0 +1,126 @@
+---
+import Avatar from '../avatar.astro';
+import { text } from '@visomi-stack/web-frontend-ui';
+import Code from '../code.astro';
+import Card from '../card.astro';
+import Text from '../text.astro';
+import Heading from '../heading.astro';
+import { siteCopy, sitePath, type SiteLocale } from '../../content/site';
+import Icon from './icon.astro';
+import Badge from '../badge.astro';
+import Link from '../link.astro';
+type Props = { locale: SiteLocale };
+const { locale } = Astro.props;
+const copy = siteCopy[locale].home;
+---
+
+<figure class="relative min-w-0 lg:pt-6">
+  <div
+    class="absolute inset-x-6 bottom-3 top-12 -rotate-3 rounded-2xl border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40"
+    aria-hidden="true"
+  ></div>
+  <Card
+    as="div"
+    tone="default"
+    padding="none"
+    layout="plain"
+    class="relative overflow-hidden shadow-2xl shadow-zinc-950/10 dark:shadow-black/30"
+  >
+    <div class="flex items-center gap-2 border-b border-zinc-200 bg-zinc-50 px-5 py-3 dark:border-zinc-700 dark:bg-zinc-900">
+      <span class="size-2 rounded-full bg-zinc-300 dark:bg-zinc-600" aria-hidden="true"></span>
+      <span class="size-2 rounded-full bg-zinc-300 dark:bg-zinc-600" aria-hidden="true"></span>
+      <span class="size-2 rounded-full bg-zinc-300 dark:bg-zinc-600" aria-hidden="true"></span>
+      <Text as="span" uiSize="xs" tone="subtle" mono class="ml-3">
+        visomi / workspace
+      </Text>
+    </div>
+    <div class="grid grid-cols-[3rem_minmax(0,1fr)] sm:grid-cols-[3.5rem_minmax(0,1fr)]">
+      <div class="flex flex-col items-center gap-5 border-r border-zinc-200 bg-zinc-50 py-5 text-zinc-400 dark:border-zinc-700 dark:bg-zinc-950">
+        <span class="flex size-7 items-center justify-center rounded-lg bg-blue-600 font-heading text-xs font-bold text-white">
+          V
+        </span>
+        <Icon name="layers" class="size-4 text-blue-700 dark:text-blue-400" />
+        <Icon name="box" class="size-4" />
+        <Icon name="branch" class="size-4" />
+      </div>
+      <div class="min-w-0 p-5 sm:p-7">
+        <div class="mb-6 flex items-center justify-between gap-3">
+          <Text as="span" uiSize="xs" tone="subtle" mono>
+            WORKSPACE / 01
+          </Text>
+          <Avatar uiSize="sm" label={copy.sampleValue} class="font-mono">
+            OR
+          </Avatar>
+        </div>
+        <Heading as="p" uiSize="md">
+          {copy.previewTitle}
+        </Heading>
+        <Text uiSize="sm" tone="subtle" class="mt-2">
+          {copy.previewSubtitle}
+        </Text>
+        <Card as="div" tone="default" padding="sm" layout="plain" class="mt-7">
+          <div class="mb-5 flex flex-wrap items-center gap-3">
+            <Icon name="box" class="size-5 text-blue-700 dark:text-blue-400" />
+            <Text uiSize="sm" tone="inherit" weight="medium">
+              {copy.previewProject}
+            </Text>
+          </div>
+          <Badge tone="success">{copy.previewReady}</Badge>
+          <div class="mt-5 flex gap-1.5" aria-hidden="true">
+            <span class="h-1.5 flex-1 rounded-full bg-blue-600"></span>
+            <span class="h-1.5 flex-1 rounded-full bg-blue-500"></span>
+            <span class="h-1.5 flex-1 rounded-full bg-blue-300 dark:bg-blue-900"></span>
+            <span class="h-1.5 flex-1 rounded-full bg-zinc-100 dark:bg-zinc-800"></span>
+          </div>
+        </Card>
+        <div class="mt-5 grid gap-3">
+          <div class="flex gap-3">
+            <span class="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-400">
+              <Icon name="check" class="size-3" />
+            </span>
+            <div>
+              <Text uiSize="xs" tone="inherit" weight="semibold">
+                {copy.previewActivity}
+              </Text>
+              <Text uiSize="xs" tone="subtle" class="mt-1">
+                {copy.previewActivityText}
+              </Text>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full border border-zinc-300 text-zinc-500 dark:border-zinc-700">
+              <Icon name="branch" class="size-3" />
+            </span>
+            <div>
+              <Text uiSize="xs" tone="inherit" weight="semibold">
+                {copy.previewNext}
+              </Text>
+              <Text uiSize="xs" tone="subtle" class="mt-1">
+                {copy.previewNextText}
+              </Text>
+            </div>
+          </div>
+        </div>
+        <Link
+          href={`${sitePath(locale, 'ui')}shell/`}
+          underline="none"
+          class="mt-6 inline-flex min-h-11 items-center gap-2 text-xs font-medium"
+        >
+          {copy.previewLink}
+          <Icon name="arrow-right" class="size-4" />
+        </Link>
+      </div>
+    </div>
+    <div class="flex gap-3 border-t border-zinc-700 bg-zinc-950 px-5 py-4 font-mono text-[0.65rem] text-zinc-300">
+      <span class="text-blue-400" aria-hidden="true">
+        $
+      </span>
+      <Code variant="plain" class:list={[text.classes({ size: 'inherit', tone: 'inherit' })]}>
+        pnpm nx serve web-app
+      </Code>
+    </div>
+  </Card>
+  <Text as="figcaption" uiSize="xs" tone="subtle" class="relative mt-6 text-center">
+    {copy.previewLabel}
+  </Text>
+</figure>

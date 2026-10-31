@@ -1,0 +1,29 @@
+---
+import BaseLayout from './base.astro';
+import Header from '../components/site/header.astro';
+import Footer from '../components/site/footer.astro';
+import { siteCopy, type SiteLocale, type SitePage } from '../content/site';
+type Props = { locale: SiteLocale; page: SitePage; title: string; description: string };
+const { locale, page, title, description } = Astro.props;
+---
+
+<BaseLayout locale={locale} title={title} description={description}>
+  <slot name="head" slot="head" />
+  <div id="top">
+    <a
+      href="#main"
+      class="ui-focus-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:rounded-lg focus:bg-white focus:p-4 focus:text-zinc-950"
+    >
+      {siteCopy[locale].skip}
+    </a>
+    <Header locale={locale} page={page} />
+    <main
+      id="main"
+      tabindex="-1"
+      class="min-w-0 scroll-mt-24 focus:outline-none [&_:focus]:scroll-mt-28 [&_:target]:scroll-mt-28"
+    >
+      <slot />
+    </main>
+    <Footer locale={locale} />
+  </div>
+</BaseLayout>

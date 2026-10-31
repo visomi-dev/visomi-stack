@@ -1,4 +1,5 @@
 ---
+import { text } from '@visomi-stack/web-frontend-ui';
 import { uiDocs, type UiLocale } from '../../ui-docs';
 import Alert from '../alert.astro';
 import Loader from '../loader.astro';
@@ -21,15 +22,21 @@ const labels = uiDocs[locale];
 >
   <div class="grid gap-3">
     <Alert tone="success">
-      <strong class="font-medium">{labels.alertTitle}</strong>
+      <strong class:list={[text.classes({ size: 'inherit', tone: 'inherit', weight: 'medium' })]}>
+        {labels.alertTitle}
+      </strong>
       <p>{labels.alertBody}</p>
     </Alert>
     <Alert tone="warning">
-      <strong class="font-medium">{labels.warning}</strong>
+      <strong class:list={[text.classes({ size: 'inherit', tone: 'inherit', weight: 'medium' })]}>
+        {labels.warning}
+      </strong>
       <p>{labels.alertBody}</p>
     </Alert>
     <Alert tone="danger">
-      <strong class="font-medium">{labels.danger}</strong>
+      <strong class:list={[text.classes({ size: 'inherit', tone: 'inherit', weight: 'medium' })]}>
+        {labels.danger}
+      </strong>
       <p>{labels.alertBody}</p>
     </Alert>
   </div>
@@ -44,7 +51,9 @@ const labels = uiDocs[locale];
 >
   <div class="flex items-center gap-3">
     <Loader label={labels.loading} />
-    <span class="text-sm text-zinc-600 dark:text-zinc-400">{labels.loading}</span>
+    <Text as="span" uiSize="sm" tone="muted">
+      {labels.loading}
+    </Text>
   </div>
 </Preview>
 <Preview

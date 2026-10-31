@@ -1,0 +1,116 @@
+---
+import Container from '../../components/container.astro';
+import Card from '../../components/card.astro';
+import Text from '../../components/text.astro';
+import Heading from '../../components/heading.astro';
+import SiteLayout from '../../layouts/site.astro';
+import { isSiteLocale, siteCopy, sitePath, repositoryUrl } from '../../content/site';
+import RuntimeMap from '../../components/site/runtime-map.astro';
+import Icon from '../../components/site/icon.astro';
+import LinkButton from '../../components/link-button.astro';
+import Badge from '../../components/badge.astro';
+const locale = Astro.params.locale;
+if (!isSiteLocale(locale)) return new Response(null, { status: 404 });
+const labels = siteCopy[locale];
+const copy = labels.architecture;
+---
+
+<SiteLayout locale={locale} page="architecture" title={copy.title} description={copy.description}>
+  <Container as="div" width="xl" gutter="compact">
+    <header class="max-w-3xl pt-14 pb-12 sm:pt-20 sm:pb-16">
+      <Text uiSize="xs" tone="accent" mono leading="relaxed" class="mb-6 tracking-widest">
+        {copy.eyebrow}
+      </Text>
+      <Heading as="h1" uiSize="display">
+        {copy.title}
+      </Heading>
+      <Text uiSize="lg" tone="muted" class="mt-7 max-w-2xl">
+        {copy.intro}
+      </Text>
+    </header>
+    <RuntimeMap locale={locale} />
+    <section class="py-16 sm:py-24" aria-labelledby="current-title">
+      <div class="mb-9 flex flex-wrap items-center gap-4">
+        <Heading as="h2" uiSize="title" id="current-title">
+          {copy.implementedTitle}
+        </Heading>
+        <Badge tone="success">{copy.current}</Badge>
+      </div>
+      <div class="grid gap-5 md:grid-cols-2">
+        {copy.implemented.map(([title, body]) => (
+          <Card as="article" tone="default" padding="lg" layout="plain">
+            <Icon name="check" class="mb-5 size-5 text-blue-700 dark:text-blue-400" />
+            <Heading as="h3" uiSize="md">
+              {title}
+            </Heading>
+            <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-3 max-w-lg">
+              {body}
+            </Text>
+          </Card>
+        ))}
+      </div>
+    </section>
+    <section
+      id="direction"
+      class="scroll-mt-28 border-t border-zinc-200 py-16 sm:py-20 dark:border-zinc-800"
+      aria-labelledby="direction-title"
+    >
+      <Badge>{copy.direction}</Badge>
+      <Heading as="h2" uiSize="section" id="direction-title" class="mt-5 max-w-2xl">
+        {copy.directionTitle}
+      </Heading>
+      <Text uiSize="md" tone="muted" class="mt-5 max-w-2xl">
+        {copy.directionIntro}
+      </Text>
+      <div class="mt-10 grid gap-5 md:grid-cols-2">
+        {copy.future.map(([title, body], i) => (
+          <Card as="article" tone="subtle" padding="lg" layout="plain" class="border-dashed">
+            <Text as="span" uiSize="xs" tone="accent" mono>
+              0{i + 1}
+            </Text>
+            <Heading as="h3" uiSize="md" class="mt-5">
+              {title}
+            </Heading>
+            <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-3">
+              {body}
+            </Text>
+          </Card>
+        ))}
+      </div>
+    </section>
+    <section class="border-t border-zinc-200 py-16 sm:py-20 dark:border-zinc-800" aria-labelledby="principles-title">
+      <Heading as="h2" uiSize="title" id="principles-title">
+        {copy.principlesTitle}
+      </Heading>
+      <div class="mt-10 grid gap-8 md:grid-cols-3">
+        {copy.principles.map(([title, body]) => (
+          <article>
+            <Heading as="h3" uiSize="sm">
+              {title}
+            </Heading>
+            <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-3">
+              {body}
+            </Text>
+          </article>
+        ))}
+      </div>
+    </section>
+    <Card as="section" tone="subtle" padding="lg" layout="plain" class="mb-16">
+      <Heading as="h2" uiSize="lg">
+        {copy.nextTitle}
+      </Heading>
+      <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-4 max-w-xl">
+        {copy.nextBody}
+      </Text>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <LinkButton href={sitePath(locale, 'docs')}>
+          {labels.start}
+          <Icon name="arrow-right" class="size-4" />
+        </LinkButton>
+        <LinkButton href={`${repositoryUrl}/blob/main/docs/architecture.md`} variant="secondary">
+          {labels.repoDocs}
+        </LinkButton>
+      </div>
+    </Card>
+  </Container>
+</SiteLayout>

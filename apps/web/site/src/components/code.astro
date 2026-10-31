@@ -1,13 +1,13 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
 
-import { code as styles } from '@visomi-stack/web-frontend-ui';
+import { code as styles, type CodeVariant } from '@visomi-stack/web-frontend-ui';
 
-type Props = HTMLAttributes<'code'> & { block?: boolean };
+type Props = HTMLAttributes<'code'> & { block?: boolean; variant?: CodeVariant };
 
-const { block = false, class: className, ...attributes } = Astro.props;
+const { block = false, variant = 'default', class: className, ...attributes } = Astro.props;
 ---
 
-<code {...attributes} class:list={[styles.classes({ block: block }), className]}>
+<code {...attributes} class:list={[styles.classes({ block, variant }), className]}>
   <slot />
 </code>

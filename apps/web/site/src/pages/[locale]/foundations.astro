@@ -1,0 +1,76 @@
+---
+import Container from '../../components/container.astro';
+import Card from '../../components/card.astro';
+import Text from '../../components/text.astro';
+import Heading from '../../components/heading.astro';
+import SiteLayout from '../../layouts/site.astro';
+import { messages } from '../../i18n';
+import { isSiteLocale } from '../../content/site';
+const locale = Astro.params.locale;
+if (!isSiteLocale(locale)) return new Response(null, { status: 404 });
+const text = messages[locale];
+---
+
+<SiteLayout locale={locale} page="foundations" title={text.foundations} description={text.intro}>
+  <Container width="lg" gutter="compact" class="py-14 sm:py-20">
+    <div class="mb-5 flex items-center gap-3 font-mono text-xs tracking-wider text-blue-700 dark:text-blue-400">
+      <span aria-hidden="true" class="h-px w-8 bg-current"></span>01 / {text.foundations}
+    </div>
+    <Heading as="h1" uiSize="display" class="max-w-3xl">
+      {text.title}
+    </Heading>
+    <Text uiSize="lead" tone="muted" class="mt-6 max-w-2xl">
+      {text.intro}
+    </Text>
+    <div class="mt-14 grid gap-5 lg:grid-cols-3">
+      <Card as="section" tone="subtle" padding="lg" layout="plain">
+        <Heading as="h2" uiSize="sm">
+          {text.type}
+        </Heading>
+        <Text uiSize="sm" tone="muted" class="mt-2">
+          {text.typeNote}
+        </Text>
+        <div class="mt-10 font-heading text-6xl font-semibold tracking-tight">Aa</div>
+        <Text uiSize="sm" tone="inherit" leading="relaxed" class="mt-6">
+          {text.body}
+        </Text>
+        <Text uiSize="xs" tone="muted" mono class="mt-6 border-t border-zinc-200 pt-4 dark:border-zinc-700">
+          {text.mono}
+        </Text>
+      </Card>
+      <Card as="section" tone="subtle" padding="lg" layout="plain">
+        <Heading as="h2" uiSize="sm">
+          {text.surfaces}
+        </Heading>
+        <Text uiSize="sm" tone="muted" class="mt-2">
+          {text.surfaceNote}
+        </Text>
+        <div class="mt-8 grid gap-3 text-sm">
+          <Card as="div" tone="default" padding="sm" layout="plain">
+            {text.canvas}
+          </Card>
+          <Card as="div" tone="subtle" padding="sm" layout="plain">
+            {text.panel}
+          </Card>
+          <Card as="div" tone="raised" padding="sm" layout="plain">
+            {text.raised}
+          </Card>
+        </div>
+      </Card>
+      <Card as="section" tone="subtle" padding="lg" layout="plain">
+        <Heading as="h2" uiSize="sm">
+          {text.palette}
+        </Heading>
+        <Text uiSize="sm" tone="muted" class="mt-2">
+          {text.paletteNote}
+        </Text>
+        <div class="mt-8 rounded-lg bg-blue-600 p-4 text-sm font-medium text-white">{text.brand}</div>
+        <ul class="mt-6 space-y-4 text-sm">
+          <li class="text-green-800 dark:text-green-300">✓ {text.success}</li>
+          <li class="text-amber-800 dark:text-amber-300">! {text.warning}</li>
+          <li class="text-red-700 dark:text-red-300">× {text.danger}</li>
+        </ul>
+      </Card>
+    </div>
+  </Container>
+</SiteLayout>

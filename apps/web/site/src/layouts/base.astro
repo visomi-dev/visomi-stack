@@ -18,6 +18,12 @@ const { locale, title, description } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     {description && <meta name="description" content={description} />}
     <title>{title} · Visomi Stack</title>
+    <meta property="og:site_name" content="Visomi Stack" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={`${title} · Visomi Stack`} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:locale" content={locale === 'en' ? 'en_US' : 'es_ES'} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline src={themeScript}></script>
     <slot name="head" />
   </head>

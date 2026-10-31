@@ -20,6 +20,27 @@ describe('portable UI recipes', () => {
     expect(ui.linkButton.classes()).toContain('aria-[current=page]:');
   });
 
+  it('keeps inline links configurable without introducing button geometry or disabled semantics', () => {
+    expect(ui.link.classes()).toContain('ui-focus-ring');
+    expect(ui.link.classes().split(' ')).toContain('underline');
+
+    for (const variant of ['default', 'muted', 'inverse'] as const) {
+      for (const underline of ['always', 'hover', 'none'] as const) {
+        const classes = ui.link.classes({ variant, underline });
+
+        expect(classes).not.toContain('undefined');
+        expect(classes).not.toContain('min-h-');
+        expect(classes).not.toContain('disabled:');
+        expect(classes).not.toContain('enabled:');
+      }
+    }
+
+    expect(ui.link.classes({ variant: 'muted', underline: 'hover' })).toContain('focus-visible:underline');
+    expect(ui.link.classes({ variant: 'inverse' })).toContain('focus-visible:outline-white');
+    expect(ui.link.classes({ variant: 'inverse' })).not.toContain('ui-focus-ring');
+    expect(ui.link.classes({ underline: 'none' })).not.toContain('hover:underline');
+  });
+
   it('keeps tone independent from geometry across feedback and surfaces', () => {
     for (const tone of ['neutral', 'accent', 'success', 'warning', 'danger'] as const) {
       expect(ui.badge.classes({ tone })).toContain('rounded-md');
@@ -34,7 +55,7 @@ describe('portable UI recipes', () => {
 
   it('supports control sizing without changing native state or value', () => {
     for (const recipe of [ui.input, ui.textarea, ui.select]) {
-      for (const size of ['sm', 'md', 'lg'] as const) {
+      for (const size of ['xs', 'sm', 'md', 'lg'] as const) {
         const classes = recipe.classes({ size });
 
         expect(classes).toContain('ui-focus-ring');
@@ -48,6 +69,22 @@ describe('portable UI recipes', () => {
     expect(ui.checkbox.classes()).not.toContain('appearance-none');
     expect(ui.toggle.classes()).toContain('checked:');
     expect(ui.toggle.classes()).toContain('forced-colors:appearance-auto');
+  });
+
+  it('allows composed surfaces and inline controls without competing default geometry', () => {
+    const plainCard = ui.card.classes({ tone: 'inverse', layout: 'plain', padding: 'none' }).split(' ');
+    const inlineSelect = ui.select.classes({ size: 'xs', inline: true }).split(' ');
+
+    expect(plainCard).not.toEqual(expect.arrayContaining(['flex', 'gap-4', 'p-4', 'bg-white']));
+    expect(plainCard).toContain('bg-zinc-950');
+    expect(ui.card.classes().split(' ')).toEqual(expect.arrayContaining(['flex', 'flex-col', 'gap-4', 'p-4']));
+    expect(inlineSelect).toEqual(expect.arrayContaining(['inline-block', 'w-auto', 'min-h-11']));
+    expect(inlineSelect).not.toEqual(expect.arrayContaining(['block', 'w-full']));
+    expect(ui.select.classes().split(' ')).toEqual(expect.arrayContaining(['block', 'w-full']));
+    expect(ui.container.classes({ gutter: 'none' })).not.toContain('px-');
+    expect(ui.text.classes({ size: 'inherit', tone: 'inherit' }).split(' ')).toEqual(['text-pretty', 'text-inherit']);
+    expect(ui.code.classes({ variant: 'plain' })).not.toContain('bg-');
+    expect(ui.heading.classes({ tone: 'inverse' })).not.toContain('dark:text-');
   });
 
   it('keeps field spacing and table layout options independent of validation and density', () => {

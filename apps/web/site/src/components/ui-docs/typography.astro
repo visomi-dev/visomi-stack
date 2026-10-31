@@ -44,6 +44,9 @@ const labels = uiDocs[locale];
     <Text tone="muted" uiSize="sm">
       {labels.muted}
     </Text>
+    <Text tone="accent" uiSize="xs" mono weight="medium">
+      {labels.body}
+    </Text>
   </div>
 </Preview>
 <Preview
@@ -58,10 +61,24 @@ const labels = uiDocs[locale];
 <Preview
   id="link"
   locale={locale}
-  angular={'<a appUI href="#forms">Learn more</a>'}
-  astro={'<Link href="#forms">Learn more</Link>'}
+  angular={
+    '<a appUI href="#forms">Learn more</a>\n<a appUI variant="muted" underline="hover" href="#forms">Learn more</a>\n<a appUI variant="inverse" href="#forms">Learn more</a>'
+  }
+  astro={
+    '<Link href="#forms">Learn more</Link>\n<Link variant="muted" underline="hover" href="#forms">Learn more</Link>\n<Link variant="inverse" href="#forms">Learn more</Link>'
+  }
 >
-  <Link href="#forms">{labels.learn}</Link>
+  <div class="flex flex-wrap items-center gap-6">
+    <Link href="#forms">{labels.learn}</Link>
+    <Link href="#forms" variant="muted" underline="hover">
+      {labels.learn}
+    </Link>
+    <div class="rounded-lg bg-blue-700 px-4 py-3">
+      <Link href="#forms" variant="inverse">
+        {labels.learn}
+      </Link>
+    </div>
+  </div>
 </Preview>
 <Preview
   id="divider"

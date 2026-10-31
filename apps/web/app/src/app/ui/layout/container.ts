@@ -1,6 +1,6 @@
 import { Directive, computed, input } from '@angular/core';
 
-import { container as styles, type ContainerWidth } from '@visomi-stack/web-frontend-ui';
+import { container as styles, type ContainerWidth, type ContainerGutter } from '@visomi-stack/web-frontend-ui';
 
 @Directive({
   selector: 'div[appUI=container]',
@@ -8,6 +8,7 @@ import { container as styles, type ContainerWidth } from '@visomi-stack/web-fron
 })
 export class Container {
   readonly width = input<ContainerWidth>('lg');
+  readonly gutter = input<ContainerGutter>('default');
 
-  protected readonly classes = computed(() => styles.classes({ width: this.width() }));
+  protected readonly classes = computed(() => styles.classes({ width: this.width(), gutter: this.gutter() }));
 }

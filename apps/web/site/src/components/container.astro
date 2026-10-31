@@ -1,13 +1,13 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
 
-import { container as styles, type ContainerWidth } from '@visomi-stack/web-frontend-ui';
+import { container as styles, type ContainerWidth, type ContainerGutter } from '@visomi-stack/web-frontend-ui';
 
-type Props = HTMLAttributes<'div'> & { width?: ContainerWidth };
+type Props = HTMLAttributes<'div'> & { width?: ContainerWidth; gutter?: ContainerGutter; as?: 'div' | 'section' };
 
-const { width = 'lg', class: className, ...attributes } = Astro.props;
+const { width = 'lg', gutter = 'default', as: Tag = 'div', class: className, ...attributes } = Astro.props;
 ---
 
-<div {...attributes} class:list={[styles.classes({ width: width }), className]}>
+<Tag {...attributes} class:list={[styles.classes({ width, gutter }), className]}>
   <slot />
-</div>
+</Tag>

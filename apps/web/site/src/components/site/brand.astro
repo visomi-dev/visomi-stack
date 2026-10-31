@@ -1,0 +1,16 @@
+---
+import { sitePath, type SiteLocale } from '../../content/site';
+type Props = { locale: SiteLocale; compact?: boolean };
+const { locale, compact = false } = Astro.props;
+---
+
+<a
+  href={sitePath(locale, 'home')}
+  aria-label="Visomi Stack"
+  class="ui-focus-ring inline-flex min-h-11 shrink-0 items-center gap-3 rounded-lg font-heading text-base font-bold tracking-tight"
+>
+  <span class="flex size-9 items-center justify-center rounded-xl bg-blue-600 text-lg text-white">V</span>
+  <span class:list={[compact ? 'hidden sm:inline' : '']}>
+    visomi<span class="mx-1 font-sans font-normal text-zinc-400 dark:text-zinc-500">/</span>stack
+  </span>
+</a>

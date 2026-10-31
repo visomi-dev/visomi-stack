@@ -1,4 +1,6 @@
 ---
+import { text } from '@visomi-stack/web-frontend-ui';
+import Text from '../text.astro';
 import { uiDocs, type UiLocale } from '../../ui-docs';
 import Fieldset from '../fieldset.astro';
 import Field from '../field.astro';
@@ -102,7 +104,9 @@ const labels = uiDocs[locale];
   angular={'<input appUI type="email" uiSize="sm" [size]="24" required />'}
   astro={'<Input type="email" uiSize="sm" size={24} required />'}
 >
-  <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{labels.fieldBehavior}</p>
+  <Text as="p" uiSize="sm" tone="muted" class="mb-4">
+    {labels.fieldBehavior}
+  </Text>
   <div id="validation-fields" class="grid gap-4">
     <Field controlId="input-email" label={labels.email} description={labels.emailHint} error={labels.emailError}>
       <Input
@@ -123,13 +127,15 @@ const labels = uiDocs[locale];
         {labels.validate}
       </Button>
     </div>
-    <p
+    <Text
+      as="p"
+      uiSize="sm"
+      tone="muted"
       role="status"
       data-ui-validation-status
       data-valid={labels.valid}
       data-invalid={labels.invalid}
-      class="text-sm text-zinc-600 dark:text-zinc-400"
-    ></p>
+    />
   </div>
 </Preview>
 <Preview
@@ -227,15 +233,23 @@ const labels = uiDocs[locale];
       <RadioCard>
         <Radio name="example-plan" value="standard" checked />
         <span>
-          <strong class="block font-medium">{labels.radioCardTitle}</strong>
-          <span class="mt-1 block text-zinc-600 dark:text-zinc-400">{labels.radioCardDescription}</span>
+          <strong class:list={[text.classes({ size: 'inherit', tone: 'inherit', weight: 'medium' }), 'block']}>
+            {labels.radioCardTitle}
+          </strong>
+          <Text as="span" uiSize="inherit" tone="muted" class="mt-1 block">
+            {labels.radioCardDescription}
+          </Text>
         </span>
       </RadioCard>
       <RadioCard>
         <Radio name="example-plan" value="shared" />
         <span>
-          <strong class="block font-medium">{labels.shared}</strong>
-          <span class="mt-1 block text-zinc-600 dark:text-zinc-400">{labels.radioCardDescription}</span>
+          <strong class:list={[text.classes({ size: 'inherit', tone: 'inherit', weight: 'medium' }), 'block']}>
+            {labels.shared}
+          </strong>
+          <Text as="span" uiSize="inherit" tone="muted" class="mt-1 block">
+            {labels.radioCardDescription}
+          </Text>
         </span>
       </RadioCard>
     </div>
