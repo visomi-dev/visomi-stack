@@ -41,17 +41,21 @@ const tokenSchema = z.strictObject({
 
 export function createBrowserTelemetry(options: {
   observability: Observability;
-  assets: BrowserAssets;
-  application: BrowserErrorReport['application'];
+  assets: Partial<Record<BrowserErrorReport['application'], BrowserAssets>>;
   origin: string;
   now?: () => number;
 }): { context: RequestHandler; router: Router; close: () => void } {
   const origin = new URL(options.origin).origin;
   const now = options.now ?? Date.now;
   const secret = randomBytes(32);
-  const release = createHash('sha256')
-    .update([...options.assets.keys()].sort().join(','))
-    .digest('hex');
+  const releases = new Map(
+    Object.entries(options.assets).map(([application, assets]) => [
+      application,
+      createHash('sha256')
+        .update([...assets.keys()].sort().join(','))
+        .digest('hex'),
+    ]),
+  );
   const router = Router();
   const store = new MemoryStore();
 
@@ -119,7 +123,9 @@ export function createBrowserTelemetry(options: {
   router.get('/config', (_request, response) =>
     response.json({
       token: sign('report'),
-      assets: [...options.assets].flatMap(([id, asset]) => asset.paths.map((path) => ({ id, path }))),
+      assets: Object.values(options.assets).flatMap((assets) =>
+        [...assets].flatMap(([id, asset]) => asset.paths.map((path) => ({ id, path }))),
+      ),
     }),
   );
   router.post(
@@ -141,16 +147,17 @@ export function createBrowserTelemetry(options: {
     (request, response) => {
       const parsed = reportSchema.safeParse(request.body);
 
-      if (!parsed.success || parsed.data.application !== options.application) {
+      if (!parsed.success || !options.assets[parsed.data.application]) {
         response.status(400).json({ error: 'telemetry_invalid' });
 
         return;
       }
 
       const { correlation, location, ...report } = parsed.data;
+      const assets = options.assets[report.application]!;
 
       if (location) {
-        const asset = options.assets.get(location.asset);
+        const asset = assets.get(location.asset);
         const columns = asset?.lines[location.line - 1];
 
         if (columns === undefined || location.column > columns + 1) {
@@ -163,7 +170,11 @@ export function createBrowserTelemetry(options: {
       const parent = verify(correlation, 'correlate')?.context;
 
       options.observability.frontendError(
-        { ...report, ...(location ? { location } : {}), release: location ? release : 'unknown' },
+        {
+          ...report,
+          ...(location ? { location } : {}),
+          release: location ? releases.get(report.application)! : 'unknown',
+        },
         parent,
       );
       response.sendStatus(202);

@@ -63,26 +63,26 @@ below do not constitute a full accessibility conformance audit.
 
 ## Routes and runtime boundaries
 
-| Surface | English    | Spanish    | Runtime                                |
-| ------- | ---------- | ---------- | -------------------------------------- |
-| Website | `/en/`     | `/es/`     | Compiled Astro through Express gateway |
-| Webapp  | `/app/en/` | `/app/es/` | Independent Angular SSR server         |
-| API     | `/api/`    | Same       | Existing embedded Express API          |
+| Surface | English    | Spanish    | Runtime                                  |
+| ------- | ---------- | ---------- | ---------------------------------------- |
+| Website | `/en/`     | `/es/`     | Compiled Astro through Express gateway   |
+| Webapp  | `/app/en/` | `/app/es/` | Compiled Angular through Express gateway |
+| API     | `/api/`    | Same       | Existing embedded Express API            |
 
 The website root and standalone webapp root redirect to English. Astro messages
 live with the site. Angular uses XLIFF, localized build outputs and `withI18nSupport()` for hydration
 of translated blocks. Localizing UI
 copy does not change the English convention for code, comments and documentation.
 
-The gateway executable imports only compiled API and Astro modules. It validates
+The gateway executable imports only compiled API, Angular and Astro modules. It validates
 the Astro middleware contract and passes the handler and absolute public-asset
 directory into its import-safe composition function. `SITE_APP_PATH` overrides
 the compiled Astro entry for local execution; its default is the sibling
 `../site/server/entry.mjs`. The matching `client` directory is derived from that
 entry, independently of the process working directory.
 
-API handling and reserved `/api` and `/app` 404s precede public static assets and
-Astro SSR. The gateway owns the listener, security headers, authentication chain,
+API handling, Angular at `/app` and reserved `/api` and `/app` 404s precede public static assets and
+Astro SSR. Angular keeps the full URL prefix for its localized SSR manifest and assets. The gateway owns the listener, security headers, authentication chain,
 telemetry and resource shutdown. The shared error handler remains last.
 
 The pinned Astro packages have pnpm patches for the gateway's runtime policy:
@@ -92,11 +92,30 @@ details. The configured site logger emits controlled event codes only. See
 [patch maintenance](../patches/README.md); keep these files in dependency installs
 and build-cache inputs until replacement versions pass the regressions.
 
-Nx builds `web-site` and `web-api` before the gateway. Preserve all three sibling
+Nx builds `web-site`, `web-app` and `web-api` before the gateway. Preserve all four sibling
 output directories, including site chunks and client assets. The existing Docker
 build copies `dist/apps/web` into the runtime image; dependencies required there
-remain in the root production manifest. No hosting or deployment is configured
-by this change. Angular gateway integration is deferred.
+remain in the root production manifest. The gateway serves Angular at `/app/en/` and `/app/es/` alongside the website and API.
+
+Angular's compiled `server/server.mjs` exports `createApp()` and `clientDirectory`.
+The gateway validates that contract, injects its existing observability runtime,
+and owns authentication, Helmet, final error handling, the listener and shutdown.
+`APPLICATION_APP_PATH` can override the adjacent `../app/server/server.mjs` artifact.
+Importing Angular composition installs no SDK, listener or shutdown handler. The
+Angular SSR engine is created lazily once for the process.
+
+For independent execution, `pnpm nx run web-app:standalone-build` compiles the
+Angular composition and its separate `server/standalone.mjs` executable.
+`pnpm nx run web-app:preview` starts that executable with its own telemetry and
+optional browser intake. Both executables use the same factory.
+
+Angular documents use a fresh CSP nonce for each response. The build-time
+`ngCspNonce` placeholder also covers Angular's early hydration bootstrap script;
+the server replaces that placeholder before writing the HTML, removes stale
+length/ETag headers and sends `Cache-Control: no-store`. The browser receives the
+same nonce in HTML and Helmet's script/style directives. Astro and API retain the
+existing policy. The parent must supply the nonce when inheriting Helmet.
+See [Angular CSP guidance](https://angular.dev/best-practices/security#content-security-policy).
 
 ## Verification
 

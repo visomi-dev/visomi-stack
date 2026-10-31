@@ -17,6 +17,7 @@ test('reports browser failures without private data and keeps source maps privat
 
   const response = await configuration;
   const config = await response.json();
+  const asset = config.assets.find((entry: { path: string }) => entry.path.startsWith('/app/'));
 
   expect(response.status()).toBe(200);
   expect(config.assets.length).toBeGreaterThan(0);
@@ -54,7 +55,7 @@ test('reports browser failures without private data and keeps source maps privat
         colno: 1,
       }),
     );
-  }, config.assets[0]);
+  }, asset);
 
   await expect.poll(() => reports.length).toBe(3);
 
@@ -67,7 +68,7 @@ test('reports browser failures without private data and keeps source maps privat
       code: 'unhandled_exception',
       kind: 'RangeError',
       screen: 'home',
-      location: { asset: config.assets[0].id, line: 1, column: 1 },
+      location: { asset: asset.id, line: 1, column: 1 },
     },
   ]);
   expect(JSON.stringify(reports)).not.toContain('SYNTHETIC_PRIVATE_BROWSER_MARKER');
@@ -78,4 +79,22 @@ test('reports browser failures without private data and keeps source maps privat
     expect(sourceMap.status()).toBe(404);
     expect(encodedMap.status()).toBe(404);
   }
+});
+
+test('uses a fresh CSP nonce per response for SSR and hydration scripts', async ({ request }) => {
+  const first = await request.get('/app/en/');
+  const second = await request.get('/app/es/');
+  const firstHtml = await first.text();
+  const secondHtml = await second.text();
+  const firstNonce = firstHtml.match(/ngcspnonce="([^"]+)"/i)?.[1];
+  const secondNonce = secondHtml.match(/ngcspnonce="([^"]+)"/i)?.[1];
+
+  expect(firstNonce).toBeTruthy();
+  expect(secondNonce).not.toBe(firstNonce);
+  expect(first.headers()['content-security-policy']).toContain(`'nonce-${firstNonce}'`);
+  expect(second.headers()['content-security-policy']).toContain(`'nonce-${secondNonce}'`);
+  expect(first.headers()['content-security-policy']).not.toContain('unsafe-inline');
+  expect(first.headers()['cache-control']).toBe('no-store');
+  expect(firstHtml).not.toContain('__VISOMI_CSP_NONCE__');
+  expect(firstHtml).toMatch(/<script[^>]+nonce="[^"]+"[^>]*>/);
 });

@@ -29,8 +29,8 @@ for diagnostics. Authentication infrastructure remains a separate step.
 ## Build and runtime
 
 The repository-root `Dockerfile` defaults to `APP_NAME=web-gateway`. Its Nx build
-also builds the API and Astro site. Production dependencies are installed in a separate build stage. The final
-image preserves `dist/apps/web/{gateway,api,site}` together, runs as the
+also builds the API, Angular app and Astro site. Production dependencies are installed in a separate build stage. The final
+image preserves `dist/apps/web/{gateway,api,app,site}` together, runs as the
 unprivileged `node` user, and contains neither pnpm nor the root development
 tooling. The Node base is pinned by version and multi-platform image digest.
 Update the version and digest together and verify both images after updating. Compose
@@ -335,8 +335,14 @@ still required to persist reports in Jaeger.
 The independent Angular Node executable supports the same flags and its own
 public origin. It owns its telemetry runtime and closes it on SIGTERM/SIGINT.
 `APP_VERSION` optionally supplies a bounded numeric service version; otherwise the
-service version is `unknown`. Only the Node entrypoint can import backend telemetry;
+service version is `unknown`. Only the Node composition and executable can import backend telemetry;
 Angular browser code uses the portable TypeScript capture library.
+
+The gateway mounts the Angular composition with its existing telemetry runtime;
+Angular does not initialize or close a second SDK. One browser intake accepts
+both `web-app` and `web-site`, with separate asset allowlists and release
+fingerprints. An asset from the other application is rejected. The gateway owns
+the permit/correlation signing key, rate-limit store and shutdown for both.
 
 Angular uses `provideBrowserGlobalErrorListeners()` and a custom `ErrorHandler`
 that delegates to the `BrowserTelemetry` service. The browser entrypoint creates

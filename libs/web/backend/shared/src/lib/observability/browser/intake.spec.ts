@@ -31,7 +31,7 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
-async function fixture(useClock = true) {
+async function fixture(useClock = true, includeApp = false) {
   if (useClock) {
     vi.useFakeTimers({ toFake: ['Date'] });
   }
@@ -48,8 +48,12 @@ async function fixture(useClock = true) {
   const telemetry = createBrowserTelemetry({
     observability: runtime,
     origin,
-    application: 'web-site',
-    assets: new Map([[asset, { paths: ['/_astro/synthetic.js'], lines: [100, 10] }]]),
+    assets: {
+      'web-site': new Map([[asset, { paths: ['/_astro/synthetic.js'], lines: [100, 10] }]]),
+      ...(includeApp
+        ? { 'web-app': new Map([['b'.repeat(64), { paths: ['/app/en/synthetic.js'], lines: [50] }]]) }
+        : {}),
+    },
     ...(useClock ? { now: () => now } : {}),
   });
   const app = express();
@@ -107,6 +111,30 @@ function signed(value: unknown): string {
 }
 
 describe('private browser error intake', () => {
+  it('shares an intake across both applications while isolating assets and release fingerprints', async () => {
+    const f = await fixture(true, true);
+    const appAsset = 'b'.repeat(64);
+
+    expect(f.config.assets).toEqual([
+      { id: asset, path: '/_astro/synthetic.js' },
+      { id: appAsset, path: '/app/en/synthetic.js' },
+    ]);
+    const angular = await f.send({
+      ...report,
+      application: 'web-app',
+      location: { asset: appAsset, line: 1, column: 1 },
+    });
+    const astro = await f.send({ ...report, location: { asset, line: 1, column: 1 } });
+    const wrongApp = await f.send({ ...report, application: 'web-app', location: { asset, line: 1, column: 1 } });
+    const wrongSite = await f.send({ ...report, location: { asset: appAsset, line: 1, column: 1 } });
+
+    expect([angular.status, astro.status, wrongApp.status, wrongSite.status]).toEqual([202, 202, 400, 400]);
+    const errors = f.spans.getFinishedSpans().filter((span) => span.name === 'frontend.error');
+
+    expect(errors.map((span) => span.attributes['frontend.application'])).toEqual(['web-app', 'web-site']);
+    expect(errors[0].attributes['frontend.release']).not.toBe(errors[1].attributes['frontend.release']);
+    expect(JSON.stringify(errors.map((span) => span.attributes))).not.toContain(marker);
+  });
   it('exports only verified fields, correlates server-issued context, and never adopts incoming traceparent', async () => {
     const f = await fixture();
     const response = await fetch(f.url + '/api/failure', {

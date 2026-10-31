@@ -11,7 +11,8 @@ for the previous stack.
 apps/
   web/
     api/          # web-api: application factory and standalone startup
-    gateway/      # web-gateway: ESM host mounting the compiled API at /api
+    gateway/      # web-gateway: ESM host for compiled API, Angular and Astro
+    app/          # web-app: import-safe Angular SSR factory and independent executable
 libs/
   backend/
     shared/       # backend-shared: HTTP-independent database and email capabilities

@@ -4,11 +4,13 @@ test('exports one completion per concurrent request across both middleware layer
   request,
   telemetry: telemetryFiles,
 }) => {
-  const responses = await Promise.all(['/api/', '/api/missing', '/missing'].map((path) => request.get(path)));
+  const responses = await Promise.all(
+    ['/api/', '/api/missing', '/missing', '/app/en/'].map((path) => request.get(path)),
+  );
   const ids = responses.map((response) => response.headers()['x-request-id']);
 
-  expect(responses.map((response) => response.status())).toEqual([200, 404, 404]);
-  expect(new Set(ids).size).toBe(3);
+  expect(responses.map((response) => response.status())).toEqual([200, 404, 404, 200]);
+  expect(new Set(ids).size).toBe(4);
 
   await expect
     .poll(async () => {
@@ -19,7 +21,7 @@ test('exports one completion per concurrent request across both middleware layer
         telemetry.spans.some((span) => (span.context as { spanId: string }).spanId === log.spanId),
       ).length;
     })
-    .toBe(3);
+    .toBe(4);
 
   const telemetry = await telemetryFiles.read();
 
@@ -35,7 +37,7 @@ test('exports one completion per concurrent request across both middleware layer
 
   expect(
     new Set(telemetry.logs.filter((log) => ids.includes(log.requestId as string)).map((log) => log.traceId)).size,
-  ).toBe(3);
+  ).toBe(4);
 
   await expect
     .poll(async () => {

@@ -9,10 +9,12 @@ import express, { static as serveStatic } from 'express';
 
 import type { ApiModule, EmbeddedAuthentication } from './api-module';
 import type { SiteModule } from './site-module';
+import type { ApplicationModule } from './application-module';
 
 export function createGatewayApp(options: {
   api: ApiModule;
   site?: SiteModule;
+  application?: ApplicationModule;
   auth?: EmbeddedAuthentication;
   observability?: Observability;
   browserTelemetry?: Pick<ReturnType<typeof createBrowserTelemetry>, 'context' | 'router'>;
@@ -33,7 +35,16 @@ export function createGatewayApp(options: {
   }
 
   if ((options.helmetMode ?? 'managed') === 'managed') {
-    app.use(securityHeaders());
+    const headers = securityHeaders();
+    const applicationHeaders = securityHeaders({ nonce: true });
+
+    app.use((request, response, next) =>
+      (request.path === '/app' || request.path.startsWith('/app/') ? applicationHeaders : headers)(
+        request,
+        response,
+        next,
+      ),
+    );
   }
 
   app.use((request, response, next) => {
@@ -70,6 +81,23 @@ export function createGatewayApp(options: {
       observability: options.observability,
     }),
   );
+  if (options.application) {
+    const application = options.application.createApp({
+      observability: options.observability,
+      errorMode: 'inherited',
+      helmetMode: 'inherited',
+    });
+
+    // Preserve /app in the URL for Angular's localized assets and SSR manifest.
+    app.use((request, response, next) => {
+      if (request.path === '/app' || request.path.startsWith('/app/')) {
+        application(request, response, next);
+      } else {
+        next();
+      }
+    });
+  }
+
   // Public pages must never turn missing API or future application routes into site responses.
   app.use(['/api', '/app'], (_request, response) => response.status(404).json({ error: 'not_found' }));
   if (options.site) {

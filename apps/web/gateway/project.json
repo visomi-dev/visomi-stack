@@ -14,9 +14,14 @@
         "^production",
         "{workspaceRoot}/.railway/jaeger.yaml",
         "{workspaceRoot}/tools/deployment/jaeger-check.mjs",
-        { "dependentTasksOutputFiles": "**/*", "transitive": true }
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
       ],
-      "options": { "command": "node tools/deployment/jaeger-check.mjs" }
+      "options": {
+        "command": "node tools/deployment/jaeger-check.mjs"
+      }
     },
     "deployment-check": {
       "executor": "nx:run-commands",
@@ -88,7 +93,8 @@
       "options": {
         "env": {
           "API_APP_PATH": "../../../dist/apps/web/api/app.js",
-          "SITE_APP_PATH": "../../../dist/apps/web/site/server/entry.mjs"
+          "SITE_APP_PATH": "../../../dist/apps/web/site/server/entry.mjs",
+          "APPLICATION_APP_PATH": "../../../dist/apps/web/app/server/server.mjs"
         }
       }
     },
@@ -182,5 +188,5 @@
       }
     }
   },
-  "implicitDependencies": ["web-api", "web-site"]
+  "implicitDependencies": ["web-api", "web-site", "web-app"]
 }

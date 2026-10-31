@@ -7,7 +7,7 @@ export default [
   ...configs['flat/angular-template'],
   ...baseConfig,
   {
-    files: ['src/server.ts'],
+    files: ['src/server.ts', 'src/standalone.ts'],
     settings: { 'import-x/internal-regex': '^@visomi-stack/(?:web-backend-shared|web-shared-observability)(?:/|$)' },
     rules: {
       // The Node executable owns server telemetry; browser application code cannot import backend modules.

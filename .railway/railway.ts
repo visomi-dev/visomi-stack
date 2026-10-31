@@ -10,6 +10,7 @@ export const watchPatterns = [
   '/apps/web/gateway/**',
   '/apps/web/api/**',
   '/apps/web/site/**',
+  '/apps/web/app/**',
   '/libs/backend/shared/**',
   '/libs/web/backend/shared/**',
   '/libs/web/frontend/ui/**',

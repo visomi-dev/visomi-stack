@@ -17,6 +17,7 @@ test('reports browser failures without private data and keeps source maps privat
 
   const response = await configuration;
   const config = await response.json();
+  const asset = config.assets.find((entry: { path: string }) => entry.path.startsWith('/_astro/'));
 
   expect(response.status()).toBe(200);
   expect(config.assets.length).toBeGreaterThan(0);
@@ -51,7 +52,7 @@ test('reports browser failures without private data and keeps source maps privat
         colno: 1,
       }),
     );
-  }, config.assets[0]);
+  }, asset);
 
   await expect.poll(() => reports.length).toBe(3);
 
@@ -64,7 +65,7 @@ test('reports browser failures without private data and keeps source maps privat
       code: 'unhandled_exception',
       kind: 'RangeError',
       screen: 'ui',
-      location: { asset: config.assets[0].id, line: 1, column: 1 },
+      location: { asset: asset.id, line: 1, column: 1 },
     },
   ]);
   expect(JSON.stringify(reports)).not.toContain('SYNTHETIC_PRIVATE_BROWSER_MARKER');

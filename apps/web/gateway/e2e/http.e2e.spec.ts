@@ -5,6 +5,8 @@ test('mounts the API and public site with the host Helmet policy', async ({ requ
     ['/api/', 200],
     ['/api/missing', 404],
     ['/en/', 200],
+    ['/app/en/', 200],
+    ['/app/es/', 200],
     ['/api/auth/passkeys', 401],
   ] as const) {
     const response = await request.get(path);

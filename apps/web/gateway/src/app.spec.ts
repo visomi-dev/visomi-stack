@@ -86,6 +86,56 @@ describe('gateway composition', () => {
     expect(result).toEqual({ status: 200, body: { enabled: true } });
     expect(context).toHaveBeenCalledOnce();
   });
+
+  it('mounts Angular after authentication with the host runtime and preserves its URL prefix', async () => {
+    const auth = {
+      middleware: [
+        (_request: Request, response: Response, next: () => void) => {
+          response.locals.initialized = true;
+          next();
+        },
+      ],
+    };
+    const handler = vi.fn<RequestHandler>((request, response, next) => {
+      if (request.path.endsWith('/missing')) {
+        next();
+
+        return;
+      }
+
+      response.json({ path: request.path, initialized: response.locals.initialized });
+    });
+    const application = { createApp: vi.fn(() => handler), clientDirectory: '/synthetic/app/browser' };
+    const siteHandler = vi.fn<RequestHandler>((_request, response) => response.json({ page: 'site' }));
+    const app = createGatewayApp({
+      api: apiFixture(),
+      application,
+      auth,
+      site: { handler: siteHandler, clientDirectory: '/synthetic/site/client' },
+    });
+    const inspect = vi.fn();
+    const rendered = await dispatch(app, '/app/es/', inspect);
+
+    expect(rendered).toEqual({ status: 200, body: { path: '/app/es/', initialized: true } });
+    expect(inspect.mock.calls[0][0]['content-security-policy']).toContain("'nonce-");
+    expect(application.createApp).toHaveBeenCalledExactlyOnceWith({
+      observability: undefined,
+      errorMode: 'inherited',
+      helmetMode: 'inherited',
+    });
+    const missing = await dispatch(app, '/app/es/missing');
+
+    expect(missing).toEqual({ status: 404, body: { error: 'not_found' } });
+    expect(siteHandler).not.toHaveBeenCalled();
+    const publicPage = await dispatch(app, '/en/');
+
+    expect(publicPage).toEqual({ status: 200, body: { page: 'site' } });
+    expect(handler).toHaveBeenCalledTimes(2);
+    handler.mockImplementation((_request, _response, next) => next(new Error('SYNTHETIC_PRIVATE_ANGULAR_FAILURE')));
+    const failed = await dispatch(app, '/app/en/');
+
+    expect(failed).toEqual({ status: 500, body: { error: 'internal_error' } });
+  });
   it('mounts public middleware after reserved routes and sanitizes its failures', async () => {
     const handler = vi.fn<RequestHandler>((_request, response) => response.json({ page: 'synthetic_site' }));
     const site = { handler, clientDirectory: '/synthetic/missing/client' };

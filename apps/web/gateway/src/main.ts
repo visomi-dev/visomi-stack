@@ -19,6 +19,7 @@ import { loadApi } from './api-module';
 import type { EmbeddedAuthentication } from './api-module';
 import { createGatewayApp } from './app';
 import { loadSite } from './site-module';
+import { loadApplication } from './application-module';
 
 const observability = initializeObservability({
   service: 'web-gateway',
@@ -95,7 +96,14 @@ async function bootstrap() {
   const siteEntry = process.env.SITE_APP_PATH
     ? pathToFileURL(resolve(process.env.SITE_APP_PATH))
     : new URL('../site/server/entry.mjs', import.meta.url);
-  const [api, site] = await Promise.all([loadApi(entry), loadSite(siteEntry)]);
+  const applicationEntry = process.env.APPLICATION_APP_PATH
+    ? pathToFileURL(resolve(process.env.APPLICATION_APP_PATH))
+    : new URL('../app/server/server.mjs', import.meta.url);
+  const [api, site, angular] = await Promise.all([
+    loadApi(entry),
+    loadSite(siteEntry),
+    loadApplication(applicationEntry),
+  ]);
 
   if (stopping) {
     return;
@@ -123,8 +131,11 @@ async function bootstrap() {
     return;
   }
 
-  if (process.env.VISOMI_BROWSER_TELEMETRY === 'true' && site) {
-    const assets = await browserAssets(site.clientDirectory);
+  if (process.env.VISOMI_BROWSER_TELEMETRY === 'true') {
+    const [applicationAssets, siteAssets] = await Promise.all([
+      browserAssets(angular.clientDirectory, '/app'),
+      site ? browserAssets(site.clientDirectory) : Promise.resolve(undefined),
+    ]);
 
     if (stopping) {
       return;
@@ -132,8 +143,7 @@ async function bootstrap() {
 
     browserTelemetry = createBrowserTelemetry({
       observability,
-      application: 'web-site',
-      assets,
+      assets: { 'web-app': applicationAssets, ...(siteAssets ? { 'web-site': siteAssets } : {}) },
       origin: process.env.BROWSER_TELEMETRY_ORIGIN ?? 'https://stack.visomi.dev',
     });
   }
@@ -141,6 +151,7 @@ async function bootstrap() {
   const application = createGatewayApp({
     api,
     site,
+    application: angular,
     auth,
     observability,
     ...(browserTelemetry ? { browserTelemetry } : {}),

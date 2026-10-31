@@ -88,6 +88,7 @@ async function startGateway(endpoint) {
         DATABASE_URL: '',
         API_APP_PATH: '',
         SITE_APP_PATH: '',
+        APPLICATION_APP_PATH: '',
         VISOMI_OTLP_TRACING: 'true',
         VISOMI_BROWSER_TELEMETRY: 'true',
         BROWSER_TELEMETRY_ORIGIN: `http://127.0.0.1:${port}`,
@@ -223,28 +224,36 @@ try {
   const correlation = failedRequest.headers.get('x-telemetry-context');
 
   assert.ok(correlation, 'The gateway must issue its own signed correlation context');
-  const browserReport = await fetch(`${gateway.origin}/telemetry/errors`, {
-    method: 'POST',
-    headers: {
-      origin: gateway.origin,
-      'content-type': 'application/json',
-      'x-browser-telemetry': browserConfiguration.token,
-      cookie: marker,
-      authorization: `Bearer ${marker}`,
-    },
-    body: JSON.stringify({
-      application: 'web-site',
-      code: 'request_failed',
-      kind: 'unknown',
-      screen: 'home',
-      location: { asset: browserConfiguration.assets[0].id, line: 1, column: 1 },
-      correlation,
-    }),
-  });
+  for (const [application, prefix] of [
+    ['web-site', '/_astro/'],
+    ['web-app', '/app/'],
+  ]) {
+    const asset = browserConfiguration.assets.find((entry) => entry.path.startsWith(prefix));
 
-  assert.equal(browserReport.status, 202);
+    assert.ok(asset);
+    const browserReport = await fetch(`${gateway.origin}/telemetry/errors`, {
+      method: 'POST',
+      headers: {
+        origin: gateway.origin,
+        'content-type': 'application/json',
+        'x-browser-telemetry': browserConfiguration.token,
+        cookie: marker,
+        authorization: `Bearer ${marker}`,
+      },
+      body: JSON.stringify({
+        application,
+        code: 'request_failed',
+        kind: 'unknown',
+        screen: 'home',
+        location: { asset: asset.id, line: 1, column: 1 },
+        correlation,
+      }),
+    });
+
+    assert.equal(browserReport.status, 202);
+  }
   const logs = await gateway.stop();
-  let frontendVerified = false;
+  const verifiedApplications = new Set();
   const readTrace = async (id) => {
     const response = await fetch(`${query}/api/v3/traces/${id}?raw_traces=true`);
     const body = await response.text();
@@ -274,7 +283,9 @@ try {
         assert.equal(span.events?.length ?? 0, 0, 'Application spans must not carry events or exceptions');
         assert.equal(span.links?.length ?? 0, 0);
         if (span.name === 'frontend.error') {
-          frontendVerified = true;
+          verifiedApplications.add(
+            span.attributes.find((attribute) => attribute.key === 'frontend.application').value.stringValue,
+          );
           assert.ok(span.parentSpanId, 'Browser API errors must reference a verified gateway span');
         } else {
           assert.ok(!span.parentSpanId, 'Synthetic operations must generate fresh root traces');
@@ -307,7 +318,7 @@ try {
       }
     }
   }
-  assert.ok(frontendVerified, 'An accepted browser error must be stored in Jaeger');
+  assert.deepEqual([...verifiedApplications].sort(), ['web-app', 'web-site']);
   assert.ok(logs.some((log) => log.event === 'job.execute' && log.outcome === 'job_failed'));
   container('stop', '--time', '10', name);
   const unavailable = await startGateway(receiver);
