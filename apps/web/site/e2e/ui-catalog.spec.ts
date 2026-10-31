@@ -40,7 +40,7 @@ for (const locale of ['en', 'es']) {
 
     await Promise.all(scripts);
 
-    expect(scripts).toHaveLength(2);
+    expect(scripts).toHaveLength(3);
     expect(scriptBytes).toBeLessThan(6144);
     expect(errors).toEqual([]);
   });

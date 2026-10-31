@@ -158,3 +158,29 @@ test('serves readable content with JavaScript disabled', async ({ browser }, inf
     await context.close();
   }
 });
+
+test('applies a persisted theme before application modules load', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('visomi.theme', 'dark'));
+
+  await page.route('**/*.js', async (request) => {
+    if (new URL(request.request().url()).pathname.includes('theme-init')) {
+      await request.continue();
+    } else {
+      await request.abort();
+    }
+  });
+
+  await page.goto(route());
+
+  await expect(page.locator('html')).toHaveClass('dark');
+
+  const bootstrap = page.locator('head script[src*="theme-init"]');
+
+  await expect(bootstrap).toHaveCount(1);
+
+  const deferred = await bootstrap.getAttribute('defer');
+
+  expect(deferred).toBeNull();
+
+  await expect(bootstrap).not.toHaveAttribute('type', 'module');
+});

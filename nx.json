@@ -21,7 +21,7 @@
     ],
     "webStyles": [
       "{workspaceRoot}/styles.base.css",
-      "{workspaceRoot}/libs/web/frontend/ui/src/theme/theme.base.js",
+      "{workspaceRoot}/libs/web/frontend/ui/src/lib/theme.ts",
       "{workspaceRoot}/.postcssrc.json"
     ]
   },

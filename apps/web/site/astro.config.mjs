@@ -16,6 +16,8 @@ export default defineConfig({
     routing: { prefixDefaultLocale: true, redirectToDefaultLocale: true },
   },
   vite: {
+    // The gateway permits only external scripts, including small processed TypeScript entries.
+    build: { assetsInlineLimit: 0 },
     plugins: [tailwindcss()],
     css: { postcss: { plugins: [] } },
   },

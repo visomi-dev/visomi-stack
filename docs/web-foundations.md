@@ -26,21 +26,34 @@ in the foreground so Nx owns its lifetime. Angular uses the root PostCSS configu
 and disables PostCSS plugin discovery to avoid processing Tailwind twice.
 Prettier reads the same stylesheet for custom utility ordering.
 
-Both builds hash the shared stylesheet, theme script and dependency lockfile.
+Both builds hash the shared stylesheet, TypeScript theme sources and dependency lockfile.
 Changes to those files invalidate their Nx build caches.
 
 ## Themes and accessibility
 
-`libs/web/frontend/ui/src/theme/theme.base.js` is a shared classic browser script loaded synchronously before
-paint. Angular copies it as a public asset; Astro imports it as a non-inlined URL.
-The gateway's existing self-only script policy remains intact. Fonts and scripts
-are served locally; no external telemetry or font services are enabled.
+`web-frontend-ui` exports the pure TypeScript `theme` policy and the
+`ThemePreference` / `ColorScheme` types. It validates `light`, `dark` and `system`,
+resolves system preferences, and owns the `visomi.theme` storage key without
+accessing the DOM or browser storage.
 
-The script stores `light`, `dark` or `system` in the `visomi.theme` local-storage
-key. Missing or invalid preferences follow the system. Explicit preferences win
-over system changes. Blocked storage affects persistence only. The script applies
-`.dark` to the document root and connects native `[data-theme-select]` controls.
-It is guarded against server execution. It does not expose a global API.
+Each frontend owns a small `src/theme-init.ts` entry. Its `theme-build` Nx target
+uses the installed Rolldown compiler to emit a classic script before the main
+build. Angular copies the result as `theme-init.js`; Astro imports a non-inlined,
+hashed URL. Both load it synchronously in the head before paint. Development
+servers also run `theme-watch`. No hand-maintained JavaScript bootstrap remains.
+
+Angular's `select[appUITheme]` directive connects native selectors to the `Theme`
+service, whose signals and media listener initialize after rendering and clean
+up with the owning injector. Astro's `ThemeSelect` wraps its existing native
+`Select` adapter and bundles a TypeScript script once per page. Both adapters
+use the shared policy and synchronize multiple `[data-theme-select]` controls.
+Missing or invalid preferences follow the system; explicit preferences win over
+system changes. Blocked storage affects persistence only. The resolved scheme
+applies `.dark` to the document root without rewriting rendered markup.
+
+The gateway's existing self-only script policy remains intact. Astro disables
+asset inlining so even small processed scripts stay external. Fonts and scripts
+are served locally; no external telemetry or font services are enabled.
 
 Use semantic landmarks, translated labels, visible keyboard focus, adequate
 contrast and 44px control targets. Scrolling respects reduced motion; components must apply the same preference
@@ -126,9 +139,9 @@ and a native GET form that works without JavaScript. No Angular Elements runtime
 is loaded. See the [library README](../libs/web/frontend/ui/README.md) for usage
 and verification commands.
 
-The production gateway sample loads 1,818 bytes of script bodies: 1,470 bytes for
-the existing theme script and 348 bytes for the counter. The shared recipe adds
-no browser JavaScript to Astro. The Playwright script-payload test records these
+The production gateway sample loads the before-paint theme entry, the Astro
+theme-control script and the counter, within a combined 4 KiB raw-script budget.
+The shared button recipe adds no browser JavaScript to Astro. The Playwright script-payload test records these
 resources in `javascript-cost.json`; CSS, fonts and HTTP headers are excluded.
 Astro's tsconfig explicitly includes `src/**/*.astro` so Vite can apply the
 workspace-generated import paths to those files.
@@ -146,16 +159,15 @@ and a static marker where necessary. `app-field` owns field composition and
 projects the native control; `p[app-error]` owns the message animation wrapper. Form controls use `uiSize` for visual size, preserving native
 numeric `size`. Integration tests cover selector isolation, form values,
 attributes, events, visual changes and native modal delegation. The catalog
-renders entirely through Astro SSR; only the external theme and small native
+renders entirely through Astro SSR; only the external theme entries and small native
 demo script run in the browser, within the existing CSP. The tests cover all
 families, both languages, JavaScript-disabled controls, dialog focus and Escape,
 local validation, reduced motion and mobile/desktop layouts in both themes.
 
-The compiled catalog loads 2,749 bytes of script bodies: the existing 1,470-byte
-theme script and a 1,279-byte documentation enhancement. The recipes add no
-browser JavaScript. These measurements exclude CSS, fonts and HTTP headers;
-the browser test checks that only those two scripts load and caps their combined
-raw size at 6 KiB.
+The compiled catalog loads three scripts: the before-paint theme entry, the Astro
+theme-control script and a documentation enhancement. The recipes add no browser
+JavaScript. The browser test caps their combined raw size at 6 KiB, excluding
+CSS, fonts and HTTP headers.
 
 Field errors and responsive table options are described in the shared library
 README. Their state and layout selectors remain in the component recipes.

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 for (const locale of ['en', 'es']) {
-  test(`the ${locale} shell renders through Express with only the theme script`, async ({ page, request }) => {
+  test(`the ${locale} shell renders through Express with only the theme scripts`, async ({ page, request }) => {
     const path = `/${locale}/ui/shell/`;
     const response = await request.get(path);
     const html = await response.text();
@@ -33,8 +33,8 @@ for (const locale of ['en', 'es']) {
 
     const sizes = await Promise.all(scripts);
 
-    expect(sizes).toHaveLength(1);
-    expect(sizes[0]).toBeLessThan(2048);
+    expect(sizes).toHaveLength(2);
+    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(2048);
     expect(errors).toEqual([]);
   });
 }

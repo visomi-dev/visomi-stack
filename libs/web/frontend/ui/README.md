@@ -1,6 +1,6 @@
-# Frontend UI styles
+# Frontend UI
 
-Framework-independent Tailwind recipes, generated with `@nx/js:library` as an
+Framework-independent Tailwind recipes and theme policy, generated with `@nx/js:library` as an
 internal, non-buildable library. Consumers compile the TypeScript source.
 The library has no Angular, Astro, DOM or Node runtime dependencies.
 
@@ -19,6 +19,45 @@ focus and form semantics remain the consumer's responsibility. Keep class names
 complete and include this library's source in each application's Tailwind
 `@source` declarations. Extra layout classes can live at the call site; the order
 of conflicting utilities in a class string does not define precedence.
+
+## Theme policy and adapters
+
+`theme` provides a framework-independent policy alongside the visual recipes:
+
+```ts
+import { theme, type ThemePreference, type ColorScheme } from '@visomi-stack/web-frontend-ui';
+
+const preference: ThemePreference = theme.preference('dark');
+const scheme: ColorScheme = theme.resolve(preference, false);
+theme.storageKey; // visomi.theme
+theme.isPreference('system'); // true
+```
+
+Invalid stored values resolve to `system`. An explicit `light` or `dark`
+preference overrides the system scheme. The library reads no browser globals;
+each frontend owns storage, DOM updates and listener lifecycle.
+
+Angular uses the `Theme` service and `select[appUITheme]` directive from its
+`ui/theme/` adapters. Add `appUI` separately for the existing select appearance:
+
+```html
+<select appUI appUITheme aria-label="Appearance">
+  <option value="system">System</option>
+  <option value="light">Light</option>
+  <option value="dark">Dark</option>
+</select>
+```
+
+Astro uses `components/theme-select.astro`, which retains the existing `Select`
+props and projects the same native options. Both synchronize multiple controls,
+persist selection when storage is available, and follow system changes in
+`system` mode. Labels and translated options belong to each consumer.
+
+Each frontend compiles its own TypeScript before-paint entry with the `theme-build`
+target; its normal build and development targets run the prerequisite. The
+external classic script applies the shared policy before framework code runs.
+See [web foundations](../../../../docs/web-foundations.md#themes-and-accessibility)
+for the build and CSP contract.
 
 ## Recipes and options
 
@@ -58,7 +97,7 @@ own required internal markup. Both use the same portable class recipes.
 
 The Angular adapters are grouped by responsibility under `app/ui/`:
 `actions/`, `typography/`, `layout/` (including shell and navigation), `data/`,
-`forms/`, `feedback/` and `overlays/`. Focused tests live beside their subject;
+`forms/`, `feedback/`, `overlays/` and `theme/`. Focused tests live beside their subject;
 `ui.spec.ts` covers the complete catalog. The root `ui/index.ts` remains the
 public entry point for individual exports and `UI_IMPORTS`. Implementation files
 import their siblings directly rather than importing the public barrel.
@@ -174,7 +213,7 @@ rewriting, modal drawer or client layout script is introduced.
 
 Full Astro examples live at `/en/ui/shell/` and `/es/ui/shell/`; Angular's existing
 localized foundation pages demonstrate the same shell. The Astro page loads
-only the existing theme script, and works without JavaScript. Navigation markup
+only the theme bootstrap and theme-control scripts, and works without JavaScript. Navigation markup
 exists in both desktop and mobile slots, with exactly one version visible and
 accessible at a time. There is no shared framework runtime.
 

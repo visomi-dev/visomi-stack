@@ -89,6 +89,11 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
           <option value="am">Americas</option>
           <option value="eu">Europe</option>
         </select>
+        <select appUI appUITheme aria-label="Appearance">
+          <option value="system">System</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
         <label appUI inline><input appUI type="checkbox" [formControl]="checked" /> Updates</label>
         <label appUI inline><input appUI type="radio" name="kind" value="one" /> One</label>
         <label appUI inline><input appUI="switch" type="checkbox" /> Notifications</label>

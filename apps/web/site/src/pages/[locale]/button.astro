@@ -1,7 +1,7 @@
 ---
 import { container } from '@visomi-stack/web-frontend-ui';
 import Label from '../../components/label.astro';
-import Select from '../../components/select.astro';
+import ThemeSelect from '../../components/theme-select.astro';
 import Card from '../../components/card.astro';
 import Text from '../../components/text.astro';
 import Heading from '../../components/heading.astro';
@@ -84,11 +84,11 @@ const text = spanish
     </Card>
     <Label inline class="mt-8">
       {text.theme}
-      <Select uiSize="xs" inline data-theme-select>
+      <ThemeSelect uiSize="xs" inline>
         <option value="system">{text.system}</option>
         <option value="light">{text.light}</option>
         <option value="dark">{text.dark}</option>
-      </Select>
+      </ThemeSelect>
     </Label>
   </main>
 </BaseLayout>

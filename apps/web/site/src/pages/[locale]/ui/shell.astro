@@ -1,6 +1,6 @@
 ---
 import Label from '../../../components/label.astro';
-import Select from '../../../components/select.astro';
+import ThemeSelect from '../../../components/theme-select.astro';
 import Text from '../../../components/text.astro';
 import Heading from '../../../components/heading.astro';
 import BaseLayout from '../../../layouts/base.astro';
@@ -69,11 +69,11 @@ const destinations = [
       </Link>
       <Label inline>
         <span>{labels.theme}</span>
-        <Select uiSize="xs" inline data-theme-select>
+        <ThemeSelect uiSize="xs" inline>
           <option value="system">{labels.system}</option>
           <option value="light">{labels.light}</option>
           <option value="dark">{labels.dark}</option>
-        </Select>
+        </ThemeSelect>
       </Label>
     </Topbar>
     <header class="mb-8 grid gap-4">

@@ -1,0 +1,56 @@
+---
+import type { ComponentProps } from 'astro/types';
+
+import Select from './select.astro';
+
+type Props = ComponentProps<typeof Select>;
+---
+
+<Select {...Astro.props} data-theme-select>
+  <slot />
+</Select>
+
+<script>
+  import { theme } from '@visomi-stack/web-frontend-ui';
+
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  let stored: unknown;
+
+  try {
+    stored = localStorage.getItem(theme.storageKey);
+  } catch {
+    // The system preference is used when persistence is unavailable.
+  }
+
+  let preference = theme.preference(stored);
+
+  function apply() {
+    document.documentElement.classList.toggle('dark', theme.resolve(preference, media.matches) === 'dark');
+    for (const control of document.querySelectorAll<HTMLSelectElement>('select[data-theme-select]')) {
+      control.value = preference;
+    }
+  }
+
+  apply();
+  media.addEventListener('change', apply);
+  document.addEventListener('change', (event) => {
+    const control = event.target;
+
+    if (!(control instanceof HTMLSelectElement) || !control.matches('[data-theme-select]')) {
+      return;
+    }
+
+    if (!theme.isPreference(control.value)) {
+      return;
+    }
+
+    preference = control.value;
+
+    try {
+      localStorage.setItem(theme.storageKey, preference);
+    } catch {
+      // Theme changes remain usable when storage is blocked.
+    }
+    apply();
+  });
+</script>
