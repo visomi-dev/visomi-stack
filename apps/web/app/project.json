@@ -27,13 +27,19 @@
         },
         "outputMode": "server",
         "security": {
-          "allowedHosts": ["localhost", "127.0.0.1"]
+          "allowedHosts": ["localhost", "127.0.0.1", "stack.visomi.dev"]
         },
         "baseHref": "/app/",
         "polyfills": ["@angular/localize/init"]
       },
       "configurations": {
         "production": {
+          "sourceMap": {
+            "scripts": true,
+            "styles": false,
+            "hidden": true,
+            "sourcesContent": true
+          },
           "budgets": [
             {
               "type": "initial",
@@ -106,9 +112,9 @@
     "preview": {
       "executor": "nx:run-commands",
       "continuous": true,
-      "dependsOn": ["build"],
+      "dependsOn": ["standalone-build"],
       "options": {
-        "command": "node dist/apps/web/app/server/server.mjs",
+        "command": "node dist/apps/web/app/server/standalone.mjs",
         "env": {
           "PORT": "4201",
           "HOST": "127.0.0.1"
@@ -128,6 +134,27 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm exec tsc -p apps/web/app/tsconfig.app.json --noEmit"
+      }
+    },
+    "standalone-build": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": ["build"],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/apps/web/app/server/standalone.mjs",
+        "{workspaceRoot}/dist/apps/web/app/server/standalone.mjs.map"
+      ],
+      "options": {
+        "cwd": "apps/web/app",
+        "command": "rolldown -c standalone.config.ts"
       }
     }
   },

@@ -3,7 +3,7 @@ import { Socket } from 'node:net';
 
 import { AuthHttpError, HttpError, httpErrorHandler, initializeObservability } from '@visomi-stack/web-backend-shared';
 import type { Request, RequestHandler, Response } from 'express';
-import express from 'express';
+import express, { Router } from 'express';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ApiModule, EmbeddedAuthentication } from './api-module';
@@ -38,6 +38,128 @@ function apiFixture(handler: RequestHandler = (request, response) => response.js
 }
 
 describe('gateway composition', () => {
+  it('serves a silent disabled configuration without entering authentication', async () => {
+    const authenticate = vi.fn<RequestHandler>();
+    const inspect = vi.fn();
+    const result = await dispatch(
+      createGatewayApp({
+        api: apiFixture(),
+        auth: {
+          middleware: [authenticate],
+        } as EmbeddedAuthentication,
+      }),
+      '/telemetry/config',
+      inspect,
+    );
+
+    expect(result).toEqual({ status: 200, body: { enabled: false } });
+    expect(inspect.mock.calls[0][0]['cache-control']).toBe('no-store');
+    expect(authenticate).not.toHaveBeenCalled();
+  });
+  it.each(['/main.js.map', '/main.js%2Emap'])('keeps source maps private for %s', async (path) => {
+    const handler = vi.fn<RequestHandler>();
+    const result = await dispatch(
+      createGatewayApp({
+        api: apiFixture(),
+        site: {
+          handler,
+          clientDirectory: '/synthetic/client',
+        },
+      }),
+      path,
+    );
+
+    expect(result).toEqual({ status: 404, body: { error: 'not_found' } });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it.each(['/en/%zz', '/app/en/%', '/api/%E0%A4%A'])('rejects malformed path encoding for %s', async (path) => {
+    const authenticate = vi.fn<RequestHandler>();
+    const handler = vi.fn<RequestHandler>();
+    const result = await dispatch(
+      createGatewayApp({
+        api: apiFixture(handler),
+        auth: { middleware: [authenticate] } as EmbeddedAuthentication,
+        application: { createApp: () => handler, clientDirectory: '/synthetic/app/browser' },
+        site: { handler, clientDirectory: '/synthetic/site/client' },
+      }),
+      path + '?private=SYNTHETIC_PRIVATE_QUERY',
+    );
+
+    expect(result).toEqual({ status: 400, body: { error: 'request_invalid' } });
+    expect(authenticate).not.toHaveBeenCalled();
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('accepts an encoded literal percent without decoding it twice', async () => {
+    const result = await dispatch(createGatewayApp({ api: apiFixture() }), '/api/%25');
+
+    expect(result).toEqual({ status: 200, body: { path: '/%25' } });
+  });
+
+  it('mounts browser intake before the API', async () => {
+    const context = vi.fn<RequestHandler>((_request, _response, next) => next());
+    const router = Router();
+
+    router.get('/config', (_request, response) => response.json({ enabled: true }));
+    const result = await dispatch(
+      createGatewayApp({ api: apiFixture(), browserTelemetry: { context, router } }),
+      '/telemetry/config',
+    );
+
+    expect(result).toEqual({ status: 200, body: { enabled: true } });
+    expect(context).toHaveBeenCalledOnce();
+  });
+
+  it('mounts Angular after authentication with the host runtime and preserves its URL prefix', async () => {
+    const auth = {
+      middleware: [
+        (_request: Request, response: Response, next: () => void) => {
+          response.locals.initialized = true;
+          next();
+        },
+      ],
+    };
+    const handler = vi.fn<RequestHandler>((request, response, next) => {
+      if (request.path.endsWith('/missing')) {
+        next();
+
+        return;
+      }
+
+      response.json({ path: request.path, initialized: response.locals.initialized });
+    });
+    const application = { createApp: vi.fn(() => handler), clientDirectory: '/synthetic/app/browser' };
+    const siteHandler = vi.fn<RequestHandler>((_request, response) => response.json({ page: 'site' }));
+    const app = createGatewayApp({
+      api: apiFixture(),
+      application,
+      auth,
+      site: { handler: siteHandler, clientDirectory: '/synthetic/site/client' },
+    });
+    const inspect = vi.fn();
+    const rendered = await dispatch(app, '/app/es/', inspect);
+
+    expect(rendered).toEqual({ status: 200, body: { path: '/app/es/', initialized: true } });
+    expect(inspect.mock.calls[0][0]['content-security-policy']).toContain("'nonce-");
+    expect(application.createApp).toHaveBeenCalledExactlyOnceWith({
+      observability: undefined,
+      errorMode: 'inherited',
+      helmetMode: 'inherited',
+    });
+    const missing = await dispatch(app, '/app/es/missing');
+
+    expect(missing).toEqual({ status: 404, body: { error: 'not_found' } });
+    expect(siteHandler).not.toHaveBeenCalled();
+    const publicPage = await dispatch(app, '/en/');
+
+    expect(publicPage).toEqual({ status: 200, body: { page: 'site' } });
+    expect(handler).toHaveBeenCalledTimes(2);
+    handler.mockImplementation((_request, _response, next) => next(new Error('SYNTHETIC_PRIVATE_ANGULAR_FAILURE')));
+    const failed = await dispatch(app, '/app/en/');
+
+    expect(failed).toEqual({ status: 500, body: { error: 'internal_error' } });
+  });
   it('mounts public middleware after reserved routes and sanitizes its failures', async () => {
     const handler = vi.fn<RequestHandler>((_request, response) => response.json({ page: 'synthetic_site' }));
     const site = { handler, clientDirectory: '/synthetic/missing/client' };
@@ -74,6 +196,19 @@ describe('gateway composition', () => {
         expect.objectContaining({ event: 'http.request', outcome: 'success', status: 200 }),
       ]);
       expect(api.createApp).toHaveBeenCalledWith(expect.objectContaining({ observability: telemetry }));
+
+      const invalid = await dispatch(
+        createGatewayApp({ api, observability: telemetry }),
+        '/app/en/%zz?private=SYNTHETIC_PRIVATE_QUERY',
+      );
+
+      expect(invalid).toEqual({ status: 400, body: { error: 'request_invalid' } });
+      expect(lines.map((line) => JSON.parse(line))).toEqual([
+        expect.objectContaining({ event: 'http.request', outcome: 'success', status: 200 }),
+        expect.objectContaining({ event: 'http.request', outcome: 'client_error', status: 400 }),
+      ]);
+      expect(lines.join('')).not.toContain('SYNTHETIC_PRIVATE_QUERY');
+      expect(lines.join('')).not.toContain('%zz');
     } finally {
       await telemetry.shutdown();
     }

@@ -4,14 +4,14 @@ import type { SpanProcessor } from '@opentelemetry/sdk-trace';
 
 // Application export requires an explicit opt-in independently of the hosting provider.
 export function otlpSpanProcessors(env: NodeJS.ProcessEnv): SpanProcessor[] {
-  if (env.VISOMI_OTLP_TRACING !== 'true') {
+  if (env['VISOMI_OTLP_TRACING'] !== 'true') {
     return [];
   }
 
   let endpoint: URL;
 
   try {
-    endpoint = new URL(env.OTEL_EXPORTER_OTLP_ENDPOINT!);
+    endpoint = new URL(env['OTEL_EXPORTER_OTLP_ENDPOINT']!);
   } catch {
     throw new Error('observability_configuration_invalid');
   }
@@ -22,8 +22,8 @@ export function otlpSpanProcessors(env: NodeJS.ProcessEnv): SpanProcessor[] {
     endpoint.password ||
     endpoint.search ||
     endpoint.hash ||
-    env.OTEL_EXPORTER_OTLP_PROTOCOL !== 'http/protobuf' ||
-    !env.OTEL_EXPORTER_OTLP_HEADERS
+    env['OTEL_EXPORTER_OTLP_PROTOCOL'] !== 'http/protobuf' ||
+    !env['OTEL_EXPORTER_OTLP_HEADERS']
   ) {
     throw new Error('observability_configuration_invalid');
   }

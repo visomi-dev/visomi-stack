@@ -17,12 +17,21 @@ const boundary = vi.hoisted(() => ({
   createGatewayApp: vi.fn(),
   loadApi: vi.fn(),
   loadSite: vi.fn(),
+  loadApplication: vi.fn(),
+  application: { createApp: vi.fn(), clientDirectory: '/synthetic/app/browser' },
+  browserAssets: vi.fn(),
+  browserTelemetry: vi.fn(),
+  closeBrowserTelemetry: vi.fn(),
   site: { handler: vi.fn(), clientDirectory: '/synthetic/site/client' },
   ready: vi.fn(),
 }));
 
 vi.mock('node:http', () => ({ createServer: boundary.createServer }));
-vi.mock('@visomi-stack/web-backend-shared', () => ({ initializeObservability: boundary.initialize }));
+vi.mock('@visomi-stack/web-backend-shared', () => ({
+  initializeObservability: boundary.initialize,
+  browserAssets: boundary.browserAssets,
+  createBrowserTelemetry: boundary.browserTelemetry,
+}));
 vi.mock('@visomi-stack/backend-shared', () => ({
   createDatabase: boundary.createDatabase,
   smtpConfig: boundary.smtpConfig,
@@ -30,6 +39,7 @@ vi.mock('@visomi-stack/backend-shared', () => ({
 }));
 vi.mock('./api-module', () => ({ loadApi: boundary.loadApi }));
 vi.mock('./site-module', () => ({ loadSite: boundary.loadSite }));
+vi.mock('./application-module', () => ({ loadApplication: boundary.loadApplication }));
 vi.mock('./app', () => ({ createGatewayApp: boundary.createGatewayApp }));
 vi.mock('@nx/js/ready-signal', () => ({ emitReadySignal: boundary.ready }));
 
@@ -42,11 +52,20 @@ beforeEach(() => {
   vi.stubEnv('DATABASE_URL', '');
   vi.stubEnv('API_APP_PATH', '/synthetic/compiled/api/app.js');
   vi.stubEnv('SITE_APP_PATH', '/synthetic/compiled/site/server/entry.mjs');
+  vi.stubEnv('APPLICATION_APP_PATH', '/synthetic/compiled/app/server/server.mjs');
   vi.stubEnv('AUTH_TRUST_PROXY', '');
   vi.stubEnv('HOST', '127.0.0.1');
   vi.stubEnv('PORT', '3456');
   vi.stubEnv('NODE_ENV', 'test');
   vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
+  vi.stubEnv('VISOMI_BROWSER_TELEMETRY', '');
+  vi.stubEnv('BROWSER_TELEMETRY_ORIGIN', undefined);
+  boundary.browserAssets.mockResolvedValue(new Map());
+  boundary.browserTelemetry.mockReturnValue({
+    context: 'synthetic-context',
+    router: 'synthetic-router',
+    close: boundary.closeBrowserTelemetry,
+  });
   boundary.signals.clear();
   boundary.events.clear();
   boundary.initialize.mockReturnValue(boundary.observability);
@@ -61,6 +80,7 @@ beforeEach(() => {
   boundary.api.createAuthentication.mockReturnValue(boundary.auth);
   boundary.loadApi.mockResolvedValue(boundary.api);
   boundary.loadSite.mockResolvedValue(boundary.site);
+  boundary.loadApplication.mockResolvedValue(boundary.application);
   boundary.createGatewayApp.mockReturnValue('synthetic-app');
   boundary.createServer.mockReturnValue(boundary.server);
   boundary.server.once.mockImplementation((name, callback) => boundary.events.set(name, callback));
@@ -87,21 +107,85 @@ async function start() {
 }
 
 describe('gateway executable ownership', () => {
+  it.each([undefined, 'https://frontend.example.test'])(
+    'owns opt-in browser telemetry using origin %s',
+    async (origin) => {
+      vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
+      vi.stubEnv('BROWSER_TELEMETRY_ORIGIN', origin);
+
+      await start();
+
+      expect(boundary.browserAssets).toHaveBeenCalledWith(boundary.site.clientDirectory);
+      expect(boundary.browserTelemetry).toHaveBeenCalledWith({
+        observability: boundary.observability,
+        assets: { 'web-site': new Map(), 'web-app': new Map() },
+        origin: origin ?? 'https://stack.visomi.dev',
+      });
+      expect(boundary.createGatewayApp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          browserTelemetry: {
+            context: 'synthetic-context',
+            router: 'synthetic-router',
+            close: boundary.closeBrowserTelemetry,
+          },
+        }),
+      );
+      boundary.signals.get('SIGTERM')!();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(boundary.closeBrowserTelemetry).toHaveBeenCalledOnce();
+    },
+  );
+
+  it('still captures Angular errors when the website is unavailable', async () => {
+    vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
+    boundary.loadSite.mockResolvedValue(undefined);
+
+    await start();
+
+    expect(boundary.browserTelemetry).toHaveBeenCalledWith(
+      expect.objectContaining({ assets: { 'web-app': new Map() } }),
+    );
+  });
+  it('does not create intake resources after shutdown while the asset allowlist is loading', async () => {
+    let loaded!: (assets: Map<string, unknown>) => void;
+
+    vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
+    boundary.browserAssets.mockReturnValue(
+      new Promise((resolve) => {
+        loaded = resolve;
+      }),
+    );
+
+    await start();
+
+    boundary.signals.get('SIGTERM')!();
+    loaded(new Map());
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(boundary.browserTelemetry).not.toHaveBeenCalled();
+    expect(boundary.server.listen).not.toHaveBeenCalled();
+  });
   it('uses default networking and the adjacent compiled API when no overrides are configured', async () => {
     vi.stubEnv('HOST', undefined);
     vi.stubEnv('PORT', undefined);
     vi.stubEnv('API_APP_PATH', '');
     vi.stubEnv('SITE_APP_PATH', '');
+    vi.stubEnv('APPLICATION_APP_PATH', '');
 
     await start();
 
     expect(boundary.server.listen).toHaveBeenCalledWith(3000, 'localhost', expect.any(Function));
     expect(boundary.loadApi.mock.calls[0][0].pathname).toMatch(/\/api\/app.js$/);
     expect(boundary.loadSite.mock.calls[0][0].pathname).toMatch(/\/site\/server\/entry.mjs$/);
+    expect(boundary.loadApplication.mock.calls[0][0].pathname).toMatch(/\/app\/server\/server.mjs$/);
   });
 
   it.each([false, true])('does not fail startup if optional Nx readiness fails: %s', async (fails) => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/synthetic/ready.sock');
+
     if (fails) {
       boundary.ready.mockImplementation(() => {
         throw new Error('SYNTHETIC_OPTIONAL_READY');
@@ -164,6 +248,7 @@ describe('gateway executable ownership', () => {
     expect(boundary.createGatewayApp).toHaveBeenCalledWith({
       api: boundary.api,
       site: boundary.site,
+      application: boundary.application,
       auth: undefined,
       observability: boundary.observability,
     });
@@ -333,6 +418,7 @@ it.each([false, true])(
     vi.stubEnv('GOOGLE_AUTH_CLIENT_ID', 'synthetic-client');
     vi.stubEnv('AUTH_TOTP_ENCRYPTION_KEY', 'synthetic-key');
     boundary.smtpConfig.mockReturnValue({ host: 'smtp.example.test' });
+
     if (fails) {
       boundary.smtp.close.mockImplementation(() => {
         throw new Error('synthetic_smtp_close_failure');

@@ -64,6 +64,7 @@ export function createApp(options: AppOptions = {}) {
   app.use((_request, response) => {
     response.status(404).json({ error: 'not_found' });
   });
+
   if ((options.errorMode ?? 'managed') === 'managed') {
     app.use(httpErrorHandler);
   }

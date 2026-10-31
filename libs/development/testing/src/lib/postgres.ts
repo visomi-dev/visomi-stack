@@ -24,6 +24,7 @@ export async function testPostgres(manifest?: string, app: TestCompose['app'] = 
     const created = await createTestCompose(directory, temporaryRoot, app);
 
     compose = created;
+
     if (manifest) {
       await writeFile(manifest, JSON.stringify({ directory, compose }));
     }

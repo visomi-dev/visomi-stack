@@ -69,6 +69,7 @@ export class Passwords {
         break;
       }
     }
+
     if (!candidates.length) {
       await verifyPassword(password, '');
     }

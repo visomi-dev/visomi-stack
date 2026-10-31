@@ -280,6 +280,7 @@ describe('authentication failures and method lifecycle', () => {
       const result33 = await other.call('POST', '/device-approval/status', { requestId });
 
       expect(result33.status).toBe(400);
+
       if (operation === 'cancel') {
         const result34 = await browser.call('POST', '/device-approval/cancel', { requestId });
 

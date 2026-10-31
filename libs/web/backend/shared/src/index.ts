@@ -14,3 +14,6 @@ export { securityHeaders } from './lib/http/security-headers';
 export { currentObservability, initializeObservability } from './lib/observability/lib/observability';
 export type { Observability, ObservabilityOptions } from './lib/observability/lib/observability';
 export { httpObservability, operationalErrorHandler } from './lib/observability/middleware/http';
+export { browserAssets } from './lib/observability/browser/assets';
+export type { BrowserAssets } from './lib/observability/browser/assets';
+export { createBrowserTelemetry } from './lib/observability/browser/intake';

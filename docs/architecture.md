@@ -11,7 +11,8 @@ for the previous stack.
 apps/
   web/
     api/          # web-api: application factory and standalone startup
-    gateway/      # web-gateway: ESM host mounting the compiled API at /api
+    gateway/      # web-gateway: ESM host for compiled API, Angular and Astro
+    app/          # web-app: import-safe Angular SSR factory and independent executable
 libs/
   backend/
     shared/       # backend-shared: HTTP-independent database and email capabilities
@@ -167,8 +168,9 @@ Telemetry uses explicit field and value allowlists:
 - Logs contain fixed event/message names, outcomes or controlled codes, optional
   HTTP status and duration, and generated request/trace/span IDs. Pino host/PID
   bindings are disabled.
-- Span names are fixed `http.request` or `job.execute`. Span attributes contain
-  only operation, outcome, and optional HTTP status. Raw exceptions, events, links,
+- HTTP/job span names are fixed `http.request` or `job.execute`. Their attributes contain
+  only operation, outcome, and optional HTTP status. The browser error boundary below
+  defines the separate `frontend.error` allowlist. Raw exceptions, events, links,
   arbitrary attributes, and data-bearing resource detectors are not exposed by the facade.
 - Metric labels contain operation, outcome, and optional HTTP status. Identifiers
   are never labels. Each counter or duration histogram has a single implementation.
@@ -256,3 +258,20 @@ a spec collection.
 
 Shared styling, themes and the current frontend runtime boundaries are documented
 in [Web foundations](web-foundations.md).
+
+### Browser error boundary
+
+Angular and Astro own their framework adapters around `web-shared-observability`,
+a portable browser capture policy. The gateway and the separate Angular Node
+executable compose the shared backend intake with their own build asset allowlist,
+process-local signing key and executable-owned observability runtime. Neither
+frontend imports a backend runtime into its browser bundle.
+
+`frontend.error` is an explicitly allowlisted operation. The server accepts only
+bounded error categories and page labels, independently verifies source references
+against immutable build assets, and exports through the private OTLP exporter.
+Signed, expiring references can correlate an observed failed API request with a
+browser error; arbitrary incoming client trace context is never trusted. Source
+maps remain private build artifacts and can be resolved locally using the
+operator tool described in `docs/railway.md`. The complete capture and delivery
+limits are documented there.

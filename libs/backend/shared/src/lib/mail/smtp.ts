@@ -62,17 +62,17 @@ export function createSmtp(config: SmtpConfig): MailTransport {
 }
 
 export function smtpConfig(environment: NodeJS.ProcessEnv): SmtpConfig | undefined {
-  if (!environment.SMTP_HOST) {
+  if (!environment['SMTP_HOST']) {
     return undefined;
   }
 
   return {
-    host: environment.SMTP_HOST,
-    port: Number(environment.SMTP_PORT ?? 587),
-    secure: environment.SMTP_SECURE === 'true',
-    from: environment.SMTP_FROM ?? '',
-    user: environment.SMTP_USER,
-    password: environment.SMTP_PASSWORD,
-    allowInsecureLocal: environment.SMTP_ALLOW_INSECURE_LOCAL === 'true',
+    host: environment['SMTP_HOST'],
+    port: Number(environment['SMTP_PORT'] ?? 587),
+    secure: environment['SMTP_SECURE'] === 'true',
+    from: environment['SMTP_FROM'] ?? '',
+    user: environment['SMTP_USER'],
+    password: environment['SMTP_PASSWORD'],
+    allowInsecureLocal: environment['SMTP_ALLOW_INSECURE_LOCAL'] === 'true',
   };
 }

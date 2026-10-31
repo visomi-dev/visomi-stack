@@ -18,7 +18,7 @@ for (const locale of ['en', 'es']) {
     }
   });
 
-  test(`the ${locale} homepage adds no client runtime for marketing`, async ({ page }) => {
+  test(`the ${locale} homepage keeps theme and error reporting scripts small`, async ({ page }) => {
     const scripts: Promise<number>[] = [];
     const errors: string[] = [];
 
@@ -35,8 +35,8 @@ for (const locale of ['en', 'es']) {
 
     const sizes = await Promise.all(scripts);
 
-    expect(sizes).toHaveLength(1);
-    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(2048);
+    expect(sizes).toHaveLength(2);
+    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(4096);
     expect(errors).toEqual([]);
 
     await page.getByRole('checkbox').uncheck();

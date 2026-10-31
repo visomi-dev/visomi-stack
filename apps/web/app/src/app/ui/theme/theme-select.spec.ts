@@ -41,6 +41,7 @@ describe('native theme selectors', () => {
     localStorage.clear();
     document.documentElement.classList.remove('dark');
     document.documentElement.style.removeProperty('color-scheme');
+
     if (originalMatchMedia) {
       Object.defineProperty(window, 'matchMedia', originalMatchMedia);
     } else {

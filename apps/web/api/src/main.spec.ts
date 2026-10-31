@@ -310,6 +310,7 @@ it.each([false, true])(
     vi.stubEnv('GOOGLE_AUTH_CLIENT_ID', 'synthetic-client');
     vi.stubEnv('AUTH_TOTP_ENCRYPTION_KEY', 'synthetic-key');
     boundary.smtpConfig.mockReturnValue({ host: 'smtp.example.test' });
+
     if (fails) {
       boundary.smtp.close.mockImplementation(() => {
         throw new Error('synthetic_smtp_close_failure');

@@ -11,7 +11,7 @@ import {
   type MailTransport,
   type DatabaseResource,
 } from '@visomi-stack/backend-shared';
-import { initializeObservability } from '@visomi-stack/web-backend-shared';
+import { browserAssets, createBrowserTelemetry, initializeObservability } from '@visomi-stack/web-backend-shared';
 
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -19,6 +19,7 @@ import { loadApi } from './api-module';
 import type { EmbeddedAuthentication } from './api-module';
 import { createGatewayApp } from './app';
 import { loadSite } from './site-module';
+import { loadApplication } from './application-module';
 
 const observability = initializeObservability({
   service: 'web-gateway',
@@ -30,6 +31,7 @@ let mail: MailTransport | undefined;
 let auth: EmbeddedAuthentication | undefined;
 const server = createServer();
 let stopping = false;
+let browserTelemetry: ReturnType<typeof createBrowserTelemetry> | undefined;
 
 async function stop(exitCode: number): Promise<void> {
   if (stopping) {
@@ -51,6 +53,7 @@ async function stop(exitCode: number): Promise<void> {
   let databaseClosed = true;
 
   try {
+    browserTelemetry?.close();
     mail?.close();
   } catch {
     databaseClosed = false;
@@ -93,7 +96,14 @@ async function bootstrap() {
   const siteEntry = process.env.SITE_APP_PATH
     ? pathToFileURL(resolve(process.env.SITE_APP_PATH))
     : new URL('../site/server/entry.mjs', import.meta.url);
-  const [api, site] = await Promise.all([loadApi(entry), loadSite(siteEntry)]);
+  const applicationEntry = process.env.APPLICATION_APP_PATH
+    ? pathToFileURL(resolve(process.env.APPLICATION_APP_PATH))
+    : new URL('../app/server/server.mjs', import.meta.url);
+  const [api, site, angular] = await Promise.all([
+    loadApi(entry),
+    loadSite(siteEntry),
+    loadApplication(applicationEntry),
+  ]);
 
   if (stopping) {
     return;
@@ -121,11 +131,30 @@ async function bootstrap() {
     return;
   }
 
+  if (process.env.VISOMI_BROWSER_TELEMETRY === 'true') {
+    const [applicationAssets, siteAssets] = await Promise.all([
+      browserAssets(angular.clientDirectory, '/app'),
+      site ? browserAssets(site.clientDirectory) : Promise.resolve(undefined),
+    ]);
+
+    if (stopping) {
+      return;
+    }
+
+    browserTelemetry = createBrowserTelemetry({
+      observability,
+      assets: { 'web-app': applicationAssets, ...(siteAssets ? { 'web-site': siteAssets } : {}) },
+      origin: process.env.BROWSER_TELEMETRY_ORIGIN ?? 'https://stack.visomi.dev',
+    });
+  }
+
   const application = createGatewayApp({
     api,
     site,
+    application: angular,
     auth,
     observability,
+    ...(browserTelemetry ? { browserTelemetry } : {}),
     ...(process.env.AUTH_TRUST_PROXY
       ? { trustProxy: process.env.AUTH_TRUST_PROXY.split(',').map((value) => value.trim()) }
       : {}),

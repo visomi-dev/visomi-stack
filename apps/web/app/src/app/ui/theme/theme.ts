@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, afterNextRender, afterRenderEffect, computed, inject, signal, DestroyRef } from '@angular/core';
+import { Service, afterNextRender, afterRenderEffect, computed, inject, signal, DestroyRef } from '@angular/core';
 
 type ThemePreference = 'system' | 'light' | 'dark';
 
@@ -7,7 +7,7 @@ function isPreference(value: unknown): value is ThemePreference {
   return value === 'system' || value === 'light' || value === 'dark';
 }
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class Theme {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);

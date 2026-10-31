@@ -58,6 +58,7 @@ describe('authentication request protections', () => {
     csrf(config)(request, {} as Response, next);
     expect(next).toHaveBeenCalledOnce();
     expect(next.mock.calls[0][0]?.code).toBe(code);
+
     if (code) {
       expect(next.mock.calls[0][0]).toBeInstanceOf(AuthHttpError);
       expect(next.mock.calls[0][0].status).toBe(403);

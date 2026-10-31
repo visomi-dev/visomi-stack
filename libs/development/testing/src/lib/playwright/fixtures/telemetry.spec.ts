@@ -15,6 +15,7 @@ let directory: string | undefined;
 
 afterEach(async () => {
   vi.unstubAllEnvs();
+
   if (directory) {
     await rm(directory, { recursive: true, force: true });
 

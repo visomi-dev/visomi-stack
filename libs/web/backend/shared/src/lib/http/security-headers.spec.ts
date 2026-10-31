@@ -3,15 +3,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { securityHeaders } from './security-headers';
 
-function headers(production?: boolean) {
+function headers(production?: boolean, nonce = false) {
   const values = new Map<string, string>();
   const response = {
+    locals: {} as Record<string, string>,
     setHeader: (name: string, value: string) => values.set(name.toLowerCase(), value),
     removeHeader: vi.fn(),
   };
   const next = vi.fn();
 
-  securityHeaders({ production })({} as Request, response as unknown as Response, next);
+  securityHeaders({ production, nonce })({} as Request, response as unknown as Response, next);
 
   return { values, next, response };
 }
@@ -56,5 +57,18 @@ describe('shared Helmet policy', () => {
     expect(headers(false).values.has('strict-transport-security')).toBe(false);
     vi.stubEnv('NODE_ENV', 'test');
     expect(headers().values.has('strict-transport-security')).toBe(false);
+  });
+  it('uses an unpredictable per-response nonce for scripts and styles without weakening attribute policy', () => {
+    const first = headers(false, true);
+    const second = headers(false, true);
+    const nonce = first.response.locals['cspNonce'];
+    const csp = first.values.get('content-security-policy');
+
+    expect(nonce).toMatch(/^[A-Za-z0-9+/]{43}=$/);
+    expect(second.response.locals['cspNonce']).not.toBe(nonce);
+    expect(csp).toContain(`script-src 'self' 'nonce-${nonce}'`);
+    expect(csp).toContain(`style-src 'self' 'nonce-${nonce}'`);
+    expect(csp).toContain("script-src-attr 'none'");
+    expect(csp).not.toContain('unsafe-inline');
   });
 });

@@ -27,6 +27,7 @@ function dispatch(app: RequestHandler, path: string, body?: unknown, method = 'G
   request.method = method;
   request.url = path;
   Object.assign(request, { sessionID: 'synthetic-browser' });
+
   if (text !== undefined) {
     request.headers['content-type'] = 'application/json';
     request.headers['content-length'] = String(Buffer.byteLength(text));
@@ -39,6 +40,7 @@ function dispatch(app: RequestHandler, path: string, body?: unknown, method = 'G
       return response;
     });
     app(request, response as Response, reject);
+
     if (text !== undefined) {
       request.push(text);
     }

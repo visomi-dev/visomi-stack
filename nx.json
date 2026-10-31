@@ -69,6 +69,8 @@
     }
   },
   "generators": {
+    "@nx/angular:service": { "injectable": false },
+    "@schematics/angular:service": { "injectable": false },
     "@nx/angular:application": {
       "e2eTestRunner": "playwright",
       "linter": "eslint",

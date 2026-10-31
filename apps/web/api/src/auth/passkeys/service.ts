@@ -75,6 +75,7 @@ export class Passkeys {
 
     if (user) {
       requireFresh(user, this.config);
+
       if (pending.subjectId !== user.id) {
         throw new HttpError(400, 'challenge_invalid');
       }

@@ -17,6 +17,7 @@ function dispatch(app: ReturnType<typeof express>, path = '/example', value?: un
   request.method = method;
   request.url = path;
   request.headers = { 'x-synthetic-proof': '7' };
+
   if (text !== undefined) {
     request.headers['content-type'] = 'application/json';
     request.headers['content-length'] = String(Buffer.byteLength(text));
@@ -29,6 +30,7 @@ function dispatch(app: ReturnType<typeof express>, path = '/example', value?: un
       return response;
     });
     app(request, response as Response, reject);
+
     if (text !== undefined) {
       request.push(text);
     }

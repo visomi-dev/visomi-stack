@@ -15,7 +15,7 @@ const functionOrClassDeclaration = {
 };
 const awaitedStatement = { selector: 'ExpressionStatement[expression.type="AwaitExpression"]' };
 
-const moduleBoundaryOptions = {
+export const moduleBoundaryOptions = {
   enforceBuildableLibDependency: true,
   // Portable primitives and contracts are used statically by routes and lazily by root services.
   // These are libraries, not lazy route projects; keep heavy validation/crypto out of the initial bundle.
@@ -81,7 +81,7 @@ export default [
       'import-x/ignore': ['^astro:'],
       // Keep workspace alias grouping independent of the lint cwd and generated resolver paths.
       'import-x/internal-regex':
-        '^(?:@visomi-stack/web-frontend-ui|web-shared|web-shared-common|web-frontend-shared|web-backend-shared)(?:/|$)',
+        '^(?:@visomi-stack/(?:web-frontend-ui|web-shared-observability)|web-shared|web-shared-common|web-frontend-shared|web-backend-shared)(?:/|$)',
     },
     rules: {
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
@@ -252,6 +252,7 @@ export default [
         { blankLine: 'always', prev: '*', next: awaitedStatement },
         { blankLine: 'always', prev: awaitedStatement, next: '*' },
         { blankLine: 'always', prev: '*', next: ['return', 'throw'] },
+        { blankLine: 'always', prev: '*', next: 'if' },
         { blankLine: 'always', prev: 'if', next: '*' },
         { blankLine: 'always', prev: '*', next: 'try' },
       ],
@@ -293,7 +294,11 @@ export default [
     },
   },
   {
-    files: ['libs/web/frontend/shared/src/**/*.ts', 'libs/web/frontend/ui/src/**/*.ts'],
+    files: [
+      'libs/web/frontend/shared/src/**/*.ts',
+      'libs/web/frontend/ui/src/**/*.ts',
+      'libs/web/shared/observability/src/**/*.ts',
+    ],
     ignores: ['**/*.spec.ts'],
     rules: {
       'no-restricted-imports': [

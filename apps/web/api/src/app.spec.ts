@@ -129,6 +129,7 @@ describe('API composition', () => {
       expect(result.status).toBe(503);
       expect(result.body).toEqual({ error: 'authentication_unavailable' });
       expect(errors).toHaveBeenCalledTimes(errorMode === 'inherited' ? 1 : 0);
+
       if (errorMode === 'inherited') {
         expect(HttpError.is(errors.mock.calls[0][0])).toBe(true);
       }
@@ -150,6 +151,7 @@ describe('API composition', () => {
       const headers = inspect.mock.calls[0][0];
 
       expect(result.status).toBe(200);
+
       if (helmetMode === 'inherited') {
         expect(headers['content-security-policy']).toBe("default-src 'none'");
         expect(headers['x-content-type-options']).toBeUndefined();
