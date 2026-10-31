@@ -2,7 +2,11 @@ name: Railway config
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    paths:
+      - '.railway/**'
+      - '.github/workflows/railway-config.yml'
+  push:
+    branches: [main]
     paths:
       - '.railway/**'
       - '.github/workflows/railway-config.yml'
@@ -17,7 +21,7 @@ env:
 
 jobs:
   plan:
-    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -42,13 +46,12 @@ jobs:
           if-no-files-found: error
 
   apply:
-    if: github.event.action == 'closed' && github.event.pull_request.merged && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
           persist-credentials: false
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
@@ -56,19 +59,36 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Wait for CI on this main commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in $(seq 1 12); do
+            run_id=$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" \
+              -f event=push -f head_sha="$GITHUB_SHA" --jq '.workflow_runs[0].id')
+            if [ "$run_id" != null ]; then
+              break
+            fi
+            sleep 5
+          done
+          test "$run_id" != null
+          gh run watch "$run_id" --exit-status --interval 10
       - name: Find the successful plan for this PR revision
         id: plan
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
+          pr_head_sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
+            --jq '[.[] | select(.merged_at != null and .base.ref == "main")][0].head.sha')
+          test "$pr_head_sha" != null
           run_id=$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/railway-config.yml/runs" \
-            -f event=pull_request -f head_sha="$PR_HEAD_SHA" -f status=success --jq '.workflow_runs[0].id')
+            -f event=pull_request -f head_sha="$pr_head_sha" -f status=success --jq '.workflow_runs[0].id')
           test "$run_id" != null
+          echo "head-sha=$pr_head_sha" >> "$GITHUB_OUTPUT"
           echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@v8
         with:
-          name: railway-plan-${{ github.event.pull_request.head.sha }}
+          name: railway-plan-${{ steps.plan.outputs.head-sha }}
           run-id: ${{ steps.plan.outputs.run-id }}
           github-token: ${{ github.token }}
       - name: Apply the reviewed plan

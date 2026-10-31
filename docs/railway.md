@@ -53,8 +53,9 @@ Railway's GitHub source follows `main` and Wait for CI gates deployments on the
 workflow results. No Railway deployment token is needed for GitHub autodeploys.
 
 Infrastructure changes use `.github/workflows/railway-config.yml`. A same-repo PR
-that changes `.railway/` saves a plan artifact for review. Merging applies that
-exact plan, with checks for environment drift and the `.railway/` tree. Apply
+that changes `.railway/` saves a plan artifact for review. After merge, the apply
+job waits for CI on that exact `main` commit and then applies the saved plan,
+with checks for environment drift and the `.railway/` tree. Apply
 fails instead of deleting resources; intentional removals need separate review.
 Expired or drifted plans must be regenerated before merge.
 
