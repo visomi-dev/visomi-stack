@@ -1,0 +1,91 @@
+---
+import SiteLayout from '../../layouts/site.astro';
+import { isSiteLocale, siteCopy, sitePath, repositoryUrl } from '../../content/site';
+import RuntimeMap from '../../components/site/runtime-map.astro';
+import Icon from '../../components/site/icon.astro';
+import LinkButton from '../../components/link-button.astro';
+import Badge from '../../components/badge.astro';
+const locale = Astro.params.locale;
+if (!isSiteLocale(locale)) return new Response(null, { status: 404 });
+const labels = siteCopy[locale];
+const copy = labels.architecture;
+---
+
+<SiteLayout locale={locale} page="architecture" title={copy.title} description={copy.description}>
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <header class="max-w-3xl pt-14 pb-12 sm:pt-20 sm:pb-16">
+      <p class="mb-6 font-mono text-xs leading-6 tracking-widest text-blue-700 dark:text-blue-400">{copy.eyebrow}</p>
+      <h1 class="font-heading text-4xl leading-tight font-semibold tracking-[-0.045em] text-balance sm:text-6xl">
+        {copy.title}
+      </h1>
+      <p class="mt-7 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">{copy.intro}</p>
+    </header>
+    <RuntimeMap locale={locale} />
+    <section class="py-16 sm:py-24" aria-labelledby="current-title">
+      <div class="mb-9 flex flex-wrap items-center gap-4">
+        <h2 id="current-title" class="font-heading text-3xl font-semibold tracking-tight">
+          {copy.implementedTitle}
+        </h2>
+        <Badge tone="success">{copy.current}</Badge>
+      </div>
+      <div class="grid gap-5 md:grid-cols-2">
+        {copy.implemented.map(([title, body]) => (
+          <article class="rounded-xl border border-zinc-200 p-6 sm:p-8 dark:border-zinc-800">
+            <Icon name="check" class="mb-5 size-5 text-blue-700 dark:text-blue-400" />
+            <h3 class="font-heading text-xl font-semibold">{title}</h3>
+            <p class="mt-3 max-w-lg text-sm leading-7 text-zinc-600 dark:text-zinc-400">{body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+    <section
+      id="direction"
+      class="scroll-mt-28 border-t border-zinc-200 py-16 sm:py-20 dark:border-zinc-800"
+      aria-labelledby="direction-title"
+    >
+      <Badge>{copy.direction}</Badge>
+      <h2
+        id="direction-title"
+        class="mt-5 max-w-2xl font-heading text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-4xl"
+      >
+        {copy.directionTitle}
+      </h2>
+      <p class="mt-5 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-400">{copy.directionIntro}</p>
+      <div class="mt-10 grid gap-5 md:grid-cols-2">
+        {copy.future.map(([title, body], i) => (
+          <article class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-6 sm:p-8 dark:border-zinc-700 dark:bg-zinc-900/40">
+            <span class="font-mono text-xs text-blue-700 dark:text-blue-400">0{i + 1}</span>
+            <h3 class="mt-5 font-heading text-xl font-semibold">{title}</h3>
+            <p class="mt-3 text-sm leading-7 text-zinc-600 dark:text-zinc-400">{body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+    <section class="border-t border-zinc-200 py-16 sm:py-20 dark:border-zinc-800" aria-labelledby="principles-title">
+      <h2 id="principles-title" class="font-heading text-3xl font-semibold tracking-tight">
+        {copy.principlesTitle}
+      </h2>
+      <div class="mt-10 grid gap-8 md:grid-cols-3">
+        {copy.principles.map(([title, body]) => (
+          <article>
+            <h3 class="font-heading text-lg font-semibold">{title}</h3>
+            <p class="mt-3 text-sm leading-7 text-zinc-600 dark:text-zinc-400">{body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+    <section class="mb-16 rounded-2xl bg-zinc-100 p-6 sm:p-10 dark:bg-zinc-900">
+      <h2 class="font-heading text-2xl font-semibold">{copy.nextTitle}</h2>
+      <p class="mt-4 max-w-xl text-sm leading-7 text-zinc-600 dark:text-zinc-400">{copy.nextBody}</p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <LinkButton href={sitePath(locale, 'docs')}>
+          {labels.start}
+          <Icon name="arrow-right" class="size-4" />
+        </LinkButton>
+        <LinkButton href={`${repositoryUrl}/blob/main/docs/architecture.md`} variant="secondary">
+          {labels.repoDocs}
+        </LinkButton>
+      </div>
+    </section>
+  </div>
+</SiteLayout>

@@ -1,0 +1,29 @@
+---
+const paths = {
+  'arrow-right': 'M5 12h14m-6-6 6 6-6 6',
+  layers: 'm12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5',
+  shield: 'm12 3 8 3v6c0 4-4 7-8 9-4-2-8-5-8-9V6l8-3Zm-4 9 3 3 5-6',
+  code: 'm8 6-6 6 6 6m8-12 6 6-6 6m-3-15-2 18',
+  check: 'm5 12 4 4L19 6',
+  menu: 'M4 6h16M4 12h16M4 18h16',
+  chevron: 'm9 5 7 7-7 7',
+  box: 'm12 3 9 5v9l-9 5-9-5V8l9-5Zm0 10 9-5M3 8l9 5v9',
+  bolt: 'm13 2-9 12h7l-1 8 10-13h-8l1-7Z',
+  branch: 'M6 3v12a5 5 0 0 0 5 5h7M6 8h7a5 5 0 0 0 5-5m-3 14 3 3-3 3',
+} as const;
+type Props = { name: keyof typeof paths; class?: string };
+const { name, class: className = 'size-5' } = Astro.props;
+---
+
+<svg
+  class={className}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <path d={paths[name]} />
+</svg>

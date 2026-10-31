@@ -1,0 +1,16 @@
+---
+type Props = { title: string; code: string };
+const { title, code } = Astro.props;
+---
+
+<figure class="min-w-0 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 text-zinc-100 shadow-xl shadow-zinc-950/5">
+  <figcaption class="flex items-center gap-3 border-b border-zinc-800 px-5 py-4 font-mono text-xs text-zinc-400">
+    <span aria-hidden="true" class="size-2 rounded-full bg-blue-400"></span>
+    {title}
+  </figcaption>
+  <pre
+    tabindex="0"
+    aria-label={title}
+    class="ui-focus-ring overflow-x-auto p-5 font-mono text-xs leading-7 sm:p-6 sm:text-sm"
+  ><code>{code}</code></pre>
+</figure>

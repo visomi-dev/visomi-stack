@@ -173,3 +173,11 @@ and `/es/ui/shell/`. These exercise the shared sidebar, application header and
 mobile navbar recipes through Express SSR. Angular's foundation page uses the
 matching composition, with native routing and hydration. Shell layout needs no
 website client script; only the existing appearance preference script is loaded.
+
+## Public website experience
+
+The homepage introduces the stack and its broader product direction. The
+original visual samples now live at `/en/foundations/` and `/es/foundations/`.
+The localized `/architecture/` and `/docs/` pages explain the runtime boundaries
+and local setup. Shared public navigation also wraps the existing component
+catalog. See [the website guide](website.md) for page ownership and verification.

@@ -1,0 +1,260 @@
+export const en = {
+  nav: {
+    home: 'Overview',
+    architecture: 'Architecture',
+    docs: 'Documentation',
+    ui: 'Components',
+    foundations: 'Design foundations',
+  },
+  start: 'Get started',
+  menu: 'Navigation',
+  language: 'Language',
+  theme: 'Appearance',
+  system: 'System',
+  light: 'Light',
+  dark: 'Dark',
+  skip: 'Skip to content',
+  source: 'Source code',
+  backTop: 'Back to top',
+  footer: 'A thoughtful foundation. A product that is yours.',
+  footerBody: 'A modular TypeScript stack for the public experience, the product and everything behind it.',
+  footerExplore: 'Explore',
+  footerBuild: 'Build',
+  repoDocs: 'Repository guides',
+  apiGuide: 'API & identity guide',
+  home: {
+    title: 'A better starting point for your next product',
+    description:
+      'Build on a modular TypeScript foundation: Astro for your website, Angular for your product and Express for your backend, brought together with Nx.',
+    eyebrow: 'A FOUNDATION FOR YOUR NEXT PRODUCT',
+    headline: 'Your product.',
+    accent: 'A stronger start.',
+    intro:
+      'Bring your website, application and backend together. Start with thoughtful foundations, keep clear boundaries and make room for the product only you can build.',
+    secondary: 'Explore the architecture',
+    facts: ['TypeScript throughout', 'Server-rendered interfaces', 'One Nx workspace'],
+    previewLabel: 'An example of what you can build',
+    previewTitle: 'Your workspace',
+    previewSubtitle: 'Everything in its place.',
+    previewProject: 'Project overview',
+    previewReady: 'Ready to build',
+    previewActivity: 'Latest activity',
+    previewActivityText: 'The foundation is in place.',
+    previewNext: 'Make it yours',
+    previewNextText: 'Bring your own domain, workflows and ideas.',
+    previewLink: 'Explore this interface',
+    stackLabel: 'PURPOSEFUL TOOLS. ONE SHARED FOUNDATION.',
+    foundationKicker: '01 / THE FOUNDATION',
+    foundationTitle: 'Less setup. More product.',
+    foundationIntro: 'The everyday essentials deserve the same care as the features that make your product different.',
+    features: [
+      {
+        icon: 'layers',
+        title: 'A home for every experience',
+        body: 'An Astro website, an Angular application and an Express API, each with a clear responsibility.',
+        detail: 'Website · Product · Backend',
+      },
+      {
+        icon: 'shield',
+        title: 'Identity from the start',
+        body: 'Passkeys, account verification and durable sessions provide a backend foundation for trusted access.',
+        detail: 'Passkeys · Sessions · Account security',
+      },
+      {
+        icon: 'code',
+        title: 'A shared visual language',
+        body: 'Native controls, typed Tailwind recipes and consistent themes make both interfaces feel like one product.',
+        detail: 'Angular + Astro · Native HTML',
+      },
+    ],
+    architectureKicker: '02 / HOW IT FITS TOGETHER',
+    architectureTitle: 'Connected by design. Clear by responsibility.',
+    architectureBody:
+      'Keep public content, product interactions and business capabilities in their own place. Compose them as the product grows, with explicit runtime boundaries.',
+    architectureLink: 'See the complete picture',
+    designKicker: '03 / MADE TO FEEL LIKE ONE PRODUCT',
+    designTitle: 'Good defaults, down to the details.',
+    designBody:
+      'Readable typography. Clear feedback. Native controls. A shared set of visual recipes connects Angular and Astro without bringing an application runtime to your website.',
+    designLink: 'Browse the components',
+    designCount: 'component families to explore',
+    sampleTitle: 'Workspace preferences',
+    sampleDescription: 'A small example, using the real components.',
+    sampleLabel: 'Workspace name',
+    sampleHint: 'This is an illustrative preview. Nothing is submitted.',
+    sampleValue: 'Orbit workspace',
+    sampleCheckbox: 'Share updates with the team',
+    sampleSave: 'Explore the UI',
+    sampleCancel: 'View foundations',
+    startKicker: '04 / YOUR FIRST STEPS',
+    startTitle: 'From repository to running locally.',
+    startBody: 'Install the workspace, choose an entry point and explore the stack at your own pace.',
+    startSteps: [
+      ['Get the source', 'Start from the repository and its documented conventions.'],
+      ['Install once', 'One dependency manifest and one lockfile for the workspace.'],
+      ['Explore locally', 'Run the website, then the application and gateway.'],
+    ],
+    startLink: 'Follow the setup guide',
+    visionKicker: 'ROOM TO GROW',
+    visionTitle: 'A foundation for what comes next.',
+    visionBody:
+      'A product needs more than screens. The architecture leaves space for background work, live experiences and client-protected content as those capabilities evolve.',
+    visionItems: [
+      ['Background work', 'Long-running tasks with a dedicated execution boundary.'],
+      ['Realtime experiences', 'Authorized updates delivered to the right client.'],
+      ['Protected content', 'A direction for client-owned keys and encrypted data.'],
+    ],
+    visionNote: 'Architecture direction · See implementation status in the architecture guide.',
+    faqTitle: 'A few things worth knowing.',
+    faq: [
+      [
+        'Is Visomi Stack a finished product?',
+        'It is a reusable foundation for building products. You bring the domain, product experience and deployment choices. The architecture guide distinguishes current capabilities from the direction of the stack.',
+      ],
+      [
+        'Why Astro and Angular together?',
+        'Astro suits public, content-led pages. Angular provides a structured application experience. Shared visual recipes connect both while each framework keeps its own rendering and interaction model.',
+      ],
+      [
+        'Can I use only the parts I need?',
+        'Yes. The applications and shared libraries have explicit responsibilities. Start with what fits your product, and use the repository guides to understand the dependencies and tradeoffs.',
+      ],
+      [
+        'Where should I begin?',
+        'Start with the local setup guide. Explore the website, the component catalog and the application shell, then review the API and architecture documentation before adding your own domain.',
+      ],
+    ],
+    finalTitle: 'Make the foundation yours.',
+    finalBody: 'Explore the decisions. Try the interfaces. Start building your product.',
+  },
+  architecture: {
+    title: 'One system. Clear boundaries.',
+    description:
+      'Understand how the website, application, API and future background and realtime capabilities fit into Visomi Stack.',
+    eyebrow: 'ARCHITECTURE / THE BIG PICTURE',
+    intro:
+      'A modular foundation gives each part a purpose. The gateway owns HTTP composition; your business capabilities own the behavior.',
+    diagramTitle: 'The runtime map',
+    current: 'Available today',
+    direction: 'Architecture direction',
+    standalone: 'Independent SSR application',
+    nextMount: 'Gateway integration is next',
+    gatewayNote: 'Owns HTTP composition, startup and process resources.',
+    map: [
+      ['Website', 'Astro SSR', '/en/ · /es/'],
+      ['API', 'Express', '/api/'],
+      ['Application', 'Angular SSR', '/app/en/ · /app/es/'],
+    ],
+    implementedTitle: 'What you can explore now.',
+    implemented: [
+      [
+        'Public website',
+        'Astro renders the site through the Express gateway, including localized routes, public assets and the component catalog.',
+      ],
+      [
+        'Application foundation',
+        'Angular renders and hydrates independently, with localized builds, Signal Forms examples and a responsive shell.',
+      ],
+      [
+        'Identity backend',
+        'The API includes passkeys, account verification, recovery and PostgreSQL-backed sessions. The product authentication screens are the next UI step.',
+      ],
+      [
+        'Shared UI',
+        'Typed visual recipes power native Angular and Astro adapters. Each framework owns its composition and interaction.',
+      ],
+    ],
+    directionTitle: 'A direction beyond the first screen.',
+    directionIntro:
+      'These examples describe the intended shape of the platform. They are not all implemented in this rebuild.',
+    future: [
+      [
+        'One public origin',
+        'Mount the Angular application alongside the site and API, keeping composition separate from domain logic.',
+      ],
+      [
+        'Background execution',
+        'Give scheduled and long-running work a dedicated worker, with handlers owned by the relevant business capability.',
+      ],
+      [
+        'Realtime delivery',
+        'Keep connection authorization and event delivery separate from HTTP requests and background execution.',
+      ],
+      [
+        'Client-protected data',
+        'Explore client-owned keys and encrypted envelopes. Security assumptions, recovery and production guarantees need explicit design and review.',
+      ],
+    ],
+    principlesTitle: 'Structure follows responsibility.',
+    principles: [
+      [
+        'Domains stay visible',
+        'Organize business capabilities around their domain. Keep genuinely cross-cutting concerns shared.',
+      ],
+      [
+        'Composition is explicit',
+        'Importing an application does not open a port. The owning executable starts and closes process resources.',
+      ],
+      [
+        'Evidence stays close',
+        'Nx targets, unit suites and browser checks verify behavior alongside the implementation.',
+      ],
+    ],
+    nextTitle: 'See the boundaries in code.',
+    nextBody: 'Start locally, then follow the repository guides for runtime ownership and integration details.',
+  },
+  docs: {
+    title: 'Start here. Build from there.',
+    description:
+      'Get Visomi Stack running locally with Node, pnpm and Nx. Explore the Astro website, Angular application, shared UI and Express gateway.',
+    eyebrow: 'DOCUMENTATION / GETTING STARTED',
+    intro:
+      'A short path from the repository to a running interface. You can explore the website and application before configuring the authentication backend.',
+    requirements: 'Before you start',
+    requirementsBody: 'Use the versions pinned by the repository. Repository access is required to clone the source.',
+    stepOne: 'Get the workspace',
+    stepOneBody: 'Clone the repository, enter the workspace and install its locked dependencies.',
+    stepTwo: 'Choose your entry point',
+    stepTwoBody: 'Run one target in your terminal. Keep it running while you explore its local URL.',
+    entries: [
+      [
+        'Public website',
+        'Astro development server. Start here for the website and UI catalog.',
+        'pnpm nx serve web-site',
+        'http://127.0.0.1:4200/en/',
+      ],
+      [
+        'Product application',
+        'Angular SSR development server, running independently.',
+        'pnpm nx serve web-app',
+        'http://localhost:4201/app/en/',
+      ],
+      [
+        'Composed gateway',
+        'Builds and mounts the compiled Astro site and Express API.',
+        'pnpm nx serve web-gateway',
+        'http://localhost:3000/en/',
+      ],
+    ],
+    authNoteTitle: 'Ready to configure identity?',
+    authNoteBody:
+      'Authentication needs PostgreSQL and explicit secrets and provider configuration. Without that configuration, auth routes fail closed. The public site can still be explored.',
+    stepThree: 'Find your way around',
+    stepThreeBody: 'Applications keep runtime entry points; shared libraries contain the concerns used across them.',
+    structure:
+      'apps/web/site/        Astro website\napps/web/app/         Angular application\napps/web/api/         Express API\napps/web/gateway/     HTTP composition\nlibs/web/frontend/ui/ Shared visual recipes',
+    checksTitle: 'Verify your changes',
+    checksBody:
+      'Run the configured Nx targets for the part of the stack you change. Website browser checks exercise the compiled site through Express.',
+    nextTitle: 'Keep exploring',
+    nextItems: [
+      [
+        'architecture',
+        'Understand the architecture',
+        'Runtime boundaries, current capabilities and where the stack is headed.',
+      ],
+      ['ui', 'Explore the component catalog', 'Live examples with Angular, Astro and shared recipe usage.'],
+      ['foundations', 'Review the visual foundations', 'Typography, surfaces, colors and light/dark themes.'],
+    ],
+  },
+} as const;
