@@ -43,7 +43,7 @@ these as future capabilities and distinguishes them from the current gateway,
 Astro site, independent Angular SSR application and identity backend.
 
 The homepage, architecture and getting-started pages load only the TypeScript
-theme bootstrap and theme-control scripts. The component catalog additionally retains its small
+theme-control script compiled by Astro. The component catalog additionally retains its small
 native demo script. Scripts remain external for Express CSP compatibility.
 Metadata contains localized descriptions and Open Graph text. A canonical
 production origin and social preview image are not invented before deployment

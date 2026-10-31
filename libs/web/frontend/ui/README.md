@@ -1,6 +1,6 @@
 # Frontend UI
 
-Framework-independent Tailwind recipes and theme policy, generated with `@nx/js:library` as an
+Framework-independent Tailwind recipes, generated with `@nx/js:library` as an
 internal, non-buildable library. Consumers compile the TypeScript source.
 The library has no Angular, Astro, DOM or Node runtime dependencies.
 
@@ -20,22 +20,12 @@ complete and include this library's source in each application's Tailwind
 `@source` declarations. Extra layout classes can live at the call site; the order
 of conflicting utilities in a class string does not define precedence.
 
-## Theme policy and adapters
+## Application-owned themes
 
-`theme` provides a framework-independent policy alongside the visual recipes:
-
-```ts
-import { theme, type ThemePreference, type ColorScheme } from '@visomi-stack/web-frontend-ui';
-
-const preference: ThemePreference = theme.preference('dark');
-const scheme: ColorScheme = theme.resolve(preference, false);
-theme.storageKey; // visomi.theme
-theme.isPreference('system'); // true
-```
-
-Invalid stored values resolve to `system`. An explicit `light` or `dark`
-preference overrides the system scheme. The library reads no browser globals;
-each frontend owns storage, DOM updates and listener lifecycle.
+Theme behavior lives in each frontend rather than in the shared recipe library.
+Angular and Astro independently own their TypeScript preference type, storage,
+DOM updates and media listeners. Both retain the `visomi.theme` storage key and
+support `light`, `dark` and `system`. Invalid values follow the system.
 
 Angular uses the `Theme` service and `select[appUITheme]` directive from its
 `ui/theme/` adapters. Add `appUI` separately for the existing select appearance:
@@ -53,9 +43,10 @@ props and projects the same native options. Both synchronize multiple controls,
 persist selection when storage is available, and follow system changes in
 `system` mode. Labels and translated options belong to each consumer.
 
-Each frontend compiles its own TypeScript before-paint entry with the `theme-build`
-target; its normal build and development targets run the prerequisite. The
-external classic script applies the shared policy before framework code runs.
+Angular initializes the theme through its service after rendering. Astro
+compiles the component script through its normal pipeline. Neither application
+uses a separate theme build or bootstrap asset. Stored preferences apply when
+the frontend code starts, so they may appear after the first paint.
 See [web foundations](../../../../docs/web-foundations.md#themes-and-accessibility)
 for the build and CSP contract.
 
@@ -213,7 +204,7 @@ rewriting, modal drawer or client layout script is introduced.
 
 Full Astro examples live at `/en/ui/shell/` and `/es/ui/shell/`; Angular's existing
 localized foundation pages demonstrate the same shell. The Astro page loads
-only the theme bootstrap and theme-control scripts, and works without JavaScript. Navigation markup
+only its theme-control script, and works without JavaScript. Navigation markup
 exists in both desktop and mobile slots, with exactly one version visible and
 accessible at a time. There is no shared framework runtime.
 

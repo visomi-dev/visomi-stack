@@ -19,11 +19,7 @@
       "{workspaceRoot}/.node-version",
       "{workspaceRoot}/patches/**/*"
     ],
-    "webStyles": [
-      "{workspaceRoot}/styles.base.css",
-      "{workspaceRoot}/libs/web/frontend/ui/src/lib/theme.ts",
-      "{workspaceRoot}/.postcssrc.json"
-    ]
+    "webStyles": ["{workspaceRoot}/styles.base.css", "{workspaceRoot}/.postcssrc.json"]
   },
   "plugins": [
     {

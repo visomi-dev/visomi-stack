@@ -22,8 +22,7 @@
         "env": {
           "ASTRO_TELEMETRY_DISABLED": "1"
         }
-      },
-      "dependsOn": ["theme-build"]
+      }
     },
     "serve": {
       "executor": "nx:run-commands",
@@ -34,8 +33,7 @@
         "env": {
           "ASTRO_TELEMETRY_DISABLED": "1"
         }
-      },
-      "dependsOn": ["theme-build", "theme-watch"]
+      }
     },
     "typecheck": {
       "executor": "nx:run-commands",
@@ -53,8 +51,7 @@
         "env": {
           "ASTRO_TELEMETRY_DISABLED": "1"
         }
-      },
-      "dependsOn": ["theme-build"]
+      }
     },
     "lint": {
       "executor": "nx:run-commands",
@@ -92,31 +89,6 @@
           "transitive": true
         }
       ]
-    },
-    "theme-build": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "inputs": [
-        "production",
-        "^production",
-        {
-          "externalDependencies": ["rolldown"]
-        }
-      ],
-      "outputs": ["{workspaceRoot}/dist/apps/web/site-theme"],
-      "options": {
-        "command": "rolldown -c theme.config.ts",
-        "cwd": "apps/web/site"
-      }
-    },
-    "theme-watch": {
-      "executor": "nx:run-commands",
-      "continuous": true,
-      "dependsOn": ["theme-build"],
-      "options": {
-        "command": "rolldown -c theme.config.ts --watch",
-        "cwd": "apps/web/site"
-      }
     }
   },
   "implicitDependencies": ["web-frontend-ui"]

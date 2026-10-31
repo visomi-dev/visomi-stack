@@ -2,12 +2,9 @@ import * as ui from '../index';
 
 describe('portable UI recipes', () => {
   it('exports 37 recipes without requiring a browser or framework', () => {
-    const { theme, ...recipes } = ui;
+    expect(Object.keys(ui)).toHaveLength(37);
 
-    expect(Object.keys(recipes)).toHaveLength(37);
-    expect(theme.storageKey).toBe('visomi.theme');
-
-    for (const recipe of Object.values(recipes)) {
+    for (const recipe of Object.values(ui)) {
       const classes = recipe.classes().split(' ');
 
       expect(classes.length).toBeGreaterThan(0);

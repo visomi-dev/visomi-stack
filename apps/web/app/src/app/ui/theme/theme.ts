@@ -1,7 +1,11 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, afterNextRender, inject, signal, DestroyRef } from '@angular/core';
 
-import { theme, type ThemePreference } from '@visomi-stack/web-frontend-ui';
+type ThemePreference = 'system' | 'light' | 'dark';
+
+function isPreference(value: unknown): value is ThemePreference {
+  return value === 'system' || value === 'light' || value === 'dark';
+}
 
 @Injectable({ providedIn: 'root' })
 export class Theme {
@@ -11,6 +15,8 @@ export class Theme {
   private readonly selection = signal<ThemePreference>('system');
 
   readonly preference = this.selection.asReadonly();
+
+  private readonly storageKey = 'visomi.theme';
 
   private media?: MediaQueryList;
 
@@ -25,12 +31,12 @@ export class Theme {
       let stored: unknown;
 
       try {
-        stored = view.localStorage.getItem(theme.storageKey);
+        stored = view.localStorage.getItem(this.storageKey);
       } catch {
         // Theme changes still work when persistence is unavailable.
       }
 
-      this.selection.set(theme.preference(stored));
+      this.selection.set(isPreference(stored) ? stored : 'system');
       this.media = view.matchMedia('(prefers-color-scheme: dark)');
       const apply = () => this.apply();
 
@@ -41,14 +47,14 @@ export class Theme {
   }
 
   select(value: string): void {
-    if (!theme.isPreference(value)) {
+    if (!isPreference(value)) {
       return;
     }
 
     this.selection.set(value);
 
     try {
-      this.document.defaultView?.localStorage.setItem(theme.storageKey, value);
+      this.document.defaultView?.localStorage.setItem(this.storageKey, value);
     } catch {
       // The selected theme remains active for the current page.
     }
@@ -56,9 +62,9 @@ export class Theme {
   }
 
   private apply(): void {
-    this.document.documentElement.classList.toggle(
-      'dark',
-      theme.resolve(this.preference(), this.media?.matches ?? false) === 'dark',
-    );
+    const preference = this.preference();
+    const dark = preference === 'system' ? (this.media?.matches ?? false) : preference === 'dark';
+
+    this.document.documentElement.classList.toggle('dark', dark);
   }
 }

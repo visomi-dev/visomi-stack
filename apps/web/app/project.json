@@ -18,11 +18,6 @@
           {
             "glob": "**/*",
             "input": "apps/web/app/public"
-          },
-          {
-            "glob": "theme-init.js",
-            "input": "dist/apps/web/app-theme",
-            "output": "."
           }
         ],
         "styles": ["apps/web/app/src/styles.css"],
@@ -78,7 +73,7 @@
         "{workspaceRoot}/pnpm-lock.yaml",
         "{workspaceRoot}/.postcssrc.json"
       ],
-      "dependsOn": ["theme-build", "^build"]
+      "dependsOn": ["^build"]
     },
     "serve": {
       "continuous": true,
@@ -100,8 +95,7 @@
         "development-es": {
           "buildTarget": "web-app:build:development-es"
         }
-      },
-      "dependsOn": ["theme-build", "theme-watch"]
+      }
     },
     "test": {
       "executor": "@angular/build:unit-test",
@@ -134,31 +128,6 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm exec tsc -p apps/web/app/tsconfig.app.json --noEmit"
-      }
-    },
-    "theme-build": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "inputs": [
-        "production",
-        "^production",
-        {
-          "externalDependencies": ["rolldown"]
-        }
-      ],
-      "outputs": ["{workspaceRoot}/dist/apps/web/app-theme"],
-      "options": {
-        "command": "rolldown -c theme.config.ts",
-        "cwd": "apps/web/app"
-      }
-    },
-    "theme-watch": {
-      "executor": "nx:run-commands",
-      "continuous": true,
-      "dependsOn": ["theme-build"],
-      "options": {
-        "command": "rolldown -c theme.config.ts --watch",
-        "cwd": "apps/web/app"
       }
     }
   },

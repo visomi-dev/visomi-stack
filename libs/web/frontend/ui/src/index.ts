@@ -38,5 +38,3 @@ export { appShell, sidebar, topbar, navbar, navItem } from './lib/shell';
 export type { ShellLayout, NavigationPlacement } from './lib/shell';
 export { disclosure, dialog } from './lib/overlays';
 export type { DialogSize } from './lib/overlays';
-export { theme } from './lib/theme';
-export type { ThemePreference, ColorScheme } from './lib/theme';

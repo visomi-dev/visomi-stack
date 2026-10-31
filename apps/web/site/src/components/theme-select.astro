@@ -11,21 +11,28 @@ type Props = ComponentProps<typeof Select>;
 </Select>
 
 <script>
-  import { theme } from '@visomi-stack/web-frontend-ui';
+  type ThemePreference = 'system' | 'light' | 'dark';
 
+  function isPreference(value: unknown): value is ThemePreference {
+    return value === 'system' || value === 'light' || value === 'dark';
+  }
+
+  const storageKey = 'visomi.theme';
   const media = window.matchMedia('(prefers-color-scheme: dark)');
   let stored: unknown;
 
   try {
-    stored = localStorage.getItem(theme.storageKey);
+    stored = localStorage.getItem(storageKey);
   } catch {
     // The system preference is used when persistence is unavailable.
   }
 
-  let preference = theme.preference(stored);
+  let preference: ThemePreference = isPreference(stored) ? stored : 'system';
 
   function apply() {
-    document.documentElement.classList.toggle('dark', theme.resolve(preference, media.matches) === 'dark');
+    const dark = preference === 'system' ? media.matches : preference === 'dark';
+
+    document.documentElement.classList.toggle('dark', dark);
     for (const control of document.querySelectorAll<HTMLSelectElement>('select[data-theme-select]')) {
       control.value = preference;
     }
@@ -40,14 +47,14 @@ type Props = ComponentProps<typeof Select>;
       return;
     }
 
-    if (!theme.isPreference(control.value)) {
+    if (!isPreference(control.value)) {
       return;
     }
 
     preference = control.value;
 
     try {
-      localStorage.setItem(theme.storageKey, preference);
+      localStorage.setItem(storageKey, preference);
     } catch {
       // Theme changes remain usable when storage is blocked.
     }

@@ -159,28 +159,14 @@ test('serves readable content with JavaScript disabled', async ({ browser }, inf
   }
 });
 
-test('applies a persisted theme before application modules load', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('visomi.theme', 'dark'));
+test('uses the system preference when the stored theme is invalid', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('visomi.theme', 'invalid'));
 
-  await page.route('**/*.js', async (request) => {
-    if (new URL(request.request().url()).pathname.includes('theme-init')) {
-      await request.continue();
-    } else {
-      await request.abort();
-    }
-  });
+  await page.emulateMedia({ colorScheme: 'dark' });
 
   await page.goto(route());
 
   await expect(page.locator('html')).toHaveClass('dark');
 
-  const bootstrap = page.locator('head script[src*="theme-init"]');
-
-  await expect(bootstrap).toHaveCount(1);
-
-  const deferred = await bootstrap.getAttribute('defer');
-
-  expect(deferred).toBeNull();
-
-  await expect(bootstrap).not.toHaveAttribute('type', 'module');
+  await expect(page.locator('[data-theme-select]')).toHaveValue('system');
 });

@@ -6,15 +6,15 @@ import { fileURLToPath } from 'node:url';
 const cwd = fileURLToPath(new URL('../../', import.meta.url));
 const cases = [
   ['styles.base.css', 'e2e', ['web-app-e2e', 'web-gateway', 'web-site']],
-  ['libs/web/frontend/ui/src/lib/theme.ts', 'e2e', ['web-app-e2e', 'web-gateway', 'web-site']],
+  ['libs/web/frontend/ui/src/lib/forms.ts', 'e2e', ['web-app-e2e', 'web-gateway', 'web-site']],
   [
-    'libs/web/frontend/ui/src/lib/theme.ts',
+    'libs/web/frontend/ui/src/lib/forms.ts',
     'lint',
     ['web-app', 'web-app-e2e', 'web-frontend-ui', 'web-gateway', 'web-site'],
   ],
-  ['libs/web/frontend/ui/src/lib/theme.ts', 'container-check', ['web-gateway']],
-  ['apps/web/app/src/theme-init.ts', 'e2e', ['web-app-e2e']],
-  ['apps/web/site/src/theme-init.ts', 'e2e', ['web-gateway', 'web-site']],
+  ['libs/web/frontend/ui/src/lib/forms.ts', 'container-check', ['web-gateway']],
+  ['apps/web/app/src/app/ui/theme/theme.ts', 'e2e', ['web-app-e2e']],
+  ['apps/web/site/src/components/theme-select.astro', 'e2e', ['web-gateway', 'web-site']],
   ['apps/web/gateway/src/app.ts', 'e2e', ['web-gateway', 'web-site']],
   ['apps/web/api/src/app.ts', 'e2e', ['web-api', 'web-gateway', 'web-site']],
   ['.railway/railway.ts', 'deployment-check', ['web-gateway']],
