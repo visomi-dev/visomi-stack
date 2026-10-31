@@ -19,8 +19,8 @@ import { appShell, type ShellLayout } from '@visomi-stack/web-frontend-ui';
   host: { '[class]': 'classes' },
 })
 export class AppShell {
-  readonly contentId = input.required<string>();
-  readonly skipLabel = input.required<string>();
+  readonly contentId = input.required<string>({ alias: 'content-id' });
+  readonly skipLabel = input.required<string>({ alias: 'skip-label' });
   readonly layout = input<ShellLayout>('sidebar');
 
   protected readonly frameClasses = computed(() => appShell.frameClasses({ layout: this.layout() }));

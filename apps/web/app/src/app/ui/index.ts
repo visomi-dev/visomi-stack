@@ -1,3 +1,6 @@
+export { ThemeSelect } from './theme/theme-select';
+export { Theme } from './theme/theme';
+
 export { NavItem } from './layout/nav-item';
 export { Navbar } from './layout/navbar';
 export { Topbar } from './layout/topbar';
@@ -36,6 +39,7 @@ export { Loader } from './feedback/loader';
 export { Disclosure } from './overlays/disclosure';
 export { Dialog } from './overlays/dialog';
 
+import { ThemeSelect } from './theme/theme-select';
 import { NavItem } from './layout/nav-item';
 import { Navbar } from './layout/navbar';
 import { Topbar } from './layout/topbar';
@@ -75,6 +79,7 @@ import { Disclosure } from './overlays/disclosure';
 import { Dialog } from './overlays/dialog';
 
 export const UI_IMPORTS = [
+  ThemeSelect,
   AppShell,
   Sidebar,
   Topbar,

@@ -68,9 +68,13 @@ test('remembers explicit themes and follows system changes only in system mode',
 
   await expect(control).toHaveValue('dark');
 
+  await expect(page.locator('html')).toHaveCSS('color-scheme', 'dark');
+
   await control.selectOption('light');
 
   await expect(page.locator('html')).not.toHaveClass('dark');
+
+  await expect(page.locator('html')).toHaveCSS('color-scheme', 'light');
 
   await page.emulateMedia({ colorScheme: 'dark' });
 
@@ -79,6 +83,8 @@ test('remembers explicit themes and follows system changes only in system mode',
   await control.selectOption('system');
 
   await expect(page.locator('html')).toHaveClass('dark');
+
+  await expect(page.locator('html')).toHaveCSS('color-scheme', 'dark');
 
   await page.emulateMedia({ colorScheme: 'light' });
 
@@ -157,4 +163,16 @@ test('serves readable content with JavaScript disabled', async ({ browser }, inf
   } finally {
     await context.close();
   }
+});
+
+test('uses the system preference when the stored theme is invalid', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('visomi.theme', 'invalid'));
+
+  await page.emulateMedia({ colorScheme: 'dark' });
+
+  await page.goto(route());
+
+  await expect(page.locator('html')).toHaveClass('dark');
+
+  await expect(page.locator('[data-theme-select]')).toHaveValue('system');
 });

@@ -20,7 +20,7 @@ const labels = uiDocs[locale];
 >
   <div class="rounded-lg border border-dashed border-zinc-300 py-5 dark:border-zinc-700">
     <Container width="sm">
-      <Text uiSize="sm" tone="muted">
+      <Text ui-size="sm" tone="muted">
         {labels.containerNote}
       </Text>
     </Container>
@@ -34,18 +34,18 @@ const labels = uiDocs[locale];
 >
   <div class="grid gap-4 sm:grid-cols-2">
     <Card>
-      <Heading as="h4" uiSize="sm">
+      <Heading as="h4" ui-size="sm">
         {labels.cardTitle}
       </Heading>
-      <Text uiSize="sm" tone="muted">
+      <Text ui-size="sm" tone="muted">
         {labels.cardBody}
       </Text>
     </Card>
     <Card tone="raised">
-      <Heading as="h4" uiSize="sm">
+      <Heading as="h4" ui-size="sm">
         {labels.cardRaised}
       </Heading>
-      <Text uiSize="sm" tone="muted">
+      <Text ui-size="sm" tone="muted">
         {labels.cardBody}
       </Text>
     </Card>
@@ -53,14 +53,14 @@ const labels = uiDocs[locale];
   <div class="mt-4 grid gap-4 sm:grid-cols-3">
     {(['subtle', 'accent', 'inverse'] as const).map((tone) => (
       <Card tone={tone} padding="sm" layout="plain">
-        <Text uiSize="sm" tone="inherit">
+        <Text ui-size="sm" tone="inherit">
           {labels.cardBody}
         </Text>
       </Card>
     ))}
   </div>
   <Card tone="ghost" padding="sm" class="mt-4">
-    <Text uiSize="sm" tone="muted">
+    <Text ui-size="sm" tone="muted">
       {labels.cardGhost}
     </Text>
   </Card>
@@ -73,10 +73,10 @@ const labels = uiDocs[locale];
 >
   <PageHeader>
     <div class="grid gap-2">
-      <Heading as="h4" uiSize="md">
+      <Heading as="h4" ui-size="md">
         {labels.pageTitle}
       </Heading>
-      <Text uiSize="sm" tone="muted">
+      <Text ui-size="sm" tone="muted">
         {labels.pageDescription}
       </Text>
     </div>

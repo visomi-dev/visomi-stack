@@ -44,7 +44,7 @@ const count = Object.values(componentGroups).flat().length;
     >
       <div class="min-w-0">
         <Text
-          uiSize="xs"
+          ui-size="xs"
           tone="accent"
           mono
           leading="relaxed"
@@ -53,13 +53,13 @@ const count = Object.values(componentGroups).flat().length;
           <span class="h-px w-7 shrink-0 bg-current" aria-hidden="true"></span>
           {copy.eyebrow}
         </Text>
-        <Heading as="h1" uiSize="hero" id="hero-title" class="max-w-2xl">
+        <Heading as="h1" ui-size="hero" id="hero-title" class="max-w-2xl">
           {copy.headline}{' '}
-          <Text as="span" uiSize="inherit" tone="accent" class="mt-2 block">
+          <Text as="span" ui-size="inherit" tone="accent" class="mt-2 block">
             {copy.accent}
           </Text>
         </Heading>
-        <Text uiSize="lead" tone="muted" leading="relaxed" class="mt-7 max-w-xl">
+        <Text ui-size="lead" tone="muted" leading="relaxed" class="mt-7 max-w-xl">
           {copy.intro}
         </Text>
         <div class="mt-9 flex flex-wrap gap-3">
@@ -84,7 +84,7 @@ const count = Object.values(componentGroups).flat().length;
     </Container>
   </section>
   <Container as="div" width="xl" gutter="compact" class="py-9">
-    <Text uiSize="xs" tone="subtle" mono class="mb-6 text-center tracking-widest">
+    <Text ui-size="xs" tone="subtle" mono class="mb-6 text-center tracking-widest">
       {copy.stackLabel}
     </Text>
     <ul class="grid grid-cols-3 gap-x-6 gap-y-5 text-center font-heading text-base font-semibold text-zinc-600 sm:grid-cols-6 sm:text-lg dark:text-zinc-300">
@@ -111,14 +111,14 @@ const count = Object.values(componentGroups).flat().length;
             <span class="mb-8 flex size-11 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-400">
               <Icon name={feature.icon} />
             </span>
-            <Heading as="h3" uiSize="md">
+            <Heading as="h3" ui-size="md">
               {feature.title}
             </Heading>
-            <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-4 flex-1">
+            <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-4 flex-1">
               {feature.body}
             </Text>
             <Text
-              uiSize="xs"
+              ui-size="xs"
               tone="subtle"
               mono
               leading="relaxed"
@@ -173,11 +173,11 @@ const count = Object.values(componentGroups).flat().length;
           description={copy.designBody}
           id="design-title"
         />
-        <Text uiSize="inherit" tone="inherit" class="mt-7 flex items-baseline gap-3">
-          <Heading as="span" uiSize="xl" tone="accent">
+        <Text ui-size="inherit" tone="inherit" class="mt-7 flex items-baseline gap-3">
+          <Heading as="span" ui-size="xl" tone="accent">
             {count}
           </Heading>
-          <Text as="span" uiSize="sm" tone="subtle" class="max-w-40">
+          <Text as="span" ui-size="sm" tone="subtle" class="max-w-40">
             {copy.designCount}
           </Text>
         </Text>
@@ -192,15 +192,15 @@ const count = Object.values(componentGroups).flat().length;
       </div>
       <Card as="div" tone="default" padding="none" layout="plain" class="overflow-hidden shadow-xl shadow-zinc-950/5">
         <div class="border-b border-zinc-200 px-6 py-5 dark:border-zinc-800">
-          <Heading as="h3" uiSize="sm">
+          <Heading as="h3" ui-size="sm">
             {copy.sampleTitle}
           </Heading>
-          <Text uiSize="sm" tone="subtle" class="mt-2">
+          <Text ui-size="sm" tone="subtle" class="mt-2">
             {copy.sampleDescription}
           </Text>
         </div>
         <div class="space-y-6 p-6 sm:p-8">
-          <Field controlId="preview-workspace" label={copy.sampleLabel} description={copy.sampleHint}>
+          <Field control-id="preview-workspace" label={copy.sampleLabel} description={copy.sampleHint}>
             <Input id="preview-workspace" value={copy.sampleValue} aria-describedby="preview-workspace-help" />
           </Field>
           <Label inline>
@@ -247,7 +247,7 @@ const count = Object.values(componentGroups).flat().length;
           <li class="flex gap-5">
             <Text
               as="span"
-              uiSize="xs"
+              ui-size="xs"
               tone="accent"
               mono
               class="flex size-10 shrink-0 items-center justify-center rounded-full border border-zinc-300 dark:border-zinc-700"
@@ -255,10 +255,10 @@ const count = Object.values(componentGroups).flat().length;
               0{i + 1}
             </Text>
             <div>
-              <Heading as="h3" uiSize="sm">
+              <Heading as="h3" ui-size="sm">
                 {title}
               </Heading>
-              <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-2">
+              <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-2">
                 {body}
               </Text>
             </div>
@@ -282,13 +282,13 @@ pnpm nx serve web-site`}
       class="grid gap-12 py-16 sm:py-24 lg:grid-cols-[1.15fr_1fr] lg:gap-20"
     >
       <div>
-        <Text uiSize="xs" tone="inverse" mono class="mb-5 tracking-widest">
+        <Text ui-size="xs" tone="inverse" mono class="mb-5 tracking-widest">
           {copy.visionKicker}
         </Text>
-        <Heading as="h2" uiSize="xl" tone="inverse" id="vision-title" class="max-w-xl">
+        <Heading as="h2" ui-size="xl" tone="inverse" id="vision-title" class="max-w-xl">
           {copy.visionTitle}
         </Heading>
-        <Text uiSize="md" tone="inverse" leading="relaxed" class="mt-6 max-w-xl">
+        <Text ui-size="md" tone="inverse" leading="relaxed" class="mt-6 max-w-xl">
           {copy.visionBody}
         </Text>
         <Link
@@ -302,14 +302,14 @@ pnpm nx serve web-site`}
       <ul class="grid content-center gap-6">
         {copy.visionItems.map(([title, body], i) => (
           <li class="flex gap-4 border-t border-white/25 pt-6">
-            <Text as="span" uiSize="xs" tone="inverse" mono>
+            <Text as="span" ui-size="xs" tone="inverse" mono>
               0{i + 1}
             </Text>
             <div>
-              <Heading as="h3" uiSize="md" tone="inverse">
+              <Heading as="h3" ui-size="md" tone="inverse">
                 {title}
               </Heading>
-              <Text uiSize="sm" tone="inverse" leading="relaxed" class="mt-2">
+              <Text ui-size="sm" tone="inverse" leading="relaxed" class="mt-2">
                 {body}
               </Text>
             </div>
@@ -325,13 +325,13 @@ pnpm nx serve web-site`}
     aria-labelledby="faq-title"
     class="grid gap-10 py-16 sm:py-24 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20"
   >
-    <Heading as="h2" uiSize="section" id="faq-title" class="max-w-md">
+    <Heading as="h2" ui-size="section" id="faq-title" class="max-w-md">
       {copy.faqTitle}
     </Heading>
     <div class="grid gap-3">
       {copy.faq.map(([question, answer]) => (
         <Disclosure summary={question}>
-          <Text uiSize="sm" tone="muted" leading="relaxed">
+          <Text ui-size="sm" tone="muted" leading="relaxed">
             {answer}
           </Text>
         </Disclosure>
@@ -339,10 +339,10 @@ pnpm nx serve web-site`}
     </div>
   </Container>
   <section class="border-t border-zinc-200 bg-zinc-50 px-5 py-16 text-center sm:px-8 sm:py-20 dark:border-zinc-800 dark:bg-zinc-900/30">
-    <Heading as="h2" uiSize="xl">
+    <Heading as="h2" ui-size="xl">
       {copy.finalTitle}
     </Heading>
-    <Text uiSize="md" tone="muted" class="mx-auto mt-5 max-w-xl">
+    <Text ui-size="md" tone="muted" class="mx-auto mt-5 max-w-xl">
       {copy.finalBody}
     </Text>
     <div class="mt-8 flex flex-wrap justify-center gap-3">

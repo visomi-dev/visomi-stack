@@ -1,8 +1,14 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
 import { appShell, type ShellLayout } from '@visomi-stack/web-frontend-ui';
-type Props = HTMLAttributes<'div'> & { contentId: string; skipLabel: string; layout?: ShellLayout };
-const { contentId, skipLabel, layout = 'sidebar', class: className, ...attributes } = Astro.props;
+type Props = HTMLAttributes<'div'> & { 'content-id': string; 'skip-label': string; layout?: ShellLayout };
+const {
+  'content-id': contentId,
+  'skip-label': skipLabel,
+  layout = 'sidebar',
+  class: className,
+  ...attributes
+} = Astro.props;
 ---
 
 <div {...attributes} class:list={[appShell.classes(), className]}>

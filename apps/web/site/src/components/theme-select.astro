@@ -1,0 +1,63 @@
+---
+import type { ComponentProps } from 'astro/types';
+
+import Select from './select.astro';
+
+type Props = ComponentProps<typeof Select>;
+---
+
+<Select {...Astro.props} data-theme-select>
+  <slot />
+</Select>
+
+<script>
+  type ThemePreference = 'system' | 'light' | 'dark';
+
+  function isPreference(value: unknown): value is ThemePreference {
+    return value === 'system' || value === 'light' || value === 'dark';
+  }
+
+  const storageKey = 'visomi.theme';
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  let stored: unknown;
+
+  try {
+    stored = localStorage.getItem(storageKey);
+  } catch {
+    // The system preference is used when persistence is unavailable.
+  }
+
+  let preference: ThemePreference = isPreference(stored) ? stored : 'system';
+
+  function apply() {
+    const dark = preference === 'system' ? media.matches : preference === 'dark';
+
+    document.documentElement.classList.toggle('dark', dark);
+    for (const control of document.querySelectorAll<HTMLSelectElement>('select[data-theme-select]')) {
+      control.value = preference;
+    }
+  }
+
+  apply();
+  media.addEventListener('change', apply);
+  document.addEventListener('change', (event) => {
+    const control = event.target;
+
+    if (!(control instanceof HTMLSelectElement) || !control.matches('[data-theme-select]')) {
+      return;
+    }
+
+    if (!isPreference(control.value)) {
+      return;
+    }
+
+    preference = control.value;
+
+    try {
+      localStorage.setItem(storageKey, preference);
+    } catch {
+      // Theme changes remain usable when storage is blocked.
+    }
+    apply();
+  });
+</script>

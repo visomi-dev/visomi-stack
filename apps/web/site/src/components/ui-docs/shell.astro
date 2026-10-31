@@ -17,14 +17,14 @@ const labels = uiDocs[locale];
   id="app-shell"
   locale={locale}
   angular={
-    '<app-shell contentId="main" skipLabel="Skip to content">\n  <app-sidebar label="Primary">...</app-sidebar>\n  <header app-topbar>...</header>\n  <h1>Workspace</h1>\n  <nav appUI="navbar" aria-label="Primary">...</nav>\n</app-shell>'
+    '<app-shell content-id="main" skip-label="Skip to content">\n  <app-sidebar label="Primary">...</app-sidebar>\n  <header app-topbar>...</header>\n  <h1>Workspace</h1>\n  <nav appUI="navbar" aria-label="Primary">...</nav>\n</app-shell>'
   }
   astro={
-    '<AppShell contentId="main" skipLabel="Skip to content">\n  <Sidebar slot="sidebar" label="Primary">...</Sidebar>\n  <Topbar slot="header">...</Topbar>\n  <h1>Workspace</h1>\n  <Navbar slot="mobile" aria-label="Primary">...</Navbar>\n</AppShell>'
+    '<AppShell content-id="main" skip-label="Skip to content">\n  <Sidebar slot="sidebar" label="Primary">...</Sidebar>\n  <Topbar slot="header">...</Topbar>\n  <h1>Workspace</h1>\n  <Navbar slot="mobile" aria-label="Primary">...</Navbar>\n</AppShell>'
   }
 >
   <div class="grid gap-5">
-    <Text as="p" uiSize="sm" tone="muted" class="max-w-2xl">
+    <Text as="p" ui-size="sm" tone="muted" class="max-w-2xl">
       {labels.shellNote}
     </Text>
     <LinkButton href={`/${locale}/ui/shell/`}>{labels.openShell}</LinkButton>
@@ -52,7 +52,7 @@ const labels = uiDocs[locale];
         <NavItem href={`/${locale}/ui/shell/#shell-activity`}>{labels.activity}</NavItem>
         <NavItem href={`/${locale}/ui/shell/#shell-settings`}>{labels.settings}</NavItem>
       </div>
-      <Text as="p" uiSize="xs" tone="muted" slot="footer">
+      <Text as="p" ui-size="xs" tone="muted" slot="footer">
         {labels.shellFooter}
       </Text>
     </Sidebar>

@@ -26,13 +26,13 @@ import { field as styles } from '@visomi-stack/web-frontend-ui';
   },
 })
 export class Field {
-  readonly controlId = input.required<string>();
+  readonly controlId = input.required<string>({ alias: 'control-id' });
   readonly label = input.required<string>();
   readonly description = input('');
   readonly error = input('');
   readonly compact = input(false, { transform: booleanAttribute });
   readonly invalid = input(false, { transform: booleanAttribute });
-  readonly manualError = input<string | null>(null);
+  readonly manualError = input<string | null>(null, { alias: 'manual-error' });
 
   readonly descriptionId = computed(() => `${this.controlId()}-help`);
   readonly errorId = computed(() => `${this.controlId()}-error`);

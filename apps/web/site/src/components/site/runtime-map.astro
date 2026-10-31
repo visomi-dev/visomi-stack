@@ -13,18 +13,18 @@ const copy = siteCopy[locale].architecture;
 ---
 
 <Card as="figure" tone="subtle" padding="lg" layout="plain">
-  <Text as="figcaption" uiSize="xs" tone="muted" mono class="mb-7 flex flex-wrap items-center justify-between gap-3">
+  <Text as="figcaption" ui-size="xs" tone="muted" mono class="mb-7 flex flex-wrap items-center justify-between gap-3">
     <span>{copy.diagramTitle}</span>
     <span>HTTP / SSR</span>
   </Text>
   <Card as="div" tone="accent" padding="md" layout="plain">
     <div class="flex items-center gap-3">
       <Icon name="layers" class="size-6 text-blue-700 dark:text-blue-400" />
-      <Heading as="span" uiSize="sm" tone="inherit">
+      <Heading as="span" ui-size="sm" tone="inherit">
         Express gateway
       </Heading>
     </div>
-    <Text uiSize="sm" tone="muted" class="mt-3 max-w-md">
+    <Text ui-size="sm" tone="muted" class="mt-3 max-w-md">
       {copy.gatewayNote}
     </Text>
   </Card>
@@ -32,10 +32,10 @@ const copy = siteCopy[locale].architecture;
   <div class="grid gap-3 sm:grid-cols-2">
     {copy.map.slice(0, 2).map(([name, technology, path]) => (
       <Card as="div" tone="default" padding="lg" layout="plain">
-        <Text uiSize="sm" tone="muted" class="mb-1">
+        <Text ui-size="sm" tone="muted" class="mb-1">
           {name}
         </Text>
-        <Heading as="p" uiSize="md">
+        <Heading as="p" ui-size="md">
           {technology}
         </Heading>
         <Code variant="plain" class:list={[text.classes({ size: 'xs', tone: 'accent' }), 'mt-4 block']}>
@@ -47,10 +47,10 @@ const copy = siteCopy[locale].architecture;
   <Card as="div" tone="default" padding="lg" layout="plain" class="mt-5 border-dashed">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <Text uiSize="sm" tone="muted">
+        <Text ui-size="sm" tone="muted">
           {copy.standalone}
         </Text>
-        <Heading as="p" uiSize="md" class="mt-1">
+        <Heading as="p" ui-size="md" class="mt-1">
           Angular SSR
         </Heading>
       </div>

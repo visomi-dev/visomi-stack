@@ -10,7 +10,7 @@ import {
 } from '@visomi-stack/web-frontend-ui';
 
 type Props = HTMLAttributes<'p'> & {
-  uiSize?: TextSize;
+  'ui-size'?: TextSize;
   tone?: TextTone;
   weight?: TextWeight;
   leading?: TextLeading;
@@ -19,7 +19,7 @@ type Props = HTMLAttributes<'p'> & {
 };
 
 const {
-  uiSize = 'md',
+  'ui-size': uiSize = 'md',
   tone = 'default',
   weight = 'inherit',
   leading = 'default',

@@ -26,21 +26,35 @@ in the foreground so Nx owns its lifetime. Angular uses the root PostCSS configu
 and disables PostCSS plugin discovery to avoid processing Tailwind twice.
 Prettier reads the same stylesheet for custom utility ordering.
 
-Both builds hash the shared stylesheet, theme script and dependency lockfile.
+Both builds hash the shared stylesheet, TypeScript theme sources and dependency lockfile.
 Changes to those files invalidate their Nx build caches.
 
 ## Themes and accessibility
 
-`theme.base.js` is a shared classic browser script loaded synchronously before
-paint. Angular copies it as a public asset; Astro imports it as a non-inlined URL.
-The gateway's existing self-only script policy remains intact. Fonts and scripts
-are served locally; no external telemetry or font services are enabled.
+Each frontend owns its theme behavior in TypeScript. Angular's
+`select[appUITheme]` directive connects native selectors to the `Theme` service,
+whose signals and media listener initialize after rendering and clean up with
+its injector. Following the Nive/v0 browser-settings pattern, `colorScheme` and
+`isDark` are computed from the saved preference and a system-preference signal.
+A browser-only render effect synchronizes `.dark` and the native `color-scheme`;
+system changes never overwrite the saved preference. Astro's `ThemeSelect` wraps its existing native `Select` adapter;
+Astro compiles its component script once per page as part of the normal build.
+The shared UI library contains visual recipes only.
 
-The script stores `light`, `dark` or `system` in the `visomi.theme` local-storage
-key. Missing or invalid preferences follow the system. Explicit preferences win
-over system changes. Blocked storage affects persistence only. The script applies
-`.dark` to the document root and connects native `[data-theme-select]` controls.
-It is guarded against server execution. It does not expose a global API.
+Both implementations store `light`, `dark` or `system` under `visomi.theme` and
+synchronize multiple `[data-theme-select]` controls. Missing or invalid values
+follow the system; explicit preferences override system changes. Blocked storage
+affects persistence only. The resolved scheme applies `.dark` to the document
+root without rewriting rendered markup.
+
+There is no separate theme entry, generated asset, compiler configuration or
+watch task. Saved preferences apply when the frontend's browser code starts;
+the server initially renders the default light theme. A stored dark preference
+can therefore appear after the first paint while the framework code loads.
+
+The gateway's existing self-only script policy remains intact. Astro disables
+asset inlining so even small processed scripts stay external. Fonts and scripts
+are served locally; no external telemetry or font services are enabled.
 
 Use semantic landmarks, translated labels, visible keyboard focus, adequate
 contrast and 44px control targets. Scrolling respects reduced motion; components must apply the same preference
@@ -126,9 +140,9 @@ and a native GET form that works without JavaScript. No Angular Elements runtime
 is loaded. See the [library README](../libs/web/frontend/ui/README.md) for usage
 and verification commands.
 
-The production gateway sample loads 1,818 bytes of script bodies: 1,470 bytes for
-the existing theme script and 348 bytes for the counter. The shared recipe adds
-no browser JavaScript to Astro. The Playwright script-payload test records these
+The production gateway sample loads the Astro theme-control script and the
+counter, within a combined 4 KiB raw-script budget.
+The shared button recipe adds no browser JavaScript to Astro. The Playwright script-payload test records these
 resources in `javascript-cost.json`; CSS, fonts and HTTP headers are excluded.
 Astro's tsconfig explicitly includes `src/**/*.astro` so Vite can apply the
 workspace-generated import paths to those files.
@@ -143,24 +157,24 @@ selection, behavior contracts and deferred widgets; the
 
 Angular control and styling adapters use native elements selected with `appUI`
 and a static marker where necessary. `app-field` owns field composition and
-projects the native control; `p[app-error]` owns the message animation wrapper. Form controls use `uiSize` for visual size, preserving native
+projects the native control; `p[app-error]` owns the message animation wrapper. Form controls use `uiSize` in Angular and `ui-size` in Astro for visual size, preserving native
 numeric `size`. Integration tests cover selector isolation, form values,
 attributes, events, visual changes and native modal delegation. The catalog
-renders entirely through Astro SSR; only the external theme and small native
+renders entirely through Astro SSR; only the external theme-control script and small native
 demo script run in the browser, within the existing CSP. The tests cover all
 families, both languages, JavaScript-disabled controls, dialog focus and Escape,
 local validation, reduced motion and mobile/desktop layouts in both themes.
 
-The compiled catalog loads 2,749 bytes of script bodies: the existing 1,470-byte
-theme script and a 1,279-byte documentation enhancement. The recipes add no
-browser JavaScript. These measurements exclude CSS, fonts and HTTP headers;
-the browser test checks that only those two scripts load and caps their combined
-raw size at 6 KiB.
+The compiled catalog loads two scripts: the Astro theme-control script and a
+documentation enhancement. The recipes add no browser
+JavaScript. The browser test caps their combined raw size at 6 KiB, excluding
+CSS, fonts and HTTP headers.
 
 Field errors and responsive table options are described in the shared library
 README. Their state and layout selectors remain in the component recipes.
 The website catalog and Angular sample demonstrate error reveal/collapse,
-Signal Forms, `mobileCards` and `stickyHeaders`; the website requires no client
+Signal Forms and the responsive table options (`mobileCards` / `stickyHeaders`
+in Angular, `mobile-cards` / `sticky-headers` in Astro); the website requires no client
 code for error transitions or table layout conversion.
 
 The component/directive choice is documented in the repository working agreement.

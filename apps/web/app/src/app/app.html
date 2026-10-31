@@ -1,4 +1,4 @@
-<app-shell id="top" contentId="main" skipLabel="Skip to content" i18n-skipLabel="@@skip">
+<app-shell id="top" content-id="main" skip-label="Skip to content" i18n-skip-label="@@skip">
   <app-sidebar label="Primary navigation" i18n-label="@@shellPrimary">
     <a
       data-slot="brand"
@@ -97,7 +97,7 @@
       </nav>
       <label appUI inline>
         <span appUI="text" uiSize="inherit" tone="muted" i18n="@@theme">Appearance</span>
-        <select appUI uiSize="sm" inline data-theme-select>
+        <select appUI uiSize="sm" inline appUITheme>
           <option value="system" i18n="@@system">System</option>
           <option value="light" i18n="@@light">Light</option>
           <option value="dark" i18n="@@dark">Dark</option>
@@ -179,11 +179,11 @@
     >
       <app-field
         #exampleField="appField"
-        controlId="angular-email"
+        control-id="angular-email"
         label="Example email"
         i18n-label="@@fieldEmail"
         [error]="emailError"
-        [manualError]="manualInvalid() ? manualEmailError : null"
+        [manual-error]="manualInvalid() ? manualEmailError : null"
       >
         <input
           appUI

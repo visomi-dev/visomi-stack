@@ -37,7 +37,7 @@ pnpm install --frozen-lockfile`;
   >
     <aside class="hidden lg:block">
       <nav aria-label={labels.nav.docs} class="sticky top-28 grid gap-1">
-        <Text uiSize="xs" tone="accent" mono class="mb-4">
+        <Text ui-size="xs" tone="accent" mono class="mb-4">
           {locale === 'es' ? 'PRIMEROS PASOS' : 'GETTING STARTED'}
         </Text>
         {sections.map(([id, title]) => (
@@ -54,13 +54,13 @@ pnpm install --frozen-lockfile`;
     </aside>
     <div class="min-w-0 max-w-4xl">
       <header>
-        <Text uiSize="xs" tone="accent" mono leading="relaxed" class="mb-6 tracking-widest">
+        <Text ui-size="xs" tone="accent" mono leading="relaxed" class="mb-6 tracking-widest">
           {copy.eyebrow}
         </Text>
-        <Heading as="h1" uiSize="display" class="max-w-3xl">
+        <Heading as="h1" ui-size="display" class="max-w-3xl">
           {copy.title}
         </Heading>
-        <Text uiSize="lg" tone="muted" class="mt-7 max-w-2xl">
+        <Text ui-size="lg" tone="muted" class="mt-7 max-w-2xl">
           {copy.intro}
         </Text>
       </header>
@@ -77,10 +77,10 @@ pnpm install --frozen-lockfile`;
         ))}
       </nav>
       <Card as="section" tone="subtle" padding="lg" layout="plain" id="requirements" class="mt-12 scroll-mt-28">
-        <Heading as="h2" uiSize="md">
+        <Heading as="h2" ui-size="md">
           {copy.requirements}
         </Heading>
-        <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-3">
+        <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-3">
           {copy.requirementsBody}
         </Text>
         <ul class="mt-5 flex flex-wrap gap-3 font-mono text-xs">
@@ -96,48 +96,48 @@ pnpm install --frozen-lockfile`;
         </ul>
       </Card>
       <section id="workspace" class="mt-14 scroll-mt-28">
-        <Heading as="h2" uiSize="lg">
-          <Text as="span" uiSize="sm" tone="accent" mono class="mr-3">
+        <Heading as="h2" ui-size="lg">
+          <Text as="span" ui-size="sm" tone="accent" mono class="mr-3">
             01
           </Text>
           {copy.stepOne}
         </Heading>
-        <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-4 mb-6">
+        <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-4 mb-6">
           {copy.stepOneBody}
         </Text>
         <Terminal title="terminal / workspace" code={clone} />
       </section>
       <section id="entry-points" class="mt-14 scroll-mt-28">
-        <Heading as="h2" uiSize="lg">
-          <Text as="span" uiSize="sm" tone="accent" mono class="mr-3">
+        <Heading as="h2" ui-size="lg">
+          <Text as="span" ui-size="sm" tone="accent" mono class="mr-3">
             02
           </Text>
           {copy.stepTwo}
         </Heading>
-        <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-4">
+        <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-4">
           {copy.stepTwoBody}
         </Text>
         <div class="mt-7 grid gap-7">
           {copy.entries.map(([title, body, command, url]) => (
             <article class="min-w-0">
-              <Heading as="h3" uiSize="sm">
+              <Heading as="h3" ui-size="sm">
                 {title}
               </Heading>
-              <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-2 mb-4">
+              <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-2 mb-4">
                 {body}
               </Text>
               <Terminal title={title} code={command} />
-              <Text uiSize="xs" tone="subtle" mono leading="relaxed" class="mt-3 break-all">
+              <Text ui-size="xs" tone="subtle" mono leading="relaxed" class="mt-3 break-all">
                 {locale === 'es' ? 'Abrir' : 'Open'}: {url.replace('/en/', `/${locale}/`)}
               </Text>
             </article>
           ))}
         </div>
         <Alert tone="accent" class="mt-8">
-          <Heading as="h3" uiSize="label">
+          <Heading as="h3" ui-size="label">
             {copy.authNoteTitle}
           </Heading>
-          <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-3">
+          <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-3">
             {copy.authNoteBody}
           </Text>
           <Link
@@ -151,22 +151,22 @@ pnpm install --frozen-lockfile`;
         </Alert>
       </section>
       <section id="structure" class="mt-14 scroll-mt-28">
-        <Heading as="h2" uiSize="lg">
-          <Text as="span" uiSize="sm" tone="accent" mono class="mr-3">
+        <Heading as="h2" ui-size="lg">
+          <Text as="span" ui-size="sm" tone="accent" mono class="mr-3">
             03
           </Text>
           {copy.stepThree}
         </Heading>
-        <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-4 mb-6">
+        <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-4 mb-6">
           {copy.stepThreeBody}
         </Text>
         <Terminal title="visomi-stack / workspace" code={copy.structure} />
       </section>
       <section id="verification" class="mt-14 scroll-mt-28">
-        <Heading as="h2" uiSize="lg">
+        <Heading as="h2" ui-size="lg">
           {copy.checksTitle}
         </Heading>
-        <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-4 mb-6">
+        <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-4 mb-6">
           {copy.checksBody}
         </Text>
         <Terminal
@@ -176,7 +176,7 @@ pnpm nx e2e web-site`}
         />
       </section>
       <section class="mt-14 border-t border-zinc-200 pt-10 dark:border-zinc-800">
-        <Heading as="h2" uiSize="lg">
+        <Heading as="h2" ui-size="lg">
           {copy.nextTitle}
         </Heading>
         <div class="mt-7 grid gap-4">
@@ -189,10 +189,10 @@ pnpm nx e2e web-site`}
               ]}
             >
               <div>
-                <Heading as="h3" uiSize="label">
+                <Heading as="h3" ui-size="label">
                   {title}
                 </Heading>
-                <Text uiSize="sm" tone="muted" class="mt-2">
+                <Text ui-size="sm" tone="muted" class="mt-2">
                   {body}
                 </Text>
               </div>

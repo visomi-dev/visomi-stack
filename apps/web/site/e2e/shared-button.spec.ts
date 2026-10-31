@@ -96,7 +96,7 @@ for (const locale of ['en', 'es']) {
   });
 }
 
-test('the website loads only its theme and small native interaction script', async ({ page }, info) => {
+test('the website loads only theme controls and a small native demo', async ({ page }, info) => {
   const responses: Promise<{ path: string; raw: number; gzip: number; brotli: number }>[] = [];
 
   page.on('response', (response) => {
@@ -126,7 +126,6 @@ test('the website loads only its theme and small native interaction script', asy
   const totalRaw = resources.reduce((total, resource) => total + resource.raw, 0);
 
   expect(resources).toHaveLength(2);
-  expect(resources.some((resource) => resource.path.includes('theme.base.'))).toBe(true);
   expect(resources.some((resource) => resource.path.includes('button-demo.'))).toBe(true);
   expect(totalRaw).toBeLessThan(4096);
 

@@ -7,13 +7,14 @@ The owning executable explicitly initializes and shuts down telemetry. Importing
 this library does not initialize it. Applications can supply a runtime to their
 HTTP adapters or use the current runtime within the same process.
 
-The owning runtime can opt into the official Railway OTLP/HTTP protobuf exporter
-with `VISOMI_RAILWAY_TRACING=true` and Railway's receiver variables. It exports
-only the facade's allowlisted spans; global instrumentation and resource discovery
-remain disabled. Export is off by default, and the public gateway remains off due
-to Railway's independent edge capture policy. See the
+The owning runtime can opt into the official OTLP/HTTP protobuf exporter with
+`VISOMI_OTLP_TRACING=true` and the `OTEL_EXPORTER_OTLP_*` receiver variables.
+The flag controls application export independently of the hosting provider.
+Production uses the authenticated private Jaeger receiver; the public gateway's native tracing and automatic instrumentation stay disabled.
+Only the facade's allowlisted spans are exported, without global instrumentation
+or resource discovery. See the
 [Railway guide](../../../../docs/railway.md#observability-and-future-workers)
-for configuration, capture boundaries, and receiver verification.
+for configuration, capture boundaries, receiver verification and rollback.
 
 `src/lib/http/` owns `HttpError`, `AuthHttpError`, `httpErrorHandler` and
 `securityHeaders`. Application factories compose these exports; they do not

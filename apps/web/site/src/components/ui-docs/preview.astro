@@ -13,7 +13,7 @@ const labels = uiDocs[locale];
 
 <section id={id} data-component={id} class="scroll-mt-28 border-t border-zinc-200 py-8 dark:border-zinc-800">
   <div class="mb-5 flex flex-wrap items-baseline justify-between gap-3">
-    <Heading as="h3" uiSize="md">
+    <Heading as="h3" ui-size="md">
       {labels.names[id]}
     </Heading>
     <Code variant="plain" class={text.classes({ size: 'xs', tone: 'subtle' })}>
@@ -26,19 +26,19 @@ const labels = uiDocs[locale];
   <Disclosure summary={labels.usage} class="mt-4">
     <div class="grid min-w-0 gap-5 py-2">
       <div class="min-w-0">
-        <Heading as="h4" uiSize="label" class="mb-2">
+        <Heading as="h4" ui-size="label" class="mb-2">
           Angular
         </Heading>
         <pre><Code block>{angular}</Code></pre>
       </div>
       <div class="min-w-0">
-        <Heading as="h4" uiSize="label" class="mb-2">
+        <Heading as="h4" ui-size="label" class="mb-2">
           Astro
         </Heading>
         <pre><Code block>{astro}</Code></pre>
       </div>
       <div class="min-w-0">
-        <Heading as="h4" uiSize="label" class="mb-2">
+        <Heading as="h4" ui-size="label" class="mb-2">
           {labels.recipe}
         </Heading>
         <pre><Code block>{`import { ${recipeNames[id]} } from '@visomi-stack/web-frontend-ui';\n\n${recipeNames[id]}.classes();`}</Code></pre>

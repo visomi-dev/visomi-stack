@@ -32,14 +32,14 @@ const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
   angular={
     '<span appUI="avatar" uiSize="md" role="img" aria-label="Morgan Lee">ML</span>\n<img appUI src="/favicon.svg" alt="Demo workspace" />'
   }
-  astro={'<Avatar label="Morgan Lee" uiSize="md">ML</Avatar>\n<Avatar src="/favicon.svg" label="Demo workspace" />'}
+  astro={'<Avatar label="Morgan Lee" ui-size="md">ML</Avatar>\n<Avatar src="/favicon.svg" label="Demo workspace" />'}
 >
   <div class="flex flex-wrap items-center gap-4">
-    <Avatar label={labels.sampleName} uiSize="sm">
+    <Avatar label={labels.sampleName} ui-size="sm">
       ML
     </Avatar>
     <Avatar label={labels.sampleName}>ML</Avatar>
-    <Avatar label={labels.sampleName} uiSize="lg" shape="rounded">
+    <Avatar label={labels.sampleName} ui-size="lg" shape="rounded">
       ML
     </Avatar>
     <Avatar label={labels.workspace} src="/favicon.svg" />
@@ -52,14 +52,14 @@ const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
     '<table appUI mobileCards stickyHeaders role="table"><caption>Workspaces</caption>…</table>\n<!-- Keep native header associations and explicit row/cell roles. Cell labels use <span data-slot="label" aria-hidden="true">…</span>. -->'
   }
   astro={
-    '<Table mobileCards stickyHeaders role="table"><caption>Workspaces</caption>…</Table>\n<!-- Keep native header associations and explicit row/cell roles. Cell labels use <span data-slot="label" aria-hidden="true">…</span>. -->'
+    '<Table mobile-cards sticky-headers role="table"><caption>Workspaces</caption>…</Table>\n<!-- Keep native header associations and explicit row/cell roles. Cell labels use <span data-slot="label" aria-hidden="true">…</span>. -->'
   }
 >
-  <Text as="p" uiSize="sm" tone="muted" class="mb-4">
+  <Text as="p" ui-size="sm" tone="muted" class="mb-4">
     {labels.tableBehavior}
   </Text>
   <div data-table-scroll class="max-h-96 overflow-auto">
-    <Table striped mobileCards stickyHeaders role="table">
+    <Table striped mobile-cards sticky-headers role="table">
       <caption>{labels.tableCaption}</caption>
       <thead role="rowgroup">
         <tr role="row">

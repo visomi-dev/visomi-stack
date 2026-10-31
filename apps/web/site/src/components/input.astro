@@ -3,9 +3,9 @@ import type { HTMLAttributes } from 'astro/types';
 
 import { input as styles, type ControlSize } from '@visomi-stack/web-frontend-ui';
 
-type Props = HTMLAttributes<'input'> & { uiSize?: ControlSize };
+type Props = HTMLAttributes<'input'> & { 'ui-size'?: ControlSize };
 
-const { uiSize = 'md', class: className, ...attributes } = Astro.props;
+const { 'ui-size': uiSize = 'md', class: className, ...attributes } = Astro.props;
 ---
 
 <input {...attributes} data-slot="control" class:list={[styles.classes({ size: uiSize }), className]} />

@@ -42,8 +42,8 @@ realtime delivery and client-protected content. The architecture page identifies
 these as future capabilities and distinguishes them from the current gateway,
 Astro site, independent Angular SSR application and identity backend.
 
-The homepage, architecture and getting-started pages load only the existing
-prepaint theme script. The component catalog additionally retains its small
+The homepage, architecture and getting-started pages load only the TypeScript
+theme-control script compiled by Astro. The component catalog additionally retains its small
 native demo script. Scripts remain external for Express CSP compatibility.
 Metadata contains localized descriptions and Open Graph text. A canonical
 production origin and social preview image are not invented before deployment

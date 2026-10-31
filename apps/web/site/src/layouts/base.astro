@@ -1,5 +1,4 @@
 ---
-import themeScript from '../../../../../theme.base.js?url&no-inline';
 import '../styles/global.css';
 
 type Props = {
@@ -24,7 +23,6 @@ const { locale, title, description } = Astro.props;
     {description && <meta property="og:description" content={description} />}
     <meta property="og:locale" content={locale === 'en' ? 'en_US' : 'es_ES'} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <script is:inline src={themeScript}></script>
     <slot name="head" />
   </head>
   <body class="min-h-screen bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">

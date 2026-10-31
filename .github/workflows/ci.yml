@@ -109,6 +109,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Build and verify the production image
         run: pnpm nx run web-gateway:container-check
+      - name: Verify private trace storage and capture policy
+        run: pnpm nx run web-gateway:jaeger-check
 
   required:
     if: always()

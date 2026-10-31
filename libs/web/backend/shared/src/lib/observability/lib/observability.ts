@@ -23,7 +23,7 @@ import {
   version,
 } from './policy';
 import type { Correlation, Environment, ErrorCode, Operation, Outcome, RuntimeEvent, Service } from './policy';
-import { railwaySpanProcessors } from './railway';
+import { otlpSpanProcessors } from './otlp';
 
 import { createInjector, inject, InjectionToken } from '@visomi-stack/backend-shared';
 
@@ -97,7 +97,7 @@ class ObservabilityRuntime implements Observability {
     const options = inject<ObservabilityOptions>(OBSERVABILITY_OPTIONS);
     const spanProcessors = options.spanExporter
       ? [new SimpleSpanProcessor({ exporter: options.spanExporter })]
-      : railwaySpanProcessors(process.env);
+      : otlpSpanProcessors(process.env);
 
     this.manager = new AsyncLocalStorageContextManager().enable();
     this.metadata = {

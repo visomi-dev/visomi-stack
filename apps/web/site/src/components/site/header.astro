@@ -1,7 +1,7 @@
 ---
 import { card, linkButton } from '@visomi-stack/web-frontend-ui';
 import Label from '../label.astro';
-import Select from '../select.astro';
+import ThemeSelect from '../theme-select.astro';
 import Container from '../container.astro';
 import Text from '../text.astro';
 import Brand from './brand.astro';
@@ -50,14 +50,14 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
         ))}
       </nav>
       <Label>
-        <Text as="span" uiSize="inherit" tone="inherit" class="sr-only">
+        <Text as="span" ui-size="inherit" tone="inherit" class="sr-only">
           {copy.theme}
         </Text>
-        <Select uiSize="xs" inline data-theme-select>
+        <ThemeSelect ui-size="xs" inline>
           <option value="system">{copy.system}</option>
           <option value="light">{copy.light}</option>
           <option value="dark">{copy.dark}</option>
-        </Select>
+        </ThemeSelect>
       </Label>
       <details class="group relative lg:hidden" data-site-menu>
         <summary
@@ -66,7 +66,7 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
             'cursor-pointer list-none [&::-webkit-details-marker]:hidden',
           ]}
         >
-          <Text as="span" uiSize="inherit" tone="inherit" class="sr-only">
+          <Text as="span" ui-size="inherit" tone="inherit" class="sr-only">
             {copy.menu}
           </Text>
           <Icon name="menu" />

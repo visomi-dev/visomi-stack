@@ -166,3 +166,15 @@ test('serves readable content with JavaScript disabled', async ({ browser }, inf
     await context.close();
   }
 });
+
+test('uses the system preference when the stored theme is invalid', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('visomi.theme', 'invalid'));
+
+  await page.emulateMedia({ colorScheme: 'dark' });
+
+  await page.goto(route());
+
+  await expect(page.locator('html')).toHaveClass('dark');
+
+  await expect(page.locator('[data-theme-select]')).toHaveValue('system');
+});

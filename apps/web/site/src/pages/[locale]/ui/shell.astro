@@ -1,6 +1,6 @@
 ---
 import Label from '../../../components/label.astro';
-import Select from '../../../components/select.astro';
+import ThemeSelect from '../../../components/theme-select.astro';
 import Text from '../../../components/text.astro';
 import Heading from '../../../components/heading.astro';
 import BaseLayout from '../../../layouts/base.astro';
@@ -29,14 +29,14 @@ const destinations = [
 ---
 
 <BaseLayout locale={locale} title={labels.names['app-shell']} description={labels.shellNote}>
-  <AppShell contentId="shell-main" skipLabel={labels.skipContent}>
+  <AppShell content-id="shell-main" skip-label={labels.skipContent}>
     <Sidebar slot="sidebar" label={labels.primaryNavigation}>
       <a
         slot="brand"
         href={`/${locale}/ui/`}
         class="ui-focus-ring flex min-h-11 items-center gap-3 rounded-lg font-heading font-bold"
       >
-        <Text as="span" uiSize="inherit" tone="inverse" class="rounded-lg bg-blue-600 px-3 py-2">
+        <Text as="span" ui-size="inherit" tone="inverse" class="rounded-lg bg-blue-600 px-3 py-2">
           V
         </Text>{' '}
         VISOMI
@@ -58,7 +58,7 @@ const destinations = [
           </NavItem>
         ))}
       </div>
-      <Text uiSize="xs" tone="muted" slot="footer" class="border-t border-zinc-200 pt-4 dark:border-zinc-700">
+      <Text ui-size="xs" tone="muted" slot="footer" class="border-t border-zinc-200 pt-4 dark:border-zinc-700">
         {labels.shellFooter}
       </Text>
     </Sidebar>
@@ -69,38 +69,38 @@ const destinations = [
       </Link>
       <Label inline>
         <span>{labels.theme}</span>
-        <Select uiSize="xs" inline data-theme-select>
+        <ThemeSelect ui-size="xs" inline>
           <option value="system">{labels.system}</option>
           <option value="light">{labels.light}</option>
           <option value="dark">{labels.dark}</option>
-        </Select>
+        </ThemeSelect>
       </Label>
     </Topbar>
     <header class="mb-8 grid gap-4">
-      <Text uiSize="xs" tone="accent" mono class="tracking-wide">
+      <Text ui-size="xs" tone="accent" mono class="tracking-wide">
         VISOMI / APP SHELL
       </Text>
-      <Heading as="h1" uiSize="title" class="max-w-2xl">
+      <Heading as="h1" ui-size="title" class="max-w-2xl">
         {labels.shellTitle}
       </Heading>
-      <Text uiSize="inherit" tone="muted" class="max-w-2xl">
+      <Text ui-size="inherit" tone="muted" class="max-w-2xl">
         {labels.shellNote}
       </Text>
     </header>
     <div class="grid gap-5 sm:grid-cols-2">
       <Card>
-        <Heading as="h2" uiSize="sm">
+        <Heading as="h2" ui-size="sm">
           {labels.studio}
         </Heading>
-        <Text uiSize="sm" tone="muted">
+        <Text ui-size="sm" tone="muted">
           {labels.cardBody}
         </Text>
       </Card>
       <Card tone="raised">
-        <Heading as="h2" uiSize="sm">
+        <Heading as="h2" ui-size="sm">
           {labels.sandbox}
         </Heading>
-        <Text uiSize="sm" tone="muted">
+        <Text ui-size="sm" tone="muted">
           {labels.containerNote}
         </Text>
       </Card>
@@ -113,10 +113,10 @@ const destinations = [
       id="shell-activity"
       class="mt-10 min-h-72 scroll-mt-28"
     >
-      <Heading as="h2" uiSize="md">
+      <Heading as="h2" ui-size="md">
         {labels.activity}
       </Heading>
-      <Text uiSize="inherit" tone="muted" class="mt-4">
+      <Text ui-size="inherit" tone="muted" class="mt-4">
         {labels.note}
       </Text>
     </Card>
@@ -128,7 +128,7 @@ const destinations = [
       id="shell-settings"
       class="mt-8 min-h-72 scroll-mt-28"
     >
-      <Heading as="h2" uiSize="md" class="mb-5">
+      <Heading as="h2" ui-size="md" class="mb-5">
         {labels.settings}
       </Heading>
       <LinkButton href={`/${locale}/ui/`}>{labels.catalogLink}</LinkButton>

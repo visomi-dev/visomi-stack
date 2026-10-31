@@ -41,13 +41,13 @@ const labels = uiDocs[locale];
   id="field"
   locale={locale}
   angular={
-    '<app-field #nameField="appField" controlId="name" label="Name" description="Visible name."><input appUI [id]="nameField.controlId()" [attr.aria-describedby]="nameField.describedBy()" /></app-field>'
+    '<app-field #nameField="appField" control-id="name" label="Name" description="Visible name."><input appUI [id]="nameField.controlId()" [attr.aria-describedby]="nameField.describedBy()" /></app-field>'
   }
   astro={
-    '<Field controlId="name" label="Name" description="Visible name."><Input id="name" aria-describedby="name-help" /></Field>'
+    '<Field control-id="name" label="Name" description="Visible name."><Input id="name" aria-describedby="name-help" /></Field>'
   }
 >
-  <Field controlId="field-name" label={labels.name} description={labels.nameHint}>
+  <Field control-id="field-name" label={labels.name} description={labels.nameHint}>
     <Input id="field-name" value={labels.sampleName} aria-describedby="field-name-help" />
   </Field>
 </Preview>
@@ -88,7 +88,7 @@ const labels = uiDocs[locale];
     '<Input id="email" aria-label="Email" aria-invalid="true" aria-describedby="email-error" /><ErrorMessage id="email-error">Enter a valid address.</ErrorMessage>'
   }
 >
-  <Field controlId="error-email" label={labels.email} error={labels.emailError}>
+  <Field control-id="error-email" label={labels.email} error={labels.emailError}>
     <Input
       type="email"
       id="error-email"
@@ -102,13 +102,13 @@ const labels = uiDocs[locale];
   id="input"
   locale={locale}
   angular={'<input appUI type="email" uiSize="sm" [size]="24" required />'}
-  astro={'<Input type="email" uiSize="sm" size={24} required />'}
+  astro={'<Input type="email" ui-size="sm" size={24} required />'}
 >
-  <Text as="p" uiSize="sm" tone="muted" class="mb-4">
+  <Text as="p" ui-size="sm" tone="muted" class="mb-4">
     {labels.fieldBehavior}
   </Text>
   <div id="validation-fields" class="grid gap-4">
-    <Field controlId="input-email" label={labels.email} description={labels.emailHint} error={labels.emailError}>
+    <Field control-id="input-email" label={labels.email} description={labels.emailHint} error={labels.emailError}>
       <Input
         type="email"
         id="input-email"
@@ -117,7 +117,7 @@ const labels = uiDocs[locale];
         value="demo@example.test"
         required
         size={24}
-        uiSize="sm"
+        ui-size="sm"
         aria-describedby="input-email-help input-email-error"
       />
     </Field>
@@ -129,7 +129,7 @@ const labels = uiDocs[locale];
     </div>
     <Text
       as="p"
-      uiSize="sm"
+      ui-size="sm"
       tone="muted"
       role="status"
       data-ui-validation-status
@@ -142,9 +142,9 @@ const labels = uiDocs[locale];
   id="textarea"
   locale={locale}
   angular={'<textarea appUI uiSize="md" id="message" rows="3" aria-label="Message"></textarea>'}
-  astro={'<Textarea uiSize="md" id="message" rows={3} aria-label="Message">Example text.</Textarea>'}
+  astro={'<Textarea ui-size="md" id="message" rows={3} aria-label="Message">Example text.</Textarea>'}
 >
-  <Field controlId="message-example" label={labels.message} description={labels.messageHint}>
+  <Field control-id="message-example" label={labels.message} description={labels.messageHint}>
     <Textarea id="message-example" rows={3} aria-describedby="message-example-help">
       {labels.body}
     </Textarea>
@@ -154,9 +154,9 @@ const labels = uiDocs[locale];
   id="select"
   locale={locale}
   angular={'<select appUI uiSize="md" aria-label="Region"><option value="am">Americas</option></select>'}
-  astro={'<Select uiSize="md" aria-label="Region"><option value="am" selected>Americas</option></Select>'}
+  astro={'<Select ui-size="md" aria-label="Region"><option value="am" selected>Americas</option></Select>'}
 >
-  <Field controlId="region-example" label={labels.region}>
+  <Field control-id="region-example" label={labels.region}>
     <Select id="region-example" name="example-region">
       <option value="">{labels.choose}</option>
       <option value="am" selected>
@@ -236,7 +236,7 @@ const labels = uiDocs[locale];
           <strong class:list={[text.classes({ size: 'inherit', tone: 'inherit', weight: 'medium' }), 'block']}>
             {labels.radioCardTitle}
           </strong>
-          <Text as="span" uiSize="inherit" tone="muted" class="mt-1 block">
+          <Text as="span" ui-size="inherit" tone="muted" class="mt-1 block">
             {labels.radioCardDescription}
           </Text>
         </span>
@@ -247,7 +247,7 @@ const labels = uiDocs[locale];
           <strong class:list={[text.classes({ size: 'inherit', tone: 'inherit', weight: 'medium' }), 'block']}>
             {labels.shared}
           </strong>
-          <Text as="span" uiSize="inherit" tone="muted" class="mt-1 block">
+          <Text as="span" ui-size="inherit" tone="muted" class="mt-1 block">
             {labels.radioCardDescription}
           </Text>
         </span>
@@ -263,7 +263,7 @@ const labels = uiDocs[locale];
   }
   astro={'<InputGroup><span data-slot="prefix" aria-hidden="true">$</span><Input aria-label="Amount" /></InputGroup>'}
 >
-  <Field controlId="amount-example" label={labels.amount}>
+  <Field control-id="amount-example" label={labels.amount}>
     <InputGroup>
       <span data-slot="prefix" aria-hidden="true">
         $

@@ -15,19 +15,19 @@ const labels = uiDocs[locale];
   id="heading"
   locale={locale}
   angular={'<h2 appUI uiSize="lg">A clear hierarchy</h2>'}
-  astro={'<Heading as="h2" uiSize="lg">A clear hierarchy</Heading>'}
+  astro={'<Heading as="h2" ui-size="lg">A clear hierarchy</Heading>'}
 >
   <div class="grid gap-4">
-    <Heading as="h4" uiSize="xl">
+    <Heading as="h4" ui-size="xl">
       {labels.subheading}
     </Heading>
-    <Heading as="h4" uiSize="lg">
+    <Heading as="h4" ui-size="lg">
       {labels.subheading}
     </Heading>
-    <Heading as="h4" uiSize="md">
+    <Heading as="h4" ui-size="md">
       {labels.subheading}
     </Heading>
-    <Heading as="h4" uiSize="sm">
+    <Heading as="h4" ui-size="sm">
       {labels.subheading}
     </Heading>
   </div>
@@ -36,15 +36,15 @@ const labels = uiDocs[locale];
   id="text"
   locale={locale}
   angular={'<p appUI uiSize="md">Good defaults.</p>\n<p appUI tone="muted" uiSize="sm">Supporting text.</p>'}
-  astro={'<Text uiSize="md">Good defaults.</Text>\n<Text tone="muted" uiSize="sm">Supporting text.</Text>'}
+  astro={'<Text ui-size="md">Good defaults.</Text>\n<Text tone="muted" ui-size="sm">Supporting text.</Text>'}
 >
   <div class="grid gap-3">
-    <Text uiSize="lg">{labels.body}</Text>
+    <Text ui-size="lg">{labels.body}</Text>
     <Text>{labels.body}</Text>
-    <Text tone="muted" uiSize="sm">
+    <Text tone="muted" ui-size="sm">
       {labels.muted}
     </Text>
-    <Text tone="accent" uiSize="xs" mono weight="medium">
+    <Text tone="accent" ui-size="xs" mono weight="medium">
       {labels.body}
     </Text>
   </div>

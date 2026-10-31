@@ -18,11 +18,6 @@
           {
             "glob": "**/*",
             "input": "apps/web/app/public"
-          },
-          {
-            "glob": "theme.base.js",
-            "input": ".",
-            "output": "."
           }
         ],
         "styles": ["apps/web/app/src/styles.css"],
@@ -74,11 +69,11 @@
         "production",
         "^production",
         "{workspaceRoot}/styles.base.css",
-        "{workspaceRoot}/theme.base.js",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/pnpm-lock.yaml",
         "{workspaceRoot}/.postcssrc.json"
-      ]
+      ],
+      "dependsOn": ["^build"]
     },
     "serve": {
       "continuous": true,

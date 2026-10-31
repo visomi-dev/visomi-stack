@@ -36,7 +36,7 @@ for (const locale of ['en', 'es']) {
     const sizes = await Promise.all(scripts);
 
     expect(sizes).toHaveLength(1);
-    expect(sizes[0]).toBeLessThan(2048);
+    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(2048);
     expect(errors).toEqual([]);
 
     await page.getByRole('checkbox').uncheck();

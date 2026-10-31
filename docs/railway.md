@@ -11,7 +11,7 @@ remains an independent application and `/app/*` returns 404 through this gateway
 - Environment: `production` (`7894fae9-b595-4415-9b58-348c3785ce6d`).
 - Service: `web-gateway` (`5c62752e-dd6c-47d7-a0b2-cfbb3c2cb73f`).
 - Source: `visomi-dev/visomi-stack`, branch `main`.
-- Public URL: <https://web-gateway-production-fa93.up.railway.app>.
+- Public URL: <https://stack.visomi.dev>.
 
 The service uses the existing Railway GitHub integration for automatic
 deployments from `main`. GitHub Actions verifies the code; Railway builds and
@@ -20,8 +20,11 @@ or a local Railway CLI session.
 
 The initial public website does not need a database, Redis, object storage, or
 mail credentials. Without `DATABASE_URL`, authentication fails closed with 503.
-No customer data or secrets are required for the initial deployment. Custom
-domains and authentication infrastructure are separate configuration steps.
+No customer data or application secrets are required for the initial website.
+The public origin is `https://stack.visomi.dev`, proxied through Cloudflare.
+Railway has a valid certificate; its DNS status may report a mismatch while
+Cloudflare proxies the CNAME. Preserve the existing Railway-generated domain
+for diagnostics. Authentication infrastructure remains a separate step.
 
 ## Build and runtime
 
@@ -81,8 +84,13 @@ The workflow cancels superseded PR runs, but never cancels `main` runs.
 ### Inputs and selection regression checks
 
 Nx 24 selects tasks using inputs and consumed dependency outputs; `dependsOn`
-alone only orders tasks. Browser and HTTP E2E targets read the outputs of their
-build dependencies transitively. Global styles and theme changes therefore
+alone only orders tasks. Browser and HTTP E2E targets declare
+`{ "dependentTasksOutputFiles": "**/*", "transitive": true }` because they run
+against compiled applications, including their JavaScript, CSS, assets and
+metadata. `transitive` follows the complete build chain, such as website tests
+→ gateway → API and Astro site. It is not a default required on every target.
+The API and gateway compiled-artifact tests also consume these outputs, including
+`.mjs`, `package.json` and source maps. Global styles and theme changes therefore
 select website and Angular E2E, and changes to the gateway/API select the
 website tests that actually serve through that gateway.
 
@@ -144,7 +152,7 @@ to it when provisioning them, and use `preserve()` for remotely stored secrets.
 After a deployment reaches `SUCCESS`, verify the public origin:
 
 ```sh
-node tools/deployment/smoke.mjs https://web-gateway-production-fa93.up.railway.app
+node tools/deployment/smoke.mjs https://stack.visomi.dev
 ```
 
 The smoke check uses only public requests. Avoid publishing raw HTTP logs,
@@ -173,72 +181,129 @@ The gateway emits allowlisted JSON logs to stdout and owns its OpenTelemetry
 providers. It currently supplies neither a production span exporter nor a metric
 reader by default. OpenTelemetry itself is not a database or a telemetry query backend.
 
-Railway already provides container metrics, log search, a customizable
-observability dashboard, and native distributed tracing. Its native OTLP receiver
-accepts **traces only**; custom application metrics and OTLP logs require another
-destination. Enabling service tracing provides the OTLP endpoint, protocol and
-required headers on the next deployment. The application has an explicit opt-in
-for its official OTLP/HTTP protobuf exporter: `VISOMI_RAILWAY_TRACING=true`.
-It requires Railway's `OTEL_EXPORTER_OTLP_ENDPOINT`,
-`OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf`, and `OTEL_EXPORTER_OTLP_HEADERS`.
-Keep these credentials out of source control, logs, and test reports. Missing or
-unsafe configuration rejects initialization with a fixed error code.
+Railway provides container metrics and log search. Its native tracing switch also
+records raw request paths at the edge and accepts client-supplied trace IDs.
+The documented controls provide no edge redaction or application-only tracing
+mode. Application filtering cannot remove separately generated edge telemetry.
+Native tracing and automatic instrumentation therefore remain **off** on the
+public gateway and on Jaeger. This does not disable Railway's or Cloudflare's own
+HTTP access logs; those follow their respective platform policies.
 
-The exporter runs only on the executable's private provider, with a bounded
-512-span queue, batches of at most 128, a one-second schedule and a 500 ms
-transport timeout. The existing shutdown path flushes it within its deadline.
-No global provider, auto-instrumentation, resource detector, metric exporter or
-log exporter is installed. Explicit test exporters retain precedence.
+### Private Jaeger
+
+Production exports application spans directly to a private `jaeger` service in
+the same Railway project, environment and region (`us-east4-eqdc4a`). It uses
+Jaeger 2.22.0, pinned by image digest in `.railway/railway.ts`. A single process
+owns the receiver, Badger storage and trace viewer; no separate collector or
+database is required. `.railway/jaeger.yaml` is supplied through `JAEGER_CONFIG`
+and loaded with `--config env:JAEGER_CONFIG`.
+
+The `jaeger-data` volume starts at 1 GB, mounts at `/badger`, and retains spans
+with a 48-hour TTL. Badger removes expired data during its normal cleanup;
+TTL is not an instantaneous disk-erasure guarantee. Keep exactly one replica.
+Monitor disk usage and increase the volume deliberately if needed. Railway mounts
+volumes as root-owned, so only this private storage service uses
+`RAILWAY_RUN_UID=0`; the HTTP gateway continues to run as `node`.
+
+Jaeger has **no public domains or TCP proxies**. Its OTLP/HTTP receiver listens
+on private port 4318 and requires Basic authentication. The query viewer uses
+port 16686; the health endpoint is `/status` on port 13133. Listeners support
+Railway's private IPv6 network. Do not enable debug exporters, automatic
+instrumentation, external exporters, AI integrations or browser telemetry.
+
+`JAEGER_HTPASSWD` and `OTLP_AUTH_HEADER` hold receiver credentials in Railway.
+The initial password is generated from 48 random bytes; its SHA htpasswd digest
+checks the same high-entropy credential sent in the Basic header. Neither value
+belongs in Git, logs, commands shown to users or reports. Rotate them together.
+IaC uses `preserve()` and references the header from the gateway.
+
+The gateway uses a provider-independent, executable-owned OTLP exporter:
+
+```text
+VISOMI_OTLP_TRACING=true
+OTEL_EXPORTER_OTLP_ENDPOINT=http://${{jaeger.RAILWAY_PRIVATE_DOMAIN}}:4318
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+OTEL_EXPORTER_OTLP_HEADERS=${{jaeger.OTLP_AUTH_HEADER}}
+OTEL_METRICS_EXPORTER=none
+OTEL_LOGS_EXPORTER=none
+```
+
+`VISOMI_OTLP_TRACING` enables only application export. The exporter has no
+Railway receiver integration, resource attribution or edge-tracing dependency.
+The official exporter requires a valid endpoint, protocol and authentication
+header; invalid configuration fails with a fixed error code.
+
+The exporter retains its bounded 512-span queue, batches of at most 128,
+one-second schedule, 500 ms transport timeout and existing shutdown deadline.
+Receiver failures do not block HTTP requests. An unsuccessful final flush can
+still make shutdown exit unsuccessfully; export is best effort, not durable
+application delivery. Explicit test exporters retain precedence.
 
 The application capture policy permits only:
 
-- Span names `http.request` and `job.execute`, with generated random trace/span
-  IDs, timing, kind and status code; no status message, events, links or baggage.
-- Attributes `operation`, controlled `outcome`, and a validated numeric
+- Span names `http.request` and `job.execute`, random trace/span IDs, timing,
+  kind and status code; no status messages, events, links or baggage.
+- Attributes `operation`, controlled `outcome`, and validated numeric
   `http.response.status_code` for HTTP completions.
-- Resource fields `service.name` from the fixed service allowlist, validated
-  semantic `service.version`, and controlled `deployment.environment.name`.
-- The fixed instrumentation scope `visomi-stack.operational` and validated version.
+- Resource fields from the existing service, version and environment allowlists,
+  and the fixed `visomi-stack.operational` instrumentation scope.
 
-Client request IDs, `traceparent`, `tracestate` and baggage are ignored. In
-particular, application traces intentionally do not join Railway edge traces:
-an external identifier is not trusted merely because its syntax is valid.
-`OTEL_RESOURCE_ATTRIBUTES`, `OTEL_SERVICE_NAME` and `OTEL_SERVICE_VERSION` do not
-override this capture policy. Railway adds its own deployment attribution on receipt.
+Jaeger's Badger compatibility conversion may display the numeric HTTP status as
+`http.status_code`; the application export uses `http.response.status_code`.
 
-**Public-service activation is blocked by the native edge capture policy.**
-Railway's Traced switch also records raw request paths at the edge and honors
-client-supplied trace IDs. Application filtering cannot remove that separately
-generated telemetry, and the documented switches do not offer edge redaction or
-an application-only mode. Therefore the public gateway's native tracing and
-application opt-in remain disabled in IaC and production. Do not enable either
-switch for the public gateway until Railway provides compatible edge controls
-or the capture policy is explicitly revised. Do not enable automatic instrumentation.
+Client request IDs, `traceparent`, `tracestate`, baggage, and arbitrary resource
+environment variables are ignored. Bodies, credentials, customer identifiers,
+paths, queries, IPs, user agents and original exceptions are never exported.
 
-The native receiver can be tested safely on a private test service with no public
-domains, databases, mail or customer traffic. Deploy the PR branch there, enable
-native tracing with automatic instrumentation off, opt in to application export,
-and generate synthetic localhost HTTP traffic. Inspect the service spans in
-Railway, including resources, events, links and status messages. Keep production
-on `main`. A successful private test proves receiver compatibility, not compliance
-of Railway's public edge. Run the library tests for repeatable wire-level checks:
+### Verify and access
+
+The container check starts the real pinned Jaeger image and the compiled gateway
+with synthetic private markers. It checks receiver authentication, stored OTLP
+attributes/resources/events/links, fresh IDs, shutdown flush, receiver outages,
+persistence after restart and the configured TTL. It does not wait 48 hours to
+test expiry. Run it through Nx, alongside the existing wire-level exporter tests:
 
 ```sh
+pnpm nx run web-gateway:jaeger-check
+CONTAINER_ENGINE=podman pnpm nx run web-gateway:jaeger-check
 pnpm nx run web-backend-shared:test
 ```
 
-These tests exercise the real protobuf exporter against a local OTLP receiver,
-including authentication, shutdown flush, receiver errors, malicious synthetic
-headers/body/path/query/error material, ignored resource environment variables,
-and fresh correlation IDs. They inspect actual request bytes and the SDK spans.
+Access the private UI through Railway SSH from an authorized workstation:
 
-If a separate collector is needed, the official Docker images are
-`otel/opentelemetry-collector` and `otel/opentelemetry-collector-contrib`. Pin a
-reviewed version/digest and run it as its own service in the **same Railway
-project and environment**, connected over private networking. A collector
-receives, processes and forwards telemetry; choose a storage/query backend when
-historical trace or custom-metric retention is needed. Do not put that storage or
-a second process manager into the HTTP gateway merely to reuse its container.
+```sh
+railway ssh config --project 0f5e009e-1689-4dc7-ab80-ca81b9037e13 \
+  --environment 7894fae9-b595-4415-9b58-348c3785ce6d \
+  --service 05d655c1-9669-4b6c-b3f7-61993979aa63 --alias railway-jaeger
+ssh -N -L 127.0.0.1:16686:127.0.0.1:16686 railway-jaeger
+```
+
+Then open `http://127.0.0.1:16686` and select service `web-gateway`. Use the
+application-generated trace IDs from allowlisted operational logs when
+investigating a request; Railway edge trace IDs intentionally do not apply.
+Do not publish raw telemetry captures or SSH credentials.
+
+Provision and verify Jaeger before enabling the gateway export variables.
+Keep the gateway's GitHub source on `main`, wait for the exact deployment to
+reach `SUCCESS`, check the public origin and inspect stored application spans
+through the private viewer.
+
+### Export flag transition
+
+The OTLP-only runtime uses `VISOMI_OTLP_TRACING` and retains no alias for the
+provider-specific `VISOMI_RAILWAY_TRACING` switch. Older executables still need
+their original flag to keep exporting to Jaeger until the new runtime is deployed. Provision the new flag alongside
+it without deploying the PR branch to production. After the new build reaches
+`SUCCESS` and its spans are verified, remove the old variable. Do not apply an
+IaC plan that removes the old flag while the old executable is still running.
+For rollback to an older build, restore its matching flag before redeploying.
+
+To disable export, set the running executable's flag to `false`
+(`VISOMI_OTLP_TRACING` for the OTLP-only runtime), redeploy its existing build,
+and verify `https://stack.visomi.dev`. Leave native tracing
+off and retain the Jaeger service/volume until their removal is explicitly
+requested. Configuration changes are not automatically applied by GitHub
+application deployments; reconcile the reviewed IaC plan separately.
 
 The current Node runtime can execute a future BullMQ worker. Its owner must
 initialize and close the queue/worker resources explicitly, drain active jobs
@@ -247,7 +312,9 @@ five-second application shutdown deadline and ten-second Railway drain period.
 With a Redis queue backend, configure persistence and `noeviction`, and account
 for worker concurrency on every gateway replica. No queue is provisioned here.
 
-References: [Railway observability](https://docs.railway.com/observability),
+References: [Jaeger storage](https://www.jaegertracing.io/docs/2.22/storage/badger/),
+[Railway SSH](https://docs.railway.com/cli/ssh),
+[Railway observability](https://docs.railway.com/observability),
 [Railway tracing](https://docs.railway.com/observability/tracing),
 [Railway tracing variables](https://docs.railway.com/variables/reference#tracing-variables),
 [Collector Docker images](https://opentelemetry.io/docs/collector/install/docker/),

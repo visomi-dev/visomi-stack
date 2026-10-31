@@ -187,11 +187,11 @@ populate it from public request bodies. Cross-process tests cover serialization
 and restoration; no queue or worker application has been integrated yet.
 
 Logs default to local JSON output. Trusted startup options allow local test sinks.
-An explicitly opted-in Railway OTLP/HTTP protobuf exporter uses the same private
+An explicitly opted-in OTLP/HTTP protobuf exporter uses the same private
 provider and capture policy, with bounded batching and transport timeouts. It
 ignores environment-driven resource attributes and never registers instrumentations.
-The public gateway remains opted out because Railway's edge separately captures
-raw paths and client-provided trace IDs; see the [Railway capture policy](railway.md#observability-and-future-workers).
+The public gateway exports directly to private Jaeger while Railway's native
+edge tracing stays disabled. See the [capture policy](railway.md#observability-and-future-workers).
 Shutdown is idempotent and bounded (one second by default, at most
 five seconds); failures cannot rewrite application results or expose raw errors.
 
