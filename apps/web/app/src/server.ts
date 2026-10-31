@@ -43,7 +43,17 @@ export function createApp(
     response.set('cache-control', 'no-store').json({ enabled: false }),
   );
   app.use((request, response, next) => {
-    if (decodeURIComponent(request.path).toLowerCase().endsWith('.map')) {
+    let path: string;
+
+    try {
+      path = decodeURIComponent(request.path).toLowerCase();
+    } catch {
+      response.status(400).json({ error: 'request_invalid' });
+
+      return;
+    }
+
+    if (path.endsWith('.map')) {
       response.status(404).json({ error: 'not_found' });
 
       return;
@@ -52,7 +62,18 @@ export function createApp(
     next();
   });
   app.get(['/app', '/app/'], (_request, response) => response.redirect(302, '/app/en/'));
-  app.use('/app', serveStatic(clientDirectory, { index: false, redirect: false }));
+  const serveAssets = serveStatic(clientDirectory, { index: false, redirect: false });
+
+  app.use('/app', (request, response, next) => {
+    // The preceding guard validates encoding; HTML must pass through Angular and nonce substitution.
+    if (decodeURIComponent(request.path).toLowerCase().endsWith('.html')) {
+      next();
+
+      return;
+    }
+
+    serveAssets(request, response, next);
+  });
   app.use((request, response, next) => {
     if (request.path !== '/app' && !request.path.startsWith('/app/')) {
       next();

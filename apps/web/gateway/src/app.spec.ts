@@ -73,6 +73,30 @@ describe('gateway composition', () => {
     expect(handler).not.toHaveBeenCalled();
   });
 
+  it.each(['/en/%zz', '/app/en/%', '/api/%E0%A4%A'])('rejects malformed path encoding for %s', async (path) => {
+    const authenticate = vi.fn<RequestHandler>();
+    const handler = vi.fn<RequestHandler>();
+    const result = await dispatch(
+      createGatewayApp({
+        api: apiFixture(handler),
+        auth: { middleware: [authenticate] } as EmbeddedAuthentication,
+        application: { createApp: () => handler, clientDirectory: '/synthetic/app/browser' },
+        site: { handler, clientDirectory: '/synthetic/site/client' },
+      }),
+      path + '?private=SYNTHETIC_PRIVATE_QUERY',
+    );
+
+    expect(result).toEqual({ status: 400, body: { error: 'request_invalid' } });
+    expect(authenticate).not.toHaveBeenCalled();
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('accepts an encoded literal percent without decoding it twice', async () => {
+    const result = await dispatch(createGatewayApp({ api: apiFixture() }), '/api/%25');
+
+    expect(result).toEqual({ status: 200, body: { path: '/%25' } });
+  });
+
   it('mounts browser intake before the API', async () => {
     const context = vi.fn<RequestHandler>((_request, _response, next) => next());
     const router = Router();
@@ -172,6 +196,19 @@ describe('gateway composition', () => {
         expect.objectContaining({ event: 'http.request', outcome: 'success', status: 200 }),
       ]);
       expect(api.createApp).toHaveBeenCalledWith(expect.objectContaining({ observability: telemetry }));
+
+      const invalid = await dispatch(
+        createGatewayApp({ api, observability: telemetry }),
+        '/app/en/%zz?private=SYNTHETIC_PRIVATE_QUERY',
+      );
+
+      expect(invalid).toEqual({ status: 400, body: { error: 'request_invalid' } });
+      expect(lines.map((line) => JSON.parse(line))).toEqual([
+        expect.objectContaining({ event: 'http.request', outcome: 'success', status: 200 }),
+        expect.objectContaining({ event: 'http.request', outcome: 'client_error', status: 400 }),
+      ]);
+      expect(lines.join('')).not.toContain('SYNTHETIC_PRIVATE_QUERY');
+      expect(lines.join('')).not.toContain('%zz');
     } finally {
       await telemetry.shutdown();
     }

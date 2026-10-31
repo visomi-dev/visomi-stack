@@ -48,7 +48,17 @@ export function createGatewayApp(options: {
   }
 
   app.use((request, response, next) => {
-    if (decodeURIComponent(request.path).toLowerCase().endsWith('.map')) {
+    let path: string;
+
+    try {
+      path = decodeURIComponent(request.path).toLowerCase();
+    } catch {
+      response.status(400).json({ error: 'request_invalid' });
+
+      return;
+    }
+
+    if (path.endsWith('.map')) {
       response.status(404).json({ error: 'not_found' });
 
       return;

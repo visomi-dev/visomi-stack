@@ -118,6 +118,18 @@ same nonce in HTML and Helmet's script/style directives. Astro and API retain th
 existing policy. The parent must supply the nonce when inheriting Helmet.
 See [Angular CSP guidance](https://angular.dev/best-practices/security#content-security-policy).
 
+Static middleware serves assets but skips HTML, including encoded `.html` paths.
+Angular's engine handles documents so `/app/en/index.html` follows Angular's
+route normalization and receives the same nonce transformation as `/app/en/`.
+The generated `index.csr.html` remains in the build for Angular's internal use;
+requesting it directly falls through to a 404 instead of exposing its nonce placeholder.
+This is specific to our per-response CSP policy, not an Angular recommendation
+to delete CSR templates: Angular also documents their use with service workers.
+See [AngularNodeAppEngine](https://angular.dev/api/ssr/node/AngularNodeAppEngine)
+and [service worker cache contents](https://angular.dev/ecosystem/service-workers/getting-started#whats-being-cached).
+Both standalone Angular and the gateway reject malformed path encoding with a
+fixed `400 request_invalid` response before routing, without reflecting the URL.
+
 ## Verification
 
 ```sh
