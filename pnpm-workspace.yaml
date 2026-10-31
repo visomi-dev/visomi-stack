@@ -9,5 +9,6 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - '@angular/ssr@22.2.5'
 patchedDependencies:
+  '@angular/ssr@22.2.5': patches/@angular__ssr@22.2.5.patch
   '@astrojs/node@11.1.6': patches/@astrojs__node@11.1.6.patch
   astro@7.3.3: patches/astro@7.3.3.patch

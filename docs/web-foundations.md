@@ -85,10 +85,11 @@ API handling, Angular at `/app` and reserved `/api` and `/app` 404s precede publ
 Astro SSR. Angular keeps the full URL prefix for its localized SSR manifest and assets. The gateway owns the listener, security headers, authentication chain,
 telemetry and resource shutdown. The shared error handler remains last.
 
-The pinned Astro packages have pnpm patches for the gateway's runtime policy:
-middleware errors delegate to Express, importing the site installs no global
-rejection handler, and failed stream cancellation never logs URLs or exception
-details. The configured site logger emits controlled event codes only. See
+The pinned frontend SSR packages have pnpm patches for the gateway's runtime policy:
+middleware errors delegate to Express, importing or rendering either frontend installs no global
+error/rejection handler, and failed stream cancellation never logs URLs or exception
+details. Angular host-validation failures return a fixed JSON 400 without logging
+the URL, and its redirect/critical-CSS diagnostics use controlled event codes. The configured site logger emits controlled event codes only. See
 [patch maintenance](../patches/README.md); keep these files in dependency installs
 and build-cache inputs until replacement versions pass the regressions.
 

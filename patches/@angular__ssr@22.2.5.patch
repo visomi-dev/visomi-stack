@@ -1,0 +1,80 @@
+diff --git a/fesm2022/node.mjs b/fesm2022/node.mjs
+index b5a384624f794d36528c34118159c66cccd86aac..a85e97e7f8abe5b7b8ceae0daaeeae44dd294ec8 100755
+--- a/fesm2022/node.mjs
++++ b/fesm2022/node.mjs
+@@ -30,15 +30,7 @@ function getArrayFromEnv(envName) {
+ }
+ 
+ function attachNodeGlobalErrorHandlers() {
+-  if (typeof Zone !== 'undefined') {
+-    return;
+-  }
+-  const gThis = globalThis;
+-  if (gThis.ngAttachNodeGlobalErrorHandlersCalled) {
+-    return;
+-  }
+-  gThis.ngAttachNodeGlobalErrorHandlersCalled = true;
+-  process.on('unhandledRejection', error => console.error('unhandledRejection', error)).on('uncaughtException', error => console.error('uncaughtException', error));
++  // The executable owns process failure handling; importing or rendering must not install raw-error loggers.
+ }
+ 
+ class CommonEngineInlineCriticalCssProcessor {
+@@ -383,9 +375,8 @@ async function writeResponseToNodeResponse(source, destination) {
+     isClosed = true;
+     destination.off('close', cancelReader);
+     destination.off('error', cancelReader);
+-    reader.cancel(error).catch(err => {
+-      console.error(`An error occurred while writing the response body for: ${destination.req.url}.`, err);
+-    });
++    // Cancellation is best effort and must not expose the request URL or stream error.
++    reader.cancel(error).catch(() => undefined);
+   };
+   destination.once('close', cancelReader);
+   destination.once('error', cancelReader);
+diff --git a/fesm2022/ssr.mjs b/fesm2022/ssr.mjs
+index f86a70295b81804ef4e2d3036fa65071421b4d80..fcf281d0d6ee5c175c3169240a67b64f0b381d14 100755
+--- a/fesm2022/ssr.mjs
++++ b/fesm2022/ssr.mjs
+@@ -287,7 +287,7 @@ function createRedirectResponse(location, status = 302, headers) {
+   }
+   const resHeaders = headers instanceof Headers ? headers : new Headers(headers);
+   if (ngDevMode && resHeaders.has('location')) {
+-    console.warn(`Location header "${resHeaders.get('location')}" will be ignored and set to "${location}".`);
++    console.warn('{"event":"app.render_failed"}');
+   }
+   const varyArray = resHeaders.get('Vary')?.split(',') ?? [];
+   const varySet = new Set(['X-Forwarded-Prefix']);
+@@ -1218,12 +1218,12 @@ class AngularServerApp {
+         noscriptFallback: true,
+         cache: true,
+         logger: {
+-          warn: console.warn
++          warn: () => console.warn('{"event":"app.render_failed"}')
+         }
+       }).process;
+       return this.inlineCriticalCssProcessor(html);
+     } catch (error) {
+-      console.error('An error occurred while inlining critical CSS.', error);
++      console.error('{"event":"app.render_failed"}');
+       return html;
+     }
+   }
+@@ -1451,14 +1451,13 @@ class AngularAppEngine {
+     const potentialLocale = getPotentialLocaleIdFromUrl(url, basePath);
+     return this.getEntryPointExports(potentialLocale) ?? this.getEntryPointExports('');
+   }
+-  handleValidationError(url, error) {
+-    const errorMessage = error.message;
+-    console.error(`ERROR: Bad Request ("${url}").\n` + errorMessage + '\n\nFor more information, see https://angular.dev/best-practices/security#preventing-server-side-request-forgery-ssrf');
+-    return new Response(errorMessage, {
++  handleValidationError(_url, _error) {
++    // Host validation remains enforced without reflecting or logging request material.
++    return new Response('{"error":"request_invalid"}', {
+       status: 400,
+       statusText: 'Bad Request',
+       headers: {
+-        'Content-Type': 'text/plain'
++        'Content-Type': 'application/json'
+       }
+     });
+   }
