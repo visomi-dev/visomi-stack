@@ -1,13 +1,35 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
 
-import { text as styles, type TextSize, type TextTone } from '@visomi-stack/web-frontend-ui';
+import {
+  text as styles,
+  type TextSize,
+  type TextTone,
+  type TextWeight,
+  type TextLeading,
+} from '@visomi-stack/web-frontend-ui';
 
-type Props = HTMLAttributes<'p'> & { uiSize?: TextSize; tone?: TextTone; as?: 'p' | 'span' };
+type Props = HTMLAttributes<'p'> & {
+  uiSize?: TextSize;
+  tone?: TextTone;
+  weight?: TextWeight;
+  leading?: TextLeading;
+  mono?: boolean;
+  as?: 'p' | 'span' | 'figcaption';
+};
 
-const { uiSize = 'md', tone = 'default', as: Tag = 'p', class: className, ...attributes } = Astro.props;
+const {
+  uiSize = 'md',
+  tone = 'default',
+  weight = 'inherit',
+  leading = 'default',
+  mono = false,
+  as: Tag = 'p',
+  class: className,
+  ...attributes
+} = Astro.props;
 ---
 
-<Tag {...attributes} class:list={[styles.classes({ size: uiSize, tone: tone }), className]}>
+<Tag {...attributes} class:list={[styles.classes({ size: uiSize, tone, weight, leading, mono }), className]}>
   <slot />
 </Tag>

@@ -1,3 +1,5 @@
+import { container } from './layout';
+
 export type ShellLayout = 'sidebar' | 'stacked';
 export type NavigationPlacement = 'sidebar' | 'navbar';
 
@@ -12,7 +14,10 @@ export const appShell = {
     return layout === 'sidebar' ? 'hidden lg:sticky lg:top-0 lg:block lg:h-dvh lg:min-h-0' : 'hidden';
   },
   contentClasses(): string {
-    return 'mx-auto min-w-0 max-w-7xl scroll-mt-24 px-5 py-8 focus:outline-none sm:px-8 sm:py-12';
+    return [
+      container.classes({ width: 'xl', gutter: 'compact' }),
+      'scroll-mt-24 py-8 focus:outline-none sm:py-12',
+    ].join(' ');
   },
   headerClasses(): string {
     return 'lg:sticky lg:top-0 lg:z-30';

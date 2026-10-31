@@ -55,7 +55,7 @@ describe('portable UI recipes', () => {
 
   it('supports control sizing without changing native state or value', () => {
     for (const recipe of [ui.input, ui.textarea, ui.select]) {
-      for (const size of ['sm', 'md', 'lg'] as const) {
+      for (const size of ['xs', 'sm', 'md', 'lg'] as const) {
         const classes = recipe.classes({ size });
 
         expect(classes).toContain('ui-focus-ring');
@@ -69,6 +69,22 @@ describe('portable UI recipes', () => {
     expect(ui.checkbox.classes()).not.toContain('appearance-none');
     expect(ui.toggle.classes()).toContain('checked:');
     expect(ui.toggle.classes()).toContain('forced-colors:appearance-auto');
+  });
+
+  it('allows composed surfaces and inline controls without competing default geometry', () => {
+    const plainCard = ui.card.classes({ tone: 'inverse', layout: 'plain', padding: 'none' }).split(' ');
+    const inlineSelect = ui.select.classes({ size: 'xs', inline: true }).split(' ');
+
+    expect(plainCard).not.toEqual(expect.arrayContaining(['flex', 'gap-4', 'p-4', 'bg-white']));
+    expect(plainCard).toContain('bg-zinc-950');
+    expect(ui.card.classes().split(' ')).toEqual(expect.arrayContaining(['flex', 'flex-col', 'gap-4', 'p-4']));
+    expect(inlineSelect).toEqual(expect.arrayContaining(['inline-block', 'w-auto', 'min-h-11']));
+    expect(inlineSelect).not.toEqual(expect.arrayContaining(['block', 'w-full']));
+    expect(ui.select.classes().split(' ')).toEqual(expect.arrayContaining(['block', 'w-full']));
+    expect(ui.container.classes({ gutter: 'none' })).not.toContain('px-');
+    expect(ui.text.classes({ size: 'inherit', tone: 'inherit' }).split(' ')).toEqual(['text-pretty', 'text-inherit']);
+    expect(ui.code.classes({ variant: 'plain' })).not.toContain('bg-');
+    expect(ui.heading.classes({ tone: 'inverse' })).not.toContain('dark:text-');
   });
 
   it('keeps field spacing and table layout options independent of validation and density', () => {

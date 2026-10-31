@@ -1,4 +1,6 @@
 ---
+import Card from '../card.astro';
+import Text from '../text.astro';
 import { uiDocs, type UiLocale } from '../../ui-docs';
 import Preview from './preview.astro';
 import Sidebar from '../sidebar.astro';
@@ -22,7 +24,9 @@ const labels = uiDocs[locale];
   }
 >
   <div class="grid gap-5">
-    <p class="max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">{labels.shellNote}</p>
+    <Text as="p" uiSize="sm" tone="muted" class="max-w-2xl">
+      {labels.shellNote}
+    </Text>
     <LinkButton href={`/${locale}/ui/shell/`}>{labels.openShell}</LinkButton>
   </div>
 </Preview>
@@ -36,7 +40,7 @@ const labels = uiDocs[locale];
     '<Sidebar label="Primary">\n  <strong slot="brand">VISOMI</strong>\n  <NavItem href="/en/" aria-current="page">Overview</NavItem>\n  <a slot="footer" href="/help">Help</a>\n</Sidebar>'
   }
 >
-  <div class="h-80 max-w-xs overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
+  <Card as="div" padding="none" layout="plain" class="h-80 max-w-xs overflow-hidden">
     <Sidebar label={labels.primaryNavigation}>
       <strong slot="brand" class="font-heading tracking-wide">
         VISOMI
@@ -48,11 +52,11 @@ const labels = uiDocs[locale];
         <NavItem href={`/${locale}/ui/shell/#shell-activity`}>{labels.activity}</NavItem>
         <NavItem href={`/${locale}/ui/shell/#shell-settings`}>{labels.settings}</NavItem>
       </div>
-      <p slot="footer" class="text-xs text-zinc-600 dark:text-zinc-400">
+      <Text as="p" uiSize="xs" tone="muted" slot="footer">
         {labels.shellFooter}
-      </p>
+      </Text>
     </Sidebar>
-  </div>
+  </Card>
 </Preview>
 <Preview
   id="topbar"

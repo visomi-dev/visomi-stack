@@ -1,4 +1,8 @@
 ---
+import Label from '../../../components/label.astro';
+import Select from '../../../components/select.astro';
+import Text from '../../../components/text.astro';
+import Heading from '../../../components/heading.astro';
 import BaseLayout from '../../../layouts/base.astro';
 import AppShell from '../../../components/app-shell.astro';
 import Sidebar from '../../../components/sidebar.astro';
@@ -32,7 +36,10 @@ const destinations = [
         href={`/${locale}/ui/`}
         class="ui-focus-ring flex min-h-11 items-center gap-3 rounded-lg font-heading font-bold"
       >
-        <span class="rounded-lg bg-blue-600 px-3 py-2 text-white">V</span> VISOMI
+        <Text as="span" uiSize="inherit" tone="inverse" class="rounded-lg bg-blue-600 px-3 py-2">
+          V
+        </Text>{' '}
+        VISOMI
       </a>
       <div class="space-y-1">
         {destinations.map((item) => (
@@ -51,59 +58,81 @@ const destinations = [
           </NavItem>
         ))}
       </div>
-      <p
-        slot="footer"
-        class="border-t border-zinc-200 pt-4 text-xs text-zinc-600 dark:border-zinc-700 dark:text-zinc-400"
-      >
+      <Text uiSize="xs" tone="muted" slot="footer" class="border-t border-zinc-200 pt-4 dark:border-zinc-700">
         {labels.shellFooter}
-      </p>
+      </Text>
     </Sidebar>
     <Topbar slot="header">
       <span slot="title">{labels.workspace}</span>
       <Link href={`/${locale}/ui/`} variant="muted" class="inline-flex min-h-11 items-center px-2 text-sm">
         {labels.catalogLink}
       </Link>
-      <label class="flex items-center gap-2 text-sm">
+      <Label inline>
         <span>{labels.theme}</span>
-        <select
-          data-theme-select
-          class="ui-focus-ring min-h-11 rounded-lg border border-zinc-500 bg-white px-2 text-zinc-950 dark:bg-zinc-900 dark:text-zinc-50"
-        >
+        <Select uiSize="xs" inline data-theme-select>
           <option value="system">{labels.system}</option>
           <option value="light">{labels.light}</option>
           <option value="dark">{labels.dark}</option>
-        </select>
-      </label>
+        </Select>
+      </Label>
     </Topbar>
     <header class="mb-8 grid gap-4">
-      <p class="font-mono text-xs tracking-wide text-blue-700 dark:text-blue-400">VISOMI / APP SHELL</p>
-      <h1 class="max-w-2xl font-heading text-3xl font-semibold tracking-tight sm:text-5xl">{labels.shellTitle}</h1>
-      <p class="max-w-2xl text-pretty text-zinc-600 dark:text-zinc-400">{labels.shellNote}</p>
+      <Text uiSize="xs" tone="accent" mono class="tracking-wide">
+        VISOMI / APP SHELL
+      </Text>
+      <Heading as="h1" uiSize="title" class="max-w-2xl">
+        {labels.shellTitle}
+      </Heading>
+      <Text uiSize="inherit" tone="muted" class="max-w-2xl">
+        {labels.shellNote}
+      </Text>
     </header>
     <div class="grid gap-5 sm:grid-cols-2">
       <Card>
-        <h2 class="font-heading text-lg font-semibold">{labels.studio}</h2>
-        <p class="text-sm text-zinc-600 dark:text-zinc-400">{labels.cardBody}</p>
+        <Heading as="h2" uiSize="sm">
+          {labels.studio}
+        </Heading>
+        <Text uiSize="sm" tone="muted">
+          {labels.cardBody}
+        </Text>
       </Card>
       <Card tone="raised">
-        <h2 class="font-heading text-lg font-semibold">{labels.sandbox}</h2>
-        <p class="text-sm text-zinc-600 dark:text-zinc-400">{labels.containerNote}</p>
+        <Heading as="h2" uiSize="sm">
+          {labels.sandbox}
+        </Heading>
+        <Text uiSize="sm" tone="muted">
+          {labels.containerNote}
+        </Text>
       </Card>
     </div>
-    <section
+    <Card
+      as="section"
+      tone="default"
+      padding="lg"
+      layout="plain"
       id="shell-activity"
-      class="mt-10 min-h-72 scroll-mt-28 rounded-xl border border-zinc-200 p-6 dark:border-zinc-700"
+      class="mt-10 min-h-72 scroll-mt-28"
     >
-      <h2 class="font-heading text-xl font-semibold">{labels.activity}</h2>
-      <p class="mt-4 text-zinc-600 dark:text-zinc-400">{labels.note}</p>
-    </section>
-    <section
+      <Heading as="h2" uiSize="md">
+        {labels.activity}
+      </Heading>
+      <Text uiSize="inherit" tone="muted" class="mt-4">
+        {labels.note}
+      </Text>
+    </Card>
+    <Card
+      as="section"
+      tone="default"
+      padding="lg"
+      layout="plain"
       id="shell-settings"
-      class="mt-8 min-h-72 scroll-mt-28 rounded-xl border border-zinc-200 p-6 dark:border-zinc-700"
+      class="mt-8 min-h-72 scroll-mt-28"
     >
-      <h2 class="mb-5 font-heading text-xl font-semibold">{labels.settings}</h2>
+      <Heading as="h2" uiSize="md" class="mb-5">
+        {labels.settings}
+      </Heading>
       <LinkButton href={`/${locale}/ui/`}>{labels.catalogLink}</LinkButton>
-    </section>
+    </Card>
     <footer
       slot="footer"
       class="border-t border-zinc-200 px-5 py-6 text-xs text-zinc-600 sm:px-8 dark:border-zinc-800 dark:text-zinc-400"

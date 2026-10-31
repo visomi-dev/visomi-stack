@@ -1,4 +1,7 @@
 ---
+import Container from '../../components/container.astro';
+import Text from '../../components/text.astro';
+import Heading from '../../components/heading.astro';
 import SiteLayout from '../../layouts/site.astro';
 import Link from '../../components/link.astro';
 
@@ -28,16 +31,18 @@ const groups = [
 
 <SiteLayout locale={locale} page="ui" title={labels.documentation} description={labels.intro}>
   <script slot="head" is:inline type="module" src={script}></script>
-  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+  <Container as="div" width="xl" gutter="compact">
     <div class="grid gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-12">
       <aside class="hidden py-12 lg:block">
         <nav aria-label={labels.navigation} class="sticky top-28 max-h-[calc(100dvh-8rem)] overflow-y-auto p-1 pr-4">
-          <h2 class="mb-5 font-heading text-sm font-semibold">{labels.contents}</h2>
+          <Heading as="h2" uiSize="label" class="mb-5">
+            {labels.contents}
+          </Heading>
           {groups.map(({ id }) => (
             <div class="mb-6">
-              <p class="mb-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+              <Text uiSize="xs" tone="subtle" weight="semibold" class="mb-2 tracking-wide uppercase">
                 {labels.categories[id]}
-              </p>
+              </Text>
               <ul class="space-y-1">
                 {componentGroups[id].map((component) => (
                   <li>
@@ -58,16 +63,22 @@ const groups = [
       </aside>
       <div class="min-w-0 py-12 sm:py-16">
         <div class="mb-12">
-          <p class="mb-5 font-mono text-xs tracking-wide text-blue-700 dark:text-blue-400">VISOMI / FRONTEND UI</p>
-          <h1 class="max-w-3xl font-heading text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
+          <Text uiSize="xs" tone="accent" mono class="mb-5 tracking-wide">
+            VISOMI / FRONTEND UI
+          </Text>
+          <Heading as="h1" uiSize="xl" class="max-w-3xl">
             {labels.title}
-          </h1>
-          <p class="mt-6 max-w-2xl text-base leading-7 text-pretty text-zinc-600 dark:text-zinc-400">{labels.intro}</p>
-          <p class="mt-4 text-sm font-medium">
+          </Heading>
+          <Text uiSize="md" tone="muted" class="mt-6 max-w-2xl">
+            {labels.intro}
+          </Text>
+          <Text uiSize="sm" tone="inherit" weight="medium" class="mt-4">
             {Object.values(componentGroups).flat().length}{' '}
             {locale === 'es' ? 'familias de componentes' : 'component families'}
-          </p>
-          <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">{labels.note}</p>
+          </Text>
+          <Text uiSize="sm" tone="subtle" class="mt-3 max-w-2xl">
+            {labels.note}
+          </Text>
           <nav aria-label={labels.navigation} class="mt-6 flex flex-wrap gap-2 lg:hidden">
             {groups.map(({ id }) => (
               <Link
@@ -84,15 +95,17 @@ const groups = [
         {groups.map(({ id, Component }) => (
           <section id={id} class="scroll-mt-28">
             <div class="mt-12 mb-2 flex flex-wrap items-center justify-between gap-3">
-              <h2 class="font-heading text-2xl font-semibold">{labels.categories[id]}</h2>
-              <span class="font-mono text-xs text-zinc-500 dark:text-zinc-400">
+              <Heading as="h2" uiSize="lg">
+                {labels.categories[id]}
+              </Heading>
+              <Text as="span" uiSize="xs" tone="subtle" mono>
                 {String(componentGroups[id].length).padStart(2, '0')}
-              </span>
+              </Text>
             </div>
             <Component locale={locale} />
           </section>
         ))}
       </div>
     </div>
-  </div>
+  </Container>
 </SiteLayout>

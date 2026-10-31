@@ -68,3 +68,11 @@ checks are not a complete screen-reader or WCAG certification.
 
 Framework references: [Astro layouts](https://docs.astro.build/en/basics/layouts/)
 and [localized routing](https://docs.astro.build/en/guides/internationalization/).
+
+Shared visual primitives also cover public typography, content containers,
+card surfaces, terminal code, native theme selects, labels, avatars, badges and
+informational alerts. The same typed options are exposed by the Angular and
+Astro adapters. Site compositions own page spacing, responsive grids, branding
+and illustration details. Native mobile details/summary and linked cards apply
+shared recipes directly to their semantic hosts. See the UI library README for
+options and composition examples. This introduces no client-side UI runtime.

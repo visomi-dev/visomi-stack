@@ -78,8 +78,16 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
           />
         </app-field>
         <textarea appUI uiSize="sm" aria-label="Notes" rows="3"></textarea>
-        <select appUI aria-label="Region">
+        <select
+          appUI
+          aria-label="Region"
+          [inline]="compact()"
+          [uiSize]="size()"
+          [formControl]="region"
+          class="region-layout"
+        >
           <option value="am">Americas</option>
+          <option value="eu">Europe</option>
         </select>
         <label appUI inline><input appUI type="checkbox" [formControl]="checked" /> Updates</label>
         <label appUI inline><input appUI type="radio" name="kind" value="one" /> One</label>
@@ -109,6 +117,7 @@ class Catalog {
 
   readonly email = new FormControl('demo@example.test', { nonNullable: true });
   readonly checked = new FormControl(false, { nonNullable: true });
+  readonly region = new FormControl('am', { nonNullable: true });
 }
 
 @Component({
@@ -273,6 +282,34 @@ describe('native Angular UI catalog', () => {
     expect(element.size).toBe(24);
     expect(fixture.nativeElement.querySelector('[appUI=badge]').className).toContain('bg-red-50');
     expect(fixture.nativeElement.querySelector('[appUI=switch]').getAttribute('role')).toBe('switch');
+  });
+
+  it('retains select state and form bindings when presentation changes', async () => {
+    const fixture = TestBed.createComponent(Catalog);
+
+    await fixture.whenStable();
+
+    const element = fixture.nativeElement.querySelector('select') as HTMLSelectElement;
+
+    element.value = 'eu';
+    element.dispatchEvent(new Event('change'));
+    expect(fixture.componentInstance.region.value).toBe('eu');
+    fixture.componentInstance.compact.set(true);
+    fixture.componentInstance.size.set('xs');
+
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('select')).toBe(element);
+    expect(element.value).toBe('eu');
+    expect(element.options).toHaveLength(2);
+    expect(element.classList.contains('region-layout')).toBe(true);
+    expect(element.classList.contains('w-full')).toBe(false);
+    expect(element.classList.contains('w-auto')).toBe(true);
+    fixture.componentInstance.region.disable();
+
+    await fixture.whenStable();
+
+    expect(element.disabled).toBe(true);
   });
 
   it('updates field state and responsive table options without replacing native controls', async () => {

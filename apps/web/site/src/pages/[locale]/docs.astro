@@ -1,4 +1,11 @@
 ---
+import { card } from '@visomi-stack/web-frontend-ui';
+import Badge from '../../components/badge.astro';
+import Alert from '../../components/alert.astro';
+import Container from '../../components/container.astro';
+import Card from '../../components/card.astro';
+import Text from '../../components/text.astro';
+import Heading from '../../components/heading.astro';
 import SiteLayout from '../../layouts/site.astro';
 import { isSiteLocale, siteCopy, sitePath, repositoryUrl } from '../../content/site';
 import Terminal from '../../components/site/terminal.astro';
@@ -22,12 +29,17 @@ pnpm install --frozen-lockfile`;
 ---
 
 <SiteLayout locale={locale} page="docs" title={copy.title} description={copy.description}>
-  <div class="mx-auto grid max-w-7xl gap-12 px-5 py-14 sm:px-8 sm:py-20 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-16">
+  <Container
+    as="div"
+    width="xl"
+    gutter="compact"
+    class="grid gap-12 py-14 sm:py-20 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-16"
+  >
     <aside class="hidden lg:block">
       <nav aria-label={labels.nav.docs} class="sticky top-28 grid gap-1">
-        <p class="mb-4 font-mono text-xs text-blue-700 dark:text-blue-400">
+        <Text uiSize="xs" tone="accent" mono class="mb-4">
           {locale === 'es' ? 'PRIMEROS PASOS' : 'GETTING STARTED'}
-        </p>
+        </Text>
         {sections.map(([id, title]) => (
           <Link
             href={`#${id}`}
@@ -42,11 +54,15 @@ pnpm install --frozen-lockfile`;
     </aside>
     <div class="min-w-0 max-w-4xl">
       <header>
-        <p class="mb-6 font-mono text-xs leading-6 tracking-widest text-blue-700 dark:text-blue-400">{copy.eyebrow}</p>
-        <h1 class="max-w-3xl font-heading text-4xl leading-tight font-semibold tracking-[-0.045em] text-balance sm:text-6xl">
+        <Text uiSize="xs" tone="accent" mono leading="relaxed" class="mb-6 tracking-widest">
+          {copy.eyebrow}
+        </Text>
+        <Heading as="h1" uiSize="display" class="max-w-3xl">
           {copy.title}
-        </h1>
-        <p class="mt-7 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">{copy.intro}</p>
+        </Heading>
+        <Text uiSize="lg" tone="muted" class="mt-7 max-w-2xl">
+          {copy.intro}
+        </Text>
       </header>
       <nav aria-label={labels.nav.docs} class="mt-8 flex flex-wrap gap-2 lg:hidden">
         {sections.map(([id, title]) => (
@@ -60,47 +76,70 @@ pnpm install --frozen-lockfile`;
           </Link>
         ))}
       </nav>
-      <section
-        id="requirements"
-        class="mt-12 scroll-mt-28 rounded-xl border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900/50"
-      >
-        <h2 class="font-heading text-xl font-semibold">{copy.requirements}</h2>
-        <p class="mt-3 text-sm leading-7 text-zinc-600 dark:text-zinc-400">{copy.requirementsBody}</p>
+      <Card as="section" tone="subtle" padding="lg" layout="plain" id="requirements" class="mt-12 scroll-mt-28">
+        <Heading as="h2" uiSize="md">
+          {copy.requirements}
+        </Heading>
+        <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-3">
+          {copy.requirementsBody}
+        </Text>
         <ul class="mt-5 flex flex-wrap gap-3 font-mono text-xs">
-          <li class="rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700">Node 24.15.0</li>
-          <li class="rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700">pnpm 12.15.0</li>
-          <li class="rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700">Git</li>
+          <li>
+            <Badge>Node 24.15.0</Badge>
+          </li>
+          <li>
+            <Badge>pnpm 12.15.0</Badge>
+          </li>
+          <li>
+            <Badge>Git</Badge>
+          </li>
         </ul>
-      </section>
+      </Card>
       <section id="workspace" class="mt-14 scroll-mt-28">
-        <h2 class="font-heading text-2xl font-semibold tracking-tight">
-          <span class="mr-3 font-mono text-sm text-blue-700 dark:text-blue-400">01</span>
+        <Heading as="h2" uiSize="lg">
+          <Text as="span" uiSize="sm" tone="accent" mono class="mr-3">
+            01
+          </Text>
           {copy.stepOne}
-        </h2>
-        <p class="mt-4 mb-6 text-sm leading-7 text-zinc-600 dark:text-zinc-400">{copy.stepOneBody}</p>
+        </Heading>
+        <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-4 mb-6">
+          {copy.stepOneBody}
+        </Text>
         <Terminal title="terminal / workspace" code={clone} />
       </section>
       <section id="entry-points" class="mt-14 scroll-mt-28">
-        <h2 class="font-heading text-2xl font-semibold tracking-tight">
-          <span class="mr-3 font-mono text-sm text-blue-700 dark:text-blue-400">02</span>
+        <Heading as="h2" uiSize="lg">
+          <Text as="span" uiSize="sm" tone="accent" mono class="mr-3">
+            02
+          </Text>
           {copy.stepTwo}
-        </h2>
-        <p class="mt-4 text-sm leading-7 text-zinc-600 dark:text-zinc-400">{copy.stepTwoBody}</p>
+        </Heading>
+        <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-4">
+          {copy.stepTwoBody}
+        </Text>
         <div class="mt-7 grid gap-7">
           {copy.entries.map(([title, body, command, url]) => (
             <article class="min-w-0">
-              <h3 class="font-heading text-lg font-semibold">{title}</h3>
-              <p class="mt-2 mb-4 text-sm leading-7 text-zinc-600 dark:text-zinc-400">{body}</p>
+              <Heading as="h3" uiSize="sm">
+                {title}
+              </Heading>
+              <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-2 mb-4">
+                {body}
+              </Text>
               <Terminal title={title} code={command} />
-              <p class="mt-3 break-all font-mono text-xs leading-6 text-zinc-500 dark:text-zinc-400">
+              <Text uiSize="xs" tone="subtle" mono leading="relaxed" class="mt-3 break-all">
                 {locale === 'es' ? 'Abrir' : 'Open'}: {url.replace('/en/', `/${locale}/`)}
-              </p>
+              </Text>
             </article>
           ))}
         </div>
-        <div class="mt-8 rounded-xl border-l-4 border-blue-600 bg-blue-50 p-5 dark:bg-blue-950/40">
-          <h3 class="text-sm font-semibold">{copy.authNoteTitle}</h3>
-          <p class="mt-3 text-sm leading-7 text-zinc-600 dark:text-zinc-300">{copy.authNoteBody}</p>
+        <Alert tone="accent" class="mt-8">
+          <Heading as="h3" uiSize="label">
+            {copy.authNoteTitle}
+          </Heading>
+          <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-3">
+            {copy.authNoteBody}
+          </Text>
           <Link
             href={`${repositoryUrl}/blob/main/apps/web/api/README.md`}
             underline="none"
@@ -109,19 +148,27 @@ pnpm install --frozen-lockfile`;
             {labels.apiGuide}
             <Icon name="arrow-right" class="size-4" />
           </Link>
-        </div>
+        </Alert>
       </section>
       <section id="structure" class="mt-14 scroll-mt-28">
-        <h2 class="font-heading text-2xl font-semibold tracking-tight">
-          <span class="mr-3 font-mono text-sm text-blue-700 dark:text-blue-400">03</span>
+        <Heading as="h2" uiSize="lg">
+          <Text as="span" uiSize="sm" tone="accent" mono class="mr-3">
+            03
+          </Text>
           {copy.stepThree}
-        </h2>
-        <p class="mt-4 mb-6 text-sm leading-7 text-zinc-600 dark:text-zinc-400">{copy.stepThreeBody}</p>
+        </Heading>
+        <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-4 mb-6">
+          {copy.stepThreeBody}
+        </Text>
         <Terminal title="visomi-stack / workspace" code={copy.structure} />
       </section>
       <section id="verification" class="mt-14 scroll-mt-28">
-        <h2 class="font-heading text-2xl font-semibold tracking-tight">{copy.checksTitle}</h2>
-        <p class="mt-4 mb-6 text-sm leading-7 text-zinc-600 dark:text-zinc-400">{copy.checksBody}</p>
+        <Heading as="h2" uiSize="lg">
+          {copy.checksTitle}
+        </Heading>
+        <Text uiSize="sm" tone="muted" leading="relaxed" class="mt-4 mb-6">
+          {copy.checksBody}
+        </Text>
         <Terminal
           title="terminal / Nx"
           code={`pnpm nx run-many -t build lint typecheck -p web-site
@@ -129,16 +176,25 @@ pnpm nx e2e web-site`}
         />
       </section>
       <section class="mt-14 border-t border-zinc-200 pt-10 dark:border-zinc-800">
-        <h2 class="font-heading text-2xl font-semibold tracking-tight">{copy.nextTitle}</h2>
+        <Heading as="h2" uiSize="lg">
+          {copy.nextTitle}
+        </Heading>
         <div class="mt-7 grid gap-4">
           {copy.nextItems.map(([page, title, body]) => (
             <a
               href={sitePath(locale, page)}
-              class="ui-focus-ring group flex items-center justify-between gap-6 rounded-xl border border-zinc-200 p-5 hover:border-blue-300 dark:border-zinc-800 dark:hover:border-blue-800"
+              class:list={[
+                card.classes({ padding: 'md', layout: 'plain' }),
+                'ui-focus-ring group flex items-center justify-between gap-6 hover:border-blue-300 dark:hover:border-blue-800',
+              ]}
             >
               <div>
-                <h3 class="text-base font-semibold">{title}</h3>
-                <p class="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{body}</p>
+                <Heading as="h3" uiSize="label">
+                  {title}
+                </Heading>
+                <Text uiSize="sm" tone="muted" class="mt-2">
+                  {body}
+                </Text>
               </div>
               <Icon name="arrow-right" class="size-5 shrink-0 text-blue-700 dark:text-blue-400" />
             </a>
@@ -152,5 +208,5 @@ pnpm nx e2e web-site`}
         </div>
       </section>
     </div>
-  </div>
+  </Container>
 </SiteLayout>

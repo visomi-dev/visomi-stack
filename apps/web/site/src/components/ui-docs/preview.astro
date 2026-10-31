@@ -1,4 +1,7 @@
 ---
+import { text } from '@visomi-stack/web-frontend-ui';
+import Card from '../card.astro';
+import Heading from '../heading.astro';
 import { recipeNames, uiDocs, type UiComponent, type UiLocale } from '../../ui-docs';
 import Code from '../code.astro';
 import Disclosure from '../disclosure.astro';
@@ -10,24 +13,34 @@ const labels = uiDocs[locale];
 
 <section id={id} data-component={id} class="scroll-mt-28 border-t border-zinc-200 py-8 dark:border-zinc-800">
   <div class="mb-5 flex flex-wrap items-baseline justify-between gap-3">
-    <h3 class="font-heading text-xl font-semibold">{labels.names[id]}</h3>
-    <code class="font-mono text-xs text-zinc-500 dark:text-zinc-400">{recipeNames[id]}.classes()</code>
+    <Heading as="h3" uiSize="md">
+      {labels.names[id]}
+    </Heading>
+    <Code variant="plain" class={text.classes({ size: 'xs', tone: 'subtle' })}>
+      {recipeNames[id]}.classes()
+    </Code>
   </div>
-  <div data-preview class="rounded-xl border border-zinc-200 bg-white p-5 sm:p-7 dark:border-zinc-700 dark:bg-zinc-950">
+  <Card as="div" padding="lg" layout="plain" data-preview>
     <slot />
-  </div>
+  </Card>
   <Disclosure summary={labels.usage} class="mt-4">
     <div class="grid min-w-0 gap-5 py-2">
       <div class="min-w-0">
-        <h4 class="mb-2 text-sm font-medium">Angular</h4>
+        <Heading as="h4" uiSize="label" class="mb-2">
+          Angular
+        </Heading>
         <pre><Code block>{angular}</Code></pre>
       </div>
       <div class="min-w-0">
-        <h4 class="mb-2 text-sm font-medium">Astro</h4>
+        <Heading as="h4" uiSize="label" class="mb-2">
+          Astro
+        </Heading>
         <pre><Code block>{astro}</Code></pre>
       </div>
       <div class="min-w-0">
-        <h4 class="mb-2 text-sm font-medium">{labels.recipe}</h4>
+        <Heading as="h4" uiSize="label" class="mb-2">
+          {labels.recipe}
+        </Heading>
         <pre><Code block>{`import { ${recipeNames[id]} } from '@visomi-stack/web-frontend-ui';\n\n${recipeNames[id]}.classes();`}</Code></pre>
       </div>
     </div>

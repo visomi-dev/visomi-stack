@@ -1,19 +1,20 @@
 ---
+import Text from '../text.astro';
+import Heading from '../heading.astro';
 type Props = { kicker: string; title: string; description?: string; id?: string };
 const { kicker, title, description, id } = Astro.props;
 ---
 
 <div class="max-w-2xl">
-  <p class="mb-5 font-mono text-xs leading-6 tracking-widest text-blue-700 dark:text-blue-400">{kicker}</p>
-  <h2
-    id={id}
-    class="font-heading text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-4xl lg:text-5xl"
-  >
+  <Text uiSize="xs" tone="accent" mono leading="relaxed" class="mb-5 tracking-widest">
+    {kicker}
+  </Text>
+  <Heading as="h2" uiSize="section" id={id}>
     {title}
-  </h2>
+  </Heading>
   {description && (
-    <p class="mt-6 max-w-xl text-base leading-7 text-pretty text-zinc-600 sm:text-lg dark:text-zinc-400">
+    <Text uiSize="lead" tone="muted" class="mt-6 max-w-xl">
       {description}
-    </p>
+    </Text>
   )}
 </div>

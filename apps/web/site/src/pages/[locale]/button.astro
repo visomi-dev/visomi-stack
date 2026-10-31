@@ -1,4 +1,10 @@
 ---
+import { container } from '@visomi-stack/web-frontend-ui';
+import Label from '../../components/label.astro';
+import Select from '../../components/select.astro';
+import Card from '../../components/card.astro';
+import Text from '../../components/text.astro';
+import Heading from '../../components/heading.astro';
 import BaseLayout from '../../layouts/base.astro';
 
 import Button from '../../components/button.astro';
@@ -43,11 +49,15 @@ const text = spanish
 
 <BaseLayout locale={locale} title={text.title}>
   <script slot="head" is:inline type="module" src={demoScript}></script>
-  <main class="mx-auto max-w-6xl px-6 py-12 sm:px-10">
+  <main class:list={[container.classes(), 'py-12']}>
     <Link href={`/${locale}/foundations/`}>{text.home}</Link>
-    <h1 class="mt-8 font-heading text-3xl font-semibold">{text.title}</h1>
-    <p class="mt-4 max-w-2xl text-zinc-600 dark:text-zinc-400">{text.description}</p>
-    <section class="mt-8 rounded-xl border border-zinc-200 p-6 dark:border-zinc-700" data-button-demo>
+    <Heading as="h1" uiSize="title" class="mt-8">
+      {text.title}
+    </Heading>
+    <Text uiSize="inherit" tone="muted" class="mt-4 max-w-2xl">
+      {text.description}
+    </Text>
+    <Card as="section" tone="default" padding="lg" layout="plain" data-button-demo class="mt-8">
       <div class="flex flex-wrap gap-4">
         <Button data-increment>{text.increment}</Button>
         <Button variant="secondary" size="sm" data-reset>
@@ -57,31 +67,28 @@ const text = spanish
           {text.disabled}
         </Button>
       </div>
-      <p class="mt-5">
+      <Text uiSize="inherit" tone="inherit" class="mt-5">
         {text.count}{' '}
         <output aria-live="polite" data-count>
           0
         </output>
-      </p>
+      </Text>
       <form method="get" action={`/${locale}/button/`} class="mt-6">
         <Button type="submit" name="action" value="submit" variant="secondary" size="sm">
           {text.submit}
         </Button>
       </form>
-      <p class="mt-4" role="status">
+      <Text uiSize="inherit" tone="inherit" role="status" class="mt-4">
         {Astro.url.searchParams.get('action') === 'submit' ? text.submitted : ''}
-      </p>
-    </section>
-    <label class="mt-8 flex items-center gap-3">
+      </Text>
+    </Card>
+    <Label inline class="mt-8">
       {text.theme}
-      <select
-        data-theme-select
-        class="ui-focus-ring min-h-11 rounded-lg border border-zinc-500 bg-white px-3 text-zinc-950 dark:bg-zinc-900 dark:text-zinc-50"
-      >
+      <Select uiSize="xs" inline data-theme-select>
         <option value="system">{text.system}</option>
         <option value="light">{text.light}</option>
         <option value="dark">{text.dark}</option>
-      </select>
-    </label>
+      </Select>
+    </Label>
   </main>
 </BaseLayout>

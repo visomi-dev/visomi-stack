@@ -1,8 +1,9 @@
-export type ControlSize = 'sm' | 'md' | 'lg';
+export type ControlSize = 'xs' | 'sm' | 'md' | 'lg';
 
 const controlBase =
-  'ui-focus-ring block w-full min-w-0 rounded-lg border border-zinc-500 bg-white text-zinc-950 placeholder:text-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-400 dark:aria-invalid:border-red-400';
+  'ui-focus-ring min-w-0 rounded-lg border border-zinc-500 bg-white text-zinc-950 placeholder:text-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-400 dark:aria-invalid:border-red-400';
 const controlSizes = {
+  xs: 'min-h-11 px-2 py-2 text-xs',
   sm: 'min-h-11 px-3 py-2 text-sm',
   md: 'min-h-11 px-3 py-2.5 text-base',
   lg: 'min-h-12 px-4 py-3 text-lg',
@@ -12,17 +13,19 @@ const selectionBase =
 
 export const input = {
   classes({ size = 'md' }: { size?: ControlSize } = {}): string {
-    return [controlBase, controlSizes[size]].join(' ');
+    return [controlBase, 'block w-full', controlSizes[size]].join(' ');
   },
 } as const;
 export const textarea = {
   classes({ size = 'md' }: { size?: ControlSize } = {}): string {
-    return [controlBase, 'min-h-28 resize-y', controlSizes[size]].join(' ');
+    return [controlBase, 'block w-full min-h-28 resize-y', controlSizes[size]].join(' ');
   },
 } as const;
 export const select = {
-  classes({ size = 'md' }: { size?: ControlSize } = {}): string {
-    return [controlBase, 'cursor-pointer', controlSizes[size]].join(' ');
+  classes({ size = 'md', inline = false }: { size?: ControlSize; inline?: boolean } = {}): string {
+    return [controlBase, inline ? 'inline-block w-auto' : 'block w-full', 'cursor-pointer', controlSizes[size]].join(
+      ' ',
+    );
   },
 } as const;
 export const checkbox = {
