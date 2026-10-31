@@ -31,7 +31,7 @@ Changes to those files invalidate their Nx build caches.
 
 ## Themes and accessibility
 
-`theme.base.js` is a shared classic browser script loaded synchronously before
+`libs/web/frontend/ui/src/theme/theme.base.js` is a shared classic browser script loaded synchronously before
 paint. Angular copies it as a public asset; Astro imports it as a non-inlined URL.
 The gateway's existing self-only script policy remains intact. Fonts and scripts
 are served locally; no external telemetry or font services are enabled.

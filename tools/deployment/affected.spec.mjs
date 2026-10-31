@@ -6,8 +6,13 @@ import { fileURLToPath } from 'node:url';
 const cwd = fileURLToPath(new URL('../../', import.meta.url));
 const cases = [
   ['styles.base.css', 'e2e', ['web-app-e2e', 'web-gateway', 'web-site']],
-  ['theme.base.js', 'e2e', ['web-app-e2e', 'web-gateway', 'web-site']],
-  ['theme.base.js', 'lint', ['web-site']],
+  ['libs/web/frontend/ui/src/theme/theme.base.js', 'e2e', ['web-app-e2e', 'web-gateway', 'web-site']],
+  [
+    'libs/web/frontend/ui/src/theme/theme.base.js',
+    'lint',
+    ['web-app', 'web-app-e2e', 'web-frontend-ui', 'web-gateway', 'web-site'],
+  ],
+  ['libs/web/frontend/ui/src/theme/theme.base.js', 'container-check', ['web-gateway']],
   ['apps/web/gateway/src/app.ts', 'e2e', ['web-gateway', 'web-site']],
   ['apps/web/api/src/app.ts', 'e2e', ['web-api', 'web-gateway', 'web-site']],
   ['.railway/railway.ts', 'deployment-check', ['web-gateway']],

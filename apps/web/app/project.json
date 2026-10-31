@@ -21,7 +21,7 @@
           },
           {
             "glob": "theme.base.js",
-            "input": ".",
+            "input": "libs/web/frontend/ui/src/theme",
             "output": "."
           }
         ],
@@ -74,7 +74,7 @@
         "production",
         "^production",
         "{workspaceRoot}/styles.base.css",
-        "{workspaceRoot}/theme.base.js",
+        "{workspaceRoot}/libs/web/frontend/ui/src/theme/theme.base.js",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/pnpm-lock.yaml",
         "{workspaceRoot}/.postcssrc.json"

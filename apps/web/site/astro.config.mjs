@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
+  site: 'https://stack.visomi.dev',
   adapter: node({ mode: 'middleware' }),
   logger: { entrypoint: new URL('./src/logger.js', import.meta.url) },
   output: 'server',
