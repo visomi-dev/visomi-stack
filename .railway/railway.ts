@@ -2,8 +2,6 @@ import { readFileSync } from 'node:fs';
 
 import { defineRailway, github, image, preserve, project, service, volume } from 'railway/iac';
 
-import { privateTracingCheck } from './private-tracing-check.mts';
-
 export const jaegerImage =
   'jaegertracing/jaeger:2.22.0@sha256:4d9387a02389204ef9a256cf291a36cfbae91983010e403b4d300202d07eff2a';
 export const jaegerConfig = readFileSync(new URL('./jaeger.yaml', import.meta.url), 'utf8');
@@ -77,7 +75,7 @@ export default defineRailway(() => {
       PORT: '8080',
       NODE_ENV: 'production',
       ASTRO_TELEMETRY_DISABLED: '1',
-      VISOMI_RAILWAY_TRACING: 'true',
+      VISOMI_OTLP_TRACING: 'true',
       OTEL_EXPORTER_OTLP_ENDPOINT: 'http://${{jaeger.RAILWAY_PRIVATE_DOMAIN}}:4318',
       OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
       OTEL_EXPORTER_OTLP_HEADERS: jaeger.env.OTLP_AUTH_HEADER,
@@ -86,5 +84,5 @@ export default defineRailway(() => {
     },
   });
 
-  return project('visomi-stack', { resources: [gateway, jaeger, privateTracingCheck] });
+  return project('visomi-stack', { resources: [gateway, jaeger] });
 });

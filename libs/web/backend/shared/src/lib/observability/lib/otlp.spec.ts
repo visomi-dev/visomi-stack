@@ -11,7 +11,7 @@ import { httpObservability, operationalErrorHandler } from '../middleware/http';
 
 import { initializeObservability } from './observability';
 import type { Observability } from './observability';
-import { railwaySpanProcessors } from './railway';
+import { otlpSpanProcessors } from './otlp';
 
 const marker = 'SYNTHETIC_PRIVATE_OTLP_71d3';
 const servers: Server[] = [];
@@ -41,9 +41,9 @@ afterEach(async () => {
   vi.unstubAllEnvs();
 });
 
-describe('Railway trace export', () => {
+describe('OTLP trace export', () => {
   it.each([undefined, 'false', 'TRUE'])('requires an explicit opt-in: %s', (enabled) => {
-    expect(railwaySpanProcessors({ VISOMI_RAILWAY_TRACING: enabled })).toEqual([]);
+    expect(otlpSpanProcessors({ VISOMI_OTLP_TRACING: enabled })).toEqual([]);
   });
 
   it.each([
@@ -58,19 +58,19 @@ describe('Railway trace export', () => {
     { OTEL_EXPORTER_OTLP_HEADERS: undefined },
   ])('rejects incomplete or unsafe transport configuration without exposing it: %#', (override) => {
     const env = {
-      VISOMI_RAILWAY_TRACING: 'true',
+      VISOMI_OTLP_TRACING: 'true',
       OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318',
       OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
       OTEL_EXPORTER_OTLP_HEADERS: `authorization=${marker}`,
       ...override,
     };
 
-    expect(() => railwaySpanProcessors(env)).toThrow('observability_configuration_invalid');
+    expect(() => otlpSpanProcessors(env)).toThrow('observability_configuration_invalid');
   });
 
   it('accepts an HTTPS receiver without opening a connection before there are spans', async () => {
-    const processors = railwaySpanProcessors({
-      VISOMI_RAILWAY_TRACING: 'true',
+    const processors = otlpSpanProcessors({
+      VISOMI_OTLP_TRACING: 'true',
       OTEL_EXPORTER_OTLP_ENDPOINT: 'https://receiver.invalid/',
       OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
       OTEL_EXPORTER_OTLP_HEADERS: 'authorization=synthetic',
@@ -107,7 +107,7 @@ describe('Railway trace export', () => {
       );
 
       for (const [key, value] of Object.entries({
-        VISOMI_RAILWAY_TRACING: 'true',
+        VISOMI_OTLP_TRACING: 'true',
         OTEL_EXPORTER_OTLP_ENDPOINT: `${receiver}/`,
         OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
         OTEL_EXPORTER_OTLP_HEADERS: 'authorization=Bearer%20SYNTHETIC_RECEIVER_CREDENTIAL',

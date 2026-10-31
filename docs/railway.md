@@ -148,8 +148,6 @@ pnpm dlx @railway/cli@5.71.0 config apply
 IaC is evaluated by the CLI, not automatically read during Docker builds. Review
 the plan before applying. This file owns the whole environment: add new resources
 to it when provisioning them, and use `preserve()` for remotely stored secrets.
-The existing `pr9-private-tracing-check` service is retained by its imported
-configuration; removing it is a separate infrastructure decision.
 
 After a deployment reaches `SUCCESS`, verify the public origin:
 
@@ -219,10 +217,10 @@ checks the same high-entropy credential sent in the Basic header. Neither value
 belongs in Git, logs, commands shown to users or reports. Rotate them together.
 IaC uses `preserve()` and references the header from the gateway.
 
-The gateway uses the **existing** executable-owned exporter:
+The gateway uses a provider-independent, executable-owned OTLP exporter:
 
 ```text
-VISOMI_RAILWAY_TRACING=true
+VISOMI_OTLP_TRACING=true
 OTEL_EXPORTER_OTLP_ENDPOINT=http://${{jaeger.RAILWAY_PRIVATE_DOMAIN}}:4318
 OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 OTEL_EXPORTER_OTLP_HEADERS=${{jaeger.OTLP_AUTH_HEADER}}
@@ -230,9 +228,8 @@ OTEL_METRICS_EXPORTER=none
 OTEL_LOGS_EXPORTER=none
 ```
 
-Despite its historical name, `VISOMI_RAILWAY_TRACING` enables only the application's
-OTLP exporter. It does not enable Railway edge tracing. No runtime API or flag
-rename is required, and the code already deployed on `main` supports this setup.
+`VISOMI_OTLP_TRACING` enables only application export. The exporter has no
+Railway receiver integration, resource attribution or edge-tracing dependency.
 The official exporter requires a valid endpoint, protocol and authentication
 header; invalid configuration fails with a fixed error code.
 
@@ -289,11 +286,21 @@ Do not publish raw telemetry captures or SSH credentials.
 Provision and verify Jaeger before enabling the gateway export variables.
 Keep the gateway's GitHub source on `main`, wait for the exact deployment to
 reach `SUCCESS`, check the public origin and inspect stored application spans
-through the private viewer. Configuration changes can reuse the existing build;
-merging the repository PR is not needed for activation.
+through the private viewer.
 
-To disable export, set `VISOMI_RAILWAY_TRACING=false` on `web-gateway`, redeploy
-its existing build, and verify `https://stack.visomi.dev`. Leave native tracing
+### Export flag transition
+
+The OTLP-only runtime uses `VISOMI_OTLP_TRACING` and retains no alias for the
+provider-specific `VISOMI_RAILWAY_TRACING` switch. Older executables still need
+their original flag to keep exporting to Jaeger until the new runtime is deployed. Provision the new flag alongside
+it without deploying the PR branch to production. After the new build reaches
+`SUCCESS` and its spans are verified, remove the old variable. Do not apply an
+IaC plan that removes the old flag while the old executable is still running.
+For rollback to an older build, restore its matching flag before redeploying.
+
+To disable export, set the running executable's flag to `false`
+(`VISOMI_OTLP_TRACING` for the OTLP-only runtime), redeploy its existing build,
+and verify `https://stack.visomi.dev`. Leave native tracing
 off and retain the Jaeger service/volume until their removal is explicitly
 requested. Configuration changes are not automatically applied by GitHub
 application deployments; reconcile the reviewed IaC plan separately.

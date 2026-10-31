@@ -2,9 +2,9 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace';
 import type { SpanProcessor } from '@opentelemetry/sdk-trace';
 
-// Opt-in is separate from Railway's edge tracing switch: the edge has its own capture policy.
-export function railwaySpanProcessors(env: NodeJS.ProcessEnv): SpanProcessor[] {
-  if (env.VISOMI_RAILWAY_TRACING !== 'true') {
+// Application export requires an explicit opt-in independently of the hosting provider.
+export function otlpSpanProcessors(env: NodeJS.ProcessEnv): SpanProcessor[] {
+  if (env.VISOMI_OTLP_TRACING !== 'true') {
     return [];
   }
 

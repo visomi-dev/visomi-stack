@@ -80,7 +80,7 @@ async function startGateway(endpoint) {
         DATABASE_URL: '',
         API_APP_PATH: '',
         SITE_APP_PATH: '',
-        VISOMI_RAILWAY_TRACING: 'true',
+        VISOMI_OTLP_TRACING: 'true',
         OTEL_EXPORTER_OTLP_ENDPOINT: endpoint,
         OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
         OTEL_EXPORTER_OTLP_HEADERS: `authorization=${encodeURIComponent(authorization)}`,
