@@ -20,6 +20,27 @@ describe('portable UI recipes', () => {
     expect(ui.linkButton.classes()).toContain('aria-[current=page]:');
   });
 
+  it('keeps inline links configurable without introducing button geometry or disabled semantics', () => {
+    expect(ui.link.classes()).toContain('ui-focus-ring');
+    expect(ui.link.classes().split(' ')).toContain('underline');
+
+    for (const variant of ['default', 'muted', 'inverse'] as const) {
+      for (const underline of ['always', 'hover', 'none'] as const) {
+        const classes = ui.link.classes({ variant, underline });
+
+        expect(classes).not.toContain('undefined');
+        expect(classes).not.toContain('min-h-');
+        expect(classes).not.toContain('disabled:');
+        expect(classes).not.toContain('enabled:');
+      }
+    }
+
+    expect(ui.link.classes({ variant: 'muted', underline: 'hover' })).toContain('focus-visible:underline');
+    expect(ui.link.classes({ variant: 'inverse' })).toContain('focus-visible:outline-white');
+    expect(ui.link.classes({ variant: 'inverse' })).not.toContain('ui-focus-ring');
+    expect(ui.link.classes({ underline: 'none' })).not.toContain('hover:underline');
+  });
+
   it('keeps tone independent from geometry across feedback and surfaces', () => {
     for (const tone of ['neutral', 'accent', 'success', 'warning', 'danger'] as const) {
       expect(ui.badge.classes({ tone })).toContain('rounded-md');

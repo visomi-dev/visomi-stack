@@ -7,6 +7,7 @@ import SectionHeading from '../../components/site/section-heading.astro';
 import Terminal from '../../components/site/terminal.astro';
 import Icon from '../../components/site/icon.astro';
 import LinkButton from '../../components/link-button.astro';
+import Link from '../../components/link.astro';
 import Field from '../../components/field.astro';
 import Input from '../../components/input.astro';
 import Checkbox from '../../components/checkbox.astro';
@@ -113,13 +114,14 @@ const count = Object.values(componentGroups).flat().length;
         description={copy.architectureBody}
         id="architecture-title"
       />
-      <a
+      <Link
         href={sitePath(locale, 'architecture')}
-        class="ui-focus-ring mt-7 inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-semibold text-blue-700 dark:text-blue-400"
+        underline="none"
+        class="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold"
       >
         {copy.architectureLink}
         <Icon name="arrow-right" class="size-4" />
-      </a>
+      </Link>
     </div>
     <RuntimeMap locale={locale} />
   </section>
@@ -141,13 +143,14 @@ const count = Object.values(componentGroups).flat().length;
           </span>
           <span class="max-w-40 text-sm leading-6 text-zinc-500 dark:text-zinc-400">{copy.designCount}</span>
         </p>
-        <a
+        <Link
           href={sitePath(locale, 'ui')}
-          class="ui-focus-ring mt-7 inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-semibold text-blue-700 dark:text-blue-400"
+          underline="none"
+          class="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold"
         >
           {copy.designLink}
           <Icon name="arrow-right" class="size-4" />
-        </a>
+        </Link>
       </div>
       <div class="min-w-0 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl shadow-zinc-950/5 dark:border-zinc-700 dark:bg-zinc-950">
         <div class="border-b border-zinc-200 px-6 py-5 dark:border-zinc-800">
@@ -189,13 +192,14 @@ const count = Object.values(componentGroups).flat().length;
           description={copy.startBody}
           id="start-title"
         />
-        <a
+        <Link
           href={sitePath(locale, 'docs')}
-          class="ui-focus-ring mt-7 inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-semibold text-blue-700 dark:text-blue-400"
+          underline="none"
+          class="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold"
         >
           {copy.startLink}
           <Icon name="arrow-right" class="size-4" />
-        </a>
+        </Link>
       </div>
       <ol class="grid gap-8">
         {copy.startSteps.map(([title, body], i) => (
@@ -230,12 +234,13 @@ pnpm nx serve web-site`}
           {copy.visionTitle}
         </h2>
         <p class="mt-6 max-w-xl text-base leading-8 text-blue-50">{copy.visionBody}</p>
-        <a
+        <Link
           href={`${sitePath(locale, 'architecture')}#direction`}
-          class="mt-6 inline-flex min-h-11 items-center rounded-lg text-xs leading-6 underline decoration-white/50 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-solid focus-visible:outline-white"
+          variant="inverse"
+          class="mt-6 inline-flex min-h-11 items-center text-xs leading-6 decoration-white/50"
         >
           {copy.visionNote}
-        </a>
+        </Link>
       </div>
       <ul class="grid content-center gap-6">
         {copy.visionItems.map(([title, body], i) => (

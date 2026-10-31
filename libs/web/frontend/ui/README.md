@@ -5,12 +5,13 @@ internal, non-buildable library. Consumers compile the TypeScript source.
 The library has no Angular, Astro, DOM or Node runtime dependencies.
 
 ```ts
-import { button, input, badge, card } from '@visomi-stack/web-frontend-ui';
+import { button, input, badge, card, link } from '@visomi-stack/web-frontend-ui';
 
 button.classes({ variant: 'secondary', size: 'sm' });
 input.classes({ size: 'lg' });
 badge.classes({ tone: 'success' });
 card.classes({ tone: 'raised', padding: 'sm' });
+link.classes({ variant: 'muted', underline: 'hover' });
 ```
 
 The functions return class strings. Native values, validation, labels, events,
@@ -21,26 +22,27 @@ of conflicting utilities in a class string does not define precedence.
 
 ## Recipes and options
 
-| Exports                                                                                                                                                                            | Options and defaults                                                                                   |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `button`, `linkButton`                                                                                                                                                             | `variant: primary \| secondary \| danger \| ghost` (primary), `size: sm \| md \| lg \| icon` (md)      |
-| `heading`                                                                                                                                                                          | `size: sm \| md \| lg \| xl` (lg)                                                                      |
-| `text`                                                                                                                                                                             | `size: sm \| md \| lg` (md), `tone: default \| muted` (default)                                        |
-| `code`                                                                                                                                                                             | `block: boolean` (false)                                                                               |
-| `divider`                                                                                                                                                                          | `soft: boolean` (false)                                                                                |
-| `container`                                                                                                                                                                        | `width: sm \| md \| lg \| full` (lg)                                                                   |
-| `card`                                                                                                                                                                             | `tone: default \| raised \| ghost` (default), `padding: sm \| md \| lg` (md)                           |
-| `badge`, `alert`                                                                                                                                                                   | `tone: neutral \| accent \| success \| warning \| danger` (neutral / accent)                           |
-| `avatar`                                                                                                                                                                           | `size: sm \| md \| lg` (md), `shape: circle \| rounded` (circle)                                       |
-| `table`                                                                                                                                                                            | `density: comfortable \| compact` (comfortable), `striped`, `mobileCards`, `stickyHeaders` (all false) |
-| `input`, `textarea`, `select`                                                                                                                                                      | `size: sm \| md \| lg` (md)                                                                            |
-| `label`                                                                                                                                                                            | `inline: boolean` (false)                                                                              |
-| `dialog`                                                                                                                                                                           | `size: sm \| md \| lg` (md)                                                                            |
-| `appShell`                                                                                                                                                                         | `layout: sidebar \| stacked` (sidebar), on its frame/sidebar parts                                     |
-| `navItem`                                                                                                                                                                          | `placement: sidebar \| navbar` (sidebar)                                                               |
-| `sidebar`, `topbar`, `navbar`                                                                                                                                                      | No visual options                                                                                      |
-| `field`                                                                                                                                                                            | `compact: boolean` (false)                                                                             |
-| `link`, `pageHeader`, `descriptionList`, `pagination`, `fieldset`, `description`, `errorMessage`, `checkbox`, `radio`, `toggle`, `radioCard`, `inputGroup`, `loader`, `disclosure` | No visual options                                                                                      |
+| Exports                                                                                                                                                                    | Options and defaults                                                                                   |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `button`, `linkButton`                                                                                                                                                     | `variant: primary \| secondary \| danger \| ghost` (primary), `size: sm \| md \| lg \| icon` (md)      |
+| `heading`                                                                                                                                                                  | `size: sm \| md \| lg \| xl` (lg)                                                                      |
+| `text`                                                                                                                                                                     | `size: sm \| md \| lg` (md), `tone: default \| muted` (default)                                        |
+| `code`                                                                                                                                                                     | `block: boolean` (false)                                                                               |
+| `divider`                                                                                                                                                                  | `soft: boolean` (false)                                                                                |
+| `container`                                                                                                                                                                | `width: sm \| md \| lg \| full` (lg)                                                                   |
+| `card`                                                                                                                                                                     | `tone: default \| raised \| ghost` (default), `padding: sm \| md \| lg` (md)                           |
+| `badge`, `alert`                                                                                                                                                           | `tone: neutral \| accent \| success \| warning \| danger` (neutral / accent)                           |
+| `avatar`                                                                                                                                                                   | `size: sm \| md \| lg` (md), `shape: circle \| rounded` (circle)                                       |
+| `table`                                                                                                                                                                    | `density: comfortable \| compact` (comfortable), `striped`, `mobileCards`, `stickyHeaders` (all false) |
+| `input`, `textarea`, `select`                                                                                                                                              | `size: sm \| md \| lg` (md)                                                                            |
+| `label`                                                                                                                                                                    | `inline: boolean` (false)                                                                              |
+| `dialog`                                                                                                                                                                   | `size: sm \| md \| lg` (md)                                                                            |
+| `appShell`                                                                                                                                                                 | `layout: sidebar \| stacked` (sidebar), on its frame/sidebar parts                                     |
+| `navItem`                                                                                                                                                                  | `placement: sidebar \| navbar` (sidebar)                                                               |
+| `sidebar`, `topbar`, `navbar`                                                                                                                                              | No visual options                                                                                      |
+| `field`                                                                                                                                                                    | `compact: boolean` (false)                                                                             |
+| `link`                                                                                                                                                                     | `variant: default \| muted \| inverse` (default), `underline: always \| hover \| none` (always)        |
+| `pageHeader`, `descriptionList`, `pagination`, `fieldset`, `description`, `errorMessage`, `checkbox`, `radio`, `toggle`, `radioCard`, `inputGroup`, `loader`, `disclosure` | No visual options                                                                                      |
 
 Buttons retain a minimum 44px target (48px for lg). Links use separate recipes
 with native hover states and navigation semantics; there is no simulated disabled
@@ -175,6 +177,40 @@ localized foundation pages demonstrate the same shell. The Astro page loads
 only the existing theme script, and works without JavaScript. Navigation markup
 exists in both desktop and mobile slots, with exactly one version visible and
 accessible at a time. There is no shared framework runtime.
+
+## Text links
+
+`link.classes({ variant, underline })` owns reusable link colors, underline
+policy and keyboard focus. It keeps inline text geometry: no button sizing or
+padding is introduced. Defaults preserve the original blue underlined link.
+
+- `default` uses the accent color.
+- `muted` uses neutral text with accent hover and native `aria-current="page"`
+  styling for text navigation.
+- `inverse` uses light text and a white focus outline for contrasting dark or
+  colored surfaces, in both themes. It intentionally does not combine the
+  regular focus utility's dark-mode color with its inverted focus treatment.
+- `underline="hover"` reveals the underline on hover and keyboard focus;
+  `always` and `none` retain explicit alternatives.
+
+```html
+<a appUI variant="muted" underline="hover" href="/guide">Guide</a>
+```
+
+```astro
+<Link variant="muted" underline="hover" href="/guide">
+  Guide
+</Link>
+<Link variant="inverse" href="/guide">
+  Guide
+</Link>
+```
+
+Both framework adapters expose the same typed options. Native anchor attributes,
+RouterLink, query parameters and events remain consumer-owned. Page-specific
+spacing, typography and icon placement stay at the call site. Brand marks,
+linked cards and skip links retain the presentation owned by their composition;
+they are not forced into a text-link style. No disabled-link behavior is added.
 
 ## Field validation and responsive tables
 

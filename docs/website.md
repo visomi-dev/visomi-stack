@@ -20,7 +20,8 @@ Every public page has English and Spanish routes:
 `src/layouts/site.astro` owns public navigation, skip navigation, one main
 landmark and the footer. It composes the import-safe base document. Marketing
 parts live in `src/components/site/`; existing native UI adapters and shared
-recipes are reused. The standalone application-shell and button experiments keep
+recipes are reused. Text/navigation links use the shared `Link` adapter with
+explicit color and underline variants; their layout stays at the call site. The standalone application-shell and button experiments keep
 their focused demo layouts.
 
 Public content lives in `src/content/en.ts` and `es.ts`. `site.ts` owns the typed

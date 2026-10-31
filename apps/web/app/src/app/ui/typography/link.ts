@@ -1,11 +1,14 @@
-import { Directive } from '@angular/core';
+import { Directive, computed, input } from '@angular/core';
 
-import { link as styles } from '@visomi-stack/web-frontend-ui';
+import { link as styles, type LinkVariant, type LinkUnderline } from '@visomi-stack/web-frontend-ui';
 
 @Directive({
   selector: 'a[appUI]:not([appUI=button]):not([appUI=nav-item])',
-  host: { '[class]': 'classes' },
+  host: { '[class]': 'classes()' },
 })
 export class Link {
-  protected readonly classes = styles.classes();
+  readonly variant = input<LinkVariant>('default');
+  readonly underline = input<LinkUnderline>('always');
+
+  protected readonly classes = computed(() => styles.classes({ variant: this.variant(), underline: this.underline() }));
 }

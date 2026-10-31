@@ -21,9 +21,32 @@ export const text = {
   },
 } as const;
 
+export type LinkVariant = 'default' | 'muted' | 'inverse';
+export type LinkUnderline = 'always' | 'hover' | 'none';
+export type LinkOptions = { variant?: LinkVariant; underline?: LinkUnderline };
+
+const linkVariants = {
+  default: 'text-blue-700 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300',
+  muted:
+    'text-zinc-600 hover:text-blue-700 aria-[current=page]:font-semibold aria-[current=page]:text-zinc-950 dark:text-zinc-400 dark:hover:text-blue-400 dark:aria-[current=page]:text-zinc-50',
+  inverse: 'text-white hover:text-blue-50',
+} as const;
+const linkUnderlines = {
+  always: 'underline',
+  hover: 'no-underline hover:underline focus-visible:underline',
+  none: 'no-underline',
+} as const;
+
 export const link = {
-  classes(): string {
-    return 'ui-focus-ring rounded-sm text-blue-700 underline underline-offset-4 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300';
+  classes({ variant = 'default', underline = 'always' }: LinkOptions = {}): string {
+    return [
+      'rounded-sm underline-offset-4 transition-colors motion-reduce:transition-none',
+      variant === 'inverse'
+        ? 'outline-2 outline-solid outline-transparent outline-offset-3 focus-visible:outline-white'
+        : 'ui-focus-ring',
+      linkVariants[variant],
+      linkUnderlines[underline],
+    ].join(' ');
   },
 } as const;
 

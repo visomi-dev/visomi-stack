@@ -7,6 +7,7 @@ import Navbar from '../../../components/navbar.astro';
 import NavItem from '../../../components/nav-item.astro';
 import Card from '../../../components/card.astro';
 import LinkButton from '../../../components/link-button.astro';
+import Link from '../../../components/link.astro';
 import { uiDocs } from '../../../ui-docs';
 const locale = Astro.params.locale;
 if (locale !== 'en' && locale !== 'es') return new Response(null, { status: 404 });
@@ -59,12 +60,9 @@ const destinations = [
     </Sidebar>
     <Topbar slot="header">
       <span slot="title">{labels.workspace}</span>
-      <a
-        href={`/${locale}/ui/`}
-        class="ui-focus-ring inline-flex min-h-11 items-center rounded-lg px-2 text-sm underline underline-offset-4"
-      >
+      <Link href={`/${locale}/ui/`} variant="muted" class="inline-flex min-h-11 items-center px-2 text-sm">
         {labels.catalogLink}
-      </a>
+      </Link>
       <label class="flex items-center gap-2 text-sm">
         <span>{labels.theme}</span>
         <select

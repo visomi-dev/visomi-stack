@@ -2,6 +2,7 @@
 import { siteCopy, sitePath, type SiteLocale } from '../../content/site';
 import Icon from './icon.astro';
 import Badge from '../badge.astro';
+import Link from '../link.astro';
 type Props = { locale: SiteLocale };
 const { locale } = Astro.props;
 const copy = siteCopy[locale].home;
@@ -70,13 +71,14 @@ const copy = siteCopy[locale].home;
             </div>
           </div>
         </div>
-        <a
+        <Link
           href={`${sitePath(locale, 'ui')}shell/`}
-          class="ui-focus-ring mt-6 inline-flex min-h-11 items-center gap-2 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-400"
+          underline="none"
+          class="mt-6 inline-flex min-h-11 items-center gap-2 text-xs font-medium"
         >
           {copy.previewLink}
           <Icon name="arrow-right" class="size-4" />
-        </a>
+        </Link>
       </div>
     </div>
     <div class="flex gap-3 border-t border-zinc-700 bg-zinc-950 px-5 py-4 font-mono text-[0.65rem] text-zinc-300">

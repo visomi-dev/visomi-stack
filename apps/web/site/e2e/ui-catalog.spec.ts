@@ -224,3 +224,52 @@ for (const width of [360, 1280]) {
     });
   }
 }
+
+for (const theme of ['light', 'dark']) {
+  test(`shared text links keep underline and keyboard focus states in ${theme}`, async ({ page }) => {
+    await page.goto('/en/ui/');
+
+    await page.locator('[data-theme-select]').selectOption(theme);
+
+    const links = page.locator('#link [data-preview] a');
+    const standard = links.nth(0);
+    const muted = links.nth(1);
+    const inverse = links.nth(2);
+
+    await expect(standard).toHaveCSS('text-decoration-line', 'underline');
+
+    await expect(muted).toHaveCSS('text-decoration-line', 'none');
+
+    await muted.hover();
+
+    await expect(muted).toHaveCSS('text-decoration-line', 'underline');
+
+    await page.mouse.move(0, 0);
+
+    await muted.focus();
+
+    await page.keyboard.press('Tab');
+
+    await page.keyboard.press('Shift+Tab');
+
+    await expect(muted).toBeFocused();
+
+    await expect(muted).toHaveCSS('text-decoration-line', 'underline');
+
+    await page.keyboard.press('Tab');
+
+    await expect(inverse).toBeFocused();
+
+    await expect(inverse).toHaveCSS('outline-color', 'rgb(255, 255, 255)');
+
+    await expect(inverse).toHaveCSS('outline-width', '2px');
+
+    await expect(inverse).toHaveCSS('outline-style', 'solid');
+
+    await expect(inverse).toHaveAttribute('href', '#forms');
+
+    await expect(
+      page.locator('[data-site-header] nav').first().getByRole('link', { name: 'Components', exact: true }),
+    ).toHaveCSS('text-decoration-line', 'none');
+  });
+}
