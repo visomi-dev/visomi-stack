@@ -89,6 +89,8 @@ async function startGateway(endpoint) {
         API_APP_PATH: '',
         SITE_APP_PATH: '',
         VISOMI_OTLP_TRACING: 'true',
+        VISOMI_BROWSER_TELEMETRY: 'true',
+        BROWSER_TELEMETRY_ORIGIN: `http://127.0.0.1:${port}`,
         OTEL_EXPORTER_OTLP_ENDPOINT: endpoint,
         OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
         OTEL_EXPORTER_OTLP_HEADERS: `authorization=${encodeURIComponent(authorization)}`,
@@ -215,7 +217,34 @@ try {
 
     await response.arrayBuffer();
   }
+  const configurationResponse = await fetch(`${gateway.origin}/telemetry/config`);
+  const browserConfiguration = await configurationResponse.json();
+  const failedRequest = await fetch(`${gateway.origin}/api/auth/session`);
+  const correlation = failedRequest.headers.get('x-telemetry-context');
+
+  assert.ok(correlation, 'The gateway must issue its own signed correlation context');
+  const browserReport = await fetch(`${gateway.origin}/telemetry/errors`, {
+    method: 'POST',
+    headers: {
+      origin: gateway.origin,
+      'content-type': 'application/json',
+      'x-browser-telemetry': browserConfiguration.token,
+      cookie: marker,
+      authorization: `Bearer ${marker}`,
+    },
+    body: JSON.stringify({
+      application: 'web-site',
+      code: 'request_failed',
+      kind: 'unknown',
+      screen: 'home',
+      location: { asset: browserConfiguration.assets[0].id, line: 1, column: 1 },
+      correlation,
+    }),
+  });
+
+  assert.equal(browserReport.status, 202);
   const logs = await gateway.stop();
+  let frontendVerified = false;
   const readTrace = async (id) => {
     const response = await fetch(`${query}/api/v3/traces/${id}?raw_traces=true`);
     const body = await response.text();
@@ -241,21 +270,44 @@ try {
     for (const scope of trace.scopeSpans) {
       assert.equal(scope.scope.name, 'visomi-stack.operational');
       for (const span of scope.spans) {
-        assert.ok(['http.request', 'job.execute'].includes(span.name));
+        assert.ok(['http.request', 'job.execute', 'frontend.error'].includes(span.name));
         assert.equal(span.events?.length ?? 0, 0, 'Application spans must not carry events or exceptions');
         assert.equal(span.links?.length ?? 0, 0);
-        assert.ok(!span.parentSpanId, 'Synthetic operations must generate fresh root traces');
+        if (span.name === 'frontend.error') {
+          frontendVerified = true;
+          assert.ok(span.parentSpanId, 'Browser API errors must reference a verified gateway span');
+        } else {
+          assert.ok(!span.parentSpanId, 'Synthetic operations must generate fresh root traces');
+        }
+
         assert.ok(!span.status?.message);
         const keys = span.attributes.map((attribute) => attribute.key);
 
         assert.ok(
           // Badger's Jaeger model roundtrip uses the legacy HTTP status attribute name.
-          keys.every((key) => ['operation', 'outcome', 'http.response.status_code', 'http.status_code'].includes(key)),
+          keys.every((key) =>
+            (span.name === 'frontend.error'
+              ? [
+                  'operation',
+                  'outcome',
+                  'frontend.application',
+                  'frontend.error.code',
+                  'frontend.error.kind',
+                  'frontend.screen',
+                  'frontend.release',
+                  'code.asset',
+                  'code.line',
+                  'code.column',
+                ]
+              : ['operation', 'outcome', 'http.response.status_code', 'http.status_code']
+            ).includes(key),
+          ),
           `Span attributes must remain allowlisted: ${keys.join(', ')}`,
         );
       }
     }
   }
+  assert.ok(frontendVerified, 'An accepted browser error must be stored in Jaeger');
   assert.ok(logs.some((log) => log.event === 'job.execute' && log.outcome === 'job_failed'));
   container('stop', '--time', '10', name);
   const unavailable = await startGateway(receiver);
@@ -274,7 +326,7 @@ try {
   await eventually(() => readTrace(logs[0].traceId));
 
   console.log(
-    'Jaeger authentication, safe application traces, shutdown flush, receiver outage, persistence and 48h TTL configuration verified.',
+    'Jaeger authentication, safe HTTP/job/browser traces, verified correlation, shutdown flush, receiver outage, persistence and 48h TTL configuration verified.',
   );
 } finally {
   child?.kill('SIGKILL');

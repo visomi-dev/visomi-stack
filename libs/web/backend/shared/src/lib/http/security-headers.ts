@@ -2,7 +2,7 @@ import type { RequestHandler } from 'express';
 import helmet from 'helmet';
 
 export function securityHeaders(options: { production?: boolean } = {}): RequestHandler {
-  const production = options.production ?? process.env.NODE_ENV === 'production';
+  const production = options.production ?? process.env['NODE_ENV'] === 'production';
 
   return helmet({
     contentSecurityPolicy: {

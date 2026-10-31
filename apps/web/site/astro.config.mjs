@@ -17,7 +17,7 @@ export default defineConfig({
   },
   vite: {
     // The gateway permits only external scripts, including small processed TypeScript entries.
-    build: { assetsInlineLimit: 0 },
+    build: { assetsInlineLimit: 0, sourcemap: 'hidden' },
     plugins: [tailwindcss()],
     css: { postcss: { plugins: [] } },
   },

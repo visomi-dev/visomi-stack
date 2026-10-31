@@ -11,7 +11,7 @@ import {
   type MailTransport,
   type DatabaseResource,
 } from '@visomi-stack/backend-shared';
-import { initializeObservability } from '@visomi-stack/web-backend-shared';
+import { browserAssets, createBrowserTelemetry, initializeObservability } from '@visomi-stack/web-backend-shared';
 
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -30,6 +30,7 @@ let mail: MailTransport | undefined;
 let auth: EmbeddedAuthentication | undefined;
 const server = createServer();
 let stopping = false;
+let browserTelemetry: ReturnType<typeof createBrowserTelemetry> | undefined;
 
 async function stop(exitCode: number): Promise<void> {
   if (stopping) {
@@ -51,6 +52,7 @@ async function stop(exitCode: number): Promise<void> {
   let databaseClosed = true;
 
   try {
+    browserTelemetry?.close();
     mail?.close();
   } catch {
     databaseClosed = false;
@@ -121,11 +123,27 @@ async function bootstrap() {
     return;
   }
 
+  if (process.env.VISOMI_BROWSER_TELEMETRY === 'true' && site) {
+    const assets = await browserAssets(site.clientDirectory);
+
+    if (stopping) {
+      return;
+    }
+
+    browserTelemetry = createBrowserTelemetry({
+      observability,
+      application: 'web-site',
+      assets,
+      origin: process.env.BROWSER_TELEMETRY_ORIGIN ?? 'https://stack.visomi.dev',
+    });
+  }
+
   const application = createGatewayApp({
     api,
     site,
     auth,
     observability,
+    ...(browserTelemetry ? { browserTelemetry } : {}),
     ...(process.env.AUTH_TRUST_PROXY
       ? { trustProxy: process.env.AUTH_TRUST_PROXY.split(',').map((value) => value.trim()) }
       : {}),

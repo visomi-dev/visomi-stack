@@ -25,6 +25,7 @@ import {
 import type { Correlation, Environment, ErrorCode, Operation, Outcome, RuntimeEvent, Service } from './policy';
 import { otlpSpanProcessors } from './otlp';
 
+import type { BrowserErrorReport } from '@visomi-stack/web-shared-observability';
 import { createInjector, inject, InjectionToken } from '@visomi-stack/backend-shared';
 
 export type ObservabilityOptions = {
@@ -116,7 +117,7 @@ class ObservabilityRuntime implements Observability {
       resource,
       sampler: new AlwaysOnSampler(),
       spanProcessors,
-      spanLimits: { eventCountLimit: 0, linkCountLimit: 0, attributeCountLimit: 8 },
+      spanLimits: { eventCountLimit: 0, linkCountLimit: 0, attributeCountLimit: 16 },
     });
     this.meterProvider = new MeterProvider({ resource, readers: options.metricReader ? [options.metricReader] : [] });
     this.tracer = this.provider.getTracer('visomi-stack.operational', this.metadata.version);
@@ -133,6 +134,7 @@ class ObservabilityRuntime implements Observability {
     this.beginHttp = this.beginHttp.bind(this);
     this.captureJobContext = this.captureJobContext.bind(this);
     this.runJob = this.runJob.bind(this);
+    this.frontendError = this.frontendError.bind(this);
     this.shutdown = this.shutdown.bind(this);
   }
 
@@ -155,6 +157,37 @@ class ObservabilityRuntime implements Observability {
 
   beginHttp(): ReturnType<Observability['beginHttp']> {
     return this.begin('http.request');
+  }
+
+  frontendError(report: Omit<BrowserErrorReport, 'correlation'> & { release: string }, parent?: Correlation): void {
+    const approved = jobContext(parent ? { version: 1, ...parent } : undefined);
+    const ctx = approved
+      ? trace.setSpanContext(ROOT_CONTEXT, {
+          traceId: approved.traceId,
+          spanId: approved.spanId,
+          traceFlags: TraceFlags.SAMPLED,
+          isRemote: true,
+        })
+      : ROOT_CONTEXT;
+    const operation = this.begin('frontend.error', ctx);
+
+    isolate(() =>
+      trace.getSpan(operation.ctx)?.setAttributes({
+        'frontend.application': report.application,
+        'frontend.error.code': report.code,
+        'frontend.error.kind': report.kind,
+        'frontend.screen': report.screen,
+        'frontend.release': report.release,
+        ...(report.location
+          ? {
+              'code.asset': report.location.asset,
+              'code.line': report.location.line,
+              'code.column': report.location.column,
+            }
+          : {}),
+      }),
+    );
+    operation.finish('client_error');
   }
 
   captureJobContext(): ReturnType<Observability['captureJobContext']> {
@@ -255,7 +288,14 @@ class ObservabilityRuntime implements Observability {
     isolate(() => {
       span = this.tracer.startSpan(
         operation,
-        { kind: operation === 'http.request' ? SpanKind.SERVER : SpanKind.CONSUMER },
+        {
+          kind:
+            operation === 'http.request'
+              ? SpanKind.SERVER
+              : operation === 'job.execute'
+                ? SpanKind.CONSUMER
+                : SpanKind.INTERNAL,
+        },
         parent,
       );
     });
@@ -292,14 +332,17 @@ class ObservabilityRuntime implements Observability {
           operation,
         ),
       );
-      isolate(() => (operation === 'http.request' ? this.httpCount : this.jobCount).add(1, attributes, ROOT_CONTEXT));
-      isolate(() =>
-        (operation === 'http.request' ? this.httpDuration : this.jobDuration).record(
-          duration,
-          attributes,
-          ROOT_CONTEXT,
-        ),
-      );
+      if (operation !== 'frontend.error') {
+        isolate(() => (operation === 'http.request' ? this.httpCount : this.jobCount).add(1, attributes, ROOT_CONTEXT));
+        isolate(() =>
+          (operation === 'http.request' ? this.httpDuration : this.jobDuration).record(
+            duration,
+            attributes,
+            ROOT_CONTEXT,
+          ),
+        );
+      }
+
       isolate(() => span?.setAttributes(attributes));
       isolate(() => span?.setStatus({ code: outcome === 'success' ? SpanStatusCode.OK : SpanStatusCode.ERROR }));
       isolate(() => span?.end());
@@ -310,6 +353,7 @@ class ObservabilityRuntime implements Observability {
 }
 
 export type Observability = {
+  frontendError: (report: Omit<BrowserErrorReport, 'correlation'> & { release: string }, parent?: Correlation) => void;
   event: (name: RuntimeEvent, code?: ErrorCode) => void;
   correlation: () => Correlation | undefined;
   beginHttp: () => { run: <T>(work: () => T) => T; finish: (outcome: Outcome, status?: number) => void };

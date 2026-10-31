@@ -3,7 +3,7 @@ import { Socket } from 'node:net';
 
 import { AuthHttpError, HttpError, httpErrorHandler, initializeObservability } from '@visomi-stack/web-backend-shared';
 import type { Request, RequestHandler, Response } from 'express';
-import express from 'express';
+import express, { Router } from 'express';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ApiModule, EmbeddedAuthentication } from './api-module';
@@ -38,6 +38,54 @@ function apiFixture(handler: RequestHandler = (request, response) => response.js
 }
 
 describe('gateway composition', () => {
+  it('serves a silent disabled configuration without entering authentication', async () => {
+    const authenticate = vi.fn<RequestHandler>();
+    const inspect = vi.fn();
+    const result = await dispatch(
+      createGatewayApp({
+        api: apiFixture(),
+        auth: {
+          middleware: [authenticate],
+        } as EmbeddedAuthentication,
+      }),
+      '/telemetry/config',
+      inspect,
+    );
+
+    expect(result).toEqual({ status: 200, body: { enabled: false } });
+    expect(inspect.mock.calls[0][0]['cache-control']).toBe('no-store');
+    expect(authenticate).not.toHaveBeenCalled();
+  });
+  it.each(['/main.js.map', '/main.js%2Emap'])('keeps source maps private for %s', async (path) => {
+    const handler = vi.fn<RequestHandler>();
+    const result = await dispatch(
+      createGatewayApp({
+        api: apiFixture(),
+        site: {
+          handler,
+          clientDirectory: '/synthetic/client',
+        },
+      }),
+      path,
+    );
+
+    expect(result).toEqual({ status: 404, body: { error: 'not_found' } });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('mounts browser intake before the API', async () => {
+    const context = vi.fn<RequestHandler>((_request, _response, next) => next());
+    const router = Router();
+
+    router.get('/config', (_request, response) => response.json({ enabled: true }));
+    const result = await dispatch(
+      createGatewayApp({ api: apiFixture(), browserTelemetry: { context, router } }),
+      '/telemetry/config',
+    );
+
+    expect(result).toEqual({ status: 200, body: { enabled: true } });
+    expect(context).toHaveBeenCalledOnce();
+  });
   it('mounts public middleware after reserved routes and sanitizes its failures', async () => {
     const handler = vi.fn<RequestHandler>((_request, response) => response.json({ page: 'synthetic_site' }));
     const site = { handler, clientDirectory: '/synthetic/missing/client' };
