@@ -28,12 +28,14 @@ const telemetry =
       })
     : undefined;
 
+let browserTelemetry: ReturnType<typeof createBrowserTelemetry> | undefined;
+
 app.disable('x-powered-by');
 if (telemetry) {
   const assets = await browserAssets(browserDirectory, '/app');
 
   app.use(httpObservability(telemetry));
-  const browserTelemetry = createBrowserTelemetry({
+  browserTelemetry = createBrowserTelemetry({
     observability: telemetry,
     assets,
     application: 'web-app',
@@ -76,6 +78,7 @@ if (isMainModule(import.meta.url)) {
     const deadline = setTimeout(() => process.exit(1), 5000);
 
     server.close(() => {
+      browserTelemetry?.close();
       void (telemetry?.shutdown() ?? Promise.resolve(true)).then((flushed) => {
         clearTimeout(deadline);
         process.exitCode = flushed ? 0 : 1;

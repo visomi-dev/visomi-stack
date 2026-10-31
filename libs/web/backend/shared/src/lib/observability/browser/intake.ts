@@ -3,6 +3,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypt
 import { Router, json } from 'express';
 import type { RequestHandler, ErrorRequestHandler } from 'express';
 import { z } from 'zod';
+import { rateLimit, MemoryStore } from 'express-rate-limit';
 
 import type { Observability } from '../lib/observability';
 import type { Correlation } from '../lib/policy';
@@ -44,7 +45,7 @@ export function createBrowserTelemetry(options: {
   application: BrowserErrorReport['application'];
   origin: string;
   now?: () => number;
-}): { context: RequestHandler; router: Router } {
+}): { context: RequestHandler; router: Router; close: () => void } {
   const origin = new URL(options.origin).origin;
   const now = options.now ?? Date.now;
   const secret = randomBytes(32);
@@ -52,8 +53,7 @@ export function createBrowserTelemetry(options: {
     .update([...options.assets.keys()].sort().join(','))
     .digest('hex');
   const router = Router();
-  let windowStart = now();
-  let requests = 0;
+  const store = new MemoryStore();
 
   function sign(purpose: 'report' | 'correlate', context?: Correlation): string {
     const body = Buffer.from(
@@ -102,20 +102,20 @@ export function createBrowserTelemetry(options: {
 
   router.use((_request, response, next) => {
     response.setHeader('cache-control', 'no-store');
-    if (now() - windowStart >= 60000) {
-      windowStart = now();
-      requests = 0;
-    }
-
-    // A process-wide budget bounds unauthenticated traffic without retaining IPs or browser IDs.
-    if (++requests > 120) {
-      response.status(429).json({ error: 'telemetry_limited' });
-
-      return;
-    }
-
     next();
   });
+  router.use(
+    rateLimit({
+      windowMs: 60000,
+      limit: 120,
+      store,
+      // One fixed bucket bounds traffic without retaining addresses or browser identifiers.
+      keyGenerator: () => 'global',
+      standardHeaders: false,
+      legacyHeaders: false,
+      message: { error: 'telemetry_limited' },
+    }),
+  );
   router.get('/config', (_request, response) =>
     response.json({
       token: sign('report'),
@@ -174,5 +174,5 @@ export function createBrowserTelemetry(options: {
     response.status(400).json({ error: 'telemetry_invalid' });
   }) satisfies ErrorRequestHandler);
 
-  return { context, router };
+  return { context, router, close: () => store.shutdown() };
 }

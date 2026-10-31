@@ -344,7 +344,9 @@ uncompressed input. Extra fields and arbitrary values are rejected with fixed
 error codes. The process has a shared budget of 120 intake requests per minute,
 including configuration reads; this deliberately avoids retaining IPs or browser
 identifiers. Exhaustion drops telemetry while normal application routes continue.
-This public reporting endpoint is not proof of a human user or trustworthy error.
+The limiter reuses the installed `express-rate-limit` memory store with one fixed
+global key; the owning executable closes that store during shutdown. This public
+reporting endpoint is not proof of a human user or trustworthy error.
 
 The approved `frontend.error` span has only:
 

@@ -15,7 +15,7 @@ export function createGatewayApp(options: {
   site?: SiteModule;
   auth?: EmbeddedAuthentication;
   observability?: Observability;
-  browserTelemetry?: ReturnType<typeof createBrowserTelemetry>;
+  browserTelemetry?: Pick<ReturnType<typeof createBrowserTelemetry>, 'context' | 'router'>;
   trustProxy?: string[];
   helmetMode?: 'managed' | 'inherited';
   errorMode?: 'managed' | 'inherited';

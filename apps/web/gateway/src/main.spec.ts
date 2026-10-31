@@ -19,6 +19,7 @@ const boundary = vi.hoisted(() => ({
   loadSite: vi.fn(),
   browserAssets: vi.fn(),
   browserTelemetry: vi.fn(),
+  closeBrowserTelemetry: vi.fn(),
   site: { handler: vi.fn(), clientDirectory: '/synthetic/site/client' },
   ready: vi.fn(),
 }));
@@ -56,7 +57,11 @@ beforeEach(() => {
   vi.stubEnv('VISOMI_BROWSER_TELEMETRY', '');
   vi.stubEnv('BROWSER_TELEMETRY_ORIGIN', undefined);
   boundary.browserAssets.mockResolvedValue(new Map());
-  boundary.browserTelemetry.mockReturnValue({ context: 'synthetic-context', router: 'synthetic-router' });
+  boundary.browserTelemetry.mockReturnValue({
+    context: 'synthetic-context',
+    router: 'synthetic-router',
+    close: boundary.closeBrowserTelemetry,
+  });
   boundary.signals.clear();
   boundary.events.clear();
   boundary.initialize.mockReturnValue(boundary.observability);
@@ -117,9 +122,15 @@ describe('gateway executable ownership', () => {
           browserTelemetry: {
             context: 'synthetic-context',
             router: 'synthetic-router',
+            close: boundary.closeBrowserTelemetry,
           },
         }),
       );
+      boundary.signals.get('SIGTERM')!();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(boundary.closeBrowserTelemetry).toHaveBeenCalledOnce();
     },
   );
 
@@ -130,6 +141,26 @@ describe('gateway executable ownership', () => {
     await start();
 
     expect(boundary.browserTelemetry).not.toHaveBeenCalled();
+  });
+  it('does not create intake resources after shutdown while the asset allowlist is loading', async () => {
+    let loaded!: (assets: Map<string, unknown>) => void;
+
+    vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
+    boundary.browserAssets.mockReturnValue(
+      new Promise((resolve) => {
+        loaded = resolve;
+      }),
+    );
+
+    await start();
+
+    boundary.signals.get('SIGTERM')!();
+    loaded(new Map());
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(boundary.browserTelemetry).not.toHaveBeenCalled();
+    expect(boundary.server.listen).not.toHaveBeenCalled();
   });
   it('uses default networking and the adjacent compiled API when no overrides are configured', async () => {
     vi.stubEnv('HOST', undefined);

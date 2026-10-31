@@ -28,9 +28,14 @@ afterEach(async () => {
   for (const close of cleanup.splice(0).reverse()) {
     await close();
   }
+  vi.useRealTimers();
 });
 
 async function fixture(useClock = true) {
+  if (useClock) {
+    vi.useFakeTimers({ toFake: ['Date'] });
+  }
+
   const spans = new InMemorySpanExporter();
   const lines: string[] = [];
   const runtime = initializeObservability({
@@ -60,6 +65,7 @@ async function fixture(useClock = true) {
   await once(server, 'listening');
 
   cleanup.push(() => runtime.shutdown());
+  cleanup.push(async () => telemetry.close());
   cleanup.push(() => new Promise<void>((resolve) => server.close(() => resolve())));
   const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   const configuration = await fetch(url + '/telemetry/config');
@@ -89,6 +95,7 @@ async function fixture(useClock = true) {
     configuration,
     advance: (ms: number) => {
       now += ms;
+      vi.setSystemTime(now);
     },
   };
 }

@@ -30,6 +30,7 @@ let mail: MailTransport | undefined;
 let auth: EmbeddedAuthentication | undefined;
 const server = createServer();
 let stopping = false;
+let browserTelemetry: ReturnType<typeof createBrowserTelemetry> | undefined;
 
 async function stop(exitCode: number): Promise<void> {
   if (stopping) {
@@ -51,6 +52,7 @@ async function stop(exitCode: number): Promise<void> {
   let databaseClosed = true;
 
   try {
+    browserTelemetry?.close();
     mail?.close();
   } catch {
     databaseClosed = false;
@@ -121,10 +123,12 @@ async function bootstrap() {
     return;
   }
 
-  let browserTelemetry;
-
   if (process.env.VISOMI_BROWSER_TELEMETRY === 'true' && site) {
     const assets = await browserAssets(site.clientDirectory);
+
+    if (stopping) {
+      return;
+    }
 
     browserTelemetry = createBrowserTelemetry({
       observability,
