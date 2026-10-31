@@ -68,9 +68,13 @@ test('remembers explicit themes and follows system changes only in system mode',
 
   await expect(control).toHaveValue('dark');
 
+  await expect(page.locator('html')).toHaveCSS('color-scheme', 'dark');
+
   await control.selectOption('light');
 
   await expect(page.locator('html')).not.toHaveClass('dark');
+
+  await expect(page.locator('html')).toHaveCSS('color-scheme', 'light');
 
   await page.emulateMedia({ colorScheme: 'dark' });
 
@@ -79,6 +83,8 @@ test('remembers explicit themes and follows system changes only in system mode',
   await control.selectOption('system');
 
   await expect(page.locator('html')).toHaveClass('dark');
+
+  await expect(page.locator('html')).toHaveCSS('color-scheme', 'dark');
 
   await page.emulateMedia({ colorScheme: 'light' });
 

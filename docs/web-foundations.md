@@ -34,7 +34,10 @@ Changes to those files invalidate their Nx build caches.
 Each frontend owns its theme behavior in TypeScript. Angular's
 `select[appUITheme]` directive connects native selectors to the `Theme` service,
 whose signals and media listener initialize after rendering and clean up with
-its injector. Astro's `ThemeSelect` wraps its existing native `Select` adapter;
+its injector. Following the Nive/v0 browser-settings pattern, `colorScheme` and
+`isDark` are computed from the saved preference and a system-preference signal.
+A browser-only render effect synchronizes `.dark` and the native `color-scheme`;
+system changes never overwrite the saved preference. Astro's `ThemeSelect` wraps its existing native `Select` adapter;
 Astro compiles its component script once per page as part of the normal build.
 The shared UI library contains visual recipes only.
 

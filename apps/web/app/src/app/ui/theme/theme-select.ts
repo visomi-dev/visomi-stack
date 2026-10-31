@@ -15,6 +15,6 @@ export class ThemeSelect {
   private readonly element = inject(ElementRef<HTMLSelectElement>);
 
   protected select(): void {
-    this.theme.select(this.element.nativeElement.value);
+    this.theme.setTheme(this.element.nativeElement.value);
   }
 }

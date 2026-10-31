@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { ThemeSelect } from './theme-select';
+import { Theme } from './theme';
 
 @Component({
   imports: [ThemeSelect],
@@ -32,12 +33,14 @@ describe('native theme selectors', () => {
     Object.defineProperty(window, 'matchMedia', { configurable: true, value: () => media });
     localStorage.clear();
     document.documentElement.classList.remove('dark');
+    document.documentElement.style.removeProperty('color-scheme');
   });
 
   afterEach(() => {
     TestBed.resetTestingModule();
     localStorage.clear();
     document.documentElement.classList.remove('dark');
+    document.documentElement.style.removeProperty('color-scheme');
     if (originalMatchMedia) {
       Object.defineProperty(window, 'matchMedia', originalMatchMedia);
     } else {
@@ -54,6 +57,8 @@ describe('native theme selectors', () => {
     const controls = fixture.nativeElement.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
 
     expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.style.colorScheme).toBe('dark');
+    expect(TestBed.inject(Theme).colorScheme()).toBe('dark');
     expect(Array.from(controls, (control) => control.value)).toEqual(['dark', 'dark']);
     controls[0].value = 'light';
     controls[0].dispatchEvent(new Event('change'));
@@ -63,6 +68,8 @@ describe('native theme selectors', () => {
     expect(Array.from(controls, (control) => control.value)).toEqual(['light', 'light']);
     expect(localStorage.getItem('visomi.theme')).toBe('light');
     expect(document.documentElement.classList.contains('dark')).toBe(false);
+    expect(document.documentElement.style.colorScheme).toBe('light');
+    expect(TestBed.inject(Theme).isDark()).toBe(false);
   });
 
   it('follows system changes and releases the media listener with its injector', async () => {
@@ -77,6 +84,9 @@ describe('native theme selectors', () => {
     await fixture.whenStable();
 
     expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.style.colorScheme).toBe('dark');
+    expect(TestBed.inject(Theme).preference()).toBe('system');
+    expect(localStorage.getItem('visomi.theme')).toBeNull();
     TestBed.resetTestingModule();
     expect(removed).toHaveBeenCalledWith('change', expect.any(Function));
   });

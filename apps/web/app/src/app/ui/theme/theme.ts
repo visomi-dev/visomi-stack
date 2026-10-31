@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, afterNextRender, inject, signal, DestroyRef } from '@angular/core';
+import { Injectable, afterNextRender, afterRenderEffect, computed, inject, signal, DestroyRef } from '@angular/core';
 
 type ThemePreference = 'system' | 'light' | 'dark';
 
@@ -13,12 +13,17 @@ export class Theme {
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly selection = signal<ThemePreference>('system');
+  private readonly systemDark = signal(false);
 
   readonly preference = this.selection.asReadonly();
+  readonly colorScheme = computed(() => {
+    const preference = this.preference();
+
+    return preference === 'system' ? (this.systemDark() ? 'dark' : 'light') : preference;
+  });
+  readonly isDark = computed(() => this.colorScheme() === 'dark');
 
   private readonly storageKey = 'visomi.theme';
-
-  private media?: MediaQueryList;
 
   constructor() {
     afterNextRender(() => {
@@ -37,16 +42,25 @@ export class Theme {
       }
 
       this.selection.set(isPreference(stored) ? stored : 'system');
-      this.media = view.matchMedia('(prefers-color-scheme: dark)');
-      const apply = () => this.apply();
+      const media = view.matchMedia('(prefers-color-scheme: dark)');
+      const updateSystem = () => this.systemDark.set(media.matches);
 
-      this.apply();
-      this.media.addEventListener('change', apply);
-      this.destroyRef.onDestroy(() => this.media?.removeEventListener('change', apply));
+      updateSystem();
+      media.addEventListener('change', updateSystem);
+      this.destroyRef.onDestroy(() => media.removeEventListener('change', updateSystem));
+    });
+
+    afterRenderEffect({
+      write: () => {
+        const root = this.document.documentElement;
+
+        root.classList.toggle('dark', this.isDark());
+        root.style.colorScheme = this.colorScheme();
+      },
     });
   }
 
-  select(value: string): void {
+  setTheme(value: string): void {
     if (!isPreference(value)) {
       return;
     }
@@ -58,13 +72,5 @@ export class Theme {
     } catch {
       // The selected theme remains active for the current page.
     }
-    this.apply();
-  }
-
-  private apply(): void {
-    const preference = this.preference();
-    const dark = preference === 'system' ? (this.media?.matches ?? false) : preference === 'dark';
-
-    this.document.documentElement.classList.toggle('dark', dark);
   }
 }
