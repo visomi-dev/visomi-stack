@@ -47,7 +47,7 @@ nx show projects --json
 
 Use `nx show project <name> --json` to get the full resolved configuration for a project.
 
-**Important**: `project.json` contains only explicit configuration. Read it when inspecting or editing source configuration, but use `nx show project --json` for the resolved target configuration, including inferred targets. If execution is unavailable, report that limitation rather than treating a static file as the complete resolved configuration.
+**Important**: Do NOT read `project.json` directly - it only contains partial configuration. The `nx show project --json` command returns the full resolved config including inferred targets from plugins.
 
 You can read the full project schema at `node_modules/nx/schemas/project-schema.json` to understand nx project configuration options.
 

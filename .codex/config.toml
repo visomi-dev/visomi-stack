@@ -1,10 +1,10 @@
 [mcp_servers.nx-mcp]
-command = "pnpx"
-args = ["nx", "mcp"]
+command = "npx"
+args = [ "nx", "mcp" ]
 
 [mcp_servers.angular-cli]
 command = "pnpx"
-args = ["-y", "@angular/cli", "mcp"]
+args = [ "-y", "@angular/cli", "mcp" ]
 
 [features]
 multi_agent = true
