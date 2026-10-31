@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import { spawn, execFileSync } from 'node:child_process';
-import { createHash, randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
+
+import { bcrypt } from 'hash-wasm';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const engine = process.env.CONTAINER_ENGINE || 'docker';
@@ -16,7 +18,13 @@ const configuration = await readFile(new URL('../../.railway/jaeger.yaml', impor
 const marker = 'SYNTHETIC_PRIVATE_JAEGER_71d3';
 const password = 'synthetic-receiver-password';
 const authorization = `Basic ${Buffer.from(`gateway:${password}`).toString('base64')}`;
-const htpasswd = `gateway:{SHA}${createHash('sha1').update(password).digest('base64')}`;
+const passwordHash = await bcrypt({
+  password,
+  salt: randomBytes(16),
+  costFactor: 12,
+  outputType: 'encoded',
+});
+const htpasswd = `gateway:${passwordHash}`;
 const container = (...args) =>
   execFileSync(engine, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 let child;
@@ -172,6 +180,16 @@ try {
   });
 
   assert.equal(unauthorized.status, 401, 'The receiver must reject unauthenticated exports');
+  const wrongPassword = await fetch(`${receiver}/v1/traces`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Basic ${Buffer.from('gateway:synthetic-incorrect-password').toString('base64')}`,
+    },
+    body: '{}',
+  });
+
+  assert.equal(wrongPassword.status, 401, 'The receiver must reject an incorrect password');
   const gateway = await startGateway(receiver);
 
   for (const [path, status] of [
