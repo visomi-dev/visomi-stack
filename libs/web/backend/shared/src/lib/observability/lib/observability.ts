@@ -23,6 +23,7 @@ import {
   version,
 } from './policy';
 import type { Correlation, Environment, ErrorCode, Operation, Outcome, RuntimeEvent, Service } from './policy';
+import { railwaySpanProcessors } from './railway';
 
 import { createInjector, inject, InjectionToken } from '@visomi-stack/backend-shared';
 
@@ -94,6 +95,9 @@ class ObservabilityRuntime implements Observability {
 
   constructor() {
     const options = inject<ObservabilityOptions>(OBSERVABILITY_OPTIONS);
+    const spanProcessors = options.spanExporter
+      ? [new SimpleSpanProcessor({ exporter: options.spanExporter })]
+      : railwaySpanProcessors(process.env);
 
     this.manager = new AsyncLocalStorageContextManager().enable();
     this.metadata = {
@@ -111,7 +115,7 @@ class ObservabilityRuntime implements Observability {
     this.provider = new TracerProvider({
       resource,
       sampler: new AlwaysOnSampler(),
-      spanProcessors: options.spanExporter ? [new SimpleSpanProcessor({ exporter: options.spanExporter })] : [],
+      spanProcessors,
       spanLimits: { eventCountLimit: 0, linkCountLimit: 0, attributeCountLimit: 8 },
     });
     this.meterProvider = new MeterProvider({ resource, readers: options.metricReader ? [options.metricReader] : [] });

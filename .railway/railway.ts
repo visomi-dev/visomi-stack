@@ -25,6 +25,8 @@ export const watchPatterns = [
 export default defineRailway(() => {
   const gateway = service('web-gateway', {
     source: github('visomi-dev/visomi-stack', { branch: 'main', commitSha: null, checkSuites: true }),
+    // Native edge tracing retains raw paths and client trace IDs independently of the application.
+    tracing: { enabled: false, autoInstrumentation: false },
     build: { builder: 'DOCKERFILE', dockerfilePath: 'Dockerfile', watchPatterns },
     deploy: {
       startCommand: 'node dist/apps/web/gateway/main.js',
@@ -41,6 +43,9 @@ export default defineRailway(() => {
       PORT: '8080',
       NODE_ENV: 'production',
       ASTRO_TELEMETRY_DISABLED: '1',
+      VISOMI_RAILWAY_TRACING: 'false',
+      OTEL_METRICS_EXPORTER: 'none',
+      OTEL_LOGS_EXPORTER: 'none',
     },
   });
 

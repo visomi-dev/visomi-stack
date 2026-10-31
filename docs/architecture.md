@@ -176,7 +176,7 @@ Telemetry uses explicit field and value allowlists:
 Bodies, cookies, tokens, IPs, user agents, customer identifiers (including hashes),
 actual URLs/query strings, SQL containing data, Redis keys, job payloads, and raw
 exception messages/stacks are excluded from every signal. There is no broad
-auto-instrumentation, Morgan, pino-http, automatic resource discovery, or environment-driven exporter setup.
+auto-instrumentation, Morgan, pino-http, or automatic resource discovery.
 
 `captureJobContext()` returns only versioned request/trace/span IDs. Store that
 technical carrier separately from domain payloads in a trusted queue boundary;
@@ -186,10 +186,13 @@ The carrier is correlation metadata, never authentication or authorization. Do n
 populate it from public request bodies. Cross-process tests cover serialization
 and restoration; no queue or worker application has been integrated yet.
 
-Logs default to local JSON output. No external exporter, monitoring account, or
-observability infrastructure is configured. Trusted startup options allow local
-test sinks; any future production exporter requires an output audit and explicit
-configuration. Shutdown is idempotent and bounded (one second by default, at most
+Logs default to local JSON output. Trusted startup options allow local test sinks.
+An explicitly opted-in Railway OTLP/HTTP protobuf exporter uses the same private
+provider and capture policy, with bounded batching and transport timeouts. It
+ignores environment-driven resource attributes and never registers instrumentations.
+The public gateway remains opted out because Railway's edge separately captures
+raw paths and client-provided trace IDs; see the [Railway capture policy](railway.md#observability-and-future-workers).
+Shutdown is idempotent and bounded (one second by default, at most
 five seconds); failures cannot rewrite application results or expose raw errors.
 
 ## Intended direction

@@ -171,21 +171,66 @@ Email verification additionally needs the repository's SMTP configuration.
 
 The gateway emits allowlisted JSON logs to stdout and owns its OpenTelemetry
 providers. It currently supplies neither a production span exporter nor a metric
-reader. OpenTelemetry itself is not a database or a telemetry query backend.
+reader by default. OpenTelemetry itself is not a database or a telemetry query backend.
 
 Railway already provides container metrics, log search, a customizable
 observability dashboard, and native distributed tracing. Its native OTLP receiver
 accepts **traces only**; custom application metrics and OTLP logs require another
 destination. Enabling service tracing provides the OTLP endpoint, protocol and
-required headers on the next deployment. This repository's explicit provider
-will still need a configured exporter; those variables alone do not activate it.
+required headers on the next deployment. The application has an explicit opt-in
+for its official OTLP/HTTP protobuf exporter: `VISOMI_RAILWAY_TRACING=true`.
+It requires Railway's `OTEL_EXPORTER_OTLP_ENDPOINT`,
+`OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf`, and `OTEL_EXPORTER_OTLP_HEADERS`.
+Keep these credentials out of source control, logs, and test reports. Missing or
+unsafe configuration rejects initialization with a fixed error code.
 
-Prefer evaluating Railway's native trace backend before provisioning another
-service. Keep the current capture allowlist and random operation correlations.
-Do not turn on broad auto-instrumentation or send request/customer data, database
-values, Redis keys, job payloads, arbitrary exception messages, or stacks. Review
-the edge and application capture policy before enabling production export.
-This CI/deployment change does not enable tracing or external exporters.
+The exporter runs only on the executable's private provider, with a bounded
+512-span queue, batches of at most 128, a one-second schedule and a 500 ms
+transport timeout. The existing shutdown path flushes it within its deadline.
+No global provider, auto-instrumentation, resource detector, metric exporter or
+log exporter is installed. Explicit test exporters retain precedence.
+
+The application capture policy permits only:
+
+- Span names `http.request` and `job.execute`, with generated random trace/span
+  IDs, timing, kind and status code; no status message, events, links or baggage.
+- Attributes `operation`, controlled `outcome`, and a validated numeric
+  `http.response.status_code` for HTTP completions.
+- Resource fields `service.name` from the fixed service allowlist, validated
+  semantic `service.version`, and controlled `deployment.environment.name`.
+- The fixed instrumentation scope `visomi-stack.operational` and validated version.
+
+Client request IDs, `traceparent`, `tracestate` and baggage are ignored. In
+particular, application traces intentionally do not join Railway edge traces:
+an external identifier is not trusted merely because its syntax is valid.
+`OTEL_RESOURCE_ATTRIBUTES`, `OTEL_SERVICE_NAME` and `OTEL_SERVICE_VERSION` do not
+override this capture policy. Railway adds its own deployment attribution on receipt.
+
+**Public-service activation is blocked by the native edge capture policy.**
+Railway's Traced switch also records raw request paths at the edge and honors
+client-supplied trace IDs. Application filtering cannot remove that separately
+generated telemetry, and the documented switches do not offer edge redaction or
+an application-only mode. Therefore the public gateway's native tracing and
+application opt-in remain disabled in IaC and production. Do not enable either
+switch for the public gateway until Railway provides compatible edge controls
+or the capture policy is explicitly revised. Do not enable automatic instrumentation.
+
+The native receiver can be tested safely on a private test service with no public
+domains, databases, mail or customer traffic. Deploy the PR branch there, enable
+native tracing with automatic instrumentation off, opt in to application export,
+and generate synthetic localhost HTTP traffic. Inspect the service spans in
+Railway, including resources, events, links and status messages. Keep production
+on `main`. A successful private test proves receiver compatibility, not compliance
+of Railway's public edge. Run the library tests for repeatable wire-level checks:
+
+```sh
+pnpm nx run web-backend-shared:test
+```
+
+These tests exercise the real protobuf exporter against a local OTLP receiver,
+including authentication, shutdown flush, receiver errors, malicious synthetic
+headers/body/path/query/error material, ignored resource environment variables,
+and fresh correlation IDs. They inspect actual request bytes and the SDK spans.
 
 If a separate collector is needed, the official Docker images are
 `otel/opentelemetry-collector` and `otel/opentelemetry-collector-contrib`. Pin a
