@@ -52,6 +52,7 @@ describe('authentication HTTP boundary', () => {
     authErrorHandler(error, {} as Request, response, next);
     expect(next.mock.calls[0][0]).toBeInstanceOf(HttpError);
     expect(next.mock.calls[0][0]).toMatchObject({ status, code });
+
     if (HttpError.is(error)) {
       expect(next).toHaveBeenCalledExactlyOnceWith(error);
     }

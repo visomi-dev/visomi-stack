@@ -37,6 +37,7 @@ async function enroll(request: APIRequestContext, token: string, device = authen
   let result = await verify.json();
 
   expect(verify.status()).toBe(201);
+
   if (result.access === 'unverified') {
     const code = await readMailCode(email);
     const verified = await request.post('/auth/email/verify', {

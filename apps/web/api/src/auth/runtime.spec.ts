@@ -131,6 +131,7 @@ describe('explicit session and Passport initialization', () => {
       const where = vi.fn();
 
       vi.mocked(f.database.select).mockReturnValue({ from: () => ({ where }) } as never);
+
       if (state === 'unavailable') {
         where.mockRejectedValue(new Error('SYNTHETIC_PRIVATE_DATABASE_ERROR'));
       } else {
@@ -217,6 +218,7 @@ it('exposes a full-session guard that rejects anonymous and unverified sessions'
     const next = vi.fn();
 
     runtime.requireVerifiedSession({ user } as Request, {} as Response, next);
+
     if (user?.level === 'full') {
       expect(next).toHaveBeenCalledWith();
     } else {

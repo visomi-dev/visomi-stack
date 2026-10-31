@@ -252,6 +252,7 @@ export default [
         { blankLine: 'always', prev: '*', next: awaitedStatement },
         { blankLine: 'always', prev: awaitedStatement, next: '*' },
         { blankLine: 'always', prev: '*', next: ['return', 'throw'] },
+        { blankLine: 'always', prev: '*', next: 'if' },
         { blankLine: 'always', prev: 'if', next: '*' },
         { blankLine: 'always', prev: '*', next: 'try' },
       ],

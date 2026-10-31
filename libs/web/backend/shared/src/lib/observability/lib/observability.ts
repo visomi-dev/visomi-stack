@@ -332,6 +332,7 @@ class ObservabilityRuntime implements Observability {
           operation,
         ),
       );
+
       if (operation !== 'frontend.error') {
         isolate(() => (operation === 'http.request' ? this.httpCount : this.jobCount).add(1, attributes, ROOT_CONTEXT));
         isolate(() =>

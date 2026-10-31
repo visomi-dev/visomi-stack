@@ -93,6 +93,7 @@ export class Factors {
   async setup(sid: string, current: Express.User) {
     requireFull(current);
     requireFresh(current, this.config);
+
     if (!this.config.totpKey) {
       throw new HttpError(503, 'totp_unavailable');
     }

@@ -282,6 +282,7 @@ try {
         assert.ok(['http.request', 'job.execute', 'frontend.error'].includes(span.name));
         assert.equal(span.events?.length ?? 0, 0, 'Application spans must not carry events or exceptions');
         assert.equal(span.links?.length ?? 0, 0);
+
         if (span.name === 'frontend.error') {
           verifiedApplications.add(
             span.attributes.find((attribute) => attribute.key === 'frontend.application').value.stringValue,

@@ -86,6 +86,7 @@ export function authenticationFixture() {
     }
 
     transport?.close();
+
     if (smtp) {
       await new Promise<void>((resolve) => smtp.close(resolve));
     }

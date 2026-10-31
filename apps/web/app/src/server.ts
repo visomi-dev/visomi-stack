@@ -25,6 +25,7 @@ export function createApp(
   const app = express();
 
   app.disable('x-powered-by');
+
   if (options.observability) {
     app.use(httpObservability(options.observability));
   }
@@ -91,6 +92,7 @@ export function createApp(
       })
       .catch(next);
   });
+
   if ((options.errorMode ?? 'managed') === 'managed') {
     app.use(httpErrorHandler);
   }

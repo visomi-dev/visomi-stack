@@ -56,6 +56,7 @@ export function createGatewayApp(options: {
 
     next();
   });
+
   if (options.browserTelemetry) {
     app.use(options.browserTelemetry.context);
     app.use('/telemetry', options.browserTelemetry.router);
@@ -81,6 +82,7 @@ export function createGatewayApp(options: {
       observability: options.observability,
     }),
   );
+
   if (options.application) {
     const application = options.application.createApp({
       observability: options.observability,
@@ -100,12 +102,14 @@ export function createGatewayApp(options: {
 
   // Public pages must never turn missing API or future application routes into site responses.
   app.use(['/api', '/app'], (_request, response) => response.status(404).json({ error: 'not_found' }));
+
   if (options.site) {
     app.use(serveStatic(options.site.clientDirectory, { index: false, redirect: false }));
     app.use(options.site.handler);
   }
 
   app.use((_request, response) => response.status(404).json({ error: 'not_found' }));
+
   if ((options.errorMode ?? 'managed') === 'managed') {
     app.use(httpErrorHandler);
   }

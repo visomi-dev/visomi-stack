@@ -255,6 +255,7 @@ export function createBrowserReporter(
     },
     stop(): void {
       stopped = true;
+
       if (options.globalErrors !== false) {
         browser.removeEventListener('error', onError);
         browser.removeEventListener('unhandledrejection', onRejection);

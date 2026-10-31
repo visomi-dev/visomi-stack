@@ -185,6 +185,7 @@ describe('gateway executable ownership', () => {
 
   it.each([false, true])('does not fail startup if optional Nx readiness fails: %s', async (fails) => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/synthetic/ready.sock');
+
     if (fails) {
       boundary.ready.mockImplementation(() => {
         throw new Error('SYNTHETIC_OPTIONAL_READY');
@@ -417,6 +418,7 @@ it.each([false, true])(
     vi.stubEnv('GOOGLE_AUTH_CLIENT_ID', 'synthetic-client');
     vi.stubEnv('AUTH_TOTP_ENCRYPTION_KEY', 'synthetic-key');
     boundary.smtpConfig.mockReturnValue({ host: 'smtp.example.test' });
+
     if (fails) {
       boundary.smtp.close.mockImplementation(() => {
         throw new Error('synthetic_smtp_close_failure');

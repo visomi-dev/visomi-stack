@@ -72,6 +72,7 @@ export class Google {
     } catch {
       throw new AuthHttpError(401, 'google_token_invalid');
     }
+
     if (
       !payload ||
       !['accounts.google.com', 'https://accounts.google.com'].includes(payload.iss) ||
@@ -194,6 +195,7 @@ export class Google {
 
       if (candidate.purpose !== 'google_login') {
         requireFull(current);
+
         if (candidate.purpose === 'google_link') {
           requireFresh(current, this.config);
         }
@@ -201,6 +203,7 @@ export class Google {
         const result1 = await lockIdentity(tx, sid, current!);
 
         user = result1;
+
         if (
           candidate.userId !== user.id ||
           candidate.authVersion !== user.authVersion ||
@@ -230,6 +233,7 @@ export class Google {
             .for('update');
 
           [user] = result3;
+
           if (!user) {
             const result4 = await tx
               .select()
