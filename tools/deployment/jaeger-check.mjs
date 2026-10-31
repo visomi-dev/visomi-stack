@@ -157,7 +157,7 @@ try {
   );
   containerCreated = true;
   const receiver = `http://${container('port', name, '4318/tcp')}`;
-  const query = `http://${container('port', name, '16686/tcp')}`;
+  let query = `http://${container('port', name, '16686/tcp')}`;
 
   await eventually(async () => {
     const response = await fetch(`${query}/api/v3/services`);
@@ -249,6 +249,9 @@ try {
   await unavailable.stop(false);
 
   container('start', name);
+
+  // Docker may assign a new ephemeral host port when the same container starts again.
+  query = `http://${container('port', name, '16686/tcp')}`;
 
   await eventually(() => readTrace(logs[0].traceId));
 
