@@ -1,10 +1,10 @@
 import { isPlatformBrowser, DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { DestroyRef, ErrorHandler, Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { DestroyRef, ErrorHandler, Service, PLATFORM_ID, inject } from '@angular/core';
 
 import { createBrowserReporter } from '@visomi-stack/web-shared-observability';
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class BrowserErrors implements ErrorHandler {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);

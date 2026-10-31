@@ -30,6 +30,8 @@ export default [
   {
     files: ['**/*.ts'],
     rules: {
+      '@angular-eslint/prefer-service-decorator': 'error',
+      '@angular-eslint/prefer-inject': 'error',
       '@angular-eslint/directive-selector': [
         'error',
         {
