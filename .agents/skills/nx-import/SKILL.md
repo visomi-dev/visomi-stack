@@ -85,7 +85,7 @@ Inferred targets (via Nx plugins) resolve config relative to project root — no
 
 ### Plugin Detection
 
-- **Whole-repo import**: inspect the plugins suggested by `nx import`; install only those needed for the authorized import and compatible with the destination.
+- **Whole-repo import**: `nx import` detects and offers to install plugins. Accept them.
 - **Subdirectory import**: Plugins NOT auto-detected. Manually add with `npx nx add @nx/PLUGIN`. Check `include`/`exclude` patterns — defaults won't match alternate directories (e.g. `apps-beta/`).
 - Run `npx nx reset` after any plugin config changes.
 
@@ -108,15 +108,21 @@ Subdirectory import doesn't bring the source's root `eslint.config.mjs`, but pro
 
 **Fix order**:
 
-1. Install only missing ESLint dependencies using versions verified against the destination manifest and plugin peer dependencies; preserve the existing installed major.
+1. Install ESLint deps first: `pnpm add -wD eslint@^9 @nx/eslint-plugin typescript-eslint` (plus framework-specific plugins)
 2. Create root `eslint.config.mjs` (copy from source or create with `@nx/eslint-plugin` base rules)
 3. Then `npx nx add @nx/eslint` to register the plugin in `nx.json`
 
 Install `typescript-eslint` explicitly — pnpm's strict hoisting won't auto-resolve this transitive dep of `@nx/eslint-plugin`.
 
-### ESLint Version Compatibility
+### ESLint Version Pinning (Critical)
 
-Inspect the destination manifest, lockfile, Nx version, plugin peer dependencies, and existing lint configuration. Preserve the installed toolchain unless the import requires a verified compatibility change. Do not pin ESLint to a historical major or add overrides based on this guide alone. Check version-matched documentation and discuss any downgrade or migration before changing dependencies.
+**Pin ESLint to v9** (`eslint@^9.0.0`). ESLint 10 breaks `@nx/eslint` and many plugins with cryptic errors like `Cannot read properties of undefined (reading 'version')`.
+
+`@nx/eslint` may peer-depend on ESLint 8, causing the wrong version to resolve. If lint fails with `Cannot read properties of undefined (reading 'allow')`, add `pnpm.overrides`:
+
+```json
+{ "pnpm": { "overrides": { "eslint": "^9.0.0" } } }
+```
 
 ### Dependency Version Conflicts
 
