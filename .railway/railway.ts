@@ -2,7 +2,7 @@ import { defineRailway, github, project, service } from 'railway/iac';
 
 export default defineRailway(() => {
   const gateway = service('web-gateway', {
-    source: github('visomi-dev/visomi-stack', { branch: 'main', checkSuites: true }),
+    source: github('visomi-dev/visomi-stack', { branch: 'main', commitSha: null, checkSuites: true }),
     build: { builder: 'DOCKERFILE', dockerfilePath: 'Dockerfile' },
     deploy: {
       startCommand: 'node dist/apps/web/gateway/main.js',

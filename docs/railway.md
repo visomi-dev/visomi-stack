@@ -13,6 +13,11 @@ remains an independent application and `/app/*` returns 404 through this gateway
 - Source: `visomi-dev/visomi-stack`, branch `main`.
 - Public URL: <https://web-gateway-production-fa93.up.railway.app>.
 
+The bootstrap deployment is pinned to verified commit `de9d09d` while CLI
+authentication and the GitHub infrastructure token are pending. Applying the
+infrastructure file clears that pin and enables Wait for CI before following
+`main`. Keep the deployment PR in draft until those steps are complete.
+
 The initial public website does not need a database, Redis, object storage, or
 mail credentials. Without `DATABASE_URL`, authentication fails closed with 503.
 No customer data or secrets are required for the initial deployment. Custom
