@@ -1,9 +1,12 @@
 autoInstallPeers: true
+packages:
+  - apps/web/edge
 allowBuilds:
   nx: true
   unrs-resolver: true
   '@parcel/watcher': false
   esbuild: true
+  workerd: true
   lmdb: false
   msgpackr-extract: false
 minimumReleaseAgeExclude:

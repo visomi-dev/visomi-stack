@@ -192,8 +192,8 @@ Logs default to local JSON output. Trusted startup options allow local test sink
 An explicitly opted-in OTLP/HTTP protobuf exporter uses the same private
 provider and capture policy, with bounded batching and transport timeouts. It
 ignores environment-driven resource attributes and never registers instrumentations.
-The public gateway exports directly to private Jaeger while Railway's native
-edge tracing stays disabled. See the [capture policy](railway.md#observability-and-future-workers).
+Optional span export uses an authenticated private OTLP receiver. Platform-managed
+telemetry must independently satisfy the [capture policy](deployment.md#observability-and-future-workers).
 Shutdown is idempotent and bounded (one second by default, at most
 five seconds); failures cannot rewrite application results or expose raw errors.
 
@@ -273,5 +273,5 @@ against immutable build assets, and exports through the private OTLP exporter.
 Signed, expiring references can correlate an observed failed API request with a
 browser error; arbitrary incoming client trace context is never trusted. Source
 maps remain private build artifacts and can be resolved locally using the
-operator tool described in `docs/railway.md`. The complete capture and delivery
-limits are documented there.
+operator tool described in [Deployment and telemetry](deployment.md#browser-error-reporting).
+The complete capture and delivery limits are documented there.

@@ -10,10 +10,11 @@ HTTP adapters or use the current runtime within the same process.
 The owning runtime can opt into the official OTLP/HTTP protobuf exporter with
 `VISOMI_OTLP_TRACING=true` and the `OTEL_EXPORTER_OTLP_*` receiver variables.
 The flag controls application export independently of the hosting provider.
-Production uses the authenticated private Jaeger receiver; the public gateway's native tracing and automatic instrumentation stay disabled.
+Export requires an authenticated private receiver. Platform-managed telemetry
+must independently satisfy the capture policy.
 Only the facade's allowlisted spans are exported, without global instrumentation
 or resource discovery. See the
-[Railway guide](../../../../docs/railway.md#observability-and-future-workers)
+[telemetry guide](../../../../docs/deployment.md#observability-and-future-workers)
 for configuration, capture boundaries, receiver verification and rollback.
 
 `src/lib/http/` owns `HttpError`, `AuthHttpError`, `httpErrorHandler` and
