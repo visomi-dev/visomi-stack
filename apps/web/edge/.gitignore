@@ -1,0 +1,4 @@
+.cloudflare/
+.wrangler/
+.env*
+.dev.vars*

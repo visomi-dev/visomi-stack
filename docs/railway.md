@@ -26,6 +26,13 @@ Railway has a valid certificate; its DNS status may report a mismatch while
 Cloudflare proxies the CNAME. Preserve the existing Railway-generated domain
 for diagnostics. Authentication infrastructure remains a separate step.
 
+The Cloudflare Worker in `apps/web/edge` validates percent encoding before
+Railway's proxy can turn malformed paths into 502 responses. It returns 400 for
+invalid paths and forwards valid requests unchanged. It has no request logging
+or tracing. Its deployment, request-quota behavior and rollback are documented
+in [the edge project](../apps/web/edge/README.md). Railway deployments do not
+deploy this Worker.
+
 ## Build and runtime
 
 The repository-root `Dockerfile` defaults to `APP_NAME=web-gateway`. Its Nx build

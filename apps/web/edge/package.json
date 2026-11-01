@@ -1,0 +1,10 @@
+{
+  "name": "@visomi-stack/web-edge",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "2.0.0-beta.v.8",
+    "cf": "0.15.0"
+  }
+}

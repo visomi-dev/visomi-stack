@@ -1,0 +1,30 @@
+{
+  "name": "web-edge",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/web/edge/src",
+  "tags": ["scope:web-backend"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "outputs": ["{projectRoot}/.cloudflare"],
+      "options": { "cwd": "apps/web/edge", "command": "cf build" }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc -p apps/web/edge/tsconfig.json --noEmit" }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "cwd": "apps/web/edge", "command": "cf deploy" }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "node apps/web/edge/smoke.mts" }
+    }
+  }
+}
