@@ -24,6 +24,6 @@ Reporting permits are refreshed on demand after four minutes. Transport failures
 do not generate further telemetry or change application error propagation.
 
 The server intake and deployment instructions are documented in
-[Railway operations](../../../../docs/railway.md#browser-error-reporting).
+[the telemetry guide](../../../../docs/deployment.md#browser-error-reporting).
 
 Run `pnpm nx test web-shared-observability` for capture and transport tests.

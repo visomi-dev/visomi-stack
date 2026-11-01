@@ -1,7 +1,7 @@
 # Production path guard
 
-This Cloudflare Worker runs on `stack.visomi.dev/*` before the existing Railway
-origin. Railway's proxy can return 502 for malformed percent escapes before the
+This Cloudflare Worker runs on `stack.visomi.dev/*` before the application
+origin. An upstream proxy can return 502 for malformed percent escapes before the
 gateway receives the request. The Worker returns a fixed, uncached 400 response
 for invalid path encoding, including invalid UTF-8.
 
@@ -45,8 +45,8 @@ After each deployment, reapply the route's fail-open quota setting as described
 below, then run `pnpm nx run web-edge:smoke`.
 
 The project uses the Cloudflare CLI and its Vite plugin. The Worker is deployed
-separately from Railway; merging changes does not automatically deploy it.
-Keep the existing proxied DNS record pointing to Railway. Use a Worker route,
+separately from the application; merging changes does not automatically deploy it.
+Keep the existing proxied DNS record pointing to the configured application origin. Use a Worker route,
 not a Custom Domain that would replace that origin.
 
 Worker logs, invocation logs, traces, Logpush, preview URLs and workers.dev are
@@ -63,8 +63,8 @@ strict JSON contract for the Worker itself.
 
 Workers Free allows 100,000 requests per day across the account. The production
 route has `request_limit_fail_open: true`: when the quota is exhausted, requests
-bypass this Worker and continue to Railway. The gateway still validates paths,
-but malformed requests rejected by Railway's proxy may return 502 again.
+bypass this Worker and continue to the application origin. The gateway still validates paths,
+but malformed requests rejected by the upstream proxy may return 502 again.
 
 The current `cf` route configuration does not expose that quota setting, and
 `cf deploy` recreates the route with fail-open disabled. After every deployment,
@@ -86,7 +86,7 @@ on redeployment. No account upgrade or change to Cloudflare's DDoS protection is
 required.
 
 To roll back the filter, remove only the `stack.visomi.dev/*` Worker route in
-Cloudflare. Keep DNS and the Railway gateway unchanged.
+Cloudflare. Keep DNS and the application origin unchanged.
 
 References: [Cloudflare CLI](https://developers.cloudflare.com/cf/get-started/first-worker/),
 [Worker routes](https://developers.cloudflare.com/workers/configuration/routing/routes/),
