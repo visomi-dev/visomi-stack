@@ -1,7 +1,6 @@
 import { defineConfig, triggers } from 'cf/config';
 
 export default defineConfig({
-  accountId: 'e9f6d4b10f8c3150666f1322dcd50ac5',
   worker: {
     name: 'stack-malformed-path-guard',
     compatibilityDate: '2026-11-01',

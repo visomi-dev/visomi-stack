@@ -18,7 +18,23 @@ From the repository root, after `pnpm install --frozen-lockfile`:
 pnpm nx run-many -p web-edge -t lint,typecheck,test,build
 ```
 
-Authenticate with `cf auth login` for the account in `cloudflare.config.ts`, then:
+Copy `apps/web/edge/.env.example` to `apps/web/edge/.env` and fill in your account
+and zone IDs. The local `.env` is ignored by Git. `cf` reads
+`CLOUDFLARE_ACCOUNT_ID` natively, so the shared configuration has no account ID.
+`CLOUDFLARE_ZONE_ID` is available for the manual route update below; the Worker
+route itself uses the public zone name. These are CLI settings, not Worker
+runtime bindings.
+
+Export the local values before using the CLI (the pinned CLI version does not
+load `.env` automatically for every command):
+
+```sh
+set -a
+. apps/web/edge/.env
+set +a
+```
+
+Authenticate with `cf auth login` for that account, then:
 
 ```sh
 pnpm nx run web-edge:deploy --dry-run
@@ -53,7 +69,7 @@ but malformed requests rejected by Railway's proxy may return 502 again.
 The current `cf` route configuration does not expose that quota setting, and
 `cf deploy` recreates the route with fail-open disabled. After every deployment,
 use the [Worker Routes API](https://developers.cloudflare.com/api/resources/workers/subresources/routes/)
-to list routes in zone `9e8cdf0c565c663273d64b53266726bd`, find the current ID for
+to list routes in the zone selected by `CLOUDFLARE_ZONE_ID`, find the current ID for
 `stack.visomi.dev/*`, and update that route with this body:
 
 ```json

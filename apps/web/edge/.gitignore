@@ -1,4 +1,5 @@
 .cloudflare/
 .wrangler/
 .env*
+!.env.example
 .dev.vars*
