@@ -12,15 +12,7 @@ import { Google } from './google';
   selector: 'app-google-button',
   imports: [Button, AuthFeedback],
   providers: [AuthHttp, Google],
-  template: `<div class="space-y-3" [attr.inert]="disabled() ? '' : null">
-    <div #button class="flex min-h-11 justify-center"></div>
-    <app-auth-feedback [action]="action" />
-    @if (action.error()) {
-      <button appUI variant="secondary" [disabled]="action.busy()" (click)="render()" i18n="@@authGoogleRetry">
-        Try Google again
-      </button>
-    }
-  </div>`,
+  templateUrl: './google-button.html',
 })
 export class GoogleButton {
   private readonly google = inject(Google);

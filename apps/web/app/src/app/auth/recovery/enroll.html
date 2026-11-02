@@ -1,0 +1,69 @@
+<section class="space-y-6">
+  <h1 appUI i18n="@@authEnrollTitle">Set up access again</h1>
+  <p appUI tone="muted" i18n="@@authEnrollDescription">
+    Your recovery proof allows you to set up a replacement sign-in method. Complete its verification before entering
+    your account.
+  </p>
+  @if (pending()) {
+    <p appUI tone="muted" i18n="@@authReplacementPasswordHint">
+      Confirm the replacement password with the required second factor. You can use a backup code instead of an
+      authenticator code.
+    </p>
+    <app-code-entry [busy]="action.busy()" [backup]="backup()" (confirmed)="completePassword($event)" />
+    @if (pending()?.factor === 'email') {
+      <app-resend-code />
+    }
+    <button appUI variant="secondary" [disabled]="action.busy()" (click)="restart()" i18n="@@authStartAgain">
+      Start again
+    </button>
+    @if (pending()?.factor === 'totp') {
+      <button appUI variant="secondary" (click)="backup.set(!backup())" i18n="@@authSwitchFactor">
+        Switch between authenticator and backup code
+      </button>
+    }
+  } @else if (registered()) {
+    <p appUI tone="muted" i18n="@@authReplacementPasskeyHint">
+      Your replacement passkey is created. Sign in with that passkey to finish recovery.
+    </p>
+    <button appUI class="w-full" [disabled]="action.busy()" (click)="provePasskey()" i18n="@@authVerifyPasskey">
+      Verify replacement passkey
+    </button>
+  } @else {
+    <button appUI class="w-full" [disabled]="action.busy()" (click)="passkey()" i18n="@@authCreateReplacementPasskey">
+      Create a replacement passkey
+    </button>
+    <details class="space-y-4">
+      <summary class="cursor-pointer text-sm ui-focus-ring" i18n="@@authUsePassword">Use a password</summary>
+      <form novalidate class="space-y-4" (submit)="password($event)">
+        <app-field
+          #field="appField"
+          control-id="replacement-password"
+          [label]="passwordLabel"
+          [description]="policy"
+          [error]="fields.password().errors()[0]?.message ?? ''"
+        >
+          <input
+            appUI
+            id="replacement-password"
+            [type]="visible() ? 'text' : 'password'"
+            autocomplete="new-password"
+            [formField]="fields.password"
+            [attr.aria-describedby]="field.describedBy()"
+          />
+          <button
+            type="button"
+            class="mt-2 text-sm ui-focus-ring"
+            (click)="visible.set(!visible())"
+            [attr.aria-pressed]="visible()"
+            i18n="@@authTogglePassword"
+          >
+            Show or hide password
+          </button>
+        </app-field>
+        <button appUI type="submit" [disabled]="action.busy()" i18n="@@authSavePassword">Save password</button>
+      </form>
+    </details>
+  }
+  <app-auth-feedback [action]="action" />
+  <button appUI variant="secondary" [disabled]="action.busy()" (click)="logout()" i18n="@@authSignOut">Sign out</button>
+</section>

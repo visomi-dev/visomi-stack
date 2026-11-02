@@ -1,4 +1,4 @@
-import { DOCUMENT } from '@angular/common';
+import { Location } from '@angular/common';
 import { Service, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
@@ -9,7 +9,7 @@ import { destination, safeReturnTo } from '../session/navigation';
 @Service()
 export class AuthNavigation {
   private readonly router = inject(Router);
-  private readonly document = inject(DOCUMENT);
+  private readonly location = inject(Location);
   private readonly session = inject(Session);
 
   readonly notificationFailed = signal(false);
@@ -17,10 +17,7 @@ export class AuthNavigation {
   returnPath(): string | null {
     const value = this.router.parseUrl(this.router.url).queryParams['returnTo'];
 
-    return safeReturnTo(
-      typeof value === 'string' ? value : null,
-      this.document.querySelector('base')?.getAttribute('href') ?? '/app/en/',
-    );
+    return safeReturnTo(typeof value === 'string' ? value : null, this.location.prepareExternalUrl('/'));
   }
 
   returnQuery(): { returnTo?: string } {

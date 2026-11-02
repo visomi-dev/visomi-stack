@@ -14,55 +14,7 @@ import { Devices, type DeviceStatus } from './devices';
   selector: 'app-device-review',
   imports: [Button, Heading, Text, Link, Field, Input, FormField, RouterLink, AuthFeedback],
   providers: [AuthHttp, Devices],
-  template: `<section class="max-w-lg space-y-6">
-    <h1 appUI i18n="@@authReviewDeviceTitle">Approve another device</h1>
-    <p appUI tone="muted" i18n="@@authReviewDeviceWarning">
-      Only approve a request you started. Approval allows a replacement sign-in method to be created for your account.
-    </p>
-    @if (status() === 'pending') {
-      <form
-        novalidate
-        class="space-y-5"
-        [attr.data-submitted]="attempted() ? '' : null"
-        (submit)="decide($event, true)"
-      >
-        <app-field
-          #field="appField"
-          control-id="device-pairing-code"
-          [label]="codeLabel"
-          [error]="fields.code().errors()[0]?.message ?? ''"
-          ><input
-            appUI
-            id="device-pairing-code"
-            [formField]="fields.code"
-            inputmode="numeric"
-            autocomplete="off"
-            placeholder=" "
-            [attr.aria-describedby]="field.describedBy()"
-            [attr.aria-invalid]="fields.code().touched() && fields.code().invalid()"
-        /></app-field>
-        <div class="flex flex-wrap gap-3">
-          <button appUI type="submit" [disabled]="action.busy()" i18n="@@authApproveDevice">Approve request</button
-          ><button
-            appUI
-            variant="danger"
-            [disabled]="action.busy()"
-            (click)="decide($event, false)"
-            i18n="@@authDenyDevice"
-          >
-            Deny request
-          </button>
-        </div>
-      </form>
-    } @else if (status()) {
-      <p role="status" i18n="@@authDeviceReviewComplete">This request is no longer waiting for approval.</p>
-    } @else if (!requestId) {
-      <p role="status" i18n="@@authDeviceLinkInvalid">Open the review link shown on the requesting device.</p>
-    }
-    <app-auth-feedback [action]="action" /><a appUI routerLink="/security" i18n="@@authBackSecurity"
-      >Back to security</a
-    >
-  </section>`,
+  templateUrl: './review.html',
 })
 export class DeviceReview {
   private readonly api = inject(Devices);

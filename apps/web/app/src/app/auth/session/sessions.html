@@ -1,0 +1,55 @@
+<section class="max-w-2xl space-y-6">
+  <h1 appUI i18n="@@authSessions">Sessions</h1>
+  <p appUI tone="muted" i18n="@@authSessionsPrivacy">
+    Review when sessions started and how they signed in. Device details and locations are not collected.
+  </p>
+  <button
+    appUI
+    variant="secondary"
+    [disabled]="action.busy()"
+    (click)="confirm.set('others')"
+    i18n="@@authEndOtherSessions"
+  >
+    End other sessions
+  </button>
+  @if (confirm() === 'others') {
+    <p role="status" i18n="@@authEndOtherConfirm">End every other session? They will need to sign in again.</p>
+    <button appUI variant="danger" [disabled]="action.busy()" (click)="revokeOthers()" i18n="@@authConfirm">
+      Confirm
+    </button>
+    <button appUI variant="secondary" (click)="confirm.set(null)" i18n="@@authCancel">Cancel</button>
+  }
+  <app-auth-feedback [action]="action" />
+  @for (entry of entries(); track entry.id) {
+    <section appUI="card">
+      <h2 class="font-semibold">{{ entry.current ? currentLabel : otherLabel }}</h2>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-5 gap-y-2 text-sm">
+        <dt i18n="@@authMethod">Method</dt>
+        <dd>{{ methodLabel(entry.method) }}</dd>
+        <dt i18n="@@authStarted">Started</dt>
+        <dd>{{ date(entry.createdAt) }}</dd>
+        <dt i18n="@@authExpires">Expires</dt>
+        <dd>{{ date(entry.expiresAt) }}</dd>
+      </dl>
+      <button
+        appUI
+        variant="secondary"
+        [disabled]="action.busy()"
+        (click)="confirm.set(entry.id)"
+        i18n="@@authEndSession"
+      >
+        End session
+      </button>
+      @if (confirm() === entry.id) {
+        <p role="status" i18n="@@authEndSessionConfirm">
+          End this session? If it is your current session, you will be signed out.
+        </p>
+        <button appUI variant="danger" [disabled]="action.busy()" (click)="revoke(entry.id)" i18n="@@authConfirm">
+          Confirm
+        </button>
+        <button appUI variant="secondary" (click)="confirm.set(null)" i18n="@@authCancel">Cancel</button>
+      }
+    </section>
+  }
+  <a appUI routerLink="/security" i18n="@@authBackSecurity">Back to security</a>
+</section>

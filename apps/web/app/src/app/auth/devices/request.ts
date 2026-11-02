@@ -1,6 +1,6 @@
-import { DOCUMENT } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { DOCUMENT, Location } from '@angular/common';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
 import { Button, Heading, Text, Link } from '../../ui';
 import { AuthHttp } from '../shared/http';
@@ -15,60 +15,38 @@ import { Devices, type DeviceRequest, type DeviceStatus } from './devices';
   selector: 'app-device-approval',
   imports: [Button, Heading, Text, Link, RouterLink, AuthFeedback, EmailEntry],
   providers: [AuthHttp, Devices],
-  template: `<section class="space-y-6">
-    <h1 appUI i18n="@@authDeviceApprovalTitle">Use your signed-in device</h1>
-    @if (request(); as pending) {
-      <p appUI tone="muted" i18n="@@authDeviceApprovalInstructions">
-        On a device where you are already signed in, open this link and enter the pairing code shown here. Only approve
-        a request you started.
-      </p>
-      <a appUI class="block text-sm break-all" [href]="reviewLink()" target="_blank" rel="noopener noreferrer">{{
-        reviewLink()
-      }}</a>
-      <p class="text-sm" i18n="@@authPairingCode">Pairing code</p>
-      <p class="font-mono text-3xl font-semibold tracking-widest">{{ pending.userCode }}</p>
-      <p role="status">{{ statusText() }}</p>
-      @if (status() === 'approved') {
-        <button appUI class="w-full" [disabled]="action.busy()" (click)="consume()" i18n="@@authContinueRecovery">
-          Continue recovery
-        </button>
-      }
-      @if (status() === 'pending' || status() === 'approved') {
-        <button
-          appUI
-          variant="secondary"
-          class="w-full"
-          [disabled]="action.busy()"
-          (click)="cancel()"
-          i18n="@@authCancelRequest"
-        >
-          Cancel request
-        </button>
-      } @else {
-        <button appUI variant="secondary" class="w-full" (click)="restart()" i18n="@@authStartAgain">
-          Start again
-        </button>
-      }
-    } @else {
-      <p appUI tone="muted" i18n="@@authDeviceApprovalDescription">
-        Request permission to set up a new sign-in method. Approval comes from a different session where you are already
-        signed in.
-      </p>
-      <app-email-entry [busy]="action.busy()" (confirmed)="start($event)" />
-    }
-    <app-auth-feedback [action]="action" /><a appUI routerLink="/auth/recovery" i18n="@@authBackRecovery"
-      >Back to recovery</a
-    >
-  </section>`,
+  templateUrl: './request.html',
 })
 export class DeviceApproval {
   private readonly api = inject(Devices);
   private readonly navigation = inject(AuthNavigation);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private readonly location = inject(Location);
 
   readonly request = signal<DeviceRequest | null>(null);
   readonly status = signal<DeviceStatus['status']>('pending');
+
+  readonly reviewRoute = computed(() => {
+    const pending = this.request();
+
+    return pending
+      ? this.router.createUrlTree(['/security/devices/review'], { queryParams: { requestId: pending.requestId } })
+      : null;
+  });
+  readonly reviewLink = computed(() => {
+    const route = this.reviewRoute();
+
+    if (!route) {
+      return '';
+    }
+
+    const path = this.location.prepareExternalUrl(this.router.serializeUrl(route));
+    const origin = this.document.location?.origin;
+
+    return origin ? new URL(path, origin).href : path;
+  });
 
   readonly action = new Action();
 
@@ -93,13 +71,6 @@ export class DeviceApproval {
 
       this.document.removeEventListener('visibilitychange', visibility);
     });
-  }
-
-  reviewLink(): string {
-    const origin = this.document.location?.origin ?? '';
-    const base = this.document.querySelector('base')?.getAttribute('href') ?? '/app/en/';
-
-    return origin + base + 'security/devices/review?requestId=' + encodeURIComponent(this.request()?.requestId ?? '');
   }
 
   statusText(): string {

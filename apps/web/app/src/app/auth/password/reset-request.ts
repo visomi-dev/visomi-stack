@@ -14,18 +14,7 @@ import { Passwords } from './passwords';
   selector: 'app-reset-request',
   imports: [Heading, Text, Link, RouterLink, AuthFeedback, EmailEntry],
   providers: [AuthHttp, Passwords],
-  template: `<section class="space-y-6">
-    <h1 appUI i18n="@@authResetRequestTitle">Reset your password</h1>
-    <p appUI tone="muted" i18n="@@authRecoveryUniform">
-      If this email can be used for recovery, we will send a code. Additional verification may be required.
-    </p>
-    <app-email-entry [busy]="action.busy()" (confirmed)="request($event)" /><app-auth-feedback [action]="action" /><a
-      appUI
-      routerLink="/auth/sign-in/password"
-      i18n="@@authBackSignIn"
-      >Back to sign in</a
-    >
-  </section>`,
+  templateUrl: './reset-request.html',
 })
 export class ResetRequest {
   private readonly passwords = inject(Passwords);

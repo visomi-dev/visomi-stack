@@ -12,29 +12,7 @@ import { AuthLanguage } from './language';
   selector: 'app-auth-layout',
   providers: [Journey],
   imports: [RouterOutlet, Appearance, AuthLanguage, Alert],
-  template: ` <div class="flex min-h-dvh flex-col bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
-    <header class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
-      <a href="/" class="font-heading text-lg font-bold tracking-tight ui-focus-ring"
-        >VISOMI<span class="ml-1 text-blue-600">.</span></a
-      >
-      <div class="flex flex-wrap items-center gap-5 text-sm"><app-auth-language /><app-auth-appearance /></div>
-    </header>
-    <main id="auth-main" class="flex flex-1 items-center justify-center px-5 py-8 sm:py-14">
-      <div
-        class="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8 dark:border-zinc-800 dark:bg-zinc-900"
-      >
-        <router-outlet />
-        @if (navigation.notificationFailed()) {
-          <div appUI="alert" role="status" class="mt-5" i18n="@@authNotificationFailed">
-            The change was saved, but the notification could not be sent.
-          </div>
-        }
-      </div>
-    </main>
-    <footer class="px-5 pb-6 text-center text-xs text-zinc-500 dark:text-zinc-400" i18n="@@authFooter">
-      Your account. Your choice of how to sign in.
-    </footer>
-  </div>`,
+  templateUrl: './auth-layout.html',
 })
 export class AuthLayout {
   readonly navigation = inject(AuthNavigation);

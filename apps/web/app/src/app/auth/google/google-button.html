@@ -1,0 +1,9 @@
+<div class="space-y-3" [attr.inert]="disabled() ? '' : null">
+  <div #button class="flex min-h-11 justify-center"></div>
+  <app-auth-feedback [action]="action" />
+  @if (action.error()) {
+    <button appUI variant="secondary" [disabled]="action.busy()" (click)="render()" i18n="@@authGoogleRetry">
+      Try Google again
+    </button>
+  }
+</div>

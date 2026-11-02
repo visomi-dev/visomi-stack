@@ -17,52 +17,7 @@ import { Passkeys } from './passkeys';
   selector: 'app-sign-in',
   imports: [Button, Heading, Text, Link, Alert, RouterLink, AuthFeedback, GoogleButton],
   providers: [AuthHttp, Passkeys],
-  template: `<section class="space-y-6">
-    <header class="space-y-3">
-      <p class="text-sm font-medium text-blue-600 dark:text-blue-400" i18n="@@authWelcomeBack">WELCOME BACK</p>
-      <h1 appUI i18n="@@authSignInHeading">Sign in to your space.</h1>
-      <p appUI tone="muted" i18n="@@authSignInDescription">
-        Choose how you want to sign in. Your passkey can use your device's screen lock.
-      </p>
-    </header>
-    @if (session.status() === 'unavailable') {
-      <div appUI="alert" tone="warning" role="status" i18n="@@authUnavailable">
-        We could not connect to authentication. Check your connection and try again.
-      </div>
-      <button appUI class="w-full" (click)="retry()" i18n="@@authRetry">Try again</button>
-    } @else if (session.snapshot().access !== 'anonymous') {
-      <button appUI class="w-full" (click)="navigation.complete()" i18n="@@authContinue">Continue</button>
-    } @else {
-      <button appUI class="min-h-12 w-full" (click)="passkey()" [disabled]="action.busy()" i18n="@@authSignInPasskey">
-        Sign in with a passkey
-      </button>
-      @if (session.providers()?.google?.enabled) {
-        <app-google-button
-          [disabled]="action.busy()"
-          (processing)="action.busy.set($event)"
-          (completed)="google($event)"
-        />
-      }
-      <a
-        appUI
-        routerLink="/auth/sign-in/password"
-        [queryParams]="navigation.returnQuery()"
-        class="block py-2 text-center"
-        i18n="@@authUsePassword"
-        >Use a password</a
-      >
-    }
-    <app-auth-feedback [action]="action" />
-    <div class="space-y-3 border-t border-zinc-200 pt-5 text-center text-sm dark:border-zinc-800">
-      <p class="flex flex-wrap justify-center gap-x-1">
-        <span i18n="@@authNewHere">New here?</span>
-        <a appUI routerLink="/auth/sign-up" [queryParams]="navigation.returnQuery()" i18n="@@authCreateAccount"
-          >Create an account</a
-        >
-      </p>
-      <a appUI variant="muted" routerLink="/auth/recovery" i18n="@@authCannotAccess">Can't access your account?</a>
-    </div>
-  </section>`,
+  templateUrl: './sign-in.html',
 })
 export class SignIn {
   readonly session = inject(Session);

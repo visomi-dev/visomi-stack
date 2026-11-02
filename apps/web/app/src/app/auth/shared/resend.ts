@@ -13,14 +13,7 @@ import { AuthFeedback } from './feedback';
   selector: 'app-resend-code',
   imports: [Button, AuthFeedback],
   providers: [AuthHttp, Email],
-  template: `<div class="space-y-3">
-    <button appUI variant="secondary" class="w-full" [disabled]="remaining() > 0 || action.busy()" (click)="resend()">
-      <span i18n="@@authResend">Send a new code</span>
-      @if (remaining() > 0) {
-        <span> · {{ remaining() }}s</span>
-      }</button
-    ><app-auth-feedback [action]="action" />
-  </div>`,
+  templateUrl: './resend.html',
 })
 export class ResendCode {
   private readonly email = inject(Email);

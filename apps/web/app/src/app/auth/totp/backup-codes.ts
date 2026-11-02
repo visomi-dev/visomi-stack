@@ -13,31 +13,7 @@ import { Totp } from './totp';
   selector: 'app-backup-codes',
   imports: [Button, Heading, Text, Link, RouterLink, AuthFeedback, BackupDisplay],
   providers: [AuthHttp, Totp],
-  template: `<section class="max-w-lg space-y-6">
-    <h1 appUI i18n="@@authBackupCodes">Backup codes</h1>
-    @if (codes().length) {
-      <app-backup-display [codes]="codes()" />
-    } @else {
-      <p appUI tone="muted" i18n="@@authBackupCannotRestore">
-        Existing backup codes cannot be displayed again. You can create a replacement set after confirming your
-        identity.
-      </p>
-      <button appUI [disabled]="action.busy()" (click)="confirm.set(true)" i18n="@@authReplaceCodes">
-        Replace backup codes
-      </button>
-      @if (confirm()) {
-        <p role="status" i18n="@@authReplaceCodesConfirm">
-          Replace all existing codes? The old set will stop working immediately.
-        </p>
-        <button appUI variant="danger" [disabled]="action.busy()" (click)="regenerate()" i18n="@@authConfirm">
-          Confirm</button
-        ><button appUI variant="secondary" (click)="confirm.set(false)" i18n="@@authCancel">Cancel</button>
-      }
-    }
-    <app-auth-feedback [action]="action" /><a appUI routerLink="/security" i18n="@@authBackSecurity"
-      >Back to security</a
-    >
-  </section>`,
+  templateUrl: './backup-codes.html',
 })
 export class BackupCodes {
   private readonly api = inject(Totp);

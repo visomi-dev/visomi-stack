@@ -16,32 +16,7 @@ import { Email } from './email';
   selector: 'app-account',
   imports: [Button, Heading, Text, Link, RouterLink, AuthFeedback, EmailEntry, CodeEntry],
   providers: [AuthHttp, Email],
-  template: `<section class="max-w-lg space-y-6">
-    <header class="space-y-3">
-      <h1 appUI i18n="@@authAccount">Account</h1>
-      <p appUI tone="muted" i18n="@@authAccountEmailDescription">
-        Your verified email helps you recover access. Changing it requires a recent identity check.
-      </p>
-    </header>
-    <p class="font-medium break-all">{{ session.user()?.email }}</p>
-    @if (pending()) {
-      <p appUI tone="muted" i18n="@@authNewEmailCode">Enter the code sent to your new email address.</p>
-      <app-code-entry [busy]="action.busy()" (confirmed)="verify($event)" /><button
-        appUI
-        variant="secondary"
-        [disabled]="action.busy()"
-        (click)="resend()"
-        i18n="@@authResend"
-      >
-        Send a new code</button
-      ><button appUI variant="secondary" (click)="pending.set(null)" i18n="@@authCancel">Cancel</button>
-    } @else {
-      <app-email-entry [label]="changeLabel" [busy]="action.busy()" (confirmed)="change($event)" />
-    }
-    <app-auth-feedback [action]="action" /><a appUI routerLink="/security" i18n="@@authBackSecurity"
-      >Back to security</a
-    >
-  </section>`,
+  templateUrl: './account.html',
 })
 export class Account {
   readonly session = inject(Session);

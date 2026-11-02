@@ -18,38 +18,7 @@ import { Passkeys } from './passkeys';
   selector: 'app-sign-up',
   imports: [Heading, Text, Link, RouterLink, EmailEntry, AuthFeedback, GoogleButton],
   providers: [AuthHttp, Passkeys],
-  template: `<section class="space-y-6">
-    <header class="space-y-3">
-      <h1 appUI i18n="@@authSignUpHeading">Make yourself at home.</h1>
-      <p appUI tone="muted" i18n="@@authSignUpDescription">
-        Create a passkey, then verify your email. No password to remember.
-      </p>
-    </header>
-    <app-email-entry [busy]="action.busy()" [label]="createLabel" (confirmed)="register($event)" /><app-auth-feedback
-      [action]="action"
-    />
-    @if (session.providers()?.google?.enabled) {
-      <app-google-button
-        [disabled]="action.busy()"
-        (processing)="action.busy.set($event)"
-        (completed)="google($event)"
-      />
-    }
-    <a
-      appUI
-      routerLink="/auth/sign-up/password"
-      [queryParams]="navigation.returnQuery()"
-      class="block text-center"
-      i18n="@@authSignUpPassword"
-      >Create an account with a password</a
-    >
-    <p
-      class="flex flex-wrap justify-center gap-x-1 border-t border-zinc-200 pt-5 text-center text-sm dark:border-zinc-800"
-    >
-      <span i18n="@@authAlreadyAccount">Already have an account?</span>
-      <a appUI routerLink="/auth/sign-in" [queryParams]="navigation.returnQuery()" i18n="@@authSignIn">Sign in</a>
-    </p>
-  </section>`,
+  templateUrl: './sign-up.html',
 })
 export class SignUp {
   readonly session = inject(Session);

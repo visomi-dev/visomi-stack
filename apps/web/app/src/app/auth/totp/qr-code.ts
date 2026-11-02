@@ -2,18 +2,7 @@ import { Component, ElementRef, afterNextRender, input, signal, viewChild } from
 
 @Component({
   selector: 'app-totp-qr',
-  template: `<div class="inline-block rounded-xl bg-white p-3">
-      <canvas
-        #canvas
-        role="img"
-        aria-label="Scan this QR code with your authenticator app, or enter the manual key below."
-        i18n-aria-label="@@authQrLabel"
-        class="max-w-full"
-      ></canvas>
-    </div>
-    @if (failed()) {
-      <p role="status" i18n="@@authQrFailed">The QR code could not be displayed. Use the manual key below.</p>
-    }`,
+  templateUrl: './qr-code.html',
 })
 export class QrCode {
   readonly uri = input.required<string>();

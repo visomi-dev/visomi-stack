@@ -1,0 +1,52 @@
+<section class="max-w-lg space-y-6">
+  <h1 appUI i18n="@@authManagePassword">Manage password</h1>
+  <p appUI tone="muted" i18n="@@authPasswordManageDescription">
+    Adding or changing a password requires a recent identity check. Password sign-in always includes a second step.
+  </p>
+  <form novalidate class="space-y-5" (submit)="save($event)">
+    <app-field
+      #field="appField"
+      control-id="manage-password"
+      [label]="passwordLabel"
+      [description]="policy"
+      [error]="fields.password().errors()[0]?.message ?? ''"
+    >
+      <input
+        appUI
+        id="manage-password"
+        [type]="visible() ? 'text' : 'password'"
+        autocomplete="new-password"
+        [formField]="fields.password"
+        [attr.aria-describedby]="field.describedBy()"
+      />
+      <button
+        type="button"
+        class="mt-2 text-sm ui-focus-ring"
+        (click)="visible.set(!visible())"
+        [attr.aria-pressed]="visible()"
+        i18n="@@authTogglePassword"
+      >
+        Show or hide password
+      </button>
+    </app-field>
+    <button appUI type="submit" [disabled]="action.busy() || !loaded()" i18n="@@authSavePassword">Save password</button>
+  </form>
+  @if (exists()) {
+    <button appUI variant="danger" [disabled]="action.busy()" (click)="confirm.set(true)" i18n="@@authRemovePassword">
+      Remove password
+    </button>
+    @if (confirm()) {
+      <p role="status" i18n="@@authRemovePasswordConfirm">
+        Remove your password? Sessions using it will end. Keep another working sign-in method.
+      </p>
+      <div class="flex gap-3">
+        <button appUI variant="danger" [disabled]="action.busy()" (click)="remove()" i18n="@@authConfirmRemove">
+          Confirm removal
+        </button>
+        <button appUI variant="secondary" (click)="confirm.set(false)" i18n="@@authCancel">Cancel</button>
+      </div>
+    }
+  }
+  <app-auth-feedback [action]="action" />
+  <a appUI routerLink="/security" i18n="@@authBackSecurity">Back to security</a>
+</section>

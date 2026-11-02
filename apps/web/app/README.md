@@ -44,7 +44,9 @@ visual layout. Backend authorization remains authoritative.
 
 The `auth/` domain groups session, passkeys, password, email, Google, TOTP, recovery
 and device approval capabilities. Views use Signal Forms and native controls with
-the existing UI adapters. Page-scoped HTTP clients cancel work when their view is
+the existing UI adapters. Auth components keep templates in adjacent `.html` files;
+the Nx and Angular component generators default to external HTML and CSS. Shared
+visual recipes stay in the UI library. Page-scoped HTTP clients cancel work when their view is
 destroyed. A scoped journey retains only pending challenge metadata between auth
 pages; it is destroyed when leaving the access layout. Passwords and codes are
 not stored in URLs, browser storage or transferred SSR state.

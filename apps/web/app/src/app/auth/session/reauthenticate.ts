@@ -36,62 +36,7 @@ import type { Pending, SessionView } from './models';
     GoogleButton,
   ],
   providers: [AuthHttp, Methods, Passkeys, Passwords],
-  template: `<section class="space-y-6">
-    <h1 appUI i18n="@@authReauthTitle">Confirm it is you</h1>
-    <p appUI tone="muted" i18n="@@authReauthDescription">
-      Use an existing sign-in method before changing your account's security. You will review the change again
-      afterwards.
-    </p>
-    @if (pending()) {
-      <app-code-entry [backup]="backup()" [busy]="action.busy()" (confirmed)="verify($event)" />
-      @if (pending()?.factor === 'email') {
-        <app-resend-code />
-      } @else {
-        <button appUI variant="secondary" (click)="backup.set(!backup())" i18n="@@authSwitchFactor">
-          Switch between authenticator and backup code
-        </button>
-      }
-    } @else {
-      @if (methods()?.passkeys?.length) {
-        <button appUI class="w-full" [disabled]="action.busy()" (click)="passkey()" i18n="@@authSignInPasskey">
-          Sign in with a passkey
-        </button>
-      }
-      @if (methods()?.google?.length && session.providers()?.google?.enabled) {
-        <app-google-button
-          [disabled]="action.busy()"
-          (processing)="action.busy.set($event)"
-          intent="reauth"
-          (completed)="google($event)"
-        />
-      }
-      @if (methods()?.password) {
-        <form novalidate class="space-y-4" (submit)="password($event)">
-          <app-field
-            #field="appField"
-            control-id="reauth-password"
-            [label]="passwordLabel"
-            [error]="fields.password().errors()[0]?.message ?? ''"
-            ><input
-              appUI
-              id="reauth-password"
-              type="password"
-              autocomplete="current-password"
-              [formField]="fields.password"
-              [attr.aria-describedby]="field.describedBy()" /></app-field
-          ><button appUI type="submit" class="w-full" [disabled]="action.busy()" i18n="@@authUsePassword">
-            Use a password
-          </button>
-        </form>
-      }
-    }
-    <app-auth-feedback [action]="action" /><a
-      appUI
-      [routerLink]="navigation.returnPath() ?? '/security'"
-      i18n="@@authCancel"
-      >Cancel</a
-    >
-  </section>`,
+  templateUrl: './reauthenticate.html',
 })
 export class Reauthenticate {
   readonly session = inject(Session);

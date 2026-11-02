@@ -8,15 +8,12 @@ import { Link } from '../../ui';
 @Component({
   selector: 'app-auth-language',
   imports: [Link],
-  template: `<nav aria-label="Language" i18n-aria-label="@@language">
-    <a appUI variant="muted" [href]="english()" hreflang="en" lang="en">English</a
-    ><span aria-hidden="true" class="px-2 text-zinc-400">/</span
-    ><a appUI variant="muted" [href]="spanish()" hreflang="es" lang="es">Español</a>
-  </nav>`,
+  templateUrl: './language.html',
 })
 export class AuthLanguage {
   private readonly router = inject(Router);
 
+  // Compile-time locales use separate bundles, so switching language requires document navigation.
   readonly english = computed(() => '/app/en' + this.stablePath());
   readonly spanish = computed(() => '/app/es' + this.stablePath());
 

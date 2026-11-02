@@ -6,32 +6,7 @@ import { themeSwitcher } from '@visomi-stack/web-frontend-ui';
 
 @Component({
   selector: 'button[app-theme-switcher]',
-  template: `
-    <svg
-      aria-hidden="true"
-      [class]="visual.sunClasses"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      stroke="currentColor"
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path [attr.d]="visual.sunPath" />
-    </svg>
-    <svg
-      aria-hidden="true"
-      [class]="visual.moonClasses"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      stroke="currentColor"
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path [attr.d]="visual.moonPath" />
-    </svg>
-  `,
+  templateUrl: './theme-switcher.html',
   host: {
     type: 'button',
     'data-theme-switcher': '',

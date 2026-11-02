@@ -1,0 +1,28 @@
+<section class="space-y-6">
+  <h1 appUI i18n="@@authConfirmSignIn">Confirm your sign-in</h1>
+  @if (pending && pending.purpose === 'password') {
+    <p appUI tone="muted">{{ pending.factor === 'email' ? emailHint : totpHint }}</p>
+    <app-code-entry [busy]="action.busy()" [backup]="backup()" (confirmed)="verify($event)" />
+    @if (pending.factor === 'email') {
+      <app-resend-code />
+    } @else {
+      <button appUI variant="secondary" class="w-full" (click)="backup.set(!backup())">
+        {{ backup() ? useAuthenticator : useBackup }}
+      </button>
+    }
+  } @else {
+    <p appUI tone="muted" i18n="@@authRestartChallenge">
+      This step could not be restored. Start again to request a new verification.
+    </p>
+  }
+  <app-auth-feedback [action]="action" />
+  <a
+    appUI
+    routerLink="/auth/sign-in/password"
+    [queryParams]="navigation.returnQuery()"
+    class="block text-center text-sm"
+    i18n="@@authStartAgain"
+  >
+    Start again
+  </a>
+</section>

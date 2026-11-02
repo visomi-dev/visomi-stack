@@ -8,23 +8,7 @@ import { emailMessage, requiredMessage, formFocus } from './form-errors';
 @Component({
   selector: 'app-email-entry',
   imports: [Button, Field, Input, FormField],
-  template: `<form novalidate class="space-y-5" [attr.data-submitted]="attempted() ? '' : null" (submit)="send($event)">
-    <app-field
-      #field="appField"
-      control-id="auth-email"
-      [label]="emailLabel"
-      [error]="fields.email().errors()[0]?.message ?? ''"
-      ><input
-        appUI
-        [formField]="fields.email"
-        type="email"
-        autocomplete="email"
-        [id]="field.controlId()"
-        [attr.aria-describedby]="field.describedBy()"
-        [attr.aria-invalid]="fields.email().touched() && fields.email().invalid()"
-        placeholder=" " /></app-field
-    ><button appUI class="w-full" type="submit" [disabled]="busy()">{{ label() }}</button>
-  </form>`,
+  templateUrl: './email-entry.html',
 })
 export class EmailEntry {
   readonly busy = input(false);
