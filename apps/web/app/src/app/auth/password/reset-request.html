@@ -1,9 +1,13 @@
-<section class="space-y-6">
-  <h1 appUI i18n="@@authResetRequestTitle">Reset your password</h1>
-  <p appUI tone="muted" i18n="@@authRecoveryUniform">
-    If this email can be used for recovery, we will send a code. Additional verification may be required.
-  </p>
+<section class="flex min-w-0 flex-col gap-6">
+  <header class="space-y-3">
+    <h1 appUI i18n="@@authResetRequestTitle">Reset your password</h1>
+    <p appUI tone="muted" i18n="@@authRecoveryUniform">
+      If this email can be used for recovery, we will send a code. Additional verification may be required.
+    </p>
+  </header>
   <app-email-entry [busy]="action.busy()" (confirmed)="request($event)" />
   <app-auth-feedback [action]="action" />
-  <a appUI routerLink="/auth/sign-in/password" i18n="@@authBackSignIn">Back to sign in</a>
+  <a appUI routerLink="/auth/sign-in/password" i18n="@@authBackSignIn" class="inline-flex min-h-11 items-center">
+    Back to sign in
+  </a>
 </section>

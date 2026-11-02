@@ -1,9 +1,11 @@
-<section class="space-y-6">
-  <h1 appUI i18n="@@authEnrollTitle">Set up access again</h1>
-  <p appUI tone="muted" i18n="@@authEnrollDescription">
-    Your recovery proof allows you to set up a replacement sign-in method. Complete its verification before entering
-    your account.
-  </p>
+<section class="flex min-w-0 flex-col gap-6">
+  <header class="space-y-3">
+    <h1 appUI i18n="@@authEnrollTitle">Set up access again</h1>
+    <p appUI tone="muted" i18n="@@authEnrollDescription">
+      Your recovery proof allows you to set up a replacement sign-in method. Complete its verification before entering
+      your account.
+    </p>
+  </header>
   @if (pending()) {
     <p appUI tone="muted" i18n="@@authReplacementPasswordHint">
       Confirm the replacement password with the required second factor. You can use a backup code instead of an
@@ -13,11 +15,18 @@
     @if (pending()?.factor === 'email') {
       <app-resend-code />
     }
-    <button appUI variant="secondary" [disabled]="action.busy()" (click)="restart()" i18n="@@authStartAgain">
+    <button
+      appUI
+      variant="secondary"
+      [disabled]="action.busy()"
+      (click)="restart()"
+      i18n="@@authStartAgain"
+      class="w-full"
+    >
       Start again
     </button>
     @if (pending()?.factor === 'totp') {
-      <button appUI variant="secondary" (click)="backup.set(!backup())" i18n="@@authSwitchFactor">
+      <button appUI variant="secondary" (click)="backup.set(!backup())" i18n="@@authSwitchFactor" class="w-full">
         Switch between authenticator and backup code
       </button>
     }
@@ -32,8 +41,8 @@
     <button appUI class="w-full" [disabled]="action.busy()" (click)="passkey()" i18n="@@authCreateReplacementPasskey">
       Create a replacement passkey
     </button>
-    <details class="space-y-4">
-      <summary class="cursor-pointer text-sm ui-focus-ring" i18n="@@authUsePassword">Use a password</summary>
+    <details appUI>
+      <summary class="text-sm" i18n="@@authUsePassword">Use a password</summary>
       <form novalidate [attr.data-submitted]="attempted() ? '' : null" class="space-y-4" (submit)="password($event)">
         <app-field
           #field="appField"
@@ -42,29 +51,41 @@
           [description]="policy"
           [error]="fields.password().errors()[0]?.message ?? ''"
         >
-          <input
-            appUI
-            id="replacement-password"
-            [type]="visible() ? 'text' : 'password'"
-            autocomplete="new-password"
-            [formField]="fields.password"
-            [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
-            [attr.aria-describedby]="field.describedBy()"
-          />
-          <button
-            type="button"
-            class="mt-2 text-sm ui-focus-ring"
-            (click)="visible.set(!visible())"
-            [attr.aria-pressed]="visible()"
-            i18n="@@authTogglePassword"
-          >
-            Show or hide password
-          </button>
+          <div class="relative">
+            <input
+              appUI
+              class="pr-24"
+              id="replacement-password"
+              [type]="visible() ? 'text' : 'password'"
+              autocomplete="new-password"
+              [formField]="fields.password"
+              [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
+              [attr.aria-describedby]="field.describedBy()"
+            />
+            <button
+              appUI
+              variant="ghost"
+              size="sm"
+              type="button"
+              class="absolute inset-y-0 right-0 min-w-16"
+              [attr.aria-pressed]="visible()"
+              aria-controls="replacement-password"
+              aria-label="Show or hide password"
+              i18n-aria-label="@@authTogglePassword"
+              (click)="visible.set(!visible())"
+            >
+              {{ visible() ? hideLabel : showLabel }}
+            </button>
+          </div>
         </app-field>
-        <button appUI type="submit" [disabled]="action.busy()" i18n="@@authSavePassword">Save password</button>
+        <button appUI type="submit" class="w-full" [disabled]="action.busy()" i18n="@@authSavePassword">
+          Save password
+        </button>
       </form>
     </details>
   }
   <app-auth-feedback [action]="action" />
-  <button appUI variant="secondary" [disabled]="action.busy()" (click)="logout()" i18n="@@authSignOut">Sign out</button>
+  <button appUI variant="secondary" [disabled]="action.busy()" (click)="logout()" i18n="@@authSignOut" class="w-full">
+    Sign out
+  </button>
 </section>

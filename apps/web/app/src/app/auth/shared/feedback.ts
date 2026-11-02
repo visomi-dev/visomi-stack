@@ -8,6 +8,10 @@ import type { Action } from './action';
   selector: 'app-auth-feedback',
   imports: [Alert, Loader],
   templateUrl: './feedback.html',
+  host: {
+    class: 'block min-w-0 space-y-3',
+    '[hidden]': '!action().error() && !action().notice() && !action().busy()',
+  },
 })
 export class AuthFeedback {
   readonly action = input.required<Action>();

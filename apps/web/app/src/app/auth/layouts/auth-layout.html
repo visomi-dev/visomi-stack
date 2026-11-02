@@ -4,22 +4,21 @@
       VISOMI
       <span class="ml-1 text-blue-600">.</span>
     </a>
-    <div class="flex flex-wrap items-center gap-5 text-sm">
+    <div class="flex flex-wrap items-center gap-3 text-sm">
       <app-auth-language />
       <app-auth-appearance />
     </div>
   </header>
   <main id="auth-main" class="flex flex-1 items-center justify-center px-5 py-8 sm:py-14">
-    <div
-      class="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8 dark:border-zinc-800 dark:bg-zinc-900"
-    >
-      <router-outlet />
+    <section appUI="card" layout="plain" padding="lg" class="w-full max-w-md shadow-sm">
+      <ng-content />
+      <router-outlet class="hidden" />
       @if (navigation.notificationFailed()) {
         <div appUI="alert" role="status" class="mt-5" i18n="@@authNotificationFailed">
           The change was saved, but the notification could not be sent.
         </div>
       }
-    </div>
+    </section>
   </main>
   <footer class="px-5 pb-6 text-center text-xs text-zinc-500 dark:text-zinc-400" i18n="@@authFooter">
     Your account. Your choice of how to sign in.

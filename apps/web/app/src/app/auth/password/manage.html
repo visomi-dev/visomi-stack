@@ -1,8 +1,10 @@
-<section class="max-w-lg space-y-6">
-  <h1 appUI i18n="@@authManagePassword">Manage password</h1>
-  <p appUI tone="muted" i18n="@@authPasswordManageDescription">
-    Adding or changing a password requires a recent identity check. Password sign-in always includes a second step.
-  </p>
+<section class="flex max-w-lg min-w-0 flex-col gap-6">
+  <header class="space-y-3">
+    <h1 appUI i18n="@@authManagePassword">Manage password</h1>
+    <p appUI tone="muted" i18n="@@authPasswordManageDescription">
+      Adding or changing a password requires a recent identity check. Password sign-in always includes a second step.
+    </p>
+  </header>
   <form novalidate [attr.data-submitted]="attempted() ? '' : null" class="space-y-5" (submit)="save($event)">
     <app-field
       #field="appField"
@@ -11,43 +13,75 @@
       [description]="policy"
       [error]="fields.password().errors()[0]?.message ?? ''"
     >
-      <input
-        appUI
-        id="manage-password"
-        [type]="visible() ? 'text' : 'password'"
-        autocomplete="new-password"
-        [formField]="fields.password"
-        [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
-        [attr.aria-describedby]="field.describedBy()"
-      />
-      <button
-        type="button"
-        class="mt-2 text-sm ui-focus-ring"
-        (click)="visible.set(!visible())"
-        [attr.aria-pressed]="visible()"
-        i18n="@@authTogglePassword"
-      >
-        Show or hide password
-      </button>
+      <div class="relative">
+        <input
+          appUI
+          class="pr-24"
+          id="manage-password"
+          [type]="visible() ? 'text' : 'password'"
+          autocomplete="new-password"
+          [formField]="fields.password"
+          [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
+          [attr.aria-describedby]="field.describedBy()"
+        />
+        <button
+          appUI
+          variant="ghost"
+          size="sm"
+          type="button"
+          class="absolute inset-y-0 right-0 min-w-16"
+          [attr.aria-pressed]="visible()"
+          aria-controls="manage-password"
+          aria-label="Show or hide password"
+          i18n-aria-label="@@authTogglePassword"
+          (click)="visible.set(!visible())"
+        >
+          {{ visible() ? hideLabel : showLabel }}
+        </button>
+      </div>
     </app-field>
-    <button appUI type="submit" [disabled]="action.busy() || !loaded()" i18n="@@authSavePassword">Save password</button>
+    <button
+      appUI
+      type="submit"
+      class="w-full sm:w-fit"
+      [disabled]="action.busy() || !loaded()"
+      i18n="@@authSavePassword"
+    >
+      Save password
+    </button>
   </form>
   @if (exists()) {
-    <button appUI variant="danger" [disabled]="action.busy()" (click)="confirm.set(true)" i18n="@@authRemovePassword">
+    <button
+      #removePassword
+      [attr.aria-expanded]="confirm()"
+      aria-controls="remove-password-confirmation"
+      appUI
+      [variant]="confirm() ? 'secondary' : 'danger'"
+      class="w-full sm:w-fit"
+      [disabled]="action.busy()"
+      (click)="confirm.set(!confirm())"
+      i18n="@@authRemovePassword"
+    >
       Remove password
     </button>
     @if (confirm()) {
-      <p role="status" i18n="@@authRemovePasswordConfirm">
-        Remove your password? Sessions using it will end. Keep another working sign-in method.
-      </p>
-      <div class="flex gap-3">
-        <button appUI variant="danger" [disabled]="action.busy()" (click)="remove()" i18n="@@authConfirmRemove">
-          Confirm removal
-        </button>
-        <button appUI variant="secondary" (click)="confirm.set(false)" i18n="@@authCancel">Cancel</button>
-      </div>
+      <section appUI="card" tone="subtle" id="remove-password-confirmation">
+        <p role="status" i18n="@@authRemovePasswordConfirm">
+          Remove your password? Sessions using it will end. Keep another working sign-in method.
+        </p>
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <button appUI variant="danger" [disabled]="action.busy()" (click)="remove()" i18n="@@authConfirmRemove">
+            Confirm removal
+          </button>
+          <button appUI variant="secondary" (click)="confirm.set(false); removePassword.focus()" i18n="@@authCancel">
+            Cancel
+          </button>
+        </div>
+      </section>
     }
   }
   <app-auth-feedback [action]="action" />
-  <a appUI routerLink="/security" i18n="@@authBackSecurity">Back to security</a>
+  <a appUI routerLink="/security" i18n="@@authBackSecurity" class="inline-flex min-h-11 items-center">
+    Back to security
+  </a>
 </section>

@@ -1,4 +1,4 @@
-<section class="space-y-6">
+<section class="flex min-w-0 flex-col gap-6">
   <h1 appUI i18n="@@authRecoveryVerifyTitle">Verify recovery</h1>
   @if (journey.challenge()?.purpose === 'recovery') {
     <p appUI tone="muted" i18n="@@authRecoveryProofHint">
@@ -51,10 +51,18 @@
     </form>
     <app-resend-code />
   } @else {
-    <p appUI tone="muted" i18n="@@authRestartChallenge">
+    <div appUI="alert" tone="warning" role="status" i18n="@@authRestartChallenge">
       This step could not be restored. Start again to request a new verification.
-    </p>
+    </div>
   }
   <app-auth-feedback [action]="action" />
-  <a appUI routerLink="/auth/recovery" i18n="@@authStartAgain">Start again</a>
+  <a
+    appUI="button"
+    [variant]="journey.challenge()?.purpose === 'recovery' ? 'secondary' : 'primary'"
+    routerLink="/auth/recovery"
+    i18n="@@authStartAgain"
+    class="inline-flex min-h-11 items-center"
+  >
+    Start again
+  </a>
 </section>

@@ -13,6 +13,7 @@ import { AuthFeedback } from './feedback';
   selector: 'app-resend-code',
   imports: [Button, AuthFeedback],
   providers: [AuthHttp, Email],
+  host: { class: 'flex min-w-0 flex-col gap-3' },
   templateUrl: './resend.html',
 })
 export class ResendCode {

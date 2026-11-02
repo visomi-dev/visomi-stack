@@ -46,7 +46,11 @@ The `auth/` domain groups session, passkeys, password, email, Google, TOTP, reco
 and device approval capabilities. Views use Signal Forms and native controls with
 the existing UI adapters. Auth components keep templates in adjacent `.html` files;
 the Nx and Angular component generators default to external HTML and CSS. Shared
-visual recipes stay in the UI library. Form submissions use Signal Forms' `onInvalid`
+visual recipes stay in the UI library. Access and fallback pages share its Card
+surface; forms, methods and return navigation use explicit vertical gaps. Inline
+security confirmations retain their disclosure trigger and return focus to it on
+cancellation. The current language is marked as text; the alternate language uses
+a native link with a comfortable touch target. Form submissions use Signal Forms' `onInvalid`
 and bound-control focus; feedback owns its alert focus after rendering. Browser SDK
 and QR work use view queries and lifecycle cleanup. Page-scoped HTTP clients cancel
 work when their view is destroyed. A scoped journey retains only pending challenge metadata between auth
@@ -111,7 +115,10 @@ New passwords follow the backend's 12–128 Unicode-character policy after NFC
 normalization; login does not impose the new-password policy.
 
 Automated tests cover native forms, keyboard behavior, screenshots, real SSR,
-virtual passkeys, TOTP and backup codes, recovery and two-browser approval. They do
+virtual passkeys, TOTP and backup codes, recovery and two-browser approval. The
+presentation cases exercise both themes at 320, 390 and 1280 CSS pixels, including
+Spanish password controls, code/resend spacing, security actions and confirmations
+above the mobile navigation. They do
 not establish screen-reader conformance or replace manual checks of real password
 managers, mobile keyboards, physical authenticators and Google provider behavior.
 See [Web foundations](../../../docs/web-foundations.md) for the shared UI contract.

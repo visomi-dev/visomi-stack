@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, pattern, disabled, submit } from '@angular/forms/signals';
 
-import { Button, Heading, Text, Link, Field, Input, Select } from '../../ui';
+import { Button, Heading, Text, LinkButton, Alert, Field, Input, Select } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
@@ -16,7 +16,20 @@ import { Recovery } from './recovery';
 
 @Component({
   selector: 'app-recovery-verify',
-  imports: [Button, Heading, Text, Link, Field, Input, Select, FormField, RouterLink, AuthFeedback, ResendCode],
+  imports: [
+    Button,
+    Heading,
+    Text,
+    LinkButton,
+    Alert,
+    Field,
+    Input,
+    Select,
+    FormField,
+    RouterLink,
+    AuthFeedback,
+    ResendCode,
+  ],
   providers: [AuthHttp, Recovery],
   templateUrl: './verify.html',
 })
@@ -65,7 +78,8 @@ export class RecoveryVerify {
 
             await this.navigation.complete(result);
           } finally {
-            this.model.update((v) => ({ ...v, code: '', factor: '' }));
+            this.fields().reset({ ...this.model(), code: '', factor: '' });
+            this.attempted.set(false);
           }
         }),
       onInvalid: focusInvalid,

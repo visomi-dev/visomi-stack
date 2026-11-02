@@ -92,7 +92,8 @@ export class PasswordCredentials {
               queryParams: this.navigation.returnQuery(),
             });
           } finally {
-            this.model.update((value) => ({ ...value, password: '' }));
+            this.fields.password().reset('');
+            this.attempted.set(false);
           }
         }),
       onInvalid: focusInvalid,

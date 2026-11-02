@@ -99,7 +99,8 @@ export class DeviceReview {
             }
           } finally {
             if (!controller.signal.aborted) {
-              this.model.set({ code: '' });
+              this.fields().reset({ code: '' });
+              this.attempted.set(false);
             }
           }
         }, controller.signal),

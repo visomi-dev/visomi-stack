@@ -59,6 +59,7 @@ export class ManagePasskeys {
   }
 
   edit(key: Passkey): void {
+    this.removing.set(null);
     this.fields().reset({ label: key.label });
     this.attempted.set(false);
     this.editing.set(key.id);

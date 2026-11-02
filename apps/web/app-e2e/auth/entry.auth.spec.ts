@@ -60,6 +60,10 @@ test('presents direct actions in both languages, mobile and dark mode', async ({
 
   await expect(page.getByRole('alert')).toBeFocused();
 
+  await expect(page.getByLabel('Password', { exact: true })).not.toHaveAttribute('aria-invalid', 'true');
+
+  await expect(page.getByText('Complete this field.', { exact: true })).toBeHidden();
+
   await page.setViewportSize({ width: 1280, height: 900 });
 
   await page.goto('/app/en/auth/sign-in');

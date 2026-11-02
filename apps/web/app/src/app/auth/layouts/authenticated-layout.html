@@ -33,12 +33,12 @@
   </app-sidebar>
   <header app-topbar>
     <a data-slot="title" routerLink="/home" class="rounded font-heading font-bold ui-focus-ring">VISOMI</a>
-    <div data-slot="actions" class="flex flex-wrap items-center gap-4">
+    <div data-slot="actions" class="flex flex-wrap items-center gap-2 sm:gap-4">
       <app-auth-language />
       <app-auth-appearance />
     </div>
   </header>
-  <div class="space-y-6">
+  <div class="flex min-w-0 flex-col gap-6">
     <app-auth-feedback [action]="action" />
     @if (navigation.notificationFailed()) {
       <div appUI="alert" role="status" i18n="@@authNotificationFailed">
@@ -46,7 +46,7 @@
       </div>
     }
     @if (session.full()) {
-      <router-outlet />
+      <router-outlet class="hidden" />
     } @else {
       <p role="status" i18n="@@authSessionUnavailable">
         Your session changed or could not be checked. Return to sign in to continue.

@@ -1,5 +1,29 @@
-<nav aria-label="Language" i18n-aria-label="@@language">
-  <a appUI variant="muted" [href]="english()" hreflang="en" lang="en">English</a>
-  <span aria-hidden="true" class="px-2 text-zinc-400">/</span>
-  <a appUI variant="muted" [href]="spanish()" hreflang="es" lang="es">Español</a>
+<nav class="flex items-center gap-2" aria-label="Language" i18n-aria-label="@@language">
+  @if (locale.startsWith('en')) {
+    <span lang="en" aria-current="true" class="inline-flex min-h-11 items-center text-sm font-medium">English</span>
+    <a
+      appUI
+      variant="muted"
+      underline="hover"
+      class="inline-flex min-h-11 items-center text-sm"
+      [href]="spanish()"
+      hreflang="es"
+      lang="es"
+    >
+      Español
+    </a>
+  } @else {
+    <a
+      appUI
+      variant="muted"
+      underline="hover"
+      class="inline-flex min-h-11 items-center text-sm"
+      [href]="english()"
+      hreflang="en"
+      lang="en"
+    >
+      English
+    </a>
+    <span lang="es" aria-current="true" class="inline-flex min-h-11 items-center text-sm font-medium">Español</span>
+  }
 </nav>

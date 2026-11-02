@@ -1,8 +1,10 @@
-<section class="space-y-6">
-  <h1 appUI i18n="@@authVerifyEmailTitle">Verify your email</h1>
-  <p appUI tone="muted" i18n="@@authVerifyEmailDescription">
-    Your account is created. Verify your email to finish signing in.
-  </p>
+<section class="flex min-w-0 flex-col gap-6">
+  <header class="space-y-3">
+    <h1 appUI i18n="@@authVerifyEmailTitle">Verify your email</h1>
+    <p appUI tone="muted" i18n="@@authVerifyEmailDescription">
+      Your account is created. Verify your email to finish signing in.
+    </p>
+  </header>
   @if (session.snapshot().nextStep === 'add_email') {
     <app-email-entry [busy]="action.busy()" (confirmed)="request($event)" />
   } @else {

@@ -3,7 +3,7 @@ import { RouterOutlet } from '@angular/router';
 
 import { Journey } from '../shared/journey';
 import { AuthNavigation } from '../shared/navigation';
-import { Alert } from '../../ui';
+import { Alert, Card } from '../../ui';
 
 import { Appearance } from './appearance';
 import { AuthLanguage } from './language';
@@ -11,7 +11,7 @@ import { AuthLanguage } from './language';
 @Component({
   selector: 'app-auth-layout',
   providers: [Journey],
-  imports: [RouterOutlet, Appearance, AuthLanguage, Alert],
+  imports: [RouterOutlet, Appearance, AuthLanguage, Alert, Card],
   templateUrl: './auth-layout.html',
 })
 export class AuthLayout {

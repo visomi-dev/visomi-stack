@@ -12,6 +12,7 @@ import { Google } from './google';
   selector: 'app-google-button',
   imports: [Button, AuthFeedback],
   providers: [AuthHttp, Google],
+  host: { class: 'flex min-w-0 flex-col gap-3' },
   templateUrl: './google-button.html',
 })
 export class GoogleButton {

@@ -2,7 +2,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { form, FormField, required, disabled, submit } from '@angular/forms/signals';
 
-import { Button, Heading, Text, Field, Input } from '../../ui';
+import { Button, Heading, Text, Field, Input, Disclosure } from '../../ui';
 import { Session } from '../session/session';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -20,7 +20,7 @@ import { Recovery } from './recovery';
 
 @Component({
   selector: 'app-recovery-enroll',
-  imports: [Button, Heading, Text, Field, Input, FormField, AuthFeedback, CodeEntry, ResendCode],
+  imports: [Button, Heading, Text, Field, Input, FormField, AuthFeedback, CodeEntry, ResendCode, Disclosure],
   providers: [AuthHttp, Passkeys, Recovery],
   templateUrl: './enroll.html',
 })
@@ -48,6 +48,8 @@ export class Enroll {
   });
 
   readonly action = new Action();
+  readonly showLabel = $localize`:@@authShowPassword:Show`;
+  readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authNewPassword:New password`;
   readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
 

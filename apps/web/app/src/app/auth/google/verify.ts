@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { Heading, Text, Link } from '../../ui';
+import { Heading, Text, LinkButton, Alert } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
@@ -14,7 +14,7 @@ import { Google } from './google';
 
 @Component({
   selector: 'app-google-verify',
-  imports: [Heading, Text, Link, RouterLink, AuthFeedback, CodeEntry, ResendCode],
+  imports: [Heading, Text, LinkButton, Alert, RouterLink, AuthFeedback, CodeEntry, ResendCode],
   providers: [AuthHttp, Google],
   templateUrl: './verify.html',
 })

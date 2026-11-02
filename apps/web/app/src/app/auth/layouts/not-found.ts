@@ -3,11 +3,13 @@ import { RouterLink } from '@angular/router';
 
 import { Session } from '../session/session';
 import { destination } from '../session/navigation';
-import { Link } from '../../ui';
+import { Heading, Text, LinkButton } from '../../ui';
+
+import { AuthLayout } from './auth-layout';
 
 @Component({
   selector: 'app-not-found',
-  imports: [RouterLink, Link],
+  imports: [RouterLink, Heading, Text, LinkButton, AuthLayout],
   templateUrl: './not-found.html',
 })
 export class NotFound {

@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, LOCALE_ID, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -12,6 +12,7 @@ import { Link } from '../../ui';
 })
 export class AuthLanguage {
   private readonly router = inject(Router);
+  readonly locale = inject(LOCALE_ID);
 
   // Compile-time locales use separate bundles, so switching language requires document navigation.
   readonly english = computed(() => '/app/en' + this.stablePath());

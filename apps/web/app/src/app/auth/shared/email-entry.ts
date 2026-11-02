@@ -8,6 +8,7 @@ import { emailMessage, requiredMessage, focusInvalid } from './form-errors';
 @Component({
   selector: 'app-email-entry',
   imports: [Button, Field, Input, FormField],
+  host: { class: 'block min-w-0' },
   templateUrl: './email-entry.html',
 })
 export class EmailEntry {

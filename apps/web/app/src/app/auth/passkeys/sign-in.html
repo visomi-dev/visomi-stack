@@ -1,4 +1,4 @@
-<section class="space-y-6">
+<section class="flex min-w-0 flex-col gap-6">
   <header class="space-y-3">
     <p class="text-sm font-medium text-blue-600 dark:text-blue-400" i18n="@@authWelcomeBack">WELCOME BACK</p>
     <h1 appUI i18n="@@authSignInHeading">Sign in to your space.</h1>
@@ -28,7 +28,7 @@
       appUI
       routerLink="/auth/sign-in/password"
       [queryParams]="navigation.returnQuery()"
-      class="block py-2 text-center"
+      class="inline-flex min-h-11 items-center justify-center py-2 text-center"
       i18n="@@authUsePassword"
     >
       Use a password

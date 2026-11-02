@@ -8,6 +8,7 @@ import { codeMessage, requiredMessage, focusInvalid } from './form-errors';
 @Component({
   selector: 'app-code-entry',
   imports: [Button, Field, Input, FormField],
+  host: { class: 'block min-w-0' },
   templateUrl: './code-entry.html',
 })
 export class CodeEntry {
@@ -32,7 +33,8 @@ export class CodeEntry {
     void submit(this.fields, {
       action: async () => {
         this.confirmed.emit(this.model().code);
-        this.model.set({ code: '' });
+        this.fields().reset({ code: '' });
+        this.attempted.set(false);
       },
       onInvalid: focusInvalid,
     });

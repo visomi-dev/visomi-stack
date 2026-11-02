@@ -1,11 +1,17 @@
-<section class="space-y-6">
+<section class="flex min-w-0 flex-col gap-6">
   <h1 appUI i18n="@@authDeviceApprovalTitle">Use your signed-in device</h1>
   @if (request(); as pending) {
     <p appUI tone="muted" i18n="@@authDeviceApprovalInstructions">
       On a device where you are already signed in, open this link and enter the pairing code shown here. Only approve a
       request you started.
     </p>
-    <a appUI class="block text-sm break-all" [routerLink]="reviewRoute()" target="_blank" rel="noopener noreferrer">
+    <a
+      appUI
+      class="inline-flex min-h-11 items-center text-sm break-all"
+      [routerLink]="reviewRoute()"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
       {{ reviewLink() }}
     </a>
     <p class="text-sm" i18n="@@authPairingCode">Pairing code</p>
@@ -38,5 +44,7 @@
     <app-email-entry [busy]="action.busy()" (confirmed)="start($event)" />
   }
   <app-auth-feedback [action]="action" />
-  <a appUI routerLink="/auth/recovery" i18n="@@authBackRecovery">Back to recovery</a>
+  <a appUI routerLink="/auth/recovery" i18n="@@authBackRecovery" class="inline-flex min-h-11 items-center">
+    Back to recovery
+  </a>
 </section>

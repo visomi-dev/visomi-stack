@@ -49,6 +49,7 @@ export class Reauthenticate {
   readonly methods = signal<MethodsView | null>(null);
   readonly pending = signal<(Pending & { factor: 'email' | 'totp' }) | null>(null);
   readonly backup = signal(false);
+  readonly visible = signal(false);
   readonly model = signal({ password: '' });
   readonly attempted = signal(false);
 
@@ -58,6 +59,8 @@ export class Reauthenticate {
   });
 
   readonly action = new Action();
+  readonly showLabel = $localize`:@@authShowPassword:Show`;
+  readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authPassword:Password`;
 
   constructor() {

@@ -1,14 +1,17 @@
-<section class="space-y-6">
-  <h1 appUI i18n="@@authReauthTitle">Confirm it is you</h1>
-  <p appUI tone="muted" i18n="@@authReauthDescription">
-    Use an existing sign-in method before changing your account's security. You will review the change again afterwards.
-  </p>
+<section class="flex min-w-0 flex-col gap-6">
+  <header class="space-y-3">
+    <h1 appUI i18n="@@authReauthTitle">Confirm it is you</h1>
+    <p appUI tone="muted" i18n="@@authReauthDescription">
+      Use an existing sign-in method before changing your account's security. You will review the change again
+      afterwards.
+    </p>
+  </header>
   @if (pending()) {
     <app-code-entry [backup]="backup()" [busy]="action.busy()" (confirmed)="verify($event)" />
     @if (pending()?.factor === 'email') {
       <app-resend-code />
     } @else {
-      <button appUI variant="secondary" (click)="backup.set(!backup())" i18n="@@authSwitchFactor">
+      <button appUI variant="secondary" (click)="backup.set(!backup())" i18n="@@authSwitchFactor" class="w-full">
         Switch between authenticator and backup code
       </button>
     }
@@ -34,15 +37,32 @@
           [label]="passwordLabel"
           [error]="fields.password().errors()[0]?.message ?? ''"
         >
-          <input
-            appUI
-            id="reauth-password"
-            type="password"
-            autocomplete="current-password"
-            [formField]="fields.password"
-            [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
-            [attr.aria-describedby]="field.describedBy()"
-          />
+          <div class="relative">
+            <input
+              appUI
+              class="pr-24"
+              id="reauth-password"
+              [type]="visible() ? 'text' : 'password'"
+              autocomplete="current-password"
+              [formField]="fields.password"
+              [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
+              [attr.aria-describedby]="field.describedBy()"
+            />
+            <button
+              appUI
+              variant="ghost"
+              size="sm"
+              type="button"
+              class="absolute inset-y-0 right-0 min-w-16"
+              [attr.aria-pressed]="visible()"
+              aria-controls="reauth-password"
+              aria-label="Show or hide password"
+              i18n-aria-label="@@authTogglePassword"
+              (click)="visible.set(!visible())"
+            >
+              {{ visible() ? hideLabel : showLabel }}
+            </button>
+          </div>
         </app-field>
         <button appUI type="submit" class="w-full" [disabled]="action.busy()" i18n="@@authUsePassword">
           Use a password
@@ -51,5 +71,12 @@
     }
   }
   <app-auth-feedback [action]="action" />
-  <a appUI [routerLink]="navigation.returnPath() ?? '/security'" i18n="@@authCancel">Cancel</a>
+  <a
+    appUI
+    [routerLink]="navigation.returnPath() ?? '/security'"
+    i18n="@@authCancel"
+    class="inline-flex min-h-11 items-center"
+  >
+    Cancel
+  </a>
 </section>

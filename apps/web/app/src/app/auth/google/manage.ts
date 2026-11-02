@@ -1,7 +1,7 @@
 import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { Button, Heading, Text, Link, Card } from '../../ui';
+import { Button, Heading, Text, Link, Card, Alert } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
@@ -16,7 +16,7 @@ import { Google } from './google';
 
 @Component({
   selector: 'app-manage-google',
-  imports: [Button, Heading, Text, Link, Card, RouterLink, AuthFeedback, GoogleButton, CodeEntry],
+  imports: [Button, Heading, Text, Link, Card, RouterLink, AuthFeedback, GoogleButton, CodeEntry, Alert],
   providers: [AuthHttp, Google, Methods],
   templateUrl: './manage.html',
 })

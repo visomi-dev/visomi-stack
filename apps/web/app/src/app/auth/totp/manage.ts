@@ -1,7 +1,7 @@
 import { Component, DestroyRef, afterNextRender, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { Button, Heading, Text, Link } from '../../ui';
+import { Button, Heading, Text, Link, Card, Code } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
@@ -15,7 +15,7 @@ import { Totp, type TotpSetup } from './totp';
 
 @Component({
   selector: 'app-manage-totp',
-  imports: [Button, Heading, Text, Link, RouterLink, AuthFeedback, CodeEntry, QrCode, BackupDisplay],
+  imports: [Button, Heading, Text, Link, RouterLink, AuthFeedback, CodeEntry, QrCode, BackupDisplay, Card, Code],
   providers: [AuthHttp, Totp, Methods],
   templateUrl: './manage.html',
 })

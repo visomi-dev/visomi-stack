@@ -1,8 +1,10 @@
-<section class="space-y-6">
+<section class="flex min-w-0 flex-col gap-6">
   <h1 appUI i18n="@@authResetTitle">Choose a new password</h1>
   @if (done()) {
     <p appUI i18n="@@authResetDone">Your password has been reset. Sign in with your new password to continue.</p>
-    <a appUI routerLink="/auth/sign-in/password" i18n="@@authSignIn">Sign in</a>
+    <a appUI routerLink="/auth/sign-in/password" i18n="@@authSignIn" class="inline-flex min-h-11 items-center">
+      Sign in
+    </a>
   } @else if (journey.challenge()?.purpose === 'reset') {
     <form novalidate class="space-y-5" [attr.data-submitted]="attempted() ? '' : null" (submit)="save($event)">
       <app-field
@@ -29,25 +31,33 @@
         [description]="policy"
         [error]="fields.password().errors()[0]?.message ?? ''"
       >
-        <input
-          appUI
-          id="reset-password"
-          [formField]="fields.password"
-          [type]="visible() ? 'text' : 'password'"
-          autocomplete="new-password"
-          placeholder=" "
-          [attr.aria-describedby]="passwordField.describedBy()"
-          [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
-        />
-        <button
-          type="button"
-          class="mt-2 text-sm ui-focus-ring"
-          [attr.aria-pressed]="visible()"
-          (click)="visible.set(!visible())"
-          i18n="@@authTogglePassword"
-        >
-          Show or hide password
-        </button>
+        <div class="relative">
+          <input
+            appUI
+            class="pr-24"
+            id="reset-password"
+            [formField]="fields.password"
+            [type]="visible() ? 'text' : 'password'"
+            autocomplete="new-password"
+            placeholder=" "
+            [attr.aria-describedby]="passwordField.describedBy()"
+            [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
+          />
+          <button
+            appUI
+            variant="ghost"
+            size="sm"
+            type="button"
+            class="absolute inset-y-0 right-0 min-w-16"
+            [attr.aria-pressed]="visible()"
+            aria-controls="reset-password"
+            aria-label="Show or hide password"
+            i18n-aria-label="@@authTogglePassword"
+            (click)="visible.set(!visible())"
+          >
+            {{ visible() ? hideLabel : showLabel }}
+          </button>
+        </div>
       </app-field>
       <app-field control-id="reset-factor-kind" [label]="factorLabel">
         <select appUI id="reset-factor-kind" [formField]="fields.kind">
@@ -83,10 +93,18 @@
     </form>
     <app-resend-code />
   } @else {
-    <p appUI tone="muted" i18n="@@authRestartChallenge">
+    <div appUI="alert" tone="warning" role="status" i18n="@@authRestartChallenge">
       This step could not be restored. Start again to request a new verification.
-    </p>
+    </div>
   }
   <app-auth-feedback [action]="action" />
-  <a appUI routerLink="/auth/forgot-password" class="block text-center text-sm" i18n="@@authStartAgain">Start again</a>
+  <a
+    appUI="button"
+    [variant]="journey.challenge()?.purpose === 'reset' ? 'secondary' : 'primary'"
+    routerLink="/auth/forgot-password"
+    class="inline-flex min-h-11 items-center justify-center text-center text-sm"
+    i18n="@@authStartAgain"
+  >
+    Start again
+  </a>
 </section>

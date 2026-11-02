@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { Heading, Text, Link, Button } from '../../ui';
+import { Heading, Text, LinkButton, Alert, Button } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Journey } from '../shared/journey';
 import { AuthNavigation } from '../shared/navigation';
@@ -14,7 +14,7 @@ import { Passwords } from './passwords';
 
 @Component({
   selector: 'app-password-verify',
-  imports: [Heading, Text, Link, Button, RouterLink, AuthFeedback, CodeEntry, ResendCode],
+  imports: [Heading, Text, LinkButton, Alert, Button, RouterLink, AuthFeedback, CodeEntry, ResendCode],
   providers: [AuthHttp, Passwords],
   templateUrl: './verify.html',
 })

@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, pattern, disabled, submit } from '@angular/forms/signals';
 
-import { Button, Heading, Text, Link, Field, Input, Select } from '../../ui';
+import { Button, Heading, Text, Link, LinkButton, Alert, Field, Input, Select } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
@@ -16,7 +16,21 @@ import { Passwords } from './passwords';
 
 @Component({
   selector: 'app-password-reset',
-  imports: [Button, Heading, Text, Link, Field, Input, Select, FormField, RouterLink, AuthFeedback, ResendCode],
+  imports: [
+    Button,
+    Heading,
+    Text,
+    Link,
+    LinkButton,
+    Alert,
+    Field,
+    Input,
+    Select,
+    FormField,
+    RouterLink,
+    AuthFeedback,
+    ResendCode,
+  ],
   providers: [AuthHttp, Passwords],
   templateUrl: './reset.html',
 })
@@ -41,6 +55,8 @@ export class PasswordReset {
 
   readonly action = new Action();
   readonly codeLabel = $localize`:@@authEmailCode:Email verification code`;
+  readonly showLabel = $localize`:@@authShowPassword:Show`;
+  readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authNewPassword:New password`;
   readonly factorLabel = $localize`:@@authAdditionalCode:Additional verification`;
   readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
@@ -72,7 +88,8 @@ export class PasswordReset {
               );
             }
           } finally {
-            this.model.update((v) => ({ ...v, password: '', code: '', factor: '' }));
+            this.fields().reset({ ...this.model(), password: '', code: '', factor: '' });
+            this.attempted.set(false);
           }
         }),
       onInvalid: focusInvalid,

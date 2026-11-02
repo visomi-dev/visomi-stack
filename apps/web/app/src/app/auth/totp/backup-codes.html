@@ -1,4 +1,4 @@
-<section class="max-w-lg space-y-6">
+<section class="flex max-w-lg min-w-0 flex-col gap-6">
   <h1 appUI i18n="@@authBackupCodes">Backup codes</h1>
   @if (codes().length) {
     <app-backup-display [codes]="codes()" />
@@ -6,19 +6,37 @@
     <p appUI tone="muted" i18n="@@authBackupCannotRestore">
       Existing backup codes cannot be displayed again. You can create a replacement set after confirming your identity.
     </p>
-    <button appUI [disabled]="action.busy()" (click)="confirm.set(true)" i18n="@@authReplaceCodes">
+    <button
+      #replaceCodes
+      [attr.aria-expanded]="confirm()"
+      aria-controls="replace-codes-confirmation"
+      appUI
+      [variant]="confirm() ? 'secondary' : 'primary'"
+      class="w-full sm:w-fit"
+      [disabled]="action.busy()"
+      (click)="confirm.set(!confirm())"
+      i18n="@@authReplaceCodes"
+    >
       Replace backup codes
     </button>
     @if (confirm()) {
-      <p role="status" i18n="@@authReplaceCodesConfirm">
-        Replace all existing codes? The old set will stop working immediately.
-      </p>
-      <button appUI variant="danger" [disabled]="action.busy()" (click)="regenerate()" i18n="@@authConfirm">
-        Confirm
-      </button>
-      <button appUI variant="secondary" (click)="confirm.set(false)" i18n="@@authCancel">Cancel</button>
+      <section appUI="card" tone="subtle" id="replace-codes-confirmation">
+        <p role="status" i18n="@@authReplaceCodesConfirm">
+          Replace all existing codes? The old set will stop working immediately.
+        </p>
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <button appUI variant="danger" [disabled]="action.busy()" (click)="regenerate()" i18n="@@authConfirm">
+            Confirm
+          </button>
+          <button appUI variant="secondary" (click)="confirm.set(false); replaceCodes.focus()" i18n="@@authCancel">
+            Cancel
+          </button>
+        </div>
+      </section>
     }
   }
   <app-auth-feedback [action]="action" />
-  <a appUI routerLink="/security" i18n="@@authBackSecurity">Back to security</a>
+  <a appUI routerLink="/security" i18n="@@authBackSecurity" class="inline-flex min-h-11 items-center">
+    Back to security
+  </a>
 </section>

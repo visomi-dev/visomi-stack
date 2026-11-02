@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { Button, Heading, Text, Link } from '../../ui';
+import { Button, Heading, Text, Link, Card } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
@@ -11,7 +11,7 @@ import { Totp } from './totp';
 
 @Component({
   selector: 'app-backup-codes',
-  imports: [Button, Heading, Text, Link, RouterLink, AuthFeedback, BackupDisplay],
+  imports: [Button, Heading, Text, Link, RouterLink, AuthFeedback, BackupDisplay, Card],
   providers: [AuthHttp, Totp],
   templateUrl: './backup-codes.html',
 })

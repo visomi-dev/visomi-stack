@@ -2,7 +2,7 @@ import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, disabled, submit } from '@angular/forms/signals';
 
-import { Button, Heading, Text, Link, Field, Input } from '../../ui';
+import { Button, Heading, Text, Link, Field, Input, Card } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
@@ -16,7 +16,7 @@ import { Passwords } from './passwords';
 
 @Component({
   selector: 'app-manage-password',
-  imports: [Button, Heading, Text, Link, Field, Input, FormField, RouterLink, AuthFeedback],
+  imports: [Button, Heading, Text, Link, Field, Input, FormField, RouterLink, AuthFeedback, Card],
   providers: [AuthHttp, Passwords, Methods],
   templateUrl: './manage.html',
 })
@@ -40,6 +40,8 @@ export class ManagePassword {
   });
 
   readonly action = new Action();
+  readonly showLabel = $localize`:@@authShowPassword:Show`;
+  readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authNewPassword:New password`;
   readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
 

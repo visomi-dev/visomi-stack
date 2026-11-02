@@ -1,4 +1,4 @@
-<section class="space-y-6">
+<section class="flex min-w-0 flex-col gap-6">
   <h1 appUI i18n="@@authConfirmSignIn">Confirm your sign-in</h1>
   @if (pending(); as pending) {
     <p appUI tone="muted">{{ pending.factor === 'email' ? emailHint : totpHint }}</p>
@@ -11,16 +11,17 @@
       </button>
     }
   } @else {
-    <p appUI tone="muted" i18n="@@authRestartChallenge">
+    <div appUI="alert" tone="warning" role="status" i18n="@@authRestartChallenge">
       This step could not be restored. Start again to request a new verification.
-    </p>
+    </div>
   }
   <app-auth-feedback [action]="action" />
   <a
-    appUI
+    appUI="button"
+    [variant]="pending() ? 'secondary' : 'primary'"
     routerLink="/auth/sign-in/password"
     [queryParams]="navigation.returnQuery()"
-    class="block text-center text-sm"
+    class="inline-flex min-h-11 items-center justify-center text-center text-sm"
     i18n="@@authStartAgain"
   >
     Start again

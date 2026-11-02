@@ -1,4 +1,4 @@
-<section class="space-y-6">
+<section class="flex min-w-0 flex-col gap-6">
   <header class="space-y-3">
     <h1 appUI i18n="@@authSignUpHeading">Make yourself at home.</h1>
     <p appUI tone="muted" i18n="@@authSignUpDescription">
@@ -14,7 +14,7 @@
     appUI
     routerLink="/auth/sign-up/password"
     [queryParams]="navigation.returnQuery()"
-    class="block text-center"
+    class="inline-flex min-h-11 items-center justify-center text-center"
     i18n="@@authSignUpPassword"
   >
     Create an account with a password

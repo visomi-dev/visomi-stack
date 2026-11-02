@@ -974,6 +974,14 @@
         <source>Dark theme</source>
         <target>Tema oscuro</target>
       </trans-unit>
+      <trans-unit id="authGoogleUnavailable" datatype="html">
+        <source>Google sign-in is not available right now. You can manage your other sign-in methods in Security.</source>
+        <target>El acceso con Google no está disponible por ahora. Puedes gestionar tus otros métodos de acceso en Seguridad.</target>
+      </trans-unit>
+      <trans-unit id="authNoPasskeys" datatype="html">
+        <source>You have no passkeys yet. Add one to sign in with your device's screen lock.</source>
+        <target>Todavía no tienes claves de acceso. Añade una para entrar con el bloqueo de pantalla de tu dispositivo.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
