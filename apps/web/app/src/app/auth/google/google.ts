@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { DestroyRef, Service, inject } from '@angular/core';
+import { CSP_NONCE, DestroyRef, Service, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthHttp } from '../shared/http';
@@ -28,6 +28,7 @@ let library: Promise<GoogleApi> | null = null;
 @Service({ autoProvided: false })
 export class Google {
   private readonly document = inject(DOCUMENT);
+  private readonly nonce = inject(CSP_NONCE, { optional: true });
   private readonly http = inject(AuthHttp);
   private readonly destroyRef = inject(DestroyRef);
   private readonly session = inject(Session);
@@ -132,10 +133,9 @@ export class Google {
 
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
-      const nonce = this.document.querySelector('[ngCspNonce]')?.getAttribute('ngCspNonce');
 
-      if (nonce) {
-        script.nonce = nonce;
+      if (this.nonce) {
+        script.nonce = this.nonce;
       }
 
       const timer = view.setTimeout(() => {

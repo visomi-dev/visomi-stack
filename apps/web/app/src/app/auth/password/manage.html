@@ -3,7 +3,7 @@
   <p appUI tone="muted" i18n="@@authPasswordManageDescription">
     Adding or changing a password requires a recent identity check. Password sign-in always includes a second step.
   </p>
-  <form novalidate class="space-y-5" (submit)="save($event)">
+  <form novalidate [attr.data-submitted]="attempted() ? '' : null" class="space-y-5" (submit)="save($event)">
     <app-field
       #field="appField"
       control-id="manage-password"
@@ -17,6 +17,7 @@
         [type]="visible() ? 'text' : 'password'"
         autocomplete="new-password"
         [formField]="fields.password"
+        [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
         [attr.aria-describedby]="field.describedBy()"
       />
       <button

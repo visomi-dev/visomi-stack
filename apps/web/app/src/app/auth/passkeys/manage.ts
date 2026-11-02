@@ -8,7 +8,7 @@ import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
 import { AuthNavigation } from '../shared/navigation';
 import { Session } from '../session/session';
-import { requiredMessage } from '../shared/form-errors';
+import { requiredMessage, focusInvalid } from '../shared/form-errors';
 
 import { Passkeys, type Passkey } from './passkeys';
 
@@ -27,6 +27,7 @@ export class ManagePasskeys {
   readonly editing = signal<string | null>(null);
   readonly removing = signal<string | null>(null);
   readonly model = signal({ label: '' });
+  readonly attempted = signal(false);
 
   readonly fields = form(this.model, (path) => {
     required(path.label, { message: requiredMessage });
@@ -58,21 +59,25 @@ export class ManagePasskeys {
   }
 
   edit(key: Passkey): void {
-    this.model.set({ label: key.label });
+    this.fields().reset({ label: key.label });
+    this.attempted.set(false);
     this.editing.set(key.id);
   }
 
   rename(event: Event, id: string): void {
     event.preventDefault();
-    void submit(this.fields, async () =>
-      this.action.run(async () => {
-        await this.api.rename(id, this.model().label);
+    this.attempted.set(true);
+    void submit(this.fields, {
+      action: async () =>
+        this.action.run(async () => {
+          await this.api.rename(id, this.model().label);
 
-        this.editing.set(null);
+          this.editing.set(null);
 
-        await this.reload();
-      }),
-    );
+          await this.reload();
+        }),
+      onInvalid: focusInvalid,
+    });
   }
 
   remove(id: string): void {

@@ -9,7 +9,7 @@ import { AuthFeedback } from '../shared/feedback';
 import { AuthNavigation } from '../shared/navigation';
 import { Session } from '../session/session';
 import { Methods } from '../session/methods';
-import { requiredMessage } from '../shared/form-errors';
+import { requiredMessage, focusInvalid } from '../shared/form-errors';
 
 import { passwordPolicy } from './validation';
 import { Passwords } from './passwords';
@@ -31,6 +31,7 @@ export class ManagePassword {
   readonly confirm = signal(false);
   readonly visible = signal(false);
   readonly model = signal({ password: '' });
+  readonly attempted = signal(false);
 
   readonly fields = form(this.model, (path) => {
     required(path.password, { message: requiredMessage });
@@ -56,22 +57,26 @@ export class ManagePassword {
 
   save(event: Event): void {
     event.preventDefault();
-    void submit(this.fields, async () =>
-      this.action.run(async () => {
-        try {
-          const result = await this.api.save(this.model().password, this.exists());
+    this.attempted.set(true);
+    void submit(this.fields, {
+      action: async () =>
+        this.action.run(async () => {
+          try {
+            const result = await this.api.save(this.model().password, this.exists());
 
-          this.exists.set(true);
-          this.action.notice.set(
-            result.notificationSent === false
-              ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
-              : $localize`:@@authPasswordSaved:Your password has been saved.`,
-          );
-        } finally {
-          this.model.set({ password: '' });
-        }
-      }),
-    );
+            this.exists.set(true);
+            this.action.notice.set(
+              result.notificationSent === false
+                ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
+                : $localize`:@@authPasswordSaved:Your password has been saved.`,
+            );
+          } finally {
+            this.fields().reset({ password: '' });
+            this.attempted.set(false);
+          }
+        }),
+      onInvalid: focusInvalid,
+    });
   }
 
   remove(): void {

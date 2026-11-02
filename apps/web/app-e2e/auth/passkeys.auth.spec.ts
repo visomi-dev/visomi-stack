@@ -52,6 +52,18 @@ test('registers and authenticates a real virtual passkey through the browser', a
 
   await expect(page.getByRole('heading', { name: 'Primary synthetic key', exact: true })).toBeVisible();
 
+  await page.getByRole('button', { name: 'Rename', exact: true }).click();
+
+  await page.getByLabel('Passkey name', { exact: true }).fill('Cancelled synthetic name');
+
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+
+  await page.reload();
+
+  await expect(page.getByRole('heading', { name: 'Primary synthetic key', exact: true })).toBeVisible();
+
+  await expect(page.getByLabel('Passkey name', { exact: true })).toHaveCount(0);
+
   await page.getByRole('button', { name: 'Remove', exact: true }).click();
 
   await page.getByRole('button', { name: 'Confirm removal', exact: true }).click();
@@ -65,6 +77,8 @@ test('registers and authenticates a real virtual passkey through the browser', a
   await page.getByRole('button', { name: 'Save password', exact: true }).click();
 
   await expect(page.getByText('Your password has been saved.', { exact: true })).toBeVisible();
+
+  await expect(page.getByLabel('New password', { exact: true })).not.toHaveAttribute('aria-invalid', 'true');
 
   await page.goto('/app/en/security/passkeys');
 

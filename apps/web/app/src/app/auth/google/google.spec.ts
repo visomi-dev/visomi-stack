@@ -1,5 +1,6 @@
 import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { CSP_NONCE } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { NEVER } from 'rxjs';
 
@@ -117,4 +118,38 @@ it('does not complete a Google callback after its owning view is destroyed', asy
   expect(failed).not.toHaveBeenCalled();
   http.expectNone('/api/auth/google/complete');
   TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+});
+
+it('loads the provider script with the Angular CSP nonce', async () => {
+  vi.stubGlobal('google', undefined);
+  TestBed.overrideProvider(CSP_NONCE, { useValue: 'synthetic-angular-nonce' });
+  const api = TestBed.inject(Google);
+  const http = TestBed.inject(HttpTestingController);
+  const ready = api.button(document.createElement('div'), 'login', vi.fn(), vi.fn());
+
+  await Promise.resolve();
+
+  http.expectOne('/api/auth/google/start').flush({
+    flowId: 'synthetic-flow',
+    clientId: 'synthetic-client',
+    nonce: 'synthetic-provider-nonce',
+  });
+
+  await vi.waitFor(() =>
+    expect(document.querySelector('script[src="https://accounts.google.com/gsi/client"]')).not.toBeNull(),
+  );
+
+  const script = document.querySelector<HTMLScriptElement>('script[src="https://accounts.google.com/gsi/client"]')!;
+
+  try {
+    expect(script.nonce).toBe('synthetic-angular-nonce');
+    vi.stubGlobal('google', { accounts: { id: { initialize, renderButton, cancel: vi.fn() } } });
+    script.dispatchEvent(new Event('load'));
+
+    await ready;
+
+    expect(renderButton).toHaveBeenCalledOnce();
+  } finally {
+    script.remove();
+  }
 });

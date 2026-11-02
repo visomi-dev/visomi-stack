@@ -22,15 +22,20 @@ export class Devices {
     return this.http.request('POST', '/device-approval/status', { requestId });
   }
 
-  review(requestId: string): Promise<DeviceStatus> {
-    return this.http.request('POST', '/device-approval/review', { requestId });
+  review(requestId: string, signal?: AbortSignal): Promise<DeviceStatus> {
+    return this.http.request('POST', '/device-approval/review', { requestId }, signal);
   }
 
-  decide(requestId: string, userCode: string, approve: boolean): Promise<void> {
-    return this.http.request('POST', approve ? '/device-approval/approve' : '/device-approval/deny', {
-      requestId,
-      userCode,
-    });
+  decide(requestId: string, userCode: string, approve: boolean, signal?: AbortSignal): Promise<void> {
+    return this.http.request(
+      'POST',
+      approve ? '/device-approval/approve' : '/device-approval/deny',
+      {
+        requestId,
+        userCode,
+      },
+      signal,
+    );
   }
 
   cancel(requestId: string): Promise<void> {

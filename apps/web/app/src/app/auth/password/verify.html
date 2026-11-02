@@ -1,6 +1,6 @@
 <section class="space-y-6">
   <h1 appUI i18n="@@authConfirmSignIn">Confirm your sign-in</h1>
-  @if (pending && pending.purpose === 'password') {
+  @if (pending(); as pending) {
     <p appUI tone="muted">{{ pending.factor === 'email' ? emailHint : totpHint }}</p>
     <app-code-entry [busy]="action.busy()" [backup]="backup()" (confirmed)="verify($event)" />
     @if (pending.factor === 'email') {

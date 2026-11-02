@@ -12,6 +12,7 @@ import {
   makeStateKey,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, firstValueFrom } from 'rxjs';
 
 import { isSession } from './models';
@@ -84,7 +85,8 @@ export class Session {
 
     this.destroyRef.onDestroy(() => {
       this.destroyed = true;
-      this.revision++;
+      this.cancelOperations();
+      this.cancellation.complete();
       this.channel?.close();
     });
     afterNextRender(() => {
@@ -136,7 +138,11 @@ export class Session {
     }
 
     const revision = this.revision;
-    const pending = firstValueFrom(this.http.get<SessionView>('/api/auth/session', { transferCache: false }))
+    const pending = firstValueFrom(
+      this.http
+        .get<SessionView>('/api/auth/session', { transferCache: false })
+        .pipe(takeUntilDestroyed(this.destroyRef)),
+    )
       .then((result) => {
         if (!isSession(result)) {
           throw new Error('authentication_response_invalid');
@@ -163,7 +169,7 @@ export class Session {
   }
 
   async loadProviders(): Promise<void> {
-    if (!this.available || this.capabilities()) {
+    if (!this.available || this.destroyed || this.capabilities()) {
       return;
     }
 
@@ -171,7 +177,11 @@ export class Session {
       return this.providerRequest;
     }
 
-    this.providerRequest = firstValueFrom(this.http.get<Providers>('/api/auth/providers', { transferCache: false }))
+    this.providerRequest = firstValueFrom(
+      this.http
+        .get<Providers>('/api/auth/providers', { transferCache: false })
+        .pipe(takeUntilDestroyed(this.destroyRef)),
+    )
       .then((result) => {
         if (!this.destroyed) {
           this.capabilities.set(result);

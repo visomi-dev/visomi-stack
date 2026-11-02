@@ -8,7 +8,7 @@ import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
 import { Journey } from '../shared/journey';
 import { ResendCode } from '../shared/resend';
-import { codeMessage, requiredMessage, formFocus } from '../shared/form-errors';
+import { codeMessage, requiredMessage, focusInvalid } from '../shared/form-errors';
 import type { Factor } from '../session/models';
 
 import { passwordPolicy } from './validation';
@@ -45,41 +45,37 @@ export class PasswordReset {
   readonly factorLabel = $localize`:@@authAdditionalCode:Additional verification`;
   readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
 
-  private readonly focusInvalid = formFocus();
-
   save(event: Event): void {
     event.preventDefault();
     this.attempted.set(true);
-    void submit(this.fields, async () =>
-      this.action.run(async () => {
-        const pending = this.journey.challenge();
+    void submit(this.fields, {
+      action: async () =>
+        this.action.run(async () => {
+          const pending = this.journey.challenge();
 
-        if (pending?.purpose !== 'reset') {
-          return;
-        }
-
-        const value = this.model();
-        const factor = value.kind === 'none' ? undefined : { kind: value.kind as Factor['kind'], code: value.factor };
-
-        try {
-          const result = await this.passwords.completeReset(pending.flowId, value.code, value.password, factor);
-
-          this.journey.clear();
-          this.done.set(true);
-
-          if (!result.notificationSent) {
-            this.action.notice.set(
-              $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
-            );
+          if (pending?.purpose !== 'reset') {
+            return;
           }
-        } finally {
-          this.model.update((v) => ({ ...v, password: '', code: '', factor: '' }));
-        }
-      }),
-    );
 
-    if (this.fields().invalid()) {
-      this.focusInvalid();
-    }
+          const value = this.model();
+          const factor = value.kind === 'none' ? undefined : { kind: value.kind as Factor['kind'], code: value.factor };
+
+          try {
+            const result = await this.passwords.completeReset(pending.flowId, value.code, value.password, factor);
+
+            this.journey.clear();
+            this.done.set(true);
+
+            if (!result.notificationSent) {
+              this.action.notice.set(
+                $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
+              );
+            }
+          } finally {
+            this.model.update((v) => ({ ...v, password: '', code: '', factor: '' }));
+          }
+        }),
+      onInvalid: focusInvalid,
+    });
   }
 }

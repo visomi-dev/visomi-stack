@@ -46,8 +46,10 @@ The `auth/` domain groups session, passkeys, password, email, Google, TOTP, reco
 and device approval capabilities. Views use Signal Forms and native controls with
 the existing UI adapters. Auth components keep templates in adjacent `.html` files;
 the Nx and Angular component generators default to external HTML and CSS. Shared
-visual recipes stay in the UI library. Page-scoped HTTP clients cancel work when their view is
-destroyed. A scoped journey retains only pending challenge metadata between auth
+visual recipes stay in the UI library. Form submissions use Signal Forms' `onInvalid`
+and bound-control focus; feedback owns its alert focus after rendering. Browser SDK
+and QR work use view queries and lifecycle cleanup. Page-scoped HTTP clients cancel
+work when their view is destroyed. A scoped journey retains only pending challenge metadata between auth
 pages; it is destroyed when leaving the access layout. Passwords and codes are
 not stored in URLs, browser storage or transferred SSR state.
 
@@ -79,6 +81,8 @@ it only to the same-origin API. Sensitive mutations are never retried automatica
 - `auth/device-approval`: browser-bound pairing request. `security/devices/review`
   lets a different full session approve or deny it with recent authentication.
   Approval grants enrollment, not application access. Pairing codes stay out of links.
+  Changing the review request within the same route clears the pairing field and
+  cancels the previous request; obsolete results cannot update the next review.
 - `home`, `account`, `security` and its capability pages: minimal private home,
   verified email, passkeys, password, Google linking, authenticator, backup codes
   and session revocation.

@@ -3,7 +3,7 @@ import { disabled, email, form, FormField, required, submit } from '@angular/for
 
 import { Button, Field, Input } from '../../ui';
 
-import { emailMessage, requiredMessage, formFocus } from './form-errors';
+import { emailMessage, requiredMessage, focusInvalid } from './form-errors';
 
 @Component({
   selector: 'app-email-entry',
@@ -26,17 +26,14 @@ export class EmailEntry {
 
   readonly emailLabel = $localize`:@@authEmail:Email address`;
 
-  private readonly focusInvalid = formFocus();
-
   send(event: Event): void {
     event.preventDefault();
     this.attempted.set(true);
-    void submit(this.fields, async () => {
-      this.confirmed.emit(this.model().email.trim());
+    void submit(this.fields, {
+      action: async () => {
+        this.confirmed.emit(this.model().email.trim());
+      },
+      onInvalid: focusInvalid,
     });
-
-    if (this.fields().invalid()) {
-      this.focusInvalid();
-    }
   }
 }

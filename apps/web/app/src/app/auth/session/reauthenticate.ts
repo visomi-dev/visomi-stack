@@ -10,7 +10,7 @@ import { AuthNavigation } from '../shared/navigation';
 import { CodeEntry } from '../shared/code-entry';
 import { ResendCode } from '../shared/resend';
 import { Journey } from '../shared/journey';
-import { requiredMessage } from '../shared/form-errors';
+import { requiredMessage, focusInvalid } from '../shared/form-errors';
 import { Passkeys } from '../passkeys/passkeys';
 import { Passwords } from '../password/passwords';
 import { GoogleButton } from '../google/google-button';
@@ -50,6 +50,7 @@ export class Reauthenticate {
   readonly pending = signal<(Pending & { factor: 'email' | 'totp' }) | null>(null);
   readonly backup = signal(false);
   readonly model = signal({ password: '' });
+  readonly attempted = signal(false);
 
   readonly fields = form(this.model, (path) => {
     required(path.password, { message: requiredMessage });
@@ -82,18 +83,22 @@ export class Reauthenticate {
 
   password(event: Event): void {
     event.preventDefault();
-    void submit(this.fields, async () =>
-      this.action.run(async () => {
-        try {
-          const pending = await this.passwords.startReauth(this.model().password);
+    this.attempted.set(true);
+    void submit(this.fields, {
+      action: async () =>
+        this.action.run(async () => {
+          try {
+            const pending = await this.passwords.startReauth(this.model().password);
 
-          this.pending.set(pending);
-          this.journey.start('password', pending);
-        } finally {
-          this.model.set({ password: '' });
-        }
-      }),
-    );
+            this.pending.set(pending);
+            this.journey.start('password', pending);
+          } finally {
+            this.fields().reset({ password: '' });
+            this.attempted.set(false);
+          }
+        }),
+      onInvalid: focusInvalid,
+    });
   }
 
   verify(code: string): void {

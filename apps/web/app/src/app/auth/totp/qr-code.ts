@@ -1,4 +1,4 @@
-import { Component, ElementRef, afterNextRender, input, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, afterRenderEffect, input, signal, viewChild } from '@angular/core';
 
 @Component({
   selector: 'app-totp-qr',
@@ -12,13 +12,33 @@ export class QrCode {
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
 
   constructor() {
-    afterNextRender(() => {
-      void import('qrcode')
-        .then((module) => module.default)
-        .then((qr) =>
-          qr.toCanvas(this.canvas().nativeElement, this.uri(), { width: 240, margin: 4, errorCorrectionLevel: 'M' }),
-        )
-        .catch(() => this.failed.set(true));
+    afterRenderEffect({
+      write: (onCleanup) => {
+        const canvas = this.canvas().nativeElement;
+        const uri = this.uri();
+        let active = true;
+
+        onCleanup(() => {
+          active = false;
+        });
+        canvas.width = 240;
+        canvas.height = 240;
+        this.failed.set(false);
+        void import('qrcode')
+          .then((module) => module.default)
+          .then((qr) => {
+            if (active) {
+              return qr.toCanvas(canvas, uri, { width: 240, margin: 4, errorCorrectionLevel: 'M' });
+            }
+
+            return undefined;
+          })
+          .catch(() => {
+            if (active) {
+              this.failed.set(true);
+            }
+          });
+      },
     });
   }
 }

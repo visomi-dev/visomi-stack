@@ -26,6 +26,7 @@
         <button appUI type="submit" [disabled]="action.busy()" i18n="@@authApproveDevice">Approve request</button>
         <button
           appUI
+          type="button"
           variant="danger"
           [disabled]="action.busy()"
           (click)="decide($event, false)"
@@ -37,7 +38,7 @@
     </form>
   } @else if (status()) {
     <p role="status" i18n="@@authDeviceReviewComplete">This request is no longer waiting for approval.</p>
-  } @else if (!requestId) {
+  } @else if (!requestId()) {
     <p role="status" i18n="@@authDeviceLinkInvalid">Open the review link shown on the requesting device.</p>
   }
   <app-auth-feedback [action]="action" />

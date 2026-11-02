@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { Heading, Text, Link, Button } from '../../ui';
@@ -25,7 +25,12 @@ export class PasswordVerify {
 
   readonly backup = signal(false);
 
-  readonly pending = this.journey.challenge();
+  readonly pending = computed(() => {
+    const challenge = this.journey.challenge();
+
+    return challenge?.purpose === 'password' ? challenge : null;
+  });
+
   readonly action = new Action();
   readonly emailHint = $localize`:@@authEmailFactorHint:Enter the code sent to your email.`;
   readonly totpHint = $localize`:@@authTotpFactorHint:Enter a code from your authenticator app, or use a backup code.`;

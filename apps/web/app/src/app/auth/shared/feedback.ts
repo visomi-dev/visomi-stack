@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, ElementRef, afterRenderEffect, input, viewChild } from '@angular/core';
 
 import { Alert, Loader } from '../../ui';
 
@@ -11,4 +11,25 @@ import type { Action } from './action';
 })
 export class AuthFeedback {
   readonly action = input.required<Action>();
+
+  private readonly alert = viewChild<ElementRef<HTMLElement>>('error');
+
+  private focusedAction: Action | null = null;
+  private focusedVersion = 0;
+
+  constructor() {
+    afterRenderEffect({
+      write: () => {
+        const action = this.action();
+        const version = action.errorFocus();
+        const alert = this.alert();
+
+        if (version && alert && (action !== this.focusedAction || version !== this.focusedVersion)) {
+          this.focusedAction = action;
+          this.focusedVersion = version;
+          alert.nativeElement.focus();
+        }
+      },
+    });
+  }
 }

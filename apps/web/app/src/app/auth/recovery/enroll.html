@@ -34,7 +34,7 @@
     </button>
     <details class="space-y-4">
       <summary class="cursor-pointer text-sm ui-focus-ring" i18n="@@authUsePassword">Use a password</summary>
-      <form novalidate class="space-y-4" (submit)="password($event)">
+      <form novalidate [attr.data-submitted]="attempted() ? '' : null" class="space-y-4" (submit)="password($event)">
         <app-field
           #field="appField"
           control-id="replacement-password"
@@ -48,6 +48,7 @@
             [type]="visible() ? 'text' : 'password'"
             autocomplete="new-password"
             [formField]="fields.password"
+            [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
             [attr.aria-describedby]="field.describedBy()"
           />
           <button

@@ -9,7 +9,7 @@ import { AuthFeedback } from '../shared/feedback';
 import { Journey } from '../shared/journey';
 import { ResendCode } from '../shared/resend';
 import { AuthNavigation } from '../shared/navigation';
-import { codeMessage, requiredMessage, formFocus } from '../shared/form-errors';
+import { codeMessage, requiredMessage, focusInvalid } from '../shared/form-errors';
 import type { Factor } from '../session/models';
 
 import { Recovery } from './recovery';
@@ -40,39 +40,35 @@ export class RecoveryVerify {
   readonly emailLabel = $localize`:@@authEmailCode:Email verification code`;
   readonly factorLabel = $localize`:@@authAdditionalCode:Additional verification`;
 
-  private readonly focusInvalid = formFocus();
-
   verify(event: Event): void {
     event.preventDefault();
     this.attempted.set(true);
-    void submit(this.fields, async () =>
-      this.action.run(async () => {
-        const pending = this.journey.challenge();
+    void submit(this.fields, {
+      action: async () =>
+        this.action.run(async () => {
+          const pending = this.journey.challenge();
 
-        if (pending?.purpose !== 'recovery') {
-          return;
-        }
+          if (pending?.purpose !== 'recovery') {
+            return;
+          }
 
-        const value = this.model();
+          const value = this.model();
 
-        try {
-          const result = await this.api.verify(
-            pending.flowId,
-            value.code,
-            value.kind === 'none' ? undefined : { kind: value.kind as Factor['kind'], code: value.factor },
-          );
+          try {
+            const result = await this.api.verify(
+              pending.flowId,
+              value.code,
+              value.kind === 'none' ? undefined : { kind: value.kind as Factor['kind'], code: value.factor },
+            );
 
-          this.journey.clear();
+            this.journey.clear();
 
-          await this.navigation.complete(result);
-        } finally {
-          this.model.update((v) => ({ ...v, code: '', factor: '' }));
-        }
-      }),
-    );
-
-    if (this.fields().invalid()) {
-      this.focusInvalid();
-    }
+            await this.navigation.complete(result);
+          } finally {
+            this.model.update((v) => ({ ...v, code: '', factor: '' }));
+          }
+        }),
+      onInvalid: focusInvalid,
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, RESPONSE_INIT } from '@angular/core';
+import { Component, computed, inject, RESPONSE_INIT } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { Session } from '../session/session';
@@ -12,8 +12,9 @@ import { Link } from '../../ui';
 })
 export class NotFound {
   private readonly response = inject(RESPONSE_INIT, { optional: true });
+  private readonly session = inject(Session);
 
-  readonly target = destination(inject(Session).snapshot());
+  readonly target = computed(() => destination(this.session.snapshot()));
 
   constructor() {
     if (this.response) {

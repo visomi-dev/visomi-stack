@@ -39,3 +39,29 @@ it('accepts backup codes without imposing a numeric code format', async () => {
 
   expect(fixture.componentInstance.fields().valid()).toBe(true);
 });
+
+it('focuses its own invalid control even when another form has an invalid field', async () => {
+  const otherForm = document.createElement('form');
+  const otherInput = document.createElement('input');
+
+  otherInput.setAttribute('aria-invalid', 'true');
+  otherForm.append(otherInput);
+  document.body.prepend(otherForm);
+
+  try {
+    const fixture = TestBed.createComponent(CodeEntry);
+
+    await fixture.whenStable();
+
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(input);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+  } finally {
+    otherForm.remove();
+  }
+});

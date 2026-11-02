@@ -1,13 +1,7 @@
-import { DOCUMENT } from '@angular/common';
-import { inject } from '@angular/core';
+import type { FieldTree } from '@angular/forms/signals';
 
-export function formFocus() {
-  const document = inject(DOCUMENT);
-
-  return () =>
-    queueMicrotask(() =>
-      document.querySelector<HTMLInputElement>('form [aria-invalid="true"], form input:invalid')?.focus(),
-    );
+export function focusInvalid<T>(fields: FieldTree<T>): void {
+  fields().errorSummary()[0]?.fieldTree().focusBoundControl();
 }
 export const requiredMessage = $localize`:@@authRequired:Complete this field.`;
 export const emailMessage = $localize`:@@authEmailInvalid:Enter a valid email address.`;

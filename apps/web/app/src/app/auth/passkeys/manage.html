@@ -9,17 +9,30 @@
     <section appUI="card">
       <h2 class="font-semibold break-words">{{ key.label }}</h2>
       @if (editing() === key.id) {
-        <form novalidate class="space-y-3" (submit)="rename($event, key.id)">
+        <form
+          novalidate
+          [attr.data-submitted]="attempted() ? '' : null"
+          class="space-y-3"
+          (submit)="rename($event, key.id)"
+        >
           <app-field
             #field="appField"
             control-id="passkey-label"
             [label]="nameLabel"
             [error]="fields.label().errors()[0]?.message ?? ''"
           >
-            <input appUI id="passkey-label" [formField]="fields.label" [attr.aria-describedby]="field.describedBy()" />
+            <input
+              appUI
+              id="passkey-label"
+              [formField]="fields.label"
+              [attr.aria-invalid]="fields.label().touched() && fields.label().invalid()"
+              [attr.aria-describedby]="field.describedBy()"
+            />
           </app-field>
           <button appUI type="submit" [disabled]="action.busy()" i18n="@@authSave">Save</button>
-          <button appUI variant="secondary" (click)="editing.set(null)" i18n="@@authCancel">Cancel</button>
+          <button appUI type="button" variant="secondary" (click)="editing.set(null)" i18n="@@authCancel">
+            Cancel
+          </button>
         </form>
       } @else {
         <div class="flex flex-wrap gap-3">

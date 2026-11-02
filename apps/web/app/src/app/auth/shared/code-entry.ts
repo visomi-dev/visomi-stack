@@ -3,7 +3,7 @@ import { disabled, form, FormField, pattern, required, submit } from '@angular/f
 
 import { Button, Field, Input } from '../../ui';
 
-import { codeMessage, requiredMessage, formFocus } from './form-errors';
+import { codeMessage, requiredMessage, focusInvalid } from './form-errors';
 
 @Component({
   selector: 'app-code-entry',
@@ -26,18 +26,15 @@ export class CodeEntry {
 
   readonly label = $localize`:@@authVerificationCode:Verification code`;
 
-  private readonly focusInvalid = formFocus();
-
   verify(event: Event): void {
     event.preventDefault();
     this.attempted.set(true);
-    void submit(this.fields, async () => {
-      this.confirmed.emit(this.model().code);
-      this.model.set({ code: '' });
+    void submit(this.fields, {
+      action: async () => {
+        this.confirmed.emit(this.model().code);
+        this.model.set({ code: '' });
+      },
+      onInvalid: focusInvalid,
     });
-
-    if (this.fields().invalid()) {
-      this.focusInvalid();
-    }
   }
 }

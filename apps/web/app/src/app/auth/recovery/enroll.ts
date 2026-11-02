@@ -13,7 +13,7 @@ import { Journey } from '../shared/journey';
 import { ResendCode } from '../shared/resend';
 import { Passkeys } from '../passkeys/passkeys';
 import { passwordPolicy } from '../password/validation';
-import { requiredMessage } from '../shared/form-errors';
+import { requiredMessage, focusInvalid } from '../shared/form-errors';
 import type { FactorPending } from '../session/models';
 
 import { Recovery } from './recovery';
@@ -39,6 +39,7 @@ export class Enroll {
   readonly backup = signal(false);
   readonly registered = signal(this.session.snapshot().method === 'passkey');
   readonly visible = signal(false);
+  readonly attempted = signal(false);
 
   readonly fields = form(this.model, (path) => {
     required(path.password, { message: requiredMessage });
@@ -77,23 +78,27 @@ export class Enroll {
 
   password(event: Event): void {
     event.preventDefault();
-    void submit(this.fields, async () =>
-      this.action.run(async () => {
-        try {
-          this.replacement = this.model().password;
-          const pending = await this.api.password(this.replacement);
+    this.attempted.set(true);
+    void submit(this.fields, {
+      action: async () =>
+        this.action.run(async () => {
+          try {
+            this.replacement = this.model().password;
+            const pending = await this.api.password(this.replacement);
 
-          this.pending.set(pending);
-          this.journey.start('replacement', pending);
-        } catch (error) {
-          this.replacement = '';
+            this.pending.set(pending);
+            this.journey.start('replacement', pending);
+          } catch (error) {
+            this.replacement = '';
 
-          throw error;
-        } finally {
-          this.model.set({ password: '' });
-        }
-      }),
-    );
+            throw error;
+          } finally {
+            this.fields().reset({ password: '' });
+            this.attempted.set(false);
+          }
+        }),
+      onInvalid: focusInvalid,
+    });
   }
 
   completePassword(code: string): void {

@@ -154,3 +154,21 @@ it('rejects an inconsistent server response without manufacturing access', async
   expect(session.status()).toBe('unavailable');
   expect(session.full()).toBe(false);
 });
+
+it('cancels session and provider reads when its injector is destroyed', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const loading = session.load();
+  const providers = session.loadProviders();
+  const sessionRequest = http.expectOne('/api/auth/session');
+  const providerRequest = http.expectOne('/api/auth/providers');
+
+  TestBed.resetTestingModule();
+
+  await Promise.all([loading, providers]);
+
+  expect(sessionRequest.cancelled).toBe(true);
+  expect(providerRequest.cancelled).toBe(true);
+  expect(session.snapshot().user).toBeNull();
+  TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+});

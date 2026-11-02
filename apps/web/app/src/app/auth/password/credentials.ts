@@ -8,7 +8,7 @@ import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
 import { AuthNavigation } from '../shared/navigation';
 import { Journey } from '../shared/journey';
-import { emailMessage, requiredMessage, formFocus } from '../shared/form-errors';
+import { emailMessage, requiredMessage, focusInvalid } from '../shared/form-errors';
 import { Passkeys } from '../passkeys/passkeys';
 
 import { passwordPolicy } from './validation';
@@ -60,8 +60,6 @@ export class PasswordCredentials {
   readonly createLabel = $localize`:@@authCreateAccount:Create an account`;
   readonly signInLabel = $localize`:@@authSignIn:Sign in`;
 
-  private readonly focusInvalid = formFocus();
-
   constructor() {
     afterNextRender(() => {
       if (!this.signup) {
@@ -76,30 +74,28 @@ export class PasswordCredentials {
   send(event: Event): void {
     event.preventDefault();
     this.attempted.set(true);
-    void submit(this.fields, async () =>
-      this.action.run(async () => {
-        this.passkeys.cancel();
-        const { email, password } = this.model();
+    void submit(this.fields, {
+      action: async () =>
+        this.action.run(async () => {
+          this.passkeys.cancel();
+          const { email, password } = this.model();
 
-        try {
-          const operation = this.signup
-            ? this.passwords.signup(email, password)
-            : this.passwords.signin(email, password);
-          const pending = await operation;
+          try {
+            const operation = this.signup
+              ? this.passwords.signup(email, password)
+              : this.passwords.signin(email, password);
+            const pending = await operation;
 
-          this.journey.start(this.signup ? 'email' : 'password', pending);
+            this.journey.start(this.signup ? 'email' : 'password', pending);
 
-          await this.router.navigate([this.signup ? '/auth/verify-email' : '/auth/sign-in/verify'], {
-            queryParams: this.navigation.returnQuery(),
-          });
-        } finally {
-          this.model.update((value) => ({ ...value, password: '' }));
-        }
-      }),
-    );
-
-    if (this.fields().invalid()) {
-      this.focusInvalid();
-    }
+            await this.router.navigate([this.signup ? '/auth/verify-email' : '/auth/sign-in/verify'], {
+              queryParams: this.navigation.returnQuery(),
+            });
+          } finally {
+            this.model.update((value) => ({ ...value, password: '' }));
+          }
+        }),
+      onInvalid: focusInvalid,
+    });
   }
 }

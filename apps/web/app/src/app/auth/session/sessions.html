@@ -27,9 +27,9 @@
         <dt i18n="@@authMethod">Method</dt>
         <dd>{{ methodLabel(entry.method) }}</dd>
         <dt i18n="@@authStarted">Started</dt>
-        <dd>{{ date(entry.createdAt) }}</dd>
+        <dd>{{ entry.createdAt | date: 'mediumDate' }} {{ entry.createdAt | date: 'shortTime' }}</dd>
         <dt i18n="@@authExpires">Expires</dt>
-        <dd>{{ date(entry.expiresAt) }}</dd>
+        <dd>{{ entry.expiresAt | date: 'mediumDate' }} {{ entry.expiresAt | date: 'shortTime' }}</dd>
       </dl>
       <button
         appUI

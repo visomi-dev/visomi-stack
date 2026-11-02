@@ -1,4 +1,5 @@
-import { Component, LOCALE_ID, afterNextRender, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { Button, Heading, Text, Link, Card } from '../../ui';
@@ -12,7 +13,7 @@ import { Session } from './session';
 
 @Component({
   selector: 'app-sessions',
-  imports: [Button, Heading, Text, Link, Card, RouterLink, AuthFeedback],
+  imports: [Button, Heading, Text, Link, Card, RouterLink, AuthFeedback, DatePipe],
   providers: [AuthHttp, Methods],
   templateUrl: './sessions.html',
 })
@@ -20,7 +21,6 @@ export class Sessions {
   private readonly api = inject(Methods);
   private readonly session = inject(Session);
   private readonly navigation = inject(AuthNavigation);
-  private readonly locale = inject(LOCALE_ID);
 
   readonly entries = signal<SessionEntry[]>([]);
   readonly confirm = signal<string | null>(null);
@@ -49,10 +49,6 @@ export class Sessions {
       default:
         return this.unknownLabel;
     }
-  }
-
-  date(value: string): string {
-    return new Intl.DateTimeFormat(this.locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
   }
 
   async reload(): Promise<void> {

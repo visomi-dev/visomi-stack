@@ -1,4 +1,4 @@
-import { expect, test } from './support/fixtures';
+import { expect, test, address } from './support/fixtures';
 
 test('presents direct actions in both languages, mobile and dark mode', async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -49,6 +49,16 @@ test('presents direct actions in both languages, mobile and dark mode', async ({
   await expect(page.locator('#password-email')).toHaveAttribute('aria-invalid', 'true');
 
   await expect(page.locator('#password-email')).toBeFocused();
+
+  await page.getByLabel('Email address', { exact: true }).fill(address());
+
+  await page.getByLabel('Password', { exact: true }).fill('synthetic-incorrect-password');
+
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+
+  await expect(page.getByRole('alert')).toContainText('We could not verify these details.');
+
+  await expect(page.getByRole('alert')).toBeFocused();
 
   await page.setViewportSize({ width: 1280, height: 900 });
 

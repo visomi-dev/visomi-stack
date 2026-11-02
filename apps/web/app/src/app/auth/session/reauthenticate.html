@@ -27,7 +27,7 @@
       />
     }
     @if (methods()?.password) {
-      <form novalidate class="space-y-4" (submit)="password($event)">
+      <form novalidate [attr.data-submitted]="attempted() ? '' : null" class="space-y-4" (submit)="password($event)">
         <app-field
           #field="appField"
           control-id="reauth-password"
@@ -40,6 +40,7 @@
             type="password"
             autocomplete="current-password"
             [formField]="fields.password"
+            [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
             [attr.aria-describedby]="field.describedBy()"
           />
         </app-field>

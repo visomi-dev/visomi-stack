@@ -1,4 +1,3 @@
-import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DestroyRef, afterNextRender, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
@@ -9,11 +8,11 @@ import { destination } from '../session/navigation';
 export class Action {
   private readonly router = inject(Router);
   private readonly session = inject(Session);
-  private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly busy = signal(true);
   readonly error = signal('');
+  readonly errorFocus = signal(0);
   readonly notice = signal('');
 
   private alive = true;
@@ -26,8 +25,8 @@ export class Action {
     });
   }
 
-  async run(work: () => Promise<void>): Promise<void> {
-    if (this.busy()) {
+  async run(work: () => Promise<void>, signal?: AbortSignal): Promise<void> {
+    if (!this.alive || this.busy() || signal?.aborted) {
       return;
     }
 
@@ -38,7 +37,7 @@ export class Action {
     try {
       await work();
     } catch (error) {
-      if (!this.alive) {
+      if (!this.alive || signal?.aborted) {
         return;
       }
 
@@ -48,6 +47,7 @@ export class Action {
         this.error.set(
           $localize`:@@authRestrictedExpired:This verification can no longer continue. Sign out and start recovery again.`,
         );
+        this.errorFocus.update((value) => value + 1);
       } else if (code === 'reauthentication_required') {
         await this.router.navigate(['/auth/reauthenticate'], { queryParams: { returnTo: this.router.url } });
       } else if (
@@ -61,10 +61,10 @@ export class Action {
         await this.router.navigateByUrl(destination(this.session.snapshot()));
       } else {
         this.error.set(errorMessage(error));
-        queueMicrotask(() => this.document.querySelector<HTMLElement>('[data-action-error]')?.focus());
+        this.errorFocus.update((value) => value + 1);
       }
     } finally {
-      if (this.alive) {
+      if (this.alive && !signal?.aborted) {
         this.busy.set(false);
       }
     }

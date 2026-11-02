@@ -1,5 +1,5 @@
 @if (action().error()) {
-  <div appUI="alert" tone="danger" role="alert" tabindex="-1" data-action-error>{{ action().error() }}</div>
+  <div #error appUI="alert" tone="danger" role="alert" tabindex="-1" data-action-error>{{ action().error() }}</div>
 }
 @if (action().notice()) {
   <div appUI="alert" role="status">{{ action().notice() }}</div>
