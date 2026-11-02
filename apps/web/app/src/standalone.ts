@@ -54,6 +54,7 @@ async function start(): Promise<void> {
       observability: telemetry,
       assets: { 'web-app': assets },
       origin: process.env['BROWSER_TELEMETRY_ORIGIN'] ?? `http://127.0.0.1:${port}`,
+      performance: process.env['VISOMI_BROWSER_PERFORMANCE'] === 'true',
     });
   }
 

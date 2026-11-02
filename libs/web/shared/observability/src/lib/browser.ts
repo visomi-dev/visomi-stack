@@ -7,6 +7,7 @@ import type {
   BrowserLocation,
   BrowserScreen,
   BrowserTelemetryConfig,
+  BrowserRouteMetric,
 } from './contract';
 
 // Only known page names cross the boundary; paths and navigation history stay in the browser.
@@ -89,6 +90,37 @@ export function createBrowserReporter(
   const errorReports = new WeakMap<object, Promise<void>>();
   let refreshedAt = Date.now();
   let ready = loadConfiguration();
+  let performanceRuntime: ReturnType<(typeof import('./performance'))['createBrowserPerformance']> | undefined;
+  const performanceScreen = browserScreen(browser.location.pathname);
+
+  // Neither the SDK nor its observers are loaded when performance capture is disabled.
+  const performanceReady = ready
+    .then(async () => {
+      if (stopped || configuration?.performance !== true) {
+        return false;
+      }
+
+      const { createBrowserPerformance } = await import('./performance');
+
+      if (!stopped) {
+        performanceRuntime = createBrowserPerformance(application, performanceScreen, browser, currentConfiguration);
+
+        return true;
+      }
+
+      return false;
+    })
+    .catch(() => false);
+
+  async function currentConfiguration(): Promise<BrowserTelemetryConfig | undefined> {
+    if (Date.now() - refreshedAt >= 240000) {
+      ready = loadConfiguration();
+    }
+
+    await ready;
+
+    return configuration;
+  }
 
   function loadConfiguration(): Promise<void> {
     refreshedAt = Date.now();
@@ -174,11 +206,7 @@ export function createBrowserReporter(
 
       count++;
 
-      if (Date.now() - refreshedAt >= 240000) {
-        ready = loadConfiguration();
-      }
-
-      await ready;
+      await currentConfiguration();
 
       if (stopped || !configuration) {
         return;
@@ -233,6 +261,12 @@ export function createBrowserReporter(
   return {
     report,
     ready,
+    performanceReady,
+    routeTransition(name: BrowserRouteMetric, duration: number): void {
+      if (!stopped && application === 'web-app') {
+        performanceRuntime?.routeTransition(name, duration);
+      }
+    },
     async fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
       const url = new URL(input instanceof Request ? input.url : String(input), browser.location.origin);
       const observed = url.origin === browser.location.origin && url.pathname.startsWith('/api/');
@@ -255,6 +289,7 @@ export function createBrowserReporter(
     },
     stop(): void {
       stopped = true;
+      performanceRuntime?.stop();
 
       if (options.globalErrors !== false) {
         browser.removeEventListener('error', onError);

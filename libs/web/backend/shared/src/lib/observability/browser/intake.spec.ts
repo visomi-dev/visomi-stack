@@ -31,7 +31,7 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
-async function fixture(useClock = true, includeApp = false) {
+async function fixture(useClock = true, includeApp = false, performance = false) {
   if (useClock) {
     vi.useFakeTimers({ toFake: ['Date'] });
   }
@@ -48,6 +48,7 @@ async function fixture(useClock = true, includeApp = false) {
   const telemetry = createBrowserTelemetry({
     observability: runtime,
     origin,
+    performance,
     assets: {
       'web-site': new Map([[asset, { paths: ['/_astro/synthetic.js'], lines: [100, 10] }]]),
       ...(includeApp
@@ -74,8 +75,8 @@ async function fixture(useClock = true, includeApp = false) {
   const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   const configuration = await fetch(url + '/telemetry/config');
   const config = await configuration.json();
-  const send = (body: unknown = report, headers: Record<string, string> = {}) =>
-    fetch(url + '/telemetry/errors', {
+  const send = (body: unknown = report, headers: Record<string, string> = {}, path = '/errors') =>
+    fetch(url + '/telemetry' + path, {
       method: 'POST',
       headers: {
         origin,
@@ -111,6 +112,133 @@ function signed(value: unknown): string {
 }
 
 describe('private browser error intake', () => {
+  it('accepts only Angular route measurements and never exports navigation material', async () => {
+    const f = await fixture(true, true, true);
+    const body = {
+      application: 'web-app',
+      screen: 'home',
+      measurements: [
+        { name: 'route_completed', value: 25.123 },
+        { name: 'route_cancelled', value: 12 },
+        { name: 'route_failed', value: 15 },
+      ],
+    };
+    const accepted = await f.send(body, {}, '/performance');
+    const astro = await f.send({ ...body, application: 'web-site' }, {}, '/performance');
+    const privateData = await f.send({ ...body, navigationId: 1, url: marker, reason: marker }, {}, '/performance');
+
+    expect([accepted.status, astro.status, privateData.status]).toEqual([202, 400, 400]);
+    const span = f.spans.getFinishedSpans().find((span) => span.name === 'frontend.performance')!;
+
+    expect(span.attributes).toEqual({
+      operation: 'frontend.performance',
+      outcome: 'success',
+      'frontend.application': 'web-app',
+      'frontend.screen': 'home',
+      'frontend.performance.route_completed': 25.12,
+      'frontend.performance.route_cancelled': 12,
+      'frontend.performance.route_failed': 15,
+    });
+    expect(JSON.stringify(span.attributes) + f.lines.join('')).not.toContain(marker);
+  });
+  it('requires a separate performance opt-in and accepts only approved measurements from both applications', async () => {
+    const f = await fixture(true, true, true);
+
+    expect(f.config.performance).toBe(true);
+    for (const application of ['web-app', 'web-site']) {
+      const response = await f.send(
+        {
+          application,
+          screen: 'unknown',
+          measurements: [
+            { name: 'cls', value: 0.123456 },
+            { name: 'lcp', value: 120.123 },
+          ],
+        },
+        { traceparent: `00-${'f'.repeat(32)}-${'f'.repeat(16)}-01` },
+        '/performance',
+      );
+
+      expect(response.status).toBe(202);
+    }
+    const spans = f.spans.getFinishedSpans().filter((span) => span.name === 'frontend.performance');
+
+    expect(spans).toHaveLength(2);
+    expect(spans[0].attributes).toEqual({
+      operation: 'frontend.performance',
+      outcome: 'success',
+      'frontend.application': 'web-app',
+      'frontend.screen': 'unknown',
+      'frontend.performance.cls': 0.1235,
+      'frontend.performance.lcp': 120.12,
+    });
+    expect(spans.every((span) => !span.parentSpanContext && span.events.length === 0 && span.links.length === 0)).toBe(
+      true,
+    );
+    expect(spans[0].spanContext().traceId).not.toBe('f'.repeat(32));
+    expect(
+      JSON.stringify(spans.map((span) => ({ attributes: span.attributes, events: span.events, links: span.links }))) +
+        f.lines.join(''),
+    ).not.toContain(marker);
+  });
+
+  it.each([
+    { application: 'worker', screen: 'home', measurements: [{ name: 'lcp', value: 1 }] },
+    { application: 'web-app', screen: marker, measurements: [{ name: 'lcp', value: 1 }] },
+    { application: 'web-site', screen: 'home', url: marker, measurements: [{ name: 'lcp', value: 1 }] },
+    { application: 'web-site', screen: 'home', measurements: [{ name: marker, value: 1 }] },
+    { application: 'web-site', screen: 'home', measurements: [{ name: 'lcp', value: marker }] },
+    { application: 'web-site', screen: 'home', measurements: [{ name: 'lcp', value: -1 }] },
+    { application: 'web-site', screen: 'home', measurements: [{ name: 'lcp', value: 300001 }] },
+    { application: 'web-site', screen: 'home', measurements: [{ name: 'cls', value: 11 }] },
+    { application: 'web-site', screen: 'home', measurements: [{ name: 'cls', value: null }] },
+    { application: 'web-site', screen: 'home', measurements: [{ name: 'lcp', value: 1, attribution: marker }] },
+    {
+      application: 'web-site',
+      screen: 'home',
+      measurements: [
+        { name: 'lcp', value: 1 },
+        { name: 'lcp', value: 2 },
+      ],
+    },
+    { application: 'web-site', screen: 'home', measurements: [] },
+  ])('rejects uncontrolled performance data %j', async (body) => {
+    const f = await fixture(true, false, true);
+    const response = await f.send(body, {}, '/performance');
+
+    expect(response.status).toBe(400);
+    expect(f.spans.getFinishedSpans().some((span) => span.name === 'frontend.performance')).toBe(false);
+  });
+
+  it('applies performance origin/permit and opt-in checks before accepting reports', async () => {
+    const f = await fixture();
+    const body = { application: 'web-site', screen: 'home', measurements: [{ name: 'lcp', value: 1 }] };
+
+    expect(f.config).not.toHaveProperty('performance');
+    const disabled = await f.send(body, {}, '/performance');
+    const invalidPermit = await f.send(body, { 'x-browser-telemetry': marker }, '/performance');
+    const invalidOrigin = await f.send(body, { origin: marker }, '/performance');
+
+    expect(disabled.status).toBe(400);
+    expect(invalidPermit.status).toBe(403);
+    expect(invalidOrigin.status).toBe(403);
+  });
+
+  it('bounds performance intake without spending the error/configuration budget', async () => {
+    const f = await fixture(true, false, true);
+    const body = { application: 'web-site', screen: 'home', measurements: [{ name: 'lcp', value: 120 }] };
+
+    for (let count = 0; count < 120; count++) {
+      const response = await f.send(body, {}, '/performance');
+
+      expect(response.status).toBe(202);
+    }
+    const limited = await f.send(body, {}, '/performance');
+    const error = await f.send();
+
+    expect(limited.status).toBe(429);
+    expect(error.status).toBe(202);
+  });
   it('shares an intake across both applications while isolating assets and release fingerprints', async () => {
     const f = await fixture(true, true);
     const appAsset = 'b'.repeat(64);
