@@ -2,6 +2,9 @@ import { resolve } from 'node:path';
 
 import { AngularNodeAppEngine, createNodeRequestHandler, writeResponseToNodeResponse } from '@angular/ssr/node';
 import express, { static as serveStatic } from 'express';
+import type { Request } from 'express';
+
+import type { AuthRenderContext } from './app/auth/session/models';
 
 import {
   type Observability,
@@ -20,6 +23,7 @@ export function createApp(
     browserTelemetry?: Pick<ReturnType<typeof createBrowserTelemetry>, 'context' | 'router'>;
     errorMode?: 'managed' | 'inherited';
     helmetMode?: 'managed' | 'inherited';
+    authContext?: (request: Request) => AuthRenderContext;
   } = {},
 ) {
   const app = express();
@@ -84,7 +88,7 @@ export function createApp(
     engine ??= new AngularNodeAppEngine();
 
     engine
-      .handle(request)
+      .handle(request, { auth: options.authContext?.(request) ?? { available: false, session: null } })
       .then(async (rendered) => {
         if (!rendered) {
           next();

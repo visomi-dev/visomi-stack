@@ -1,0 +1,57 @@
+import { Component, ElementRef, afterNextRender, inject, input, output, viewChild } from '@angular/core';
+
+import { Button } from '../../ui';
+import type { Pending, SessionView } from '../session/models';
+import { Action } from '../shared/action';
+import { AuthFeedback } from '../shared/feedback';
+import { AuthHttp } from '../shared/http';
+
+import { Google } from './google';
+
+@Component({
+  selector: 'app-google-button',
+  imports: [Button, AuthFeedback],
+  providers: [AuthHttp, Google],
+  template: `<div class="space-y-3" [attr.inert]="disabled() ? '' : null">
+    <div #button class="flex min-h-11 justify-center"></div>
+    <app-auth-feedback [action]="action" />
+    @if (action.error()) {
+      <button appUI variant="secondary" [disabled]="action.busy()" (click)="render()" i18n="@@authGoogleRetry">
+        Try Google again
+      </button>
+    }
+  </div>`,
+})
+export class GoogleButton {
+  private readonly google = inject(Google);
+
+  readonly intent = input<'login' | 'link' | 'reauth'>('login');
+  readonly disabled = input(false);
+  readonly completed = output<SessionView | (Pending & { factor: 'email' })>();
+  readonly processing = output<boolean>();
+
+  readonly action = new Action();
+
+  private readonly button = viewChild.required<ElementRef<HTMLElement>>('button');
+
+  constructor() {
+    afterNextRender(() => this.render());
+  }
+
+  render(): void {
+    void this.action.run(() =>
+      this.google.button(
+        this.button().nativeElement,
+        this.intent(),
+        (result) => this.completed.emit(result),
+        (error) => {
+          void this.action.run(async () => {
+            throw error;
+          });
+        },
+        () => !this.disabled(),
+        (active) => this.processing.emit(active),
+      ),
+    );
+  }
+}

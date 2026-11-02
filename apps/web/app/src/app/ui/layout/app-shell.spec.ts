@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, RouterLink } from '@angular/router';
@@ -52,7 +53,7 @@ describe('application shell composition', () => {
     expect(main.id).toBe('workspace-main');
     expect(main.tabIndex).toBe(-1);
     expect(main.querySelector('p')?.textContent?.trim()).toBe('Projected page');
-    expect(root.querySelector('a')?.getAttribute('href')).toBe('#workspace-main');
+    expect(root.querySelector('a')?.getAttribute('href')).toBe('/#workspace-main');
     expect(root.querySelector('app-sidebar nav')?.getAttribute('aria-label')).toBe('Primary');
     expect(root.querySelector('app-sidebar nav [data-slot=brand]')).toBeNull();
     expect(root.querySelector('app-sidebar nav [data-slot=footer]')).toBeNull();
@@ -64,6 +65,11 @@ describe('application shell composition', () => {
 
     expect(root.querySelector('app-sidebar')?.parentElement?.className).toBe('hidden');
     expect(root.querySelector('main')).toBe(main);
+    TestBed.inject(Location).go('/security', 'tab=methods');
+
+    await fixture.whenStable();
+
+    expect(root.querySelector('a')?.getAttribute('href')).toBe('/security?tab=methods#workspace-main');
   });
 
   it('keeps native link routing, button events and disabled behavior', async () => {

@@ -38,6 +38,47 @@ function apiFixture(handler: RequestHandler = (request, response) => response.js
 }
 
 describe('gateway composition', () => {
+  it.each([undefined, { middleware: [(_request: Request, _response: Response, next: () => void) => next()] }])(
+    'renders an unavailable context when the host has no snapshot integration',
+    async (auth) => {
+      const application = {
+        clientDirectory: '/synthetic/app/browser',
+        createApp:
+          (options: { authContext?: (request: Request) => unknown }) => (request: Request, response: Response) =>
+            response.json(options.authContext?.(request)),
+      };
+      const result = await dispatch(createGatewayApp({ api: apiFixture(), auth, application }), '/app/en/auth/sign-in');
+
+      expect(result.body).toEqual({ available: false, session: null });
+    },
+  );
+  it('passes the current public snapshot to Angular and scopes Google policy to its documents', async () => {
+    const snapshot = { authenticated: false, user: null, access: 'anonymous' as const, method: null, nextStep: null };
+    const auth: EmbeddedAuthentication = {
+      middleware: [(_request, _response, next) => next()],
+      googleEnabled: true,
+      snapshot: vi.fn(() => snapshot),
+    };
+    const application = {
+      clientDirectory: '/synthetic/app/browser',
+      createApp: vi.fn(
+        (options: { authContext?: (request: Request) => unknown }) => (request: Request, response: Response) =>
+          response.json(options.authContext?.(request)),
+      ),
+    };
+    const app = createGatewayApp({ api: apiFixture(), auth, application });
+    const documentHeaders = vi.fn();
+    const rendered = await dispatch(app, '/app/en/auth/sign-in', documentHeaders);
+
+    expect(rendered.body).toEqual({ available: true, session: snapshot });
+    expect(auth.snapshot).toHaveBeenCalledOnce();
+    expect(documentHeaders.mock.calls[0][0]['content-security-policy']).toContain('accounts.google.com');
+    const apiHeaders = vi.fn();
+
+    await dispatch(app, '/api/', apiHeaders);
+
+    expect(apiHeaders.mock.calls[0][0]['content-security-policy']).not.toContain('accounts.google.com');
+  });
   it('serves a silent disabled configuration without entering authentication', async () => {
     const authenticate = vi.fn<RequestHandler>();
     const inspect = vi.fn();
@@ -143,6 +184,7 @@ describe('gateway composition', () => {
     expect(rendered).toEqual({ status: 200, body: { path: '/app/es/', initialized: true } });
     expect(inspect.mock.calls[0][0]['content-security-policy']).toContain("'nonce-");
     expect(application.createApp).toHaveBeenCalledExactlyOnceWith({
+      authContext: expect.any(Function),
       observability: undefined,
       errorMode: 'inherited',
       helmetMode: 'inherited',

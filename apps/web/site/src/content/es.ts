@@ -10,6 +10,7 @@ export const es = {
   menu: 'Navegación',
   language: 'Idioma',
   theme: 'Apariencia',
+  themeToggle: 'Tema oscuro',
   system: 'Sistema',
   light: 'Claro',
   dark: 'Oscuro',

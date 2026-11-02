@@ -1,0 +1,149 @@
+import { Component, afterNextRender, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { form, FormField, required, disabled, submit } from '@angular/forms/signals';
+
+import { Button, Heading, Text, Link, Field, Input } from '../../ui';
+import { AuthHttp } from '../shared/http';
+import { Action } from '../shared/action';
+import { AuthFeedback } from '../shared/feedback';
+import { AuthNavigation } from '../shared/navigation';
+import { Session } from '../session/session';
+import { Methods } from '../session/methods';
+import { requiredMessage } from '../shared/form-errors';
+
+import { passwordPolicy } from './validation';
+import { Passwords } from './passwords';
+
+@Component({
+  selector: 'app-manage-password',
+  imports: [Button, Heading, Text, Link, Field, Input, FormField, RouterLink, AuthFeedback],
+  providers: [AuthHttp, Passwords, Methods],
+  template: `<section class="max-w-lg space-y-6">
+    <h1 appUI i18n="@@authManagePassword">Manage password</h1>
+    <p appUI tone="muted" i18n="@@authPasswordManageDescription">
+      Adding or changing a password requires a recent identity check. Password sign-in always includes a second step.
+    </p>
+    <form novalidate class="space-y-5" (submit)="save($event)">
+      <app-field
+        #field="appField"
+        control-id="manage-password"
+        [label]="passwordLabel"
+        [description]="policy"
+        [error]="fields.password().errors()[0]?.message ?? ''"
+        ><input
+          appUI
+          id="manage-password"
+          [type]="visible() ? 'text' : 'password'"
+          autocomplete="new-password"
+          [formField]="fields.password"
+          [attr.aria-describedby]="field.describedBy()"
+        /><button
+          type="button"
+          class="mt-2 text-sm ui-focus-ring"
+          (click)="visible.set(!visible())"
+          [attr.aria-pressed]="visible()"
+          i18n="@@authTogglePassword"
+        >
+          Show or hide password
+        </button></app-field
+      ><button appUI type="submit" [disabled]="action.busy() || !loaded()" i18n="@@authSavePassword">
+        Save password
+      </button>
+    </form>
+    @if (exists()) {
+      <button appUI variant="danger" [disabled]="action.busy()" (click)="confirm.set(true)" i18n="@@authRemovePassword">
+        Remove password
+      </button>
+      @if (confirm()) {
+        <p role="status" i18n="@@authRemovePasswordConfirm">
+          Remove your password? Sessions using it will end. Keep another working sign-in method.
+        </p>
+        <div class="flex gap-3">
+          <button appUI variant="danger" [disabled]="action.busy()" (click)="remove()" i18n="@@authConfirmRemove">
+            Confirm removal</button
+          ><button appUI variant="secondary" (click)="confirm.set(false)" i18n="@@authCancel">Cancel</button>
+        </div>
+      }
+    }
+    <app-auth-feedback [action]="action" /><a appUI routerLink="/security" i18n="@@authBackSecurity"
+      >Back to security</a
+    >
+  </section>`,
+})
+export class ManagePassword {
+  private readonly api = inject(Passwords);
+  private readonly methods = inject(Methods);
+  private readonly session = inject(Session);
+  private readonly navigation = inject(AuthNavigation);
+
+  readonly exists = signal(false);
+  readonly loaded = signal(false);
+  readonly confirm = signal(false);
+  readonly visible = signal(false);
+  readonly model = signal({ password: '' });
+
+  readonly fields = form(this.model, (path) => {
+    required(path.password, { message: requiredMessage });
+    passwordPolicy(path.password);
+    disabled(path, { when: () => this.action.busy() });
+  });
+
+  readonly action = new Action();
+  readonly passwordLabel = $localize`:@@authNewPassword:New password`;
+  readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
+
+  constructor() {
+    afterNextRender(
+      () =>
+        void this.action.run(async () => {
+          const methods = await this.methods.list();
+
+          this.exists.set(methods.password);
+          this.loaded.set(true);
+        }),
+    );
+  }
+
+  save(event: Event): void {
+    event.preventDefault();
+    void submit(this.fields, async () =>
+      this.action.run(async () => {
+        try {
+          const result = await this.api.save(this.model().password, this.exists());
+
+          this.exists.set(true);
+          this.action.notice.set(
+            result.notificationSent === false
+              ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
+              : $localize`:@@authPasswordSaved:Your password has been saved.`,
+          );
+        } finally {
+          this.model.set({ password: '' });
+        }
+      }),
+    );
+  }
+
+  remove(): void {
+    void this.action.run(async () => {
+      const result = await this.api.remove();
+
+      this.confirm.set(false);
+
+      await this.session.load(true);
+
+      if (!this.session.full()) {
+        await this.navigation.complete();
+
+        return;
+      }
+
+      this.exists.set(false);
+      this.action.notice.set(
+        result?.notificationSent === false
+          ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
+          : $localize`:@@authPasswordRemoved:Your password has been removed.`,
+      );
+    });
+  }
+}

@@ -68,7 +68,7 @@ test('remembers explicit themes and follows system changes only in system mode',
     }
   });
 
-  await page.goto(route());
+  await page.goto('/en/button/');
 
   const control = page.locator('[data-theme-select]');
 
@@ -118,7 +118,7 @@ test('keeps theme controls usable when storage is blocked', async ({ page }) => 
 
   await expect(page.locator('html')).toHaveClass('dark');
 
-  await page.locator('[data-theme-select]').selectOption('light');
+  await page.getByRole('button', { name: 'Dark theme', exact: true }).click();
 
   await expect(page.locator('html')).not.toHaveClass('dark');
 });
@@ -140,9 +140,15 @@ test('supports keyboard focus, reduced motion and a narrow viewport', async ({ p
 
   expect(overflowing).toBe(false);
 
-  await page.locator('[data-theme-select]').focus();
+  const switcher = page.getByRole('button', { name: 'Tema oscuro', exact: true });
 
-  await expect(page.locator('[data-theme-select]')).toHaveCSS('outline-style', 'solid');
+  await expect(switcher).toBeEnabled();
+
+  await switcher.focus();
+
+  await expect(switcher).toHaveCSS('outline-style', 'solid');
+
+  await expect(switcher.locator('svg').first()).toHaveCSS('transition-property', 'none');
 
   await page.evaluate(() => document.fonts.ready);
 
@@ -176,5 +182,11 @@ test('uses the system preference when the stored theme is invalid', async ({ pag
 
   await expect(page.locator('html')).toHaveClass('dark');
 
-  await expect(page.locator('[data-theme-select]')).toHaveValue('system');
+  const switcher = page.getByRole('button', { name: 'Dark theme', exact: true });
+
+  await expect(switcher).toHaveAttribute('aria-pressed', 'true');
+
+  await page.emulateMedia({ colorScheme: 'light' });
+
+  await expect(switcher).toHaveAttribute('aria-pressed', 'false');
 });

@@ -1,0 +1,87 @@
+import { Component, afterNextRender, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+
+import { Heading, Text, Link, Card } from '../../ui';
+import { AuthHttp } from '../shared/http';
+import { Action } from '../shared/action';
+import { AuthFeedback } from '../shared/feedback';
+
+import { Methods, type MethodsView } from './methods';
+import { Session } from './session';
+
+@Component({
+  selector: 'app-security',
+  imports: [Heading, Text, Link, Card, RouterLink, AuthFeedback],
+  providers: [AuthHttp, Methods],
+  template: `<section class="max-w-4xl space-y-6">
+    <header class="space-y-2">
+      <h1 appUI i18n="@@authSecurity">Security</h1>
+      <p appUI tone="muted" i18n="@@authSecurityDescription">
+        Choose how you sign in and manage access to your account.
+      </p>
+    </header>
+    <app-auth-feedback [action]="action" />
+    <div class="grid gap-4 sm:grid-cols-2">
+      <section appUI="card">
+        <h2 class="font-semibold" i18n="@@authPasskeys">Passkeys</h2>
+        <p appUI tone="muted" i18n="@@authPasskeysDescription">Use your device's screen lock or a security key.</p>
+        <a appUI routerLink="/security/passkeys" i18n="@@authManagePasskeys">Manage passkeys</a>
+      </section>
+      <section appUI="card">
+        <h2 class="font-semibold" i18n="@@authPassword">Password</h2>
+        <p appUI tone="muted">{{ methods()?.password ? enabled : disabled }}</p>
+        <a appUI routerLink="/security/password" i18n="@@authManagePassword">Manage password</a>
+      </section>
+      @if (session.providers()?.google?.enabled || methods()?.google?.length) {
+        <section appUI="card">
+          <h2 class="font-semibold">Google</h2>
+          <p appUI tone="muted">{{ methods()?.google?.length ? enabled : disabled }}</p>
+          <a appUI routerLink="/security/google" i18n="@@authManageGoogle">Manage Google</a>
+        </section>
+      }
+      @if (session.providers()?.totp || methods()?.totp) {
+        <section appUI="card">
+          <h2 class="font-semibold" i18n="@@authAuthenticator">Authenticator app</h2>
+          <p appUI tone="muted">{{ methods()?.totp ? enabled : disabled }}</p>
+          <a appUI routerLink="/security/totp" i18n="@@authManageAuthenticator">Manage authenticator</a>
+          @if (methods()?.totp) {
+            <a appUI routerLink="/security/recovery-codes" i18n="@@authBackupCodes">Backup codes</a>
+          }
+        </section>
+      }
+      <section appUI="card">
+        <h2 class="font-semibold" i18n="@@authSessions">Sessions</h2>
+        <p appUI tone="muted" i18n="@@authSessionsDescription">Review and end access from your signed-in sessions.</p>
+        <a appUI routerLink="/security/sessions" i18n="@@authManageSessions">Manage sessions</a>
+      </section>
+      <section appUI="card">
+        <h2 class="font-semibold" i18n="@@authAccount">Account</h2>
+        <p appUI tone="muted" i18n="@@authEmailSecurityDescription">Keep your recovery email up to date.</p>
+        <a appUI routerLink="/account" i18n="@@authManageAccount">Manage account</a>
+      </section>
+    </div>
+  </section>`,
+})
+export class Security {
+  readonly session = inject(Session);
+  private readonly api = inject(Methods);
+
+  readonly methods = signal<MethodsView | null>(null);
+
+  readonly action = new Action();
+  readonly enabled = $localize`:@@authEnabled:Enabled`;
+  readonly disabled = $localize`:@@authNotEnabled:Not enabled`;
+
+  constructor() {
+    afterNextRender(
+      () =>
+        void this.action.run(async () => {
+          const methods = await this.api.list();
+
+          this.methods.set(methods);
+
+          await this.session.loadProviders();
+        }),
+    );
+  }
+}

@@ -19,7 +19,7 @@ export async function createTestCompose(
   telemetryDirectory: string,
   app: TestCompose['app'],
 ): Promise<TestCompose> {
-  const configured = process.env.VISOMI_TEST_COMPOSE;
+  const configured = process.env['VISOMI_TEST_COMPOSE'];
   let provider: TestCompose['provider'];
 
   if (configured === 'docker' || configured === 'podman-compose') {

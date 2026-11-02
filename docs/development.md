@@ -315,3 +315,22 @@ and deployment are not implicit maintenance steps.
 
 See [Web foundations](web-foundations.md) for the independent Angular SSR app,
 Astro development server, compiled Astro/Express composition, themes and UI checks.
+
+## Authentication frontend
+
+The Angular root now selects the appropriate authentication or private route.
+Use `/app/en/foundations` or `/app/es/foundations` for the original UI examples.
+Full auth runs through the gateway with its existing PostgreSQL, SMTP, origin and
+session configuration; the standalone Angular executable does not own those resources.
+
+Run the browser suite with an owned synthetic database and mailbox:
+
+```sh
+pnpm nx e2e web-app-e2e --configuration=auth
+```
+
+It includes Chromium virtual passkeys and password/recovery workflows in Firefox
+and WebKit. Select the installed Compose provider through `VISOMI_TEST_COMPOSE`
+when necessary. No real Google account, customer records or developer database is
+used. See the [application guide](../apps/web/app/README.md) for route, SSR and
+challenge-restart behavior and the remaining manual device/provider checks.

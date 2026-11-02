@@ -57,6 +57,34 @@ async function initializedRequest(first: ReturnType<typeof fixture>, second = fi
 }
 
 describe('explicit session and Passport initialization', () => {
+  it('exposes only public session state for request-scoped rendering', () => {
+    const { runtime } = fixture();
+    const request = {
+      isAuthenticated: () => true,
+      session: { csrf: 'synthetic-private-csrf' },
+      sessionID: 'synthetic-private-sid',
+      user: {
+        id: 'synthetic-user',
+        email: 'demo@example.test',
+        emailVerified: true,
+        level: 'full',
+        method: 'passkey',
+        authenticatedAt: 123,
+        version: 2,
+      },
+    } as unknown as Request;
+    const snapshot = runtime.snapshot(request);
+
+    expect(snapshot).toEqual({
+      authenticated: true,
+      user: { id: 'synthetic-user', email: 'demo@example.test', emailVerified: true },
+      access: 'full',
+      method: 'passkey',
+      nextStep: null,
+    });
+    expect(JSON.stringify(snapshot)).not.toContain('synthetic-private');
+    expect(snapshot).not.toHaveProperty('authenticatedAt');
+  });
   it('creates an isolated service graph for every runtime', () => {
     const first = fixture();
     const second = fixture();

@@ -40,6 +40,7 @@ import {
 } from './shared/authorization';
 import { AUTH_CONFIG, type AuthConfig } from './shared/config';
 import { Flows } from './shared/flows';
+import { sessionView } from './shared/http';
 import { readPrincipal } from './shared/identity';
 import { SecurityNotifications } from './shared/notifications';
 import { RequestLimitStore } from './shared/request-limit-store';
@@ -158,7 +159,13 @@ export function createAuthentication(options: {
     database,
     config,
     middleware,
+    googleEnabled: Boolean(config.googleClientId),
     requireInitialized,
+    snapshot(request: Request) {
+      const { authenticated, user, access, method, nextStep } = sessionView(request);
+
+      return { authenticated, user, access, method, nextStep };
+    },
     requestLimits: injector.get<RequestLimitStore>(RequestLimitStore),
     anonymous,
     authenticated: authorization.authenticated.bind(authorization),

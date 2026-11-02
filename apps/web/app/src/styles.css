@@ -1,3 +1,10 @@
 @import '../../../../styles.base.css';
 @source './';
 @source '../../../../libs/web/frontend/ui/src';
+
+/* Route headings receive reading focus without the outline used by interactive controls. */
+@layer base {
+  h1[data-navigation-focus]:focus {
+    outline: none;
+  }
+}

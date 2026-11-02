@@ -1,0 +1,152 @@
+import { Component, afterNextRender, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { form, FormField, required, maxLength, disabled, submit } from '@angular/forms/signals';
+
+import { Button, Heading, Text, Link, Field, Input, Card } from '../../ui';
+import { AuthHttp } from '../shared/http';
+import { Action } from '../shared/action';
+import { AuthFeedback } from '../shared/feedback';
+import { AuthNavigation } from '../shared/navigation';
+import { Session } from '../session/session';
+import { requiredMessage } from '../shared/form-errors';
+
+import { Passkeys, type Passkey } from './passkeys';
+
+@Component({
+  selector: 'app-manage-passkeys',
+  imports: [Button, Heading, Text, Link, Field, Input, Card, FormField, RouterLink, AuthFeedback],
+  providers: [AuthHttp, Passkeys],
+  template: `<section class="max-w-2xl space-y-6">
+    <h1 appUI i18n="@@authPasskeys">Passkeys</h1>
+    <p appUI tone="muted" i18n="@@authPasskeysManageDescription">
+      Add a passkey or give an existing one a name you recognize. Removing a passkey ends sessions using it.
+    </p>
+    <button appUI [disabled]="action.busy()" (click)="add()" i18n="@@authAddPasskey">Add a passkey</button
+    ><app-auth-feedback [action]="action" />
+    @for (key of keys(); track key.id) {
+      <section appUI="card">
+        <h2 class="font-semibold break-words">{{ key.label }}</h2>
+        @if (editing() === key.id) {
+          <form novalidate class="space-y-3" (submit)="rename($event, key.id)">
+            <app-field
+              #field="appField"
+              control-id="passkey-label"
+              [label]="nameLabel"
+              [error]="fields.label().errors()[0]?.message ?? ''"
+              ><input
+                appUI
+                id="passkey-label"
+                [formField]="fields.label"
+                [attr.aria-describedby]="field.describedBy()" /></app-field
+            ><button appUI type="submit" [disabled]="action.busy()" i18n="@@authSave">Save</button
+            ><button appUI variant="secondary" (click)="editing.set(null)" i18n="@@authCancel">Cancel</button>
+          </form>
+        } @else {
+          <div class="flex flex-wrap gap-3">
+            <button appUI variant="secondary" [disabled]="action.busy()" (click)="edit(key)" i18n="@@authRename">
+              Rename</button
+            ><button
+              appUI
+              variant="danger"
+              [disabled]="action.busy()"
+              (click)="removing.set(key.id)"
+              i18n="@@authRemove"
+            >
+              Remove
+            </button>
+          </div>
+        }
+        @if (removing() === key.id) {
+          <p role="status" i18n="@@authRemovePasskeyConfirm">
+            Remove this passkey and end sessions using it? You must keep another working sign-in method.
+          </p>
+          <div class="flex gap-3">
+            <button
+              appUI
+              variant="danger"
+              [disabled]="action.busy()"
+              (click)="remove(key.id)"
+              i18n="@@authConfirmRemove"
+            >
+              Confirm removal</button
+            ><button appUI variant="secondary" (click)="removing.set(null)" i18n="@@authCancel">Cancel</button>
+          </div>
+        }
+      </section>
+    }
+    <a appUI routerLink="/security" i18n="@@authBackSecurity">Back to security</a>
+  </section>`,
+})
+export class ManagePasskeys {
+  private readonly api = inject(Passkeys);
+  private readonly session = inject(Session);
+  private readonly navigation = inject(AuthNavigation);
+
+  readonly keys = signal<Passkey[]>([]);
+  readonly editing = signal<string | null>(null);
+  readonly removing = signal<string | null>(null);
+  readonly model = signal({ label: '' });
+
+  readonly fields = form(this.model, (path) => {
+    required(path.label, { message: requiredMessage });
+    maxLength(path.label, 64);
+    disabled(path, { when: () => this.action.busy() });
+  });
+
+  readonly action = new Action();
+  readonly nameLabel = $localize`:@@authPasskeyName:Passkey name`;
+
+  constructor() {
+    afterNextRender(() => void this.action.run(() => this.reload()));
+  }
+
+  async reload(): Promise<void> {
+    const result = await this.api.list();
+
+    this.keys.set(result.credentials);
+  }
+
+  add(): void {
+    void this.action.run(async () => {
+      await this.api.register();
+
+      await this.reload();
+
+      this.action.notice.set($localize`:@@authPasskeyAdded:Your passkey has been added.`);
+    });
+  }
+
+  edit(key: Passkey): void {
+    this.model.set({ label: key.label });
+    this.editing.set(key.id);
+  }
+
+  rename(event: Event, id: string): void {
+    event.preventDefault();
+    void submit(this.fields, async () =>
+      this.action.run(async () => {
+        await this.api.rename(id, this.model().label);
+
+        this.editing.set(null);
+
+        await this.reload();
+      }),
+    );
+  }
+
+  remove(id: string): void {
+    void this.action.run(async () => {
+      await this.api.revoke(id);
+
+      this.removing.set(null);
+
+      await this.session.load(true);
+
+      if (this.session.full()) {
+        await this.reload();
+      } else {
+        await this.navigation.complete();
+      }
+    });
+  }
+}
