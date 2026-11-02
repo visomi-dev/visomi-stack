@@ -184,7 +184,15 @@ export default [
         },
       ],
       '@typescript-eslint/no-non-null-assertion': 'off',
-      'import-x/order': ['error', { 'newlines-between': 'always' }],
+      'import-x/order': [
+        'error',
+        {
+          'newlines-between': 'always',
+          // Treat the testing package consistently from root hooks and project-level Nx tasks.
+          pathGroups: [{ pattern: '@visomi-stack/dev-testing{,/**}', group: 'external' }],
+          pathGroupsExcludedImportTypes: ['builtin'],
+        },
+      ],
       'import-x/no-named-as-default': 'off',
       'import-x/no-duplicates': 'error',
       'import-x/no-unresolved': 'off',
@@ -248,7 +256,7 @@ export default [
         { blankLine: 'always', prev: 'import', next: '*' },
         { blankLine: 'any', prev: 'import', next: 'import' },
         { blankLine: 'always', prev: 'export', next: 'expression' },
-        { blankLine: 'always', prev: functionOrClassDeclaration, next: functionOrClassDeclaration },
+        { blankLine: 'always', prev: '*', next: functionOrClassDeclaration },
         { blankLine: 'always', prev: '*', next: awaitedStatement },
         { blankLine: 'always', prev: awaitedStatement, next: '*' },
         { blankLine: 'always', prev: '*', next: ['return', 'throw'] },

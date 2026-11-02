@@ -5,6 +5,7 @@ import type { SessionResult } from '../session/models';
 
 export type TotpSetup = { enrollmentId: string; secret: string; uri: string };
 export type BackupResult = SessionResult & { recoveryCodes: string[] };
+
 @Service({ autoProvided: false })
 export class Totp {
   private readonly http = inject(AuthHttp);

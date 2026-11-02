@@ -4,6 +4,7 @@ import type { Pending } from '../session/models';
 
 export type ChallengePurpose = 'password' | 'email' | 'google' | 'reset' | 'recovery' | 'replacement';
 export type Challenge = Pending & { purpose: ChallengePurpose; factor?: 'email' | 'totp'; sentAt: number };
+
 @Service({ autoProvided: false })
 export class Journey {
   readonly challenge = signal<Challenge | null>(null);

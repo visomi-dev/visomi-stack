@@ -22,6 +22,7 @@ export type Passkey = {
   backupEligible: boolean;
   backupState: boolean;
 };
+
 @Service({ autoProvided: false })
 export class Passkeys {
   private readonly http = inject(AuthHttp);

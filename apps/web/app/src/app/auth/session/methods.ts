@@ -9,6 +9,7 @@ export type MethodsView = {
   totp: boolean;
 };
 export type SessionEntry = { id: string; current: boolean; createdAt: string; expiresAt: string; method?: string };
+
 @Service({ autoProvided: false })
 export class Methods {
   private readonly http = inject(AuthHttp);

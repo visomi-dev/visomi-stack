@@ -11,6 +11,7 @@ import { authenticationFixture, password } from './support/auth';
 const f = authenticationFixture();
 
 type Browser = Awaited<ReturnType<typeof f.client>>;
+
 async function storedPrincipal(browser: Browser) {
   const result = await f.pool.query(
     "select sess->'passport'->'user' as principal from auth_sessions where sess->>'csrf' = $1",

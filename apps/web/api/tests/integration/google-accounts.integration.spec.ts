@@ -18,6 +18,7 @@ beforeEach(() => {
   } as never);
 });
 afterEach(() => vi.restoreAllMocks());
+
 function signed(nonce: string, email: string, sub: string, changes = {}) {
   const now = Math.floor(Date.now() / 1000);
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', kid: 'synthetic' })).toString('base64url');

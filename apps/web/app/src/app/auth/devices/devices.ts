@@ -9,6 +9,7 @@ export type DeviceStatus = {
   status: 'pending' | 'approved' | 'denied' | 'cancelled' | 'consumed' | 'expired';
   expiresAt: string;
 };
+
 @Service({ autoProvided: false })
 export class Devices {
   private readonly http = inject(AuthHttp);
