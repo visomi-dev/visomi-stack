@@ -79,6 +79,7 @@ export default defineRailway(() => {
       ASTRO_TELEMETRY_DISABLED: '1',
       VISOMI_OTLP_TRACING: 'true',
       VISOMI_BROWSER_TELEMETRY: 'true',
+      VISOMI_BROWSER_PERFORMANCE: 'true',
       BROWSER_TELEMETRY_ORIGIN: 'https://stack.visomi.dev',
       OTEL_EXPORTER_OTLP_ENDPOINT: 'http://${{jaeger.RAILWAY_PRIVATE_DOMAIN}}:4318',
       OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
