@@ -91,6 +91,7 @@ async function startGateway(endpoint) {
         APPLICATION_APP_PATH: '',
         VISOMI_OTLP_TRACING: 'true',
         VISOMI_BROWSER_TELEMETRY: 'true',
+        VISOMI_BROWSER_PERFORMANCE: 'true',
         BROWSER_TELEMETRY_ORIGIN: `http://127.0.0.1:${port}`,
         OTEL_EXPORTER_OTLP_ENDPOINT: endpoint,
         OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
@@ -251,9 +252,31 @@ try {
     });
 
     assert.equal(browserReport.status, 202);
+    const performanceReport = await fetch(`${gateway.origin}/telemetry/performance`, {
+      method: 'POST',
+      headers: {
+        origin: gateway.origin,
+        'content-type': 'application/json',
+        'x-browser-telemetry': browserConfiguration.token,
+        cookie: marker,
+        'user-agent': marker,
+        traceparent: `00-${'f'.repeat(32)}-${'f'.repeat(16)}-01`,
+      },
+      body: JSON.stringify({
+        application,
+        screen: 'home',
+        measurements: [
+          { name: 'lcp', value: 120.5 },
+          ...(application === 'web-app' ? [{ name: 'route_completed', value: 25.5 }] : []),
+        ],
+      }),
+    });
+
+    assert.equal(performanceReport.status, 202);
   }
   const logs = await gateway.stop();
   const verifiedApplications = new Set();
+  const performanceApplications = new Set();
   const readTrace = async (id) => {
     const response = await fetch(`${query}/api/v3/traces/${id}?raw_traces=true`);
     const body = await response.text();
@@ -279,7 +302,7 @@ try {
     for (const scope of trace.scopeSpans) {
       assert.equal(scope.scope.name, 'visomi-stack.operational');
       for (const span of scope.spans) {
-        assert.ok(['http.request', 'job.execute', 'frontend.error'].includes(span.name));
+        assert.ok(['http.request', 'job.execute', 'frontend.error', 'frontend.performance'].includes(span.name));
         assert.equal(span.events?.length ?? 0, 0, 'Application spans must not carry events or exceptions');
         assert.equal(span.links?.length ?? 0, 0);
 
@@ -292,26 +315,56 @@ try {
           assert.ok(!span.parentSpanId, 'Synthetic operations must generate fresh root traces');
         }
 
+        if (span.name === 'frontend.performance') {
+          performanceApplications.add(
+            span.attributes.find((attribute) => attribute.key === 'frontend.application').value.stringValue,
+          );
+          assert.equal(
+            span.attributes.find((attribute) => attribute.key === 'frontend.performance.lcp').value.doubleValue,
+            120.5,
+          );
+
+          if (
+            span.attributes.find((attribute) => attribute.key === 'frontend.application').value.stringValue ===
+            'web-app'
+          ) {
+            assert.equal(
+              span.attributes.find((attribute) => attribute.key === 'frontend.performance.route_completed').value
+                .doubleValue,
+              25.5,
+            );
+          }
+        }
+
         assert.ok(!span.status?.message);
         const keys = span.attributes.map((attribute) => attribute.key);
 
         assert.ok(
           // Badger's Jaeger model roundtrip uses the legacy HTTP status attribute name.
           keys.every((key) =>
-            (span.name === 'frontend.error'
+            (span.name === 'frontend.performance'
               ? [
                   'operation',
                   'outcome',
                   'frontend.application',
-                  'frontend.error.code',
-                  'frontend.error.kind',
                   'frontend.screen',
-                  'frontend.release',
-                  'code.asset',
-                  'code.line',
-                  'code.column',
+                  'frontend.performance.lcp',
+                  'frontend.performance.route_completed',
                 ]
-              : ['operation', 'outcome', 'http.response.status_code', 'http.status_code']
+              : span.name === 'frontend.error'
+                ? [
+                    'operation',
+                    'outcome',
+                    'frontend.application',
+                    'frontend.error.code',
+                    'frontend.error.kind',
+                    'frontend.screen',
+                    'frontend.release',
+                    'code.asset',
+                    'code.line',
+                    'code.column',
+                  ]
+                : ['operation', 'outcome', 'http.response.status_code', 'http.status_code']
             ).includes(key),
           ),
           `Span attributes must remain allowlisted: ${keys.join(', ')}`,
@@ -320,6 +373,7 @@ try {
     }
   }
   assert.deepEqual([...verifiedApplications].sort(), ['web-app', 'web-site']);
+  assert.deepEqual([...performanceApplications].sort(), ['web-app', 'web-site']);
   assert.ok(logs.some((log) => log.event === 'job.execute' && log.outcome === 'job_failed'));
   container('stop', '--time', '10', name);
   const unavailable = await startGateway(receiver);

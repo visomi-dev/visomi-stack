@@ -3,6 +3,8 @@ import { brotliCompressSync, gzipSync } from 'node:zlib';
 
 import { expect, test } from '@playwright/test';
 
+import { disablePerformanceCapture } from './support/performance';
+
 for (const locale of ['en', 'es']) {
   test(`Astro SSR emits native controls with shared styles in ${locale}`, async ({ page, request }) => {
     const path = `/${locale}/button/`;
@@ -97,6 +99,8 @@ for (const locale of ['en', 'es']) {
 }
 
 test('the website loads small theme, error reporting and native demo scripts', async ({ page }, info) => {
+  await disablePerformanceCapture(page);
+
   const responses: Promise<{ path: string; raw: number; gzip: number; brotli: number }>[] = [];
 
   page.on('response', (response) => {

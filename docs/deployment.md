@@ -264,9 +264,10 @@ configured Origin, JSON content, a valid HMAC-signed permit and at most 2 KiB of
 uncompressed input. Extra fields and arbitrary values are rejected with fixed
 error codes. The process has a shared budget of 120 intake requests per minute,
 including configuration reads; this deliberately avoids retaining IPs or browser
-identifiers. Exhaustion drops telemetry while normal application routes continue.
-The limiter reuses the installed `express-rate-limit` memory store with one fixed
-global key; the owning executable closes that store during shutdown. This public
+identifiers. Performance uses a separate fixed budget. Exhaustion drops telemetry
+while normal application routes continue. The limiter reuses the installed
+`express-rate-limit` memory store with fixed error/configuration and performance
+keys; the owning executable closes that store during shutdown. This public
 reporting endpoint is not proof of a human user or trustworthy error.
 
 The approved `frontend.error` span has only:
@@ -322,3 +323,66 @@ then also checks restart persistence and collector outages. Initial failures bef
 the reporting script starts and telemetry delivery after leaving a page remain
 best effort. Error grouping and a dedicated error-tracking dashboard are outside
 this initial implementation.
+
+### Browser performance reporting
+
+Set `VISOMI_BROWSER_PERFORMANCE=true` alongside `VISOMI_BROWSER_TELEMETRY=true`
+to enable OpenTelemetry performance capture for both Angular and Astro. Performance
+is disabled by default, independently of error reporting. The same gateway or
+standalone Angular executable supplies the opt-in through `/telemetry/config`.
+The performance SDK is imported only after that opt-in; SSR does not initialize it.
+Runtime changes and deployment remain separate from source changes.
+
+Capture uses the pinned official navigation-timing and Web Vitals instruments,
+with no browser resource detection or session management. A synchronous allowlist
+copies approved numbers before creating SDK records. Only CLS, FCP, INP, LCP,
+TTFB, DOM interactive, DOM content loaded, load completion, and Angular route
+transition durations are transmitted.
+No URLs, query strings, metric IDs, client timestamps, DOM targets, attribution,
+interaction history, exception details, or arbitrary SDK records are sent.
+Timings are milliseconds, rounded to two decimals and capped at 300,000; CLS is
+dimensionless, rounded to four decimals and capped at 10. All values must be finite
+and nonnegative. Measurements use the document's initial screen category, including
+route transition reports; no source/destination screen history is exported.
+
+Angular observes its Router only after performance opt-in, measuring elapsed time
+from `NavigationStart` to completion, cancellation or failure. Fixed metric names
+`route_completed`, `route_cancelled` and `route_failed` encode the result, with
+milliseconds as the only value. Initial navigation and skipped navigations are
+excluded. Superseded/redirected attempts finish as cancellations; a new attempt is
+measured separately. Only the current operation's numeric ID and start time are
+held locally for matching; IDs, URLs, route names, parameters, fragments, router
+snapshots, cancellation reasons and exceptions are never passed to the SDK or sent.
+The adapter unsubscribes when Angular is destroyed and does not run on SSR. Timing
+covers router guards, resolvers, loading and activation, not final browser paint.
+
+The browser sends strict reports to `/telemetry/performance`, using the same
+origin, permit, payload limit and credential/referrer omission as errors. Reports
+contain only the fixed application, fixed screen and up to eleven unique named
+measurements. The server independently rejects unknown fields, applications,
+categories, duplicates and out-of-range values. Route measurements are accepted only
+for Angular. Client trace context is not adopted.
+A separate 12-attempt browser budget leaves the error budget intact. The server
+also uses a separate fixed 120-request performance budget per minute, preserving
+the existing 120-request error/configuration budget. Permit refresh, replica
+limitations, no-retry behavior and best-effort unload delivery also apply to performance.
+
+The approved `frontend.performance` span contains `operation=frontend.performance`,
+`outcome=success`, `frontend.application`, `frontend.screen`, and numeric
+`frontend.performance.<name>` attributes for the eleven fixed names `cls`, `fcp`,
+`inp`, `lcp`, `ttfb`, `dom_interactive`, `dom_content_loaded`, `load`,
+`route_completed`, `route_cancelled`, and `route_failed`. Its random
+IDs are server-generated; its span duration measures ingestion, not browser work.
+The numeric attributes hold the actual browser measurements. These spans use the
+existing authenticated private OTLP tracing export and existing resource allowlist.
+The server also records same-named histograms (`ms`, or `1` for CLS) with only
+application and screen attributes for configured metric readers. No external
+metric exporter or browser-facing collector is enabled.
+
+FCP/TTFB/navigation measurements can arrive after load; INP needs an interaction,
+and final Web Vitals may arrive on visibility change. Browser support varies.
+The reporter stops SDK emission on destruction; underlying Web Vitals listeners
+may remain installed due to the upstream library's lifecycle limits. Error capture
+continues to use the existing custom path. See the
+[browser library](../libs/web/shared/observability/README.md#browser-performance)
+for the capture and lifecycle policy.

@@ -41,6 +41,36 @@ afterEach(async () => {
 });
 
 describe('observability runtime', () => {
+  it('records frontend histograms with fixed units without inflating HTTP/job measurements', async () => {
+    const f = fixture();
+    const { frontendPerformance } = f.telemetry;
+
+    frontendPerformance({
+      application: 'web-app',
+      screen: 'home',
+      measurements: [
+        { name: 'cls', value: 0.1 },
+        { name: 'lcp', value: 120 },
+      ],
+    });
+
+    await f.reader.forceFlush();
+
+    const metrics = f.metrics
+      .getMetrics()
+      .flatMap((resource) => resource.scopeMetrics.flatMap((scope) => scope.metrics));
+
+    expect(metrics.map((metric) => metric.descriptor.name).sort()).toEqual([
+      'frontend.performance.cls',
+      'frontend.performance.lcp',
+    ]);
+    expect(metrics.find((metric) => metric.descriptor.name.endsWith('.cls'))?.descriptor.unit).toBe('1');
+    const lcp = metrics.find((metric) => metric.descriptor.name.endsWith('.lcp'))!;
+
+    expect(lcp.descriptor.unit).toBe('ms');
+    expect(lcp.dataPoints[0].attributes).toEqual({ 'frontend.application': 'web-app', 'frontend.screen': 'home' });
+    expect(lcp.dataPoints[0].value).toMatchObject({ count: 1, sum: 120 });
+  });
   it('keeps application work and completion records available when span construction fails', async () => {
     const tracer = vi.spyOn(TracerProvider.prototype, 'getTracer').mockReturnValue({
       startSpan: () => {

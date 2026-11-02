@@ -59,6 +59,7 @@ beforeEach(() => {
   vi.stubEnv('NODE_ENV', 'test');
   vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
   vi.stubEnv('VISOMI_BROWSER_TELEMETRY', '');
+  vi.stubEnv('VISOMI_BROWSER_PERFORMANCE', '');
   vi.stubEnv('BROWSER_TELEMETRY_ORIGIN', undefined);
   boundary.browserAssets.mockResolvedValue(new Map());
   boundary.browserTelemetry.mockReturnValue({
@@ -120,6 +121,7 @@ describe('gateway executable ownership', () => {
         observability: boundary.observability,
         assets: { 'web-site': new Map(), 'web-app': new Map() },
         origin: origin ?? 'https://stack.visomi.dev',
+        performance: false,
       });
       expect(boundary.createGatewayApp).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -147,6 +149,14 @@ describe('gateway executable ownership', () => {
     expect(boundary.browserTelemetry).toHaveBeenCalledWith(
       expect.objectContaining({ assets: { 'web-app': new Map() } }),
     );
+  });
+  it('forwards the explicit browser performance opt-in to the shared intake', async () => {
+    vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
+    vi.stubEnv('VISOMI_BROWSER_PERFORMANCE', 'true');
+
+    await start();
+
+    expect(boundary.browserTelemetry).toHaveBeenCalledWith(expect.objectContaining({ performance: true }));
   });
   it('does not create intake resources after shutdown while the asset allowlist is loading', async () => {
     let loaded!: (assets: Map<string, unknown>) => void;

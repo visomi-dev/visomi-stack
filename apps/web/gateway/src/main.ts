@@ -145,6 +145,7 @@ async function bootstrap() {
       observability,
       assets: { 'web-app': applicationAssets, ...(siteAssets ? { 'web-site': siteAssets } : {}) },
       origin: process.env.BROWSER_TELEMETRY_ORIGIN ?? 'https://stack.visomi.dev',
+      performance: process.env.VISOMI_BROWSER_PERFORMANCE === 'true',
     });
   }
 

@@ -1,6 +1,6 @@
 export type Service = 'web-api' | 'web-gateway' | 'web-app' | 'worker' | 'realtime';
 export type Environment = 'development' | 'test' | 'production' | 'unknown';
-export type Operation = 'http.request' | 'job.execute' | 'frontend.error';
+export type Operation = 'http.request' | 'job.execute' | 'frontend.error' | 'frontend.performance';
 export type Outcome = 'success' | 'client_error' | 'server_error' | 'aborted' | 'job_failed';
 export type RuntimeEvent = 'runtime.started' | 'runtime.stopped' | 'runtime.failed';
 export type ErrorCode = 'none' | 'startup_failed' | 'shutdown_failed' | 'shutdown_timeout';

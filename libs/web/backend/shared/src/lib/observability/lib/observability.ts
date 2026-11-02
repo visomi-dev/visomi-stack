@@ -25,7 +25,12 @@ import {
 import type { Correlation, Environment, ErrorCode, Operation, Outcome, RuntimeEvent, Service } from './policy';
 import { otlpSpanProcessors } from './otlp';
 
-import type { BrowserErrorReport } from '@visomi-stack/web-shared-observability';
+import { browserPerformanceMetrics } from '@visomi-stack/web-shared-observability';
+import type {
+  BrowserErrorReport,
+  BrowserPerformanceMetric,
+  BrowserPerformanceReport,
+} from '@visomi-stack/web-shared-observability';
 import { createInjector, inject, InjectionToken } from '@visomi-stack/backend-shared';
 
 export type ObservabilityOptions = {
@@ -90,6 +95,7 @@ class ObservabilityRuntime implements Observability {
   private readonly httpDuration: Histogram;
   private readonly jobCount: Counter;
   private readonly jobDuration: Histogram;
+  private readonly frontendMeasurements: Map<BrowserPerformanceMetric, Histogram>;
 
   private stopped = false;
   private shutdownPromise: Promise<boolean> | undefined;
@@ -127,6 +133,12 @@ class ObservabilityRuntime implements Observability {
     this.httpDuration = meter.createHistogram('http.server.request.duration', { unit: 's' });
     this.jobCount = meter.createCounter('job.executions');
     this.jobDuration = meter.createHistogram('job.duration', { unit: 's' });
+    this.frontendMeasurements = new Map(
+      browserPerformanceMetrics.map((name) => [
+        name,
+        meter.createHistogram(`frontend.performance.${name}`, { unit: name === 'cls' ? '1' : 'ms' }),
+      ]),
+    );
 
     // Public methods remain safe to pass as callbacks, as the original closures were.
     this.event = this.event.bind(this);
@@ -135,6 +147,7 @@ class ObservabilityRuntime implements Observability {
     this.captureJobContext = this.captureJobContext.bind(this);
     this.runJob = this.runJob.bind(this);
     this.frontendError = this.frontendError.bind(this);
+    this.frontendPerformance = this.frontendPerformance.bind(this);
     this.shutdown = this.shutdown.bind(this);
   }
 
@@ -194,6 +207,18 @@ class ObservabilityRuntime implements Observability {
     const ids = this.correlation();
 
     return ids ? Object.freeze({ version: 1 as const, ...ids }) : undefined;
+  }
+
+  frontendPerformance(report: BrowserPerformanceReport): void {
+    const operation = this.begin('frontend.performance');
+    const attributes = { 'frontend.application': report.application, 'frontend.screen': report.screen };
+
+    isolate(() => trace.getSpan(operation.ctx)?.setAttributes(attributes));
+    for (const { name, value } of report.measurements) {
+      isolate(() => trace.getSpan(operation.ctx)?.setAttribute(`frontend.performance.${name}`, value));
+      isolate(() => this.frontendMeasurements.get(name)!.record(value, attributes, ROOT_CONTEXT));
+    }
+    operation.finish('success');
   }
 
   async runJob<T>(carrier: unknown, work: () => Promise<T>): Promise<T> {
@@ -333,7 +358,7 @@ class ObservabilityRuntime implements Observability {
         ),
       );
 
-      if (operation !== 'frontend.error') {
+      if (operation === 'http.request' || operation === 'job.execute') {
         isolate(() => (operation === 'http.request' ? this.httpCount : this.jobCount).add(1, attributes, ROOT_CONTEXT));
         isolate(() =>
           (operation === 'http.request' ? this.httpDuration : this.jobDuration).record(
@@ -354,6 +379,7 @@ class ObservabilityRuntime implements Observability {
 }
 
 export type Observability = {
+  frontendPerformance: (report: BrowserPerformanceReport) => void;
   frontendError: (report: Omit<BrowserErrorReport, 'correlation'> & { release: string }, parent?: Correlation) => void;
   event: (name: RuntimeEvent, code?: ErrorCode) => void;
   correlation: () => Correlation | undefined;

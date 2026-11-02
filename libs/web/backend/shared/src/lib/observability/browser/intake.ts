@@ -10,7 +10,13 @@ import type { Correlation } from '../lib/policy';
 
 import type { BrowserAssets } from './assets';
 
-import { applications, browserErrorCodes, browserErrorKinds, screens } from '@visomi-stack/web-shared-observability';
+import {
+  applications,
+  browserErrorCodes,
+  browserErrorKinds,
+  browserPerformanceMetrics,
+  screens,
+} from '@visomi-stack/web-shared-observability';
 import type { BrowserErrorReport } from '@visomi-stack/web-shared-observability';
 
 const reportSchema = z.strictObject({
@@ -38,11 +44,30 @@ const tokenSchema = z.strictObject({
     })
     .optional(),
 });
+const performanceSchema = z.strictObject({
+  application: z.enum(applications),
+  screen: z.enum(screens),
+  measurements: z
+    .array(
+      z.strictObject({
+        name: z.enum(browserPerformanceMetrics),
+        value: z.number().min(0).max(300000),
+      }),
+    )
+    .min(1)
+    .max(browserPerformanceMetrics.length)
+    .refine(
+      (measurements) =>
+        new Set(measurements.map(({ name }) => name)).size === measurements.length &&
+        measurements.every(({ name, value }) => name !== 'cls' || value <= 10),
+    ),
+});
 
 export function createBrowserTelemetry(options: {
   observability: Observability;
   assets: Partial<Record<BrowserErrorReport['application'], BrowserAssets>>;
   origin: string;
+  performance?: boolean;
   now?: () => number;
 }): { context: RequestHandler; router: Router; close: () => void } {
   const origin = new URL(options.origin).origin;
@@ -113,8 +138,8 @@ export function createBrowserTelemetry(options: {
       windowMs: 60000,
       limit: 120,
       store,
-      // One fixed bucket bounds traffic without retaining addresses or browser identifiers.
-      keyGenerator: () => 'global',
+      // Fixed buckets keep performance traffic out of the existing error/config budget, without retaining identifiers.
+      keyGenerator: (request) => (request.path === '/performance' ? 'performance' : 'global'),
       standardHeaders: false,
       legacyHeaders: false,
       message: { error: 'telemetry_limited' },
@@ -126,10 +151,11 @@ export function createBrowserTelemetry(options: {
       assets: Object.values(options.assets).flatMap((assets) =>
         [...assets].flatMap(([id, asset]) => asset.paths.map((path) => ({ id, path }))),
       ),
+      ...(options.performance ? { performance: true } : {}),
     }),
   );
   router.post(
-    '/errors',
+    ['/errors', '/performance'],
     (request, response, next) => {
       if (
         request.get('origin') !== origin ||
@@ -145,6 +171,39 @@ export function createBrowserTelemetry(options: {
     },
     json({ limit: '2kb', strict: true, inflate: false }),
     (request, response) => {
+      if (request.path === '/performance') {
+        const parsed = performanceSchema.safeParse(request.body);
+
+        if (!options.performance || !parsed.success || !options.assets[parsed.data.application]) {
+          response.status(400).json({ error: 'telemetry_invalid' });
+
+          return;
+        }
+
+        if (
+          parsed.data.application !== 'web-app' &&
+          parsed.data.measurements.some(({ name }) => name.startsWith('route_'))
+        ) {
+          response.status(400).json({ error: 'telemetry_invalid' });
+
+          return;
+        }
+
+        const { application, screen, measurements } = parsed.data;
+
+        options.observability.frontendPerformance({
+          application,
+          screen,
+          measurements: measurements.map(({ name, value }) => ({
+            name,
+            value: Number(value.toFixed(name === 'cls' ? 4 : 2)),
+          })),
+        });
+        response.sendStatus(202);
+
+        return;
+      }
+
       const parsed = reportSchema.safeParse(request.body);
 
       if (!parsed.success || !options.assets[parsed.data.application]) {
