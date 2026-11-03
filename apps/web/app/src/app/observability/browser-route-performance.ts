@@ -1,5 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
-import { DestroyRef, PLATFORM_ID, Service, inject } from '@angular/core';
+import { DestroyRef, Service, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   NavigationCancel,
@@ -12,12 +11,12 @@ import {
 
 import { BROWSER_ERROR_REPORTER } from './browser-telemetry';
 
-@Service()
+@Service({ autoProvided: false })
 export class BrowserRoutePerformance {
   constructor() {
     const reporter = inject(BROWSER_ERROR_REPORTER, { optional: true });
 
-    if (!isPlatformBrowser(inject(PLATFORM_ID)) || !reporter) {
+    if (!reporter) {
       return;
     }
 

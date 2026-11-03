@@ -7,7 +7,7 @@ export const BROWSER_ERROR_REPORTER = new InjectionToken<ReturnType<typeof creat
   'BrowserErrorReporter',
 );
 
-@Service()
+@Service({ autoProvided: false })
 export class BrowserTelemetry {
   private readonly reporter = inject(BROWSER_ERROR_REPORTER, { optional: true });
 

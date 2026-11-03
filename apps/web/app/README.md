@@ -35,6 +35,21 @@ for browser passkey tests: a WebAuthn RP ID must be a valid domain, not a loopba
 IP address. Chromium uses a virtual authenticator; physical passkeys and actual
 Google accounts require separate manual validation.
 
+## Platform observability
+
+The browser and server entrypoints merge their own platform configuration with
+`app.config.ts`. `app.config.browser.ts` registers `BrowserErrors` as `ErrorHandler`,
+Angular's global browser error listeners, the HTTP error interceptor and router
+performance measurement. These services use explicit providers and are not created
+during SSR. The browser entrypoint owns reporter initialization and shutdown.
+
+`app.config.server.ts` registers `ServerErrors` as `ErrorHandler`. It emits only the
+fixed `app.render_failed` event without inspecting or serializing exceptions, in
+both development and production. Its HTTP pipeline retains the auth interceptor
+without browser telemetry. Platform selection happens through DI configuration;
+observability services contain no runtime platform checks. Existing capture and
+privacy policies remain unchanged.
+
 ## Authentication composition
 
 The root owns the router outlet and global infrastructure. `AuthLayout` supplies
