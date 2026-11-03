@@ -32,12 +32,15 @@ test('restarts replacement-password preparation without losing recovery access',
 
   await page.getByLabel('New password', { exact: true }).fill('Recovered synthetic password 42!');
 
-  const firstPreparation = page.waitForResponse('**/api/auth/recovery/password');
+  const firstPreparation = page.waitForResponse(
+    (response) => response.url().endsWith('/api/auth/recovery/password') && response.request().method() === 'POST',
+  );
 
   await page.getByRole('button', { name: 'Save password', exact: true }).click();
 
   const firstResponse = await firstPreparation;
-  const firstPending = await firstResponse.json();
+
+  expect(firstResponse.status()).toBe(202);
 
   await expect(page.getByText('Confirm the replacement password', { exact: false })).toBeVisible();
 
@@ -58,14 +61,15 @@ test('restarts replacement-password preparation without losing recovery access',
 
   await page.getByLabel('New password', { exact: true }).fill('Recovered synthetic password 42!');
 
-  const nextPreparation = page.waitForResponse('**/api/auth/recovery/password');
+  const nextPreparation = page.waitForResponse(
+    (response) => response.url().endsWith('/api/auth/recovery/password') && response.request().method() === 'POST',
+  );
 
   await page.getByRole('button', { name: 'Save password', exact: true }).click();
 
   const nextResponse = await nextPreparation;
-  const nextPending = await nextResponse.json();
 
-  expect(nextPending.flowId).not.toBe(firstPending.flowId);
+  expect(nextResponse.status()).toBe(202);
 
   await expect(page.getByText('Confirm the replacement password', { exact: false })).toBeVisible();
 

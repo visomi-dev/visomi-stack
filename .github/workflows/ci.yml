@@ -96,7 +96,7 @@ jobs:
         run: pnpm nx run "$E2E_PROJECT:e2e"
       - name: Run authentication end-to-end tests
         if: matrix.project == 'web-app-e2e'
-        run: pnpm nx run web-app-e2e:e2e --configuration=auth
+        run: pnpm nx run web-app-e2e:e2e --configuration=auth --args='--fail-on-flaky-tests'
 
   container:
     needs: verify

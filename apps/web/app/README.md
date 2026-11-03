@@ -122,7 +122,8 @@ normalization; login does not impose the new-password policy.
 Automated tests cover native forms, keyboard behavior, screenshots, real SSR,
 virtual passkeys, TOTP and backup codes, recovery and two-browser approval. The
 CI browser job runs both foundations and the `auth` configuration whenever
-`web-app-e2e` is affected, installing Chromium, Firefox and WebKit. The
+`web-app-e2e` is affected, installing Chromium, Firefox and WebKit. The auth step
+fails if a test needs a retry, so an intermittent failure cannot produce a green check. The
 presentation cases exercise both themes at 320, 390 and 1280 CSS pixels, including
 Spanish password controls, code/resend spacing, security actions and confirmations
 above the mobile navigation. They do
