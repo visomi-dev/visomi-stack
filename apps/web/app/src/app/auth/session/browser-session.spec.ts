@@ -3,8 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { TransferState } from '@angular/core';
 
-import { appConfig } from '../../app.config';
-import { BrowserRoutePerformance } from '../../observability/browser-route-performance';
+import { CodeEntry } from '../shared/code-entry';
 
 import { Session, initialSessionState } from './session';
 import { BrowserSession } from './browser-session';
@@ -37,13 +36,46 @@ beforeEach(() =>
     ],
   }),
 );
-afterEach(() => TestBed.inject(HttpTestingController).verify());
+afterEach(() => {
+  TestBed.inject(HttpTestingController).verify();
+  vi.restoreAllMocks();
+});
 
-it('selects the same browser instance through the application Session provider', () => {
-  TestBed.configureTestingModule({ providers: [...appConfig.providers, provideHttpClientTesting()] });
-  TestBed.overrideProvider(BrowserRoutePerformance, { useValue: {} });
+it('starts browser revalidation once and releases its focus listener with the injector', async () => {
+  const add = vi.spyOn(window, 'addEventListener');
+  const remove = vi.spyOn(window, 'removeEventListener');
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const fixture = TestBed.createComponent(CodeEntry);
 
-  expect(TestBed.inject(Session)).toBe(TestBed.inject(BrowserSession));
+  fixture.detectChanges();
+
+  await vi.waitFor(() => http.expectOne('/api/auth/session').flush(anonymous));
+
+  await vi.waitFor(() =>
+    http.expectOne('/api/auth/providers').flush({
+      passkey: true,
+      password: true,
+      google: { enabled: false, clientId: null },
+      totp: false,
+    }),
+  );
+
+  await fixture.whenStable();
+
+  expect(session).toBe(TestBed.inject(BrowserSession));
+  const focusListener = add.mock.calls.find(([type]) => type === 'focus')?.[1];
+
+  expect(focusListener).toBeTypeOf('function');
+  window.dispatchEvent(new Event('focus'));
+  http.expectOne('/api/auth/session').flush(full);
+
+  await fixture.whenStable();
+
+  expect(session.full()).toBe(true);
+  TestBed.resetTestingModule();
+  expect(remove).toHaveBeenCalledWith('focus', focusListener);
+  TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
 });
 
 it('hydrates the transferred snapshot before HTTP revalidation and removes the consumed state', async () => {

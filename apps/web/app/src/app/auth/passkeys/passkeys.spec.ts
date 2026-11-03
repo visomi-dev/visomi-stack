@@ -1,12 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { NEVER } from 'rxjs';
-import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
+import * as webauthn from '@simplewebauthn/browser';
 
 import { Session } from '../session/session';
 import { AuthHttp } from '../shared/http';
 
 import { Passkeys } from './passkeys';
 
+// Another page may have loaded the adapter in this shared test worker before its SDK mock.
+vi.hoisted(() => {
+  vi.resetModules();
+});
 vi.mock('@simplewebauthn/browser', () => ({
   startAuthentication: vi.fn(),
   startRegistration: vi.fn(),
@@ -16,9 +20,9 @@ vi.mock('@simplewebauthn/browser', () => ({
 }));
 afterEach(() => vi.clearAllMocks());
 it('does not submit an abandoned passkey registration to the backend', async () => {
-  let resolve!: (value: Awaited<ReturnType<typeof startRegistration>>) => void;
+  let resolve!: (value: Awaited<ReturnType<typeof webauthn.startRegistration>>) => void;
 
-  vi.mocked(startRegistration).mockReturnValue(
+  vi.mocked(webauthn.startRegistration).mockReturnValue(
     new Promise((done) => {
       resolve = done;
     }),
@@ -38,19 +42,19 @@ it('does not submit an abandoned passkey registration to the backend', async () 
   const operation = api.register('demo@example.test');
   const rejected = expect(operation).rejects.toMatchObject({ name: 'AbortError' });
 
-  await vi.waitFor(() => expect(startRegistration).toHaveBeenCalledOnce());
+  await vi.waitFor(() => expect(webauthn.startRegistration).toHaveBeenCalledOnce());
 
   api.cancel();
-  resolve({} as Awaited<ReturnType<typeof startRegistration>>);
+  resolve({} as Awaited<ReturnType<typeof webauthn.startRegistration>>);
 
   await rejected;
 
   expect(request).toHaveBeenCalledTimes(1);
 });
 it('cancels conditional autofill before another authentication can complete', async () => {
-  let resolve!: (value: Awaited<ReturnType<typeof startAuthentication>>) => void;
+  let resolve!: (value: Awaited<ReturnType<typeof webauthn.startAuthentication>>) => void;
 
-  vi.mocked(startAuthentication).mockReturnValue(
+  vi.mocked(webauthn.startAuthentication).mockReturnValue(
     new Promise((done) => {
       resolve = done;
     }),
@@ -70,10 +74,10 @@ it('cancels conditional autofill before another authentication can complete', as
   const operation = api.authenticate(true);
   const rejected = expect(operation).rejects.toMatchObject({ name: 'AbortError' });
 
-  await vi.waitFor(() => expect(startAuthentication).toHaveBeenCalledOnce());
+  await vi.waitFor(() => expect(webauthn.startAuthentication).toHaveBeenCalledOnce());
 
   api.cancel();
-  resolve({} as Awaited<ReturnType<typeof startAuthentication>>);
+  resolve({} as Awaited<ReturnType<typeof webauthn.startAuthentication>>);
 
   await rejected;
 

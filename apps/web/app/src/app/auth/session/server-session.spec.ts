@@ -1,10 +1,14 @@
-import { createEnvironmentInjector, EnvironmentInjector, REQUEST_CONTEXT, TransferState } from '@angular/core';
+import {
+  afterNextRender,
+  createEnvironmentInjector,
+  EnvironmentInjector,
+  REQUEST_CONTEXT,
+  TransferState,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { config } from '../../app.config.server';
-import { BrowserRoutePerformance } from '../../observability/browser-route-performance';
+import { CodeEntry } from '../shared/code-entry';
 
-import { BrowserSession } from './browser-session';
 import type { AuthRenderContext, SessionSnapshot, SessionView } from './models';
 import { Session, initialSessionState } from './session';
 import { ServerSession } from './server-session';
@@ -23,19 +27,19 @@ beforeEach(() =>
   }),
 );
 
-it('selects the server implementation from the merged application config without resolving the browser service', () => {
-  TestBed.configureTestingModule({ providers: config.providers });
-  TestBed.overrideProvider(BrowserRoutePerformance, { useValue: {} });
-  TestBed.overrideProvider(BrowserSession, {
-    useFactory: () => {
-      throw new Error('browser_provider_used_during_ssr');
-    },
-  });
+it('resolves server session state without changing the surrounding render environment', async () => {
   TestBed.overrideProvider(REQUEST_CONTEXT, { useValue: { auth: { available: true, session: full } } });
   const session = TestBed.inject(Session);
+  const rendered = vi.fn();
+
+  TestBed.runInInjectionContext(() => afterNextRender(rendered));
+  const fixture = TestBed.createComponent(CodeEntry);
+
+  await fixture.whenStable();
 
   expect(session).toBe(TestBed.inject(ServerSession));
   expect(session.full()).toBe(true);
+  expect(rendered).toHaveBeenCalledOnce();
 });
 
 it('uses the request snapshot without HTTP or browser dependencies even for forced loads', async () => {
