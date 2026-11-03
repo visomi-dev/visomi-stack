@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
 
@@ -51,7 +52,7 @@ export function safeReturnTo(value: string | null, base: string): string | null 
     url.search &&
     !(
       pathname === '/security/devices/review' &&
-      [...url.searchParams.keys()].every((key) => key === 'requestId') &&
+      url.searchParams.size === 1 &&
       /^[a-f0-9-]{36}$/.test(url.searchParams.get('requestId') ?? '')
     )
   ) {
@@ -72,6 +73,7 @@ export const anonymousGuard: CanActivateFn = async () => {
     : router.parseUrl(destination(session.snapshot()));
 };
 export const fullGuard: CanActivateFn = async (_route, state) => {
+  const location = inject(Location);
   const session = inject(Session);
   const router = inject(Router);
 
@@ -83,7 +85,9 @@ export const fullGuard: CanActivateFn = async (_route, state) => {
 
   const target = session.status() === 'ready' ? destination(session.snapshot()) : '/auth/sign-in';
 
-  return router.createUrlTree([target], { queryParams: target === '/auth/sign-in' ? { returnTo: state.url } : {} });
+  const returnTo = target === '/auth/sign-in' ? safeReturnTo(state.url, location.prepareExternalUrl('/')) : null;
+
+  return router.createUrlTree([target], { queryParams: returnTo ? { returnTo } : {} });
 };
 export const unverifiedGuard: CanActivateFn = async () => {
   const session = inject(Session);

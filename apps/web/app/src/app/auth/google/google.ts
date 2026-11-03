@@ -35,9 +35,16 @@ export class Google {
 
   private alive = true;
   private epoch = 0;
+  private invalidateButton: (() => void) | undefined;
 
   constructor() {
-    this.session.cancelled.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.epoch++);
+    this.session.cancelled.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.epoch++;
+      const invalidateButton = this.invalidateButton;
+
+      this.invalidateButton = undefined;
+      invalidateButton?.();
+    });
     this.destroyRef.onDestroy(() => {
       this.alive = false;
       this.epoch++;
@@ -52,17 +59,33 @@ export class Google {
     allowed: () => boolean = () => true,
     processing: (active: boolean) => void = () => undefined,
   ): Promise<void> {
+    this.invalidateButton = undefined;
     const epoch = ++this.epoch;
     const pending = await this.http.request<Pending & { clientId: string; nonce: string }>('POST', '/google/start', {
       intent,
     });
     const google = await this.load();
 
-    if (!this.alive || epoch !== this.epoch) {
+    if (!this.alive) {
       return;
     }
 
+    if (epoch !== this.epoch) {
+      throw new DOMException('Cancelled', 'AbortError');
+    }
+
     let used = false;
+    let active = false;
+
+    this.invalidateButton = () => {
+      element.replaceChildren();
+
+      if (active) {
+        processing(false);
+      }
+
+      failed(new DOMException('Cancelled', 'AbortError'));
+    };
 
     google.accounts.id.initialize({
       client_id: pending.clientId,
@@ -74,6 +97,7 @@ export class Google {
         }
 
         used = true;
+        active = true;
         processing(true);
         void this.http
           .request<SessionView | (Pending & { factor: 'email' })>('POST', '/google/complete', {
@@ -82,12 +106,14 @@ export class Google {
           })
           .then((value) => {
             if (this.alive && epoch === this.epoch) {
+              active = false;
               processing(false);
               complete(value);
             }
           })
           .catch((error) => {
             if (this.alive && epoch === this.epoch) {
+              active = false;
               processing(false);
               failed(error);
             }

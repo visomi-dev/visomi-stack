@@ -56,6 +56,7 @@ it('preserves only the allowed device review handle', () => {
   expect(
     safeReturnTo('/security/devices/review?requestId=11111111-1111-4111-8111-111111111111&code=123456', '/app/es/'),
   ).toBeNull();
+  expect(safeReturnTo(target + '&requestId=synthetic-proof', '/app/es/')).toBeNull();
 });
 it('guards share loaded state and distinguish identity from full access', async () => {
   const current = signal(snapshot('unverified'));

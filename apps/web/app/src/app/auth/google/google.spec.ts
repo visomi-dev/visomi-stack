@@ -2,7 +2,7 @@ import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { CSP_NONCE } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { NEVER } from 'rxjs';
+import { Subject } from 'rxjs';
 
 import { AuthHttp } from '../shared/http';
 import { Session } from '../session/session';
@@ -22,8 +22,10 @@ const initialize = vi.fn((options: { callback: typeof callback }) => {
   callback = options.callback;
 });
 const renderButton = vi.fn();
+let cancelled: Subject<void>;
 
 beforeEach(() => {
+  cancelled = new Subject<void>();
   vi.stubGlobal('google', { accounts: { id: { initialize, renderButton, cancel: vi.fn() } } });
   TestBed.configureTestingModule({
     providers: [
@@ -38,7 +40,7 @@ beforeEach(() => {
           load: vi.fn().mockResolvedValue(undefined),
           token: vi.fn().mockResolvedValue('synthetic-csrf'),
           operationVersion: () => 0,
-          cancelled: NEVER,
+          cancelled,
         },
       },
     ],
@@ -94,6 +96,61 @@ it('uses the server nonce and submits a Google credential only once', async () =
   expect(failed).not.toHaveBeenCalled();
   expect(processing.mock.calls).toEqual([[true], [false]]);
 });
+it('releases reauthentication and permits a new Google attempt after session invalidation', async () => {
+  const api = TestBed.inject(Google);
+  const http = TestBed.inject(HttpTestingController);
+  const complete = vi.fn();
+  const failed = vi.fn();
+  const processing = vi.fn();
+  const element = document.createElement('div');
+  const render = async (flowId: string) => {
+    const ready = api.button(element, 'reauth', complete, failed, undefined, processing);
+
+    await Promise.resolve();
+
+    http.expectOne('/api/auth/google/start').flush({
+      flowId,
+      clientId: 'synthetic-client',
+      nonce: 'synthetic-nonce',
+    });
+
+    await ready;
+  };
+
+  await render('first');
+
+  const staleCallback = callback;
+
+  staleCallback({ credential: 'synthetic-old' });
+
+  await Promise.resolve();
+
+  const first = http.expectOne('/api/auth/google/complete');
+
+  cancelled.next();
+
+  expect(first.cancelled).toBe(true);
+  expect(processing.mock.calls).toEqual([[true], [false]]);
+  expect(failed).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ name: 'AbortError' }));
+
+  await render('second');
+
+  staleCallback({ credential: 'synthetic-old' });
+  callback({ credential: 'synthetic-new' });
+
+  await Promise.resolve();
+
+  const second = http.expectOne('/api/auth/google/complete');
+
+  expect(second.request.body).toEqual({ flowId: 'second', idToken: 'synthetic-new' });
+  second.flush(session);
+
+  await vi.waitFor(() => expect(complete).toHaveBeenCalledExactlyOnceWith(session));
+
+  expect(processing.mock.calls).toEqual([[true], [false], [true], [false]]);
+  expect(failed).toHaveBeenCalledOnce();
+});
+
 it('does not complete a Google callback after its owning view is destroyed', async () => {
   const api = TestBed.inject(Google);
   const http = TestBed.inject(HttpTestingController);

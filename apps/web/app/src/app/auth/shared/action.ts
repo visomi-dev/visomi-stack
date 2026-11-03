@@ -1,12 +1,14 @@
+import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DestroyRef, afterNextRender, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { Session } from '../session/session';
-import { destination } from '../session/navigation';
+import { destination, safeReturnTo } from '../session/navigation';
 
 export class Action {
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly session = inject(Session);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -49,7 +51,9 @@ export class Action {
         );
         this.errorFocus.update((value) => value + 1);
       } else if (code === 'reauthentication_required') {
-        await this.router.navigate(['/auth/reauthenticate'], { queryParams: { returnTo: this.router.url } });
+        const returnTo = safeReturnTo(this.router.url, this.location.prepareExternalUrl('/'));
+
+        await this.router.navigate(['/auth/reauthenticate'], { queryParams: returnTo ? { returnTo } : {} });
       } else if (
         code === 'account_verification_required' ||
         code === 'anonymous_session_required' ||

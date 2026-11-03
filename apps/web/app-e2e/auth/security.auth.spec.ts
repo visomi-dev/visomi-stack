@@ -153,3 +153,25 @@ test('changes email and revokes another session from the security pages', async 
     await otherContext.close();
   }
 });
+
+test('filters return targets before redirecting to sign-in and reauthentication', async ({ page }) => {
+  await page.goto('/app/en/account?code=synthetic-proof');
+
+  await expect(page).toHaveURL('/app/en/auth/sign-in');
+
+  await signup(page);
+
+  await page.route('**/api/auth/email/change/request', (route) =>
+    route.fulfill({ status: 403, json: { error: 'reauthentication_required' } }),
+  );
+
+  await page.goto('/app/en/account?code=synthetic-proof');
+
+  await page.getByLabel('Email address', { exact: true }).fill(address());
+
+  await page.getByRole('button', { name: 'Change email', exact: true }).click();
+
+  await expect(page).toHaveURL('/app/en/auth/reauthenticate');
+
+  await expect(page.getByRole('link', { name: 'Cancel', exact: true })).toHaveAttribute('href', '/app/en/security');
+});

@@ -1,4 +1,6 @@
-import { expect, test, address } from './support/fixtures';
+import { readMailCode } from '@visomi-stack/dev-testing';
+
+import { expect, test, address, password, expireEmailVerification } from './support/fixtures';
 
 test('presents direct actions in both languages, mobile and dark mode', async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -97,4 +99,46 @@ test('presents direct actions in both languages, mobile and dark mode', async ({
   expect(overflow).toBe(false);
 
   await expect(page.getByRole('button', { name: 'Sign in with a passkey', exact: true })).toBeVisible();
+});
+
+test('requests and verifies a fresh email challenge after the displayed challenge expires', async ({ page }) => {
+  const email = address();
+
+  await page.clock.install();
+
+  await page.goto('/app/en/auth/sign-up/password');
+
+  await page.getByLabel('Email address', { exact: true }).fill(email);
+
+  await page.getByLabel('Password', { exact: true }).fill(password);
+
+  await page.getByRole('button', { name: 'Create an account', exact: true }).click();
+
+  await expect(page.getByLabel('Verification code', { exact: true })).toBeVisible();
+
+  await expireEmailVerification(email);
+
+  await page.clock.fastForward(11 * 60_000);
+
+  await expect(page.getByLabel('Verification code', { exact: true })).toHaveCount(0);
+
+  await page.route('**/api/auth/email/request', async (route) => {
+    const response = await route.fetch();
+
+    await page.clock.setSystemTime(Date.now());
+
+    await route.fulfill({ response });
+  });
+
+  await page.getByRole('button', { name: 'Request a code', exact: true }).click();
+
+  await expect(page.getByLabel('Verification code', { exact: true })).toBeEnabled();
+
+  const code = await readMailCode(email);
+
+  await page.getByLabel('Verification code', { exact: true }).fill(code);
+
+  await page.getByRole('button', { name: 'Verify', exact: true }).click();
+
+  await expect(page).toHaveURL('/app/en/home');
 });

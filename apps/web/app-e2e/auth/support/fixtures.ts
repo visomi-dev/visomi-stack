@@ -14,7 +14,7 @@ export function address(): string {
   return `${randomUUID()}@example.test`;
 }
 
-async function resetLimits(): Promise<void> {
+async function isolatedPool(): Promise<Pool> {
   const directory = process.env['VISOMI_E2E_TELEMETRY_DIR']!;
   const result1 = await readFile(join(directory, 'database.json'), 'utf8');
   const value = JSON.parse(result1) as { url: string };
@@ -24,7 +24,26 @@ async function resetLimits(): Promise<void> {
     throw new Error('isolated_database_required');
   }
 
-  const pool = new Pool({ connectionString: url.toString() });
+  return new Pool({ connectionString: url.toString() });
+}
+
+export async function expireEmailVerification(email: string): Promise<void> {
+  const pool = await isolatedPool();
+
+  try {
+    const result = await pool.query(
+      "UPDATE auth_flows SET expires_at = now() - interval '1 second' WHERE email = $1 AND purpose = 'email_verify' AND consumed_at IS NULL",
+      [email],
+    );
+
+    expect(result.rowCount).toBe(1);
+  } finally {
+    await pool.end();
+  }
+}
+
+async function resetLimits(): Promise<void> {
+  const pool = await isolatedPool();
 
   try {
     await pool.query('DELETE FROM auth_rate_limits');

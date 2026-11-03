@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { Button, Heading, Text } from '../../ui';
@@ -28,7 +28,26 @@ export class EmailVerify {
   private readonly navigation = inject(AuthNavigation);
   private readonly router = inject(Router);
 
+  private readonly clock = signal(0);
+
+  readonly pending = computed(() => {
+    const challenge = this.journey.challenge();
+
+    return challenge?.purpose === 'email' && Date.parse(challenge.expiresAt) > this.clock() ? challenge : null;
+  });
+
   readonly action = new Action();
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+
+    afterNextRender(() => {
+      this.clock.set(Date.now());
+      const timer = setInterval(() => this.clock.set(Date.now()), 1000);
+
+      destroyRef.onDestroy(() => clearInterval(timer));
+    });
+  }
 
   request(address?: string): void {
     void this.action.run(async () => {
@@ -41,9 +60,9 @@ export class EmailVerify {
   }
 
   verify(code: string): void {
-    const pending = this.journey.challenge();
+    const pending = this.pending();
 
-    if (pending?.purpose !== 'email') {
+    if (!pending) {
       return;
     }
 

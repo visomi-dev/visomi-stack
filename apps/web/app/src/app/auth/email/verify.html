@@ -9,7 +9,7 @@
     <app-email-entry [busy]="action.busy()" (confirmed)="request($event)" />
   } @else {
     <p class="text-sm font-medium break-all">{{ session.user()?.email }}</p>
-    @if (journey.challenge()?.purpose === 'email') {
+    @if (pending()) {
       <app-code-entry [busy]="action.busy()" (confirmed)="verify($event)" />
       <app-resend-code />
     } @else {
