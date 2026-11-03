@@ -57,10 +57,21 @@ work when their view is destroyed. A scoped journey retains only pending challen
 pages; it is destroyed when leaving the access layout. Passwords and codes are
 not stored in URLs, browser storage or transferred SSR state.
 
-`Session` shares reads, rejects responses older than a later session transition,
+`Session` is the shared contract consumed by pages, guards and capability services.
+The browser configuration provides `BrowserSession`; the server configuration
+overrides it with `ServerSession`, both through `useExisting` aliases. Common
+derived access signals stay on the contract without platform checks. This follows
+[Angular's platform-specific provider pattern](https://angular.dev/best-practices/performance/ssr#providing-platform-specific-implementations).
+
+`BrowserSession` shares reads, rejects responses older than a later session transition,
 retains rotated CSRF tokens in memory and revalidates on focus. Cross-tab messages
 contain only a fixed invalidation signal. Temporary failures lock private content
 without asserting that the server has revoked the identity.
+
+`ServerSession` reads only the current `REQUEST_CONTEXT`, with no HTTP or browser
+dependencies. Its render state is isolated per injector, and browser mutations are
+rejected. It transfers an allowlisted public snapshot; the browser consumes and
+removes that initial state before obtaining a CSRF token through the API.
 
 The owning auth runtime creates a public snapshot for each render request. The
 host passes it through Angular's request context; hydration reuses the same initial

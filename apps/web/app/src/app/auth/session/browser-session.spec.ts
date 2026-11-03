@@ -1,10 +1,14 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { REQUEST_CONTEXT, PLATFORM_ID, TransferState, makeStateKey } from '@angular/core';
+import { TransferState } from '@angular/core';
 
-import { Session } from './session';
-import type { SessionView, AuthRenderContext } from './models';
+import { appConfig } from '../../app.config';
+import { BrowserRoutePerformance } from '../../observability/browser-route-performance';
+
+import { Session, initialSessionState } from './session';
+import { BrowserSession } from './browser-session';
+import type { SessionView } from './models';
 
 const anonymous: SessionView = {
   authenticated: false,
@@ -23,8 +27,61 @@ const full: SessionView = {
   csrfToken: 'synthetic-rotated-csrf',
 };
 
-beforeEach(() => TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] }));
+beforeEach(() =>
+  TestBed.configureTestingModule({
+    providers: [
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      BrowserSession,
+      { provide: Session, useExisting: BrowserSession },
+    ],
+  }),
+);
 afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+it('selects the same browser instance through the application Session provider', () => {
+  TestBed.configureTestingModule({ providers: [...appConfig.providers, provideHttpClientTesting()] });
+  TestBed.overrideProvider(BrowserRoutePerformance, { useValue: {} });
+
+  expect(TestBed.inject(Session)).toBe(TestBed.inject(BrowserSession));
+});
+
+it('hydrates the transferred snapshot before HTTP revalidation and removes the consumed state', async () => {
+  const { csrfToken: _csrf, ...snapshot } = full;
+  const transfer = TestBed.inject(TransferState);
+
+  transfer.set(initialSessionState, { available: true, session: snapshot });
+  const session = TestBed.inject(Session);
+
+  expect(session.snapshot()).toEqual(snapshot);
+  expect(session.full()).toBe(true);
+  expect(transfer.hasKey(initialSessionState)).toBe(false);
+  const read = session.load();
+
+  TestBed.inject(HttpTestingController).expectNone('/api/auth/session');
+
+  await read;
+
+  const token = session.token();
+
+  TestBed.inject(HttpTestingController).expectOne('/api/auth/session').flush(full);
+
+  await expect(token).resolves.toBe(full.csrfToken);
+});
+
+it('keeps standalone auth unavailable without attempting session or provider requests', async () => {
+  TestBed.inject(TransferState).set(initialSessionState, { available: false, session: null });
+  const session = TestBed.inject(Session);
+
+  await session.load(true);
+
+  await session.loadProviders();
+
+  expect(session.status()).toBe('unavailable');
+  expect(session.full()).toBe(false);
+  TestBed.inject(HttpTestingController).expectNone('/api/auth/session');
+  TestBed.inject(HttpTestingController).expectNone('/api/auth/providers');
+});
 
 it('shares one session request between concurrent consumers', async () => {
   const session = TestBed.inject(Session);
@@ -97,30 +154,6 @@ it('obtains a fresh CSRF token after invalidation without retrying a mutation', 
 
   expect(result2).toBe('synthetic-new-token');
 });
-it('transfers a request-specific snapshot without CSRF or session secrets', () => {
-  TestBed.overrideProvider(PLATFORM_ID, { useValue: 'server' });
-  const { csrfToken: _csrf, ...snapshot } = full;
-
-  TestBed.overrideProvider(REQUEST_CONTEXT, { useValue: { auth: { available: true, session: snapshot } } });
-  const session = TestBed.inject(Session);
-  const transfer = TestBed.inject(TransferState);
-
-  expect(session.full()).toBe(true);
-  expect(
-    transfer.get(makeStateKey<AuthRenderContext>('auth-initial-session'), { available: false, session: null }),
-  ).toEqual({ available: true, session: snapshot });
-  expect(transfer.toJson()).not.toContain(full.csrfToken);
-});
-it('does not manufacture a session when the standalone host has no auth integration', async () => {
-  TestBed.overrideProvider(PLATFORM_ID, { useValue: 'server' });
-  const session = TestBed.inject(Session);
-
-  await session.load();
-
-  expect(session.status()).toBe('unavailable');
-  expect(session.full()).toBe(false);
-});
-
 it('discards an in-flight read before revalidating a change from another tab', async () => {
   const session = TestBed.inject(Session);
   const http = TestBed.inject(HttpTestingController);

@@ -8,6 +8,7 @@ export type SessionSnapshot = {
   nextStep: 'verify_email' | 'add_email' | 'enroll_method' | null;
 };
 export type SessionView = SessionSnapshot & { csrfToken: string };
+export type SessionStatus = 'loading' | 'ready' | 'unavailable';
 export type AuthRenderContext = { available: boolean; session: SessionSnapshot | null };
 export type Pending = { flowId: string; expiresAt: string };
 export type Factor = { kind: 'email' | 'totp' | 'recovery_code'; code: string };

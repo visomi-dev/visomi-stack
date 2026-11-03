@@ -11,12 +11,16 @@ import { provideRouter } from '@angular/router';
 
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './auth/session/interceptor';
+import { Session } from './auth/session/session';
+import { BrowserSession } from './auth/session/browser-session';
 import { BrowserErrors } from './observability/browser-errors';
 import { browserErrorsInterceptor } from './observability/browser-errors-interceptor';
 import { BrowserRoutePerformance } from './observability/browser-route-performance';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    BrowserSession,
+    { provide: Session, useExisting: BrowserSession },
     provideClientHydration(
       withI18nSupport(),
       withHttpTransferCacheOptions({ filter: (request) => !request.url.includes('/auth/') }),

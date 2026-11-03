@@ -108,6 +108,54 @@ test('requires a second factor and restarts a lost challenge after reload', asyn
   await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
 });
 
+test('isolates concurrent SSR identities and hydrates each browser with its own session', async ({
+  page,
+  context,
+  browser,
+}) => {
+  const firstEmail = await signup(page);
+  const otherContext = await browser.newContext({ baseURL: 'http://localhost:4204' });
+  const otherPage = await otherContext.newPage();
+
+  try {
+    const secondEmail = await signup(otherPage);
+    const firstSessionResponse = await context.request.get('/api/auth/session');
+    const firstSession = await firstSessionResponse.json();
+    const secondSessionResponse = await otherContext.request.get('/api/auth/session');
+    const secondSession = await secondSessionResponse.json();
+    const [firstResponse, secondResponse] = await Promise.all([
+      context.request.get('/app/en/account'),
+      otherContext.request.get('/app/en/account'),
+    ]);
+    const [firstHtml, secondHtml] = await Promise.all([firstResponse.text(), secondResponse.text()]);
+
+    expect(firstResponse.headers()['cache-control']).toBe('no-store');
+    expect(secondResponse.headers()['cache-control']).toBe('no-store');
+    expect(firstHtml).toContain(firstEmail);
+    expect(firstHtml).not.toContain(secondEmail);
+    expect(firstHtml).not.toContain(firstSession.csrfToken);
+    expect(secondHtml).toContain(secondEmail);
+    expect(secondHtml).not.toContain(firstEmail);
+    expect(secondHtml).not.toContain(secondSession.csrfToken);
+    expect(firstHtml).toContain('<app-authenticated-layout');
+    expect(secondHtml).toContain('<app-authenticated-layout');
+    expect(firstHtml).not.toContain('<app-sign-in');
+    expect(secondHtml).not.toContain('<app-sign-in');
+
+    await Promise.all([page.goto('/app/en/account'), otherPage.goto('/app/en/account')]);
+
+    await expect(page.locator('app-account p.font-medium')).toHaveText(firstEmail);
+
+    await expect(otherPage.locator('app-account p.font-medium')).toHaveText(secondEmail);
+
+    await expect(page.getByRole('button', { name: 'Change email', exact: true })).toBeEnabled();
+
+    await expect(otherPage.getByRole('button', { name: 'Change email', exact: true })).toBeEnabled();
+  } finally {
+    await otherContext.close();
+  }
+});
+
 test('resets a password without signing in', async ({ page, context }) => {
   const email = await signup(page);
 
