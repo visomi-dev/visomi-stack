@@ -746,10 +746,6 @@
         <source>Use an existing sign-in method before changing your account's security. You will review the change again afterwards.</source>
         <target>Usa un método de acceso existente antes de cambiar la seguridad de tu cuenta. Después revisarás el cambio de nuevo.</target>
       </trans-unit>
-      <trans-unit id="authGoogleReauthFailed" datatype="html">
-        <source>Use an already linked Google account, or choose another sign-in method.</source>
-        <target>Usa una cuenta de Google ya vinculada o elige otro método de acceso.</target>
-      </trans-unit>
       <trans-unit id="authSecurityDescription" datatype="html">
         <source>Choose how you sign in and manage access to your account.</source>
         <target>Elige cómo iniciar sesión y gestiona el acceso a tu cuenta.</target>
@@ -981,6 +977,10 @@
       <trans-unit id="authNoPasskeys" datatype="html">
         <source>You have no passkeys yet. Add one to sign in with your device's screen lock.</source>
         <target>Todavía no tienes claves de acceso. Añade una para entrar con el bloqueo de pantalla de tu dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="authReplacementEmailRestart" datatype="html">
+        <source>If the email does not arrive, start again and enter your replacement password to request a new code.</source>
+        <target>Si el correo no llega, vuelve a empezar e introduce tu contraseña de reemplazo para solicitar un código nuevo.</target>
       </trans-unit>
     </body>
   </file>

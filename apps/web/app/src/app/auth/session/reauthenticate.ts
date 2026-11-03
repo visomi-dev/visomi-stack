@@ -14,10 +14,13 @@ import { requiredMessage, focusInvalid } from '../shared/form-errors';
 import { Passkeys } from '../passkeys/passkeys';
 import { Passwords } from '../password/passwords';
 import { GoogleButton } from '../google/google-button';
+import { Google } from '../google/google';
 
 import { Methods, type MethodsView } from './methods';
 import { Session } from './session';
-import type { Pending, SessionView } from './models';
+import type { FactorPending, Pending, SessionView } from './models';
+
+type Reauthentication = (FactorPending & { method: 'password' }) | (Pending & { method: 'google'; factor: 'email' });
 
 @Component({
   selector: 'app-reauthenticate',
@@ -35,7 +38,7 @@ import type { Pending, SessionView } from './models';
     ResendCode,
     GoogleButton,
   ],
-  providers: [AuthHttp, Methods, Passkeys, Passwords],
+  providers: [AuthHttp, Methods, Passkeys, Passwords, Google],
   templateUrl: './reauthenticate.html',
 })
 export class Reauthenticate {
@@ -44,10 +47,11 @@ export class Reauthenticate {
   private readonly methodApi = inject(Methods);
   private readonly passkeys = inject(Passkeys);
   private readonly passwords = inject(Passwords);
+  private readonly googleApi = inject(Google);
   private readonly journey = inject(Journey);
 
   readonly methods = signal<MethodsView | null>(null);
-  readonly pending = signal<(Pending & { factor: 'email' | 'totp' }) | null>(null);
+  readonly pending = signal<Reauthentication | null>(null);
   readonly backup = signal(false);
   readonly visible = signal(false);
   readonly model = signal({ password: '' });
@@ -93,7 +97,8 @@ export class Reauthenticate {
           try {
             const pending = await this.passwords.startReauth(this.model().password);
 
-            this.pending.set(pending);
+            this.pending.set({ ...pending, method: 'password' });
+            this.backup.set(false);
             this.journey.start('password', pending);
           } finally {
             this.fields().reset({ password: '' });
@@ -112,10 +117,14 @@ export class Reauthenticate {
     }
 
     void this.action.run(async () => {
-      await this.passwords.completeReauth(pending.flowId, {
-        kind: this.backup() ? 'recovery_code' : pending.factor,
-        code,
-      });
+      if (pending.method === 'google') {
+        await this.googleApi.verify(pending.flowId, code);
+      } else {
+        await this.passwords.completeReauth(pending.flowId, {
+          kind: pending.factor === 'totp' && this.backup() ? 'recovery_code' : pending.factor,
+          code,
+        });
+      }
 
       this.journey.clear();
 
@@ -125,11 +134,11 @@ export class Reauthenticate {
 
   google(result: SessionView | (Pending & { factor: 'email' })): void {
     if ('access' in result) {
-      void this.navigation.complete();
+      void this.action.run(() => this.navigation.complete());
     } else {
-      this.action.error.set(
-        $localize`:@@authGoogleReauthFailed:Use an already linked Google account, or choose another sign-in method.`,
-      );
+      this.pending.set({ ...result, method: 'google' });
+      this.backup.set(false);
+      this.journey.start('google', result);
     }
   }
 }

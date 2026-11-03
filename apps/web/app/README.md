@@ -78,15 +78,20 @@ it only to the same-origin API. Sensitive mutations are never retried automatica
 - `auth/forgot-password`, `auth/reset-password`: uniform reset request and completion
   without automatically signing in.
 - `auth/google/verify-email`, `auth/reauthenticate`: provider verification and recent
-  proof before sensitive changes.
+  proof before sensitive changes. Google reauthentication also accepts an email
+  challenge, verifies it on the same page and returns to the requested task.
 - `auth/recovery`, `auth/recovery/verify`, `auth/recovery/enroll`: recovery proof and
   restricted replacement enrollment. A replacement passkey must authenticate;
-  a replacement password must prove its required second factor.
+  a replacement password must prove its required second factor. Enrollment codes
+  cannot use generic resend; restarting password preparation requests a new code
+  without losing a valid restricted session and clears the previous password.
 - `auth/device-approval`: browser-bound pairing request. `security/devices/review`
   lets a different full session approve or deny it with recent authentication.
   Approval grants enrollment, not application access. Pairing codes stay out of links.
   Changing the review request within the same route clears the pairing field and
   cancels the previous request; obsolete results cannot update the next review.
+  Cancelling or restarting a requesting device also aborts its pending status
+  query, so a late result cannot block polling the replacement request.
 - `home`, `account`, `security` and its capability pages: minimal private home,
   verified email, passkeys, password, Google linking, authenticator, backup codes
   and session revocation.
@@ -116,6 +121,8 @@ normalization; login does not impose the new-password policy.
 
 Automated tests cover native forms, keyboard behavior, screenshots, real SSR,
 virtual passkeys, TOTP and backup codes, recovery and two-browser approval. The
+CI browser job runs both foundations and the `auth` configuration whenever
+`web-app-e2e` is affected, installing Chromium, Firefox and WebKit. The
 presentation cases exercise both themes at 320, 390 and 1280 CSS pixels, including
 Spanish password controls, code/resend spacing, security actions and confirmations
 above the mobile navigation. They do

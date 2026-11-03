@@ -7,6 +7,9 @@
     </p>
   </header>
   @if (pending()) {
+    @if (pending()?.method === 'google') {
+      <p appUI tone="muted" i18n="@@authGoogleVerifyDescription">Verify your email to finish continuing with Google.</p>
+    }
     <app-code-entry [backup]="backup()" [busy]="action.busy()" (confirmed)="verify($event)" />
     @if (pending()?.factor === 'email') {
       <app-resend-code />

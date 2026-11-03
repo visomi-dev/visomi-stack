@@ -51,8 +51,7 @@ export class DeviceApproval {
   readonly action = new Action();
 
   private timer: ReturnType<typeof setTimeout> | null = null;
-  private generation = 0;
-  private polling = false;
+  private polling: AbortController | null = null;
 
   constructor() {
     const visibility = () => {
@@ -63,12 +62,7 @@ export class DeviceApproval {
 
     this.document.addEventListener('visibilitychange', visibility);
     this.destroyRef.onDestroy(() => {
-      this.generation++;
-
-      if (this.timer) {
-        clearTimeout(this.timer);
-      }
-
+      this.stopPolling();
       this.document.removeEventListener('visibilitychange', visibility);
     });
   }
@@ -92,7 +86,7 @@ export class DeviceApproval {
 
   start(email: string): void {
     void this.action.run(async () => {
-      this.generation++;
+      this.stopPolling();
       const pending = await this.api.request(email);
 
       this.request.set(pending);
@@ -108,10 +102,10 @@ export class DeviceApproval {
 
     if (this.timer) {
       clearTimeout(this.timer);
+      this.timer = null;
     }
 
     const pending = this.request();
-    const generation = this.generation;
 
     if (!pending || this.status() !== 'pending') {
       return;
@@ -127,24 +121,28 @@ export class DeviceApproval {
       return;
     }
 
-    this.polling = true;
+    const controller = new AbortController();
+
+    this.polling = controller;
 
     try {
-      const result = await this.api.status(pending.requestId);
+      const result = await this.api.status(pending.requestId, controller.signal);
 
-      if (generation === this.generation) {
+      if (!controller.signal.aborted) {
         this.status.set(result.status);
         this.action.error.set('');
       }
     } catch (error) {
-      if (generation === this.generation) {
+      if (!controller.signal.aborted) {
         this.action.error.set(errorMessage(error));
       }
     } finally {
-      this.polling = false;
+      if (this.polling === controller) {
+        this.polling = null;
 
-      if (generation === this.generation && this.status() === 'pending') {
-        this.timer = setTimeout(() => void this.poll(), 5000);
+        if (this.status() === 'pending') {
+          this.timer = setTimeout(() => void this.poll(), 5000);
+        }
       }
     }
   }
@@ -156,12 +154,7 @@ export class DeviceApproval {
       void this.action.run(async () => {
         await this.api.cancel(pending.requestId);
 
-        this.generation++;
-
-        if (this.timer) {
-          clearTimeout(this.timer);
-        }
-
+        this.stopPolling();
         this.status.set('cancelled');
       });
     }
@@ -174,7 +167,7 @@ export class DeviceApproval {
       void this.action.run(async () => {
         await this.api.consume(pending.requestId, pending.userCode);
 
-        this.generation++;
+        this.stopPolling();
 
         await this.navigation.complete();
       });
@@ -182,13 +175,18 @@ export class DeviceApproval {
   }
 
   restart(): void {
-    this.generation++;
-
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
-
+    this.stopPolling();
     this.request.set(null);
     this.action.error.set('');
+  }
+
+  private stopPolling(): void {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+
+    this.polling?.abort();
+    this.polling = null;
   }
 }

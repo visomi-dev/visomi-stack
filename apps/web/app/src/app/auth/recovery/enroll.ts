@@ -9,8 +9,6 @@ import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
 import { AuthNavigation } from '../shared/navigation';
 import { CodeEntry } from '../shared/code-entry';
-import { Journey } from '../shared/journey';
-import { ResendCode } from '../shared/resend';
 import { Passkeys } from '../passkeys/passkeys';
 import { passwordPolicy } from '../password/validation';
 import { requiredMessage, focusInvalid } from '../shared/form-errors';
@@ -20,13 +18,12 @@ import { Recovery } from './recovery';
 
 @Component({
   selector: 'app-recovery-enroll',
-  imports: [Button, Heading, Text, Field, Input, FormField, AuthFeedback, CodeEntry, ResendCode, Disclosure],
+  imports: [Button, Heading, Text, Field, Input, FormField, AuthFeedback, CodeEntry, Disclosure],
   providers: [AuthHttp, Passkeys, Recovery],
   templateUrl: './enroll.html',
 })
 export class Enroll {
   private readonly api = inject(Recovery);
-  private readonly journey = inject(Journey);
   private readonly keys = inject(Passkeys);
   private readonly navigation = inject(AuthNavigation);
   private readonly http = inject(AuthHttp);
@@ -89,7 +86,6 @@ export class Enroll {
             const pending = await this.api.password(this.replacement);
 
             this.pending.set(pending);
-            this.journey.start('replacement', pending);
           } catch (error) {
             this.replacement = '';
 
@@ -118,7 +114,6 @@ export class Enroll {
 
       this.replacement = '';
       this.pending.set(null);
-      this.journey.clear();
 
       await this.navigation.complete(result);
     });
@@ -126,9 +121,13 @@ export class Enroll {
 
   restart(): void {
     this.pending.set(null);
-    this.journey.clear();
     this.replacement = '';
-    this.model.set({ password: '' });
+    this.fields().reset({ password: '' });
+    this.attempted.set(false);
+    this.backup.set(false);
+    this.visible.set(false);
+    this.action.error.set('');
+    this.action.notice.set('');
   }
 
   logout(): void {

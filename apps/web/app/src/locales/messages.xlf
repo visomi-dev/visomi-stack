@@ -57,7 +57,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
-          <context context-type="linenumber">26,28</context>
+          <context context-type="linenumber">28,30</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify.html</context>
@@ -82,42 +82,42 @@
         <source>Waiting for approval on your other device.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
-          <context context-type="linenumber">79</context>
+          <context context-type="linenumber">73</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceApproved" datatype="html">
         <source>Approved. Continue to set up a replacement sign-in method.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
-          <context context-type="linenumber">81</context>
+          <context context-type="linenumber">75</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceDenied" datatype="html">
         <source>This request was denied.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
-          <context context-type="linenumber">83</context>
+          <context context-type="linenumber">77</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceCancelled" datatype="html">
         <source>This request was cancelled.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
-          <context context-type="linenumber">85</context>
+          <context context-type="linenumber">79</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceConsumed" datatype="html">
         <source>This request has already been used.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
-          <context context-type="linenumber">87</context>
+          <context context-type="linenumber">81</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceExpired" datatype="html">
         <source>This request expired. Start again.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
-          <context context-type="linenumber">89</context>
+          <context context-type="linenumber">83</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReviewDeviceTitle" datatype="html">
@@ -265,7 +265,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
-          <context context-type="linenumber">80,83</context>
+          <context context-type="linenumber">83,86</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
@@ -396,7 +396,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
-          <context context-type="linenumber">89,91</context>
+          <context context-type="linenumber">91,93</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authGoogleRetry" datatype="html">
@@ -479,6 +479,10 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/google/verify.html</context>
           <context context-type="linenumber">4,5</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="linenumber">11,13</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRestartChallenge" datatype="html">
@@ -800,7 +804,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
-          <context context-type="linenumber">21,24</context>
+          <context context-type="linenumber">24,27</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authUsePassword" datatype="html">
@@ -811,11 +815,11 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
-          <context context-type="linenumber">45,46</context>
+          <context context-type="linenumber">47,48</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
-          <context context-type="linenumber">68,70</context>
+          <context context-type="linenumber">71,73</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authNewHere" datatype="html">
@@ -909,11 +913,11 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
-          <context context-type="linenumber">73,74</context>
+          <context context-type="linenumber">75,76</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
-          <context context-type="linenumber">59,60</context>
+          <context context-type="linenumber">62,63</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authForgotPassword" datatype="html">
@@ -977,7 +981,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.ts</context>
-          <context context-type="linenumber">64</context>
+          <context context-type="linenumber">68</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
@@ -1008,7 +1012,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.ts</context>
-          <context context-type="linenumber">54</context>
+          <context context-type="linenumber">51</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authShowPassword" datatype="html">
@@ -1027,11 +1031,11 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.ts</context>
-          <context context-type="linenumber">51</context>
+          <context context-type="linenumber">48</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.ts</context>
-          <context context-type="linenumber">62</context>
+          <context context-type="linenumber">66</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authHidePassword" datatype="html">
@@ -1050,11 +1054,11 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.ts</context>
-          <context context-type="linenumber">52</context>
+          <context context-type="linenumber">49</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.ts</context>
-          <context context-type="linenumber">63</context>
+          <context context-type="linenumber">67</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authManagePassword" datatype="html">
@@ -1083,7 +1087,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
-          <context context-type="linenumber">82,84</context>
+          <context context-type="linenumber">84,86</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRemovePassword" datatype="html">
@@ -1112,7 +1116,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.ts</context>
-          <context context-type="linenumber">53</context>
+          <context context-type="linenumber">50</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordSaved" datatype="html">
@@ -1294,36 +1298,43 @@
           <context context-type="linenumber">11,14</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="authReplacementEmailRestart" datatype="html">
+        <source> If the email does not arrive, start again and enter your replacement password to request a new code. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="linenumber">17,21</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="authSwitchFactor" datatype="html">
         <source> Switch between authenticator and backup code </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
-          <context context-type="linenumber">30,33</context>
+          <context context-type="linenumber">32,35</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
-          <context context-type="linenumber">15,18</context>
+          <context context-type="linenumber">18,21</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReplacementPasskeyHint" datatype="html">
         <source> Your replacement passkey is created. Sign in with that passkey to finish recovery. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
-          <context context-type="linenumber">35,37</context>
+          <context context-type="linenumber">37,39</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authVerifyPasskey" datatype="html">
         <source> Verify replacement passkey </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
-          <context context-type="linenumber">38,41</context>
+          <context context-type="linenumber">40,43</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCreateReplacementPasskey" datatype="html">
         <source> Create a replacement passkey </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
-          <context context-type="linenumber">42,45</context>
+          <context context-type="linenumber">44,47</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRecoverTitle" datatype="html">
@@ -1384,13 +1395,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
           <context context-type="linenumber">5,9</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="authGoogleReauthFailed" datatype="html">
-        <source>Use an already linked Google account, or choose another sign-in method.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.ts</context>
-          <context context-type="linenumber">131</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSecurityDescription" datatype="html">

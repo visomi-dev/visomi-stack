@@ -18,8 +18,8 @@ export class Devices {
     return this.http.request('POST', '/device-approval/request', { email });
   }
 
-  status(requestId: string): Promise<DeviceStatus> {
-    return this.http.request('POST', '/device-approval/status', { requestId });
+  status(requestId: string, signal?: AbortSignal): Promise<DeviceStatus> {
+    return this.http.request('POST', '/device-approval/status', { requestId }, signal);
   }
 
   review(requestId: string, signal?: AbortSignal): Promise<DeviceStatus> {

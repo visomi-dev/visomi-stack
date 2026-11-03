@@ -13,7 +13,9 @@
     </p>
     <app-code-entry [busy]="action.busy()" [backup]="backup()" (confirmed)="completePassword($event)" />
     @if (pending()?.factor === 'email') {
-      <app-resend-code />
+      <p appUI tone="muted" class="text-sm" i18n="@@authReplacementEmailRestart">
+        If the email does not arrive, start again and enter your replacement password to request a new code.
+      </p>
     }
     <button
       appUI

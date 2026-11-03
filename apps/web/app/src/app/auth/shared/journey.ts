@@ -2,7 +2,7 @@ import { Service, signal } from '@angular/core';
 
 import type { Pending } from '../session/models';
 
-export type ChallengePurpose = 'password' | 'email' | 'google' | 'reset' | 'recovery' | 'replacement';
+export type ChallengePurpose = 'password' | 'email' | 'google' | 'reset' | 'recovery';
 export type Challenge = Pending & { purpose: ChallengePurpose; factor?: 'email' | 'totp'; sentAt: number };
 
 @Service({ autoProvided: false })
