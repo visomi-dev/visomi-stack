@@ -2,6 +2,10 @@ import { resolve } from 'node:path';
 
 import { AngularNodeAppEngine, createNodeRequestHandler, writeResponseToNodeResponse } from '@angular/ssr/node';
 import express, { static as serveStatic } from 'express';
+import type { Request } from 'express';
+import { rateLimit } from 'express-rate-limit';
+
+import type { AuthRenderContext } from './app/auth/session/models';
 
 import {
   type Observability,
@@ -20,6 +24,7 @@ export function createApp(
     browserTelemetry?: Pick<ReturnType<typeof createBrowserTelemetry>, 'context' | 'router'>;
     errorMode?: 'managed' | 'inherited';
     helmetMode?: 'managed' | 'inherited';
+    authContext?: (request: Request) => AuthRenderContext;
   } = {},
 ) {
   const app = express();
@@ -74,6 +79,18 @@ export function createApp(
 
     serveAssets(request, response, next);
   });
+  app.use(
+    rateLimit({
+      windowMs: 60_000,
+      limit: 600,
+      skip: (request) => request.path !== '/app' && !request.path.startsWith('/app/'),
+      // A single bucket caps work per application instance without retaining client addresses.
+      keyGenerator: () => 'ssr',
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+      message: { error: 'rate_limited' },
+    }),
+  );
   app.use((request, response, next) => {
     if (request.path !== '/app' && !request.path.startsWith('/app/')) {
       next();
@@ -84,7 +101,7 @@ export function createApp(
     engine ??= new AngularNodeAppEngine();
 
     engine
-      .handle(request)
+      .handle(request, { auth: options.authContext?.(request) ?? { available: false, session: null } })
       .then(async (rendered) => {
         if (!rendered) {
           next();
@@ -122,4 +139,10 @@ export function createApp(
 }
 
 // Angular's build and development server consume this handler without starting a process runtime.
-export const reqHandler = createNodeRequestHandler(createApp());
+let defaultApp: Parameters<typeof createNodeRequestHandler>[0] | undefined;
+
+export const reqHandler = createNodeRequestHandler((request, response, next) => {
+  defaultApp ??= createApp();
+
+  defaultApp(request, response, next);
+});

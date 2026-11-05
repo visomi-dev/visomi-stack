@@ -12,7 +12,7 @@ import type {
 
 // Only known page names cross the boundary; paths and navigation history stay in the browser.
 export function browserScreen(path: string): BrowserScreen {
-  if (/^(?:\/app)?\/(?:en|es)\/?$/.test(path)) {
+  if (/^(?:\/app)?\/(?:en|es)\/?$/.test(path) || /^\/app\/(?:en|es)\/foundations\/?$/.test(path)) {
     return 'home';
   }
 

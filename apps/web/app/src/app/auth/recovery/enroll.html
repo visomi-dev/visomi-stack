@@ -1,0 +1,93 @@
+<section class="flex min-w-0 flex-col gap-6">
+  <header class="space-y-3">
+    <h1 appUI i18n="@@authEnrollTitle">Set up access again</h1>
+    <p appUI tone="muted" i18n="@@authEnrollDescription">
+      Your recovery proof allows you to set up a replacement sign-in method. Complete its verification before entering
+      your account.
+    </p>
+  </header>
+  @if (pending()) {
+    <p appUI tone="muted" i18n="@@authReplacementPasswordHint">
+      Confirm the replacement password with the required second factor. You can use a backup code instead of an
+      authenticator code.
+    </p>
+    <app-code-entry [busy]="action.busy()" [backup]="backup()" (confirmed)="completePassword($event)" />
+    @if (pending()?.factor === 'email') {
+      <p appUI tone="muted" class="text-sm" i18n="@@authReplacementEmailRestart">
+        If the email does not arrive, start again and enter your replacement password to request a new code.
+      </p>
+    }
+    <button
+      appUI
+      variant="secondary"
+      [disabled]="action.busy()"
+      (click)="restart()"
+      i18n="@@authStartAgain"
+      class="w-full"
+    >
+      Start again
+    </button>
+    @if (pending()?.factor === 'totp') {
+      <button appUI variant="secondary" (click)="backup.set(!backup())" i18n="@@authSwitchFactor" class="w-full">
+        Switch between authenticator and backup code
+      </button>
+    }
+  } @else if (registered()) {
+    <p appUI tone="muted" i18n="@@authReplacementPasskeyHint">
+      Your replacement passkey is created. Sign in with that passkey to finish recovery.
+    </p>
+    <button appUI class="w-full" [disabled]="action.busy()" (click)="provePasskey()" i18n="@@authVerifyPasskey">
+      Verify replacement passkey
+    </button>
+  } @else {
+    <button appUI class="w-full" [disabled]="action.busy()" (click)="passkey()" i18n="@@authCreateReplacementPasskey">
+      Create a replacement passkey
+    </button>
+    <details appUI>
+      <summary class="text-sm" i18n="@@authUsePassword">Use a password</summary>
+      <form novalidate [attr.data-submitted]="attempted() ? '' : null" class="space-y-4" (submit)="password($event)">
+        <app-field
+          #field="appField"
+          control-id="replacement-password"
+          [label]="passwordLabel"
+          [description]="policy"
+          [error]="fields.password().errors()[0]?.message ?? ''"
+        >
+          <div class="relative">
+            <input
+              appUI
+              class="pr-24"
+              id="replacement-password"
+              [type]="visible() ? 'text' : 'password'"
+              autocomplete="new-password"
+              [formField]="fields.password"
+              [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
+              [attr.aria-describedby]="field.describedBy()"
+            />
+            <button
+              appUI
+              variant="ghost"
+              size="sm"
+              type="button"
+              class="absolute inset-y-0 right-0 min-w-16"
+              [attr.aria-pressed]="visible()"
+              aria-controls="replacement-password"
+              aria-label="Show or hide password"
+              i18n-aria-label="@@authTogglePassword"
+              (click)="visible.set(!visible())"
+            >
+              {{ visible() ? hideLabel : showLabel }}
+            </button>
+          </div>
+        </app-field>
+        <button appUI type="submit" class="w-full" [disabled]="action.busy()" i18n="@@authSavePassword">
+          Save password
+        </button>
+      </form>
+    </details>
+  }
+  <app-auth-feedback [action]="action" />
+  <button appUI variant="secondary" [disabled]="action.busy()" (click)="logout()" i18n="@@authSignOut" class="w-full">
+    Sign out
+  </button>
+</section>

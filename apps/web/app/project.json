@@ -30,7 +30,8 @@
           "allowedHosts": ["localhost", "127.0.0.1", "stack.visomi.dev"]
         },
         "baseHref": "/app/",
-        "polyfills": ["@angular/localize/init"]
+        "polyfills": ["@angular/localize/init"],
+        "allowedCommonJsDependencies": ["qrcode", "dijkstrajs"]
       },
       "configurations": {
         "production": {

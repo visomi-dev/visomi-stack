@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { securityHeaders } from './security-headers';
 
-function headers(production?: boolean, nonce = false) {
+function headers(production?: boolean, nonce = false, google = false) {
   const values = new Map<string, string>();
   const response = {
     locals: {} as Record<string, string>,
@@ -12,7 +12,7 @@ function headers(production?: boolean, nonce = false) {
   };
   const next = vi.fn();
 
-  securityHeaders({ production, nonce })({} as Request, response as unknown as Response, next);
+  securityHeaders({ production, nonce, google })({} as Request, response as unknown as Response, next);
 
   return { values, next, response };
 }
@@ -20,6 +20,19 @@ function headers(production?: boolean, nonce = false) {
 afterEach(() => vi.unstubAllEnvs());
 
 describe('shared Helmet policy', () => {
+  it('permits the configured Google integration while retaining nonce and attribute protections', () => {
+    const { values, response } = headers(false, true, true);
+    const csp = values.get('content-security-policy');
+
+    expect(csp).toContain('https://accounts.google.com/gsi/client');
+    expect(csp).toContain('https://accounts.google.com/gsi/style');
+    expect(csp).toContain("connect-src 'self' https://accounts.google.com/gsi/");
+    expect(csp).toContain("frame-src 'self' https://accounts.google.com/gsi/");
+    expect(csp).toContain(`'nonce-${response.locals['cspNonce']}'`);
+    expect(csp).toContain("script-src-attr 'none'");
+    expect(csp).not.toContain('unsafe-inline');
+    expect(values.get('cross-origin-opener-policy')).toBe('same-origin-allow-popups');
+  });
   it('applies browser isolation and content protections without legacy product permissions', () => {
     const { values, next, response } = headers(false);
     const csp = values.get('content-security-policy');

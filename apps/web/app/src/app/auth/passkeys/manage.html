@@ -1,0 +1,93 @@
+<section class="flex max-w-2xl min-w-0 flex-col gap-6">
+  <header class="space-y-3">
+    <h1 appUI i18n="@@authPasskeys">Passkeys</h1>
+    <p appUI tone="muted" i18n="@@authPasskeysManageDescription">
+      Add a passkey or give an existing one a name you recognize. Removing a passkey ends sessions using it.
+    </p>
+  </header>
+  <button appUI [disabled]="action.busy()" (click)="add()" i18n="@@authAddPasskey" class="w-full sm:w-fit">
+    Add a passkey
+  </button>
+  <app-auth-feedback [action]="action" />
+  @if (!keys().length && !action.busy() && !action.error()) {
+    <p appUI tone="muted" i18n="@@authNoPasskeys">
+      You have no passkeys yet. Add one to sign in with your device's screen lock.
+    </p>
+  }
+  @for (key of keys(); track key.id) {
+    <section appUI="card">
+      <h2 class="font-semibold break-words">{{ key.label }}</h2>
+      @if (editing() === key.id) {
+        <form
+          novalidate
+          [attr.data-submitted]="attempted() ? '' : null"
+          class="space-y-3"
+          (submit)="rename($event, key.id)"
+        >
+          <app-field
+            #field="appField"
+            control-id="passkey-label"
+            [label]="nameLabel"
+            [error]="fields.label().errors()[0]?.message ?? ''"
+          >
+            <input
+              appUI
+              id="passkey-label"
+              [formField]="fields.label"
+              [attr.aria-invalid]="fields.label().touched() && fields.label().invalid()"
+              [attr.aria-describedby]="field.describedBy()"
+            />
+          </app-field>
+          <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <button appUI type="submit" [disabled]="action.busy()" i18n="@@authSave">Save</button>
+            <button appUI type="button" variant="secondary" (click)="editing.set(null)" i18n="@@authCancel">
+              Cancel
+            </button>
+          </div>
+        </form>
+      } @else {
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <button appUI variant="secondary" [disabled]="action.busy()" (click)="edit(key)" i18n="@@authRename">
+            Rename
+          </button>
+          <button
+            appUI
+            #removeKey
+            [variant]="removing() === key.id ? 'secondary' : 'danger'"
+            [attr.aria-expanded]="removing() === key.id"
+            [attr.aria-controls]="'passkey-confirmation-' + key.id"
+            [disabled]="action.busy()"
+            (click)="removing.set(removing() === key.id ? null : key.id)"
+            i18n="@@authRemove"
+          >
+            Remove
+          </button>
+        </div>
+        @if (removing() === key.id) {
+          <div class="space-y-4" [id]="'passkey-confirmation-' + key.id">
+            <p role="status" i18n="@@authRemovePasskeyConfirm">
+              Remove this passkey and end sessions using it? You must keep another working sign-in method.
+            </p>
+            <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <button
+                appUI
+                variant="danger"
+                [disabled]="action.busy()"
+                (click)="remove(key.id)"
+                i18n="@@authConfirmRemove"
+              >
+                Confirm removal
+              </button>
+              <button appUI variant="secondary" (click)="removing.set(null); removeKey.focus()" i18n="@@authCancel">
+                Cancel
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </section>
+  }
+  <a appUI routerLink="/security" i18n="@@authBackSecurity" class="inline-flex min-h-11 items-center">
+    Back to security
+  </a>
+</section>

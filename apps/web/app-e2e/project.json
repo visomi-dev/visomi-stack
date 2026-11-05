@@ -30,6 +30,18 @@
           "dependentTasksOutputFiles": "**/*",
           "transitive": true
         }
+      ],
+      "configurations": {
+        "auth": {
+          "env": {
+            "VISOMI_AUTH_E2E": "true"
+          }
+        }
+      },
+      "outputs": [
+        "{workspaceRoot}/dist/.playwright/apps/web/app-e2e/test-output",
+        "{workspaceRoot}/dist/.playwright/apps/web/app-e2e/auth-output",
+        "{workspaceRoot}/dist/.playwright/apps/web/app-e2e/playwright-report"
       ]
     },
     "typecheck": {

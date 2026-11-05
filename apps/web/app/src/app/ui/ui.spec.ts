@@ -94,6 +94,7 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
           <option value="light">Light</option>
           <option value="dark">Dark</option>
         </select>
+        <button app-theme-switcher aria-label="Dark theme"></button>
         <label appUI inline><input appUI type="checkbox" [formControl]="checked" /> Updates</label>
         <label appUI inline><input appUI type="radio" name="kind" value="one" /> One</label>
         <label appUI inline><input appUI="switch" type="checkbox" /> Notifications</label>

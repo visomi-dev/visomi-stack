@@ -1,0 +1,32 @@
+<section class="flex max-w-lg min-w-0 flex-col gap-6">
+  <header class="space-y-3">
+    <h1 appUI i18n="@@authAccount">Account</h1>
+    <p appUI tone="muted" i18n="@@authAccountEmailDescription">
+      Your verified email helps you recover access. Changing it requires a recent identity check.
+    </p>
+  </header>
+  <p class="font-medium break-all">{{ session.user()?.email }}</p>
+  @if (pending()) {
+    <p appUI tone="muted" i18n="@@authNewEmailCode">Enter the code sent to your new email address.</p>
+    <app-code-entry [busy]="action.busy()" (confirmed)="verify($event)" />
+    <button
+      appUI
+      variant="secondary"
+      [disabled]="action.busy()"
+      (click)="resend()"
+      i18n="@@authResend"
+      class="w-full sm:w-fit"
+    >
+      Send a new code
+    </button>
+    <button appUI variant="secondary" (click)="pending.set(null)" i18n="@@authCancel" class="w-full sm:w-fit">
+      Cancel
+    </button>
+  } @else {
+    <app-email-entry [label]="changeLabel" [busy]="action.busy()" (confirmed)="change($event)" />
+  }
+  <app-auth-feedback [action]="action" />
+  <a appUI routerLink="/security" i18n="@@authBackSecurity" class="inline-flex min-h-11 items-center">
+    Back to security
+  </a>
+</section>

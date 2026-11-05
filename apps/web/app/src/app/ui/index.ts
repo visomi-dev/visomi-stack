@@ -1,4 +1,5 @@
 export { ThemeSelect } from './theme/theme-select';
+export { ThemeSwitcher } from './theme/theme-switcher';
 export { Theme } from './theme/theme';
 
 export { NavItem } from './layout/nav-item';
@@ -40,6 +41,7 @@ export { Disclosure } from './overlays/disclosure';
 export { Dialog } from './overlays/dialog';
 
 import { ThemeSelect } from './theme/theme-select';
+import { ThemeSwitcher } from './theme/theme-switcher';
 import { NavItem } from './layout/nav-item';
 import { Navbar } from './layout/navbar';
 import { Topbar } from './layout/topbar';
@@ -80,6 +82,7 @@ import { Dialog } from './overlays/dialog';
 
 export const UI_IMPORTS = [
   ThemeSelect,
+  ThemeSwitcher,
   AppShell,
   Sidebar,
   Topbar,

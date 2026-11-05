@@ -13,6 +13,7 @@ const { flows, rateLimits } = authSchema;
 export type Flow = typeof flows.$inferSelect;
 type FlowInput = Partial<Pick<Flow, 'userId' | 'authVersion' | 'email' | 'data' | 'attempts' | 'expiresAt'>>;
 export const unavailable = () => new HttpError(400, 'verification_failed');
+
 export class Flows {
   private readonly database = inject<Database>(DATABASE);
   private readonly config = inject<AuthConfig>(AUTH_CONFIG);

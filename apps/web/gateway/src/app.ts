@@ -36,7 +36,7 @@ export function createGatewayApp(options: {
 
   if ((options.helmetMode ?? 'managed') === 'managed') {
     const headers = securityHeaders();
-    const applicationHeaders = securityHeaders({ nonce: true });
+    const applicationHeaders = securityHeaders({ nonce: true, google: options.auth?.googleEnabled === true });
 
     app.use((request, response, next) =>
       (request.path === '/app' || request.path.startsWith('/app/') ? applicationHeaders : headers)(
@@ -98,6 +98,10 @@ export function createGatewayApp(options: {
       observability: options.observability,
       errorMode: 'inherited',
       helmetMode: 'inherited',
+      authContext: (request) => ({
+        available: Boolean(options.auth?.snapshot),
+        session: options.auth?.snapshot?.(request) ?? null,
+      }),
     });
 
     // Preserve /app in the URL for Angular's localized assets and SSR manifest.

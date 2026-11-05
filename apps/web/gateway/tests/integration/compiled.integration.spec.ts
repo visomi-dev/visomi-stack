@@ -243,6 +243,43 @@ describe('compiled ESM gateway and embedded API', () => {
       await gateway.cleanup();
     }
   });
+  it('limits Angular rendering while continuing to serve its static assets', async () => {
+    const gateway = await launch();
+
+    try {
+      const document = await fetch(gateway.url + '/app/en/foundations');
+      const html = await document.text();
+      const stylesheet = html.match(/href="([^"]+\.css)"/)?.[1];
+
+      expect(document.status).toBe(200);
+      expect(stylesheet).toBeTruthy();
+
+      for (let count = 1; count < 600; count++) {
+        const response = await fetch(gateway.url + '/app/ssr-limit-probe', { redirect: 'manual' });
+
+        await response.arrayBuffer();
+
+        expect(response.status).not.toBe(429);
+      }
+
+      const rejected = await fetch(gateway.url + '/app/en/foundations', { redirect: 'manual' });
+
+      expect(rejected.status).toBe(429);
+      expect(rejected.headers.get('retry-after')).toBeTruthy();
+
+      await expect(rejected.json()).resolves.toEqual({ error: 'rate_limited' });
+
+      const asset = await fetch(new URL(stylesheet!, gateway.url + '/app/en/'));
+
+      expect(asset.status).toBe(200);
+      expect(asset.headers.get('content-type')).toContain('text/css');
+
+      await asset.arrayBuffer();
+    } finally {
+      await gateway.cleanup();
+    }
+  }, 30_000);
+
   it('loads the actual compiled API through the gateway module boundary without starting it', async () => {
     const api = await loadApi(pathToFileURL(join(root, 'dist/apps/web/api/app.js')));
 

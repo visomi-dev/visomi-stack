@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 function route(locale = 'en') {
-  return `/app/${locale}/`;
+  return `/app/${locale}/foundations`;
 }
 
 for (const locale of ['en', 'es']) {

@@ -22,6 +22,7 @@ import { decryptSecret, encryptSecret, totpSetup, totpStep } from './secrets';
 const { totpEnrollments, recoveryCodes } = authSchema;
 
 export type Factor = { kind: 'email' | 'totp' | 'recovery_code'; code: string };
+
 export class Factors {
   private readonly database = inject<Database>(DATABASE);
   private readonly config = inject<AuthConfig>(AUTH_CONFIG);

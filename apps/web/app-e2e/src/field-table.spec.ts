@@ -5,7 +5,7 @@ for (const locale of ['en', 'es']) {
     page,
     request,
   }, info) => {
-    const path = `/app/${locale}/`;
+    const path = `/app/${locale}/foundations`;
     const response = await request.get(path);
     const html = await response.text();
 

@@ -1,13 +1,13 @@
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse, type HttpInterceptorFn } from '@angular/common/http';
-import { PLATFORM_ID, inject } from '@angular/core';
+import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 
 import { BrowserTelemetry } from './browser-telemetry';
 
 export const browserErrorsInterceptor: HttpInterceptorFn = (req, next) => {
   const telemetry = inject(BrowserTelemetry);
-  const browser = isPlatformBrowser(inject(PLATFORM_ID)) ? inject(DOCUMENT).defaultView : null;
+  const browser = inject(DOCUMENT).defaultView;
 
   return next(req).pipe(
     catchError((error: unknown) => {

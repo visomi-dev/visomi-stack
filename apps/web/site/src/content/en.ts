@@ -10,6 +10,7 @@ export const en = {
   menu: 'Navigation',
   language: 'Language',
   theme: 'Appearance',
+  themeToggle: 'Dark theme',
   system: 'System',
   light: 'Light',
   dark: 'Dark',

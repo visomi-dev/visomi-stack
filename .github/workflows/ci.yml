@@ -85,12 +85,18 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Install Chromium
-        if: matrix.project == 'web-site' || matrix.project == 'web-app-e2e'
+        if: matrix.project == 'web-site'
         run: pnpm exec playwright install --with-deps chromium
+      - name: Install authentication browsers
+        if: matrix.project == 'web-app-e2e'
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
       - name: Run end-to-end tests
         env:
           E2E_PROJECT: ${{ matrix.project }}
         run: pnpm nx run "$E2E_PROJECT:e2e"
+      - name: Run authentication end-to-end tests
+        if: matrix.project == 'web-app-e2e'
+        run: pnpm nx run web-app-e2e:e2e --configuration=auth --args='--fail-on-flaky-tests'
 
   container:
     needs: verify

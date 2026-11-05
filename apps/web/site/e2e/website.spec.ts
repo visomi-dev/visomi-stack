@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { disablePerformanceCapture } from './support/performance';
+import { selectTheme } from './support/theme';
 
 for (const locale of ['en', 'es']) {
   test(`public ${locale} pages render complete HTML through Express`, async ({ request }) => {
@@ -47,6 +48,34 @@ for (const locale of ['en', 'es']) {
     await page.getByRole('checkbox').uncheck();
 
     await expect(page.getByRole('checkbox')).not.toBeChecked();
+
+    const switcher = page.getByRole('button', { name: locale === 'en' ? 'Dark theme' : 'Tema oscuro', exact: true });
+
+    await expect(switcher).toBeEnabled();
+
+    await expect(switcher).toHaveAttribute('aria-pressed', 'false');
+
+    await switcher.focus();
+
+    await page.keyboard.press('Space');
+
+    await expect(switcher).toHaveAttribute('aria-pressed', 'true');
+
+    await expect(page.locator('html')).toHaveClass('dark');
+
+    await page.reload();
+
+    await expect(switcher).toHaveAttribute('aria-pressed', 'true');
+
+    await switcher.focus();
+
+    await page.keyboard.press('Enter');
+
+    await expect(switcher).toHaveAttribute('aria-pressed', 'false');
+
+    await expect(page.locator('html')).toHaveClass('');
+
+    expect(errors).toEqual([]);
   });
 }
 
@@ -139,7 +168,7 @@ for (const width of [320, 360, 768, 1440]) {
       for (const route of ['', 'architecture/', 'docs/']) {
         await page.goto(`/es/${route}`);
 
-        await page.locator('[data-theme-select]').selectOption(theme);
+        await selectTheme(page, theme);
 
         await expect(page.locator('html')).toHaveClass(theme === 'dark' ? 'dark' : '');
 
@@ -167,7 +196,7 @@ test('the colored vision panel retains readable contrast in both themes', async 
   await page.goto('/en/');
 
   for (const theme of ['light', 'dark']) {
-    await page.locator('[data-theme-select]').selectOption(theme);
+    await selectTheme(page, theme);
 
     const ratios = await page.locator('[aria-labelledby=vision-title]').evaluate((section) => {
       const canvas = document.createElement('canvas');

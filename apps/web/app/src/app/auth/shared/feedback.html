@@ -1,0 +1,9 @@
+@if (action().error()) {
+  <div #error appUI="alert" tone="danger" role="alert" tabindex="-1" data-action-error>{{ action().error() }}</div>
+}
+@if (action().notice()) {
+  <div appUI="alert" role="status">{{ action().notice() }}</div>
+}
+@if (action().busy()) {
+  <span appUI="loader" role="status" aria-label="Working…" i18n-aria-label="@@authWorking"></span>
+}

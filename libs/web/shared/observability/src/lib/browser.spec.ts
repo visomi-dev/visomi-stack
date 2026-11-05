@@ -21,9 +21,12 @@ function fixture(configuration: unknown = config) {
 afterEach(() => vi.restoreAllMocks());
 
 describe('browser error capture policy', () => {
-  it.each(['/en/', '/es', '/app/en/'])('uses fixed home names for %s', (path) => {
-    expect(browserScreen(path)).toBe('home');
-  });
+  it.each(['/en/', '/es', '/app/en/', '/app/en/foundations', '/app/es/foundations/'])(
+    'uses fixed home names for %s',
+    (path) => {
+      expect(browserScreen(path)).toBe('home');
+    },
+  );
   it.each(['/en/ui/', '/app/es/ui', '/es/ui/'])('uses fixed UI names for %s', (path) => {
     expect(browserScreen(path)).toBe('ui');
   });

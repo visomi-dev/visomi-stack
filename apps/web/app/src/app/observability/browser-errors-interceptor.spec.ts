@@ -1,7 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { HttpClient, HttpErrorResponse, HttpRequest, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, throwError } from 'rxjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -18,7 +17,7 @@ afterEach(() => {
   TestBed.resetTestingModule();
 });
 
-function fixture(platform = 'browser') {
+function fixture(hasWindow = true) {
   const fetch = vi.fn().mockResolvedValue(new Response(undefined, { status: 202 }));
 
   fetch.mockResolvedValueOnce(Response.json({ token: 'synthetic-token', assets: [] }));
@@ -26,15 +25,14 @@ function fixture(platform = 'browser') {
     fetch,
     location: new URL('https://frontend.example.test/app/en/'),
   });
-  const reporter =
-    platform === 'browser'
-      ? createBrowserReporter('web-app', browser as unknown as Window, { globalErrors: false })
-      : undefined;
+  const reporter = hasWindow
+    ? createBrowserReporter('web-app', browser as unknown as Window, { globalErrors: false })
+    : undefined;
 
   TestBed.configureTestingModule({
     providers: [
-      { provide: PLATFORM_ID, useValue: platform },
-      { provide: DOCUMENT, useValue: { defaultView: browser } },
+      BrowserTelemetry,
+      { provide: DOCUMENT, useValue: { defaultView: hasWindow ? browser : null } },
       ...(reporter ? [{ provide: BROWSER_ERROR_REPORTER, useValue: reporter }] : []),
       provideHttpClient(withInterceptors([browserErrorsInterceptor])),
       provideHttpClientTesting(),
@@ -133,8 +131,8 @@ describe('browserErrorsInterceptor', () => {
     expect(report).not.toHaveBeenCalled();
   });
 
-  it('does not report HTTP errors during SSR', () => {
-    const f = fixture('server');
+  it('propagates HTTP errors when the document has no window', () => {
+    const f = fixture(false);
     const report = vi.spyOn(f.telemetry, 'report');
     const received = vi.fn();
 

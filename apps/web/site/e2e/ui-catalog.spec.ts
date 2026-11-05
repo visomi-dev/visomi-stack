@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { disablePerformanceCapture } from './support/performance';
+import { selectTheme } from './support/theme';
 
 for (const locale of ['en', 'es']) {
   test(`the ${locale} catalog renders all recipes through Express SSR`, async ({ page, request }) => {
@@ -200,7 +201,7 @@ for (const width of [360, 1280]) {
 
       await page.goto('/es/ui/');
 
-      await page.locator('[data-theme-select]').selectOption(theme);
+      await selectTheme(page, theme);
 
       await expect(page.locator('html')).toHaveClass(theme === 'dark' ? 'dark' : '');
 
@@ -233,7 +234,7 @@ for (const theme of ['light', 'dark']) {
   test(`shared text links keep underline and keyboard focus states in ${theme}`, async ({ page }) => {
     await page.goto('/en/ui/');
 
-    await page.locator('[data-theme-select]').selectOption(theme);
+    await selectTheme(page, theme);
 
     const links = page.locator('#link [data-preview] a');
     const standard = links.nth(0);

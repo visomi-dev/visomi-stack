@@ -6,7 +6,7 @@ for (const width of [360, 1023, 1024, 1440]) {
 
     await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
 
-    await page.goto('/app/es/');
+    await page.goto('/app/es/foundations');
 
     await expect(page.locator('app-root')).not.toHaveAttribute('ngh');
 
