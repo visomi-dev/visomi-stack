@@ -163,7 +163,7 @@ export class BrowserSession extends Session {
   }
 
   override async token(): Promise<string> {
-    if (!this.csrfToken) {
+    if (!this.csrfToken || this.state() !== 'ready') {
       await this.load(true);
     }
 
@@ -186,7 +186,9 @@ export class BrowserSession extends Session {
 
     const previous = this.value();
 
-    if (
+    if (!broadcast && previous.user?.id !== result.user?.id) {
+      this.cancelOperations();
+    } else if (
       broadcast ||
       previous.access !== result.access ||
       previous.user?.id !== result.user?.id ||

@@ -55,7 +55,11 @@ export class DeviceApproval {
 
   constructor() {
     const visibility = () => {
-      if (this.document.visibilityState !== 'hidden' && this.request() && this.status() === 'pending') {
+      if (
+        this.document.visibilityState !== 'hidden' &&
+        this.request() &&
+        ['pending', 'approved'].includes(this.status())
+      ) {
         void this.poll();
       }
     };
@@ -107,7 +111,7 @@ export class DeviceApproval {
 
     const pending = this.request();
 
-    if (!pending || this.status() !== 'pending') {
+    if (!pending || !['pending', 'approved'].includes(this.status())) {
       return;
     }
 
@@ -140,7 +144,7 @@ export class DeviceApproval {
       if (this.polling === controller) {
         this.polling = null;
 
-        if (this.status() === 'pending') {
+        if (['pending', 'approved'].includes(this.status())) {
           this.timer = setTimeout(() => void this.poll(), 5000);
         }
       }

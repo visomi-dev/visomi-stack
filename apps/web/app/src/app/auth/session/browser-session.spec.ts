@@ -237,3 +237,61 @@ it('cancels session and provider reads when its injector is destroyed', async ()
   expect(session.snapshot().user).toBeNull();
   TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
 });
+
+it('retries a failed session check even when the previous CSRF token is cached', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+
+  session.accept(full);
+  const failed = session.load(true);
+
+  http.expectOne('/api/auth/session').flush(null, { status: 503, statusText: 'Unavailable' });
+
+  await failed;
+
+  const retry = session.token();
+
+  http.expectOne('/api/auth/session').flush(full);
+
+  await expect(retry).resolves.toBe(full.csrfToken);
+
+  expect(session.status()).toBe('ready');
+});
+
+it('cancels account-bound operations when a refresh discovers a different identity', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const cancelled = vi.fn();
+
+  session.accept(full);
+  session.cancelled.subscribe(cancelled);
+  const refresh = session.load(true);
+
+  http.expectOne('/api/auth/session').flush({
+    ...full,
+    user: { ...full.user!, id: 'another-user', email: 'other@example.test' },
+    csrfToken: 'another-csrf',
+  });
+
+  await refresh;
+
+  expect(cancelled).toHaveBeenCalledOnce();
+  expect(session.user()?.id).toBe('another-user');
+});
+
+it('preserves account-bound operations on a same-identity refresh', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const cancelled = vi.fn();
+
+  session.accept(full);
+  session.cancelled.subscribe(cancelled);
+  const refresh = session.load(true);
+
+  http.expectOne('/api/auth/session').flush({ ...full, csrfToken: 'refreshed-csrf' });
+
+  await refresh;
+
+  expect(cancelled).not.toHaveBeenCalled();
+  expect(session.full()).toBe(true);
+});

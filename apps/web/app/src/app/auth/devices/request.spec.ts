@@ -115,6 +115,59 @@ describe('device status polling', () => {
     expect(page.status()).toBe('approved');
   });
 
+  it('expires an approved request on the next scheduled check and lets the user restart', async () => {
+    const fixture = TestBed.createComponent(DeviceApproval);
+    const page = fixture.componentInstance;
+
+    await fixture.whenStable();
+
+    page.start('demo@example.test');
+
+    await fixture.whenStable();
+
+    const timers = vi.spyOn(globalThis, 'setTimeout');
+    const clock = vi.spyOn(Date, 'now');
+
+    try {
+      polls[0].resolve({ requestId: firstId, status: 'approved', expiresAt });
+
+      await fixture.whenStable();
+
+      expect(page.status()).toBe('approved');
+      const check = timers.mock.calls.find(([, delay]) => delay === 5000)?.[0];
+
+      expect(check).toBeTypeOf('function');
+      clock.mockReturnValue(Date.parse(expiresAt) + 1);
+      (check as () => void)();
+
+      await fixture.whenStable();
+
+      expect(page.status()).toBe('expired');
+      expect(status).toHaveBeenCalledTimes(1);
+      const buttons = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'));
+      const restart = buttons.find((button) => button.textContent?.trim() === 'Start again');
+
+      expect(restart).toBeDefined();
+      expect(buttons.some((button) => button.textContent?.trim() === 'Continue recovery')).toBe(false);
+      restart!.click();
+      clock.mockRestore();
+
+      await fixture.whenStable();
+
+      expect(page.request()).toBeNull();
+      page.start('demo@example.test');
+
+      await fixture.whenStable();
+
+      expect(polls).toHaveLength(2);
+      expect(polls[1].id).toBe(secondId);
+    } finally {
+      clock.mockRestore();
+      timers.mockRestore();
+      fixture.destroy();
+    }
+  });
+
   it('aborts a pending status request when the page is destroyed', async () => {
     const fixture = TestBed.createComponent(DeviceApproval);
     const page = fixture.componentInstance;

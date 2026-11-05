@@ -1,6 +1,7 @@
 import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { CSP_NONCE } from '@angular/core';
+import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 
@@ -8,6 +9,7 @@ import { AuthHttp } from '../shared/http';
 import { Session } from '../session/session';
 
 import { Google } from './google';
+import { GoogleButton } from './google-button';
 
 const session = {
   authenticated: true,
@@ -29,6 +31,7 @@ beforeEach(() => {
   vi.stubGlobal('google', { accounts: { id: { initialize, renderButton, cancel: vi.fn() } } });
   TestBed.configureTestingModule({
     providers: [
+      provideRouter([]),
       provideHttpClient(),
       provideHttpClientTesting(),
       AuthHttp,
@@ -209,4 +212,66 @@ it('loads the provider script with the Angular CSP nonce', async () => {
   } finally {
     script.remove();
   }
+});
+
+it('starts a fresh Google flow after linking and can link a second account without remounting', async () => {
+  const fixture = TestBed.createComponent(GoogleButton);
+  const http = TestBed.inject(HttpTestingController);
+  const completed = vi.fn();
+
+  fixture.componentRef.setInput('intent', 'link');
+  fixture.componentInstance.completed.subscribe(completed);
+  fixture.detectChanges();
+
+  await Promise.resolve();
+
+  http.expectOne('/api/auth/google/start').flush({
+    flowId: 'first-link',
+    clientId: 'synthetic-client',
+    nonce: 'first-nonce',
+  });
+
+  await fixture.whenStable();
+
+  await vi.waitFor(() => expect(renderButton).toHaveBeenCalledOnce());
+
+  const firstCallback = callback;
+
+  firstCallback({ credential: 'first-account' });
+
+  const first = await vi.waitFor(() => http.expectOne('/api/auth/google/complete'));
+
+  first.flush(session);
+
+  const next = await vi.waitFor(() => http.expectOne('/api/auth/google/start'));
+
+  expect(completed).toHaveBeenCalledExactlyOnceWith(session);
+
+  expect(next.request.body).toEqual({ intent: 'link' });
+  next.flush({ flowId: 'second-link', clientId: 'synthetic-client', nonce: 'second-nonce' });
+
+  await fixture.whenStable();
+
+  await vi.waitFor(() =>
+    expect(initialize).toHaveBeenLastCalledWith(expect.objectContaining({ nonce: 'second-nonce' })),
+  );
+
+  firstCallback({ credential: 'stale-first-account' });
+  callback({ credential: 'second-account' });
+
+  const second = await vi.waitFor(() => http.expectOne('/api/auth/google/complete'));
+
+  expect(second.request.body).toEqual({ flowId: 'second-link', idToken: 'second-account' });
+  second.flush(session);
+
+  const third = await vi.waitFor(() => http.expectOne('/api/auth/google/start'));
+
+  expect(completed).toHaveBeenCalledTimes(2);
+  third.flush({
+    flowId: 'third-link',
+    clientId: 'synthetic-client',
+    nonce: 'third-nonce',
+  });
+
+  await fixture.whenStable();
 });

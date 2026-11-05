@@ -46,7 +46,9 @@
       </div>
     }
     @if (session.full()) {
-      <router-outlet class="hidden" />
+      @for (user of [session.user()]; track user?.id) {
+        <router-outlet class="hidden" />
+      }
     } @else {
       <p role="status" i18n="@@authSessionUnavailable">
         Your session changed or could not be checked. Return to sign in to continue.

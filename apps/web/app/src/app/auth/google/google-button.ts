@@ -36,7 +36,13 @@ export class GoogleButton {
       this.google.button(
         this.button().nativeElement,
         this.intent(),
-        (result) => this.completed.emit(result),
+        (result) => {
+          this.completed.emit(result);
+
+          if (this.intent() === 'link' && 'access' in result) {
+            this.render();
+          }
+        },
         (error) => {
           void this.action.run(async () => {
             throw error;
