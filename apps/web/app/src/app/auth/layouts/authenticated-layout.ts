@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
-import { Alert, AppShell, Sidebar, Topbar, NavItem, Navbar, Button, Link } from '../../ui';
+import { Alert, AppShell, Sidebar, Topbar, NavItem, Navbar, Button, Link, ThemeSwitcher } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
@@ -9,7 +9,6 @@ import { Session } from '../session/session';
 import { AuthNavigation } from '../shared/navigation';
 
 import { AuthLanguage } from './language';
-import { Appearance } from './appearance';
 
 @Component({
   selector: 'app-authenticated-layout',
@@ -25,7 +24,7 @@ import { Appearance } from './appearance';
     RouterLink,
     RouterLinkActive,
     RouterOutlet,
-    Appearance,
+    ThemeSwitcher,
     AuthLanguage,
     AuthFeedback,
   ],

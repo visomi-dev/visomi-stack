@@ -533,8 +533,12 @@
       <trans-unit id="themeToggle" datatype="html">
         <source>Dark theme</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/appearance.html</context>
-          <context context-type="linenumber">1</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/auth-layout.html</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="linenumber">45</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authFooter" datatype="html">
