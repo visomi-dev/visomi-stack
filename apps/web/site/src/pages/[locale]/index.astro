@@ -36,11 +36,12 @@ const count = Object.values(componentGroups).flat().length;
       class="pointer-events-none absolute inset-y-0 right-0 -z-10 w-1/2 bg-linear-to-l from-blue-50/70 to-transparent dark:from-blue-950/25"
       aria-hidden="true"
     ></div>
+
     <Container
       as="div"
       width="xl"
       gutter="compact"
-      class="grid items-center gap-14 pt-14 pb-16 sm:py-20 lg:grid-cols-[1.15fr_1fr] lg:gap-16 lg:pt-20 lg:pb-24"
+      class="grid items-center gap-14 pt-6 pb-16 sm:py-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16 lg:pt-8 lg:pb-24"
     >
       <div class="min-w-0">
         <Text
@@ -53,24 +54,29 @@ const count = Object.values(componentGroups).flat().length;
           <span class="h-px w-7 shrink-0 bg-current" aria-hidden="true"></span>
           {copy.eyebrow}
         </Text>
+
         <Heading as="h1" ui-size="hero" id="hero-title" class="max-w-2xl">
           {copy.headline}{' '}
           <Text as="span" ui-size="inherit" tone="accent" class="mt-2 block">
             {copy.accent}
           </Text>
         </Heading>
+
         <Text ui-size="lead" tone="muted" leading="relaxed" class="mt-7 max-w-xl">
           {copy.intro}
         </Text>
+
         <div class="mt-9 flex flex-wrap gap-3">
           <LinkButton href={sitePath(locale, 'docs')}>
             {labels.start}
             <Icon name="arrow-right" class="size-4" />
           </LinkButton>
+
           <LinkButton href={sitePath(locale, 'architecture')} variant="secondary">
             {copy.secondary}
           </LinkButton>
         </div>
+
         <ul class="mt-9 grid gap-3 text-xs leading-5 text-zinc-600 sm:text-sm dark:text-zinc-400">
           {copy.facts.map((fact) => (
             <li class="flex items-center gap-2">
@@ -83,16 +89,19 @@ const count = Object.values(componentGroups).flat().length;
       <ProductPreview locale={locale} />
     </Container>
   </section>
+
   <Container as="div" width="xl" gutter="compact" class="py-9">
     <Text ui-size="xs" tone="subtle" mono class="mb-6 text-center tracking-widest">
       {copy.stackLabel}
     </Text>
+
     <ul class="grid grid-cols-3 gap-x-6 gap-y-5 text-center font-heading text-base font-semibold text-zinc-600 sm:grid-cols-6 sm:text-lg dark:text-zinc-300">
       {['Nx', 'Angular', 'Astro', 'Express', 'PostgreSQL', 'Tailwind'].map((name) => (
         <li>{name}</li>
       ))}
     </ul>
   </Container>
+
   <section
     id="foundation"
     class="border-y border-zinc-200 bg-zinc-50/70 py-16 sm:py-24 dark:border-zinc-800 dark:bg-zinc-900/30"

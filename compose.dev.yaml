@@ -1,0 +1,36 @@
+# Explicit development overlay; compiled runtime images keep their normal startup.
+services:
+  app:
+    image: localhost/visomi-live-reload:local
+    build:
+      target: development
+    environment:
+      NODE_ENV: development
+      NX_DAEMON: 'false'
+      NX_ISOLATE_PLUGINS: 'false'
+      HUSKY: '0'
+    volumes:
+      # A directory mount also observes editors that save files by atomic rename.
+      - .:/workspace:Z
+      - development-node-modules:/workspace/node_modules
+      - development-dist:/workspace/dist
+      - development-nx:/workspace/.nx
+      - development-tmp:/workspace/tmp
+    healthcheck:
+      # Podman's Docker API splits exec healthcheck arguments on whitespace.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/api/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      start_period: 30s
+      retries: 30
+    stop_grace_period: 10s
+
+volumes:
+  development-node-modules:
+  development-dist:
+  development-nx:
+  development-tmp:

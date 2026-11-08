@@ -25,6 +25,12 @@ FROM workspace AS database-init
 
 CMD ["pnpm", "nx", "run", "backend-shared:db-migrate", "--output-style=static"]
 
+FROM workspace AS development
+
+ENV NODE_ENV=development
+
+CMD ["node", "tools/development/live-reload.mjs"]
+
 FROM workspace AS build
 
 ARG APP_NAME=web-gateway

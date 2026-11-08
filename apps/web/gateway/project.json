@@ -5,6 +5,24 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "continuous": true,
+      "options": {
+        "command": "node tools/development/live-reload.mjs",
+        "tty": true
+      }
+    },
+    "development-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["sharedGlobals", "{workspaceRoot}/tools/development/**/*", "{workspaceRoot}/eslint.config.mjs"],
+      "options": {
+        "commands": ["eslint tools/development/*.mjs", "node --test tools/development/*.spec.mjs"],
+        "parallel": false
+      }
+    },
     "jaeger-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -25,6 +43,7 @@
     },
     "deployment-check": {
       "executor": "nx:run-commands",
+      "dependsOn": ["development-check"],
       "options": {
         "commands": [
           "tsc --noEmit --module esnext --moduleResolution bundler --allowImportingTsExtensions --target es2022 --types node --skipLibCheck .railway/railway.ts",
@@ -38,6 +57,7 @@
         "default",
         "{workspaceRoot}/.railway/**/*",
         "{workspaceRoot}/tools/deployment/**/*",
+        "{workspaceRoot}/tools/development/**/*",
         "{workspaceRoot}/eslint.config.mjs",
         "{workspaceRoot}/tools/eslint-rules/**/*",
         {

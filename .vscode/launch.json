@@ -2,6 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch Chrome against localhost:8080",
+      "url": "http://localhost:8080",
+      "runtimeArgs": ["--auto-open-devtools-for-tabs"]
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Debug web-api with Nx",

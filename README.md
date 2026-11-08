@@ -16,7 +16,7 @@ HTTP listener, shared telemetry and optional PostgreSQL pool. Authentication
 runs once in the host; the embedded API uses inherited mode.
 
 The Astro website (`web-site`) is mounted by the gateway at `/en/` and `/es/`.
-The Angular SSR application (`web-app`) runs independently at `/app/en/` and
+The Angular SSR application (`web-app`) is mounted by the gateway at `/app/en/` and
 `/app/es/`. Both use shared Tailwind foundations and light/dark/system themes.
 Worker and realtime applications remain unimplemented. The API now supports PostgreSQL-backed passkey authentication and durable sessions.
 Business domains remain future work; this slice does not demonstrate a complete DDD model.
@@ -51,11 +51,19 @@ dependency or `.env` loader. See the [API guide](apps/web/api/README.md) for mig
 commands, authentication endpoints and middleware ownership.
 
 For local containers, supply a high-entropy `SESSION_SECRET` of at least 32 bytes
-and run `docker compose up --build app`. The separate `database-init` service
+and run `docker compose up --build app` to start the gateway with the website at
+`/`, Angular under `/app`, and the API under `/api`. The separate `database-init` service
 waits for healthy PostgreSQL and applies checked-in migrations before `app` can
 start. The API never migrates or seeds during startup. See
 [container database initialization](docs/development.md#container-database-initialization)
 for reruns and seed ownership.
+
+For integrated live reload of the website, Angular application and API, run
+`pnpm dev` on the host,
+or `podman compose -f compose.yaml -f compose.dev.yaml up -d --build` in containers.
+Both modes use the compiled gateway and full browser reload after successful
+builds. See [integrated live reload](docs/development.md#integrated-live-reload)
+for environment settings, dependencies, port ownership and switching modes.
 
 The serve command and HTTP response have been checked. A fresh worktree
 installation with `pnpm install --frozen-lockfile` has also been verified.
@@ -69,12 +77,13 @@ installation with `pnpm install --frozen-lockfile` has also been verified.
   Keep the API output as its sibling directory; the gateway imports `../api/app.js`.
   Process integration tests verify that mount, inherited authentication, shared
   telemetry and resource cleanup. It also imports `../site/server/entry.mjs` and
-  serves its sibling `client` directory. Angular gateway mounting remains pending.
+  serves its sibling `client` directory. Angular SSR is imported from
+  `../app/server/server.mjs` and mounted under `/app`.
 - API and gateway Playwright request suites verify their HTTP contracts using
   separate owned Compose projects with container PostgreSQL, the compiled
   application, and local telemetry destinations. Run
   `pnpm nx e2e web-api` and `pnpm nx e2e web-gateway`.
-- The container runtime selects the standalone API or gateway with
+- The container runtime defaults to the gateway and selects the standalone API or gateway with
   `APP_NAME=web-api|web-gateway`, with a separate database initialization image. Redis and MinIO services remain in Compose from
   the earlier infrastructure setup; the API authentication slice does not use
   them. Containers do not establish worker or deployment readiness.

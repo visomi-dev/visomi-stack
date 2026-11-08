@@ -8,6 +8,9 @@ out-tsc
 # dependencies
 node_modules
 
+# Local Compose secrets
+/.env
+
 # IDEs and editors
 /.idea
 .project
