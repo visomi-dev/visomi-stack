@@ -6,6 +6,13 @@ import { filter, map } from 'rxjs';
 import { Link } from '../../ui';
 import { AuthNavigation } from '../shared/navigation';
 
+const restarts: Record<string, string> = Object.freeze({
+  '/auth/sign-in/verify': '/auth/sign-in/password',
+  '/auth/reset-password': '/auth/forgot-password',
+  '/auth/google/verify-email': '/auth/sign-in',
+  '/auth/recovery/verify': '/auth/recovery',
+});
+
 @Component({
   selector: 'app-auth-language',
   imports: [Link],
@@ -30,12 +37,6 @@ export class AuthLanguage {
 
   private stablePath(): string {
     const path = this.url().split(/[?#]/, 1)[0];
-    const restarts: Record<string, string> = {
-      '/auth/sign-in/verify': '/auth/sign-in/password',
-      '/auth/reset-password': '/auth/forgot-password',
-      '/auth/google/verify-email': '/auth/sign-in',
-      '/auth/recovery/verify': '/auth/recovery',
-    };
 
     if (path === '/security/devices/review') {
       const request = this.router.parseUrl(this.url()).queryParams['requestId'];

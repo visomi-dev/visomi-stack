@@ -15,11 +15,14 @@ import { appShell, type ShellLayout } from '@visomi-stack/web-frontend-ui';
         <div [class]="headerClasses"><ng-content select="[app-topbar],[data-shell-header]" /></div>
 
         <main [id]="contentId()" tabindex="-1" [class]="contentClasses"><ng-content /></main>
+
         <ng-content select="[data-shell-footer]" />
       </div>
     </div>
 
-    <div [class]="mobileClasses"><ng-content select="[appUI=navbar],[data-shell-mobile]" /></div>
+    <div [class]="mobileClasses">
+      <ng-content select="[appUI=navbar],[data-shell-mobile]" />
+    </div>
   `,
   host: { '[class]': 'classes' },
 })
