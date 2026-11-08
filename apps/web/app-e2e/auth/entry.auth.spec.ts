@@ -23,7 +23,7 @@ test('presents direct actions in both languages, mobile and dark mode', async ({
 
   await expect(switcher).toHaveAttribute('aria-pressed', 'true');
 
-  await expect(page.locator('html')).toHaveClass(/dark/);
+  await expect(page.locator('app-root')).toHaveClass(/dark/);
 
   const result2 = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
@@ -82,13 +82,13 @@ test('presents direct actions in both languages, mobile and dark mode', async ({
 
   await expect(lightSwitcher).toHaveAttribute('aria-pressed', 'false');
 
-  await expect(page.locator('html')).not.toHaveClass(/dark/);
+  await expect(page.locator('app-root')).not.toHaveClass(/dark/);
 
   await page.screenshot({ path: info.outputPath('sign-in-en-desktop-light.png'), animations: 'disabled' });
 
   await page.emulateMedia({ reducedMotion: 'reduce' });
 
-  await expect(lightSwitcher.locator('svg').first()).toHaveCSS('transition-property', 'none');
+  await expect(lightSwitcher.locator('svg').first()).toHaveCSS('animation-name', 'none');
 
   await page.evaluate(() => {
     document.documentElement.style.zoom = '2';

@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { Action } from '../shared/action';
 import { Session } from '../session/session';
 import { AuthNavigation } from '../shared/navigation';
 
@@ -72,7 +73,7 @@ describe('device status polling', () => {
       ],
     });
     TestBed.overrideComponent(DeviceApproval, {
-      set: { providers: [{ provide: Devices, useValue: { request, status, cancel } }] },
+      set: { providers: [Action, { provide: Devices, useValue: { request, status, cancel } }] },
     });
   });
 

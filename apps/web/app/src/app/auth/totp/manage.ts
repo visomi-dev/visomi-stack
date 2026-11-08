@@ -1,6 +1,7 @@
 import { Component, DestroyRef, afterNextRender, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link, Card, Code } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -15,8 +16,21 @@ import { Totp, type TotpSetup } from './totp';
 
 @Component({
   selector: 'app-manage-totp',
-  imports: [Button, Heading, Text, Link, RouterLink, AuthFeedback, CodeEntry, QrCode, BackupDisplay, Card, Code],
-  providers: [AuthHttp, Totp, Methods],
+  imports: [
+    NavigationHeading,
+    Button,
+    Heading,
+    Text,
+    Link,
+    RouterLink,
+    AuthFeedback,
+    CodeEntry,
+    QrCode,
+    BackupDisplay,
+    Card,
+    Code,
+  ],
+  providers: [Action, AuthHttp, Totp, Methods],
   templateUrl: './manage.html',
 })
 export class ManageTotp {
@@ -24,29 +38,18 @@ export class ManageTotp {
   private readonly api = inject(Totp);
   private readonly methods = inject(Methods);
   private readonly destroyRef = inject(DestroyRef);
+  readonly action = inject(Action);
 
   readonly enabled = signal(false);
   readonly setup = signal<TotpSetup | null>(null);
   readonly codes = signal<string[]>([]);
   readonly removing = signal(false);
 
-  readonly action = new Action();
-
   constructor() {
     this.destroyRef.onDestroy(() => {
       this.setup.set(null);
       this.codes.set([]);
     });
-    afterNextRender(
-      () =>
-        void this.action.run(async () => {
-          const methods = await this.methods.list();
-
-          this.enabled.set(methods.totp);
-
-          await this.session.loadProviders();
-        }),
-    );
   }
 
   start(): void {
@@ -72,7 +75,7 @@ export class ManageTotp {
       this.enabled.set(true);
 
       if (result.notificationSent === false) {
-        this.action.notice.set(
+        this.action.setNotice(
           $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
         );
       }
@@ -88,10 +91,21 @@ export class ManageTotp {
       this.codes.set([]);
 
       if (result.notificationSent === false) {
-        this.action.notice.set(
+        this.action.setNotice(
           $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
         );
       }
     });
   }
+
+  private readonly initialize = afterNextRender(
+    () =>
+      void this.action.run(async () => {
+        const methods = await this.methods.list();
+
+        this.enabled.set(methods.totp);
+
+        await this.session.loadProviders();
+      }),
+  );
 }

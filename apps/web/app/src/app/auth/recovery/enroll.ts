@@ -2,6 +2,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { form, FormField, required, disabled, submit } from '@angular/forms/signals';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Field, Input, Disclosure } from '../../ui';
 import { Session } from '../session/session';
 import { AuthHttp } from '../shared/http';
@@ -18,8 +19,8 @@ import { Recovery } from './recovery';
 
 @Component({
   selector: 'app-recovery-enroll',
-  imports: [Button, Heading, Text, Field, Input, FormField, AuthFeedback, CodeEntry, Disclosure],
-  providers: [AuthHttp, Passkeys, Recovery],
+  imports: [NavigationHeading, Button, Heading, Text, Field, Input, FormField, AuthFeedback, CodeEntry, Disclosure],
+  providers: [Action, AuthHttp, Passkeys, Recovery],
   templateUrl: './enroll.html',
 })
 export class Enroll {
@@ -30,6 +31,7 @@ export class Enroll {
   private readonly session = inject(Session);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  readonly action = inject(Action);
 
   readonly model = signal({ password: '' });
   readonly pending = signal<FactorPending | null>(null);
@@ -44,7 +46,6 @@ export class Enroll {
     disabled(path, { when: () => this.action.busy() });
   });
 
-  readonly action = new Action();
   readonly showLabel = $localize`:@@authShowPassword:Show`;
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authNewPassword:New password`;
@@ -126,8 +127,8 @@ export class Enroll {
     this.attempted.set(false);
     this.backup.set(false);
     this.visible.set(false);
-    this.action.error.set('');
-    this.action.notice.set('');
+    this.action.setError('');
+    this.action.setNotice('');
   }
 
   logout(): void {

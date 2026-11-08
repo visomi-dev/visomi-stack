@@ -1,5 +1,5 @@
 <section class="flex max-w-lg min-w-0 flex-col gap-6">
-  <h1 appUI i18n="@@authBackupCodes">Backup codes</h1>
+  <h1 appUI appNavigationHeading i18n="@@authBackupCodes">Backup codes</h1>
   @if (codes().length) {
     <app-backup-display [codes]="codes()" />
   } @else {

@@ -2,6 +2,7 @@ import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, disabled, submit } from '@angular/forms/signals';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link, Field, Input } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -25,6 +26,7 @@ type Reauthentication = (FactorPending & { method: 'password' }) | (Pending & { 
 @Component({
   selector: 'app-reauthenticate',
   imports: [
+    NavigationHeading,
     Button,
     Heading,
     Text,
@@ -38,7 +40,7 @@ type Reauthentication = (FactorPending & { method: 'password' }) | (Pending & { 
     ResendCode,
     GoogleButton,
   ],
-  providers: [AuthHttp, Methods, Passkeys, Passwords, Google],
+  providers: [Action, AuthHttp, Methods, Passkeys, Passwords, Google],
   templateUrl: './reauthenticate.html',
 })
 export class Reauthenticate {
@@ -49,6 +51,7 @@ export class Reauthenticate {
   private readonly passwords = inject(Passwords);
   private readonly googleApi = inject(Google);
   private readonly journey = inject(Journey);
+  readonly action = inject(Action);
 
   readonly methods = signal<MethodsView | null>(null);
   readonly pending = signal<Reauthentication | null>(null);
@@ -62,23 +65,9 @@ export class Reauthenticate {
     disabled(path, { when: () => this.action.busy() });
   });
 
-  readonly action = new Action();
   readonly showLabel = $localize`:@@authShowPassword:Show`;
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authPassword:Password`;
-
-  constructor() {
-    afterNextRender(
-      () =>
-        void this.action.run(async () => {
-          const methods = await this.methodApi.list();
-
-          this.methods.set(methods);
-
-          await this.session.loadProviders();
-        }),
-    );
-  }
 
   passkey(): void {
     void this.action.run(async () => {
@@ -141,4 +130,15 @@ export class Reauthenticate {
       this.journey.start('google', result);
     }
   }
+
+  private readonly initialize = afterNextRender(
+    () =>
+      void this.action.run(async () => {
+        const methods = await this.methodApi.list();
+
+        this.methods.set(methods);
+
+        await this.session.loadProviders();
+      }),
+  );
 }

@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Heading, Text, Link } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -12,16 +13,15 @@ import { Recovery } from './recovery';
 
 @Component({
   selector: 'app-recovery-request',
-  imports: [Heading, Text, Link, RouterLink, AuthFeedback, EmailEntry],
-  providers: [AuthHttp, Recovery],
+  imports: [NavigationHeading, Heading, Text, Link, RouterLink, AuthFeedback, EmailEntry],
+  providers: [Action, AuthHttp, Recovery],
   templateUrl: './request.html',
 })
 export class RecoveryRequest {
   private readonly api = inject(Recovery);
   private readonly journey = inject(Journey);
   private readonly router = inject(Router);
-
-  readonly action = new Action();
+  readonly action = inject(Action);
 
   request(email: string): void {
     void this.action.run(async () => {

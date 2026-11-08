@@ -98,7 +98,13 @@ Host header. The development client uses a local event stream, without external
 telemetry. Production startup does not include this proxy or reload client.
 
 While rebuilding, the public server returns a temporary 503 building page. It
-starts a new gateway and reloads connected browsers only after a successful
+uses the shared UI recipes, Tailwind theme and locally served fonts, with
+English/Spanish copy and the saved or system light/dark preference. Its HTML and
+CSS are prepared once at supervisor startup in a short-lived compiler process;
+they require neither application build output nor additional watchers. Restart
+the supervisor after editing this screen or its shared design recipes.
+
+The supervisor starts a new gateway and reloads connected browsers only after a successful
 build and API readiness check. Compilation or startup failures remain visible in
 the terminal; editing a source file retries the build. Changes arriving during a
 build are batched for the next build. Stopping the supervisor closes its source

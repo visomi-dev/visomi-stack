@@ -39,6 +39,8 @@
 
 ## Frontend composition
 
+- Assign Angular effects and render hooks to named readonly class properties, ordered after methods. Keep computed values pure; derive element attributes through template or host bindings. Navigation services expose focus requests as signals; a directive on the owning heading applies its bindings and handles the necessary native focus call after rendering. Use Angular-owned elements and view queries for browser/SDK integrations rather than global DOM searches or rewriting attributes.
+
 - Angular services use `@Service()` with `inject()` dependencies. Root provisioning is implicit; use `@Service({ autoProvided: false })` with explicit providers for local scope. Reserve `@Injectable` for required scopes or provider metadata that `@Service` cannot represent, and document the reason. Keep this convention in generator defaults and Angular ESLint rules; do not rename service classes or files merely to add a `Service` suffix.
 - Choose an attribute directive when adding reusable appearance or behavior to an existing element without owning a template. Choose a component when it owns markup, projected parts, or structural accessibility responsibilities. Component size alone does not decide this, and not every UI primitive must use the same abstraction.
 - Preserve native controls and their attributes, events, focus and form bindings. A component may use an attribute selector on a native host when it needs its own template; a custom tag is not required. Component selectors use the `app` prefix and kebab-case; attribute directives keep the existing prefixed camelCase convention, including `appUI`.

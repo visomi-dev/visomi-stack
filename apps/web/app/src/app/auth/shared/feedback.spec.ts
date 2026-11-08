@@ -11,17 +11,51 @@ beforeEach(() => {
   TestBed.configureTestingModule({
     providers: [provideRouter([]), { provide: Session, useValue: { full: signal(true) } }],
   });
+  TestBed.overrideComponent(AuthFeedback, { add: { providers: [Action] } });
+});
+
+it('keeps inline progress accessible without clipping errors or notices', async () => {
+  const fixture = TestBed.createComponent(AuthFeedback);
+  const action = fixture.debugElement.injector.get(Action);
+
+  fixture.componentRef.setInput('action', action);
+  fixture.componentRef.setInput('indicator', false);
+
+  await fixture.whenStable();
+
+  action.setProcessing(true);
+
+  await fixture.whenStable();
+
+  const host = fixture.nativeElement as HTMLElement;
+
+  expect(host.classList.contains('sr-only')).toBe(true);
+  expect(host.hidden).toBe(false);
+  expect(host.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Working…');
+  action.setError('Synthetic action error');
+
+  await fixture.whenStable();
+
+  expect(host.classList.contains('sr-only')).toBe(false);
+  expect(host.querySelector('[role="alert"]')?.textContent).toContain('Synthetic action error');
+  action.setError('');
+  action.setNotice('Synthetic action notice');
+
+  await fixture.whenStable();
+
+  expect(host.classList.contains('sr-only')).toBe(false);
+  expect(host.textContent).toContain('Synthetic action notice');
 });
 
 it('focuses the owning alert after rendering and supports repeating the same failed action', async () => {
   const first = TestBed.createComponent(AuthFeedback);
   const second = TestBed.createComponent(AuthFeedback);
-  const firstAction = TestBed.runInInjectionContext(() => new Action());
-  const secondAction = TestBed.runInInjectionContext(() => new Action());
+  const firstAction = first.debugElement.injector.get(Action);
+  const secondAction = second.debugElement.injector.get(Action);
 
   first.componentRef.setInput('action', firstAction);
   second.componentRef.setInput('action', secondAction);
-  firstAction.error.set('Synthetic background error');
+  firstAction.setError('Synthetic background error');
 
   await Promise.all([first.whenStable(), second.whenStable()]);
 
@@ -45,7 +79,7 @@ it('focuses the owning alert after rendering and supports repeating the same fai
 
 it('announces background failures without moving focus', async () => {
   const fixture = TestBed.createComponent(AuthFeedback);
-  const action = TestBed.runInInjectionContext(() => new Action());
+  const action = fixture.debugElement.injector.get(Action);
 
   fixture.componentRef.setInput('action', action);
 
@@ -57,7 +91,7 @@ it('announces background failures without moving focus', async () => {
 
   try {
     button.focus();
-    action.error.set('Synthetic polling failure');
+    action.setError('Synthetic polling failure');
 
     await fixture.whenStable();
 

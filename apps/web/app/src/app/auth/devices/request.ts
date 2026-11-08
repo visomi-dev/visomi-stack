@@ -2,6 +2,7 @@ import { DOCUMENT, Location } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action, errorMessage } from '../shared/action';
@@ -13,8 +14,8 @@ import { Devices, type DeviceRequest, type DeviceStatus } from './devices';
 
 @Component({
   selector: 'app-device-approval',
-  imports: [Button, Heading, Text, Link, RouterLink, AuthFeedback, EmailEntry],
-  providers: [AuthHttp, Devices],
+  imports: [NavigationHeading, Button, Heading, Text, Link, RouterLink, AuthFeedback, EmailEntry],
+  providers: [Action, AuthHttp, Devices],
   templateUrl: './request.html',
 })
 export class DeviceApproval {
@@ -24,6 +25,7 @@ export class DeviceApproval {
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
+  readonly action = inject(Action);
 
   readonly request = signal<DeviceRequest | null>(null);
   readonly status = signal<DeviceStatus['status']>('pending');
@@ -47,8 +49,6 @@ export class DeviceApproval {
 
     return origin ? new URL(path, origin).href : path;
   });
-
-  readonly action = new Action();
 
   private timer: ReturnType<typeof setTimeout> | null = null;
   private polling: AbortController | null = null;
@@ -134,11 +134,11 @@ export class DeviceApproval {
 
       if (!controller.signal.aborted) {
         this.status.set(result.status);
-        this.action.error.set('');
+        this.action.setError('');
       }
     } catch (error) {
       if (!controller.signal.aborted) {
-        this.action.error.set(errorMessage(error));
+        this.action.setError(errorMessage(error));
       }
     } finally {
       if (this.polling === controller) {
@@ -181,7 +181,7 @@ export class DeviceApproval {
   restart(): void {
     this.stopPolling();
     this.request.set(null);
-    this.action.error.set('');
+    this.action.setError('');
   }
 
   private stopPolling(): void {

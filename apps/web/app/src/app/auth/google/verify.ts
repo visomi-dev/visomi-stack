@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Heading, Text, LinkButton, Alert } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -14,16 +15,15 @@ import { Google } from './google';
 
 @Component({
   selector: 'app-google-verify',
-  imports: [Heading, Text, LinkButton, Alert, RouterLink, AuthFeedback, CodeEntry, ResendCode],
-  providers: [AuthHttp, Google],
+  imports: [NavigationHeading, Heading, Text, LinkButton, Alert, RouterLink, AuthFeedback, CodeEntry, ResendCode],
+  providers: [Action, AuthHttp, Google],
   templateUrl: './verify.html',
 })
 export class GoogleVerify {
   readonly journey = inject(Journey);
   private readonly google = inject(Google);
   private readonly navigation = inject(AuthNavigation);
-
-  readonly action = new Action();
+  readonly action = inject(Action);
 
   verify(code: string): void {
     const pending = this.journey.challenge();

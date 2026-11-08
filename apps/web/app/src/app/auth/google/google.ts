@@ -155,6 +155,7 @@ export class Google {
         return;
       }
 
+      // Google requires an executable external script; Angular templates do not execute script elements.
       const script = this.document.createElement('script');
 
       script.src = 'https://accounts.google.com/gsi/client';

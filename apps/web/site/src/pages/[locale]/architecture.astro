@@ -17,7 +17,7 @@ const copy = labels.architecture;
 
 <SiteLayout locale={locale} page="architecture" title={copy.title} description={copy.description}>
   <Container as="div" width="xl" gutter="compact">
-    <header class="max-w-3xl pt-14 pb-12 sm:pt-20 sm:pb-16">
+    <header class="max-w-3xl pt-8 pb-8 sm:pt-10 sm:pb-10">
       <Text ui-size="xs" tone="accent" mono leading="relaxed" class="mb-6 tracking-widest">
         {copy.eyebrow}
       </Text>
@@ -29,7 +29,7 @@ const copy = labels.architecture;
       </Text>
     </header>
     <RuntimeMap locale={locale} />
-    <section class="py-16 sm:py-24" aria-labelledby="current-title">
+    <section class="py-10 sm:py-12 lg:py-16" aria-labelledby="current-title">
       <div class="mb-9 flex flex-wrap items-center gap-4">
         <Heading as="h2" ui-size="title" id="current-title">
           {copy.implementedTitle}
@@ -52,7 +52,7 @@ const copy = labels.architecture;
     </section>
     <section
       id="direction"
-      class="scroll-mt-28 border-t border-zinc-200 py-16 sm:py-20 dark:border-zinc-800"
+      class="scroll-mt-28 border-t border-zinc-200 py-10 sm:py-12 lg:py-16 dark:border-zinc-800"
       aria-labelledby="direction-title"
     >
       <Badge>{copy.direction}</Badge>
@@ -62,7 +62,7 @@ const copy = labels.architecture;
       <Text ui-size="md" tone="muted" class="mt-5 max-w-2xl">
         {copy.directionIntro}
       </Text>
-      <div class="mt-10 grid gap-5 md:grid-cols-2">
+      <div class="mt-10 grid gap-5 lg:grid-cols-3">
         {copy.future.map(([title, body], i) => (
           <Card as="article" tone="subtle" padding="lg" layout="plain" class="border-dashed">
             <Text as="span" ui-size="xs" tone="accent" mono>
@@ -78,7 +78,7 @@ const copy = labels.architecture;
         ))}
       </div>
     </section>
-    <section class="border-t border-zinc-200 py-16 sm:py-20 dark:border-zinc-800" aria-labelledby="principles-title">
+    <section class="border-t border-zinc-200 py-10 sm:py-12 dark:border-zinc-800" aria-labelledby="principles-title">
       <Heading as="h2" ui-size="title" id="principles-title">
         {copy.principlesTitle}
       </Heading>
@@ -95,7 +95,7 @@ const copy = labels.architecture;
         ))}
       </div>
     </section>
-    <Card as="section" tone="subtle" padding="lg" layout="plain" class="mb-16">
+    <Card as="section" tone="subtle" padding="lg" layout="plain" class="mb-10 sm:mb-12">
       <Heading as="h2" ui-size="lg">
         {copy.nextTitle}
       </Heading>

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { email, form, FormField, required } from '@angular/forms/signals';
 
+import { NavigationHeading } from '../shared/navigation-heading';
 import {
   Button,
   Field,
@@ -22,6 +23,7 @@ import {
 
 @Component({
   imports: [
+    NavigationHeading,
     Button,
     Field,
     Input,

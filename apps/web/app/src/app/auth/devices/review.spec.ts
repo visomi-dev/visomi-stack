@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
+import { Action } from '../shared/action';
 import { Session } from '../session/session';
 
 import { Devices, type DeviceStatus } from './devices';
@@ -29,7 +30,7 @@ beforeEach(() => {
     ],
   });
   TestBed.overrideComponent(DeviceReview, {
-    set: { providers: [{ provide: Devices, useValue: { review, decide } }] },
+    set: { providers: [Action, { provide: Devices, useValue: { review, decide } }] },
   });
 });
 

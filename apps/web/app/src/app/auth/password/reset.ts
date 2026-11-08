@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, pattern, disabled, submit } from '@angular/forms/signals';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link, LinkButton, Alert, Field, Input, Select } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -17,6 +18,7 @@ import { Passwords } from './passwords';
 @Component({
   selector: 'app-password-reset',
   imports: [
+    NavigationHeading,
     Button,
     Heading,
     Text,
@@ -31,12 +33,13 @@ import { Passwords } from './passwords';
     AuthFeedback,
     ResendCode,
   ],
-  providers: [AuthHttp, Passwords],
+  providers: [Action, AuthHttp, Passwords],
   templateUrl: './reset.html',
 })
 export class PasswordReset {
   readonly journey = inject(Journey);
   private readonly passwords = inject(Passwords);
+  readonly action = inject(Action);
 
   readonly model = signal({ code: '', password: '', kind: 'none', factor: '' });
   readonly attempted = signal(false);
@@ -53,7 +56,6 @@ export class PasswordReset {
     disabled(path, { when: () => this.action.busy() });
   });
 
-  readonly action = new Action();
   readonly codeLabel = $localize`:@@authEmailCode:Email verification code`;
   readonly showLabel = $localize`:@@authShowPassword:Show`;
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
@@ -83,7 +85,7 @@ export class PasswordReset {
             this.done.set(true);
 
             if (!result.notificationSent) {
-              this.action.notice.set(
+              this.action.setNotice(
                 $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
               );
             }

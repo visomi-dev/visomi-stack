@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, pattern, disabled, submit } from '@angular/forms/signals';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, LinkButton, Alert, Field, Input, Select } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -17,6 +18,7 @@ import { Recovery } from './recovery';
 @Component({
   selector: 'app-recovery-verify',
   imports: [
+    NavigationHeading,
     Button,
     Heading,
     Text,
@@ -30,13 +32,14 @@ import { Recovery } from './recovery';
     AuthFeedback,
     ResendCode,
   ],
-  providers: [AuthHttp, Recovery],
+  providers: [Action, AuthHttp, Recovery],
   templateUrl: './verify.html',
 })
 export class RecoveryVerify {
   readonly journey = inject(Journey);
   private readonly api = inject(Recovery);
   private readonly navigation = inject(AuthNavigation);
+  readonly action = inject(Action);
 
   readonly model = signal({ code: '', kind: 'none', factor: '' });
   readonly attempted = signal(false);
@@ -49,7 +52,6 @@ export class RecoveryVerify {
     disabled(path, { when: () => this.action.busy() });
   });
 
-  readonly action = new Action();
   readonly emailLabel = $localize`:@@authEmailCode:Email verification code`;
   readonly factorLabel = $localize`:@@authAdditionalCode:Additional verification`;
 

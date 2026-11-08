@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link } from '../../ui';
 import { Session } from '../session/session';
 import { AuthHttp } from '../shared/http';
@@ -14,17 +15,17 @@ import { Email } from './email';
 
 @Component({
   selector: 'app-account',
-  imports: [Button, Heading, Text, Link, RouterLink, AuthFeedback, EmailEntry, CodeEntry],
-  providers: [AuthHttp, Email],
+  imports: [NavigationHeading, Button, Heading, Text, Link, RouterLink, AuthFeedback, EmailEntry, CodeEntry],
+  providers: [Action, AuthHttp, Email],
   templateUrl: './account.html',
 })
 export class Account {
   readonly session = inject(Session);
   private readonly email = inject(Email);
+  readonly action = inject(Action);
 
   readonly pending = signal<Pending | null>(null);
 
-  readonly action = new Action();
   readonly changeLabel = $localize`:@@authChangeEmail:Change email`;
 
   change(email: string): void {
@@ -43,7 +44,7 @@ export class Account {
         const next = await this.email.resend(pending.flowId);
 
         this.pending.set(next);
-        this.action.notice.set($localize`:@@authCodeSent:A new code has been requested. Check your email.`);
+        this.action.setNotice($localize`:@@authCodeSent:A new code has been requested. Check your email.`);
       });
     }
   }
@@ -59,7 +60,7 @@ export class Account {
       const result = await this.email.completeChange(pending.flowId, code);
 
       this.pending.set(null);
-      this.action.notice.set(
+      this.action.setNotice(
         result.notificationSent === false
           ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
           : $localize`:@@authEmailChanged:Your email has been updated.`,

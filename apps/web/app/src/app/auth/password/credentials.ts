@@ -2,6 +2,7 @@ import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { disabled, email, form, FormField, required, submit } from '@angular/forms/signals';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link, Field, Input } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -16,8 +17,8 @@ import { Passwords } from './passwords';
 
 @Component({
   selector: 'app-password-credentials',
-  imports: [Button, Heading, Text, Link, Field, Input, FormField, RouterLink, AuthFeedback],
-  providers: [AuthHttp, Passwords, Passkeys],
+  imports: [NavigationHeading, Button, Heading, Text, Link, Field, Input, FormField, RouterLink, AuthFeedback],
+  providers: [Action, AuthHttp, Passwords, Passkeys],
   templateUrl: './credentials.html',
 })
 export class PasswordCredentials {
@@ -27,12 +28,14 @@ export class PasswordCredentials {
   private readonly journey = inject(Journey);
   private readonly router = inject(Router);
   readonly navigation = inject(AuthNavigation);
+  readonly action = inject(Action);
 
   readonly model = signal({ email: '', password: '' });
   readonly visible = signal(false);
   readonly attempted = signal(false);
 
   readonly signup = this.route.snapshot.data['signup'] === true;
+
   readonly fields = form(this.model, (path) => {
     required(path.email, { message: requiredMessage });
     email(path.email, { message: emailMessage });
@@ -45,7 +48,6 @@ export class PasswordCredentials {
     disabled(path, { when: () => this.action.busy() });
   });
 
-  readonly action = new Action();
   readonly title = this.signup
     ? $localize`:@@authPasswordSignUpTitle:Create your account`
     : $localize`:@@authPasswordSignInTitle:Sign in with a password`;
@@ -59,17 +61,6 @@ export class PasswordCredentials {
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly createLabel = $localize`:@@authCreateAccount:Create an account`;
   readonly signInLabel = $localize`:@@authSignIn:Sign in`;
-
-  constructor() {
-    afterNextRender(() => {
-      if (!this.signup) {
-        void this.passkeys
-          .authenticate(true)
-          .then(() => this.navigation.complete())
-          .catch(() => undefined);
-      }
-    });
-  }
 
   send(event: Event): void {
     event.preventDefault();
@@ -99,4 +90,13 @@ export class PasswordCredentials {
       onInvalid: focusInvalid,
     });
   }
+
+  private readonly initialize = afterNextRender(() => {
+    if (!this.signup) {
+      void this.passkeys
+        .authenticate(true)
+        .then(() => this.navigation.complete())
+        .catch(() => undefined);
+    }
+  });
 }

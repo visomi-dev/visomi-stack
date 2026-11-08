@@ -22,6 +22,7 @@ export { Pagination } from './data/pagination';
 export { Container } from './layout/container';
 export { Card } from './layout/card';
 export { PageHeader } from './layout/page-header';
+export { PageLoader } from './layout/page-loader';
 export { Fieldset } from './forms/fieldset';
 export { Field } from './forms/field';
 export { Label } from './forms/label';

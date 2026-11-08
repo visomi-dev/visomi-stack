@@ -5,7 +5,7 @@ import Heading from '../heading.astro';
 import Brand from './brand.astro';
 import Link from '../link.astro';
 import Icon from './icon.astro';
-import { repositoryUrl, siteCopy, sitePath, type SiteLocale } from '../../content/site';
+import { applicationPath, repositoryUrl, siteCopy, sitePath, type SiteLocale } from '../../content/site';
 type Props = { locale: SiteLocale };
 const { locale } = Astro.props;
 const copy = siteCopy[locale];
@@ -44,6 +44,17 @@ const copy = siteCopy[locale];
           {copy.footerBuild}
         </Heading>
         <ul>
+          <li>
+            <Link
+              href={applicationPath(locale)}
+              variant="muted"
+              underline="none"
+              class="inline-flex min-h-11 items-center gap-2 text-sm"
+            >
+              {copy.openApp}
+              <Icon name="arrow-right" class="size-4" />
+            </Link>
+          </li>
           <li>
             <Link
               href={sitePath(locale, 'docs')}

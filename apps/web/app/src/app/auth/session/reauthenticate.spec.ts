@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { Action } from '../shared/action';
 import { Google } from '../google/google';
 import { Passwords } from '../password/passwords';
 import { Passkeys } from '../passkeys/passkeys';
@@ -32,6 +33,7 @@ beforeEach(() => {
   TestBed.overrideComponent(Reauthenticate, {
     set: {
       providers: [
+        Action,
         { provide: Google, useValue: { verify: verifyGoogle } },
         { provide: Passwords, useValue: { completeReauth: verifyPassword } },
         { provide: Passkeys, useValue: {} },

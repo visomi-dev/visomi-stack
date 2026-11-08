@@ -4,6 +4,33 @@ import { disablePerformanceCapture } from './support/performance';
 import { selectTheme } from './support/theme';
 
 for (const locale of ['en', 'es']) {
+  for (const width of [360, 1440]) {
+    test(`the ${locale} website opens the mounted app at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+
+      await page.goto(`/${locale}/`);
+
+      const header = page.locator('[data-site-header]');
+      const label = locale === 'en' ? 'Open app' : 'Abrir app';
+
+      if (width < 1024) {
+        await header.locator('[data-site-menu] summary').click();
+      }
+
+      const link = header.getByRole('link', { name: label, exact: true }).filter({ visible: true });
+
+      await expect(link).toHaveAttribute('href', `/app/${locale}/`);
+
+      await link.click();
+
+      await expect(page).toHaveURL(new RegExp(`/app/${locale}/auth/sign-in$`));
+
+      await expect(page.locator('html')).toHaveAttribute('lang', locale === 'en' ? 'en-US' : 'es');
+
+      await expect(page.locator('[data-theme-switcher]')).toBeEnabled();
+    });
+  }
+
   test(`public ${locale} pages render complete HTML through Express`, async ({ request }) => {
     for (const suffix of ['', 'architecture/', 'docs/', 'foundations/', 'ui/']) {
       const response = await request.get(`/${locale}/${suffix}`);

@@ -76,6 +76,11 @@ validation, events, disabled behavior and submission semantics.
 - Error appearance follows `aria-invalid`; messages must be associated through
   `aria-describedby`. A red border alone is not error feedback.
 - Links navigate and buttons act. Button links do not emulate a disabled button.
+- Busy buttons set `aria-busy="true"` and native `disabled` while their action
+  runs. The shared recipe draws an inline `::after` spinner after the label without
+  extra markup and stops rotation for reduced motion. Consumers
+  own the pending state and any live announcement; disabled alone does not show
+  a spinner. Angular and Astro use the same native attributes.
 - Avatar images require appropriate alternative text. Initials and loaders need
   contextual accessible names. Decorative icons are hidden from assistive tech.
 - Table cells and description-list parts remain native children. Pagination is a

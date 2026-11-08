@@ -1,5 +1,5 @@
 <section class="flex min-w-0 flex-col gap-6">
-  <h1 appUI i18n="@@authRecoveryVerifyTitle">Verify recovery</h1>
+  <h1 appUI appNavigationHeading i18n="@@authRecoveryVerifyTitle">Verify recovery</h1>
   @if (journey.challenge()?.purpose === 'recovery') {
     <p appUI tone="muted" i18n="@@authRecoveryProofHint">
       Enter your email code. If you enabled an authenticator, also include an authenticator or backup code.

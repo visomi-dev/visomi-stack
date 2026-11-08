@@ -1,6 +1,6 @@
 <section class="flex max-w-lg min-w-0 flex-col gap-6">
   <header class="space-y-3">
-    <h1 appUI i18n="@@authManageGoogle">Manage Google</h1>
+    <h1 appUI appNavigationHeading i18n="@@authManageGoogle">Manage Google</h1>
     <p appUI tone="muted" i18n="@@authGoogleManageDescription">
       Link Google as another sign-in method. Linking or removing it requires a recent identity check.
     </p>
@@ -10,7 +10,7 @@
   } @else if (session.providers()?.google?.enabled) {
     <app-google-button
       [disabled]="action.busy()"
-      (processing)="action.busy.set($event)"
+      (processing)="action.setProcessing($event)"
       intent="link"
       (completed)="linked($event)"
     />

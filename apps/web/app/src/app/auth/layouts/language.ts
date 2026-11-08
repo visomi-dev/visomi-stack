@@ -14,10 +14,6 @@ export class AuthLanguage {
   private readonly router = inject(Router);
   readonly locale = inject(LOCALE_ID);
 
-  // Compile-time locales use separate bundles, so switching language requires document navigation.
-  readonly english = computed(() => '/app/en' + this.stablePath());
-  readonly spanish = computed(() => '/app/es' + this.stablePath());
-
   private readonly url = toSignal(
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
@@ -25,6 +21,10 @@ export class AuthLanguage {
     ),
     { initialValue: this.router.url },
   );
+
+  // Compile-time locales use separate bundles, so switching language requires document navigation.
+  readonly english = computed(() => '/app/en' + this.stablePath());
+  readonly spanish = computed(() => '/app/es' + this.stablePath());
 
   private stablePath(): string {
     const path = this.url().split(/[?#]/, 1)[0];

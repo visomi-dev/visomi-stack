@@ -151,7 +151,7 @@ export default [
             {
               groupName: 'angular-state',
               selector: 'property',
-              elementValuePattern: '^(?:signal|linkedSignal)(?:<[^>]*>)?\\s*\\(',
+              elementValuePattern: '^(?:signal|linkedSignal|toSignal)(?:<[^>]*>)?\\s*\\(',
             },
             {
               groupName: 'angular-forms',
@@ -236,6 +236,17 @@ export default [
       'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
       'no-restricted-syntax': [
         'error',
+        {
+          selector:
+            'ClassDeclaration:has(Decorator > CallExpression[callee.name=/^(Component|Directive|Service|Injectable)$/]) > ClassBody CallExpression[callee.name=/^(effect|afterRenderEffect|afterNextRender|afterEveryRender)$/]:not(PropertyDefinition[readonly=true] > CallExpression)',
+          message: 'Assign Angular effects and render hooks to readonly class properties, ordered after methods.',
+        },
+        {
+          selector:
+            'ClassDeclaration:has(Decorator > CallExpression[callee.name=/^(Component|Directive|Service|Injectable)$/]) > ClassBody CallExpression[callee.type="MemberExpression"][callee.property.name=/^(setAttribute|removeAttribute|querySelector|querySelectorAll)$/]',
+          message:
+            'Use Angular template/host bindings for attributes and view queries or host references for owned elements.',
+        },
         {
           selector:
             ':matches(ImportDeclaration, ExportNamedDeclaration, ExportAllDeclaration, ImportExpression)[source.value=/^\\..*\\.[jt]sx?$/]',

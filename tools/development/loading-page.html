@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="{{ locale }}" data-development-loading>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{{ title }} · visomi-stack</title>
+    <link rel="stylesheet" href="/__dev/live-reload/loading.css" />
+  </head>
+  <body
+    class="grid min-h-svh place-items-center bg-zinc-50 py-8 font-sans text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50"
+  >
+    <main class="{{ container }}" aria-labelledby="loading-title">
+      <div
+        class="mb-6 flex items-center gap-3 font-heading text-base font-bold tracking-tight"
+        aria-label="Visomi Stack"
+      >
+        <span
+          class="flex size-9 items-center justify-center rounded-xl bg-blue-600 text-lg text-white"
+          aria-hidden="true"
+        >
+          V
+        </span>
+        <span>
+          visomi
+          <span class="mx-1 font-sans font-normal text-zinc-400 dark:text-zinc-500">/</span>
+          stack
+        </span>
+      </div>
+      <section class="{{ card }}">
+        <p class="{{ label }}">{{ environment }}</p>
+        <h1 id="loading-title" class="{{ heading }}">{{ title }}</h1>
+        <p class="{{ body }}">{{ description }}</p>
+        <div class="mt-2 flex flex-col gap-3" role="status">
+          <div class="h-1 overflow-hidden rounded-full bg-blue-100 dark:bg-blue-950" aria-hidden="true">
+            <div class="development-progress h-full w-1/3 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+          </div>
+          <p class="{{ status }}">{{ refresh }}</p>
+        </div>
+        <noscript>
+          <p class="{{ body }}">{{ noScript }}</p>
+        </noscript>
+      </section>
+      <p class="{{ footer }} mt-4">{{ terminal }}</p>
+    </main>
+  </body>
+</html>

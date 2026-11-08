@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Heading, Text, LinkButton, Alert, Button } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Journey } from '../shared/journey';
@@ -14,14 +15,26 @@ import { Passwords } from './passwords';
 
 @Component({
   selector: 'app-password-verify',
-  imports: [Heading, Text, LinkButton, Alert, Button, RouterLink, AuthFeedback, CodeEntry, ResendCode],
-  providers: [AuthHttp, Passwords],
+  imports: [
+    NavigationHeading,
+    Heading,
+    Text,
+    LinkButton,
+    Alert,
+    Button,
+    RouterLink,
+    AuthFeedback,
+    CodeEntry,
+    ResendCode,
+  ],
+  providers: [Action, AuthHttp, Passwords],
   templateUrl: './verify.html',
 })
 export class PasswordVerify {
   private readonly journey = inject(Journey);
   private readonly passwords = inject(Passwords);
   readonly navigation = inject(AuthNavigation);
+  readonly action = inject(Action);
 
   readonly backup = signal(false);
 
@@ -31,7 +44,6 @@ export class PasswordVerify {
     return challenge?.purpose === 'password' ? challenge : null;
   });
 
-  readonly action = new Action();
   readonly emailHint = $localize`:@@authEmailFactorHint:Enter the code sent to your email.`;
   readonly totpHint = $localize`:@@authTotpFactorHint:Enter a code from your authenticator app, or use a backup code.`;
   readonly useAuthenticator = $localize`:@@authUseAuthenticator:Use authenticator app`;

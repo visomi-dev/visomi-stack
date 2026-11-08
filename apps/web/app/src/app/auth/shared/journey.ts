@@ -7,13 +7,15 @@ export type Challenge = Pending & { purpose: ChallengePurpose; factor?: 'email' 
 
 @Service({ autoProvided: false })
 export class Journey {
-  readonly challenge = signal<Challenge | null>(null);
+  private readonly current = signal<Challenge | null>(null);
+
+  readonly challenge = this.current.asReadonly();
 
   start(purpose: ChallengePurpose, pending: Pending & { factor?: 'email' | 'totp' }): void {
-    this.challenge.set({ ...pending, purpose, sentAt: Date.now() });
+    this.current.set({ ...pending, purpose, sentAt: Date.now() });
   }
 
   clear(): void {
-    this.challenge.set(null);
+    this.current.set(null);
   }
 }

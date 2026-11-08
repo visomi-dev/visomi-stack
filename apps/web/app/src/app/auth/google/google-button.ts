@@ -11,25 +11,20 @@ import { Google } from './google';
 @Component({
   selector: 'app-google-button',
   imports: [Button, AuthFeedback],
-  providers: [AuthHttp, Google],
+  providers: [Action, AuthHttp, Google],
   host: { class: 'flex min-w-0 flex-col gap-3' },
   templateUrl: './google-button.html',
 })
 export class GoogleButton {
   private readonly google = inject(Google);
+  readonly action = inject(Action);
 
   readonly intent = input<'login' | 'link' | 'reauth'>('login');
   readonly disabled = input(false);
   readonly completed = output<SessionView | (Pending & { factor: 'email' })>();
   readonly processing = output<boolean>();
 
-  readonly action = new Action();
-
   private readonly button = viewChild.required<ElementRef<HTMLElement>>('button');
-
-  constructor() {
-    afterNextRender(() => this.render());
-  }
 
   render(): void {
     void this.action.run(() =>
@@ -53,4 +48,6 @@ export class GoogleButton {
       ),
     );
   }
+
+  private readonly initialize = afterNextRender(() => this.render());
 }

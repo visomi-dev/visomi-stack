@@ -52,6 +52,49 @@ privacy policies remain unchanged.
 
 ## Authentication composition
 
+Services stay with their owning capability and use explicit lifetimes:
+
+| Responsibility                   | Location                    | Scope                                        |
+| -------------------------------- | --------------------------- | -------------------------------------------- |
+| Route activity and heading focus | `shared/navigation.ts`      | Application; runs after browser rendering    |
+| Theme                            | `ui/theme/theme.ts`         | Application                                  |
+| Session                          | `auth/session/`             | Browser application or individual SSR render |
+| Auth return navigation           | `auth/shared/navigation.ts` | Application                                  |
+| Pending challenge journey        | `auth/shared/journey.ts`    | Access layout and its child pages            |
+| Action progress and feedback     | `auth/shared/action.ts`     | Individual screen or control                 |
+| Capability HTTP clients          | Their `auth/` capability    | Owning screen or control                     |
+
+`Action` uses `@Service({ autoProvided: false })`; each consumer declares its own
+provider and injects it. Nested controls, such as resend and backup-code actions,
+own separate instances. Busy state, pending action names, errors and notices are
+private writable signals exposed as read-only signals. The service owns state
+changes, duplicate-action guards and completion/error handling; callers use its
+methods instead of writing signals. `Journey` and auth notification state follow
+the same read-only boundary. Native form models and presentation-only state stay
+with their consuming views.
+
+`Navigation` exposes a read-only `loading` signal derived from Angular Router's
+current navigation. The root composes `PageLoader` as a thin, indeterminate bar at
+the top of the viewport while guards, resolvers or lazy pages are pending. Router
+completion, cancellation, errors and skipped navigations clear it automatically.
+The service exposes a computed `headingFocus` request, derived from completed
+page paths through `toSignal()`. Each page marks its owning `h1` with
+`appNavigationHeading`; the directive binds focus attributes and applies the
+necessary native focus call after rendering. Initial navigation and fragment-only
+changes retain their existing focus. RxJS retains adjacent completed paths before
+signal updates can be coalesced.
+The loader announces page loading in the current language, respects reduced
+motion and preserves identical initial SSR/hydration markup.
+
+Effects and render hooks are named readonly properties, ordered after methods by
+ESLint. Computed values derive state and bindings without side effects. Element
+attributes belong to templates or directive host bindings, and view queries or
+host references identify owned elements. Native focus, dialog methods, QR canvas
+drawing and the fixed-URL Google SDK loader remain explicit browser integrations.
+The theme uses Angular host bindings on `app-root`; CSS propagates the document
+surface and color scheme. Backup-code downloads use a template-owned anchor and
+revocable browser Blob URLs.
+
 The root owns the router outlet and global infrastructure. `AuthLayout` supplies
 the centered access composition; `AuthenticatedLayout` composes the existing
 `AppShell`. Guards enforce the session access level independently of the chosen

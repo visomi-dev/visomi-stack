@@ -1,5 +1,5 @@
 <section class="flex min-w-0 flex-col gap-6">
-  <h1 appUI i18n="@@authResetTitle">Choose a new password</h1>
+  <h1 appUI appNavigationHeading i18n="@@authResetTitle">Choose a new password</h1>
   @if (done()) {
     <p appUI i18n="@@authResetDone">Your password has been reset. Sign in with your new password to continue.</p>
     <a appUI routerLink="/auth/sign-in/password" i18n="@@authSignIn" class="inline-flex min-h-11 items-center">

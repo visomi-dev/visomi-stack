@@ -41,7 +41,7 @@ const count = Object.values(componentGroups).flat().length;
       as="div"
       width="xl"
       gutter="compact"
-      class="grid items-center gap-14 pt-6 pb-16 sm:py-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16 lg:pt-8 lg:pb-24"
+      class="grid items-center gap-10 pt-6 pb-10 sm:py-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16 lg:pt-8 lg:pb-12"
     >
       <div class="min-w-0">
         <Text
@@ -104,7 +104,7 @@ const count = Object.values(componentGroups).flat().length;
 
   <section
     id="foundation"
-    class="border-y border-zinc-200 bg-zinc-50/70 py-16 sm:py-24 dark:border-zinc-800 dark:bg-zinc-900/30"
+    class="border-y border-zinc-200 bg-zinc-50/70 py-10 sm:py-12 lg:py-16 dark:border-zinc-800 dark:bg-zinc-900/30"
     aria-labelledby="foundation-title"
   >
     <Container as="div" width="xl" gutter="compact">
@@ -145,7 +145,7 @@ const count = Object.values(componentGroups).flat().length;
     width="xl"
     gutter="compact"
     aria-labelledby="architecture-title"
-    class="grid items-center gap-12 py-16 sm:py-24 lg:grid-cols-2 lg:gap-20"
+    class="grid items-center gap-12 py-10 sm:py-12 lg:py-16 lg:grid-cols-2 lg:gap-20"
   >
     <div>
       <SectionHeading
@@ -166,7 +166,7 @@ const count = Object.values(componentGroups).flat().length;
     <RuntimeMap locale={locale} />
   </Container>
   <section
-    class="border-y border-zinc-200 bg-zinc-50 py-16 sm:py-24 dark:border-zinc-800 dark:bg-zinc-900/30"
+    class="border-y border-zinc-200 bg-zinc-50 py-10 sm:py-12 lg:py-16 dark:border-zinc-800 dark:bg-zinc-900/30"
     aria-labelledby="design-title"
   >
     <Container
@@ -233,7 +233,7 @@ const count = Object.values(componentGroups).flat().length;
       </Card>
     </Container>
   </section>
-  <Container as="section" width="xl" gutter="compact" aria-labelledby="start-title" class="py-16 sm:py-24">
+  <Container as="section" width="xl" gutter="compact" aria-labelledby="start-title" class="py-10 sm:py-12 lg:py-16">
     <div class="grid items-start gap-12 lg:grid-cols-2 lg:gap-20">
       <div>
         <SectionHeading
@@ -288,7 +288,7 @@ pnpm nx serve web-site`}
       as="div"
       width="xl"
       gutter="compact"
-      class="grid gap-12 py-16 sm:py-24 lg:grid-cols-[1.15fr_1fr] lg:gap-20"
+      class="grid gap-12 py-10 sm:py-12 lg:py-16 lg:grid-cols-[1.15fr_1fr] lg:gap-20"
     >
       <div>
         <Text ui-size="xs" tone="inverse" mono class="mb-5 tracking-widest">
@@ -332,7 +332,7 @@ pnpm nx serve web-site`}
     width="xl"
     gutter="compact"
     aria-labelledby="faq-title"
-    class="grid gap-10 py-16 sm:py-24 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20"
+    class="grid gap-10 py-10 sm:py-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20"
   >
     <Heading as="h2" ui-size="section" id="faq-title" class="max-w-md">
       {copy.faqTitle}
@@ -347,7 +347,7 @@ pnpm nx serve web-site`}
       ))}
     </div>
   </Container>
-  <section class="border-t border-zinc-200 bg-zinc-50 px-5 py-16 text-center sm:px-8 sm:py-20 dark:border-zinc-800 dark:bg-zinc-900/30">
+  <section class="border-t border-zinc-200 bg-zinc-50 px-5 py-10 text-center sm:px-8 sm:py-12 dark:border-zinc-800 dark:bg-zinc-900/30">
     <Heading as="h2" ui-size="xl">
       {copy.finalTitle}
     </Heading>

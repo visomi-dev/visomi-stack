@@ -230,6 +230,33 @@ await writeFile('dist/apps/web/gateway/main.js', source);
       return response.status === 503 && body.includes('live-reload/client.js');
     });
 
+    const loading = await fetch(origin + '/app/es/sign-in');
+    const loadingHtml = await loading.text();
+
+    assert.equal(loading.status, 503);
+    assert.equal(loading.headers.get('cache-control'), 'no-store');
+    assert.equal(loading.headers.get('retry-after'), '1');
+    assert.match(loading.headers.get('content-security-policy'), /style-src 'self'; font-src 'self'/);
+    assert.match(loadingHtml, /lang="es"/);
+    assert.match(loadingHtml, /Preparando tu espacio de trabajo/);
+    assert.match(loadingHtml, /name="viewport"/);
+    assert.match(loadingHtml, /role="status"/);
+    assert.doesNotMatch(loadingHtml, /\{\{|<style|style=|<script(?![^>]*src=)/);
+
+    const stylesheet = await fetch(origin + '/__dev/live-reload/loading.css');
+    const css = await stylesheet.text();
+
+    assert.equal(stylesheet.headers.get('content-type'), 'text/css');
+    assert.match(css, /prefers-reduced-motion/);
+    const fontUrl = /url\("([^"]+\.woff2)"\)/.exec(css)?.[1];
+
+    assert.ok(fontUrl);
+    const font = await fetch(origin + fontUrl);
+    const fontData = await font.arrayBuffer();
+
+    assert.equal(font.headers.get('content-type'), 'font/woff2');
+    assert.ok(fontData.byteLength > 1000);
+
     await writeFile(join(cwd, 'apps/web/site/src/probe.txt'), 'recovered');
 
     await until(async () => {

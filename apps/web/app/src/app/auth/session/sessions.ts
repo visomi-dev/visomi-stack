@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link, Card } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -13,26 +14,22 @@ import { Session } from './session';
 
 @Component({
   selector: 'app-sessions',
-  imports: [Button, Heading, Text, Link, Card, RouterLink, AuthFeedback, DatePipe],
-  providers: [AuthHttp, Methods],
+  imports: [NavigationHeading, Button, Heading, Text, Link, Card, RouterLink, AuthFeedback, DatePipe],
+  providers: [Action, AuthHttp, Methods],
   templateUrl: './sessions.html',
 })
 export class Sessions {
   private readonly api = inject(Methods);
   private readonly session = inject(Session);
   private readonly navigation = inject(AuthNavigation);
+  readonly action = inject(Action);
 
   readonly entries = signal<SessionEntry[]>([]);
   readonly confirm = signal<string | null>(null);
 
-  readonly action = new Action();
   readonly currentLabel = $localize`:@@authCurrentSession:Current session`;
   readonly otherLabel = $localize`:@@authOtherSession:Other session`;
   readonly unknownLabel = $localize`:@@authUnknownMethod:Not available`;
-
-  constructor() {
-    afterNextRender(() => void this.action.run(() => this.reload()));
-  }
 
   methodLabel(value: string | undefined): string {
     switch (value) {
@@ -82,4 +79,6 @@ export class Sessions {
       await this.reload();
     });
   }
+
+  private readonly initialize = afterNextRender(() => void this.action.run(() => this.reload()));
 }

@@ -12,7 +12,13 @@ export class AuthNavigation {
   private readonly location = inject(Location);
   private readonly session = inject(Session);
 
-  readonly notificationFailed = signal(false);
+  private readonly failedNotification = signal(false);
+
+  readonly notificationFailed = this.failedNotification.asReadonly();
+
+  clearNotification(): void {
+    this.failedNotification.set(false);
+  }
 
   returnPath(): string | null {
     const value = this.router.parseUrl(this.router.url).queryParams['returnTo'];
@@ -27,7 +33,7 @@ export class AuthNavigation {
   }
 
   async complete(result?: Notified): Promise<void> {
-    this.notificationFailed.set(result?.notificationSent === false);
+    this.failedNotification.set(result?.notificationSent === false);
 
     await this.router.navigateByUrl(
       this.session.status() !== 'ready'

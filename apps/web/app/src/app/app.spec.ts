@@ -10,4 +10,5 @@ it('composes routed pages without starting authentication', async () => {
   await fixture.whenStable();
 
   expect(fixture.nativeElement.querySelector('router-outlet')).not.toBeNull();
+  expect(fixture.nativeElement.querySelector('app-page-loader [aria-hidden="true"]')).toBeNull();
 });

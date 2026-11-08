@@ -10,7 +10,17 @@
   </ul>
   <div class="flex flex-wrap gap-3">
     <button appUI variant="secondary" (click)="copy()" i18n="@@authCopyCodes">Copy codes</button>
-    <button appUI variant="secondary" (click)="download()" i18n="@@authDownloadCodes">Download codes</button>
+    <a
+      appUI="button"
+      variant="secondary"
+      [href]="downloadUrl()"
+      download="visomi-backup-codes.txt"
+      [attr.aria-disabled]="!downloadUrl()"
+      (click)="!downloadUrl() && $event.preventDefault()"
+      i18n="@@authDownloadCodes"
+    >
+      Download codes
+    </a>
   </div>
   <app-auth-feedback [action]="action" />
 </section>

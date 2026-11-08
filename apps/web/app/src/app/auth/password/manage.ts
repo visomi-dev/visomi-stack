@@ -2,6 +2,7 @@ import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, disabled, submit } from '@angular/forms/signals';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link, Field, Input, Card } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -16,8 +17,8 @@ import { Passwords } from './passwords';
 
 @Component({
   selector: 'app-manage-password',
-  imports: [Button, Heading, Text, Link, Field, Input, FormField, RouterLink, AuthFeedback, Card],
-  providers: [AuthHttp, Passwords, Methods],
+  imports: [NavigationHeading, Button, Heading, Text, Link, Field, Input, FormField, RouterLink, AuthFeedback, Card],
+  providers: [Action, AuthHttp, Passwords, Methods],
   templateUrl: './manage.html',
 })
 export class ManagePassword {
@@ -25,6 +26,7 @@ export class ManagePassword {
   private readonly methods = inject(Methods);
   private readonly session = inject(Session);
   private readonly navigation = inject(AuthNavigation);
+  readonly action = inject(Action);
 
   readonly exists = signal(false);
   readonly loaded = signal(false);
@@ -39,23 +41,10 @@ export class ManagePassword {
     disabled(path, { when: () => this.action.busy() });
   });
 
-  readonly action = new Action();
   readonly showLabel = $localize`:@@authShowPassword:Show`;
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authNewPassword:New password`;
   readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
-
-  constructor() {
-    afterNextRender(
-      () =>
-        void this.action.run(async () => {
-          const methods = await this.methods.list();
-
-          this.exists.set(methods.password);
-          this.loaded.set(true);
-        }),
-    );
-  }
 
   save(event: Event): void {
     event.preventDefault();
@@ -67,7 +56,7 @@ export class ManagePassword {
             const result = await this.api.save(this.model().password, this.exists());
 
             this.exists.set(true);
-            this.action.notice.set(
+            this.action.setNotice(
               result.notificationSent === false
                 ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
                 : $localize`:@@authPasswordSaved:Your password has been saved.`,
@@ -96,11 +85,21 @@ export class ManagePassword {
       }
 
       this.exists.set(false);
-      this.action.notice.set(
+      this.action.setNotice(
         result?.notificationSent === false
           ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
           : $localize`:@@authPasswordRemoved:Your password has been removed.`,
       );
     });
   }
+
+  private readonly initialize = afterNextRender(
+    () =>
+      void this.action.run(async () => {
+        const methods = await this.methods.list();
+
+        this.exists.set(methods.password);
+        this.loaded.set(true);
+      }),
+  );
 }

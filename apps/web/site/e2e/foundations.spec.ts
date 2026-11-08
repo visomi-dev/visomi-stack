@@ -148,7 +148,7 @@ test('supports keyboard focus, reduced motion and a narrow viewport', async ({ p
 
   await expect(switcher).toHaveCSS('outline-style', 'solid');
 
-  await expect(switcher.locator('svg').first()).toHaveCSS('transition-property', 'none');
+  await expect(switcher.locator('svg').first()).toHaveCSS('animation-name', 'none');
 
   await page.evaluate(() => document.fonts.ready);
 

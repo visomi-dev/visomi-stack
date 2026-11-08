@@ -17,7 +17,23 @@
     "development-check": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["sharedGlobals", "{workspaceRoot}/tools/development/**/*", "{workspaceRoot}/eslint.config.mjs"],
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/tools/development/**/*",
+        "{workspaceRoot}/libs/web/frontend/ui/src/lib/layout.ts",
+        "{workspaceRoot}/libs/web/frontend/ui/src/lib/typography.ts",
+        "{workspaceRoot}/styles.base.css",
+        "{workspaceRoot}/eslint.config.mjs",
+        {
+          "externalDependencies": [
+            "postcss",
+            "@tailwindcss/postcss",
+            "@fontsource/inter",
+            "@fontsource/manrope",
+            "@fontsource/jetbrains-mono"
+          ]
+        }
+      ],
       "options": {
         "commands": ["eslint tools/development/*.mjs", "node --test tools/development/*.spec.mjs"],
         "parallel": false

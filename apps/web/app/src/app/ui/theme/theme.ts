@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Service, afterNextRender, afterRenderEffect, computed, inject, signal, DestroyRef } from '@angular/core';
+import { Service, afterNextRender, computed, inject, signal, DestroyRef } from '@angular/core';
 
 type ThemePreference = 'system' | 'light' | 'dark';
 
@@ -14,6 +14,7 @@ export class Theme {
 
   private readonly selection = signal<ThemePreference>('system');
   private readonly systemDark = signal(false);
+  private readonly changed = signal(false);
 
   readonly preference = this.selection.asReadonly();
   readonly colorScheme = computed(() => {
@@ -23,49 +24,22 @@ export class Theme {
   });
   readonly isDark = computed(() => this.colorScheme() === 'dark');
 
+  readonly hasChanged = this.changed.asReadonly();
+
   private readonly storageKey = 'visomi.theme';
-
-  constructor() {
-    afterNextRender(() => {
-      const view = this.document.defaultView;
-
-      if (!view?.matchMedia) {
-        return;
-      }
-
-      let stored: unknown;
-
-      try {
-        stored = view.localStorage.getItem(this.storageKey);
-      } catch {
-        // Theme changes still work when persistence is unavailable.
-      }
-
-      this.selection.set(isPreference(stored) ? stored : 'system');
-      const media = view.matchMedia('(prefers-color-scheme: dark)');
-      const updateSystem = () => this.systemDark.set(media.matches);
-
-      updateSystem();
-      media.addEventListener('change', updateSystem);
-      this.destroyRef.onDestroy(() => media.removeEventListener('change', updateSystem));
-    });
-
-    afterRenderEffect({
-      write: () => {
-        const root = this.document.documentElement;
-
-        root.classList.toggle('dark', this.isDark());
-        root.style.colorScheme = this.colorScheme();
-      },
-    });
-  }
 
   setTheme(value: string): void {
     if (!isPreference(value)) {
       return;
     }
 
+    const wasDark = this.isDark();
+
     this.selection.set(value);
+
+    if (wasDark !== this.isDark()) {
+      this.changed.set(true);
+    }
 
     try {
       this.document.defaultView?.localStorage.setItem(this.storageKey, value);
@@ -73,4 +47,36 @@ export class Theme {
       // The selected theme remains active for the current page.
     }
   }
+
+  private readonly initialize = afterNextRender(() => {
+    const view = this.document.defaultView;
+
+    if (!view?.matchMedia) {
+      return;
+    }
+
+    let stored: unknown;
+
+    try {
+      stored = view.localStorage.getItem(this.storageKey);
+    } catch {
+      // Theme changes still work when persistence is unavailable.
+    }
+
+    this.selection.set(isPreference(stored) ? stored : 'system');
+    const media = view.matchMedia('(prefers-color-scheme: dark)');
+    const updateSystem = () => {
+      const wasDark = this.isDark();
+
+      this.systemDark.set(media.matches);
+
+      if (wasDark !== this.isDark()) {
+        this.changed.set(true);
+      }
+    };
+
+    this.systemDark.set(media.matches);
+    media.addEventListener('change', updateSystem);
+    this.destroyRef.onDestroy(() => media.removeEventListener('change', updateSystem));
+  });
 }

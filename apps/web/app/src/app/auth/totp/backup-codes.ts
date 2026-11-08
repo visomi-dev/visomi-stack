@@ -1,6 +1,7 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link, Card } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -11,18 +12,17 @@ import { Totp } from './totp';
 
 @Component({
   selector: 'app-backup-codes',
-  imports: [Button, Heading, Text, Link, RouterLink, AuthFeedback, BackupDisplay, Card],
-  providers: [AuthHttp, Totp],
+  imports: [NavigationHeading, Button, Heading, Text, Link, RouterLink, AuthFeedback, BackupDisplay, Card],
+  providers: [Action, AuthHttp, Totp],
   templateUrl: './backup-codes.html',
 })
 export class BackupCodes {
   private readonly api = inject(Totp);
   private readonly destroyRef = inject(DestroyRef);
+  readonly action = inject(Action);
 
   readonly codes = signal<string[]>([]);
   readonly confirm = signal(false);
-
-  readonly action = new Action();
 
   constructor() {
     this.destroyRef.onDestroy(() => this.codes.set([]));

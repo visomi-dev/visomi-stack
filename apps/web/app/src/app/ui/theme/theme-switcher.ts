@@ -12,6 +12,7 @@ import { themeSwitcher } from '@visomi-stack/web-frontend-ui';
     'data-theme-switcher': '',
     '[class]': 'visual.classes()',
     '[attr.aria-pressed]': 'theme.isDark()',
+    '[attr.data-theme-animated]': "theme.hasChanged() ? '' : null",
     '[disabled]': '!ready()',
     '(click)': 'toggle()',
   },
@@ -23,11 +24,9 @@ export class ThemeSwitcher {
 
   protected readonly visual = themeSwitcher;
 
-  constructor() {
-    afterNextRender(() => this.ready.set(true));
-  }
-
   protected toggle(): void {
     this.theme.setTheme(this.theme.isDark() ? 'light' : 'dark');
   }
+
+  private readonly initialize = afterNextRender(() => this.ready.set(true));
 }

@@ -17,6 +17,10 @@ export function sitePath(locale: SiteLocale, page: SitePage): string {
   return `/${locale}/${paths[page]}`;
 }
 
+export function applicationPath(locale: SiteLocale): string {
+  return `/app/${locale}/`;
+}
+
 export function isSiteLocale(value: string | undefined): value is SiteLocale {
   return value === 'en' || value === 'es';
 }

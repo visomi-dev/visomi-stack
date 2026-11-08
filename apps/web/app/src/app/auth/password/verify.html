@@ -1,5 +1,5 @@
 <section class="flex min-w-0 flex-col gap-6">
-  <h1 appUI i18n="@@authConfirmSignIn">Confirm your sign-in</h1>
+  <h1 appUI appNavigationHeading i18n="@@authConfirmSignIn">Confirm your sign-in</h1>
   @if (pending(); as pending) {
     <p appUI tone="muted">{{ pending.factor === 'email' ? emailHint : totpHint }}</p>
     <app-code-entry [busy]="action.busy()" [backup]="backup()" (confirmed)="verify($event)" />

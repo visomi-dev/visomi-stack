@@ -1,40 +1,48 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, input } from '@angular/core';
+import { Component, afterRenderEffect, inject, input, signal } from '@angular/core';
 
-import { Button, Text } from '../../ui';
+import { Button, LinkButton, Text } from '../../ui';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
 
 @Component({
   selector: 'app-backup-display',
-  imports: [Button, Text, AuthFeedback],
+  imports: [Button, LinkButton, Text, AuthFeedback],
+  providers: [Action],
   templateUrl: './backup-display.html',
 })
 export class BackupDisplay {
   private readonly document = inject(DOCUMENT);
+  readonly action = inject(Action);
 
   readonly codes = input.required<string[]>();
 
-  readonly action = new Action();
+  protected readonly downloadUrl = signal<string | null>(null);
 
   copy(): void {
     void this.action.run(async () => {
       await this.document.defaultView!.navigator.clipboard.writeText(this.codes().join('\n'));
 
-      this.action.notice.set($localize`:@@authCopied:Copied.`);
+      this.action.setNotice($localize`:@@authCopied:Copied.`);
     });
   }
 
-  download(): void {
-    void this.action.run(async () => {
-      const blob = new Blob([this.codes().join('\n') + '\n'], { type: 'text/plain' });
+  private readonly prepareDownload = afterRenderEffect({
+    write: (onCleanup) => {
+      const codes = this.codes();
+
+      this.downloadUrl.set(null);
+
+      if (!codes.length || typeof URL.createObjectURL !== 'function') {
+        return;
+      }
+
+      // Blob URLs are browser resources whose lifetime follows the displayed codes.
+      const blob = new Blob([codes.join('\n') + '\n'], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
-      const anchor = this.document.createElement('a');
 
-      anchor.href = url;
-      anchor.download = 'visomi-backup-codes.txt';
-      anchor.click();
-      URL.revokeObjectURL(url);
-    });
-  }
+      this.downloadUrl.set(url);
+      onCleanup(() => URL.revokeObjectURL(url));
+    },
+  });
 }

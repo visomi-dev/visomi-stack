@@ -2,6 +2,7 @@ import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, maxLength, disabled, submit } from '@angular/forms/signals';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link, Field, Input, Card } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -14,14 +15,15 @@ import { Passkeys, type Passkey } from './passkeys';
 
 @Component({
   selector: 'app-manage-passkeys',
-  imports: [Button, Heading, Text, Link, Field, Input, Card, FormField, RouterLink, AuthFeedback],
-  providers: [AuthHttp, Passkeys],
+  imports: [NavigationHeading, Button, Heading, Text, Link, Field, Input, Card, FormField, RouterLink, AuthFeedback],
+  providers: [Action, AuthHttp, Passkeys],
   templateUrl: './manage.html',
 })
 export class ManagePasskeys {
   private readonly api = inject(Passkeys);
   private readonly session = inject(Session);
   private readonly navigation = inject(AuthNavigation);
+  readonly action = inject(Action);
 
   readonly keys = signal<Passkey[]>([]);
   readonly editing = signal<string | null>(null);
@@ -35,12 +37,7 @@ export class ManagePasskeys {
     disabled(path, { when: () => this.action.busy() });
   });
 
-  readonly action = new Action();
   readonly nameLabel = $localize`:@@authPasskeyName:Passkey name`;
-
-  constructor() {
-    afterNextRender(() => void this.action.run(() => this.reload()));
-  }
 
   async reload(): Promise<void> {
     const result = await this.api.list();
@@ -54,7 +51,7 @@ export class ManagePasskeys {
 
       await this.reload();
 
-      this.action.notice.set($localize`:@@authPasskeyAdded:Your passkey has been added.`);
+      this.action.setNotice($localize`:@@authPasskeyAdded:Your passkey has been added.`);
     });
   }
 
@@ -96,4 +93,6 @@ export class ManagePasskeys {
       }
     });
   }
+
+  private readonly initialize = afterNextRender(() => void this.action.run(() => this.reload()));
 }

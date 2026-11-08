@@ -53,7 +53,51 @@
     outline-color: var(--color-blue-600);
   }
 
-  html.dark &:focus-visible {
+  .dark &:focus-visible {
     outline-color: var(--color-blue-400);
+  }
+}
+
+@keyframes ui-theme-enter {
+  from {
+    translate: 0 4rem;
+    opacity: 0;
+  }
+  to {
+    translate: 0 0;
+    opacity: 1;
+  }
+}
+
+@keyframes ui-theme-leave {
+  from {
+    translate: 0 0;
+    opacity: 1;
+  }
+  to {
+    translate: 0 -4rem;
+    opacity: 0;
+  }
+}
+
+@layer components {
+  @media (prefers-reduced-motion: no-preference) {
+    .ui-theme-switcher[data-theme-animated] {
+      .ui-theme-sun {
+        animation: ui-theme-enter 400ms ease-in-out;
+      }
+
+      .ui-theme-moon {
+        animation: ui-theme-leave 400ms ease-in-out;
+      }
+
+      .dark & .ui-theme-sun {
+        animation-name: ui-theme-leave;
+      }
+
+      .dark & .ui-theme-moon {
+        animation-name: ui-theme-enter;
+      }
+    }
   }
 }

@@ -19,13 +19,18 @@
 
   function apply() {
     const dark = preference === 'system' ? media.matches : preference === 'dark';
+    const pressed = String(dark);
 
     document.documentElement.classList.toggle('dark', dark);
     for (const control of document.querySelectorAll<HTMLSelectElement>('select[data-theme-select]')) {
       control.value = preference;
     }
     for (const control of document.querySelectorAll<HTMLButtonElement>('button[data-theme-switcher]')) {
-      control.setAttribute('aria-pressed', String(dark));
+      if (!control.disabled && control.ariaPressed !== pressed) {
+        control.dataset.themeAnimated = '';
+      }
+
+      control.ariaPressed = pressed;
       control.disabled = false;
     }
   }

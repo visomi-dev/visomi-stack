@@ -1,6 +1,7 @@
 import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link, Card, Alert } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
@@ -16,8 +17,20 @@ import { Google } from './google';
 
 @Component({
   selector: 'app-manage-google',
-  imports: [Button, Heading, Text, Link, Card, RouterLink, AuthFeedback, GoogleButton, CodeEntry, Alert],
-  providers: [AuthHttp, Google, Methods],
+  imports: [
+    NavigationHeading,
+    Button,
+    Heading,
+    Text,
+    Link,
+    Card,
+    RouterLink,
+    AuthFeedback,
+    GoogleButton,
+    CodeEntry,
+    Alert,
+  ],
+  providers: [Action, AuthHttp, Google, Methods],
   templateUrl: './manage.html',
 })
 export class ManageGoogle {
@@ -25,16 +38,11 @@ export class ManageGoogle {
   private readonly google = inject(Google);
   private readonly api = inject(Methods);
   private readonly navigation = inject(AuthNavigation);
+  readonly action = inject(Action);
 
   readonly methods = signal<MethodsView | null>(null);
   readonly pending = signal<Pending | null>(null);
   readonly confirm = signal<string | null>(null);
-
-  readonly action = new Action();
-
-  constructor() {
-    afterNextRender(() => void this.action.run(() => this.reload()));
-  }
 
   async reload(): Promise<void> {
     const methods = await this.api.list();
@@ -78,7 +86,7 @@ export class ManageGoogle {
         await this.reload();
 
         if (result?.notificationSent === false) {
-          this.action.notice.set(
+          this.action.setNotice(
             $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
           );
         }
@@ -87,4 +95,6 @@ export class ManageGoogle {
       }
     });
   }
+
+  private readonly initialize = afterNextRender(() => void this.action.run(() => this.reload()));
 }

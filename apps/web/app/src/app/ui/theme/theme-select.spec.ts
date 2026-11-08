@@ -3,10 +3,12 @@ import { TestBed } from '@angular/core/testing';
 
 import { ThemeSelect } from './theme-select';
 import { Theme } from './theme';
+import { ThemeHost } from './theme-host';
 import { ThemeSwitcher } from './theme-switcher';
 
 @Component({
   imports: [ThemeSelect, ThemeSwitcher],
+  hostDirectives: [ThemeHost],
   template: `
     <button app-theme-switcher aria-label="Dark theme"></button>
     <select appUITheme aria-label="First appearance">
@@ -60,8 +62,8 @@ describe('native theme selectors', () => {
     const controls = fixture.nativeElement.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
     const switcher = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
 
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(document.documentElement.style.colorScheme).toBe('dark');
+    expect((fixture.nativeElement as HTMLElement).classList.contains('dark')).toBe(true);
+    expect((fixture.nativeElement as HTMLElement).getAttribute('style')).toBeNull();
     expect(TestBed.inject(Theme).colorScheme()).toBe('dark');
     expect(switcher.type).toBe('button');
     expect(switcher.getAttribute('aria-pressed')).toBe('true');
@@ -74,8 +76,7 @@ describe('native theme selectors', () => {
 
     expect(Array.from(controls, (control) => control.value)).toEqual(['light', 'light']);
     expect(localStorage.getItem('visomi.theme')).toBe('light');
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
-    expect(document.documentElement.style.colorScheme).toBe('light');
+    expect((fixture.nativeElement as HTMLElement).classList.contains('dark')).toBe(false);
     expect(TestBed.inject(Theme).isDark()).toBe(false);
     expect(switcher.getAttribute('aria-pressed')).toBe('false');
     switcher.click();
@@ -98,8 +99,7 @@ describe('native theme selectors', () => {
 
     await fixture.whenStable();
 
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(document.documentElement.style.colorScheme).toBe('dark');
+    expect((fixture.nativeElement as HTMLElement).classList.contains('dark')).toBe(true);
     expect(TestBed.inject(Theme).preference()).toBe('system');
     expect(localStorage.getItem('visomi.theme')).toBeNull();
     TestBed.resetTestingModule();

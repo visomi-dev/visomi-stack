@@ -1,6 +1,6 @@
 <section class="flex min-w-0 flex-col gap-6">
   <header class="space-y-3">
-    <h1 appUI i18n="@@authReauthTitle">Confirm it is you</h1>
+    <h1 appUI appNavigationHeading i18n="@@authReauthTitle">Confirm it is you</h1>
     <p appUI tone="muted" i18n="@@authReauthDescription">
       Use an existing sign-in method before changing your account's security. You will review the change again
       afterwards.
@@ -27,7 +27,7 @@
     @if (methods()?.google?.length && session.providers()?.google?.enabled) {
       <app-google-button
         [disabled]="action.busy()"
-        (processing)="action.busy.set($event)"
+        (processing)="action.setProcessing($event)"
         intent="reauth"
         (completed)="google($event)"
       />

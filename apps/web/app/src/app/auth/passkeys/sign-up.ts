@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Heading, Text, Link } from '../../ui';
 import { EmailEntry } from '../shared/email-entry';
 import { AuthHttp } from '../shared/http';
@@ -16,8 +17,8 @@ import { Passkeys } from './passkeys';
 
 @Component({
   selector: 'app-sign-up',
-  imports: [Heading, Text, Link, RouterLink, EmailEntry, AuthFeedback, GoogleButton],
-  providers: [AuthHttp, Passkeys],
+  imports: [NavigationHeading, Heading, Text, Link, RouterLink, EmailEntry, AuthFeedback, GoogleButton],
+  providers: [Action, AuthHttp, Passkeys],
   templateUrl: './sign-up.html',
 })
 export class SignUp {
@@ -26,8 +27,8 @@ export class SignUp {
   private readonly keys = inject(Passkeys);
   private readonly journey = inject(Journey);
   private readonly router = inject(Router);
+  readonly action = inject(Action);
 
-  readonly action = new Action();
   readonly createLabel = $localize`:@@authCreatePasskeyAccount:Create account with a passkey`;
 
   register(email: string): void {

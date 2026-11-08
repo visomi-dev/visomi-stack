@@ -28,6 +28,8 @@ Public content lives in `src/content/en.ts` and `es.ts`. `site.ts` owns the type
 page identifiers and localized paths, so changing language retains the current
 public page. The mobile menu uses native `details`, and FAQs use the existing
 native disclosure adapter. No client router or extra UI runtime is required.
+The header, mobile menu and footer link to `/app/en/` or `/app/es/` on the same
+origin, preserving the website language when opening the mounted application.
 
 ## Visual and content direction
 
@@ -40,11 +42,19 @@ or unsupported production security claims are invented.
 As agreed, the website also illustrates the broader direction: worker execution,
 realtime delivery and client-protected content. The architecture page identifies
 these as future capabilities and distinguishes them from the current gateway,
-Astro site, independent Angular SSR application and identity backend.
+Astro site, gateway-mounted Angular SSR application and identity backend.
+
+Homepage and architecture sections cap vertical padding at 64px per side, with
+smaller spacing on mobile and around short blocks such as FAQ, principles and
+closing actions. Page content determines height; spacing separates groups
+without forcing them to fill a viewport.
 
 The homepage, architecture and getting-started pages load only the TypeScript
 theme-control script compiled by Astro. The component catalog additionally retains its small
 native demo script. Scripts remain external for Express CSP compatibility.
+Both theme-switcher adapters share CSS keyframes: the incoming icon enters from
+below and the outgoing icon leaves above in either direction. Initial theme
+restoration does not animate, and reduced-motion preferences disable the cycle.
 Metadata contains localized descriptions and Open Graph text. A canonical
 production origin and social preview image are not invented before deployment
 configuration is decided.

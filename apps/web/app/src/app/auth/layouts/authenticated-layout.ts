@@ -29,7 +29,7 @@ import { Appearance } from './appearance';
     AuthLanguage,
     AuthFeedback,
   ],
-  providers: [AuthHttp],
+  providers: [Action, AuthHttp],
   templateUrl: './authenticated-layout.html',
 })
 export class AuthenticatedLayout {
@@ -37,8 +37,7 @@ export class AuthenticatedLayout {
   readonly navigation = inject(AuthNavigation);
   private readonly http = inject(AuthHttp);
   private readonly router = inject(Router);
-
-  readonly action = new Action();
+  readonly action = inject(Action);
 
   logout(): void {
     void this.action.run(async () => {
@@ -48,7 +47,7 @@ export class AuthenticatedLayout {
         await this.http.request('POST', '/logout', {});
 
         this.session.clear();
-        this.navigation.notificationFailed.set(false);
+        this.navigation.clearNotification();
       } catch (error) {
         await this.session.load(true);
 

@@ -12,7 +12,7 @@ import { AuthFeedback } from './feedback';
 @Component({
   selector: 'app-resend-code',
   imports: [Button, AuthFeedback],
-  providers: [AuthHttp, Email],
+  providers: [Action, AuthHttp, Email],
   host: { class: 'flex min-w-0 flex-col gap-3' },
   templateUrl: './resend.html',
 })
@@ -20,6 +20,7 @@ export class ResendCode {
   private readonly email = inject(Email);
   private readonly journey = inject(Journey);
   private readonly destroyRef = inject(DestroyRef);
+  readonly action = inject(Action);
 
   readonly sent = output<void>();
 
@@ -35,17 +36,6 @@ export class ResendCode {
         ),
   );
 
-  readonly action = new Action();
-
-  constructor() {
-    afterNextRender(() => {
-      this.clock.set(Date.now());
-      const timer = setInterval(() => this.clock.set(Date.now()), 1000);
-
-      this.destroyRef.onDestroy(() => clearInterval(timer));
-    });
-  }
-
   resend(): void {
     const current = this.journey.challenge();
 
@@ -59,7 +49,7 @@ export class ResendCode {
 
         this.journey.start(current.purpose, { ...pending, factor: current.factor });
         this.sent.emit();
-        this.action.notice.set($localize`:@@authCodeSent:A new code has been requested. Check your email.`);
+        this.action.setNotice($localize`:@@authCodeSent:A new code has been requested. Check your email.`);
       } catch (error) {
         if (error instanceof HttpErrorResponse) {
           this.retryAt.set(Date.now() + (retryDelay(error.headers) ?? 60) * 1000);
@@ -69,4 +59,11 @@ export class ResendCode {
       }
     });
   }
+
+  private readonly initialize = afterNextRender(() => {
+    this.clock.set(Date.now());
+    const timer = setInterval(() => this.clock.set(Date.now()), 1000);
+
+    this.destroyRef.onDestroy(() => clearInterval(timer));
+  });
 }

@@ -1,6 +1,7 @@
 import { Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
+import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text } from '../../ui';
 import { Session } from '../session/session';
 import { AuthHttp } from '../shared/http';
@@ -16,8 +17,8 @@ import { Email } from './email';
 
 @Component({
   selector: 'app-email-verify',
-  imports: [Button, Heading, Text, AuthFeedback, CodeEntry, EmailEntry, ResendCode],
-  providers: [AuthHttp, Email],
+  imports: [NavigationHeading, Button, Heading, Text, AuthFeedback, CodeEntry, EmailEntry, ResendCode],
+  providers: [Action, AuthHttp, Email],
   templateUrl: './verify.html',
 })
 export class EmailVerify {
@@ -27,6 +28,8 @@ export class EmailVerify {
   private readonly http = inject(AuthHttp);
   private readonly navigation = inject(AuthNavigation);
   private readonly router = inject(Router);
+  readonly action = inject(Action);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly clock = signal(0);
 
@@ -35,19 +38,6 @@ export class EmailVerify {
 
     return challenge?.purpose === 'email' && Date.parse(challenge.expiresAt) > this.clock() ? challenge : null;
   });
-
-  readonly action = new Action();
-
-  constructor() {
-    const destroyRef = inject(DestroyRef);
-
-    afterNextRender(() => {
-      this.clock.set(Date.now());
-      const timer = setInterval(() => this.clock.set(Date.now()), 1000);
-
-      destroyRef.onDestroy(() => clearInterval(timer));
-    });
-  }
 
   request(address?: string): void {
     void this.action.run(async () => {
@@ -87,4 +77,11 @@ export class EmailVerify {
       await this.router.navigate(['/auth/sign-in']);
     });
   }
+
+  private readonly initialize = afterNextRender(() => {
+    this.clock.set(Date.now());
+    const timer = setInterval(() => this.clock.set(Date.now()), 1000);
+
+    this.destroyRef.onDestroy(() => clearInterval(timer));
+  });
 }

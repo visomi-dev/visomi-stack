@@ -1,40 +1,84 @@
 import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { DestroyRef, afterNextRender, inject, signal } from '@angular/core';
+import { DestroyRef, Service, afterNextRender, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { Session } from '../session/session';
 import { destination, safeReturnTo } from '../session/navigation';
 
+@Service({ autoProvided: false })
 export class Action {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly session = inject(Session);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly busy = signal(true);
-  readonly error = signal('');
-  readonly errorFocus = signal(0);
-  readonly notice = signal('');
+  private readonly busyState = signal(true);
+  private readonly errorState = signal('');
+  private readonly errorFocusState = signal(0);
+  private readonly noticeState = signal('');
+  private readonly pendingState = signal<string | null>(null);
+
+  readonly busy = this.busyState.asReadonly();
+  readonly error = this.errorState.asReadonly();
+  readonly errorFocus = this.errorFocusState.asReadonly();
+  readonly notice = this.noticeState.asReadonly();
+  readonly pending = this.pendingState.asReadonly();
 
   private alive = true;
 
   constructor() {
-    // Native controls remain disabled until their form bindings are hydrated.
-    afterNextRender(() => this.busy.set(false));
     this.destroyRef.onDestroy(() => {
       this.alive = false;
     });
   }
 
-  async run(work: () => Promise<void>, signal?: AbortSignal): Promise<void> {
+  setProcessing(active: boolean): void {
+    if (!this.alive) {
+      return;
+    }
+
+    this.busyState.set(active);
+
+    if (!active) {
+      this.pendingState.set(null);
+    }
+  }
+
+  setError(message: string): void {
+    if (this.alive) {
+      this.errorState.set(message);
+    }
+  }
+
+  setNotice(message: string): void {
+    if (this.alive) {
+      this.noticeState.set(message);
+    }
+  }
+
+  reset(): void {
+    if (!this.alive) {
+      return;
+    }
+
+    this.busyState.set(false);
+    this.pendingState.set(null);
+    this.errorState.set('');
+    this.noticeState.set('');
+  }
+
+  async run(work: () => Promise<void>, options: { signal?: AbortSignal; name?: string } = {}): Promise<void> {
+    const { signal, name } = options;
+
     if (!this.alive || this.busy() || signal?.aborted) {
       return;
     }
 
-    this.busy.set(true);
-    this.error.set('');
-    this.notice.set('');
+    this.busyState.set(true);
+    this.pendingState.set(name ?? null);
+    this.errorState.set('');
+    this.noticeState.set('');
 
     try {
       await work();
@@ -46,10 +90,10 @@ export class Action {
       const code: unknown = error instanceof HttpErrorResponse ? error.error?.error : null;
 
       if (code === 'reauthentication_required' && !this.session.full()) {
-        this.error.set(
+        this.errorState.set(
           $localize`:@@authRestrictedExpired:This verification can no longer continue. Sign out and start recovery again.`,
         );
-        this.errorFocus.update((value) => value + 1);
+        this.errorFocusState.update((value) => value + 1);
       } else if (code === 'reauthentication_required') {
         const returnTo = safeReturnTo(this.router.url, this.location.prepareExternalUrl('/'));
 
@@ -64,15 +108,19 @@ export class Action {
 
         await this.router.navigateByUrl(destination(this.session.snapshot()));
       } else {
-        this.error.set(errorMessage(error));
-        this.errorFocus.update((value) => value + 1);
+        this.errorState.set(errorMessage(error));
+        this.errorFocusState.update((value) => value + 1);
       }
     } finally {
       if (this.alive && !signal?.aborted) {
-        this.busy.set(false);
+        this.busyState.set(false);
+        this.pendingState.set(null);
       }
     }
   }
+
+  // Native controls remain disabled until their form bindings are hydrated.
+  private readonly initialize = afterNextRender(() => this.busyState.set(false));
 }
 
 export function errorMessage(error: unknown): string {

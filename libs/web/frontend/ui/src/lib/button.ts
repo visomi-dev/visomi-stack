@@ -46,6 +46,11 @@ export type ButtonOptions = {
 
 export const button = {
   classes({ variant = 'primary', size = 'md' }: ButtonOptions = {}): string {
-    return [base, variants[variant], sizes[size]].join(' ');
+    return [
+      base,
+      variants[variant],
+      sizes[size],
+      "aria-busy:cursor-wait aria-busy:after:content-[''] aria-busy:after:size-4 aria-busy:after:shrink-0 aria-busy:after:rounded-full aria-busy:after:border-2 aria-busy:after:border-current aria-busy:after:border-r-transparent aria-busy:after:animate-spin motion-reduce:aria-busy:after:animate-none",
+    ].join(' ');
   },
 } as const;

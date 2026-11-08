@@ -2,6 +2,10 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
   <file source-language="en-US" target-language="es" datatype="plaintext" original="ng2.template">
     <body>
+      <trans-unit id="pageLoading" datatype="html">
+        <source>Loading page…</source>
+        <target>Cargando página…</target>
+      </trans-unit>
       <trans-unit id="language" datatype="html">
         <source>Language</source>
         <target>Idioma</target>

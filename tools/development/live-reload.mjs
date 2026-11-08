@@ -2,13 +2,15 @@ import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { existsSync, readdirSync, watch } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { createServer, request as forwardRequest } from 'node:http';
 import { resolve, join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 
+import { createLoadingPage, loadingPrefix as prefix } from './loading-page.mjs';
+
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const prefix = '/__dev/live-reload';
 const projectRoots = [
   'apps/web/api',
   'apps/web/gateway',
@@ -30,11 +32,18 @@ const rootInputs = new Set([
   'pnpm-workspace.yaml',
 ]);
 const ignored = new Set(['node_modules', 'dist', '.nx', '.astro', '.git', 'coverage', 'tmp']);
-const client = `const events = new EventSource('${prefix}/events');
+const client = `const loadingPage = document.documentElement.hasAttribute('data-development-loading');
+if (loadingPage) {
+  let theme;
+  try { theme = localStorage.getItem('visomi.theme'); } catch { /* Storage may be unavailable. */ }
+  document.documentElement.classList.toggle('dark', theme === 'dark' ||
+    (theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches));
+}
+const events = new EventSource('${prefix}/events');
 let revision;
 events.onmessage = ({ data }) => {
   const state = JSON.parse(data);
-  if (revision !== undefined && state.ready && revision !== state.revision) location.reload();
+  if (state.ready && (loadingPage || (revision !== undefined && revision !== state.revision))) location.reload();
   revision ??= state.revision;
 };`;
 
@@ -159,6 +168,7 @@ async function stopChild(child) {
 
 export async function startDevelopment({ cwd = root, env = process.env } = {}) {
   const runtime = runtimeEnvironment(env);
+  const loading = await createLoadingPage();
   const port = Number(env.PORT ?? env.APP_PORT ?? 8080);
   const clients = new Set();
   const watchers = [];
@@ -195,13 +205,42 @@ export async function startDevelopment({ cwd = root, env = process.env } = {}) {
       return;
     }
 
-    if (!ready) {
-      response.writeHead(503, { 'content-type': 'text/html', 'cache-control': 'no-store', 'retry-after': '1' });
-      response.end(
-        injectClient(
-          '<!doctype html><html lang="en"><head><title>Building</title></head><body>Building the development gateway. This page reloads when ready.</body></html>',
-        ),
+    if (path === `${prefix}/loading.css`) {
+      response.writeHead(200, { 'content-type': 'text/css', 'cache-control': 'no-store' });
+      response.end(loading.css);
+
+      return;
+    }
+
+    if (Object.hasOwn(loading.fonts, path)) {
+      void readFile(loading.fonts[path]).then(
+        (font) => {
+          response.writeHead(200, {
+            'content-type': path.endsWith('.woff2') ? 'font/woff2' : 'font/woff',
+            'cache-control': 'no-store',
+          });
+          response.end(font);
+        },
+        () => {
+          response.writeHead(404);
+          response.end();
+        },
       );
+
+      return;
+    }
+
+    if (!ready) {
+      const locale = /^\/(?:app\/)?es(?:\/|$)/.test(path) ? 'es' : 'en';
+
+      response.writeHead(503, {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'no-store',
+        'retry-after': '1',
+        'content-security-policy':
+          "default-src 'none'; style-src 'self'; font-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'",
+      });
+      response.end(injectClient(loading.pages[locale]));
 
       return;
     }

@@ -56,39 +56,6 @@ export class BrowserSession extends Session {
       this.cancellation.complete();
       this.channel?.close();
     });
-    afterNextRender(() => {
-      const view = this.document.defaultView;
-
-      if (!view || !this.available) {
-        return;
-      }
-
-      const refresh = () => {
-        if (this.document.visibilityState !== 'hidden') {
-          void this.load(true);
-        }
-      };
-
-      view.addEventListener('focus', refresh);
-
-      if ('BroadcastChannel' in view) {
-        try {
-          this.channel = new BroadcastChannel('visomi-auth');
-          this.channel.onmessage = (event: MessageEvent<unknown>) => {
-            if (event.data === 'session-changed') {
-              void this.invalidate();
-            }
-          };
-        } catch {
-          // Focus revalidation also works when the browser denies cross-tab channels.
-          this.channel = null;
-        }
-      }
-
-      this.destroyRef.onDestroy(() => view.removeEventListener('focus', refresh));
-      void this.load(true);
-      void this.loadProviders();
-    });
   }
 
   override async load(force = false): Promise<void> {
@@ -244,4 +211,38 @@ export class BrowserSession extends Session {
     this.revision++;
     this.cancellation.next();
   }
+
+  private readonly initialize = afterNextRender(() => {
+    const view = this.document.defaultView;
+
+    if (!view || !this.available) {
+      return;
+    }
+
+    const refresh = () => {
+      if (this.document.visibilityState !== 'hidden') {
+        void this.load(true);
+      }
+    };
+
+    view.addEventListener('focus', refresh);
+
+    if ('BroadcastChannel' in view) {
+      try {
+        this.channel = new BroadcastChannel('visomi-auth');
+        this.channel.onmessage = (event: MessageEvent<unknown>) => {
+          if (event.data === 'session-changed') {
+            void this.invalidate();
+          }
+        };
+      } catch {
+        // Focus revalidation also works when the browser denies cross-tab channels.
+        this.channel = null;
+      }
+    }
+
+    this.destroyRef.onDestroy(() => view.removeEventListener('focus', refresh));
+    void this.load(true);
+    void this.loadProviders();
+  });
 }
