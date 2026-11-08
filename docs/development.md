@@ -42,6 +42,41 @@ and apply this same shared migration history. Application imports and startup do
 not run migrations. See the [API guide](../apps/web/api/README.md) for configuration
 and resource ownership.
 
+## Local agent tooling
+
+Run these steps on each new checkout created from the stack template. Use the
+Node and pnpm versions described above. Install the workspace dependencies with
+`pnpm install --frozen-lockfile` and run the remaining commands from the repo root.
+
+1. Make the Codegraph and Context7 CLIs available on the host's PATH. Skip the
+   install if both commands are already available.
+
+   ```sh
+   pnpm add -g @colbymchenry/codegraph@1.6.2 ctx7@0.10.0
+   ```
+
+2. Build the source and Markdown indexes for this checkout. Codegraph reads
+   `codegraph.json` and QMD reads `.qmd/index.yml`.
+
+   ```sh
+   CODEGRAPH_TELEMETRY=0 codegraph init --yes
+   pnpm --config.ignore-scripts=true dlx @tobilu/qmd@2.8.3 update
+   ```
+
+   Use `CODEGRAPH_TELEMETRY=0 codegraph index` after changing Codegraph's coverage.
+   Rerun QMD's `update` after Markdown changes. The generated indexes are local
+   to each checkout and ignored by Git.
+
+3. Open the repo root as a trusted Codex project and start a new session. Codex
+   loads the local Nx, Angular CLI, Codegraph, and QMD MCP servers from
+   `.codex/config.toml`. Run `codex mcp list` from the repo root to inspect the
+   configuration. QMD uses lexical search over the `visomi-docs` collection.
+
+The bundled `find-docs` skill uses `ctx7` for public third-party documentation.
+Send only public technology names and questions to Context7. See
+[AGENTS.md](../AGENTS.md#code-and-documentation-lookup) for the QMD MCP and CLI
+search workflow.
+
 ## Gateway development
 
 ```sh

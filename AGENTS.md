@@ -37,7 +37,17 @@
 - The Nx task preference below applies to project tasks. It does not replace the intentionally file-scoped ESLint/Prettier commands in lint-staged.
 - Keep this agreement outside the generated Nx section so generator updates do not erase it.
 
+## Code and documentation lookup
+
+- Start with Codegraph's `codegraph_explore` for indexed code, including symbols, call paths, dependencies, and related tests. Reuse the current source it returns and read files directly when the index is unavailable, stale, or missing the detail you need.
+- Use the `find-docs` skill for external framework, library, SDK, and CLI documentation. Match the installed version and keep lookup queries free of proprietary code, credentials, and customer data.
+- Use the local QMD MCP to find sections by content in repository Markdown. Call `query` with a `lex` search, `collections: ["visomi-docs"]`, `rerank: false`, and a small result limit. Use the returned document ID and line to call `get` with `file`, `fromLine`, and `maxLines` for just the relevant excerpt.
+- When QMD MCP is unavailable, use `pnpm --config.ignore-scripts=true dlx @tobilu/qmd@2.8.3` from the repository root with `search "<keywords>" -c visomi-docs -n 3 --json` and `get '<docid>:<start>:<count>'`. Run `update` with the same CLI on first use and when the index needs refreshing. See [local agent tooling setup](docs/development.md#local-agent-tooling).
+- For exact text in a known file, unindexed files, or an unavailable QMD index, search within the relevant files or read the relevant lines directly.
+
 ## Frontend composition
+
+- Use existing components directly in layout templates. Create a wrapper only when it owns distinct behavior or customization.
 
 - Assign Angular effects and render hooks to named readonly class properties, ordered after methods. Keep computed values pure; derive element attributes through template or host bindings. Navigation services expose focus requests as signals; a directive on the owning heading applies its bindings and handles the necessary native focus call after rendering. Use Angular-owned elements and view queries for browser/SDK integrations rather than global DOM searches or rewriting attributes.
 

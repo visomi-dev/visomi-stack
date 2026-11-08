@@ -52,6 +52,9 @@ vitest.config.*.timestamp*
 .nx/polygraph
 .angular
 
+# Local QMD index and SQLite sidecars
+/.qmd/index.sqlite*
+
 __screenshots__/
 
 # Astro generated declarations and caches

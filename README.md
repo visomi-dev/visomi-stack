@@ -40,6 +40,9 @@ NX_DAEMON=false pnpm nx run web-api:serve
 pnpm nx serve web-gateway
 ```
 
+For a new template checkout used with coding agents, follow the
+[local agent tooling setup](docs/development.md#local-agent-tooling) after installing dependencies.
+
 Run one server at a time. Open <http://localhost:3000/> for the standalone API
 or <http://localhost:3000/api/> for the gateway. Stop it with Ctrl+C.
 The server reads `HOST` and `PORT` from the process environment; their defaults
