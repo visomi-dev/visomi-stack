@@ -3,6 +3,29 @@ import { readMailCode } from '@visomi-stack/dev-testing';
 
 import { expect, test, address, signup, logout, passwordStart, password } from './support/fixtures';
 
+test('cancels reauthentication back to the exact device review', async ({ page }) => {
+  await signup(page);
+
+  const requestId = '11111111-1111-4111-8111-111111111111';
+  const destination = '/security/devices/review?requestId=' + requestId;
+
+  await page.route('**/api/auth/device-approval/review', (route) =>
+    route.fulfill({ json: { requestId, status: 'pending', expiresAt: '2099-01-01T00:00:00.000Z' } }),
+  );
+
+  await page.goto('/app/en/auth/reauthenticate?returnTo=' + encodeURIComponent(destination));
+
+  const cancel = page.getByRole('link', { name: 'Cancel', exact: true });
+
+  await expect(cancel).toHaveAttribute('href', '/app/en' + destination);
+
+  await cancel.click();
+
+  await expect(page).toHaveURL('/app/en' + destination);
+
+  await expect(page.getByLabel('Pairing code', { exact: true })).toBeVisible();
+});
+
 test('sets up TOTP locally and signs in with a replacement backup code', async ({ page, context }) => {
   const email = await signup(page);
 

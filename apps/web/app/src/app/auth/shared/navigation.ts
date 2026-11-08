@@ -1,6 +1,6 @@
 import { Location } from '@angular/common';
 import { Service, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, type UrlTree } from '@angular/router';
 
 import { Session } from '../session/session';
 import type { Notified } from '../session/models';
@@ -30,6 +30,10 @@ export class AuthNavigation {
     const value = this.returnPath();
 
     return value ? { returnTo: value } : {};
+  }
+
+  returnLink(): UrlTree {
+    return this.router.parseUrl(this.returnPath() ?? '/security');
   }
 
   async complete(result?: Notified): Promise<void> {

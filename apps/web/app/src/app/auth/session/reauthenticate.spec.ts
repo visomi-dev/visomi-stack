@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 
 import { Action } from '../shared/action';
 import { Google } from '../google/google';
@@ -27,7 +28,14 @@ beforeEach(() => {
       provideRouter([]),
       Journey,
       { provide: Session, useValue: { full: () => true, loadProviders: async () => undefined } },
-      { provide: AuthNavigation, useValue: { complete, returnPath: () => '/security/password' } },
+      {
+        provide: AuthNavigation,
+        useFactory: () => {
+          const router = inject(Router);
+
+          return { complete, returnLink: () => router.parseUrl('/security/password') };
+        },
+      },
     ],
   });
   TestBed.overrideComponent(Reauthenticate, {

@@ -2,6 +2,20 @@ import { readMailCode } from '@visomi-stack/dev-testing';
 
 import { expect, test, address, password, expireEmailVerification } from './support/fixtures';
 
+test('keeps the device review destination when changing the sign-in language', async ({ page }) => {
+  const destination = '/security/devices/review?requestId=11111111-1111-4111-8111-111111111111';
+
+  await page.goto('/app/en' + destination);
+
+  await page.getByRole('link', { name: 'Español', exact: true }).click();
+
+  await expect(page).toHaveURL(
+    (url) => url.pathname === '/app/es/auth/sign-in' && url.searchParams.get('returnTo') === destination,
+  );
+
+  await expect(page.getByRole('link', { name: 'Usar contraseña', exact: true })).toBeVisible();
+});
+
 test('presents direct actions in both languages, mobile and dark mode', async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
 

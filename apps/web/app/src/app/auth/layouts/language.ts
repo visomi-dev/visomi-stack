@@ -4,6 +4,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter, map } from 'rxjs';
 
 import { Link } from '../../ui';
+import { AuthNavigation } from '../shared/navigation';
 
 @Component({
   selector: 'app-auth-language',
@@ -12,6 +13,7 @@ import { Link } from '../../ui';
 })
 export class AuthLanguage {
   private readonly router = inject(Router);
+  private readonly navigation = inject(AuthNavigation);
   readonly locale = inject(LOCALE_ID);
 
   private readonly url = toSignal(
@@ -43,6 +45,14 @@ export class AuthLanguage {
       }
     }
 
-    return restarts[path] ?? (path === '/' ? '/auth/sign-in' : path);
+    const target = restarts[path] ?? (path === '/' ? '/auth/sign-in' : path);
+
+    if (target.startsWith('/auth/')) {
+      const queryParams = this.navigation.returnQuery();
+
+      return this.router.serializeUrl(this.router.createUrlTree([target], { queryParams }));
+    }
+
+    return target;
   }
 }
