@@ -6,6 +6,11 @@ args = [ "nx", "mcp" ]
 command = "pnpx"
 args = [ "-y", "@angular/cli", "mcp" ]
 
+[mcp_servers.codegraph]
+command = "codegraph"
+args = [ "serve", "--mcp" ]
+env = { CODEGRAPH_TELEMETRY = "0" }
+
 [features]
 multi_agent = true
 
