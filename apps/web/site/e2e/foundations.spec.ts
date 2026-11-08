@@ -4,6 +4,40 @@ function route(locale = 'en') {
   return `/${locale}/`;
 }
 
+test('shows a localized 404 with the foundations theme and a working way home on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+
+  await page.emulateMedia({ colorScheme: 'light' });
+
+  const response = await page.goto('/es/missing-review-page/');
+
+  expect(response?.status()).toBe(404);
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Página no encontrada');
+
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCSS('font-family', /Manrope/);
+
+  const theme = page.getByRole('button', { name: 'Modo oscuro' });
+
+  await expect(theme).toBeEnabled();
+
+  await theme.focus();
+
+  await page.keyboard.press('Enter');
+
+  await expect(theme).toHaveAttribute('aria-pressed', 'true');
+
+  const fitsViewport = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+
+  expect(fitsViewport).toBe(true);
+
+  await page.getByRole('link', { name: 'Ir al inicio' }).click();
+
+  await expect(page).toHaveURL(/\/es\/$/);
+});
+
 for (const locale of ['en', 'es']) {
   test(`renders ${locale} through Express and loads assets without errors`, async ({ page, request }, info) => {
     const path = route(locale);

@@ -9,6 +9,7 @@ import { readMailCode } from '@visomi-stack/dev-testing';
 export { expect } from '@playwright/test';
 
 export const password = 'Synthetic private password 42!';
+let clientSequence = 0;
 
 export function address(): string {
   return `${randomUUID()}@example.test`;
@@ -94,7 +95,12 @@ export async function passwordStart(page: Page, email: string, value = password)
 
 export const test = base.extend<{ rateLimitIsolation: void }>({
   rateLimitIsolation: [
-    async ({ baseURL: _baseURL }, use) => {
+    async ({ context }, use, info) => {
+      // Separate journeys share a test gateway but represent distinct clients.
+      const address = `198.18.${info.workerIndex}.${++clientSequence}`;
+
+      await context.setExtraHTTPHeaders({ 'x-forwarded-for': address });
+
       await resetLimits();
 
       await use();

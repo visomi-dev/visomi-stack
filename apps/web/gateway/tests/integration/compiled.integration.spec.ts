@@ -72,7 +72,7 @@ afterAll(async () => {
   }
 });
 
-async function launch(databaseUrl?: string) {
+async function launch(databaseUrl?: string, trustProxy?: string) {
   const portProbe = createServer();
 
   await new Promise<void>((ready) => portProbe.listen(0, '127.0.0.1', ready));
@@ -92,6 +92,7 @@ async function launch(databaseUrl?: string) {
       HOST: '127.0.0.1',
       PORT: String(address.port),
       NODE_ENV: 'test',
+      ...(trustProxy ? { AUTH_TRUST_PROXY: trustProxy } : {}),
       ...(databaseUrl
         ? {
             SMTP_HOST: '127.0.0.1',
@@ -243,33 +244,69 @@ describe('compiled ESM gateway and embedded API', () => {
       await gateway.cleanup();
     }
   });
-  it('limits Angular rendering while continuing to serve its static assets', async () => {
-    const gateway = await launch();
+  it('limits Angular rendering by client and globally while continuing to serve its static assets', async () => {
+    const gateway = await launch(undefined, '127.0.0.1');
 
     try {
-      const document = await fetch(gateway.url + '/app/en/foundations');
+      const headers = { 'x-forwarded-for': '192.0.2.1' };
+      const document = await fetch(gateway.url + '/app/en/foundations', { headers });
       const html = await document.text();
       const stylesheet = html.match(/href="([^"]+\.css)"/)?.[1];
 
       expect(document.status).toBe(200);
       expect(stylesheet).toBeTruthy();
 
-      for (let count = 1; count < 600; count++) {
-        const response = await fetch(gateway.url + '/app/ssr-limit-probe', { redirect: 'manual' });
+      for (let count = 0; count < 60; count++) {
+        const response = await fetch(gateway.url + '/app/en/ssr-limit-probe', { headers, method: 'OPTIONS' });
 
         await response.arrayBuffer();
 
-        expect(response.status).not.toBe(429);
+        expect(response.status).toBe(405);
+        expect(response.headers.get('allow')).toBe('GET, HEAD');
       }
 
-      const rejected = await fetch(gateway.url + '/app/en/foundations', { redirect: 'manual' });
+      const unsupported = await fetch(gateway.url + '/app/unsupported/ssr-limit-probe', { headers });
+
+      expect(unsupported.status).toBe(404);
+      expect(unsupported.headers.has('ratelimit')).toBe(false);
+
+      await unsupported.arrayBuffer();
+
+      for (let client = 1; client <= 10; client++) {
+        for (let count = client === 1 ? 1 : 0; count < 60; count++) {
+          const response = await fetch(gateway.url + '/app/en/ssr-limit-probe', {
+            headers: { 'x-forwarded-for': '192.0.2.' + client },
+            redirect: 'manual',
+          });
+
+          await response.arrayBuffer();
+
+          expect(response.status).not.toBe(429);
+        }
+
+        if (client === 1) {
+          const limited = await fetch(gateway.url + '/app/en/foundations', {
+            headers: { ...headers, accept: 'text/html' },
+          });
+
+          expect(limited.status).toBe(429);
+          expect(limited.headers.get('retry-after')).toBeTruthy();
+
+          await expect(limited.text()).resolves.toContain('Too many requests');
+        }
+      }
+
+      const rejected = await fetch(gateway.url + '/app/en/foundations', {
+        headers: { 'x-forwarded-for': '192.0.2.11' },
+        redirect: 'manual',
+      });
 
       expect(rejected.status).toBe(429);
       expect(rejected.headers.get('retry-after')).toBeTruthy();
 
       await expect(rejected.json()).resolves.toEqual({ error: 'rate_limited' });
 
-      const asset = await fetch(new URL(stylesheet!, gateway.url + '/app/en/'));
+      const asset = await fetch(new URL(stylesheet!, gateway.url + '/app/en/'), { headers });
 
       expect(asset.status).toBe(200);
       expect(asset.headers.get('content-type')).toContain('text/css');

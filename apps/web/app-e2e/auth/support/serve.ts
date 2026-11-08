@@ -73,7 +73,7 @@ async function serve(): Promise<void> {
         AUTH_ORIGIN: 'http://localhost:4204',
         AUTH_RP_ID: 'localhost',
         SESSION_SECRET: 'synthetic-auth-ui-session-secret-32-bytes',
-        AUTH_TRUST_PROXY: '',
+        AUTH_TRUST_PROXY: '127.0.0.1',
         GOOGLE_AUTH_CLIENT_ID: '',
         AUTH_TOTP_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64url'),
         SMTP_HOST: '127.0.0.1',

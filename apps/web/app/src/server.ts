@@ -1,15 +1,17 @@
+import { createHmac, randomBytes } from 'node:crypto';
 import { resolve } from 'node:path';
 
 import { AngularNodeAppEngine, createNodeRequestHandler, writeResponseToNodeResponse } from '@angular/ssr/node';
-import express, { static as serveStatic } from 'express';
+import express, { Router, static as serveStatic } from 'express';
 import type { Request } from 'express';
-import { rateLimit } from 'express-rate-limit';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 
 import type { AuthRenderContext } from './app/auth/session/models';
 
 import {
   type Observability,
   type createBrowserTelemetry,
+  HttpError,
   httpErrorHandler,
   httpObservability,
   securityHeaders,
@@ -24,12 +26,17 @@ export function createApp(
     browserTelemetry?: Pick<ReturnType<typeof createBrowserTelemetry>, 'context' | 'router'>;
     errorMode?: 'managed' | 'inherited';
     helmetMode?: 'managed' | 'inherited';
+    trustProxy?: string[];
     authContext?: (request: Request) => AuthRenderContext;
   } = {},
 ) {
   const app = express();
 
   app.disable('x-powered-by');
+
+  if (options.trustProxy) {
+    app.set('trust proxy', options.trustProxy);
+  }
 
   if (options.observability) {
     app.use(httpObservability(options.observability));
@@ -79,25 +86,54 @@ export function createApp(
 
     serveAssets(request, response, next);
   });
-  app.use(
-    rateLimit({
-      windowMs: 60_000,
-      limit: 600,
-      skip: (request) => request.path !== '/app' && !request.path.startsWith('/app/'),
-      // A single bucket caps work per application instance without retaining client addresses.
-      keyGenerator: () => 'ssr',
-      standardHeaders: 'draft-7',
-      legacyHeaders: false,
-      message: { error: 'rate_limited' },
-    }),
-  );
-  app.use((request, response, next) => {
-    if (request.path !== '/app' && !request.path.startsWith('/app/')) {
-      next();
+  const key = randomBytes(32);
+  const limits = {
+    windowMs: 60_000,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    handler: (_request, _response, next) => next(new HttpError(429, 'rate_limited')),
+    logger: { error: () => undefined, warn: () => undefined },
+  } satisfies Parameters<typeof rateLimit>[0];
+
+  const documents = Router();
+
+  documents.use((request, response, next) => {
+    if (!/^\/app\/(?:en|es)(?:\/|$)/.test(request.path)) {
+      next('router');
 
       return;
     }
 
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      response.set('allow', 'GET, HEAD');
+      next(new HttpError(405, 'method_not_allowed'));
+
+      return;
+    }
+
+    const destination = request.get('sec-fetch-dest');
+
+    if ((destination && !['document', 'frame', 'iframe'].includes(destination)) || !request.accepts('html')) {
+      next('router');
+
+      return;
+    }
+
+    next();
+  });
+  documents.use(
+    rateLimit({
+      ...limits,
+      limit: 60,
+      // Scope transient counters without retaining the client's network address.
+      keyGenerator: (request) =>
+        createHmac('sha256', key)
+          .update(ipKeyGenerator(request.ip ?? 'unknown'))
+          .digest('hex'),
+    }),
+    rateLimit({ ...limits, limit: 600, keyGenerator: () => 'ssr' }),
+  );
+  documents.use((request, response, next) => {
     engine ??= new AngularNodeAppEngine();
 
     engine
@@ -130,6 +166,7 @@ export function createApp(
       })
       .catch(next);
   });
+  app.use(documents);
 
   if ((options.errorMode ?? 'managed') === 'managed') {
     app.use(httpErrorHandler);

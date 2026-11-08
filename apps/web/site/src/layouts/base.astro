@@ -1,13 +1,15 @@
 ---
 import '../styles/global.css';
+import SiteTelemetry from '../components/site/telemetry.astro';
 
 type Props = {
   locale: 'en' | 'es';
   title: string;
   description?: string;
+  telemetry?: boolean;
 };
 
-const { locale, title, description } = Astro.props;
+const { locale, title, description, telemetry = true } = Astro.props;
 ---
 
 <!doctype html>
@@ -24,9 +26,7 @@ const { locale, title, description } = Astro.props;
     <meta property="og:locale" content={locale === 'en' ? 'en_US' : 'es_ES'} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <slot name="head" />
-    <script>
-      import '../observability';
-    </script>
+    {telemetry && <SiteTelemetry />}
   </head>
   <body class="min-h-screen bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
     <slot />

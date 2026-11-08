@@ -1,0 +1,8 @@
+---
+import ErrorDocument from '../components/site/error-document.astro';
+
+const locale = /^\/es(?:\/|$)/.test(Astro.url.pathname) ? 'es' : 'en';
+Astro.response.headers.set('cache-control', 'no-store');
+---
+
+<ErrorDocument locale={locale} status="404" />
