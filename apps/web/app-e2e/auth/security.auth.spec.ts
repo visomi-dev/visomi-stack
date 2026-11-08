@@ -8,19 +8,17 @@ test('sets up TOTP locally and signs in with a replacement backup code', async (
 
   await page.goto('/app/en/security/totp');
 
-  const setupResponse = page.waitForResponse(
-    (response) => response.url().endsWith('/api/auth/totp/setup') && response.status() === 201,
-  );
-
   await page.getByRole('button', { name: 'Set up authenticator', exact: true }).click();
 
-  const result6 = await setupResponse;
-  const result5 = await result6.json();
-  const setup = result5 as { secret: string };
+  const manualKey = page.locator('app-manage-totp code');
+
+  await expect(manualKey).not.toBeEmpty();
+
+  const secret = await manualKey.innerText();
 
   await expect(page.locator('app-totp-qr canvas')).toHaveJSProperty('width', 240);
 
-  const code = await generate({ secret: setup.secret });
+  const code = await generate({ secret });
 
   await page.getByLabel('Verification code', { exact: true }).fill(code);
 
@@ -31,10 +29,10 @@ test('sets up TOTP locally and signs in with a replacement backup code', async (
   const html = await context.request.get('/app/en/security/totp');
   const result7 = await html.text();
 
-  expect(result7).not.toContain(setup.secret);
+  expect(result7).not.toContain(secret);
   const storage = await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }));
 
-  expect(storage).not.toContain(setup.secret);
+  expect(storage).not.toContain(secret);
 
   await page.goto('/app/en/security/recovery-codes');
 

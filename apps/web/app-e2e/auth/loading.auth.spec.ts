@@ -41,6 +41,8 @@ for (const locale of ['en', 'es']) {
 
       await expect(button).toBeEnabled();
 
+      await page.evaluate(() => document.fonts.ready);
+
       const before = await button.boundingBox();
       let release!: () => void;
       const gate = new Promise<void>((resolve) => {
@@ -108,9 +110,9 @@ for (const locale of ['en', 'es']) {
 
       await expect(page.locator('[data-action-error]')).toBeFocused();
 
-      const stopped = await button.evaluate((element) => getComputedStyle(element, '::after').content);
+      const stopped = await button.evaluate((element) => getComputedStyle(element, '::after').visibility);
 
-      expect(stopped).toBe('none');
+      expect(stopped).toBe('hidden');
     });
   }
 }
