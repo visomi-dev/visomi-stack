@@ -6,6 +6,27 @@
   "tags": ["scope:development"],
   "// targets": "to see all targets run: nx show project dev-testing --web",
   "targets": {
+    "eslint-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/tools/lint-rules/**/*",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/apps/web/{app,site}/eslint.config.mjs",
+        "{workspaceRoot}/apps/web/app/src/app/shared/navigation.ts",
+        "{workspaceRoot}/.prettierrc.json",
+        "{workspaceRoot}/.vscode/settings.json",
+        "{workspaceRoot}/lint-staged.config.mjs"
+      ],
+      "options": {
+        "commands": ["eslint tools/lint-rules/*.mjs lint-staged.config.mjs", "node --test tools/lint-rules/*.spec.mjs"],
+        "parallel": false
+      }
+    },
+    "test": {
+      "dependsOn": ["eslint-check"]
+    },
     "typecheck-tests": {
       "executor": "nx:run-commands",
       "options": {

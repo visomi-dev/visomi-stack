@@ -1,10 +1,12 @@
 <section class="flex min-w-0 flex-col gap-6">
   <h1 appUI appNavigationHeading i18n="@@authDeviceApprovalTitle">Use your signed-in device</h1>
+
   @if (request(); as pending) {
     <p appUI tone="muted" i18n="@@authDeviceApprovalInstructions">
       On a device where you are already signed in, open this link and enter the pairing code shown here. Only approve a
       request you started.
     </p>
+
     <a
       appUI
       class="inline-flex min-h-11 items-center text-sm break-all"
@@ -14,14 +16,19 @@
     >
       {{ reviewLink() }}
     </a>
+
     <p class="text-sm" i18n="@@authPairingCode">Pairing code</p>
+
     <p class="font-mono text-3xl font-semibold tracking-widest">{{ pending.userCode }}</p>
+
     <p role="status">{{ statusText() }}</p>
+
     @if (status() === 'approved') {
       <button appUI class="w-full" [disabled]="action.busy()" (click)="consume()" i18n="@@authContinueRecovery">
         Continue recovery
       </button>
     }
+
     @if (status() === 'pending' || status() === 'approved') {
       <button
         appUI
@@ -41,9 +48,12 @@
       Request permission to set up a new sign-in method. Approval comes from a different session where you are already
       signed in.
     </p>
+
     <app-email-entry [busy]="action.busy()" (confirmed)="start($event)" />
   }
+
   <app-auth-feedback [action]="action" />
+
   <a appUI routerLink="/auth/recovery" i18n="@@authBackRecovery" class="inline-flex min-h-11 items-center">
     Back to recovery
   </a>

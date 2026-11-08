@@ -1,7 +1,9 @@
 <section class="flex min-w-0 flex-col gap-6">
   <h1 appUI appNavigationHeading i18n="@@authResetTitle">Choose a new password</h1>
+
   @if (done()) {
     <p appUI i18n="@@authResetDone">Your password has been reset. Sign in with your new password to continue.</p>
+
     <a appUI routerLink="/auth/sign-in/password" i18n="@@authSignIn" class="inline-flex min-h-11 items-center">
       Sign in
     </a>
@@ -24,6 +26,7 @@
           [attr.aria-invalid]="fields.code().touched() && fields.code().invalid()"
         />
       </app-field>
+
       <app-field
         #passwordField="appField"
         control-id="reset-password"
@@ -43,6 +46,7 @@
             [attr.aria-describedby]="passwordField.describedBy()"
             [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
           />
+
           <button
             appUI
             variant="ghost"
@@ -59,16 +63,21 @@
           </button>
         </div>
       </app-field>
+
       <app-field control-id="reset-factor-kind" [label]="factorLabel">
         <select appUI id="reset-factor-kind" [formField]="fields.kind">
           <option value="none" i18n="@@authNoExtraFactor">No additional code</option>
+
           <option value="totp" i18n="@@authAuthenticator">Authenticator app</option>
+
           <option value="recovery_code" i18n="@@authBackupCode">Backup code</option>
         </select>
       </app-field>
+
       <p appUI tone="muted" class="text-sm" i18n="@@authExtraFactorHint">
         If you enabled an authenticator, include its code or a backup code. Email alone cannot replace it.
       </p>
+
       @if (model().kind !== 'none') {
         <app-field
           #factorField="appField"
@@ -87,17 +96,21 @@
           />
         </app-field>
       }
+
       <button appUI type="submit" class="w-full" [disabled]="action.busy()" i18n="@@authResetPassword">
         Reset password
       </button>
     </form>
+
     <app-resend-code />
   } @else {
     <div appUI="alert" tone="warning" role="status" i18n="@@authRestartChallenge">
       This step could not be restored. Start again to request a new verification.
     </div>
   }
+
   <app-auth-feedback [action]="action" />
+
   <a
     appUI="button"
     [variant]="journey.challenge()?.purpose === 'reset' ? 'secondary' : 'primary'"

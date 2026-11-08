@@ -39,8 +39,11 @@ const message = manualError?.trim() || error.trim();
   class:list={[styles.classes({ compact }), className]}
 >
   <Label for={controlId}>{label}</Label>
+
   <slot />
+
   {description && <Description id={`${controlId}-help`}>{description}</Description>}
+
   <ErrorMessage id={`${controlId}-error`} hidden={!message}>
     {message}
   </ErrorMessage>

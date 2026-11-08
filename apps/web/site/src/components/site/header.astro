@@ -20,6 +20,7 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
 >
   <Container as="div" width="xl" gutter="compact" class="flex min-h-20 items-center justify-between gap-2">
     <Brand locale={locale} compact />
+
     <nav aria-label={copy.menu} class="hidden lg:flex lg:items-center lg:gap-1">
       {pages.map((destination) => (
         <Link
@@ -33,12 +34,14 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
         </Link>
       ))}
     </nav>
+
     <div class="flex items-center gap-1.5 sm:gap-3">
       <div class="hidden lg:block">
         <LinkButton href={applicationPath(locale)} size="sm">
           {copy.openApp}
         </LinkButton>
       </div>
+
       <nav aria-label={copy.language} class="flex gap-0.5 text-xs font-medium">
         {(['en', 'es'] as const).map((language) => (
           <Link
@@ -54,7 +57,9 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
           </Link>
         ))}
       </nav>
+
       <ThemeSwitcher label={copy.themeToggle} />
+
       <details class="group relative lg:hidden" data-site-menu>
         <summary
           class:list={[
@@ -65,8 +70,10 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
           <Text as="span" ui-size="inherit" tone="inherit" class="sr-only">
             {copy.menu}
           </Text>
+
           <Icon name="menu" />
         </summary>
+
         <nav
           aria-label={copy.menu}
           class:list={[
@@ -85,6 +92,7 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
               {copy.nav[destination]}
             </Link>
           ))}
+
           <LinkButton href={applicationPath(locale)} size="sm" class="mt-1">
             {copy.openApp}
           </LinkButton>

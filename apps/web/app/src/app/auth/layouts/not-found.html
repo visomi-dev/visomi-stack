@@ -2,11 +2,14 @@
   <section class="flex min-w-0 flex-col gap-6">
     <header class="space-y-3">
       <p appUI uiSize="sm" tone="accent" mono>404</p>
+
       <h1 appUI appNavigationHeading i18n="@@authNotFound">Page not found</h1>
+
       <p appUI tone="muted" i18n="@@authNotFoundDescription">
         This page is not available. You can return to your account or sign in.
       </p>
     </header>
+
     <a appUI="button" [routerLink]="target()" i18n="@@authContinue">Continue</a>
   </section>
 </app-auth-layout>

@@ -9,6 +9,7 @@ const { class: className, ...attributes } = Astro.props;
   <div class={topbar.titleClasses()}>
     <slot name="title" />
   </div>
+
   <div class={topbar.actionsClasses()}>
     <slot />
   </div>

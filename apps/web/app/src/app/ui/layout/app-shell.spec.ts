@@ -14,19 +14,28 @@ import type { ShellLayout } from '@visomi-stack/web-frontend-ui';
     <app-shell content-id="workspace-main" skip-label="Skip navigation" [layout]="layout()">
       <app-sidebar label="Primary">
         <a data-slot="brand" href="/">Brand</a>
+
         <a appUI="nav-item" [routerLink]="['/settings']" [queryParams]="{ tab: 'profile' }" aria-current="page"
           >Settings</a
         >
+
         <p data-slot="footer">Workspace footer</p>
       </app-sidebar>
+
       <header app-topbar>
         <h1 data-slot="title">Workspace</h1>
+
         <button appUI="nav-item" type="button" [disabled]="locked()" (click)="count.set(count() + 1)">Help</button>
       </header>
+
       <p>Projected page</p>
+
       <button appUI type="button">Save</button>
+
       <a appUI href="/help">Help center</a>
+
       <footer data-shell-footer>Page footer</footer>
+
       <nav appUI="navbar" aria-label="Primary">
         <a appUI="nav-item" placement="navbar" href="/settings">Settings</a>
       </nav>

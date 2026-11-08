@@ -31,12 +31,15 @@ const labels = uiDocs[locale];
 >
   <Fieldset>
     <Label as="legend">{labels.fieldsetLegend}</Label>
+
     <Label inline>
       <Checkbox checked />
+
       {labels.notify}
     </Label>
   </Fieldset>
 </Preview>
+
 <Preview
   id="field"
   locale={locale}
@@ -51,6 +54,7 @@ const labels = uiDocs[locale];
     <Input id="field-name" value={labels.sampleName} aria-describedby="field-name-help" />
   </Field>
 </Preview>
+
 <Preview
   id="label"
   locale={locale}
@@ -59,9 +63,11 @@ const labels = uiDocs[locale];
 >
   <div class="grid gap-2">
     <Label for="label-example">{labels.name}</Label>
+
     <Input id="label-example" placeholder={labels.sampleName} />
   </div>
 </Preview>
+
 <Preview
   id="description"
   locale={locale}
@@ -74,10 +80,13 @@ const labels = uiDocs[locale];
 >
   <div class="grid gap-2">
     <Label for="description-email">{labels.email}</Label>
+
     <Input type="email" id="description-email" aria-describedby="description-help" placeholder="demo@example.test" />
+
     <Description id="description-help">{labels.emailHint}</Description>
   </div>
 </Preview>
+
 <Preview
   id="error-message"
   locale={locale}
@@ -98,6 +107,7 @@ const labels = uiDocs[locale];
     />
   </Field>
 </Preview>
+
 <Preview
   id="input"
   locale={locale}
@@ -107,6 +117,7 @@ const labels = uiDocs[locale];
   <Text as="p" ui-size="sm" tone="muted" class="mb-4">
     {labels.fieldBehavior}
   </Text>
+
   <div id="validation-fields" class="grid gap-4">
     <Field control-id="input-email" label={labels.email} description={labels.emailHint} error={labels.emailError}>
       <Input
@@ -121,12 +132,15 @@ const labels = uiDocs[locale];
         aria-describedby="input-email-help input-email-error"
       />
     </Field>
+
     <Input disabled value={labels.disabled} aria-label={labels.disabled} />
+
     <div>
       <Button variant="secondary" size="sm" data-ui-validate="validation-fields">
         {labels.validate}
       </Button>
     </div>
+
     <Text
       as="p"
       ui-size="sm"
@@ -138,6 +152,7 @@ const labels = uiDocs[locale];
     />
   </div>
 </Preview>
+
 <Preview
   id="textarea"
   locale={locale}
@@ -150,6 +165,7 @@ const labels = uiDocs[locale];
     </Textarea>
   </Field>
 </Preview>
+
 <Preview
   id="select"
   locale={locale}
@@ -159,14 +175,18 @@ const labels = uiDocs[locale];
   <Field control-id="region-example" label={labels.region}>
     <Select id="region-example" name="example-region">
       <option value="">{labels.choose}</option>
+
       <option value="am" selected>
         {labels.regionOne}
       </option>
+
       <option value="eu">{labels.regionTwo}</option>
+
       <option value="ap">{labels.regionThree}</option>
     </Select>
   </Field>
 </Preview>
+
 <Preview
   id="checkbox"
   locale={locale}
@@ -176,14 +196,18 @@ const labels = uiDocs[locale];
   <div class="grid gap-2">
     <Label inline>
       <Checkbox name="example-updates" checked />
+
       {labels.notify}
     </Label>
+
     <Label inline>
       <Checkbox disabled />
+
       {labels.disabled}
     </Label>
   </div>
 </Preview>
+
 <Preview
   id="radio"
   locale={locale}
@@ -196,18 +220,23 @@ const labels = uiDocs[locale];
 >
   <Fieldset>
     <legend>{labels.radioLegend}</legend>
+
     <div class="flex flex-wrap gap-6">
       <Label inline>
         <Radio name="example-kind" value="personal" checked />
+
         {labels.personal}
       </Label>
+
       <Label inline>
         <Radio name="example-kind" value="shared" />
+
         {labels.shared}
       </Label>
     </div>
   </Fieldset>
 </Preview>
+
 <Preview
   id="toggle"
   locale={locale}
@@ -216,9 +245,11 @@ const labels = uiDocs[locale];
 >
   <Label inline>
     <Toggle name="example-notifications" checked />
+
     {labels.enabled}
   </Label>
 </Preview>
+
 <Preview
   id="radio-card"
   locale={locale}
@@ -229,24 +260,30 @@ const labels = uiDocs[locale];
 >
   <fieldset>
     <legend class="sr-only">{labels.radioLegend}</legend>
+
     <div class="grid gap-3 sm:grid-cols-2">
       <RadioCard>
         <Radio name="example-plan" value="standard" checked />
+
         <span>
           <strong class:list={[text.classes({ size: 'inherit', tone: 'inherit', weight: 'medium' }), 'block']}>
             {labels.radioCardTitle}
           </strong>
+
           <Text as="span" ui-size="inherit" tone="muted" class="mt-1 block">
             {labels.radioCardDescription}
           </Text>
         </span>
       </RadioCard>
+
       <RadioCard>
         <Radio name="example-plan" value="shared" />
+
         <span>
           <strong class:list={[text.classes({ size: 'inherit', tone: 'inherit', weight: 'medium' }), 'block']}>
             {labels.shared}
           </strong>
+
           <Text as="span" ui-size="inherit" tone="muted" class="mt-1 block">
             {labels.radioCardDescription}
           </Text>
@@ -255,6 +292,7 @@ const labels = uiDocs[locale];
     </div>
   </fieldset>
 </Preview>
+
 <Preview
   id="input-group"
   locale={locale}
@@ -268,7 +306,9 @@ const labels = uiDocs[locale];
       <span data-slot="prefix" aria-hidden="true">
         $
       </span>
+
       <Input id="amount-example" inputmode="decimal" value="125.00" />
+
       <span data-slot="suffix" aria-hidden="true">
         USD
       </span>

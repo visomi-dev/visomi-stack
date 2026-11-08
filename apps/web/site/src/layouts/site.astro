@@ -9,6 +9,7 @@ const { locale, page, title, description } = Astro.props;
 
 <BaseLayout locale={locale} title={title} description={description}>
   <slot name="head" slot="head" />
+
   <div id="top">
     <a
       href="#main"
@@ -16,7 +17,9 @@ const { locale, page, title, description } = Astro.props;
     >
       {siteCopy[locale].skip}
     </a>
+
     <Header locale={locale} page={page} />
+
     <main
       id="main"
       tabindex="-1"
@@ -24,6 +27,7 @@ const { locale, page, title, description } = Astro.props;
     >
       <slot />
     </main>
+
     <Footer locale={locale} />
   </div>
 </BaseLayout>

@@ -16,6 +16,7 @@ import { field as styles } from '@visomi-stack/web-frontend-ui';
     @if (description()) {
       <p appUI="description" [id]="descriptionId()">{{ description() }}</p>
     }
+
     <p app-error [id]="errorId()" [hidden]="!message()">{{ message() }}</p>
   `,
   host: {

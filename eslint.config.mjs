@@ -1,11 +1,15 @@
 import { configs as nxConfigs } from '@nx/eslint-plugin';
+import { templateParser } from 'angular-eslint';
 import stylistic from '@stylistic/eslint-plugin';
 import * as tsParser from '@typescript-eslint/parser';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
+import { configs as astroConfigs } from 'eslint-plugin-astro';
 import { importX } from 'eslint-plugin-import-x';
 import perfectionist from 'eslint-plugin-perfectionist';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
+
+import templateSiblingNewlines from './tools/lint-rules/template-sibling-newlines.mjs';
 
 const importXFiles = ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'];
 
@@ -46,7 +50,17 @@ export default [
   ...nxConfigs['flat/base'],
   ...nxConfigs['flat/typescript'],
   ...nxConfigs['flat/javascript'],
+  ...astroConfigs.base,
   eslintConfigPrettier,
+  {
+    files: ['**/*.html'],
+    languageOptions: { parser: templateParser },
+  },
+  {
+    files: ['**/*.html', '**/*.astro'],
+    plugins: { workspace: { rules: { 'template-sibling-newlines': templateSiblingNewlines } } },
+    rules: { 'workspace/template-sibling-newlines': 'error' },
+  },
   {
     ...importX.flatConfigs.recommended,
     files: importXFiles,

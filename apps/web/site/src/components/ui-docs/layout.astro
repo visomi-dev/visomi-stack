@@ -26,6 +26,7 @@ const labels = uiDocs[locale];
     </Container>
   </div>
 </Preview>
+
 <Preview
   id="card"
   locale={locale}
@@ -37,19 +38,23 @@ const labels = uiDocs[locale];
       <Heading as="h4" ui-size="sm">
         {labels.cardTitle}
       </Heading>
+
       <Text ui-size="sm" tone="muted">
         {labels.cardBody}
       </Text>
     </Card>
+
     <Card tone="raised">
       <Heading as="h4" ui-size="sm">
         {labels.cardRaised}
       </Heading>
+
       <Text ui-size="sm" tone="muted">
         {labels.cardBody}
       </Text>
     </Card>
   </div>
+
   <div class="mt-4 grid gap-4 sm:grid-cols-3">
     {(['subtle', 'accent', 'inverse'] as const).map((tone) => (
       <Card tone={tone} padding="sm" layout="plain">
@@ -59,12 +64,14 @@ const labels = uiDocs[locale];
       </Card>
     ))}
   </div>
+
   <Card tone="ghost" padding="sm" class="mt-4">
     <Text ui-size="sm" tone="muted">
       {labels.cardGhost}
     </Text>
   </Card>
 </Preview>
+
 <Preview
   id="page-header"
   locale={locale}
@@ -76,10 +83,12 @@ const labels = uiDocs[locale];
       <Heading as="h4" ui-size="md">
         {labels.pageTitle}
       </Heading>
+
       <Text ui-size="sm" tone="muted">
         {labels.pageDescription}
       </Text>
     </div>
+
     <Button size="sm">{labels.save}</Button>
   </PageHeader>
 </Preview>

@@ -6,6 +6,7 @@ import { topbar } from '@visomi-stack/web-frontend-ui';
   selector: 'header[app-topbar]',
   template: `
     <div [class]="titleClasses"><ng-content select="[data-slot=title]" /></div>
+
     <div [class]="actionsClasses"><ng-content /></div>
   `,
   host: { '[class]': 'classes' },

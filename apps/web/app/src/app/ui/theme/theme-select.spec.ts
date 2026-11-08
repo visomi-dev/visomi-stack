@@ -11,14 +11,20 @@ import { ThemeSwitcher } from './theme-switcher';
   hostDirectives: [ThemeHost],
   template: `
     <button app-theme-switcher aria-label="Dark theme"></button>
+
     <select appUITheme aria-label="First appearance">
       <option value="system">System</option>
+
       <option value="light">Light</option>
+
       <option value="dark">Dark</option>
     </select>
+
     <select appUITheme aria-label="Second appearance">
       <option value="system">System</option>
+
       <option value="light">Light</option>
+
       <option value="dark">Dark</option>
     </select>
   `,

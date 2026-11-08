@@ -25,28 +25,35 @@ const labels = {
 
 <BaseLayout locale={locale} title={title} description={description} telemetry={false}>
   <meta name="robots" content="noindex" slot="head" />
+
   <header class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
     <a href={home} class="font-heading text-lg font-bold tracking-tight ui-focus-ring">
       VISOMI<span class="ml-1 text-blue-600">.</span>
     </a>
+
     <ThemeSwitcher label={labels.theme} />
   </header>
+
   <main class="grid min-h-[70dvh] place-items-center py-8">
     <Container width="sm" gutter="compact">
       <Card as="section" aria-labelledby="error-title" padding="lg">
         <Text tone="accent" ui-size="sm" mono>
           {status}
         </Text>
+
         <Heading as="h1" id="error-title">
           {title}
         </Heading>
+
         <Text tone="muted">{description}</Text>
+
         <div class="mt-2 flex flex-wrap gap-3">
           {retry || signIn ? (
             <>
               <LinkButton href={signIn ? `/app/${locale}/auth/sign-in` : ''}>
                 {signIn ? labels.signIn : labels.retry}
               </LinkButton>
+
               <LinkButton href={home} variant="secondary">
                 {labels.home}
               </LinkButton>

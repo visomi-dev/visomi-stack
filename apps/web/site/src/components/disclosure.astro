@@ -10,6 +10,7 @@ const { summary, class: className, ...attributes } = Astro.props;
 
 <details {...attributes} class:list={[styles.classes(), className]}>
   <summary>{summary}</summary>
+
   <div>
     <slot />
   </div>

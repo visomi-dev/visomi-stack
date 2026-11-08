@@ -79,6 +79,22 @@ the standalone API, which serves its greeting at `/`. Set `APP_PORT` to change t
 published port and align `AUTH_ORIGIN` with that public URL. Worker and realtime
 applications remain unimplemented.
 
+## Template formatting and editor linting
+
+HTML, Angular templates and Astro use the local `workspace/template-sibling-newlines`
+ESLint rule to separate sibling elements and control-flow blocks already written
+on different lines. Inline text, comments and literal content in `pre`, `code`,
+`textarea`, `script` and `style` retain their spacing. Prettier preserves the
+inserted blank lines. `lint-staged` runs Prettier followed by ESLint fixes for both
+HTML and Astro; the workspace editor settings enable formatting and ESLint fixes
+on explicit save. Nx lint tasks enforce the same rule.
+
+The editor selects the local ESLint configuration for each project. After shared
+ESM lint configuration changes, use **ESLint: Restart ESLint Server** if diagnostics
+still reflect an older configuration. `toSignal`, `signal` and `linkedSignal` belong
+to the same Angular state group, before computed properties. Configuration tests
+verify this ordering from both the workspace root and the application directory.
+
 ## Integrated live reload
 
 The `pnpm dev` launcher serves the same website, Angular SSR application and

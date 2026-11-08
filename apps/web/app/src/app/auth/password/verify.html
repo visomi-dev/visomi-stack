@@ -1,8 +1,11 @@
 <section class="flex min-w-0 flex-col gap-6">
   <h1 appUI appNavigationHeading i18n="@@authConfirmSignIn">Confirm your sign-in</h1>
+
   @if (pending(); as pending) {
     <p appUI tone="muted">{{ pending.factor === 'email' ? emailHint : totpHint }}</p>
+
     <app-code-entry [busy]="action.busy()" [backup]="backup()" (confirmed)="verify($event)" />
+
     @if (pending.factor === 'email') {
       <app-resend-code />
     } @else {
@@ -15,7 +18,9 @@
       This step could not be restored. Start again to request a new verification.
     </div>
   }
+
   <app-auth-feedback [action]="action" />
+
   <a
     appUI="button"
     [variant]="pending() ? 'secondary' : 'primary'"
