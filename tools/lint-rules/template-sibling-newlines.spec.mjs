@@ -120,6 +120,14 @@ test('Angular: handles ng-template and structural directive wrappers', () => {
   assert.deepEqual(result.messages, []);
 });
 
+test('Astro: keeps comment-only expressions attached to nearby elements', () => {
+  const source = '<main>\n<a></a>\n{/* Document the following div. */}\n<div></div>\n</main>\n';
+  const result = linter.verifyAndFix(source, configuration(astroParser), { filename: 'example.astro' });
+
+  assert.equal(result.output, source);
+  assert.deepEqual(result.messages, []);
+});
+
 test('editor and CLI configurations classify toSignal as state before computed properties', async () => {
   const filename = resolve(root, 'apps/web/app/src/app/shared/navigation.ts');
   const source = await readFile(filename, 'utf8');

@@ -37,7 +37,9 @@ export default {
         return;
       }
 
-      const elements = (children ?? []).filter((child) => siblings.has(child.type));
+      const elements = (children ?? []).filter(
+        (child) => siblings.has(child.type) && child.expression?.type !== 'JSXEmptyExpression',
+      );
 
       for (let index = 1; index < elements.length; index++) {
         const previousEnd = range(elements[index - 1])[1];
