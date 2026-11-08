@@ -57,6 +57,7 @@
   "namedInputs": {
     "lintPolicy": [
       "sharedGlobals",
+      "{workspaceRoot}/**/project.json",
       "{workspaceRoot}/tools/lint-rules/**/*",
       "{workspaceRoot}/eslint.config.mjs",
       "{workspaceRoot}/apps/web/{app,site}/eslint.config.mjs",
