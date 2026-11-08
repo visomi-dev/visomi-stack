@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
 import { templateParser } from 'angular-eslint';
 import * as astroParser from 'astro-eslint-parser';
@@ -173,5 +175,26 @@ test('actual root and project configs enforce the same template rule', async () 
 
     assert.equal(results[0].length, 1);
     assert.deepEqual(results[0], results[1]);
+  }
+});
+
+test('Nx selects lint and rule regressions when only a shared rule changes', async () => {
+  const { stdout } = await promisify(execFile)(
+    'pnpm',
+    [
+      'nx',
+      'affected',
+      '-t',
+      'lint',
+      'test',
+      '--files=tools/lint-rules/template-sibling-newlines.mjs',
+      '--graph=stdout',
+    ],
+    { cwd: root, env: { ...process.env, NX_DAEMON: 'false' }, maxBuffer: 4 * 1024 * 1024 },
+  );
+  const graph = JSON.parse(stdout);
+
+  for (const task of ['dev-testing:eslint-check', 'dev-testing:test', 'web-app:lint', 'web-site:lint']) {
+    assert.ok(graph.tasks.tasks[task], `Missing affected task: ${task}`);
   }
 });

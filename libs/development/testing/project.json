@@ -9,23 +9,37 @@
     "eslint-check": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": [
-        "sharedGlobals",
-        "{workspaceRoot}/tools/lint-rules/**/*",
-        "{workspaceRoot}/eslint.config.mjs",
-        "{workspaceRoot}/apps/web/{app,site}/eslint.config.mjs",
-        "{workspaceRoot}/apps/web/app/src/app/shared/navigation.ts",
-        "{workspaceRoot}/.prettierrc.json",
-        "{workspaceRoot}/.vscode/settings.json",
-        "{workspaceRoot}/lint-staged.config.mjs"
-      ],
+      "inputs": ["lintPolicy"],
       "options": {
         "commands": ["eslint tools/lint-rules/*.mjs lint-staged.config.mjs", "node --test tools/lint-rules/*.spec.mjs"],
         "parallel": false
       }
     },
     "test": {
-      "dependsOn": ["eslint-check"]
+      "dependsOn": ["eslint-check"],
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "fileset": "{projectRoot}/tsconfig.spec.json",
+          "dependencies": true
+        },
+        {
+          "fileset": "{projectRoot}/tsconfig.storybook.json",
+          "dependencies": true
+        },
+        {
+          "externalDependencies": ["vitest"]
+        },
+        {
+          "env": "CI"
+        },
+        {
+          "dependentTasksOutputFiles": "**/*.js",
+          "transitive": true
+        },
+        "lintPolicy"
+      ]
     },
     "typecheck-tests": {
       "executor": "nx:run-commands",
@@ -39,5 +53,17 @@
       "dependsOn": ["test"]
     }
   },
-  "implicitDependencies": ["backend-shared"]
+  "implicitDependencies": ["backend-shared"],
+  "namedInputs": {
+    "lintPolicy": [
+      "sharedGlobals",
+      "{workspaceRoot}/tools/lint-rules/**/*",
+      "{workspaceRoot}/eslint.config.mjs",
+      "{workspaceRoot}/apps/web/{app,site}/eslint.config.mjs",
+      "{workspaceRoot}/apps/web/app/src/app/shared/navigation.ts",
+      "{workspaceRoot}/.prettierrc.json",
+      "{workspaceRoot}/.vscode/settings.json",
+      "{workspaceRoot}/lint-staged.config.mjs"
+    ]
+  }
 }

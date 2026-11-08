@@ -62,7 +62,7 @@
         "default",
         "^default",
         "{workspaceRoot}/eslint.config.mjs",
-        "{workspaceRoot}/tools/eslint-rules/**/*",
+        "{workspaceRoot}/tools/lint-rules/**/*",
         {
           "externalDependencies": ["eslint"]
         }
