@@ -14,6 +14,7 @@ export class ServerSession extends Session {
 
   constructor() {
     super();
+
     const context = inject(REQUEST_CONTEXT, { optional: true }) as { auth?: AuthRenderContext } | null;
     const initial = context?.auth ?? { available: false, session: null };
     const source = initial.session;
@@ -31,6 +32,7 @@ export class ServerSession extends Session {
 
     this.snapshot = signal(snapshot).asReadonly();
     this.status = signal<SessionStatus>(initial.available ? 'ready' : 'unavailable').asReadonly();
+
     inject(TransferState).set(initialSessionState, {
       available: initial.available,
       session: source ? snapshot : null,

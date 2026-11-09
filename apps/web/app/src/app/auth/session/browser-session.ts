@@ -37,6 +37,7 @@ export class BrowserSession extends Session {
 
   constructor() {
     super();
+
     const initial = this.transfer.get(initialSessionState, null);
 
     if (initial) {
