@@ -10,10 +10,9 @@ export const BROWSER_ERROR_REPORTER = new InjectionToken<ReturnType<typeof creat
 @Service({ autoProvided: false })
 export class BrowserTelemetry {
   private readonly reporter = inject(BROWSER_ERROR_REPORTER, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
 
-  constructor() {
-    inject(DestroyRef).onDestroy(() => this.reporter?.stop());
-  }
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.reporter?.stop());
 
   report(code: BrowserErrorCode, error?: unknown, correlation?: string): void {
     void this.reporter?.report(code, error, undefined, correlation);

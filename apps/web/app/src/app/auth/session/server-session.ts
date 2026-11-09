@@ -1,24 +1,66 @@
-import { REQUEST_CONTEXT, Service, TransferState, inject, signal, type Signal } from '@angular/core';
+import { REQUEST_CONTEXT, Service, TransferState, computed, inject, signal } from '@angular/core';
 import { NEVER } from 'rxjs';
 
 import type { AuthRenderContext, Providers, SessionSnapshot, SessionStatus, SessionView } from './models';
-import { Session, anonymousSession, initialSessionState } from './session';
+import { type Session, anonymousSession, initialSessionState, isFullSession } from './session';
 
 @Service({ autoProvided: false })
-export class ServerSession extends Session {
-  override readonly providers = signal<Providers | null>(null).asReadonly();
+export class ServerSession implements Session {
+  private readonly transfer = inject(TransferState);
 
-  override readonly snapshot: Signal<SessionSnapshot>;
-  override readonly status: Signal<SessionStatus>;
-  override readonly cancelled = NEVER;
+  private readonly initial = this.transferSession(
+    (inject(REQUEST_CONTEXT, { optional: true }) as { auth?: AuthRenderContext } | null)?.auth,
+  );
 
-  constructor() {
-    super();
+  readonly snapshot = signal(this.initial.session ?? anonymousSession).asReadonly();
+  readonly status = signal<SessionStatus>(this.initial.available ? 'ready' : 'unavailable').asReadonly();
+  readonly providers = signal<Providers | null>(null).asReadonly();
 
-    const context = inject(REQUEST_CONTEXT, { optional: true }) as { auth?: AuthRenderContext } | null;
-    const initial = context?.auth ?? { available: false, session: null };
-    const source = initial.session;
-    const snapshot: SessionSnapshot = source
+  readonly full = computed(() => isFullSession(this.status(), this.snapshot()));
+  readonly user = computed(() => this.snapshot().user);
+
+  readonly cancelled = NEVER;
+
+  // The auth runtime already resolved this request; SSR never refreshes through HTTP.
+  load(_force = false): Promise<void> {
+    return Promise.resolve();
+  }
+
+  loadProviders(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  operationVersion(): number {
+    return 0;
+  }
+
+  token(): Promise<string> {
+    return Promise.reject(new Error('browser_required'));
+  }
+
+  accept(_result: SessionView, _broadcast = true): void {
+    throw new Error('browser_required');
+  }
+
+  clear(): void {
+    throw new Error('browser_required');
+  }
+
+  invalidateToken(): void {
+    throw new Error('browser_required');
+  }
+
+  invalidate(): Promise<void> {
+    return Promise.reject(new Error('browser_required'));
+  }
+
+  cancelOperations(): void {
+    throw new Error('browser_required');
+  }
+
+  private transferSession(context?: AuthRenderContext): AuthRenderContext {
+    const source = context?.session;
+    const session: SessionSnapshot | null = source
       ? {
           authenticated: source.authenticated,
           user: source.user
@@ -28,51 +70,11 @@ export class ServerSession extends Session {
           method: source.method,
           nextStep: source.nextStep,
         }
-      : anonymousSession;
+      : null;
+    const initial = { available: context?.available ?? false, session };
 
-    this.snapshot = signal(snapshot).asReadonly();
-    this.status = signal<SessionStatus>(initial.available ? 'ready' : 'unavailable').asReadonly();
+    this.transfer.set(initialSessionState, initial);
 
-    inject(TransferState).set(initialSessionState, {
-      available: initial.available,
-      session: source ? snapshot : null,
-    });
-  }
-
-  // The auth runtime already resolved this request; SSR never refreshes through HTTP.
-  override load(_force = false): Promise<void> {
-    return Promise.resolve();
-  }
-
-  override loadProviders(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  override operationVersion(): number {
-    return 0;
-  }
-
-  override token(): Promise<string> {
-    return Promise.reject(new Error('browser_required'));
-  }
-
-  override accept(_result: SessionView, _broadcast = true): void {
-    throw new Error('browser_required');
-  }
-
-  override clear(): void {
-    throw new Error('browser_required');
-  }
-
-  override invalidateToken(): void {
-    throw new Error('browser_required');
-  }
-
-  override invalidate(): Promise<void> {
-    return Promise.reject(new Error('browser_required'));
-  }
-
-  override cancelOperations(): void {
-    throw new Error('browser_required');
+    return initial;
   }
 }

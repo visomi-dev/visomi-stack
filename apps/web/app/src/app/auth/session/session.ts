@@ -1,4 +1,4 @@
-import { computed, makeStateKey, type Signal } from '@angular/core';
+import { makeStateKey, type Signal } from '@angular/core';
 import type { Observable } from 'rxjs';
 
 import type { AuthRenderContext, Providers, SessionSnapshot, SessionStatus, SessionView } from './models';
@@ -12,15 +12,15 @@ export const anonymousSession: SessionSnapshot = {
   nextStep: null,
 };
 
+export function isFullSession(status: SessionStatus, snapshot: SessionSnapshot): boolean {
+  return status === 'ready' && snapshot.access === 'full' && snapshot.user?.emailVerified === true;
+}
+
 export abstract class Session {
   abstract readonly snapshot: Signal<SessionSnapshot>;
   abstract readonly status: Signal<SessionStatus>;
-  readonly full = computed(
-    () =>
-      this.status() === 'ready' && this.snapshot().access === 'full' && this.snapshot().user?.emailVerified === true,
-  );
-  readonly user = computed(() => this.snapshot().user);
-
+  abstract readonly full: Signal<boolean>;
+  abstract readonly user: Signal<SessionSnapshot['user']>;
   abstract readonly providers: Signal<Providers | null>;
   abstract readonly cancelled: Observable<void>;
 

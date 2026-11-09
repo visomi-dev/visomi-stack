@@ -1,15 +1,15 @@
 import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { DestroyRef, Service, TransferState, afterNextRender, inject, signal } from '@angular/core';
+import { DestroyRef, Service, TransferState, afterNextRender, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, firstValueFrom } from 'rxjs';
 
 import { isSession } from './models';
 import type { SessionSnapshot, SessionStatus, SessionView, Providers } from './models';
-import { Session, anonymousSession, initialSessionState } from './session';
+import { type Session, anonymousSession, initialSessionState, isFullSession } from './session';
 
 @Service({ autoProvided: false })
-export class BrowserSession extends Session {
+export class BrowserSession implements Session {
   private readonly http = inject(HttpClient);
   private readonly transfer = inject(TransferState);
   private readonly document = inject(DOCUMENT);
@@ -19,12 +19,18 @@ export class BrowserSession extends Session {
   private readonly state = signal<SessionStatus>('loading');
   private readonly capabilities = signal<Providers | null>(null);
 
-  override readonly snapshot = this.value.asReadonly();
-  override readonly status = this.state.asReadonly();
-  override readonly providers = this.capabilities.asReadonly();
+  readonly full = computed(() => isFullSession(this.state(), this.value()));
+  readonly user = computed(() => this.value().user);
+
+  readonly snapshot = this.value.asReadonly();
+  readonly status = this.state.asReadonly();
+  readonly providers = this.capabilities.asReadonly();
 
   private readonly cancellation = new Subject<void>();
-  override readonly cancelled = this.cancellation.asObservable();
+  readonly cancelled = this.cancellation.asObservable();
+
+  private readonly available = this.restoreInitialSession();
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.dispose());
 
   private csrfToken: string | null = null;
   private revision = 0;
@@ -32,34 +38,9 @@ export class BrowserSession extends Session {
   private pending: Promise<void> | null = null;
   private providerRequest: Promise<void> | null = null;
   private channel: BroadcastChannel | null = null;
-  private available = true;
   private destroyed = false;
 
-  constructor() {
-    super();
-
-    const initial = this.transfer.get(initialSessionState, null);
-
-    if (initial) {
-      this.available = initial.available;
-
-      if (initial.session) {
-        this.value.set(initial.session);
-      }
-
-      this.state.set(initial.available ? 'ready' : 'unavailable');
-      this.transfer.remove(initialSessionState);
-    }
-
-    this.destroyRef.onDestroy(() => {
-      this.destroyed = true;
-      this.cancelOperations();
-      this.cancellation.complete();
-      this.channel?.close();
-    });
-  }
-
-  override async load(force = false): Promise<void> {
+  async load(force = false): Promise<void> {
     if (!this.available || this.destroyed) {
       return;
     }
@@ -103,7 +84,7 @@ export class BrowserSession extends Session {
     return pending;
   }
 
-  override async loadProviders(): Promise<void> {
+  async loadProviders(): Promise<void> {
     if (!this.available || this.destroyed || this.capabilities()) {
       return;
     }
@@ -130,7 +111,7 @@ export class BrowserSession extends Session {
     return this.providerRequest;
   }
 
-  override async token(): Promise<string> {
+  async token(): Promise<string> {
     if (!this.csrfToken || this.state() !== 'ready') {
       await this.load(true);
     }
@@ -147,7 +128,7 @@ export class BrowserSession extends Session {
     return this.csrfToken;
   }
 
-  override accept(result: SessionView, broadcast = true): void {
+  accept(result: SessionView, broadcast = true): void {
     if (this.destroyed) {
       return;
     }
@@ -177,7 +158,7 @@ export class BrowserSession extends Session {
     }
   }
 
-  override clear(): void {
+  clear(): void {
     this.cancelOperations();
     this.revision++;
     this.csrfToken = null;
@@ -186,11 +167,11 @@ export class BrowserSession extends Session {
     this.channel?.postMessage('session-changed');
   }
 
-  override invalidateToken(): void {
+  invalidateToken(): void {
     this.csrfToken = null;
   }
 
-  override async invalidate(): Promise<void> {
+  async invalidate(): Promise<void> {
     this.cancelOperations();
     this.revision++;
     this.csrfToken = null;
@@ -203,14 +184,35 @@ export class BrowserSession extends Session {
     await this.load(true);
   }
 
-  override operationVersion(): number {
+  operationVersion(): number {
     return this.transition;
   }
 
-  override cancelOperations(): void {
+  cancelOperations(): void {
     this.transition++;
     this.revision++;
     this.cancellation.next();
+  }
+
+  private restoreInitialSession(): boolean {
+    const initial = this.transfer.get(initialSessionState, null);
+
+    if (!initial) {
+      return true;
+    }
+
+    this.value.set(initial.session ?? anonymousSession);
+    this.state.set(initial.available ? 'ready' : 'unavailable');
+    this.transfer.remove(initialSessionState);
+
+    return initial.available;
+  }
+
+  private dispose(): void {
+    this.destroyed = true;
+    this.cancelOperations();
+    this.cancellation.complete();
+    this.channel?.close();
   }
 
   private readonly initialize = afterNextRender(() => {
