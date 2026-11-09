@@ -20,17 +20,24 @@ const boundary = vi.hoisted(() => ({
   database: { db: {}, pool: { query: vi.fn() }, close: vi.fn() },
   authConfig: vi.fn(),
   createAuthentication: vi.fn(),
+  redisTransport: vi.fn(),
 }));
 
 vi.mock('node:http', () => ({ createServer: boundary.createServer }));
 vi.mock('@visomi-stack/web-backend-shared', () => ({
   initializeObservability: boundary.initialize,
 }));
-vi.mock('@visomi-stack/backend-shared', () => ({
-  createDatabase: boundary.createDatabase,
-  smtpConfig: boundary.smtpConfig,
-  createSmtp: boundary.createSmtp,
-}));
+vi.mock('@visomi-stack/backend-shared', async (original) => {
+  const shared = await original<typeof import('@visomi-stack/backend-shared')>();
+
+  return {
+    ...shared,
+    createRedisRealtimeTransport: boundary.redisTransport,
+    createDatabase: boundary.createDatabase,
+    smtpConfig: boundary.smtpConfig,
+    createSmtp: boundary.createSmtp,
+  };
+});
 vi.mock('./app', () => ({
   createApp: boundary.createApp,
   authConfig: boundary.authConfig,
@@ -44,6 +51,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.useFakeTimers();
   vi.stubEnv('DATABASE_URL', '');
+  vi.stubEnv('REALTIME_REDIS_URL', '');
   vi.stubEnv('AUTH_TRUST_PROXY', '');
   boundary.createDatabase.mockReturnValue(boundary.database);
   boundary.smtpConfig.mockReturnValue(undefined);
@@ -80,6 +88,30 @@ afterEach(() => {
 });
 
 describe('API executable lifecycle', () => {
+  it('publishes through Redis independently of a socket server', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    vi.stubEnv('REALTIME_REDIS_URL', 'redis://synthetic');
+    const transport = { publish: vi.fn(), close: vi.fn() };
+
+    boundary.redisTransport.mockReturnValue(transport);
+
+    await import('./main');
+
+    const { realtimePublisher } = boundary.createAuthentication.mock.calls[0][0];
+
+    await realtimePublisher.notifySession('synthetic-session');
+
+    expect(transport.publish).toHaveBeenCalledWith({ kind: 'session', id: 'synthetic-session' });
+    const reportFailure = boundary.redisTransport.mock.calls[0][1];
+
+    reportFailure();
+    expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed');
+    boundary.signals.get('SIGTERM')!();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(transport.close).toHaveBeenCalledOnce();
+  });
   it('uses default networking when no host or port is configured', async () => {
     vi.stubEnv('HOST', undefined);
     vi.stubEnv('PORT', undefined);

@@ -57,6 +57,37 @@ async function initializedRequest(first: ReturnType<typeof fixture>, second = fi
 }
 
 describe('explicit session and Passport initialization', () => {
+  it('identifies only verified full sessions for realtime', async () => {
+    const { runtime, database } = fixture();
+    const identity = { id: 'synthetic-user', method: 'password', level: 'full', version: 1, authenticatedAt: 123 };
+    const where = vi
+      .fn()
+      .mockResolvedValue([
+        { id: identity.id, authVersion: 1, emailVerifiedAt: new Date(), passwordHash: 'synthetic-hash' },
+      ]);
+
+    vi.mocked(database.select).mockReturnValue({ from: () => ({ where }) } as never);
+
+    await expect(runtime.realtime.readUser(identity)).resolves.toBe(identity.id);
+
+    await expect(runtime.realtime.readUser({ ...identity, level: 'unverified' })).resolves.toBeNull();
+
+    await expect(runtime.realtime.readUser(undefined)).resolves.toBeNull();
+  });
+
+  it('limits realtime access to the session-owned approval and exposes only its expiry', async () => {
+    const { runtime } = fixture();
+    const expiresAt = new Date(Date.now() + 60_000);
+    const status = vi
+      .spyOn(runtime.devices, 'status')
+      .mockResolvedValue({ requestId: 'request', status: 'pending', expiresAt });
+
+    await expect(runtime.realtime.watchExpiration('requester', 'request')).resolves.toBe(expiresAt.getTime());
+
+    expect(status).toHaveBeenCalledExactlyOnceWith('requester', 'request');
+    expect(runtime.realtime.readSession).toBe(runtime.middleware[0]);
+  });
+
   it('exposes only public session state for request-scoped rendering', () => {
     const { runtime } = fixture();
     const request = {

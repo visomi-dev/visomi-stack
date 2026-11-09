@@ -143,9 +143,34 @@ test('polls a new device request after cancelling one whose status response is d
 });
 
 test('approves another browser and grants enrollment rather than full access', async ({ page, browser }) => {
+  let authenticatedSocket = false;
+
+  page.on('websocket', (socket) => {
+    if (new URL(socket.url()).pathname === '/socket.io/') {
+      socket.on('framereceived', ({ payload }) => {
+        authenticatedSocket ||= typeof payload === 'string' && payload.startsWith('40/session,{');
+      });
+    }
+  });
   const email = await signup(page);
+
+  await expect.poll(() => authenticatedSocket).toBe(true);
+
   const requesterContext = await browser.newContext({ baseURL: 'http://localhost:4204' });
   const requester = await requesterContext.newPage();
+  let subscribed = false;
+  let notified = false;
+
+  requester.on('websocket', (socket) => {
+    if (new URL(socket.url()).pathname === '/socket.io/') {
+      socket.on('framereceived', ({ payload }) => {
+        if (typeof payload === 'string') {
+          subscribed ||= payload.startsWith('40{');
+          notified ||= payload === '42["device-approval:changed"]';
+        }
+      });
+    }
+  });
 
   try {
     await requester.goto('/app/en/auth/device-approval');
@@ -155,6 +180,8 @@ test('approves another browser and grants enrollment rather than full access', a
     await requester.getByRole('button', { name: 'Continue', exact: true }).click();
 
     await expect(requester.getByText('Waiting for approval on your other device.', { exact: true })).toBeVisible();
+
+    await expect.poll(() => subscribed).toBe(true);
 
     const review = requester.locator('a[target="_blank"]');
     const link = await review.getAttribute('href');
@@ -169,6 +196,8 @@ test('approves another browser and grants enrollment rather than full access', a
     await page.getByRole('button', { name: 'Approve request', exact: true }).click();
 
     await expect(page.getByText('This request is no longer waiting for approval.', { exact: true })).toBeVisible();
+
+    await expect.poll(() => notified).toBe(true);
 
     await requester.getByRole('button', { name: 'Continue recovery', exact: true }).click();
 

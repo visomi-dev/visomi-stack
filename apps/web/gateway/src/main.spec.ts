@@ -18,6 +18,13 @@ const boundary = vi.hoisted(() => ({
   loadApi: vi.fn(),
   loadSite: vi.fn(),
   loadApplication: vi.fn(),
+  loadRealtime: vi.fn(),
+  attachRealtime: vi.fn(),
+  closeRealtime: vi.fn(),
+  notifyDeviceApproval: vi.fn(),
+  notifySession: vi.fn(),
+  notifyUser: vi.fn(),
+  redisTransport: vi.fn(),
   application: { createApp: vi.fn(), clientDirectory: '/synthetic/app/browser' },
   browserAssets: vi.fn(),
   browserTelemetry: vi.fn(),
@@ -32,14 +39,21 @@ vi.mock('@visomi-stack/web-backend-shared', () => ({
   browserAssets: boundary.browserAssets,
   createBrowserTelemetry: boundary.browserTelemetry,
 }));
-vi.mock('@visomi-stack/backend-shared', () => ({
-  createDatabase: boundary.createDatabase,
-  smtpConfig: boundary.smtpConfig,
-  createSmtp: boundary.createSmtp,
-}));
+vi.mock('@visomi-stack/backend-shared', async (original) => {
+  const shared = await original<typeof import('@visomi-stack/backend-shared')>();
+
+  return {
+    ...shared,
+    createRedisRealtimeTransport: boundary.redisTransport,
+    createDatabase: boundary.createDatabase,
+    smtpConfig: boundary.smtpConfig,
+    createSmtp: boundary.createSmtp,
+  };
+});
 vi.mock('./api-module', () => ({ loadApi: boundary.loadApi }));
 vi.mock('./site-module', () => ({ loadSite: boundary.loadSite }));
 vi.mock('./application-module', () => ({ loadApplication: boundary.loadApplication }));
+vi.mock('./realtime-module', () => ({ loadRealtime: boundary.loadRealtime }));
 vi.mock('./app', () => ({ createGatewayApp: boundary.createGatewayApp }));
 vi.mock('@nx/js/ready-signal', () => ({ emitReadySignal: boundary.ready }));
 
@@ -50,6 +64,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.useFakeTimers();
   vi.stubEnv('DATABASE_URL', '');
+  vi.stubEnv('REALTIME_REDIS_URL', '');
   vi.stubEnv('API_APP_PATH', '/synthetic/compiled/api/app.js');
   vi.stubEnv('SITE_APP_PATH', '/synthetic/compiled/site/server/entry.mjs');
   vi.stubEnv('APPLICATION_APP_PATH', '/synthetic/compiled/app/server/server.mjs');
@@ -82,6 +97,14 @@ beforeEach(() => {
   boundary.loadApi.mockResolvedValue(boundary.api);
   boundary.loadSite.mockResolvedValue(boundary.site);
   boundary.loadApplication.mockResolvedValue(boundary.application);
+  boundary.loadRealtime.mockResolvedValue({ attachRealtimeServer: boundary.attachRealtime });
+  boundary.attachRealtime.mockReturnValue({
+    close: boundary.closeRealtime,
+    notifyDeviceApproval: boundary.notifyDeviceApproval,
+    notifySession: boundary.notifySession,
+    notifyUser: boundary.notifyUser,
+  });
+  boundary.closeRealtime.mockResolvedValue(undefined);
   boundary.createGatewayApp.mockReturnValue('synthetic-app');
   boundary.createServer.mockReturnValue(boundary.server);
   boundary.server.once.mockImplementation((name, callback) => boundary.events.set(name, callback));
@@ -108,6 +131,114 @@ async function start() {
 }
 
 describe('gateway executable ownership', () => {
+  const approvals = { origin: 'https://app.example.test' };
+
+  it('uses the configured Redis transport and closes it with the host', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    vi.stubEnv('REALTIME_REDIS_URL', 'redis://synthetic');
+    boundary.api.createAuthentication.mockReturnValue({ ...boundary.auth, realtime: approvals });
+    const transport = { publish: vi.fn(), subscribe: vi.fn(), close: vi.fn() };
+
+    boundary.redisTransport.mockReturnValue(transport);
+
+    await start();
+
+    expect(transport.subscribe).toHaveBeenCalledOnce();
+    const reportFailure = boundary.redisTransport.mock.calls[0][1];
+
+    reportFailure();
+    expect(boundary.observability.event).toHaveBeenCalledWith('runtime.failed');
+    boundary.signals.get('SIGTERM')!();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(transport.close).toHaveBeenCalledOnce();
+  });
+
+  it('does not listen if shutdown begins while subscribing to events', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    vi.stubEnv('REALTIME_REDIS_URL', 'redis://synthetic');
+    boundary.api.createAuthentication.mockReturnValue({ ...boundary.auth, realtime: approvals });
+    let subscribed!: () => void;
+    const subscription = new Promise<void>((resolve) => {
+      subscribed = resolve;
+    });
+
+    boundary.redisTransport.mockReturnValue({ subscribe: () => subscription, close: vi.fn() });
+
+    await start();
+
+    boundary.signals.get('SIGTERM')!();
+    subscribed();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(boundary.server.listen).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])('provides a transport-neutral publisher when realtime is enabled=%s', async (enabled) => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    boundary.api.createAuthentication.mockReturnValue({ ...boundary.auth, realtime: enabled ? approvals : undefined });
+
+    await start();
+
+    const { realtimePublisher } = boundary.api.createAuthentication.mock.calls[0][0];
+
+    await realtimePublisher.notifyDeviceApproval('synthetic-request');
+
+    await realtimePublisher.notifySession('synthetic-session');
+
+    await realtimePublisher.notifyUser('synthetic-user');
+
+    expect(boundary.notifyDeviceApproval.mock.calls).toEqual(enabled ? [['synthetic-request']] : []);
+    expect(boundary.notifySession.mock.calls).toEqual(enabled ? [['synthetic-session']] : []);
+    expect(boundary.notifyUser.mock.calls).toEqual(enabled ? [['synthetic-user']] : []);
+  });
+
+  it.each([false, true])('closes upgraded connections before the database when close fails=%s', async (fails) => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    boundary.api.createAuthentication.mockReturnValue({ ...boundary.auth, realtime: approvals });
+
+    if (fails) {
+      boundary.closeRealtime.mockRejectedValue(new Error('SYNTHETIC_CLOSE_FAILURE'));
+    }
+
+    await start();
+
+    expect(boundary.loadRealtime.mock.calls[0][0].pathname).toMatch(/\/realtime\/app.js$/);
+    expect(boundary.attachRealtime).toHaveBeenCalledWith(boundary.server, approvals);
+    expect(boundary.attachRealtime.mock.invocationCallOrder[0]).toBeLessThan(
+      boundary.server.listen.mock.invocationCallOrder[0],
+    );
+    boundary.signals.get('SIGTERM')!();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(boundary.closeRealtime.mock.invocationCallOrder[0]).toBeLessThan(
+      boundary.database.close.mock.invocationCallOrder[0],
+    );
+    expect(boundary.server.close).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(fails ? 1 : 0);
+  });
+
+  it('does not attach realtime if shutdown begins while loading the factory', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
+    boundary.api.createAuthentication.mockReturnValue({ ...boundary.auth, realtime: approvals });
+    let loaded!: (module: { attachRealtimeServer: typeof boundary.attachRealtime }) => void;
+
+    boundary.loadRealtime.mockReturnValue(new Promise((resolve) => (loaded = resolve)));
+
+    await start();
+
+    boundary.signals.get('SIGTERM')!();
+    loaded({ attachRealtimeServer: boundary.attachRealtime });
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(boundary.attachRealtime).not.toHaveBeenCalled();
+    expect(boundary.server.listen).not.toHaveBeenCalled();
+  });
+
   it.each([undefined, 'https://frontend.example.test'])(
     'owns opt-in browser telemetry using origin %s',
     async (origin) => {
@@ -280,6 +411,7 @@ describe('gateway executable ownership', () => {
       database: boundary.database.db,
       pool: boundary.database.pool,
       config: {},
+      realtimePublisher: expect.any(Object),
     });
     expect(boundary.createGatewayApp).toHaveBeenCalledWith(
       expect.objectContaining({ auth: boundary.auth, trustProxy: ['127.0.0.1', '::1'] }),

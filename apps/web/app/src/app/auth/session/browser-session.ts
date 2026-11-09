@@ -1,11 +1,12 @@
 import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { DestroyRef, Service, TransferState, afterNextRender, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Service, TransferState, afterNextRender, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, firstValueFrom } from 'rxjs';
 
 import { isSession } from './models';
 import type { SessionSnapshot, SessionStatus, SessionView, Providers } from './models';
+import { SessionRealtime } from './realtime';
 import { type Session, anonymousSession, initialSessionState, isFullSession } from './session';
 
 @Service({ autoProvided: false })
@@ -14,13 +15,19 @@ export class BrowserSession implements Session {
   private readonly transfer = inject(TransferState);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly realtime = inject(SessionRealtime);
 
   private readonly value = signal<SessionSnapshot>(anonymousSession);
   private readonly state = signal<SessionStatus>('loading');
   private readonly capabilities = signal<Providers | null>(null);
+  private readonly realtimeGeneration = signal(0);
+  private readonly rendered = signal(false);
 
   readonly full = computed(() => isFullSession(this.state(), this.value()));
   readonly user = computed(() => this.value().user);
+  private readonly realtimeSession = computed(() =>
+    this.rendered() && this.full() ? this.realtimeGeneration() : null,
+  );
 
   readonly snapshot = this.value.asReadonly();
   readonly status = this.state.asReadonly();
@@ -134,16 +141,17 @@ export class BrowserSession implements Session {
     }
 
     const previous = this.value();
+    const changedUser = previous.user?.id !== result.user?.id;
+    const rotated = this.csrfToken !== null && this.csrfToken !== result.csrfToken;
 
-    if (!broadcast && previous.user?.id !== result.user?.id) {
+    if (!broadcast && changedUser) {
       this.cancelOperations();
-    } else if (
-      broadcast ||
-      previous.access !== result.access ||
-      previous.user?.id !== result.user?.id ||
-      (this.csrfToken !== null && this.csrfToken !== result.csrfToken)
-    ) {
+    } else if (broadcast || previous.access !== result.access || changedUser || rotated) {
       this.transition++;
+    }
+
+    if (broadcast || changedUser || rotated) {
+      this.realtimeGeneration.update((value) => value + 1);
     }
 
     this.revision++;
@@ -215,12 +223,29 @@ export class BrowserSession implements Session {
     this.channel?.close();
   }
 
+  private async refreshRealtime(): Promise<void> {
+    // A read already in progress may have observed the state before the notice.
+    if (this.pending) {
+      await this.pending;
+    }
+
+    await this.load(true);
+  }
+
+  private readonly syncRealtime = effect((onCleanup) => {
+    if (this.realtimeSession() !== null) {
+      onCleanup(this.realtime.connectSession(() => void this.refreshRealtime()));
+    }
+  });
+
   private readonly initialize = afterNextRender(() => {
     const view = this.document.defaultView;
 
     if (!view || !this.available) {
       return;
     }
+
+    this.rendered.set(true);
 
     const refresh = () => {
       if (this.document.visibilityState !== 'hidden') {

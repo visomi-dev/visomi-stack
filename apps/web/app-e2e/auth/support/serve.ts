@@ -70,6 +70,7 @@ async function serve(): Promise<void> {
         HOST: '127.0.0.1',
         PORT: '4204',
         DATABASE_URL: postgres.url,
+        REALTIME_REDIS_URL: '',
         AUTH_ORIGIN: 'http://localhost:4204',
         AUTH_RP_ID: 'localhost',
         SESSION_SECRET: 'synthetic-auth-ui-session-secret-32-bytes',

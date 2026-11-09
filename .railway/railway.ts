@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-import { defineRailway, github, image, preserve, project, service, volume } from 'railway/iac';
+import { defineRailway, github, image, preserve, project, redis, service, volume } from 'railway/iac';
 
 export const jaegerImage =
   'jaegertracing/jaeger:2.22.0@sha256:4d9387a02389204ef9a256cf291a36cfbae91983010e403b4d300202d07eff2a';
@@ -8,6 +8,7 @@ export const jaegerConfig = readFileSync(new URL('./jaeger.yaml', import.meta.ur
 
 export const watchPatterns = [
   '/apps/web/gateway/**',
+  '/apps/web/realtime/**',
   '/apps/web/api/**',
   '/apps/web/site/**',
   '/apps/web/app/**',
@@ -30,6 +31,7 @@ export const watchPatterns = [
 ];
 
 export default defineRailway(() => {
+  const broker = redis('redis');
   const traces = volume('jaeger-data', { sizeMB: 1024, region: 'us-east4-eqdc4a' });
   const jaeger = service('jaeger', {
     source: image(jaegerImage),
@@ -76,8 +78,10 @@ export default defineRailway(() => {
       HOST: '0.0.0.0',
       PORT: '8080',
       NODE_ENV: 'production',
+      REALTIME_REDIS_URL: broker.env.REDIS_URL,
       ASTRO_TELEMETRY_DISABLED: '1',
       VISOMI_OTLP_TRACING: 'true',
+      VISOMI_RAILWAY_TRACING: preserve(),
       VISOMI_BROWSER_TELEMETRY: 'true',
       VISOMI_BROWSER_PERFORMANCE: 'true',
       BROWSER_TELEMETRY_ORIGIN: 'https://stack.visomi.dev',
@@ -89,5 +93,5 @@ export default defineRailway(() => {
     },
   });
 
-  return project('visomi-stack', { resources: [gateway, jaeger] });
+  return project('visomi-stack', { resources: [gateway, jaeger, broker] });
 });

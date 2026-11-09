@@ -6,6 +6,7 @@ import { TransferState } from '@angular/core';
 import { CodeEntry } from '../shared/code-entry';
 
 import { Session, initialSessionState } from './session';
+import { SessionRealtime } from './realtime';
 import { BrowserSession } from './browser-session';
 import type { SessionView } from './models';
 
@@ -26,19 +27,66 @@ const full: SessionView = {
   csrfToken: 'synthetic-rotated-csrf',
 };
 
-beforeEach(() =>
+const connectSession = vi.fn<SessionRealtime['connectSession']>();
+
+beforeEach(() => {
+  connectSession.mockReset().mockImplementation(() => () => undefined);
   TestBed.configureTestingModule({
     providers: [
       provideHttpClient(),
       provideHttpClientTesting(),
       BrowserSession,
       { provide: Session, useExisting: BrowserSession },
+      { provide: SessionRealtime, useValue: { connectSession } },
     ],
-  }),
-);
+  });
+});
 afterEach(() => {
   TestBed.inject(HttpTestingController).verify();
   vi.restoreAllMocks();
+});
+
+it('connects after sign-in, replaces a rotated connection and refreshes on revocation', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const fixture = TestBed.createComponent(CodeEntry);
+  const closeFirst = vi.fn();
+  const closeSecond = vi.fn();
+
+  connectSession.mockReturnValueOnce(closeFirst).mockReturnValueOnce(closeSecond);
+  fixture.detectChanges();
+
+  await vi.waitFor(() => http.expectOne('/api/auth/session').flush(anonymous));
+
+  await vi.waitFor(() => http.expectOne('/api/auth/providers').flush({ passkey: true }));
+
+  await fixture.whenStable();
+
+  expect(connectSession).not.toHaveBeenCalled();
+  session.accept(full);
+
+  await fixture.whenStable();
+
+  expect(connectSession).toHaveBeenCalledOnce();
+  session.accept({ ...full, csrfToken: 'synthetic-next-token' }, false);
+
+  await fixture.whenStable();
+
+  expect(closeFirst).toHaveBeenCalledOnce();
+  expect(connectSession).toHaveBeenCalledTimes(2);
+  const beforeNotice = session.load(true);
+
+  connectSession.mock.calls[1][0]();
+  http.expectOne('/api/auth/session').flush({ ...full, csrfToken: 'synthetic-next-token' });
+
+  await beforeNotice;
+
+  await vi.waitFor(() => http.expectOne('/api/auth/session').flush(anonymous));
+
+  await fixture.whenStable();
+
+  expect(session.full()).toBe(false);
+  expect(closeSecond).toHaveBeenCalledOnce();
 });
 
 it('starts browser revalidation once and releases its focus listener with the injector', async () => {

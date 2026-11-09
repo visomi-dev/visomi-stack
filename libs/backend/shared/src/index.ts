@@ -8,3 +8,11 @@ export type { CodePurpose, SecurityNotice } from './lib/mail/messages';
 export { createInjector, inject, InjectionToken, Injector, runInInjectionContext } from './lib/injection';
 export type { Provider, Type } from './lib/injection';
 export { DATABASE, DATABASE_POOL } from './lib/database/tokens';
+export {
+  REALTIME_PUBLISHER,
+  createMemoryRealtimeTransport,
+  createRealtimePublisher,
+  subscribeRealtime,
+} from './lib/realtime';
+export type { RealtimePublisher, RealtimeRuntime, RealtimeTransport } from './lib/realtime';
+export { createRedisRealtimeTransport } from './lib/realtime-redis';

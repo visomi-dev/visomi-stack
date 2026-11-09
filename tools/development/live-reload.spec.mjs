@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
 
+import { io } from 'socket.io-client';
+
 import { buildQueue, injectClient, isSource, runtimeEnvironment, startDevelopment } from './live-reload.mjs';
 
 async function until(check) {
@@ -139,6 +141,7 @@ if (value === 'invalid') {
  process.exit(1);
 }
 const source = \`import {createServer} from 'node:http';
+import {Server} from ${JSON.stringify(import.meta.resolve('socket.io'))};
 const value = \${JSON.stringify(value)};
 const server = createServer((req, res) => {
  res.setHeader('set-cookie', 'synthetic=value; HttpOnly');
@@ -146,8 +149,10 @@ const server = createServer((req, res) => {
  if (req.url === '/api/') { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify({value})); }
  else { res.setHeader('content-type', 'text/html'); res.end('<html><head></head><body>'+value+'</body></html>'); }
 });
+const realtime = new Server(server, { transports: ['websocket'] });
+realtime.on('connection', (socket) => socket.emit('fixture-ready', value));
 server.listen(Number(process.env.PORT), process.env.HOST);
-process.once('SIGTERM', () => server.close());\`;
+process.once('SIGTERM', () => void realtime.close());\`;
 await writeFile('dist/apps/web/gateway/main.js', source);
 `,
       { mode: 0o755 },
@@ -189,6 +194,18 @@ await writeFile('dist/apps/web/gateway/main.js', source);
 
       return actual === 'initial';
     });
+
+    const socket = io(origin, { autoConnect: false, reconnection: false, transports: ['websocket'], timeout: 2000 });
+
+    try {
+      const reply = await new Promise((resolve, reject) => {
+        socket.once('fixture-ready', resolve).once('connect_error', reject).connect();
+      });
+
+      assert.equal(reply, 'initial');
+    } finally {
+      socket.disconnect();
+    }
 
     const html = await fetch(origin + '/');
 

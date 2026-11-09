@@ -14,6 +14,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const projectRoots = [
   'apps/web/api',
   'apps/web/gateway',
+  'apps/web/realtime',
   'apps/web/site',
   'apps/web/app',
   'libs/backend/shared',
@@ -292,6 +293,42 @@ export async function startDevelopment({ cwd = root, env = process.env } = {}) {
     request.on('aborted', () => forwarded.destroy());
     response.on('close', () => forwarded.destroy());
     request.pipe(forwarded);
+  });
+
+  server.on('upgrade', (request, socket, head) => {
+    if (!ready || request.url?.split('?')[0] !== '/socket.io/') {
+      socket.destroy();
+
+      return;
+    }
+
+    const forwarded = forwardRequest({
+      hostname: '127.0.0.1',
+      port: upstreamPort,
+      method: request.method,
+      path: request.url,
+      headers: request.headers,
+    });
+
+    socket.on('error', () => forwarded.destroy());
+    socket.on('close', () => forwarded.destroy());
+    forwarded.on('error', () => socket.destroy());
+    forwarded.on('response', (response) => {
+      response.resume();
+      socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\nContent-Length: 0\r\n\r\n');
+    });
+    forwarded.on('upgrade', (response, upstream, upstreamHead) => {
+      const headers = Object.entries(response.headers).map(([name, value]) => name + ': ' + value);
+
+      socket.write(['HTTP/1.1 101 Switching Protocols', ...headers, '', ''].join('\r\n'));
+      upstream.write(head);
+      socket.write(upstreamHead);
+      upstream.on('error', () => socket.destroy());
+      upstream.on('close', () => socket.destroy());
+      socket.on('close', () => upstream.destroy());
+      upstream.pipe(socket).pipe(upstream);
+    });
+    forwarded.end();
   });
   const heartbeat = setInterval(() => {
     for (const response of clients) {

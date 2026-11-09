@@ -4,10 +4,13 @@ import { createServer } from 'node:http';
 
 import {
   createDatabase,
+  createRealtimePublisher,
+  createRedisRealtimeTransport,
   createSmtp,
   smtpConfig,
   type MailTransport,
   type DatabaseResource,
+  type RealtimeTransport,
 } from '@visomi-stack/backend-shared';
 import { initializeObservability } from '@visomi-stack/web-backend-shared';
 
@@ -24,6 +27,7 @@ const observability = initializeObservability({
 let database: DatabaseResource | undefined;
 let mail: MailTransport | undefined;
 let auth: AuthRuntime | undefined;
+let realtimeTransport: RealtimeTransport | undefined;
 let startupFailed = false;
 let application: ReturnType<typeof createApp> | undefined;
 
@@ -41,7 +45,20 @@ try {
 
     mail = smtp ? createSmtp(smtp) : undefined;
     database = createDatabase(process.env.DATABASE_URL, () => observability.event('runtime.failed'));
-    auth = createAuthentication({ database: database.db, pool: database.pool, config, mail });
+
+    if (process.env.REALTIME_REDIS_URL) {
+      realtimeTransport = createRedisRealtimeTransport(process.env.REALTIME_REDIS_URL, () =>
+        observability.event('runtime.failed'),
+      );
+    }
+
+    auth = createAuthentication({
+      database: database.db,
+      pool: database.pool,
+      config,
+      mail,
+      ...(realtimeTransport ? { realtimePublisher: createRealtimePublisher(realtimeTransport) } : {}),
+    });
   }
 
   application = createApp({
@@ -75,6 +92,7 @@ async function stop(exitCode: number): Promise<void> {
   await new Promise<void>((resolve) => server.close(() => resolve()));
 
   clearTimeout(drain);
+  realtimeTransport?.close();
   let databaseClosed = true;
 
   try {

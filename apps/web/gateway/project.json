@@ -224,5 +224,5 @@
       }
     }
   },
-  "implicitDependencies": ["web-api", "web-site", "web-app"]
+  "implicitDependencies": ["web-api", "web-site", "web-app", "web-realtime"]
 }

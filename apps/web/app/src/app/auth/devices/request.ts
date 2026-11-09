@@ -1,6 +1,8 @@
 import { DOCUMENT, Location } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
+import { fromEvent } from 'rxjs';
 
 import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link } from '../../ui';
@@ -9,6 +11,7 @@ import { Action, errorMessage } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
 import { AuthNavigation } from '../shared/navigation';
 import { EmailEntry } from '../shared/email-entry';
+import { SessionRealtime } from '../session/realtime';
 
 import { Devices, type DeviceRequest, type DeviceStatus } from './devices';
 
@@ -21,6 +24,7 @@ import { Devices, type DeviceRequest, type DeviceStatus } from './devices';
 export class DeviceApproval {
   private readonly api = inject(Devices);
   private readonly navigation = inject(AuthNavigation);
+  private readonly realtime = inject(SessionRealtime);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
@@ -50,26 +54,13 @@ export class DeviceApproval {
     return origin ? new URL(path, origin).href : path;
   });
 
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.stopWatching());
+
   private timer: ReturnType<typeof setTimeout> | null = null;
   private polling: AbortController | null = null;
-
-  constructor() {
-    const visibility = () => {
-      if (
-        this.document.visibilityState !== 'hidden' &&
-        this.request() &&
-        ['pending', 'approved'].includes(this.status())
-      ) {
-        void this.poll();
-      }
-    };
-
-    this.document.addEventListener('visibilitychange', visibility);
-    this.destroyRef.onDestroy(() => {
-      this.stopPolling();
-      this.document.removeEventListener('visibilitychange', visibility);
-    });
-  }
+  private disconnect: (() => void) | undefined;
+  private live = false;
+  private refreshQueued = false;
 
   statusText(): string {
     switch (this.status()) {
@@ -90,11 +81,23 @@ export class DeviceApproval {
 
   start(email: string): void {
     void this.action.run(async () => {
-      this.stopPolling();
+      this.stopWatching();
       const pending = await this.api.request(email);
+
+      if (this.destroyRef.destroyed) {
+        return;
+      }
 
       this.request.set(pending);
       this.status.set('pending');
+      this.disconnect = this.realtime.watchDeviceApproval(pending.requestId, (event) => {
+        if (event === 'disconnected' && !this.live) {
+          return;
+        }
+
+        this.live = event !== 'disconnected';
+        this.refreshStatus();
+      });
       void this.poll();
     });
   }
@@ -117,15 +120,17 @@ export class DeviceApproval {
 
     if (Date.now() >= Date.parse(pending.expiresAt)) {
       this.status.set('expired');
+      this.stopWatching();
 
       return;
     }
 
-    if (this.document.visibilityState === 'hidden') {
+    if (!this.live && this.document.visibilityState === 'hidden') {
       return;
     }
 
     const controller = new AbortController();
+    let failed = false;
 
     this.polling = controller;
 
@@ -138,14 +143,24 @@ export class DeviceApproval {
       }
     } catch (error) {
       if (!controller.signal.aborted) {
+        failed = true;
         this.action.setError(errorMessage(error));
       }
     } finally {
       if (this.polling === controller) {
         this.polling = null;
 
-        if (['pending', 'approved'].includes(this.status())) {
-          this.timer = setTimeout(() => void this.poll(), 5000);
+        if (!['pending', 'approved'].includes(this.status())) {
+          this.stopWatching();
+        } else if (this.refreshQueued) {
+          this.refreshQueued = false;
+          void this.poll();
+        } else {
+          const remaining = Math.max(0, Date.parse(pending.expiresAt) - Date.now());
+          // Redis Pub/Sub can miss an event even while the browser socket stays connected.
+          const interval = this.live && !failed ? 30_000 : 5000;
+
+          this.timer = setTimeout(() => void this.poll(), Math.min(remaining, interval));
         }
       }
     }
@@ -158,7 +173,7 @@ export class DeviceApproval {
       void this.action.run(async () => {
         await this.api.cancel(pending.requestId);
 
-        this.stopPolling();
+        this.stopWatching();
         this.status.set('cancelled');
       });
     }
@@ -171,7 +186,7 @@ export class DeviceApproval {
       void this.action.run(async () => {
         await this.api.consume(pending.requestId, pending.userCode);
 
-        this.stopPolling();
+        this.stopWatching();
 
         await this.navigation.complete();
       });
@@ -179,12 +194,20 @@ export class DeviceApproval {
   }
 
   restart(): void {
-    this.stopPolling();
+    this.stopWatching();
     this.request.set(null);
     this.action.setError('');
   }
 
-  private stopPolling(): void {
+  private refreshStatus(): void {
+    if (this.polling) {
+      this.refreshQueued = true;
+    } else {
+      void this.poll();
+    }
+  }
+
+  private stopWatching(): void {
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = null;
@@ -192,5 +215,19 @@ export class DeviceApproval {
 
     this.polling?.abort();
     this.polling = null;
+    this.disconnect?.();
+    this.disconnect = undefined;
+    this.live = false;
+    this.refreshQueued = false;
   }
+
+  private readonly watchVisibility = afterNextRender(() => {
+    fromEvent(this.document, 'visibilitychange')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (this.document.visibilityState !== 'hidden') {
+          this.refreshStatus();
+        }
+      });
+  });
 }

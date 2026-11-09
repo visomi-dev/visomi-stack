@@ -38,6 +38,7 @@ ARG APP_NAME=web-gateway
 RUN case "$APP_NAME" in \
       web-api) printf '%s\n' 'dist/apps/web/api/main.js' > app-entrypoint ;; \
       web-gateway) printf '%s\n' 'dist/apps/web/gateway/main.js' > app-entrypoint ;; \
+      web-realtime) printf '%s\n' 'dist/apps/web/realtime/main.js' > app-entrypoint ;; \
       *) exit 1 ;; \
     esac \
     && pnpm nx build "$APP_NAME"
@@ -80,6 +81,6 @@ USER node
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT ?? '8080') + (process.env.APP_NAME === 'web-gateway' ? '/api/' : '/')).then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD ["node", "-e", "const path = { 'web-gateway': '/api/', 'web-realtime': '/health' }; fetch('http://127.0.0.1:' + (process.env.PORT ?? '8080') + (path[process.env.APP_NAME] ?? '/')).then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"]
 
 CMD ["sh", "-c", "exec node \"$(cat app-entrypoint)\""]

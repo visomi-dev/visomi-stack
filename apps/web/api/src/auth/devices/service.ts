@@ -1,6 +1,13 @@
 import { randomUUID } from 'node:crypto';
 
-import { authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
+import {
+  authSchema,
+  DATABASE,
+  inject,
+  REALTIME_PUBLISHER,
+  type Database,
+  type RealtimePublisher,
+} from '@visomi-stack/backend-shared';
 import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
 
 import { normalizeEmail } from '../email/normalization';
@@ -52,6 +59,7 @@ export class Devices {
   private readonly database = inject<Database>(DATABASE);
   private readonly config = inject<AuthConfig>(AUTH_CONFIG);
   private readonly proofs = inject(Flows);
+  private readonly realtime = inject<RealtimePublisher>(REALTIME_PUBLISHER, { optional: true });
 
   async request(sid: string, emailInput: string) {
     const email = normalizeEmail(emailInput);
@@ -174,6 +182,8 @@ export class Devices {
         throw unavailable();
       }
     });
+
+    this.notifyChange(id);
   }
 
   async cancel(sid: string, id: string) {
@@ -197,6 +207,8 @@ export class Devices {
         throw unavailable();
       }
     });
+
+    this.notifyChange(id);
   }
 
   async consume(sid: string, id: string, code: string): Promise<Principal> {
@@ -218,7 +230,7 @@ export class Devices {
       throw unavailable();
     }
 
-    return this.database.transaction(async (tx) => {
+    const result = await this.database.transaction(async (tx) => {
       const [user] = await tx.select().from(users).where(eq(users.id, reserved.userId!)).for('update');
 
       await lockSession(tx, sid);
@@ -254,5 +266,14 @@ export class Devices {
 
       return { ...principal(user, 'device', grantId, 'enrollment'), grantId };
     });
+
+    this.notifyChange(id);
+
+    return result;
+  }
+
+  private notifyChange(id: string): void {
+    // A delivery failure cannot change the outcome of an already committed approval.
+    void this.realtime?.notifyDeviceApproval(id).catch(() => undefined);
   }
 }

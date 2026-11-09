@@ -5,6 +5,8 @@ import { provideRouter } from '@angular/router';
 
 import { Action } from '../shared/action';
 import { Session } from '../session/session';
+import { SessionRealtime } from '../session/realtime';
+import { ServerRealtime } from '../session/server-realtime';
 import { AuthNavigation } from '../shared/navigation';
 
 import { DeviceApproval } from './request';
@@ -18,6 +20,7 @@ describe('device review links', () => {
         provideRouter([]),
         { provide: APP_BASE_HREF, useValue: `/app/${locale}/` },
         { provide: Session, useValue: {} },
+        { provide: SessionRealtime, useClass: ServerRealtime },
         { provide: AuthNavigation, useValue: {} },
       ],
     });
@@ -45,13 +48,15 @@ describe('device review links', () => {
   });
 });
 
-describe('device status polling', () => {
+describe('device approval updates', () => {
   const firstId = '9aef148d-8d52-4e4d-aace-18eabaeec543';
   const secondId = '6bdc2d63-7da7-4ac9-856f-4732a60ea10a';
   const expiresAt = '2099-01-01T00:00:00Z';
   const polls: { id: string; signal: AbortSignal; resolve: (value: DeviceStatus) => void }[] = [];
   const request = vi.fn();
   const cancel = vi.fn();
+  const disconnect = vi.fn();
+  let notify: (event: 'connected' | 'disconnected' | 'changed') => void;
   const status = vi.fn(
     (id: string, signal: AbortSignal) =>
       new Promise<DeviceStatus>((resolve) => {
@@ -65,16 +70,61 @@ describe('device status polling', () => {
     request.mockReset().mockResolvedValueOnce({ requestId: firstId, userCode: '001234', expiresAt });
     request.mockResolvedValueOnce({ requestId: secondId, userCode: '005678', expiresAt });
     cancel.mockReset().mockResolvedValue(undefined);
+    disconnect.mockClear();
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         { provide: Session, useValue: { full: () => false } },
         { provide: AuthNavigation, useValue: {} },
+        {
+          provide: SessionRealtime,
+          useValue: {
+            watchDeviceApproval: (_id: string, listener: typeof notify) => {
+              notify = listener;
+
+              return disconnect;
+            },
+          },
+        },
       ],
     });
     TestBed.overrideComponent(DeviceApproval, {
       set: { providers: [Action, { provide: Devices, useValue: { request, status, cancel } }] },
     });
+  });
+
+  it('refreshes on connection and preserves an update that arrives during an HTTP read', async () => {
+    const fixture = TestBed.createComponent(DeviceApproval);
+    const page = fixture.componentInstance;
+    const expiry = new Date(Date.now() + 60_000).toISOString();
+
+    request.mockReset().mockResolvedValue({ requestId: firstId, userCode: '001234', expiresAt: expiry });
+
+    await fixture.whenStable();
+
+    page.start('demo@example.test');
+
+    await fixture.whenStable();
+
+    notify('connected');
+    polls[0].resolve({ requestId: firstId, status: 'pending', expiresAt: expiry });
+
+    await fixture.whenStable();
+
+    expect(polls).toHaveLength(2);
+    notify('changed');
+    polls[1].resolve({ requestId: firstId, status: 'pending', expiresAt: expiry });
+
+    await fixture.whenStable();
+
+    expect(polls).toHaveLength(3);
+    polls[2].resolve({ requestId: firstId, status: 'approved', expiresAt: expiry });
+
+    await fixture.whenStable();
+
+    expect(page.status()).toBe('approved');
+    fixture.destroy();
+    expect(disconnect).toHaveBeenCalledOnce();
   });
 
   it('starts polling a replacement request and ignores the cancelled poll even when it resolves late', async () => {

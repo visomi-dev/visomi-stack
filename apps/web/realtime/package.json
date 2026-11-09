@@ -1,0 +1,14 @@
+{
+  "name": "@visomi-stack/web-realtime",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "socket.io": "4.8.3",
+    "zod": "4.6.6",
+    "ioredis": "6.0.0",
+    "pg": "8.23.1",
+    "injection-js": "2.6.1",
+    "drizzle-orm": "1.0.0-rc.5"
+  },
+  "type": "module"
+}

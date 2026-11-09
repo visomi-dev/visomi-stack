@@ -145,6 +145,19 @@ test('changes email and revokes another session from the security pages', async 
 
   const otherContext = await browser.newContext({ baseURL: 'http://localhost:4204' });
   const other = await otherContext.newPage();
+  let subscribed = false;
+  let disconnected = false;
+
+  other.on('websocket', (socket) => {
+    if (new URL(socket.url()).pathname === '/socket.io/') {
+      socket.on('framereceived', ({ payload }) => {
+        if (typeof payload === 'string') {
+          subscribed ||= payload.startsWith('40/session,{');
+          disconnected ||= payload === '41/session,';
+        }
+      });
+    }
+  });
 
   try {
     await passwordStart(other, replacement);
@@ -157,6 +170,8 @@ test('changes email and revokes another session from the security pages', async 
 
     await expect(other.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
 
+    await expect.poll(() => subscribed).toBe(true);
+
     await page.goto('/app/en/security/sessions');
 
     await expect(page.getByRole('heading', { name: 'Other session', exact: true })).toBeVisible();
@@ -166,6 +181,8 @@ test('changes email and revokes another session from the security pages', async 
     await page.getByRole('button', { name: 'Confirm', exact: true }).click();
 
     await expect(page.getByRole('heading', { name: 'Other session', exact: true })).toHaveCount(0);
+
+    await expect.poll(() => disconnected).toBe(true);
 
     await other.reload();
 
