@@ -54,15 +54,13 @@ export class LanguageSwitcher {
       }
     }
 
-    const target = path === '/' ? '/auth/sign-in' : path;
-
-    if (target.startsWith('/auth/')) {
-      const restart = authRestarts[target] ?? target;
+    if (path.startsWith('/auth/')) {
+      const restart = authRestarts[path] ?? path;
       const queryParams = this.navigation.returnQuery();
 
       return this.router.serializeUrl(this.router.createUrlTree([restart], { queryParams }));
     }
 
-    return target;
+    return path;
   }
 }
