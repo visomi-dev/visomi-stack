@@ -80,31 +80,7 @@
     </a>
 
     <div class="flex flex-wrap items-center gap-5 text-sm">
-      <nav aria-label="Language" i18n-aria-label="@@language" class="flex gap-3">
-        <a
-          href="/app/en/foundations"
-          lang="en"
-          hreflang="en"
-          appUI
-          variant="muted"
-          underline="none"
-          class="inline-flex min-h-11 min-w-11 items-center px-2"
-        >
-          EN
-        </a>
-
-        <a
-          href="/app/es/foundations"
-          lang="es"
-          hreflang="es"
-          appUI
-          variant="muted"
-          underline="none"
-          class="inline-flex min-h-11 min-w-11 items-center px-2"
-        >
-          ES
-        </a>
-      </nav>
+      <app-language-switcher compact path="/foundations" />
 
       <label appUI inline>
         <span appUI="text" uiSize="inherit" tone="muted" i18n="@@theme">Appearance</span>

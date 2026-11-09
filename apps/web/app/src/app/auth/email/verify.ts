@@ -1,9 +1,9 @@
 import { Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 
 import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text } from '../../ui';
 import { Session } from '../session/session';
+import { Logout } from '../session/logout';
 import { AuthHttp } from '../shared/http';
 import { AuthFeedback } from '../shared/feedback';
 import { Action } from '../shared/action';
@@ -18,16 +18,15 @@ import { Email } from './email';
 @Component({
   selector: 'app-email-verify',
   imports: [NavigationHeading, Button, Heading, Text, AuthFeedback, CodeEntry, EmailEntry, ResendCode],
-  providers: [Action, AuthHttp, Email],
+  providers: [Action, AuthHttp, Email, Logout],
   templateUrl: './verify.html',
 })
 export class EmailVerify {
   readonly session = inject(Session);
   readonly journey = inject(Journey);
   private readonly email = inject(Email);
-  private readonly http = inject(AuthHttp);
   private readonly navigation = inject(AuthNavigation);
-  private readonly router = inject(Router);
+  private readonly signOut = inject(Logout);
   readonly action = inject(Action);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -66,16 +65,7 @@ export class EmailVerify {
   }
 
   logout(): void {
-    void this.action.run(async () => {
-      this.session.cancelOperations();
-
-      await this.http.request('POST', '/logout', {});
-
-      this.session.clear();
-      this.journey.clear();
-
-      await this.router.navigate(['/auth/sign-in']);
-    });
+    void this.signOut.run({ clearFlowState: () => this.journey.clear() });
   }
 
   private readonly initialize = afterNextRender(() => {

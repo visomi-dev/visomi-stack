@@ -7,7 +7,7 @@ export const appRoutes: Routes = [
     path: '',
     pathMatch: 'full',
     canActivate: [entryGuard],
-    loadComponent: () => import('./auth/layouts/not-found').then((m) => m.NotFound),
+    loadComponent: () => import('./not-found/not-found').then((m) => m.NotFound),
   },
   { path: 'foundations', loadComponent: () => import('./foundations/foundations').then((m) => m.Foundations) },
   {
@@ -90,9 +90,9 @@ export const appRoutes: Routes = [
     path: '',
     canActivate: [fullGuard],
     canActivateChild: [fullGuard],
-    loadComponent: () => import('./auth/layouts/authenticated-layout').then((m) => m.AuthenticatedLayout),
+    loadComponent: () => import('./layouts/authenticated-layout').then((m) => m.AuthenticatedLayout),
     children: [
-      { path: 'home', loadComponent: () => import('./auth/layouts/home').then((m) => m.Home) },
+      { path: 'home', loadComponent: () => import('./home/home').then((m) => m.Home) },
       { path: 'account', loadComponent: () => import('./auth/email/account').then((m) => m.Account) },
       {
         path: 'security',
@@ -120,5 +120,5 @@ export const appRoutes: Routes = [
       },
     ],
   },
-  { path: '**', loadComponent: () => import('./auth/layouts/not-found').then((m) => m.NotFound) },
+  { path: '**', loadComponent: () => import('./not-found/not-found').then((m) => m.NotFound) },
 ];

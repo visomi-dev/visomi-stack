@@ -1,10 +1,10 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { form, FormField, required, disabled, submit } from '@angular/forms/signals';
 
 import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Field, Input, Disclosure } from '../../ui';
 import { Session } from '../session/session';
+import { Logout } from '../session/logout';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
@@ -20,16 +20,15 @@ import { Recovery } from './recovery';
 @Component({
   selector: 'app-recovery-enroll',
   imports: [NavigationHeading, Button, Heading, Text, Field, Input, FormField, AuthFeedback, CodeEntry, Disclosure],
-  providers: [Action, AuthHttp, Passkeys, Recovery],
+  providers: [Action, AuthHttp, Passkeys, Recovery, Logout],
   templateUrl: './enroll.html',
 })
 export class Enroll {
   private readonly api = inject(Recovery);
   private readonly keys = inject(Passkeys);
   private readonly navigation = inject(AuthNavigation);
-  private readonly http = inject(AuthHttp);
   private readonly session = inject(Session);
-  private readonly router = inject(Router);
+  private readonly signOut = inject(Logout);
   private readonly destroyRef = inject(DestroyRef);
   readonly action = inject(Action);
 
@@ -132,14 +131,6 @@ export class Enroll {
   }
 
   logout(): void {
-    void this.action.run(async () => {
-      this.session.cancelOperations();
-
-      await this.http.request('POST', '/logout', {});
-
-      this.session.clear();
-
-      await this.router.navigate(['/auth/sign-in']);
-    });
+    void this.signOut.run();
   }
 }

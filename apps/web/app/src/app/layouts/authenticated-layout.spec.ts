@@ -6,9 +6,9 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { NEVER } from 'rxjs';
 
-import type { SessionSnapshot } from '../session/models';
-import { Session } from '../session/session';
-import { BackupCodes } from '../totp/backup-codes';
+import type { SessionSnapshot } from '../auth/session/models';
+import { Session } from '../auth/session/session';
+import { BackupCodes } from '../auth/totp/backup-codes';
 
 import { AuthenticatedLayout } from './authenticated-layout';
 
