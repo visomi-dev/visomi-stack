@@ -20,6 +20,7 @@ export class QrCode {
       onCleanup(() => {
         active = false;
       });
+
       this.failed.set(false);
       void import('qrcode')
         .then((module) => module.default)

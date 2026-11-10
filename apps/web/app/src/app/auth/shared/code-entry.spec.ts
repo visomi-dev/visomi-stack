@@ -26,6 +26,7 @@ it('keeps a code as text, accepts leading zeroes and submits only explicitly', a
   expect(input.type).toBe('text');
   expect(input.autocomplete).toBe('one-time-code');
 });
+
 it('accepts backup codes without imposing a numeric code format', async () => {
   const fixture = TestBed.createComponent(CodeEntry);
 

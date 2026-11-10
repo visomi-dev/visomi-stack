@@ -83,6 +83,7 @@ export class Enroll {
         this.action.run(async () => {
           try {
             this.replacement = this.model().password;
+
             const pending = await this.api.password(this.replacement);
 
             this.pending.set(pending);

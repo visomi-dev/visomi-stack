@@ -43,6 +43,7 @@ it('recreates private routed content only when the account identity changes', as
       },
     ],
   });
+
   const harness = await RouterTestingHarness.create('/security/recovery-codes');
   const original = harness.fixture.debugElement.query(By.directive(BackupCodes)).componentInstance as BackupCodes;
 

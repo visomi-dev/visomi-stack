@@ -16,6 +16,7 @@ it('binds the download link and revokes each Blob URL when codes change or the v
       static override revokeObjectURL = revoke;
     },
   );
+
   TestBed.configureTestingModule({
     providers: [provideRouter([]), { provide: Session, useValue: { full: () => true } }],
   });

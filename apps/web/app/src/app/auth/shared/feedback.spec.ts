@@ -11,6 +11,7 @@ beforeEach(() => {
   TestBed.configureTestingModule({
     providers: [provideRouter([]), { provide: Session, useValue: { full: signal(true) } }],
   });
+
   TestBed.overrideComponent(AuthFeedback, { add: { providers: [Action] } });
 });
 

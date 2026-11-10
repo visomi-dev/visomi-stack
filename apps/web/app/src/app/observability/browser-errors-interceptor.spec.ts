@@ -67,6 +67,7 @@ describe('browserErrorsInterceptor', () => {
         headers: { 'x-telemetry-context': 'synthetic-server-signed-context' },
       },
     );
+
     expect(received).toHaveBeenCalledOnce();
     expect(received.mock.calls[0][0]).toBeInstanceOf(HttpErrorResponse);
     expect(received.mock.calls[0][0].error).toEqual({ customer: marker });
@@ -82,6 +83,7 @@ describe('browserErrorsInterceptor', () => {
       screen: 'home',
       correlation: 'synthetic-server-signed-context',
     });
+
     expect(JSON.stringify(payload)).not.toContain(marker);
   });
 

@@ -68,6 +68,7 @@ describe('Angular browser error handler', () => {
         provideBrowserGlobalErrorListeners(),
       ],
     });
+
     TestBed.inject(ErrorHandler);
     expect(add.mock.calls.map(([type]) => type).sort()).toEqual(['error', 'unhandledrejection']);
     browser.dispatchEvent(Object.assign(new Event('error'), { error: new TypeError(marker) }));
@@ -81,6 +82,7 @@ describe('Angular browser error handler', () => {
       { application: 'web-app', code: 'unhandled_exception', kind: 'TypeError', screen: 'home' },
       { application: 'web-app', code: 'unhandled_exception', kind: 'unknown', screen: 'home' },
     ]);
+
     expect(JSON.stringify(reports)).not.toContain(marker);
     TestBed.resetTestingModule();
     expect(stop).toHaveBeenCalledOnce();

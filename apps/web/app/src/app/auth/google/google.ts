@@ -45,6 +45,7 @@ export class Google {
       this.invalidateButton = undefined;
       invalidateButton?.();
     });
+
     this.destroyRef.onDestroy(() => {
       this.alive = false;
       this.epoch++;
@@ -120,6 +121,7 @@ export class Google {
           });
       },
     });
+
     google.accounts.id.renderButton(element, {
       type: 'standard',
       theme: 'outline',
@@ -181,12 +183,14 @@ export class Google {
           reject(new Error('google_unavailable'));
         }
       };
+
       script.onerror = () => {
         view.clearTimeout(timer);
         script.remove();
         library = null;
         reject(new Error('google_unavailable'));
       };
+
       this.document.head.append(script);
     });
 

@@ -15,6 +15,7 @@ beforeEach(() =>
     ],
   }),
 );
+
 afterEach(() => TestBed.inject(HttpTestingController).verify());
 it('adds CSRF only to mutations of our own API', async () => {
   const http = TestBed.inject(HttpClient);
@@ -47,6 +48,7 @@ it('adds CSRF only to mutations of our own API', async () => {
 
   await read;
 });
+
 it('invalidates CSRF on rejection and never replays the mutation', async () => {
   const http = TestBed.inject(HttpClient);
   const control = TestBed.inject(HttpTestingController);

@@ -1,10 +1,10 @@
 import { Service, signal } from '@angular/core';
 import type { Socket } from 'socket.io-client';
 
-import type { ApprovalEvent, SessionRealtime } from './realtime';
+type ApprovalEvent = 'connected' | 'disconnected' | 'changed';
 
 @Service({ autoProvided: false })
-export class BrowserRealtime implements SessionRealtime {
+export class BrowserRealtimeSession {
   private readonly online = signal(false);
 
   readonly connected = this.online.asReadonly();
@@ -22,6 +22,7 @@ export class BrowserRealtime implements SessionRealtime {
           refresh();
         }
       });
+
       socket.on('connect_error', () => this.online.set(false));
       socket.on('session:changed', refresh);
     });
@@ -79,7 +80,9 @@ export class BrowserRealtime implements SessionRealtime {
           path: '/socket.io',
           transports: ['websocket'],
         });
+
         configure(socket);
+
         socket.connect();
       })
       .catch(() => {

@@ -19,6 +19,23 @@ const functionOrClassDeclaration = {
 };
 const awaitedStatement = { selector: 'ExpressionStatement[expression.type="AwaitExpression"]' };
 
+export const statementPadding = [
+  'error',
+  { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
+  { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
+  // Separate the import block from code without splitting imports or their attached comments.
+  { blankLine: 'always', prev: 'import', next: '*' },
+  { blankLine: 'any', prev: 'import', next: 'import' },
+  { blankLine: 'always', prev: 'export', next: 'expression' },
+  { blankLine: 'always', prev: '*', next: functionOrClassDeclaration },
+  { blankLine: 'always', prev: '*', next: awaitedStatement },
+  { blankLine: 'always', prev: awaitedStatement, next: '*' },
+  { blankLine: 'always', prev: '*', next: ['return', 'throw'] },
+  { blankLine: 'always', prev: '*', next: 'if' },
+  { blankLine: 'always', prev: 'if', next: '*' },
+  { blankLine: 'always', prev: '*', next: 'try' },
+];
+
 export const moduleBoundaryOptions = {
   enforceBuildableLibDependency: true,
   // Portable primitives and contracts are used statically by routes and lazily by root services.
@@ -273,22 +290,7 @@ export default [
         },
       ],
       'padding-line-between-statements': 'off',
-      '@stylistic/padding-line-between-statements': [
-        'error',
-        { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
-        { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
-        // Separate the import block from code without splitting imports or their attached comments.
-        { blankLine: 'always', prev: 'import', next: '*' },
-        { blankLine: 'any', prev: 'import', next: 'import' },
-        { blankLine: 'always', prev: 'export', next: 'expression' },
-        { blankLine: 'always', prev: '*', next: functionOrClassDeclaration },
-        { blankLine: 'always', prev: '*', next: awaitedStatement },
-        { blankLine: 'always', prev: awaitedStatement, next: '*' },
-        { blankLine: 'always', prev: '*', next: ['return', 'throw'] },
-        { blankLine: 'always', prev: '*', next: 'if' },
-        { blankLine: 'always', prev: 'if', next: '*' },
-        { blankLine: 'always', prev: '*', next: 'try' },
-      ],
+      '@stylistic/padding-line-between-statements': statementPadding,
     },
   },
   {

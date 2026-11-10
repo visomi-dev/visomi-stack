@@ -11,7 +11,7 @@ import { Action, errorMessage } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
 import { AuthNavigation } from '../shared/navigation';
 import { EmailEntry } from '../shared/email-entry';
-import { SessionRealtime } from '../session/realtime';
+import { BrowserRealtimeSession } from '../session/browser-realtime-session';
 
 import { Devices, type DeviceRequest, type DeviceStatus } from './devices';
 
@@ -24,7 +24,7 @@ import { Devices, type DeviceRequest, type DeviceStatus } from './devices';
 export class DeviceApproval {
   private readonly api = inject(Devices);
   private readonly navigation = inject(AuthNavigation);
-  private readonly realtime = inject(SessionRealtime);
+  private readonly realtime = inject(BrowserRealtimeSession, { optional: true });
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
@@ -82,6 +82,7 @@ export class DeviceApproval {
   start(email: string): void {
     void this.action.run(async () => {
       this.stopWatching();
+
       const pending = await this.api.request(email);
 
       if (this.destroyRef.destroyed) {
@@ -90,7 +91,7 @@ export class DeviceApproval {
 
       this.request.set(pending);
       this.status.set('pending');
-      this.disconnect = this.realtime.watchDeviceApproval(pending.requestId, (event) => {
+      this.disconnect = this.realtime?.watchDeviceApproval(pending.requestId, (event) => {
         if (event === 'disconnected' && !this.live) {
           return;
         }
@@ -98,6 +99,7 @@ export class DeviceApproval {
         this.live = event !== 'disconnected';
         this.refreshStatus();
       });
+
       void this.poll();
     });
   }

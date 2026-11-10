@@ -38,6 +38,7 @@ beforeEach(() => {
       },
     ],
   });
+
   TestBed.overrideComponent(Reauthenticate, {
     set: {
       providers: [
@@ -116,6 +117,7 @@ it('still verifies password factors through the password endpoint', async () => 
     kind: 'recovery_code',
     code: 'SYNTHETIC-BACKUP',
   });
+
   expect(verifyGoogle).not.toHaveBeenCalled();
   expect(complete).toHaveBeenCalledOnce();
 });

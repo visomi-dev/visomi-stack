@@ -5,8 +5,7 @@ import { provideRouter } from '@angular/router';
 
 import { Action } from '../shared/action';
 import { Session } from '../session/session';
-import { SessionRealtime } from '../session/realtime';
-import { ServerRealtime } from '../session/server-realtime';
+import { BrowserRealtimeSession } from '../session/browser-realtime-session';
 import { AuthNavigation } from '../shared/navigation';
 
 import { DeviceApproval } from './request';
@@ -20,7 +19,6 @@ describe('device review links', () => {
         provideRouter([]),
         { provide: APP_BASE_HREF, useValue: `/app/${locale}/` },
         { provide: Session, useValue: {} },
-        { provide: SessionRealtime, useClass: ServerRealtime },
         { provide: AuthNavigation, useValue: {} },
       ],
     });
@@ -77,7 +75,7 @@ describe('device approval updates', () => {
         { provide: Session, useValue: { full: () => false } },
         { provide: AuthNavigation, useValue: {} },
         {
-          provide: SessionRealtime,
+          provide: BrowserRealtimeSession,
           useValue: {
             watchDeviceApproval: (_id: string, listener: typeof notify) => {
               notify = listener;
@@ -88,6 +86,7 @@ describe('device approval updates', () => {
         },
       ],
     });
+
     TestBed.overrideComponent(DeviceApproval, {
       set: { providers: [Action, { provide: Devices, useValue: { request, status, cancel } }] },
     });

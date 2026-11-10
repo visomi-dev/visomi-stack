@@ -10,9 +10,8 @@ import {
 
 import { appConfig } from './app.config';
 import { authInterceptor } from './auth/session/interceptor';
-import { BrowserRealtime } from './auth/session/browser-realtime';
+import { BrowserRealtimeSession } from './auth/session/browser-realtime-session';
 import { BrowserSession } from './auth/session/browser-session';
-import { SessionRealtime } from './auth/session/realtime';
 import { Session } from './auth/session/session';
 import { BrowserErrors } from './observability/browser-errors';
 import { browserErrorsInterceptor } from './observability/browser-errors-interceptor';
@@ -23,8 +22,7 @@ const browserConfig: ApplicationConfig = {
   providers: [
     BrowserSession,
     { provide: Session, useExisting: BrowserSession },
-    BrowserRealtime,
-    { provide: SessionRealtime, useExisting: BrowserRealtime },
+    BrowserRealtimeSession,
     BrowserErrors,
     { provide: ErrorHandler, useExisting: BrowserErrors },
     BrowserTelemetry,

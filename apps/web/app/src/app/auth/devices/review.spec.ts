@@ -29,6 +29,7 @@ beforeEach(() => {
       { provide: Session, useValue: { full: () => true } },
     ],
   });
+
   TestBed.overrideComponent(DeviceReview, {
     set: { providers: [Action, { provide: Devices, useValue: { review, decide } }] },
   });
@@ -40,6 +41,7 @@ it('cancels stale reviews and clears pairing codes when Angular reuses the page 
 
   page.model.set({ code: '001234' });
   page.fields().markAsTouched();
+
   const reused = await harness.navigateByUrl(`/security/devices/review?requestId=${secondId}`, DeviceReview);
 
   expect(reused).toBe(page);
@@ -85,6 +87,7 @@ it('ignores an approval result after the review link changes and cancels on dest
         finishApproval = resolve;
       }),
   );
+
   const harness = await RouterTestingHarness.create();
   const page = await harness.navigateByUrl(`/security/devices/review?requestId=${firstId}`, DeviceReview);
 

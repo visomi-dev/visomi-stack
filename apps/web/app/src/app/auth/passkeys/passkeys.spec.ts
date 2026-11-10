@@ -11,6 +11,7 @@ import { Passkeys } from './passkeys';
 vi.hoisted(() => {
   vi.resetModules();
 });
+
 vi.mock('@simplewebauthn/browser', () => ({
   startAuthentication: vi.fn(),
   startRegistration: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock('@simplewebauthn/browser', () => ({
   browserSupportsWebAuthnAutofill: async () => true,
   WebAuthnAbortService: { cancelCeremony: vi.fn() },
 }));
+
 afterEach(() => vi.clearAllMocks());
 it('does not submit an abandoned passkey registration to the backend', async () => {
   let resolve!: (value: Awaited<ReturnType<typeof webauthn.startRegistration>>) => void;
@@ -51,6 +53,7 @@ it('does not submit an abandoned passkey registration to the backend', async () 
 
   expect(request).toHaveBeenCalledTimes(1);
 });
+
 it('cancels conditional autofill before another authentication can complete', async () => {
   let resolve!: (value: Awaited<ReturnType<typeof webauthn.startAuthentication>>) => void;
 

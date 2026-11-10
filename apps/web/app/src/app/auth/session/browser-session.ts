@@ -6,7 +6,7 @@ import { Subject, firstValueFrom } from 'rxjs';
 
 import { isSession } from './models';
 import type { SessionSnapshot, SessionStatus, SessionView, Providers } from './models';
-import { SessionRealtime } from './realtime';
+import { BrowserRealtimeSession } from './browser-realtime-session';
 import { type Session, anonymousSession, initialSessionState, isFullSession } from './session';
 
 @Service({ autoProvided: false })
@@ -15,7 +15,7 @@ export class BrowserSession implements Session {
   private readonly transfer = inject(TransferState);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly realtime = inject(SessionRealtime);
+  private readonly realtime = inject(BrowserRealtimeSession);
 
   private readonly value = signal<SessionSnapshot>(anonymousSession);
   private readonly state = signal<SessionStatus>('loading');

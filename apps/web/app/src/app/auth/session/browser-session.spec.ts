@@ -1,12 +1,12 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { TransferState } from '@angular/core';
+import { EnvironmentInjector, TransferState, createEnvironmentInjector } from '@angular/core';
 
 import { CodeEntry } from '../shared/code-entry';
 
 import { Session, initialSessionState } from './session';
-import { SessionRealtime } from './realtime';
+import { BrowserRealtimeSession } from './browser-realtime-session';
 import { BrowserSession } from './browser-session';
 import type { SessionView } from './models';
 
@@ -27,7 +27,7 @@ const full: SessionView = {
   csrfToken: 'synthetic-rotated-csrf',
 };
 
-const connectSession = vi.fn<SessionRealtime['connectSession']>();
+const connectSession = vi.fn<BrowserRealtimeSession['connectSession']>();
 
 beforeEach(() => {
   connectSession.mockReset().mockImplementation(() => () => undefined);
@@ -37,13 +37,24 @@ beforeEach(() => {
       provideHttpClientTesting(),
       BrowserSession,
       { provide: Session, useExisting: BrowserSession },
-      { provide: SessionRealtime, useValue: { connectSession } },
+      { provide: BrowserRealtimeSession, useValue: { connectSession } },
     ],
   });
 });
+
 afterEach(() => {
   TestBed.inject(HttpTestingController).verify();
   vi.restoreAllMocks();
+});
+
+it('cleans up when the injector is destroyed before the first render', () => {
+  const injector = createEnvironmentInjector([BrowserSession], TestBed.inject(EnvironmentInjector));
+  const complete = vi.fn();
+
+  injector.get(BrowserSession).cancelled.subscribe({ complete });
+  injector.destroy();
+
+  expect(complete).toHaveBeenCalledOnce();
 });
 
 it('connects after sign-in, replaces a rotated connection and refreshes on revocation', async () => {
@@ -95,7 +106,9 @@ it('starts browser revalidation once and releases its focus listener with the in
   const session = TestBed.inject(Session);
   const http = TestBed.inject(HttpTestingController);
   const fixture = TestBed.createComponent(CodeEntry);
+  const complete = vi.fn();
 
+  session.cancelled.subscribe({ complete });
   fixture.detectChanges();
 
   await vi.waitFor(() => http.expectOne('/api/auth/session').flush(anonymous));
@@ -122,6 +135,7 @@ it('starts browser revalidation once and releases its focus listener with the in
 
   expect(session.full()).toBe(true);
   TestBed.resetTestingModule();
+  expect(complete).toHaveBeenCalledOnce();
   expect(remove).toHaveBeenCalledWith('focus', focusListener);
   TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
 });
@@ -176,6 +190,7 @@ it('shares one session request between concurrent consumers', async () => {
   expect(session.snapshot().access).toBe('anonymous');
   expect(session.status()).toBe('ready');
 });
+
 it('ignores a response started before logout', async () => {
   const session = TestBed.inject(Session);
   const http = TestBed.inject(HttpTestingController);
@@ -189,6 +204,7 @@ it('ignores a response started before logout', async () => {
   expect(session.snapshot().user).toBeNull();
   expect(session.full()).toBe(false);
 });
+
 it('preserves a rotated token when an older session read completes', async () => {
   const session = TestBed.inject(Session);
   const http = TestBed.inject(HttpTestingController);
@@ -204,6 +220,7 @@ it('preserves a rotated token when an older session read completes', async () =>
   expect(result1).toBe(full.csrfToken);
   expect(session.full()).toBe(true);
 });
+
 it('distinguishes temporary failure from anonymous access and locks private content', async () => {
   const session = TestBed.inject(Session);
   const http = TestBed.inject(HttpTestingController);
@@ -221,6 +238,7 @@ it('distinguishes temporary failure from anonymous access and locks private cont
   expect(session.status()).toBe('unavailable');
   expect(session.full()).toBe(false);
 });
+
 it('obtains a fresh CSRF token after invalidation without retrying a mutation', async () => {
   const session = TestBed.inject(Session);
   const http = TestBed.inject(HttpTestingController);
@@ -230,10 +248,12 @@ it('obtains a fresh CSRF token after invalidation without retrying a mutation', 
   const token = session.token();
 
   http.expectOne('/api/auth/session').flush({ ...full, csrfToken: 'synthetic-new-token' });
+
   const result2 = await token;
 
   expect(result2).toBe('synthetic-new-token');
 });
+
 it('discards an in-flight read before revalidating a change from another tab', async () => {
   const session = TestBed.inject(Session);
   const http = TestBed.inject(HttpTestingController);

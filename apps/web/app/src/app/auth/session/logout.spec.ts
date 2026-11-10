@@ -54,6 +54,7 @@ async function openFlow({ path, access }: (typeof flows)[number]) {
       { provide: Session, useValue: session },
     ],
   });
+
   const harness = await RouterTestingHarness.create('/' + path);
   const journey = TestBed.inject(Journey);
 

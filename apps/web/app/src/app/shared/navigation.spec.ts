@@ -85,6 +85,7 @@ it('clears progress when a guard rejects or a resolver returns no data', async (
 
   guard.next(false);
   guard.complete();
+
   const deniedResult = await denied;
 
   expect(deniedResult).toBe(false);
@@ -98,6 +99,7 @@ it('clears progress when a guard rejects or a resolver returns no data', async (
   await vi.waitFor(() => expect(bar()).not.toBeNull());
 
   resolver.complete();
+
   const emptyResult = await empty;
 
   expect(emptyResult).toBe(false);
@@ -120,6 +122,7 @@ it('clears progress after a resolver fails', async () => {
   await vi.waitFor(() => expect(bar()).not.toBeNull());
 
   gate.error(failure);
+
   const result = await pending;
 
   expect(result).toBe(failure);
@@ -187,6 +190,7 @@ it('follows redirects and leaves skipped navigations idle', async () => {
   expect(router.url).toBe('/next');
   expect(navigation.loading()).toBe(false);
   expect(bar()).toBeNull();
+
   const skipped = await router.navigateByUrl('/next');
 
   expect(skipped).toBe(false);

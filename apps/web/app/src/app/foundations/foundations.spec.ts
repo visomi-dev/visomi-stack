@@ -24,6 +24,7 @@ describe('design foundations', () => {
       ['EN', '/app/en/foundations'],
       ['ES', '/app/es/foundations'],
     ]);
+
     expect(element.querySelector('a[href$="#main"]')).not.toBeNull();
   });
 });

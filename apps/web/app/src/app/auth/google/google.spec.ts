@@ -49,11 +49,13 @@ beforeEach(() => {
     ],
   });
 });
+
 afterEach(() => {
   TestBed.inject(HttpTestingController).verify();
   vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
+
 it('uses the server nonce and submits a Google credential only once', async () => {
   const api = TestBed.inject(Google);
   const http = TestBed.inject(HttpTestingController);
@@ -80,6 +82,7 @@ it('uses the server nonce and submits a Google credential only once', async () =
   expect(initialize).toHaveBeenCalledWith(
     expect.objectContaining({ nonce: 'synthetic-nonce', client_id: 'synthetic-client', auto_select: false }),
   );
+
   expect(renderButton).toHaveBeenCalledOnce();
   callback({ credential: 'synthetic-blocked' });
   http.expectNone('/api/auth/google/complete');
@@ -99,6 +102,7 @@ it('uses the server nonce and submits a Google credential only once', async () =
   expect(failed).not.toHaveBeenCalled();
   expect(processing.mock.calls).toEqual([[true], [false]]);
 });
+
 it('releases reauthentication and permits a new Google attempt after session invalidation', async () => {
   const api = TestBed.inject(Google);
   const http = TestBed.inject(HttpTestingController);

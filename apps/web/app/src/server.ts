@@ -54,6 +54,7 @@ export function createApp(
   app.get('/telemetry/config', (_request, response) =>
     response.set('cache-control', 'no-store').json({ enabled: false }),
   );
+
   app.use((request, response, next) => {
     let path: string;
 
@@ -73,6 +74,7 @@ export function createApp(
 
     next();
   });
+
   app.get(['/app', '/app/'], (_request, response) => response.redirect(302, '/app/en/'));
   const serveAssets = serveStatic(clientDirectory, { index: false, redirect: false });
 
@@ -121,6 +123,7 @@ export function createApp(
 
     next();
   });
+
   documents.use(
     rateLimit({
       ...limits,
@@ -133,6 +136,7 @@ export function createApp(
     }),
     rateLimit({ ...limits, limit: 600, keyGenerator: () => 'ssr' }),
   );
+
   documents.use((request, response, next) => {
     engine ??= new AngularNodeAppEngine();
 
@@ -166,6 +170,7 @@ export function createApp(
       })
       .catch(next);
   });
+
   app.use(documents);
 
   if ((options.errorMode ?? 'managed') === 'managed') {

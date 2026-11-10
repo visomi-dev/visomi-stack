@@ -93,6 +93,7 @@ export class Action {
         this.errorState.set(
           $localize`:@@authRestrictedExpired:This verification can no longer continue. Sign out and start recovery again.`,
         );
+
         this.errorFocusState.update((value) => value + 1);
       } else if (code === 'reauthentication_required') {
         const returnTo = safeReturnTo(this.router.url, this.location.prepareExternalUrl('/'));

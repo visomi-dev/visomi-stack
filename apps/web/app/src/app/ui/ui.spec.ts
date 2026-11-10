@@ -274,6 +274,7 @@ describe('native Angular UI catalog', () => {
     expect(element.disabled).toBe(true);
     expect(element.classList.contains('ui-focus-ring')).toBe(true);
   });
+
   it('compiles every adapter and keeps element selectors mutually exclusive', async () => {
     const fixture = TestBed.createComponent(Catalog);
 

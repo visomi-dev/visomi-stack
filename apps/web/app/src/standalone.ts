@@ -26,6 +26,7 @@ async function stop(exitCode: number): Promise<void> {
 
   clearTimeout(drain);
   browserTelemetry?.close();
+
   const flushed = await telemetry.shutdown(1000);
 
   clearTimeout(deadline);
