@@ -12,6 +12,10 @@ type Props = { locale: SiteLocale; page: SitePage };
 const { locale, page } = Astro.props;
 const copy = siteCopy[locale];
 const pages = ['home', 'architecture', 'docs', 'ui'] as const;
+const languages = [
+  ['en', 'English'],
+  ['es', 'Español'],
+] as const;
 ---
 
 <header
@@ -42,20 +46,25 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
         </LinkButton>
       </div>
 
-      <nav aria-label={copy.language} class="flex gap-0.5 text-xs font-medium">
-        {(['en', 'es'] as const).map((language) => (
-          <Link
-            href={sitePath(language, page)}
-            hreflang={language}
-            lang={language}
-            aria-current={locale === language ? 'page' : undefined}
-            variant="muted"
-            underline="none"
-            class="inline-flex min-h-11 min-w-11 items-center justify-center"
-          >
-            {language.toUpperCase()}
-          </Link>
-        ))}
+      <nav aria-label={copy.language} class="flex items-center gap-2">
+        {languages.map(([language, label]) =>
+          locale === language ? (
+            <span lang={language} aria-current="true" class="inline-flex min-h-11 items-center text-sm font-medium">
+              {label}
+            </span>
+          ) : (
+            <Link
+              href={sitePath(language, page)}
+              hreflang={language}
+              lang={language}
+              variant="muted"
+              underline="hover"
+              class="inline-flex min-h-11 items-center text-sm"
+            >
+              {label}
+            </Link>
+          ),
+        )}
       </nav>
 
       <ThemeSwitcher label={copy.themeToggle} />

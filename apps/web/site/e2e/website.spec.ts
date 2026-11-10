@@ -139,9 +139,25 @@ test('mobile navigation and locale changes work without JavaScript', async ({ br
 
     await expect(page).toHaveURL(/\/es\/architecture\/$/);
 
-    await page.getByRole('navigation', { name: 'Idioma', exact: true }).getByRole('link', { name: 'EN' }).click();
+    const language = page.getByRole('navigation', { name: 'Idioma', exact: true });
+    const english = language.getByRole('link', { name: 'English', exact: true });
+
+    await expect(language.getByText('Español', { exact: true })).toHaveAttribute('aria-current', 'true');
+
+    await expect(language.getByRole('link')).toHaveCount(1);
+
+    await expect(english).toHaveAttribute('hreflang', 'en');
+
+    await english.focus();
+
+    await page.keyboard.press('Enter');
 
     await expect(page).toHaveURL(/\/en\/architecture\/$/);
+
+    await expect(page.getByRole('navigation', { name: 'Language', exact: true }).getByText('English')).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('One system. Clear boundaries.');
 
