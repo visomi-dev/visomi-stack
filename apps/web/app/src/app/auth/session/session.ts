@@ -1,5 +1,4 @@
 import { makeStateKey, type Signal } from '@angular/core';
-import type { Observable } from 'rxjs';
 
 import type { AuthRenderContext, Providers, SessionSnapshot, SessionStatus, SessionView } from './models';
 
@@ -22,7 +21,8 @@ export abstract class Session {
   abstract readonly full: Signal<boolean>;
   abstract readonly user: Signal<SessionSnapshot['user']>;
   abstract readonly providers: Signal<Providers | null>;
-  abstract readonly cancelled: Observable<void>;
+  abstract readonly cancellation: Signal<AbortSignal>;
+  abstract readonly operationVersion: Signal<number>;
 
   abstract load(force?: boolean): Promise<void>;
 
@@ -37,8 +37,6 @@ export abstract class Session {
   abstract invalidateToken(): void;
 
   abstract invalidate(): Promise<void>;
-
-  abstract operationVersion(): number;
 
   abstract cancelOperations(): void;
 }

@@ -14,6 +14,7 @@ export class AuthHttp {
 
   async request<T>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
     const version = this.session.operationVersion();
+    const cancellation = this.session.cancellation();
 
     try {
       if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
@@ -24,14 +25,14 @@ export class AuthHttp {
         throw new DOMException('Cancelled', 'AbortError');
       }
 
-      if (signal?.aborted) {
+      if (cancellation.aborted || signal?.aborted) {
         throw new DOMException('Cancelled', 'AbortError');
       }
 
       const result = await firstValueFrom(
         this.http.request<T>(method, '/api/auth' + path, { body, transferCache: false }).pipe(
           takeUntilDestroyed(this.destroyRef),
-          takeUntil(this.session.cancelled),
+          takeUntil(fromEvent(cancellation, 'abort')),
           takeUntil(signal ? fromEvent(signal, 'abort') : NEVER),
           tap((result) => {
             if (isSession(result)) {
@@ -47,7 +48,7 @@ export class AuthHttp {
 
       return result;
     } catch (error) {
-      if (signal?.aborted || version !== this.session.operationVersion()) {
+      if (cancellation.aborted || signal?.aborted || version !== this.session.operationVersion()) {
         throw new DOMException('Cancelled', 'AbortError');
       }
 

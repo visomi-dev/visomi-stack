@@ -24,9 +24,7 @@ export class BackupCodes {
   readonly codes = signal<string[]>([]);
   readonly confirm = signal(false);
 
-  constructor() {
-    this.destroyRef.onDestroy(() => this.codes.set([]));
-  }
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.codes.set([]));
 
   regenerate(): void {
     void this.action.run(async () => {

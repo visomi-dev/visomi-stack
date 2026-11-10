@@ -1,7 +1,5 @@
 import { Component, LOCALE_ID, booleanAttribute, computed, inject, input } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
-import { filter, map } from 'rxjs';
+import { Router } from '@angular/router';
 
 import { Link } from '../ui';
 import { AuthNavigation } from '../auth/shared/navigation';
@@ -27,14 +25,11 @@ export class LanguageSwitcher {
   readonly compact = input(false, { transform: booleanAttribute });
   readonly path = input<string>();
 
-  private readonly url = toSignal(
-    this.router.events.pipe(
-      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-      map((event) => event.urlAfterRedirects),
-    ),
-    { initialValue: this.router.url },
-  );
+  private readonly url = computed(() => {
+    const url = this.router.lastSuccessfulNavigation()?.finalUrl;
 
+    return url ? this.router.serializeUrl(url) : this.router.url;
+  });
   protected readonly linkClasses = computed(() =>
     this.compact() ? 'inline-flex min-h-11 min-w-11 items-center px-2' : 'inline-flex min-h-11 items-center text-sm',
   );

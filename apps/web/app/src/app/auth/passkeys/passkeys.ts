@@ -1,5 +1,4 @@
 import { DestroyRef, Service, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   startAuthentication,
   startRegistration,
@@ -29,27 +28,18 @@ export class Passkeys {
   private readonly destroyRef = inject(DestroyRef);
   private readonly session = inject(Session);
 
-  private attempt = 0;
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.cancel());
+
   private controller: AbortController | null = null;
 
-  constructor() {
-    this.session.cancelled.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.cancel());
-    this.destroyRef.onDestroy(() => this.cancel());
-  }
-
   cancel(): void {
-    this.attempt++;
     this.controller?.abort();
     this.controller = null;
     WebAuthnAbortService.cancelCeremony();
   }
 
   async register(email?: string): Promise<SessionView & Partial<Pending>> {
-    this.cancel();
-    const attempt = this.attempt;
-    const controller = new AbortController();
-
-    this.controller = controller;
+    const signal = this.begin();
 
     if (!browserSupportsWebAuthn()) {
       throw new Error('passkey_unavailable');
@@ -59,33 +49,25 @@ export class Passkeys {
       'POST',
       '/passkeys/registration/options',
       email ? { email } : {},
-      controller.signal,
+      signal,
     );
 
-    if (this.attempt !== attempt) {
-      throw new DOMException('Cancelled', 'AbortError');
-    }
+    signal.throwIfAborted();
 
     const response = await startRegistration({ optionsJSON: options.options });
 
-    if (this.attempt !== attempt) {
-      throw new DOMException('Cancelled', 'AbortError');
-    }
+    signal.throwIfAborted();
 
     return this.http.request(
       'POST',
       '/passkeys/registration/verify',
       { challengeId: options.challengeId, response },
-      controller.signal,
+      signal,
     );
   }
 
   async authenticate(conditional = false): Promise<SessionView> {
-    this.cancel();
-    const attempt = this.attempt;
-    const controller = new AbortController();
-
-    this.controller = controller;
+    const signal = this.begin();
 
     if (!browserSupportsWebAuthn()) {
       throw new Error('passkey_unavailable');
@@ -103,28 +85,26 @@ export class Passkeys {
       throw new DOMException('Unavailable', 'AbortError');
     }
 
+    signal.throwIfAborted();
+
     const options = await this.http.request<{ challengeId: string; options: PublicKeyCredentialRequestOptionsJSON }>(
       'POST',
       '/passkeys/authentication/options',
       {},
-      controller.signal,
+      signal,
     );
 
-    if (this.attempt !== attempt) {
-      throw new DOMException('Cancelled', 'AbortError');
-    }
+    signal.throwIfAborted();
 
     const response = await startAuthentication({ optionsJSON: options.options, useBrowserAutofill: conditional });
 
-    if (this.attempt !== attempt) {
-      throw new DOMException('Cancelled', 'AbortError');
-    }
+    signal.throwIfAborted();
 
     return this.http.request(
       'POST',
       '/passkeys/authentication/verify',
       { challengeId: options.challengeId, response },
-      controller.signal,
+      signal,
     );
   }
 
@@ -138,5 +118,17 @@ export class Passkeys {
 
   revoke(id: string): Promise<void> {
     return this.http.request('DELETE', '/passkeys/' + encodeURIComponent(id));
+  }
+
+  private begin(): AbortSignal {
+    this.cancel();
+    const cancellation = this.session.cancellation();
+    const controller = new AbortController();
+
+    cancellation.throwIfAborted();
+    this.controller = controller;
+    cancellation.addEventListener('abort', () => this.cancel(), { once: true, signal: controller.signal });
+
+    return controller.signal;
   }
 }

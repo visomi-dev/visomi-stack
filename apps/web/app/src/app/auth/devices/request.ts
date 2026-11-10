@@ -1,8 +1,6 @@
 import { DOCUMENT, Location } from '@angular/common';
 import { Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { fromEvent } from 'rxjs';
 
 import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Heading, Text, Link } from '../../ui';
@@ -224,12 +222,13 @@ export class DeviceApproval {
   }
 
   private readonly watchVisibility = afterNextRender(() => {
-    fromEvent(this.document, 'visibilitychange')
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        if (this.document.visibilityState !== 'hidden') {
-          this.refreshStatus();
-        }
-      });
+    const refresh = () => {
+      if (this.document.visibilityState !== 'hidden') {
+        this.refreshStatus();
+      }
+    };
+
+    this.document.addEventListener('visibilitychange', refresh);
+    this.destroyRef.onDestroy(() => this.document.removeEventListener('visibilitychange', refresh));
   });
 }

@@ -49,12 +49,11 @@ afterEach(() => {
 
 it('cleans up when the injector is destroyed before the first render', () => {
   const injector = createEnvironmentInjector([BrowserSession], TestBed.inject(EnvironmentInjector));
-  const complete = vi.fn();
+  const cancellation = injector.get(BrowserSession).cancellation();
 
-  injector.get(BrowserSession).cancelled.subscribe({ complete });
   injector.destroy();
 
-  expect(complete).toHaveBeenCalledOnce();
+  expect(cancellation.aborted).toBe(true);
 });
 
 it('connects after sign-in, replaces a rotated connection and refreshes on revocation', async () => {
@@ -106,9 +105,8 @@ it('starts browser revalidation once and releases its focus listener with the in
   const session = TestBed.inject(Session);
   const http = TestBed.inject(HttpTestingController);
   const fixture = TestBed.createComponent(CodeEntry);
-  const complete = vi.fn();
+  const cancellation = session.cancellation();
 
-  session.cancelled.subscribe({ complete });
   fixture.detectChanges();
 
   await vi.waitFor(() => http.expectOne('/api/auth/session').flush(anonymous));
@@ -135,7 +133,7 @@ it('starts browser revalidation once and releases its focus listener with the in
 
   expect(session.full()).toBe(true);
   TestBed.resetTestingModule();
-  expect(complete).toHaveBeenCalledOnce();
+  expect(cancellation.aborted).toBe(true);
   expect(remove).toHaveBeenCalledWith('focus', focusListener);
   TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
 });
@@ -329,10 +327,9 @@ it('retries a failed session check even when the previous CSRF token is cached',
 it('cancels account-bound operations when a refresh discovers a different identity', async () => {
   const session = TestBed.inject(Session);
   const http = TestBed.inject(HttpTestingController);
-  const cancelled = vi.fn();
 
   session.accept(full);
-  session.cancelled.subscribe(cancelled);
+  const cancellation = session.cancellation();
   const refresh = session.load(true);
 
   http.expectOne('/api/auth/session').flush({
@@ -343,23 +340,24 @@ it('cancels account-bound operations when a refresh discovers a different identi
 
   await refresh;
 
-  expect(cancelled).toHaveBeenCalledOnce();
+  expect(cancellation.aborted).toBe(true);
+  expect(session.cancellation().aborted).toBe(false);
   expect(session.user()?.id).toBe('another-user');
 });
 
 it('preserves account-bound operations on a same-identity refresh', async () => {
   const session = TestBed.inject(Session);
   const http = TestBed.inject(HttpTestingController);
-  const cancelled = vi.fn();
 
   session.accept(full);
-  session.cancelled.subscribe(cancelled);
+  const cancellation = session.cancellation();
   const refresh = session.load(true);
 
   http.expectOne('/api/auth/session').flush({ ...full, csrfToken: 'refreshed-csrf' });
 
   await refresh;
 
-  expect(cancelled).not.toHaveBeenCalled();
+  expect(session.cancellation()).toBe(cancellation);
+  expect(cancellation.aborted).toBe(false);
   expect(session.full()).toBe(true);
 });

@@ -4,7 +4,6 @@ import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { NEVER } from 'rxjs';
 
 import type { SessionSnapshot } from '../auth/session/models';
 import { Session } from '../auth/session/session';
@@ -38,7 +37,7 @@ it('recreates private routed content only when the account identity changes', as
           user: computed(() => snapshot().user),
           full: () => true,
           status: () => 'ready',
-          cancelled: NEVER,
+          cancellation: () => new AbortController().signal,
         },
       },
     ],

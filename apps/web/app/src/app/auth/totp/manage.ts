@@ -45,12 +45,10 @@ export class ManageTotp {
   readonly codes = signal<string[]>([]);
   readonly removing = signal(false);
 
-  constructor() {
-    this.destroyRef.onDestroy(() => {
-      this.setup.set(null);
-      this.codes.set([]);
-    });
-  }
+  private readonly cleanup = this.destroyRef.onDestroy(() => {
+    this.setup.set(null);
+    this.codes.set([]);
+  });
 
   start(): void {
     void this.action.run(async () => {

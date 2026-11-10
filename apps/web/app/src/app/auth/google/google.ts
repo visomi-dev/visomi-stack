@@ -1,6 +1,5 @@
 import { DOCUMENT } from '@angular/common';
 import { CSP_NONCE, DestroyRef, Service, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthHttp } from '../shared/http';
 import { Session } from '../session/session';
@@ -33,24 +32,8 @@ export class Google {
   private readonly destroyRef = inject(DestroyRef);
   private readonly session = inject(Session);
 
-  private alive = true;
-  private epoch = 0;
-  private invalidateButton: (() => void) | undefined;
-
-  constructor() {
-    this.session.cancelled.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.epoch++;
-      const invalidateButton = this.invalidateButton;
-
-      this.invalidateButton = undefined;
-      invalidateButton?.();
-    });
-
-    this.destroyRef.onDestroy(() => {
-      this.alive = false;
-      this.epoch++;
-    });
-  }
+  private buttonLifetime: AbortController | undefined;
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.buttonLifetime?.abort());
 
   async button(
     element: HTMLElement,
@@ -60,40 +43,48 @@ export class Google {
     allowed: () => boolean = () => true,
     processing: (active: boolean) => void = () => undefined,
   ): Promise<void> {
-    this.invalidateButton = undefined;
-    const epoch = ++this.epoch;
+    this.buttonLifetime?.abort();
+    const controller = new AbortController();
+    const lifetime = controller.signal;
+    const cancellation = this.session.cancellation();
+
+    this.buttonLifetime = controller;
+
     const pending = await this.http.request<Pending & { clientId: string; nonce: string }>('POST', '/google/start', {
       intent,
     });
     const google = await this.load();
 
-    if (!this.alive) {
+    if (this.destroyRef.destroyed) {
       return;
     }
 
-    if (epoch !== this.epoch) {
-      throw new DOMException('Cancelled', 'AbortError');
-    }
+    lifetime.throwIfAborted();
+    cancellation.throwIfAborted();
 
     let used = false;
     let active = false;
 
-    this.invalidateButton = () => {
-      element.replaceChildren();
+    cancellation.addEventListener(
+      'abort',
+      () => {
+        element.replaceChildren();
 
-      if (active) {
-        processing(false);
-      }
+        if (active) {
+          processing(false);
+        }
 
-      failed(new DOMException('Cancelled', 'AbortError'));
-    };
+        failed(new DOMException('Cancelled', 'AbortError'));
+      },
+      { once: true, signal: lifetime },
+    );
 
     google.accounts.id.initialize({
       client_id: pending.clientId,
       nonce: pending.nonce,
       auto_select: false,
       callback: (result) => {
-        if (used || !this.alive || epoch !== this.epoch || !allowed()) {
+        if (used || lifetime.aborted || cancellation.aborted || !allowed()) {
           return;
         }
 
@@ -106,14 +97,14 @@ export class Google {
             idToken: result.credential,
           })
           .then((value) => {
-            if (this.alive && epoch === this.epoch) {
+            if (!lifetime.aborted && !cancellation.aborted) {
               active = false;
               processing(false);
               complete(value);
             }
           })
           .catch((error) => {
-            if (this.alive && epoch === this.epoch) {
+            if (!lifetime.aborted && !cancellation.aborted) {
               active = false;
               processing(false);
               failed(error);

@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { DestroyRef, Service, TransferState, afterNextRender, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 import { isSession } from './models';
 import type { SessionSnapshot, SessionStatus, SessionView, Providers } from './models';
@@ -20,11 +20,14 @@ export class BrowserSession implements Session {
   private readonly value = signal<SessionSnapshot>(anonymousSession);
   private readonly state = signal<SessionStatus>('loading');
   private readonly capabilities = signal<Providers | null>(null);
+  private readonly cancellationScope = signal(new AbortController());
+  private readonly transition = signal(0);
   private readonly realtimeGeneration = signal(0);
   private readonly rendered = signal(false);
 
   readonly full = computed(() => isFullSession(this.state(), this.value()));
   readonly user = computed(() => this.value().user);
+  readonly cancellation = computed(() => this.cancellationScope().signal);
   private readonly realtimeSession = computed(() =>
     this.rendered() && this.full() ? this.realtimeGeneration() : null,
   );
@@ -32,16 +35,13 @@ export class BrowserSession implements Session {
   readonly snapshot = this.value.asReadonly();
   readonly status = this.state.asReadonly();
   readonly providers = this.capabilities.asReadonly();
-
-  private readonly cancellation = new Subject<void>();
-  readonly cancelled = this.cancellation.asObservable();
+  readonly operationVersion = this.transition.asReadonly();
 
   private readonly available = this.restoreInitialSession();
   private readonly cleanup = this.destroyRef.onDestroy(() => this.dispose());
 
   private csrfToken: string | null = null;
   private revision = 0;
-  private transition = 0;
   private pending: Promise<void> | null = null;
   private providerRequest: Promise<void> | null = null;
   private channel: BroadcastChannel | null = null;
@@ -147,7 +147,7 @@ export class BrowserSession implements Session {
     if (!broadcast && changedUser) {
       this.cancelOperations();
     } else if (broadcast || previous.access !== result.access || changedUser || rotated) {
-      this.transition++;
+      this.transition.update((version) => version + 1);
     }
 
     if (broadcast || changedUser || rotated) {
@@ -192,14 +192,17 @@ export class BrowserSession implements Session {
     await this.load(true);
   }
 
-  operationVersion(): number {
-    return this.transition;
-  }
-
   cancelOperations(): void {
-    this.transition++;
+    const previous = this.cancellationScope();
+
+    this.transition.update((version) => version + 1);
     this.revision++;
-    this.cancellation.next();
+
+    if (!this.destroyed) {
+      this.cancellationScope.set(new AbortController());
+    }
+
+    previous.abort();
   }
 
   private restoreInitialSession(): boolean {
@@ -219,7 +222,6 @@ export class BrowserSession implements Session {
   private dispose(): void {
     this.destroyed = true;
     this.cancelOperations();
-    this.cancellation.complete();
     this.channel?.close();
   }
 

@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { NEVER } from 'rxjs';
 import * as webauthn from '@simplewebauthn/browser';
 
 import { Session } from '../session/session';
@@ -21,7 +20,7 @@ vi.mock('@simplewebauthn/browser', () => ({
 }));
 
 afterEach(() => vi.clearAllMocks());
-it('does not submit an abandoned passkey registration to the backend', async () => {
+it('cancels passkey registration immediately when the session changes', async () => {
   let resolve!: (value: Awaited<ReturnType<typeof webauthn.startRegistration>>) => void;
 
   vi.mocked(webauthn.startRegistration).mockReturnValue(
@@ -32,10 +31,11 @@ it('does not submit an abandoned passkey registration to the backend', async () 
   const request = vi
     .fn()
     .mockResolvedValue({ challengeId: 'synthetic-challenge', options: { challenge: 'synthetic-options' } });
+  const cancellation = new AbortController();
 
   TestBed.configureTestingModule({
     providers: [
-      { provide: Session, useValue: { cancelled: NEVER } },
+      { provide: Session, useValue: { cancellation: () => cancellation.signal } },
       Passkeys,
       { provide: AuthHttp, useValue: { request } },
     ],
@@ -46,7 +46,9 @@ it('does not submit an abandoned passkey registration to the backend', async () 
 
   await vi.waitFor(() => expect(webauthn.startRegistration).toHaveBeenCalledOnce());
 
-  api.cancel();
+  vi.mocked(webauthn.WebAuthnAbortService.cancelCeremony).mockClear();
+  cancellation.abort();
+  expect(webauthn.WebAuthnAbortService.cancelCeremony).toHaveBeenCalledOnce();
   resolve({} as Awaited<ReturnType<typeof webauthn.startRegistration>>);
 
   await rejected;
@@ -68,7 +70,7 @@ it('cancels conditional autofill before another authentication can complete', as
 
   TestBed.configureTestingModule({
     providers: [
-      { provide: Session, useValue: { cancelled: NEVER } },
+      { provide: Session, useValue: { cancellation: () => new AbortController().signal } },
       Passkeys,
       { provide: AuthHttp, useValue: { request } },
     ],

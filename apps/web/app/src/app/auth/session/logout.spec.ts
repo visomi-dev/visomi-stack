@@ -4,7 +4,6 @@ import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { NEVER } from 'rxjs';
 
 import { AuthenticatedLayout } from '../../layouts/authenticated-layout';
 import { EmailVerify } from '../email/verify';
@@ -37,7 +36,7 @@ async function openFlow({ path, access }: (typeof flows)[number]) {
     status: () => 'ready' as const,
     user: () => snapshot().user,
     full: () => snapshot().access === 'full',
-    cancelled: NEVER,
+    cancellation: () => new AbortController().signal,
     cancelOperations: vi.fn(),
     operationVersion: () => 0,
     token: vi.fn().mockResolvedValue('synthetic-csrf'),

@@ -1,5 +1,4 @@
 import { REQUEST_CONTEXT, Service, TransferState, computed, inject, signal } from '@angular/core';
-import { NEVER } from 'rxjs';
 
 import type { AuthRenderContext, Providers, SessionSnapshot, SessionStatus, SessionView } from './models';
 import { type Session, anonymousSession, initialSessionState, isFullSession } from './session';
@@ -15,11 +14,11 @@ export class ServerSession implements Session {
   readonly snapshot = signal(this.initial.session ?? anonymousSession).asReadonly();
   readonly status = signal<SessionStatus>(this.initial.available ? 'ready' : 'unavailable').asReadonly();
   readonly providers = signal<Providers | null>(null).asReadonly();
+  readonly cancellation = signal(new AbortController().signal).asReadonly();
+  readonly operationVersion = signal(0).asReadonly();
 
   readonly full = computed(() => isFullSession(this.status(), this.snapshot()));
   readonly user = computed(() => this.snapshot().user);
-
-  readonly cancelled = NEVER;
 
   // The auth runtime already resolved this request; SSR never refreshes through HTTP.
   load(_force = false): Promise<void> {
@@ -28,10 +27,6 @@ export class ServerSession implements Session {
 
   loadProviders(): Promise<void> {
     return Promise.resolve();
-  }
-
-  operationVersion(): number {
-    return 0;
   }
 
   token(): Promise<string> {

@@ -1,7 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Subject } from 'rxjs';
 
 import { Session } from '../session/session';
 
@@ -9,7 +8,7 @@ import { AuthHttp } from './http';
 
 it('aborts a superseded verification before its response can change the session', async () => {
   const accept = vi.fn();
-  const cancelled = new Subject<void>();
+  const cancellation = new AbortController();
 
   TestBed.configureTestingModule({
     providers: [
@@ -20,7 +19,7 @@ it('aborts a superseded verification before its response can change the session'
         provide: Session,
         useValue: {
           accept,
-          cancelled: cancelled.asObservable(),
+          cancellation: () => cancellation.signal,
           operationVersion: () => 0,
           token: async () => 'synthetic-csrf',
         },
@@ -48,8 +47,7 @@ it('aborts a superseded verification before its response can change the session'
 
 it('cancels an in-flight security change when logout begins', async () => {
   const accept = vi.fn();
-  const cancelled = new Subject<void>();
-  let version = 0;
+  const cancellation = new AbortController();
 
   TestBed.configureTestingModule({
     providers: [
@@ -60,8 +58,8 @@ it('cancels an in-flight security change when logout begins', async () => {
         provide: Session,
         useValue: {
           accept,
-          cancelled: cancelled.asObservable(),
-          operationVersion: () => version,
+          cancellation: () => cancellation.signal,
+          operationVersion: () => 0,
           token: async () => 'synthetic-csrf',
         },
       },
@@ -76,12 +74,11 @@ it('cancels an in-flight security change when logout begins', async () => {
 
   const request = http.expectOne('/api/auth/password/change');
 
-  version++;
-  cancelled.next();
+  cancellation.abort();
+  expect(request.cancelled).toBe(true);
 
   await failure;
 
-  expect(request.cancelled).toBe(true);
   expect(accept).not.toHaveBeenCalled();
   http.verify();
 });

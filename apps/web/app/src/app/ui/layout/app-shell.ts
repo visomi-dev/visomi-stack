@@ -1,5 +1,7 @@
 import { Location } from '@angular/common';
-import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Observable } from 'rxjs';
 
 import { appShell, type ShellLayout } from '@visomi-stack/web-frontend-ui';
 
@@ -28,13 +30,15 @@ import { appShell, type ShellLayout } from '@visomi-stack/web-frontend-ui';
 })
 export class AppShell {
   private readonly location = inject(Location);
-  private readonly destroyRef = inject(DestroyRef);
 
   readonly contentId = input.required<string>({ alias: 'content-id' });
   readonly skipLabel = input.required<string>({ alias: 'skip-label' });
   readonly layout = input<ShellLayout>('sidebar');
 
-  private readonly path = signal(this.location.path());
+  private readonly path = toSignal(
+    new Observable<string>((subscriber) => this.location.onUrlChange(() => subscriber.next(this.location.path()))),
+    { initialValue: this.location.path() },
+  );
 
   protected readonly frameClasses = computed(() => appShell.frameClasses({ layout: this.layout() }));
   protected readonly sidebarClasses = computed(() => appShell.sidebarClasses({ layout: this.layout() }));
@@ -48,10 +52,4 @@ export class AppShell {
   protected readonly contentClasses = appShell.contentClasses();
   protected readonly headerClasses = appShell.headerClasses();
   protected readonly mobileClasses = appShell.mobileClasses();
-
-  constructor() {
-    const unsubscribe = this.location.onUrlChange(() => this.path.set(this.location.path()));
-
-    this.destroyRef.onDestroy(unsubscribe);
-  }
 }

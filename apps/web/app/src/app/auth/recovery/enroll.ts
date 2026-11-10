@@ -52,12 +52,10 @@ export class Enroll {
 
   private replacement = '';
 
-  constructor() {
-    this.destroyRef.onDestroy(() => {
-      this.replacement = '';
-      this.model.set({ password: '' });
-    });
-  }
+  private readonly cleanup = this.destroyRef.onDestroy(() => {
+    this.replacement = '';
+    this.model.set({ password: '' });
+  });
 
   passkey(): void {
     void this.action.run(async () => {

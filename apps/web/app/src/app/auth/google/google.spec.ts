@@ -3,7 +3,6 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { CSP_NONCE } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
-import { Subject } from 'rxjs';
 
 import { AuthHttp } from '../shared/http';
 import { Session } from '../session/session';
@@ -24,10 +23,10 @@ const initialize = vi.fn((options: { callback: typeof callback }) => {
   callback = options.callback;
 });
 const renderButton = vi.fn();
-let cancelled: Subject<void>;
+let cancellation: AbortController;
 
 beforeEach(() => {
-  cancelled = new Subject<void>();
+  cancellation = new AbortController();
   vi.stubGlobal('google', { accounts: { id: { initialize, renderButton, cancel: vi.fn() } } });
   TestBed.configureTestingModule({
     providers: [
@@ -43,7 +42,7 @@ beforeEach(() => {
           load: vi.fn().mockResolvedValue(undefined),
           token: vi.fn().mockResolvedValue('synthetic-csrf'),
           operationVersion: () => 0,
-          cancelled,
+          cancellation: () => cancellation.signal,
         },
       },
     ],
@@ -134,7 +133,10 @@ it('releases reauthentication and permits a new Google attempt after session inv
 
   const first = http.expectOne('/api/auth/google/complete');
 
-  cancelled.next();
+  const previous = cancellation;
+
+  cancellation = new AbortController();
+  previous.abort();
 
   expect(first.cancelled).toBe(true);
   expect(processing.mock.calls).toEqual([[true], [false]]);

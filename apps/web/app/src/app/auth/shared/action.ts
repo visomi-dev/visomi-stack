@@ -25,16 +25,8 @@ export class Action {
   readonly notice = this.noticeState.asReadonly();
   readonly pending = this.pendingState.asReadonly();
 
-  private alive = true;
-
-  constructor() {
-    this.destroyRef.onDestroy(() => {
-      this.alive = false;
-    });
-  }
-
   setProcessing(active: boolean): void {
-    if (!this.alive) {
+    if (this.destroyRef.destroyed) {
       return;
     }
 
@@ -46,19 +38,19 @@ export class Action {
   }
 
   setError(message: string): void {
-    if (this.alive) {
+    if (!this.destroyRef.destroyed) {
       this.errorState.set(message);
     }
   }
 
   setNotice(message: string): void {
-    if (this.alive) {
+    if (!this.destroyRef.destroyed) {
       this.noticeState.set(message);
     }
   }
 
   reset(): void {
-    if (!this.alive) {
+    if (this.destroyRef.destroyed) {
       return;
     }
 
@@ -71,7 +63,7 @@ export class Action {
   async run(work: () => Promise<void>, options: { signal?: AbortSignal; name?: string } = {}): Promise<void> {
     const { signal, name } = options;
 
-    if (!this.alive || this.busy() || signal?.aborted) {
+    if (this.destroyRef.destroyed || this.busy() || signal?.aborted) {
       return;
     }
 
@@ -83,7 +75,7 @@ export class Action {
     try {
       await work();
     } catch (error) {
-      if (!this.alive || signal?.aborted) {
+      if (this.destroyRef.destroyed || signal?.aborted) {
         return;
       }
 
@@ -113,7 +105,7 @@ export class Action {
         this.errorFocusState.update((value) => value + 1);
       }
     } finally {
-      if (this.alive && !signal?.aborted) {
+      if (!this.destroyRef.destroyed && !signal?.aborted) {
         this.busyState.set(false);
         this.pendingState.set(null);
       }

@@ -1,4 +1,4 @@
-import { Component, computed, inject, RESPONSE_INIT } from '@angular/core';
+import { Component, computed, inject, RESPONSE_INIT, type OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { NavigationHeading } from '../shared/navigation-heading';
@@ -12,13 +12,13 @@ import { NotFoundLayout } from '../layouts/not-found-layout';
   imports: [NavigationHeading, RouterLink, Heading, Text, LinkButton, NotFoundLayout],
   templateUrl: './not-found.html',
 })
-export class NotFound {
+export class NotFound implements OnInit {
   private readonly response = inject(RESPONSE_INIT, { optional: true });
   private readonly session = inject(Session);
 
   readonly target = computed(() => destination(this.session.snapshot()));
 
-  constructor() {
+  ngOnInit(): void {
     if (this.response) {
       this.response.status = 404;
     }
