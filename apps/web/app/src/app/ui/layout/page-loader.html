@@ -1,0 +1,14 @@
+<span role="status" class="sr-only">
+  @if (active()) {
+    <span i18n="@@pageLoading">Loading page…</span>
+  }
+</span>
+
+@if (active()) {
+  <div
+    aria-hidden="true"
+    class="pointer-events-none fixed inset-x-0 top-0 z-[60] h-1 overflow-hidden bg-blue-600/15 dark:bg-blue-400/15"
+  >
+    <div class="page-loader-indicator h-full w-2/5 bg-blue-600 dark:bg-blue-400"></div>
+  </div>
+}

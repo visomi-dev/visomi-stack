@@ -17,7 +17,7 @@ const pairingBody = z.strictObject({ requestId: identifierSchema, userCode: code
 const deviceRequestSchema = z.object({ requestId: identifierSchema, userCode: z.string(), expiresAt: expirySchema });
 const deviceStatusSchema = z.object({
   requestId: identifierSchema,
-  status: z.enum(['requested', 'approved', 'denied', 'cancelled', 'consumed', 'expired']),
+  status: z.enum(['pending', 'approved', 'denied', 'cancelled', 'consumed', 'expired']),
   expiresAt: expirySchema,
 });
 

@@ -33,33 +33,53 @@ for (const locale of ['en', 'es']) {
 }
 
 for (const locale of ['en', 'es']) {
-  const response = await request(`/app/${locale}/`);
-  const html = await response.text();
+  const entry = await request(`/app/${locale}/`);
 
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get('content-type'), /text\/html/);
-  assert.ok(html.includes('<app-root'));
-  assert.ok(!html.includes('__VISOMI_CSP_NONCE__'));
-  const nonce = html.match(/ngcspnonce="([^"]+)"/i)?.[1];
+  assert.equal(entry.status, 302);
+  const destination = new URL(entry.headers.get('location'), origin);
 
-  assert.ok(nonce);
-  assert.ok(response.headers.get('content-security-policy').includes(`'nonce-${nonce}'`));
-  assert.equal(response.headers.get('cache-control'), 'no-store');
-  const stylesheet = html.match(/href="([^"]+\.css)"/);
+  assert.equal(destination.origin, origin.origin);
+  assert.equal(destination.pathname, `/app/${locale}/auth/sign-in`);
 
-  assert.ok(stylesheet);
-  const asset = await request(new URL(stylesheet[1], response.url));
+  for (const path of [destination.pathname, `/app/${locale}/foundations`]) {
+    const response = await request(path);
+    const html = await response.text();
 
-  assert.equal(asset.status, 200);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type'), /text\/html/);
+    assert.ok(html.includes('<app-root'));
+    assert.ok(!html.includes('__VISOMI_CSP_NONCE__'));
+    const nonce = html.match(/ngcspnonce="([^"]+)"/i)?.[1];
+
+    assert.ok(nonce);
+    assert.ok(response.headers.get('content-security-policy').includes(`'nonce-${nonce}'`));
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    const stylesheet = html.match(/href="([^"]+\.css)"/);
+    const base = html.match(/<base href="([^"]+)"/);
+
+    assert.ok(stylesheet);
+    assert.ok(base);
+    const documentBase = new URL(base[1], response.url);
+
+    assert.equal(documentBase.pathname, `/app/${locale}/`);
+    const asset = await request(new URL(stylesheet[1], documentBase));
+
+    assert.equal(asset.status, 200);
+    assert.match(asset.headers.get('content-type'), /text\/css/);
+  }
 }
 
-for (const path of ['/api/missing', '/app/en/missing']) {
-  const response = await request(path);
+const missingApi = await request('/api/missing');
+const missingApiBody = await missingApi.json();
 
-  assert.equal(response.status, 404);
-  const body = await response.json();
+assert.equal(missingApi.status, 404);
+assert.deepEqual(missingApiBody, { error: 'not_found' });
+const missingApplication = await request('/app/en/missing');
+const missingApplicationHtml = await missingApplication.text();
 
-  assert.deepEqual(body, { error: 'not_found' });
-}
+assert.equal(missingApplication.status, 404);
+assert.match(missingApplication.headers.get('content-type'), /text\/html/);
+assert.ok(missingApplicationHtml.includes('<app-root'));
+assert.ok(missingApplicationHtml.includes('Page not found'));
 
 console.log('Gateway, localized Angular and Astro SSR, static assets, and route boundaries verified.');

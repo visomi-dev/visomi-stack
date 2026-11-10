@@ -7,9 +7,11 @@ export const en = {
     foundations: 'Design foundations',
   },
   start: 'Get started',
+  openApp: 'Open app',
   menu: 'Navigation',
   language: 'Language',
   theme: 'Appearance',
+  themeToggle: 'Dark theme',
   system: 'System',
   light: 'Light',
   dark: 'Dark',
@@ -137,9 +139,7 @@ export const en = {
     diagramTitle: 'The runtime map',
     current: 'Available today',
     direction: 'Architecture direction',
-    standalone: 'Independent SSR application',
-    nextMount: 'Gateway integration is next',
-    gatewayNote: 'Owns HTTP composition, startup and process resources.',
+    gatewayNote: 'Mounts the website, Angular application and API; owns startup and process resources.',
     map: [
       ['Website', 'Astro SSR', '/en/ · /es/'],
       ['API', 'Express', '/api/'],
@@ -153,11 +153,11 @@ export const en = {
       ],
       [
         'Application foundation',
-        'Angular renders and hydrates independently, with localized builds, Signal Forms examples and a responsive shell.',
+        'Angular SSR shares the gateway with the website and API, with localized builds, Signal Forms examples and a responsive shell.',
       ],
       [
         'Identity backend',
-        'The API includes passkeys, account verification, recovery and PostgreSQL-backed sessions. The product authentication screens are the next UI step.',
+        'The API includes passkeys, account verification, recovery and PostgreSQL-backed sessions used by the Angular authentication screens.',
       ],
       [
         'Shared UI',
@@ -166,12 +166,8 @@ export const en = {
     ],
     directionTitle: 'A direction beyond the first screen.',
     directionIntro:
-      'These examples describe the intended shape of the platform. They are not all implemented in this rebuild.',
+      'These capabilities describe future architecture directions. They are not yet implemented in this rebuild.',
     future: [
-      [
-        'One public origin',
-        'Mount the Angular application alongside the site and API, keeping composition separate from domain logic.',
-      ],
       [
         'Background execution',
         'Give scheduled and long-running work a dedicated worker, with handlers owned by the relevant business capability.',

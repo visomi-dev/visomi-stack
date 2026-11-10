@@ -1,4 +1,5 @@
 export { ThemeSelect } from './theme/theme-select';
+export { ThemeSwitcher } from './theme/theme-switcher';
 export { Theme } from './theme/theme';
 
 export { NavItem } from './layout/nav-item';
@@ -21,6 +22,7 @@ export { Pagination } from './data/pagination';
 export { Container } from './layout/container';
 export { Card } from './layout/card';
 export { PageHeader } from './layout/page-header';
+export { PageLoader } from './layout/page-loader';
 export { Fieldset } from './forms/fieldset';
 export { Field } from './forms/field';
 export { Label } from './forms/label';
@@ -40,6 +42,7 @@ export { Disclosure } from './overlays/disclosure';
 export { Dialog } from './overlays/dialog';
 
 import { ThemeSelect } from './theme/theme-select';
+import { ThemeSwitcher } from './theme/theme-switcher';
 import { NavItem } from './layout/nav-item';
 import { Navbar } from './layout/navbar';
 import { Topbar } from './layout/topbar';
@@ -80,6 +83,7 @@ import { Dialog } from './overlays/dialog';
 
 export const UI_IMPORTS = [
   ThemeSelect,
+  ThemeSwitcher,
   AppShell,
   Sidebar,
   Topbar,

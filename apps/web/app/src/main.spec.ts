@@ -29,6 +29,7 @@ it('shares the startup reporter with Angular and waits for an existing report be
         resolveConfiguration = resolve;
       }),
   );
+
   vi.stubGlobal('fetch', fetch);
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
   const stop = vi.fn();
@@ -44,6 +45,7 @@ it('shares the startup reporter with Angular and waits for an existing report be
       originalStop();
       stop();
     });
+
     // Angular may deliver a bootstrap failure to ErrorHandler before rejecting bootstrap.
     void reporter.report('unhandled_exception', error);
 
@@ -66,5 +68,6 @@ it('shares the startup reporter with Angular and waits for an existing report be
     code: 'unhandled_exception',
     kind: 'TypeError',
   });
+
   expect(JSON.stringify(fetch.mock.calls)).not.toContain('SYNTHETIC_PRIVATE_STARTUP_ERROR');
 });

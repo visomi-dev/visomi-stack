@@ -51,7 +51,7 @@ If the user supplies a focus area (for example: "architecture only" or "testing 
 
 ### Phase 1: Scan and Read Intent
 
-1. Prefer existing repository navigation tools and read-only inspection. If a broad inventory is explicitly requested and the optional scan is useful, inspect the script first and run it only within the authorized environment and write scope:
+1. Follow the code and documentation lookup rules in `AGENTS.md`. Use Codegraph for source structure and dependencies. If a broad inventory is explicitly requested and the optional scan is useful, inspect the script first and run it only within the authorized environment and write scope:
 
    ```bash
    python3 "$SKILL_ROOT/scripts/scan.py" --output docs/codebase/.codebase-scan.txt
@@ -71,6 +71,8 @@ If the user supplies a focus area (for example: "architecture only" or "testing 
 ### Phase 2: Investigate
 
 Use observed repository evidence to answer questions for the selected areas. Load only relevant portions of [`references/inquiry-checkpoints.md`](references/inquiry-checkpoints.md).
+
+Use `find-docs` to verify third-party behavior when it matters to the explanation. Use the repository's installed versions and configuration to establish what the project actually uses.
 
 If the stack is ambiguous (multiple manifest files, unfamiliar file types, no `package.json`), load [`references/stack-detection.md`](references/stack-detection.md).
 
@@ -159,8 +161,8 @@ Use these sections during Phase 2 to inform investigation questions and identify
 
 ## Bundled Assets
 
-| Asset                                | When to load                                                        |
-| ------------------------------------ | ------------------------------------------------------------------- |
+| Asset                                | When to load                                                                              |
+| ------------------------------------ | ----------------------------------------------------------------------------------------- |
 | [`scripts/scan.py`](scripts/scan.py) | Optional broad inventory after inspecting the script and confirming execution/write scope |
 
 | [`references/inquiry-checkpoints.md`](references/inquiry-checkpoints.md) | Phase 2 — load for per-template investigation questions |

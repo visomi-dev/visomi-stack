@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { ErrorHandler, PLATFORM_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ErrorHandler, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -20,7 +20,7 @@ describe('Angular browser error handler', () => {
   it('delegates to the telemetry service and keeps development diagnostics local', () => {
     const telemetry = { report: vi.fn() };
 
-    TestBed.configureTestingModule({ providers: [{ provide: BrowserTelemetry, useValue: telemetry }] });
+    TestBed.configureTestingModule({ providers: [BrowserErrors, { provide: BrowserTelemetry, useValue: telemetry }] });
     const errors = TestBed.inject(BrowserErrors);
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const error = new TypeError(marker);
@@ -33,7 +33,7 @@ describe('Angular browser error handler', () => {
   it('does not print raw errors in production', () => {
     const telemetry = { report: vi.fn() };
 
-    TestBed.configureTestingModule({ providers: [{ provide: BrowserTelemetry, useValue: telemetry }] });
+    TestBed.configureTestingModule({ providers: [BrowserErrors, { provide: BrowserTelemetry, useValue: telemetry }] });
     const errors = TestBed.inject(BrowserErrors);
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
@@ -60,12 +60,15 @@ describe('Angular browser error handler', () => {
     TestBed.configureTestingModule({
       rethrowApplicationErrors: false,
       providers: [
+        BrowserErrors,
+        BrowserTelemetry,
         { provide: DOCUMENT, useValue: { defaultView: browser } },
         { provide: BROWSER_ERROR_REPORTER, useValue: reporter },
         { provide: ErrorHandler, useExisting: BrowserErrors },
         provideBrowserGlobalErrorListeners(),
       ],
     });
+
     TestBed.inject(ErrorHandler);
     expect(add.mock.calls.map(([type]) => type).sort()).toEqual(['error', 'unhandledrejection']);
     browser.dispatchEvent(Object.assign(new Event('error'), { error: new TypeError(marker) }));
@@ -79,6 +82,7 @@ describe('Angular browser error handler', () => {
       { application: 'web-app', code: 'unhandled_exception', kind: 'TypeError', screen: 'home' },
       { application: 'web-app', code: 'unhandled_exception', kind: 'unknown', screen: 'home' },
     ]);
+
     expect(JSON.stringify(reports)).not.toContain(marker);
     TestBed.resetTestingModule();
     expect(stop).toHaveBeenCalledOnce();
@@ -88,18 +92,5 @@ describe('Angular browser error handler', () => {
     await reporter.report('startup_failed', new Error(marker));
 
     expect(fetch).toHaveBeenCalledTimes(3);
-  });
-
-  it('keeps SSR diagnostics controlled and never creates a browser reporter', () => {
-    TestBed.configureTestingModule({ providers: [{ provide: PLATFORM_ID, useValue: 'server' }] });
-    const fetch = vi.spyOn(window, 'fetch');
-    const errors = TestBed.inject(BrowserErrors);
-    const telemetry = vi.spyOn(TestBed.inject(BrowserTelemetry), 'report');
-    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-
-    errors.handleError(new Error(marker));
-    expect(fetch).not.toHaveBeenCalled();
-    expect(telemetry).not.toHaveBeenCalled();
-    expect(log).toHaveBeenCalledExactlyOnceWith('{"event":"app.render_failed"}');
   });
 });

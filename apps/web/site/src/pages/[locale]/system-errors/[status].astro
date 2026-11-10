@@ -1,0 +1,16 @@
+---
+import ErrorDocument from '../../../components/site/error-document.astro';
+import { httpErrors } from '../../../content/http-errors';
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return (['en', 'es'] as const).flatMap((locale) =>
+    Object.keys(httpErrors).map((status) => ({ params: { locale, status } })),
+  );
+}
+
+const { locale, status } = Astro.params;
+---
+
+<ErrorDocument locale={locale} status={status} />

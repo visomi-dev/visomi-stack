@@ -1,10 +1,20 @@
 [mcp_servers.nx-mcp]
-command = "npx"
-args = [ "nx", "mcp" ]
+command = "pnpm"
+args = [ "--reporter=silent", "nx", "mcp", "--disableTelemetry" ]
 
 [mcp_servers.angular-cli]
-command = "pnpx"
-args = [ "-y", "@angular/cli", "mcp" ]
+command = "pnpm"
+args = [ "--reporter=silent", "exec", "ng", "mcp" ]
+
+[mcp_servers.codegraph]
+command = "codegraph"
+args = [ "serve", "--mcp" ]
+env = { CODEGRAPH_TELEMETRY = "0" }
+
+[mcp_servers.qmd]
+command = "pnpm"
+args = [ "--reporter=silent", "--config.ignore-scripts=true", "dlx", "@tobilu/qmd@2.8.3", "mcp" ]
+startup_timeout_sec = 60
 
 [features]
 multi_agent = true

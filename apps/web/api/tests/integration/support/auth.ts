@@ -10,6 +10,7 @@ import { beforeAll, afterAll, beforeEach, expect } from 'vitest';
 import { createApp, createAuthentication, authConfig } from '../../../src/app';
 
 export const password = 'Synthetic password 42!';
+
 export function authenticationFixture() {
   let postgres: Awaited<ReturnType<typeof testPostgres>>;
   let resource: ReturnType<typeof createDatabase>;

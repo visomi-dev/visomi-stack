@@ -1,33 +1,45 @@
 ---
 import '../styles/global.css';
+import SiteTelemetry from '../components/site/telemetry.astro';
 
 type Props = {
   locale: 'en' | 'es';
   title: string;
   description?: string;
+  telemetry?: boolean;
 };
 
-const { locale, title, description } = Astro.props;
+const { locale, title, description, telemetry = true } = Astro.props;
 ---
 
 <!doctype html>
 <html lang={locale}>
   <head>
     <meta charset="utf-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
     {description && <meta name="description" content={description} />}
+
     <title>{title} · Visomi Stack</title>
+
     <meta property="og:site_name" content="Visomi Stack" />
+
     <meta property="og:type" content="website" />
+
     <meta property="og:title" content={`${title} · Visomi Stack`} />
+
     {description && <meta property="og:description" content={description} />}
+
     <meta property="og:locale" content={locale === 'en' ? 'en_US' : 'es_ES'} />
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
     <slot name="head" />
-    <script>
-      import '../observability';
-    </script>
+
+    {telemetry && <SiteTelemetry />}
   </head>
+
   <body class="min-h-screen bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
     <slot />
   </body>

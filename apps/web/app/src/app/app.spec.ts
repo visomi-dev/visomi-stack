@@ -1,19 +1,14 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { App } from './app';
 
-describe('design foundations', () => {
-  it('provides a labelled native theme control and both localized entry points', async () => {
-    const fixture = TestBed.createComponent(App);
+it('composes routed pages without starting authentication', async () => {
+  TestBed.configureTestingModule({ providers: [provideRouter([])] });
+  const fixture = TestBed.createComponent(App);
 
-    await fixture.whenStable();
+  await fixture.whenStable();
 
-    const element = fixture.nativeElement as HTMLElement;
-    const select = element.querySelector('select');
-
-    expect(select?.closest('label')?.textContent).toContain('Appearance');
-    expect(Array.from(select?.options ?? [], (option) => option.value)).toEqual(['system', 'light', 'dark']);
-    expect(element.querySelector('a[hreflang="es"]')?.getAttribute('href')).toBe('/app/es/');
-    expect(element.querySelector('a[href="#main"]')).not.toBeNull();
-  });
+  expect(fixture.nativeElement.querySelector('router-outlet')).not.toBeNull();
+  expect(fixture.nativeElement.querySelector('app-page-loader [aria-hidden="true"]')).toBeNull();
 });

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 for (const locale of ['en', 'es']) {
   test(`SSR includes a native button and hydration reuses it in ${locale}`, async ({ page, request }) => {
-    const path = `/app/${locale}/`;
+    const path = `/app/${locale}/foundations`;
     const response = await request.get(path);
     const markup = await response.text();
 
@@ -82,7 +82,7 @@ test('the native Angular button remains available without JavaScript', async ({ 
   try {
     const page = await context.newPage();
 
-    await page.goto('/app/en/');
+    await page.goto('/app/en/foundations');
 
     await expect(page.getByRole('button', { name: 'Add one', exact: true })).toBeVisible();
 

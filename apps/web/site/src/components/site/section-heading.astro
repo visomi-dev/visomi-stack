@@ -9,9 +9,11 @@ const { kicker, title, description, id } = Astro.props;
   <Text ui-size="xs" tone="accent" mono leading="relaxed" class="mb-5 tracking-widest">
     {kicker}
   </Text>
+
   <Heading as="h2" ui-size="section" id={id}>
     {title}
   </Heading>
+
   {description && (
     <Text ui-size="lead" tone="muted" class="mt-6 max-w-xl">
       {description}

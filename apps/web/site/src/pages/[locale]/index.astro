@@ -36,11 +36,12 @@ const count = Object.values(componentGroups).flat().length;
       class="pointer-events-none absolute inset-y-0 right-0 -z-10 w-1/2 bg-linear-to-l from-blue-50/70 to-transparent dark:from-blue-950/25"
       aria-hidden="true"
     ></div>
+
     <Container
       as="div"
       width="xl"
       gutter="compact"
-      class="grid items-center gap-14 pt-14 pb-16 sm:py-20 lg:grid-cols-[1.15fr_1fr] lg:gap-16 lg:pt-20 lg:pb-24"
+      class="grid items-center gap-10 pt-6 pb-10 sm:py-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16 lg:pt-8 lg:pb-12"
     >
       <div class="min-w-0">
         <Text
@@ -51,51 +52,64 @@ const count = Object.values(componentGroups).flat().length;
           class="mb-7 flex items-center gap-3 tracking-widest sm:text-xs"
         >
           <span class="h-px w-7 shrink-0 bg-current" aria-hidden="true"></span>
+
           {copy.eyebrow}
         </Text>
+
         <Heading as="h1" ui-size="hero" id="hero-title" class="max-w-2xl">
           {copy.headline}{' '}
+
           <Text as="span" ui-size="inherit" tone="accent" class="mt-2 block">
             {copy.accent}
           </Text>
         </Heading>
+
         <Text ui-size="lead" tone="muted" leading="relaxed" class="mt-7 max-w-xl">
           {copy.intro}
         </Text>
+
         <div class="mt-9 flex flex-wrap gap-3">
           <LinkButton href={sitePath(locale, 'docs')}>
             {labels.start}
+
             <Icon name="arrow-right" class="size-4" />
           </LinkButton>
+
           <LinkButton href={sitePath(locale, 'architecture')} variant="secondary">
             {copy.secondary}
           </LinkButton>
         </div>
+
         <ul class="mt-9 grid gap-3 text-xs leading-5 text-zinc-600 sm:text-sm dark:text-zinc-400">
           {copy.facts.map((fact) => (
             <li class="flex items-center gap-2">
               <Icon name="check" class="size-4 shrink-0 text-blue-700 dark:text-blue-400" />
+
               {fact}
             </li>
           ))}
         </ul>
       </div>
+
       <ProductPreview locale={locale} />
     </Container>
   </section>
+
   <Container as="div" width="xl" gutter="compact" class="py-9">
     <Text ui-size="xs" tone="subtle" mono class="mb-6 text-center tracking-widest">
       {copy.stackLabel}
     </Text>
+
     <ul class="grid grid-cols-3 gap-x-6 gap-y-5 text-center font-heading text-base font-semibold text-zinc-600 sm:grid-cols-6 sm:text-lg dark:text-zinc-300">
       {['Nx', 'Angular', 'Astro', 'Express', 'PostgreSQL', 'Tailwind'].map((name) => (
         <li>{name}</li>
       ))}
     </ul>
   </Container>
+
   <section
     id="foundation"
-    class="border-y border-zinc-200 bg-zinc-50/70 py-16 sm:py-24 dark:border-zinc-800 dark:bg-zinc-900/30"
+    class="border-y border-zinc-200 bg-zinc-50/70 py-10 sm:py-12 lg:py-16 dark:border-zinc-800 dark:bg-zinc-900/30"
     aria-labelledby="foundation-title"
   >
     <Container as="div" width="xl" gutter="compact">
@@ -105,18 +119,22 @@ const count = Object.values(componentGroups).flat().length;
         description={copy.foundationIntro}
         id="foundation-title"
       />
+
       <div class="mt-12 grid gap-5 md:grid-cols-3">
         {copy.features.map((feature) => (
           <Card as="article" tone="default" padding="lg" layout="plain" class="flex flex-col">
             <span class="mb-8 flex size-11 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-400">
               <Icon name={feature.icon} />
             </span>
+
             <Heading as="h3" ui-size="md">
               {feature.title}
             </Heading>
+
             <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-4 flex-1">
               {feature.body}
             </Text>
+
             <Text
               ui-size="xs"
               tone="subtle"
@@ -131,12 +149,13 @@ const count = Object.values(componentGroups).flat().length;
       </div>
     </Container>
   </section>
+
   <Container
     as="section"
     width="xl"
     gutter="compact"
     aria-labelledby="architecture-title"
-    class="grid items-center gap-12 py-16 sm:py-24 lg:grid-cols-2 lg:gap-20"
+    class="grid items-center gap-12 py-10 sm:py-12 lg:py-16 lg:grid-cols-2 lg:gap-20"
   >
     <div>
       <SectionHeading
@@ -145,19 +164,23 @@ const count = Object.values(componentGroups).flat().length;
         description={copy.architectureBody}
         id="architecture-title"
       />
+
       <Link
         href={sitePath(locale, 'architecture')}
         underline="none"
         class="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold"
       >
         {copy.architectureLink}
+
         <Icon name="arrow-right" class="size-4" />
       </Link>
     </div>
+
     <RuntimeMap locale={locale} />
   </Container>
+
   <section
-    class="border-y border-zinc-200 bg-zinc-50 py-16 sm:py-24 dark:border-zinc-800 dark:bg-zinc-900/30"
+    class="border-y border-zinc-200 bg-zinc-50 py-10 sm:py-12 lg:py-16 dark:border-zinc-800 dark:bg-zinc-900/30"
     aria-labelledby="design-title"
   >
     <Container
@@ -173,49 +196,61 @@ const count = Object.values(componentGroups).flat().length;
           description={copy.designBody}
           id="design-title"
         />
+
         <Text ui-size="inherit" tone="inherit" class="mt-7 flex items-baseline gap-3">
           <Heading as="span" ui-size="xl" tone="accent">
             {count}
           </Heading>
+
           <Text as="span" ui-size="sm" tone="subtle" class="max-w-40">
             {copy.designCount}
           </Text>
         </Text>
+
         <Link
           href={sitePath(locale, 'ui')}
           underline="none"
           class="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold"
         >
           {copy.designLink}
+
           <Icon name="arrow-right" class="size-4" />
         </Link>
       </div>
+
       <Card as="div" tone="default" padding="none" layout="plain" class="overflow-hidden shadow-xl shadow-zinc-950/5">
         <div class="border-b border-zinc-200 px-6 py-5 dark:border-zinc-800">
           <Heading as="h3" ui-size="sm">
             {copy.sampleTitle}
           </Heading>
+
           <Text ui-size="sm" tone="subtle" class="mt-2">
             {copy.sampleDescription}
           </Text>
         </div>
+
         <div class="space-y-6 p-6 sm:p-8">
           <Field control-id="preview-workspace" label={copy.sampleLabel} description={copy.sampleHint}>
             <Input id="preview-workspace" value={copy.sampleValue} aria-describedby="preview-workspace-help" />
           </Field>
+
           <Label inline>
             <Checkbox checked />
+
             {copy.sampleCheckbox}
           </Label>
+
           <div class="flex flex-wrap gap-3">
             <LinkButton href={sitePath(locale, 'ui')} size="sm">
               {copy.sampleSave}
             </LinkButton>
+
             <LinkButton href={sitePath(locale, 'foundations')} size="sm" variant="secondary">
               {copy.sampleCancel}
             </LinkButton>
           </div>
         </div>
+
         <div class="overflow-x-auto border-t border-zinc-200 bg-zinc-50 px-6 py-5 font-mono text-[0.65rem] leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
           <Code variant="plain" class:list={[text.classes({ size: 'inherit', tone: 'inherit' })]}>
             {"button.classes({ variant: 'secondary', size: 'sm' });"}
@@ -224,7 +259,8 @@ const count = Object.values(componentGroups).flat().length;
       </Card>
     </Container>
   </section>
-  <Container as="section" width="xl" gutter="compact" aria-labelledby="start-title" class="py-16 sm:py-24">
+
+  <Container as="section" width="xl" gutter="compact" aria-labelledby="start-title" class="py-10 sm:py-12 lg:py-16">
     <div class="grid items-start gap-12 lg:grid-cols-2 lg:gap-20">
       <div>
         <SectionHeading
@@ -233,15 +269,18 @@ const count = Object.values(componentGroups).flat().length;
           description={copy.startBody}
           id="start-title"
         />
+
         <Link
           href={sitePath(locale, 'docs')}
           underline="none"
           class="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold"
         >
           {copy.startLink}
+
           <Icon name="arrow-right" class="size-4" />
         </Link>
       </div>
+
       <ol class="grid gap-8">
         {copy.startSteps.map(([title, body], i) => (
           <li class="flex gap-5">
@@ -254,10 +293,12 @@ const count = Object.values(componentGroups).flat().length;
             >
               0{i + 1}
             </Text>
+
             <div>
               <Heading as="h3" ui-size="sm">
                 {title}
               </Heading>
+
               <Text ui-size="sm" tone="muted" leading="relaxed" class="mt-2">
                 {body}
               </Text>
@@ -266,6 +307,7 @@ const count = Object.values(componentGroups).flat().length;
         ))}
       </ol>
     </div>
+
     <div class="mt-12">
       <Terminal
         title="visomi-stack / terminal"
@@ -274,23 +316,27 @@ pnpm nx serve web-site`}
       />
     </div>
   </Container>
+
   <section class="bg-blue-700 text-white dark:bg-blue-600" aria-labelledby="vision-title">
     <Container
       as="div"
       width="xl"
       gutter="compact"
-      class="grid gap-12 py-16 sm:py-24 lg:grid-cols-[1.15fr_1fr] lg:gap-20"
+      class="grid gap-12 py-10 sm:py-12 lg:py-16 lg:grid-cols-[1.15fr_1fr] lg:gap-20"
     >
       <div>
         <Text ui-size="xs" tone="inverse" mono class="mb-5 tracking-widest">
           {copy.visionKicker}
         </Text>
+
         <Heading as="h2" ui-size="xl" tone="inverse" id="vision-title" class="max-w-xl">
           {copy.visionTitle}
         </Heading>
+
         <Text ui-size="md" tone="inverse" leading="relaxed" class="mt-6 max-w-xl">
           {copy.visionBody}
         </Text>
+
         <Link
           href={`${sitePath(locale, 'architecture')}#direction`}
           variant="inverse"
@@ -299,16 +345,19 @@ pnpm nx serve web-site`}
           {copy.visionNote}
         </Link>
       </div>
+
       <ul class="grid content-center gap-6">
         {copy.visionItems.map(([title, body], i) => (
           <li class="flex gap-4 border-t border-white/25 pt-6">
             <Text as="span" ui-size="xs" tone="inverse" mono>
               0{i + 1}
             </Text>
+
             <div>
               <Heading as="h3" ui-size="md" tone="inverse">
                 {title}
               </Heading>
+
               <Text ui-size="sm" tone="inverse" leading="relaxed" class="mt-2">
                 {body}
               </Text>
@@ -318,16 +367,18 @@ pnpm nx serve web-site`}
       </ul>
     </Container>
   </section>
+
   <Container
     as="section"
     width="xl"
     gutter="compact"
     aria-labelledby="faq-title"
-    class="grid gap-10 py-16 sm:py-24 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20"
+    class="grid gap-10 py-10 sm:py-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20"
   >
     <Heading as="h2" ui-size="section" id="faq-title" class="max-w-md">
       {copy.faqTitle}
     </Heading>
+
     <div class="grid gap-3">
       {copy.faq.map(([question, answer]) => (
         <Disclosure summary={question}>
@@ -338,18 +389,23 @@ pnpm nx serve web-site`}
       ))}
     </div>
   </Container>
-  <section class="border-t border-zinc-200 bg-zinc-50 px-5 py-16 text-center sm:px-8 sm:py-20 dark:border-zinc-800 dark:bg-zinc-900/30">
+
+  <section class="border-t border-zinc-200 bg-zinc-50 px-5 py-10 text-center sm:px-8 sm:py-12 dark:border-zinc-800 dark:bg-zinc-900/30">
     <Heading as="h2" ui-size="xl">
       {copy.finalTitle}
     </Heading>
+
     <Text ui-size="md" tone="muted" class="mx-auto mt-5 max-w-xl">
       {copy.finalBody}
     </Text>
+
     <div class="mt-8 flex flex-wrap justify-center gap-3">
       <LinkButton href={sitePath(locale, 'docs')}>
         {labels.start}
+
         <Icon name="arrow-right" class="size-4" />
       </LinkButton>
+
       <LinkButton href={sitePath(locale, 'ui')} variant="secondary">
         {labels.nav.ui}
       </LinkButton>

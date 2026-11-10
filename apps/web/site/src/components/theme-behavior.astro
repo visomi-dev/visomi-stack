@@ -1,0 +1,63 @@
+<script>
+  type ThemePreference = 'system' | 'light' | 'dark';
+
+  function isPreference(value: unknown): value is ThemePreference {
+    return value === 'system' || value === 'light' || value === 'dark';
+  }
+
+  const storageKey = 'visomi.theme';
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  let stored: unknown;
+
+  try {
+    stored = localStorage.getItem(storageKey);
+  } catch {
+    // The system preference is used when persistence is unavailable.
+  }
+
+  let preference: ThemePreference = isPreference(stored) ? stored : 'system';
+
+  function apply() {
+    const dark = preference === 'system' ? media.matches : preference === 'dark';
+    const pressed = String(dark);
+
+    document.documentElement.classList.toggle('dark', dark);
+    for (const control of document.querySelectorAll<HTMLSelectElement>('select[data-theme-select]')) {
+      control.value = preference;
+    }
+    for (const control of document.querySelectorAll<HTMLButtonElement>('button[data-theme-switcher]')) {
+      if (!control.disabled && control.ariaPressed !== pressed) {
+        control.dataset.themeAnimated = '';
+      }
+
+      control.ariaPressed = pressed;
+      control.disabled = false;
+    }
+  }
+
+  function select(value: ThemePreference) {
+    preference = value;
+
+    try {
+      localStorage.setItem(storageKey, value);
+    } catch {
+      // Theme changes remain usable when storage is blocked.
+    }
+    apply();
+  }
+
+  apply();
+  media.addEventListener('change', apply);
+  document.addEventListener('change', (event) => {
+    const control = event.target;
+
+    if (control instanceof HTMLSelectElement && control.matches('[data-theme-select]') && isPreference(control.value)) {
+      select(control.value);
+    }
+  });
+  document.addEventListener('click', (event) => {
+    if (event.target instanceof Element && event.target.closest('button[data-theme-switcher]')) {
+      select(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
+    }
+  });
+</script>

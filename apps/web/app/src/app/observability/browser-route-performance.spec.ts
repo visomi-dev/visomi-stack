@@ -1,4 +1,4 @@
-import { Component, PLATFORM_ID, provideEnvironmentInitializer, inject } from '@angular/core';
+import { Component, provideEnvironmentInitializer, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -12,7 +12,7 @@ class Page {}
 
 const marker = 'SYNTHETIC_PRIVATE_ROUTE_DATA';
 
-function fixture(enabled = true, platform = 'browser') {
+function fixture(enabled = true, configured = true) {
   const routeTransition = vi.fn();
   let enterSlow!: () => void;
   const slowEntered = new Promise<void>((resolve) => {
@@ -22,6 +22,7 @@ function fixture(enabled = true, platform = 'browser') {
 
   TestBed.configureTestingModule({
     providers: [
+      BrowserRoutePerformance,
       provideRouter([
         { path: '', component: Page },
         { path: 'customer/:id', component: Page },
@@ -48,8 +49,7 @@ function fixture(enabled = true, platform = 'browser') {
         },
         { path: 'redirect', redirectTo: '/customer/redirected', pathMatch: 'full' },
       ]),
-      { provide: PLATFORM_ID, useValue: platform },
-      { provide: BROWSER_ERROR_REPORTER, useValue: reporter },
+      ...(configured ? [{ provide: BROWSER_ERROR_REPORTER, useValue: reporter }] : []),
       provideEnvironmentInitializer(() => {
         inject(BrowserRoutePerformance);
       }),
@@ -98,10 +98,10 @@ describe('Angular route transition performance', () => {
   });
 
   it.each([
-    [false, 'browser'],
-    [true, 'server'],
-  ] as const)('does not capture when enabled=%s on %s', async (enabled, platform) => {
-    const f = fixture(enabled, platform);
+    [false, true],
+    [true, false],
+  ] as const)('does not capture when enabled=%s and configured=%s', async (enabled, configured) => {
+    const f = fixture(enabled, configured);
     const harness = await RouterTestingHarness.create('/');
 
     await harness.navigateByUrl('/customer/synthetic');

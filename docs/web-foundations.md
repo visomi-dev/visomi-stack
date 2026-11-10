@@ -83,7 +83,15 @@ entry, independently of the process working directory.
 
 API handling, Angular at `/app` and reserved `/api` and `/app` 404s precede public static assets and
 Astro SSR. Angular keeps the full URL prefix for its localized SSR manifest and assets. The gateway owns the listener, security headers, authentication chain,
-telemetry and resource shutdown. The shared error handler remains last.
+telemetry and resource shutdown. Authentication runs only for `/api` and `/app`, so public assets
+remain available during a session-store outage.
+
+Astro builds localized error documents using the shared UI foundations. The gateway serves them for
+browser requests, retaining the original 4xx or 5xx status and any retry headers. API and telemetry
+errors keep their JSON contracts. Angular keeps its router-owned 404 for in-app navigation. SSR
+document requests share a 600-per-minute instance budget after a 60-per-minute client budget.
+The gateway passes its explicit trusted proxy ranges to Angular so the client budget works behind
+configured ingress. Static assets and non-document requests bypass both limits.
 
 The pinned frontend SSR packages have pnpm patches for the gateway's runtime policy:
 middleware errors delegate to Express, importing or rendering either frontend installs no global

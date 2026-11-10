@@ -4,6 +4,40 @@ function route(locale = 'en') {
   return `/${locale}/`;
 }
 
+test('shows a localized 404 with the foundations theme and a working way home on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+
+  await page.emulateMedia({ colorScheme: 'light' });
+
+  const response = await page.goto('/es/missing-review-page/');
+
+  expect(response?.status()).toBe(404);
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Página no encontrada');
+
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCSS('font-family', /Manrope/);
+
+  const theme = page.getByRole('button', { name: 'Modo oscuro' });
+
+  await expect(theme).toBeEnabled();
+
+  await theme.focus();
+
+  await page.keyboard.press('Enter');
+
+  await expect(theme).toHaveAttribute('aria-pressed', 'true');
+
+  const fitsViewport = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+
+  expect(fitsViewport).toBe(true);
+
+  await page.getByRole('link', { name: 'Ir al inicio' }).click();
+
+  await expect(page).toHaveURL(/\/es\/$/);
+});
+
 for (const locale of ['en', 'es']) {
   test(`renders ${locale} through Express and loads assets without errors`, async ({ page, request }, info) => {
     const path = route(locale);
@@ -68,7 +102,7 @@ test('remembers explicit themes and follows system changes only in system mode',
     }
   });
 
-  await page.goto(route());
+  await page.goto('/en/button/');
 
   const control = page.locator('[data-theme-select]');
 
@@ -118,7 +152,7 @@ test('keeps theme controls usable when storage is blocked', async ({ page }) => 
 
   await expect(page.locator('html')).toHaveClass('dark');
 
-  await page.locator('[data-theme-select]').selectOption('light');
+  await page.getByRole('button', { name: 'Dark theme', exact: true }).click();
 
   await expect(page.locator('html')).not.toHaveClass('dark');
 });
@@ -140,9 +174,15 @@ test('supports keyboard focus, reduced motion and a narrow viewport', async ({ p
 
   expect(overflowing).toBe(false);
 
-  await page.locator('[data-theme-select]').focus();
+  const switcher = page.getByRole('button', { name: 'Tema oscuro', exact: true });
 
-  await expect(page.locator('[data-theme-select]')).toHaveCSS('outline-style', 'solid');
+  await expect(switcher).toBeEnabled();
+
+  await switcher.focus();
+
+  await expect(switcher).toHaveCSS('outline-style', 'solid');
+
+  await expect(switcher.locator('svg').first()).toHaveCSS('animation-name', 'none');
 
   await page.evaluate(() => document.fonts.ready);
 
@@ -176,5 +216,11 @@ test('uses the system preference when the stored theme is invalid', async ({ pag
 
   await expect(page.locator('html')).toHaveClass('dark');
 
-  await expect(page.locator('[data-theme-select]')).toHaveValue('system');
+  const switcher = page.getByRole('button', { name: 'Dark theme', exact: true });
+
+  await expect(switcher).toHaveAttribute('aria-pressed', 'true');
+
+  await page.emulateMedia({ colorScheme: 'light' });
+
+  await expect(switcher).toHaveAttribute('aria-pressed', 'false');
 });

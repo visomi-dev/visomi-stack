@@ -1,3 +1,4 @@
+import { REALTIME_PUBLISHER } from '@visomi-stack/backend-shared';
 import { describe, expect, it, vi } from 'vitest';
 
 import { config, current, flow, granted, session, storage, user } from '../../../tests/support/auth-state';
@@ -21,6 +22,23 @@ describe('device approval revocation and races', () => {
     codeHash: digest(config.secret, `device:${flow.id}`, '123456'),
     expiresAt: flow.expiresAt,
   };
+
+  it('publishes after a successful write and preserves the result if delivery fails', async () => {
+    const f = storage([[session], [], [session], [request]]);
+    const changed = vi.fn().mockRejectedValue(new Error('synthetic_delivery_failure'));
+    const devices = authService(Devices, f.db, config, [
+      { provide: Flows, useValue: {} as Flows },
+      { provide: REALTIME_PUBLISHER, useValue: { notifyDeviceApproval: changed } },
+    ]);
+
+    await expect(devices.cancel(session.sid, flow.id)).rejects.toMatchObject({ code: 'verification_failed' });
+
+    expect(changed).not.toHaveBeenCalled();
+
+    await devices.cancel(session.sid, flow.id);
+
+    expect(changed).toHaveBeenCalledExactlyOnceWith(flow.id);
+  });
 
   it('rejects missing, revoked and stale approval authorities', async () => {
     for (const candidate of [

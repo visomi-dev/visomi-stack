@@ -7,9 +7,11 @@ export const es = {
     foundations: 'Fundamentos de diseño',
   },
   start: 'Comenzar',
+  openApp: 'Abrir app',
   menu: 'Navegación',
   language: 'Idioma',
   theme: 'Apariencia',
+  themeToggle: 'Tema oscuro',
   system: 'Sistema',
   light: 'Claro',
   dark: 'Oscuro',
@@ -138,9 +140,7 @@ export const es = {
     diagramTitle: 'El mapa de ejecución',
     current: 'Disponible hoy',
     direction: 'Dirección de arquitectura',
-    standalone: 'Aplicación SSR independiente',
-    nextMount: 'La integración al gateway es el siguiente paso',
-    gatewayNote: 'Compone HTTP y controla el arranque y los recursos del proceso.',
+    gatewayNote: 'Monta el website, la aplicación Angular y la API; controla el arranque y los recursos del proceso.',
     map: [
       ['Website', 'Astro SSR', '/en/ · /es/'],
       ['API', 'Express', '/api/'],
@@ -154,11 +154,11 @@ export const es = {
       ],
       [
         'Base de aplicación',
-        'Angular renderiza e hidrata de forma independiente, con builds por idioma, ejemplos de Signal Forms y un shell adaptable.',
+        'Angular SSR comparte el gateway con el website y la API, con builds por idioma, ejemplos de Signal Forms y un shell adaptable.',
       ],
       [
         'Backend de identidad',
-        'La API incluye passkeys, verificación de cuentas, recuperación y sesiones en PostgreSQL. Las pantallas de autenticación son el siguiente paso de UI.',
+        'La API incluye passkeys, verificación de cuentas, recuperación y sesiones en PostgreSQL que utilizan las pantallas de autenticación de Angular.',
       ],
       [
         'UI compartida',
@@ -167,12 +167,8 @@ export const es = {
     ],
     directionTitle: 'Una dirección más allá de la primera pantalla.',
     directionIntro:
-      'Estos ejemplos describen la forma prevista de la plataforma. Aún no están todos implementados en esta reconstrucción.',
+      'Estas capacidades describen direcciones futuras de arquitectura. Todavía no están implementadas en esta reconstrucción.',
     future: [
-      [
-        'Un origen público',
-        'Montar la aplicación Angular junto al website y la API, manteniendo la composición separada de la lógica de dominio.',
-      ],
       [
         'Ejecución en segundo plano',
         'Dar su propio worker al trabajo programado y de larga duración, con handlers del dominio de negocio correspondiente.',

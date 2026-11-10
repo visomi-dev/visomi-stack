@@ -23,6 +23,12 @@ of conflicting utilities in a class string does not define precedence.
 ## Application-owned themes
 
 Theme behavior lives in each frontend rather than in the shared recipe library.
+The `themeSwitcher` recipe shares the sun/moon artwork and vertical reel transition.
+Angular and Astro headers use native toggle buttons with a localized label,
+pressed state and reduced-motion support. They use the system theme initially and
+persist an explicit light or dark choice after activation; the native selector
+remains available in the foundations demonstrations.
+
 Angular and Astro independently own their TypeScript preference type, storage,
 DOM updates and media listeners. Both retain the `visomi.theme` storage key and
 support `light`, `dark` and `system`. Invalid values follow the system.

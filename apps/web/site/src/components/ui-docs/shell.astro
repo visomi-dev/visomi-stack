@@ -27,9 +27,11 @@ const labels = uiDocs[locale];
     <Text as="p" ui-size="sm" tone="muted" class="max-w-2xl">
       {labels.shellNote}
     </Text>
+
     <LinkButton href={`/${locale}/ui/shell/`}>{labels.openShell}</LinkButton>
   </div>
 </Preview>
+
 <Preview
   id="sidebar"
   locale={locale}
@@ -45,19 +47,24 @@ const labels = uiDocs[locale];
       <strong slot="brand" class="font-heading tracking-wide">
         VISOMI
       </strong>
+
       <div class="space-y-1">
         <NavItem href={`/${locale}/ui/shell/`} aria-current="page">
           {labels.home}
         </NavItem>
+
         <NavItem href={`/${locale}/ui/shell/#shell-activity`}>{labels.activity}</NavItem>
+
         <NavItem href={`/${locale}/ui/shell/#shell-settings`}>{labels.settings}</NavItem>
       </div>
+
       <Text as="p" ui-size="xs" tone="muted" slot="footer">
         {labels.shellFooter}
       </Text>
     </Sidebar>
   </Card>
 </Preview>
+
 <Preview
   id="topbar"
   locale={locale}
@@ -66,11 +73,13 @@ const labels = uiDocs[locale];
 >
   <Topbar class="rounded-t-lg">
     <span slot="title">{labels.workspace}</span>
+
     <LinkButton href={`/${locale}/ui/shell/`} variant="secondary" size="sm">
       {labels.openShell}
     </LinkButton>
   </Topbar>
 </Preview>
+
 <Preview
   id="navbar"
   locale={locale}
@@ -85,14 +94,17 @@ const labels = uiDocs[locale];
     <NavItem placement="navbar" href={`/${locale}/ui/shell/`} aria-current="page">
       {labels.home}
     </NavItem>
+
     <NavItem placement="navbar" href={`/${locale}/ui/shell/#shell-activity`}>
       {labels.activity}
     </NavItem>
+
     <NavItem placement="navbar" href={`/${locale}/ui/shell/#shell-settings`}>
       {labels.settings}
     </NavItem>
   </Navbar>
 </Preview>
+
 <Preview
   id="nav-item"
   locale={locale}
@@ -107,6 +119,7 @@ const labels = uiDocs[locale];
     <NavItem href={`/${locale}/ui/shell/`} aria-current="page">
       {labels.home}
     </NavItem>
+
     <NavItem href={`/${locale}/ui/shell/#shell-settings`}>{labels.settings}</NavItem>
   </nav>
 </Preview>

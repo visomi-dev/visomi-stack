@@ -18,9 +18,10 @@ NX_DAEMON=false pnpm nx show projects --json
 NX_DAEMON=false pnpm nx show project web-api --json
 ```
 
-The current projects are `web-api`, `web-gateway`, `web-backend-shared`, and `backend-shared`.
-Do not substitute the legacy name `api` or assume planned projects such as
-`server`, `app`, or `site` exist.
+The web applications are `web-api`, `web-gateway`, `web-app`, and `web-site`, with
+supporting libraries and test projects listed by `nx show projects`. Use these
+Nx project names rather than the legacy name `api` or directory names such as
+`app` and `site`.
 Template initialization, doctor and smoke scripts from the previous stack are not
 available here. Check command help before using unfamiliar
 flags. Agents should follow the Nx skill guidance in [AGENTS.md](../AGENTS.md).
@@ -41,6 +42,41 @@ and apply this same shared migration history. Application imports and startup do
 not run migrations. See the [API guide](../apps/web/api/README.md) for configuration
 and resource ownership.
 
+## Local agent tooling
+
+Run these steps on each new checkout created from the stack template. Use the
+Node and pnpm versions described above. Install the workspace dependencies with
+`pnpm install --frozen-lockfile` and run the remaining commands from the repo root.
+
+1. Make the Codegraph and Context7 CLIs available on the host's PATH. Skip the
+   install if both commands are already available.
+
+   ```sh
+   pnpm add -g @colbymchenry/codegraph@1.6.2 ctx7@0.10.0
+   ```
+
+2. Build the source and Markdown indexes for this checkout. Codegraph reads
+   `codegraph.json` and QMD reads `.qmd/index.yml`.
+
+   ```sh
+   CODEGRAPH_TELEMETRY=0 codegraph init --yes
+   pnpm --config.ignore-scripts=true dlx @tobilu/qmd@2.8.3 update
+   ```
+
+   Use `CODEGRAPH_TELEMETRY=0 codegraph index` after changing Codegraph's coverage.
+   Rerun QMD's `update` after Markdown changes. The generated indexes are local
+   to each checkout and ignored by Git.
+
+3. Open the repo root as a trusted Codex project and start a new session. Codex
+   loads the local Nx, Angular CLI, Codegraph, and QMD MCP servers from
+   `.codex/config.toml`. Run `codex mcp list` from the repo root to inspect the
+   configuration. QMD uses lexical search over the `visomi-docs` collection.
+
+The bundled `find-docs` skill uses `ctx7` for public third-party documentation.
+Send only public technology names and questions to Context7. See
+[AGENTS.md](../AGENTS.md#code-and-documentation-lookup) for the QMD MCP and CLI
+search workflow.
+
 ## Gateway development
 
 ```sh
@@ -48,16 +84,21 @@ pnpm nx serve web-gateway
 pnpm nx build web-gateway
 ```
 
-Serving watches the gateway source and builds the API dependency first. It mounts
-the compiled API at `/api`; the gateway root currently returns 404. Rebuild the
-API explicitly after changing its source, then restart the gateway to load the
-new artifact. Nx supplies `API_APP_PATH` for source-mode serving. Standalone
-compiled startup defaults to `../api/app.js` relative to the gateway artifact,
-independent of the working directory. An explicit `API_APP_PATH` override must
-point to compiled `app.js`; relative overrides resolve from the working directory.
+Serving watches the gateway source and builds its application dependencies first.
+The gateway mounts the compiled API at `/api`, the Angular SSR application under
+`/app`, and the Astro website at `/`. The website root redirects to `/en/`; localized
+pages are available at `/en/` and `/es/`. Angular entry routes are `/app/en/` and
+`/app/es/`. Rebuild a mounted application after changing its source, then restart
+the gateway to load the new artifact.
+
+Nx supplies `API_APP_PATH`, `SITE_APP_PATH`, and `APPLICATION_APP_PATH` for
+source-mode serving. Compiled startup defaults to sibling artifacts
+`../api/app.js`, `../site/server/entry.mjs`, and `../app/server/server.mjs`,
+independent of the working directory. Explicit overrides must point to these
+compiled application exports; relative overrides resolve from the working directory.
 
 The gateway emits ESM with matching package metadata; the API retains CommonJS.
-Deploy both complete output directories as siblings with their runtime
+Deploy all four complete output directories as siblings with their runtime
 dependencies. `node dist/apps/web/gateway/main.js` owns the public listener.
 Importing either `app.js` only exposes a factory, without listening, connecting
 to PostgreSQL or initializing telemetry. The gateway uses the API's existing
@@ -66,11 +107,121 @@ It installs one auth chain in the host and uses inherited mode for the mounted A
 Its shutdown uses the same three-second HTTP drain, one-second telemetry flush
 budget and five-second total deadline as the standalone API.
 
-The container runtime defaults to the standalone API. Set `APP_NAME=web-gateway`
-to build the gateway and its API dependency, copy both compiled outputs, and run
-the gateway's `main.js`. Set `APP_PORT` to change the published port and align
-`AUTH_ORIGIN` with that public URL. This tunnel configuration adds no frontend mounts, realtime or
-worker mounts.
+The container runtime defaults to `web-gateway`. Its build includes the API,
+Angular application, and Astro website, and the runtime starts the gateway's
+`main.js` with all four compiled outputs. Set `APP_NAME=web-api` only when running
+the standalone API, which serves its greeting at `/`. Set `APP_PORT` to change the
+published port and align `AUTH_ORIGIN` with that public URL. Worker and realtime
+applications remain unimplemented.
+
+## Template formatting and editor linting
+
+HTML, Angular templates and Astro use the local `workspace/template-sibling-newlines`
+ESLint rule to separate sibling elements and control-flow blocks already written
+on different lines. Inline text, comments and literal content in `pre`, `code`,
+`textarea`, `script` and `style` retain their spacing. Prettier preserves the
+inserted blank lines. `lint-staged` runs Prettier followed by ESLint fixes for both
+HTML and Astro; the workspace editor settings enable formatting and ESLint fixes
+on explicit save. Nx lint tasks enforce the same rule.
+
+The editor selects the local ESLint configuration for each project. After shared
+ESM lint configuration changes, use **ESLint: Restart ESLint Server** if diagnostics
+still reflect an older configuration. `toSignal`, `signal` and `linkedSignal` belong
+to the same Angular state group, before computed properties. Configuration tests
+verify this ordering from both the workspace root and the application directory.
+
+## Integrated live reload
+
+The `pnpm dev` launcher serves the same website, Angular SSR application and
+API together on `http://localhost:8080`. It uses one source-watching supervisor,
+short-lived Nx builds with a concurrency of one, and a compiled gateway child
+process. Angular and Astro watch servers and the Nx daemon are not started by
+the supervisor. The direct launcher also avoids a long-running Nx task retaining
+build output in memory. The optional `web-gateway:dev` target runs the same
+supervisor under Nx. Nx's cache reuses unaffected builds. This is full browser reload,
+not component HMR; both English and Spanish production-localized outputs are
+built so the mounted runtime remains the same as the container runtime.
+
+The supervisor owns the public port and injects an external, same-origin reload
+client into HTML. The compiled gateway listens on a private loopback port, owns
+authentication and SSR session context, and receives the original cookies and
+Host header. The development client uses a local event stream, without external
+telemetry. Production startup does not include this proxy or reload client.
+
+While rebuilding, the public server returns a temporary 503 building page. It
+uses the shared UI recipes, Tailwind theme and locally served fonts, with
+English/Spanish copy and the saved or system light/dark preference. Its HTML and
+CSS are prepared once at supervisor startup in a short-lived compiler process;
+they require neither application build output nor additional watchers. Restart
+the supervisor after editing this screen or its shared design recipes.
+
+The supervisor starts a new gateway and reloads connected browsers only after a successful
+build and API readiness check. Compilation or startup failures remain visible in
+the terminal; editing a source file retries the build. Changes arriving during a
+build are batched for the next build. Stopping the supervisor closes its source
+watchers, event streams, build process group, and gateway.
+
+### Gateway on the host
+
+Use Node and pnpm from this workspace. Keep a private root `.env` with a unique
+`SESSION_SECRET`; `.env.example` documents the local defaults. The supervisor
+loads `.env` without overriding existing process variables. It defaults the
+database connection to the published local PostgreSQL port and the credentials
+used by Compose; set `DATABASE_URL` explicitly for a native or different database.
+An explicitly empty `DATABASE_URL` allows a preview with authentication disabled.
+
+If a Compose application is running, stop it to release the public port. Start
+only dependencies and apply migrations when needed:
+
+```sh
+podman compose stop app
+podman compose up -d postgres redis minio minio-init
+podman compose run --rm database-init
+pnpm dev
+```
+
+With PostgreSQL already available locally and its schema migrated, only the last
+command is needed; Podman is optional. `APP_PORT` (or `PORT`) changes the public
+port. Keep `AUTH_ORIGIN` aligned with that port. Stop development with Ctrl+C.
+The existing `serve` targets remain available for working on one application.
+
+### Gateway inside Podman
+
+Stop a host development process first, then use the explicit development overlay:
+
+```sh
+podman compose -f compose.yaml -f compose.dev.yaml up -d --build
+podman compose -f compose.yaml -f compose.dev.yaml logs -f app
+```
+
+The same supervisor runs inside the development image. The checkout is
+bind-mounted as a directory, including atomic editor saves, while `node_modules`,
+compiled output, temporary files and Nx workspace data use separate development
+volumes inside the container. Host edits trigger a build, gateway restart and
+browser reload without rebuilding the image. The
+application's database URL continues to use container DNS `postgres:5432`.
+
+Use one gateway development mode per checkout at a time and release its public
+port before switching. Source, templates, styles, public assets, project
+configuration and shared library changes
+are watched; generated outputs, dependencies, tests and private environment files
+are excluded. Restart the supervisor after changing `.env`, the supervisor itself,
+or adding a new project/source subtree. After changing dependencies, run
+`pnpm install --frozen-lockfile` on the host, or update the isolated container
+dependencies with
+`podman compose -f compose.yaml -f compose.dev.yaml run --rm --no-deps app pnpm install --frozen-lockfile`
+and restart the development service. The development volumes are disposable
+build state and are separate from the PostgreSQL and MinIO data volumes.
+
+To return to the ordinary container runtime:
+
+```sh
+podman compose up -d --build app
+```
+
+The source-watching setup reduces persistent compiler processes; it does not cap
+the memory needed for a build. Measure actual memory use before setting limits.
+Check the development controller with `pnpm nx run web-gateway:development-check`.
 
 ## Container database initialization
 
@@ -80,7 +231,8 @@ the selected compiled API or gateway with production dependencies. Neither image
 migrations at build time. The API entrypoint does not run migrations or seeds.
 
 Provide a high-entropy `SESSION_SECRET` of at least 32 bytes in your environment,
-then run:
+or in a root `.env` file (ignored by Git). Keep that file private, for example
+with `chmod 600 .env`. Then run:
 
 ```sh
 docker compose up --build app
@@ -93,16 +245,32 @@ its startup. Redis and MinIO remain available as separate services but are not
 dependencies of the current API. Use `up app` for this slice; starting every
 service also includes those legacy integrations.
 
-Use Docker Compose with support for these dependency conditions. Older `podman-compose`
-providers can fail to start the application after the one-shot dependency exits.
-Docker Compose v2 can use the host's Podman API socket instead; this is a local
-provider limitation, not a reason to move initialization into the API.
+Use Docker Compose with support for these dependency conditions. `podman-compose`
+providers, including 1.6.0, can fail to start the application after the one-shot
+dependency exits because of their native container dependency graph. Docker Compose
+v2 can use the host's Podman API socket instead; this is a local provider limitation,
+not a reason to move initialization into the API.
 
 With that socket and Docker Compose v2 available, run:
 
 ```sh
 DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock" docker-compose up --build app
 ```
+
+Alternatively, let `podman compose` configure the connection to that socket:
+
+```sh
+PODMAN_COMPOSE_PROVIDER="$(command -v docker-compose)" podman compose up -d --build app
+```
+
+To make this provider selection persistent, set `compose_providers` under
+`[engine]` in `~/.config/containers/containers.conf` to the absolute path returned
+by `command -v docker-compose`. Check `podman compose version` as well as
+`podman-compose --version`: an explicit provider path overrides `PATH` and can
+keep selecting an older distribution package. When changing providers for an
+existing project, run `podman-compose down` with the old provider first, without
+`--volumes`, so the new provider can recreate the containers and network with its
+own labels while retaining the database and storage volumes.
 
 Both services use the same database URL, with container DNS `postgres:5432`.
 The default URL is composed from the same `POSTGRES_USER`, `POSTGRES_PASSWORD`
@@ -121,6 +289,7 @@ podman-compose --version
 Ensure `~/.local/bin` precedes `/usr/bin` in `PATH`. This updates the Compose
 provider independently of the Podman engine; it does not upgrade the engine or
 restart unrelated containers.
+
 The API defaults to `AUTH_ORIGIN=http://localhost:8080` and `AUTH_RP_ID=localhost`
 for this local setup; override both together when needed. Compose supplies only
 the declared settings to the API and does not require an `env_file`.
@@ -315,3 +484,22 @@ and deployment are not implicit maintenance steps.
 
 See [Web foundations](web-foundations.md) for the independent Angular SSR app,
 Astro development server, compiled Astro/Express composition, themes and UI checks.
+
+## Authentication frontend
+
+The Angular root now selects the appropriate authentication or private route.
+Use `/app/en/foundations` or `/app/es/foundations` for the original UI examples.
+Full auth runs through the gateway with its existing PostgreSQL, SMTP, origin and
+session configuration; the standalone Angular executable does not own those resources.
+
+Run the browser suite with an owned synthetic database and mailbox:
+
+```sh
+pnpm nx e2e web-app-e2e --configuration=auth
+```
+
+It includes Chromium virtual passkeys and password/recovery workflows in Firefox
+and WebKit. Select the installed Compose provider through `VISOMI_TEST_COMPOSE`
+when necessary. No real Google account, customer records or developer database is
+used. See the [application guide](../apps/web/app/README.md) for route, SSR and
+challenge-restart behavior and the remaining manual device/provider checks.

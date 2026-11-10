@@ -26,6 +26,7 @@ const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
     ))}
   </div>
 </Preview>
+
 <Preview
   id="avatar"
   locale={locale}
@@ -38,13 +39,17 @@ const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
     <Avatar label={labels.sampleName} ui-size="sm">
       ML
     </Avatar>
+
     <Avatar label={labels.sampleName}>ML</Avatar>
+
     <Avatar label={labels.sampleName} ui-size="lg" shape="rounded">
       ML
     </Avatar>
+
     <Avatar label={labels.workspace} src="/favicon.svg" />
   </div>
 </Preview>
+
 <Preview
   id="table"
   locale={locale}
@@ -58,45 +63,56 @@ const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
   <Text as="p" ui-size="sm" tone="muted" class="mb-4">
     {labels.tableBehavior}
   </Text>
+
   <div data-table-scroll class="max-h-96 overflow-auto">
     <Table striped mobile-cards sticky-headers role="table">
       <caption>{labels.tableCaption}</caption>
+
       <thead role="rowgroup">
         <tr role="row">
           <th scope="col" role="columnheader" id="docs-workspace">
             {labels.workspace}
           </th>
+
           <th scope="col" role="columnheader" id="docs-status">
             {labels.status}
           </th>
         </tr>
       </thead>
+
       <tbody role="rowgroup">
         <tr role="row">
           <th scope="row" role="rowheader" id="docs-studio">
             <span data-slot="label" aria-hidden="true">
               {labels.workspace}
             </span>
+
             {labels.studio}
           </th>
+
           <td role="cell" headers="docs-status docs-studio">
             <span data-slot="label" aria-hidden="true">
               {labels.status}
             </span>
+
             <Badge tone="success">{labels.success}</Badge>
           </td>
         </tr>
+
         <tr role="row">
           <th scope="row" role="rowheader" id="docs-sandbox">
             <span data-slot="label" aria-hidden="true">
               {labels.workspace}
             </span>
+
             {labels.sandbox}
           </th>
+
           <td role="cell" headers="docs-status docs-sandbox">
             <span data-slot="label" aria-hidden="true">
               {labels.status}
             </span>
+
             <Badge>{labels.neutral}</Badge>
           </td>
         </tr>
@@ -104,6 +120,7 @@ const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
     </Table>
   </div>
 </Preview>
+
 <Preview
   id="description-list"
   locale={locale}
@@ -112,13 +129,19 @@ const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
 >
   <DescriptionList>
     <dt>{labels.plan}</dt>
+
     <dd>{labels.team}</dd>
+
     <dt>{labels.members}</dt>
+
     <dd>8</dd>
+
     <dt>{labels.status}</dt>
+
     <dd>{labels.success}</dd>
   </DescriptionList>
 </Preview>
+
 <Preview
   id="pagination"
   locale={locale}
@@ -131,11 +154,13 @@ const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
     <LinkButton href="#pagination" variant="ghost" size="sm">
       {labels.previous}
     </LinkButton>
+
     {[1, 2, 3].map((page) => (
       <LinkButton href="#pagination" variant="secondary" size="sm" aria-current={page === 2 ? 'page' : undefined}>
         {page}
       </LinkButton>
     ))}
+
     <LinkButton href="#pagination" variant="ghost" size="sm">
       {labels.next}
     </LinkButton>

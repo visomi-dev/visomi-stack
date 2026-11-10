@@ -4,8 +4,10 @@ import {
   DATABASE,
   DATABASE_POOL,
   MAIL_TRANSPORT,
+  REALTIME_PUBLISHER,
   type Database,
   type MailTransport,
+  type RealtimePublisher,
 } from '@visomi-stack/backend-shared';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import type { Request, RequestHandler } from 'express';
@@ -40,6 +42,7 @@ import {
 } from './shared/authorization';
 import { AUTH_CONFIG, type AuthConfig } from './shared/config';
 import { Flows } from './shared/flows';
+import { sessionView } from './shared/http';
 import { readPrincipal } from './shared/identity';
 import { SecurityNotifications } from './shared/notifications';
 import { RequestLimitStore } from './shared/request-limit-store';
@@ -57,6 +60,7 @@ export function createAuthentication(options: {
   config: AuthConfig;
   mail?: MailTransport;
   authorize?: AuthorizationPolicy;
+  realtimePublisher?: RealtimePublisher;
 }) {
   const { database, pool, config } = options;
   const passport = new Passport();
@@ -65,6 +69,7 @@ export function createAuthentication(options: {
     { provide: DATABASE_POOL, useValue: pool },
     { provide: AUTH_CONFIG, useValue: config },
     { provide: MAIL_TRANSPORT, useValue: options.mail },
+    { provide: REALTIME_PUBLISHER, useValue: options.realtimePublisher },
     { provide: AUTHORIZATION_POLICY, useValue: options.authorize ?? denyPermissions },
     Authorization,
     AuthMail,
@@ -93,6 +98,7 @@ export function createAuthentication(options: {
     PasskeysController,
   ]);
   const store = injector.get<SessionStore>(SessionStore);
+  const devices = injector.get<Devices>(Devices);
   const authorization = injector.get<Authorization>(Authorization);
   const owner = {};
 
@@ -119,15 +125,16 @@ export function createAuthentication(options: {
     }
   });
 
+  const readSession = session({
+    store,
+    secret: config.secret,
+    name: config.cookieName,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { httpOnly: true, secure: config.secure, sameSite: 'strict', path: '/', maxAge: config.sessionMaxAge },
+  });
   const middleware: RequestHandler[] = [
-    session({
-      store,
-      secret: config.secret,
-      name: config.cookieName,
-      resave: false,
-      saveUninitialized: false,
-      cookie: { httpOnly: true, secure: config.secure, sameSite: 'strict', path: '/', maxAge: config.sessionMaxAge },
-    }),
+    readSession,
     passport.initialize(),
     passport.session(),
     (request: InitializedRequest, _response, next) => {
@@ -158,7 +165,27 @@ export function createAuthentication(options: {
     database,
     config,
     middleware,
+    realtime: {
+      origin: config.origin,
+      readSession,
+      async readUser(serialized: unknown) {
+        const principal = await readPrincipal(database, serialized);
+
+        return principal && principal.level === 'full' ? principal.id : null;
+      },
+      async watchExpiration(sessionId: string, requestId: string) {
+        const approval = await devices.status(sessionId, requestId);
+
+        return approval.expiresAt.getTime();
+      },
+    },
+    googleEnabled: Boolean(config.googleClientId),
     requireInitialized,
+    snapshot(request: Request) {
+      const { authenticated, user, access, method, nextStep } = sessionView(request);
+
+      return { authenticated, user, access, method, nextStep };
+    },
     requestLimits: injector.get<RequestLimitStore>(RequestLimitStore),
     anonymous,
     authenticated: authorization.authenticated.bind(authorization),
@@ -174,6 +201,6 @@ export function createAuthentication(options: {
     factors: injector.get<Factors>(Factors),
     google: injector.get<Google>(Google),
     recovery: injector.get<Recovery>(Recovery),
-    devices: injector.get<Devices>(Devices),
+    devices,
   };
 }

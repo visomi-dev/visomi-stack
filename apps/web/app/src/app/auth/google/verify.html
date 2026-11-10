@@ -1,0 +1,27 @@
+<section class="flex min-w-0 flex-col gap-6">
+  <h1 appUI appNavigationHeading i18n="@@authGoogleVerifyTitle">One more step</h1>
+
+  @if (journey.challenge()?.purpose === 'google') {
+    <p appUI tone="muted" i18n="@@authGoogleVerifyDescription">Verify your email to finish continuing with Google.</p>
+
+    <app-code-entry [busy]="action.busy()" (confirmed)="verify($event)" />
+
+    <app-resend-code />
+  } @else {
+    <div appUI="alert" tone="warning" role="status" i18n="@@authRestartChallenge">
+      This step could not be restored. Start again to request a new verification.
+    </div>
+  }
+
+  <app-auth-feedback [action]="action" />
+
+  <a
+    appUI="button"
+    [variant]="journey.challenge()?.purpose === 'google' ? 'secondary' : 'primary'"
+    routerLink="/auth/sign-in"
+    i18n="@@authBackSignIn"
+    class="inline-flex min-h-11 items-center"
+  >
+    Back to sign in
+  </a>
+</section>

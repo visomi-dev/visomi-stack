@@ -1,8 +1,36 @@
 import { expect, test } from '@playwright/test';
 
 import { disablePerformanceCapture } from './support/performance';
+import { selectTheme } from './support/theme';
 
 for (const locale of ['en', 'es']) {
+  for (const width of [360, 1440]) {
+    test(`the ${locale} website opens the mounted app at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+
+      await page.goto(`/${locale}/`);
+
+      const header = page.locator('[data-site-header]');
+      const label = locale === 'en' ? 'Open app' : 'Abrir app';
+
+      if (width < 1024) {
+        await header.locator('[data-site-menu] summary').click();
+      }
+
+      const link = header.getByRole('link', { name: label, exact: true }).filter({ visible: true });
+
+      await expect(link).toHaveAttribute('href', `/app/${locale}/`);
+
+      await link.click();
+
+      await expect(page).toHaveURL(new RegExp(`/app/${locale}/auth/sign-in$`));
+
+      await expect(page.locator('html')).toHaveAttribute('lang', locale === 'en' ? 'en-US' : 'es');
+
+      await expect(page.locator('[data-theme-switcher]')).toBeEnabled();
+    });
+  }
+
   test(`public ${locale} pages render complete HTML through Express`, async ({ request }) => {
     for (const suffix of ['', 'architecture/', 'docs/', 'foundations/', 'ui/']) {
       const response = await request.get(`/${locale}/${suffix}`);
@@ -47,6 +75,34 @@ for (const locale of ['en', 'es']) {
     await page.getByRole('checkbox').uncheck();
 
     await expect(page.getByRole('checkbox')).not.toBeChecked();
+
+    const switcher = page.getByRole('button', { name: locale === 'en' ? 'Dark theme' : 'Tema oscuro', exact: true });
+
+    await expect(switcher).toBeEnabled();
+
+    await expect(switcher).toHaveAttribute('aria-pressed', 'false');
+
+    await switcher.focus();
+
+    await page.keyboard.press('Space');
+
+    await expect(switcher).toHaveAttribute('aria-pressed', 'true');
+
+    await expect(page.locator('html')).toHaveClass('dark');
+
+    await page.reload();
+
+    await expect(switcher).toHaveAttribute('aria-pressed', 'true');
+
+    await switcher.focus();
+
+    await page.keyboard.press('Enter');
+
+    await expect(switcher).toHaveAttribute('aria-pressed', 'false');
+
+    await expect(page.locator('html')).toHaveClass('');
+
+    expect(errors).toEqual([]);
   });
 }
 
@@ -83,9 +139,25 @@ test('mobile navigation and locale changes work without JavaScript', async ({ br
 
     await expect(page).toHaveURL(/\/es\/architecture\/$/);
 
-    await page.getByRole('navigation', { name: 'Idioma', exact: true }).getByRole('link', { name: 'EN' }).click();
+    const language = page.getByRole('navigation', { name: 'Idioma', exact: true });
+    const english = language.getByRole('link', { name: 'English', exact: true });
+
+    await expect(language.getByText('Español', { exact: true })).toHaveAttribute('aria-current', 'true');
+
+    await expect(language.getByRole('link')).toHaveCount(1);
+
+    await expect(english).toHaveAttribute('hreflang', 'en');
+
+    await english.focus();
+
+    await page.keyboard.press('Enter');
 
     await expect(page).toHaveURL(/\/en\/architecture\/$/);
+
+    await expect(page.getByRole('navigation', { name: 'Language', exact: true }).getByText('English')).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('One system. Clear boundaries.');
 
@@ -139,7 +211,7 @@ for (const width of [320, 360, 768, 1440]) {
       for (const route of ['', 'architecture/', 'docs/']) {
         await page.goto(`/es/${route}`);
 
-        await page.locator('[data-theme-select]').selectOption(theme);
+        await selectTheme(page, theme);
 
         await expect(page.locator('html')).toHaveClass(theme === 'dark' ? 'dark' : '');
 
@@ -167,7 +239,7 @@ test('the colored vision panel retains readable contrast in both themes', async 
   await page.goto('/en/');
 
   for (const theme of ['light', 'dark']) {
-    await page.locator('[data-theme-select]').selectOption(theme);
+    await selectTheme(page, theme);
 
     const ratios = await page.locator('[aria-labelledby=vision-title]').evaluate((section) => {
       const canvas = document.createElement('canvas');

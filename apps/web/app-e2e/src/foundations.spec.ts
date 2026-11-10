@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 function route(locale = 'en') {
-  return `/app/${locale}/`;
+  return `/app/${locale}/foundations`;
 }
 
 for (const locale of ['en', 'es']) {
@@ -64,7 +64,7 @@ test('remembers explicit themes and follows system changes only in system mode',
 
   const control = page.locator('[data-theme-select]');
 
-  await expect(page.locator('html')).toHaveClass('dark');
+  await expect(page.locator('app-root')).toHaveClass(/dark/);
 
   await expect(control).toHaveValue('dark');
 
@@ -72,23 +72,23 @@ test('remembers explicit themes and follows system changes only in system mode',
 
   await control.selectOption('light');
 
-  await expect(page.locator('html')).not.toHaveClass('dark');
+  await expect(page.locator('app-root')).not.toHaveClass(/dark/);
 
   await expect(page.locator('html')).toHaveCSS('color-scheme', 'light');
 
   await page.emulateMedia({ colorScheme: 'dark' });
 
-  await expect(page.locator('html')).not.toHaveClass('dark');
+  await expect(page.locator('app-root')).not.toHaveClass(/dark/);
 
   await control.selectOption('system');
 
-  await expect(page.locator('html')).toHaveClass('dark');
+  await expect(page.locator('app-root')).toHaveClass(/dark/);
 
   await expect(page.locator('html')).toHaveCSS('color-scheme', 'dark');
 
   await page.emulateMedia({ colorScheme: 'light' });
 
-  await expect(page.locator('html')).not.toHaveClass('dark');
+  await expect(page.locator('app-root')).not.toHaveClass(/dark/);
 
   await control.selectOption('dark');
 
@@ -114,11 +114,11 @@ test('keeps theme controls usable when storage is blocked', async ({ page }) => 
 
   await page.goto(route());
 
-  await expect(page.locator('html')).toHaveClass('dark');
+  await expect(page.locator('app-root')).toHaveClass(/dark/);
 
   await page.locator('[data-theme-select]').selectOption('light');
 
-  await expect(page.locator('html')).not.toHaveClass('dark');
+  await expect(page.locator('app-root')).not.toHaveClass(/dark/);
 });
 
 test('supports keyboard focus, reduced motion and a narrow viewport', async ({ page }, info) => {
@@ -172,7 +172,7 @@ test('uses the system preference when the stored theme is invalid', async ({ pag
 
   await page.goto(route());
 
-  await expect(page.locator('html')).toHaveClass('dark');
+  await expect(page.locator('app-root')).toHaveClass(/dark/);
 
   await expect(page.locator('[data-theme-select]')).toHaveValue('system');
 });

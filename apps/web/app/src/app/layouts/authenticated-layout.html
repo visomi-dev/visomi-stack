@@ -1,0 +1,116 @@
+<app-shell content-id="workspace-main" skip-label="Skip to content" i18n-skip-label="@@skip">
+  <app-sidebar label="Primary navigation" i18n-label="@@shellPrimary">
+    <a data-slot="brand" routerLink="/home" class="rounded font-heading text-xl font-bold ui-focus-ring">
+      VISOMI
+      <span class="text-blue-600">.</span>
+    </a>
+
+    <div class="space-y-1">
+      <a appUI="nav-item" routerLink="/home" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@authHome">
+        Home
+      </a>
+
+      <a
+        appUI="nav-item"
+        routerLink="/account"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        i18n="@@authAccount"
+      >
+        Account
+      </a>
+
+      <a
+        appUI="nav-item"
+        routerLink="/security"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        i18n="@@authSecurity"
+      >
+        Security
+      </a>
+    </div>
+
+    <div data-slot="footer">
+      <button appUI [disabled]="action.busy()" (click)="logout()" i18n="@@authSignOut">Sign out</button>
+    </div>
+  </app-sidebar>
+
+  <header app-topbar>
+    <a data-slot="title" routerLink="/home" class="rounded font-heading font-bold ui-focus-ring">VISOMI</a>
+
+    <div data-slot="actions" class="flex flex-wrap items-center gap-2 sm:gap-4">
+      <app-language-switcher />
+
+      <button app-theme-switcher aria-label="Dark theme" i18n-aria-label="@@themeToggle"></button>
+    </div>
+  </header>
+
+  <div class="flex min-w-0 flex-col gap-6">
+    <app-auth-feedback [action]="action" />
+
+    @if (navigation.notificationFailed()) {
+      <div appUI="alert" role="status" i18n="@@authNotificationFailed">
+        The change was saved, but the notification could not be sent.
+      </div>
+    }
+
+    @if (session.full()) {
+      @for (user of [session.user()]; track user?.id) {
+        <router-outlet class="hidden" />
+      }
+    } @else {
+      <p role="status" i18n="@@authSessionUnavailable">
+        Your session changed or could not be checked. Return to sign in to continue.
+      </p>
+
+      <a appUI routerLink="/auth/sign-in" i18n="@@authBackSignIn">Back to sign in</a>
+    }
+  </div>
+
+  <nav appUI="navbar" aria-label="Primary navigation" i18n-aria-label="@@shellPrimary">
+    <a
+      appUI="nav-item"
+      placement="navbar"
+      routerLink="/home"
+      routerLinkActive="active"
+      ariaCurrentWhenActive="page"
+      i18n="@@authHome"
+    >
+      Home
+    </a>
+
+    <a
+      appUI="nav-item"
+      placement="navbar"
+      routerLink="/account"
+      routerLinkActive="active"
+      ariaCurrentWhenActive="page"
+      i18n="@@authAccount"
+    >
+      Account
+    </a>
+
+    <a
+      appUI="nav-item"
+      placement="navbar"
+      routerLink="/security"
+      routerLinkActive="active"
+      ariaCurrentWhenActive="page"
+      i18n="@@authSecurity"
+    >
+      Security
+    </a>
+
+    <button
+      appUI="nav-item"
+      placement="navbar"
+      type="button"
+      [disabled]="action.busy()"
+      (click)="logout()"
+      i18n="@@authSignOut"
+    >
+      Sign out
+    </button>
+  </nav>
+</app-shell>

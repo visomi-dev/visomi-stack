@@ -13,10 +13,8 @@ Before a cross-cutting or unfamiliar change, inspect the relevant code and summa
 
 ## Instructions
 
-1. Search the codebase for files related to this task
-2. Identify direct dependencies (imports/exports)
-3. Find related tests
-4. Look for similar patterns in existing code
+1. Start with `codegraph_explore` using the relevant symbols or paths. Use the returned source and relationships to identify affected files, direct dependencies, related tests, and similar patterns.
+2. Follow the code and documentation lookup rules in `AGENTS.md` for gaps in the index and use `find-docs` when the map depends on a third-party API or tool.
 
 ## Optional Output Format
 

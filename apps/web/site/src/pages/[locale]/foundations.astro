@@ -16,58 +16,76 @@ const text = messages[locale];
     <div class="mb-5 flex items-center gap-3 font-mono text-xs tracking-wider text-blue-700 dark:text-blue-400">
       <span aria-hidden="true" class="h-px w-8 bg-current"></span>01 / {text.foundations}
     </div>
+
     <Heading as="h1" ui-size="display" class="max-w-3xl">
       {text.title}
     </Heading>
+
     <Text ui-size="lead" tone="muted" class="mt-6 max-w-2xl">
       {text.intro}
     </Text>
+
     <div class="mt-14 grid gap-5 lg:grid-cols-3">
       <Card as="section" tone="subtle" padding="lg" layout="plain">
         <Heading as="h2" ui-size="sm">
           {text.type}
         </Heading>
+
         <Text ui-size="sm" tone="muted" class="mt-2">
           {text.typeNote}
         </Text>
+
         <div class="mt-10 font-heading text-6xl font-semibold tracking-tight">Aa</div>
+
         <Text ui-size="sm" tone="inherit" leading="relaxed" class="mt-6">
           {text.body}
         </Text>
+
         <Text ui-size="xs" tone="muted" mono class="mt-6 border-t border-zinc-200 pt-4 dark:border-zinc-700">
           {text.mono}
         </Text>
       </Card>
+
       <Card as="section" tone="subtle" padding="lg" layout="plain">
         <Heading as="h2" ui-size="sm">
           {text.surfaces}
         </Heading>
+
         <Text ui-size="sm" tone="muted" class="mt-2">
           {text.surfaceNote}
         </Text>
+
         <div class="mt-8 grid gap-3 text-sm">
           <Card as="div" tone="default" padding="sm" layout="plain">
             {text.canvas}
           </Card>
+
           <Card as="div" tone="subtle" padding="sm" layout="plain">
             {text.panel}
           </Card>
+
           <Card as="div" tone="raised" padding="sm" layout="plain">
             {text.raised}
           </Card>
         </div>
       </Card>
+
       <Card as="section" tone="subtle" padding="lg" layout="plain">
         <Heading as="h2" ui-size="sm">
           {text.palette}
         </Heading>
+
         <Text ui-size="sm" tone="muted" class="mt-2">
           {text.paletteNote}
         </Text>
+
         <div class="mt-8 rounded-lg bg-blue-600 p-4 text-sm font-medium text-white">{text.brand}</div>
+
         <ul class="mt-6 space-y-4 text-sm">
           <li class="text-green-800 dark:text-green-300">✓ {text.success}</li>
+
           <li class="text-amber-800 dark:text-amber-300">! {text.warning}</li>
+
           <li class="text-red-700 dark:text-red-300">× {text.danger}</li>
         </ul>
       </Card>

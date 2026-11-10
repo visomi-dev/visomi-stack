@@ -1,3 +1,29 @@
 @import '../../../../styles.base.css';
 @source './';
 @source '../../../../libs/web/frontend/ui/src';
+
+/* Route headings receive reading focus without the outline used by interactive controls. */
+@layer base {
+  html {
+    /* Keep navigation and translated content from shifting when a scrollbar appears. */
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background-color: var(--color-white);
+    color: var(--color-zinc-950);
+  }
+
+  :root:has(app-root.dark) {
+    color-scheme: dark;
+  }
+
+  body:has(app-root.dark) {
+    background-color: var(--color-zinc-950);
+    color: var(--color-zinc-50);
+  }
+
+  h1[data-navigation-focus]:focus {
+    outline: none;
+  }
+}

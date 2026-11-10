@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, RouterLink } from '@angular/router';
@@ -13,19 +14,28 @@ import type { ShellLayout } from '@visomi-stack/web-frontend-ui';
     <app-shell content-id="workspace-main" skip-label="Skip navigation" [layout]="layout()">
       <app-sidebar label="Primary">
         <a data-slot="brand" href="/">Brand</a>
+
         <a appUI="nav-item" [routerLink]="['/settings']" [queryParams]="{ tab: 'profile' }" aria-current="page"
           >Settings</a
         >
+
         <p data-slot="footer">Workspace footer</p>
       </app-sidebar>
+
       <header app-topbar>
         <h1 data-slot="title">Workspace</h1>
+
         <button appUI="nav-item" type="button" [disabled]="locked()" (click)="count.set(count() + 1)">Help</button>
       </header>
+
       <p>Projected page</p>
+
       <button appUI type="button">Save</button>
+
       <a appUI href="/help">Help center</a>
+
       <footer data-shell-footer>Page footer</footer>
+
       <nav appUI="navbar" aria-label="Primary">
         <a appUI="nav-item" placement="navbar" href="/settings">Settings</a>
       </nav>
@@ -52,7 +62,7 @@ describe('application shell composition', () => {
     expect(main.id).toBe('workspace-main');
     expect(main.tabIndex).toBe(-1);
     expect(main.querySelector('p')?.textContent?.trim()).toBe('Projected page');
-    expect(root.querySelector('a')?.getAttribute('href')).toBe('#workspace-main');
+    expect(root.querySelector('a')?.getAttribute('href')).toBe('/#workspace-main');
     expect(root.querySelector('app-sidebar nav')?.getAttribute('aria-label')).toBe('Primary');
     expect(root.querySelector('app-sidebar nav [data-slot=brand]')).toBeNull();
     expect(root.querySelector('app-sidebar nav [data-slot=footer]')).toBeNull();
@@ -64,6 +74,11 @@ describe('application shell composition', () => {
 
     expect(root.querySelector('app-sidebar')?.parentElement?.className).toBe('hidden');
     expect(root.querySelector('main')).toBe(main);
+    TestBed.inject(Location).go('/security', 'tab=methods');
+
+    await fixture.whenStable();
+
+    expect(root.querySelector('a')?.getAttribute('href')).toBe('/security?tab=methods#workspace-main');
   });
 
   it('keeps native link routing, button events and disabled behavior', async () => {

@@ -6,10 +6,15 @@ import { pathToFileURL } from 'node:url';
 
 import {
   createDatabase,
+  createMemoryRealtimeTransport,
+  createRealtimePublisher,
+  createRedisRealtimeTransport,
   createSmtp,
   smtpConfig,
+  subscribeRealtime,
   type MailTransport,
   type DatabaseResource,
+  type RealtimeRuntime,
 } from '@visomi-stack/backend-shared';
 import { browserAssets, createBrowserTelemetry, initializeObservability } from '@visomi-stack/web-backend-shared';
 
@@ -20,6 +25,7 @@ import type { EmbeddedAuthentication } from './api-module';
 import { createGatewayApp } from './app';
 import { loadSite } from './site-module';
 import { loadApplication } from './application-module';
+import { loadRealtime } from './realtime-module';
 
 const observability = initializeObservability({
   service: 'web-gateway',
@@ -29,6 +35,8 @@ const observability = initializeObservability({
 let database: DatabaseResource | undefined;
 let mail: MailTransport | undefined;
 let auth: EmbeddedAuthentication | undefined;
+let realtime: RealtimeRuntime | undefined;
+let realtimeTransport = createMemoryRealtimeTransport();
 const server = createServer();
 let stopping = false;
 let browserTelemetry: ReturnType<typeof createBrowserTelemetry> | undefined;
@@ -47,7 +55,19 @@ async function stop(exitCode: number): Promise<void> {
   }, 5000);
   const drain = setTimeout(() => server.closeAllConnections(), 3000);
 
-  await new Promise<void>((resolve) => server.close(() => resolve()));
+  let listenerClosed = true;
+
+  realtimeTransport.close();
+
+  try {
+    if (realtime) {
+      await realtime.close();
+    } else {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  } catch {
+    listenerClosed = false;
+  }
 
   clearTimeout(drain);
   let databaseClosed = true;
@@ -65,13 +85,13 @@ async function stop(exitCode: number): Promise<void> {
     databaseClosed = false;
   }
   observability.event(
-    !databaseClosed || exitCode ? 'runtime.failed' : 'runtime.stopped',
-    !databaseClosed ? 'shutdown_failed' : exitCode ? 'startup_failed' : 'none',
+    !listenerClosed || !databaseClosed || exitCode ? 'runtime.failed' : 'runtime.stopped',
+    !listenerClosed || !databaseClosed ? 'shutdown_failed' : exitCode ? 'startup_failed' : 'none',
   );
   const flushed = await observability.shutdown(1000);
 
   clearTimeout(deadline);
-  process.exitCode = flushed && databaseClosed ? exitCode : 1;
+  process.exitCode = flushed && listenerClosed && databaseClosed ? exitCode : 1;
 }
 
 function onSignal(): void {
@@ -110,6 +130,12 @@ async function bootstrap() {
   }
 
   if (process.env.DATABASE_URL) {
+    if (process.env.REALTIME_REDIS_URL) {
+      realtimeTransport = createRedisRealtimeTransport(process.env.REALTIME_REDIS_URL, () =>
+        observability.event('runtime.failed'),
+      );
+    }
+
     const config = api.authConfig({
       origin: process.env.AUTH_ORIGIN!,
       rpId: process.env.AUTH_RP_ID!,
@@ -122,7 +148,13 @@ async function bootstrap() {
 
     mail = smtp ? createSmtp(smtp) : undefined;
     database = createDatabase(process.env.DATABASE_URL, () => observability.event('runtime.failed'));
-    auth = api.createAuthentication({ database: database.db, pool: database.pool, config, mail });
+    auth = api.createAuthentication({
+      database: database.db,
+      pool: database.pool,
+      config,
+      mail,
+      realtimePublisher: createRealtimePublisher(realtimeTransport),
+    });
 
     await database.pool.query('SELECT 1');
   }
@@ -162,6 +194,23 @@ async function bootstrap() {
   });
 
   server.on('request', application);
+
+  if (auth?.realtime) {
+    const module = await loadRealtime(new URL('../realtime/app.js', import.meta.url));
+
+    if (stopping) {
+      return;
+    }
+
+    realtime = module.attachRealtimeServer(server, auth.realtime);
+
+    await subscribeRealtime(realtimeTransport, realtime);
+  }
+
+  if (stopping) {
+    return;
+  }
+
   server.listen(port, host, async () => {
     observability.event('runtime.started');
 

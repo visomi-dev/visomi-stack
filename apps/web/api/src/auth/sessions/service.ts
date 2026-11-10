@@ -1,4 +1,11 @@
-import { authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
+import {
+  authSchema,
+  DATABASE,
+  inject,
+  REALTIME_PUBLISHER,
+  type Database,
+  type RealtimePublisher,
+} from '@visomi-stack/backend-shared';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 
@@ -12,6 +19,7 @@ const { sessions } = authSchema;
 export class Sessions {
   private readonly database = inject<Database>(DATABASE);
   private readonly config = inject<AuthConfig>(AUTH_CONFIG);
+  private readonly realtime = inject<RealtimePublisher>(REALTIME_PUBLISHER, { optional: true });
 
   async listSessions(sid: string, current: Express.User) {
     requireFull(current);
@@ -39,7 +47,7 @@ export class Sessions {
     requireFull(current);
     requireFresh(current, this.config);
 
-    return this.database.transaction(async (tx) => {
+    const closed = await this.database.transaction(async (tx) => {
       await lockIdentity(tx, sid, current);
 
       const rows = await tx
@@ -59,8 +67,14 @@ export class Sessions {
           .where(eq(sessions.sid, row.sid));
       }
 
-      return selected.some((row) => row.sid === sid);
+      return selected;
     });
+
+    for (const row of closed) {
+      void this.realtime?.notifySession(row.sid).catch(() => undefined);
+    }
+
+    return closed.some((row) => row.sid === sid);
   }
 
   private sessionHandle(sid: string) {

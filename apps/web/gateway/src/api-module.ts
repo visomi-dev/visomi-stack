@@ -1,10 +1,22 @@
-import type { Database, MailTransport } from '@visomi-stack/backend-shared';
+import type { Database, MailTransport, RealtimePublisher } from '@visomi-stack/backend-shared';
 import type { Observability } from '@visomi-stack/web-backend-shared';
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
 import type { Pool } from 'pg';
 
+import type { AuthSnapshot } from './application-module';
+
 // The gateway depends on the compiled public surface, not API source or auth internals.
-export type EmbeddedAuthentication = { middleware: RequestHandler[] };
+export type EmbeddedAuthentication = {
+  middleware: RequestHandler[];
+  snapshot?: (request: Request) => AuthSnapshot;
+  googleEnabled?: boolean;
+  realtime?: {
+    origin: string;
+    readSession: RequestHandler;
+    readUser(serialized: unknown): Promise<string | null>;
+    watchExpiration(sessionId: string, requestId: string): Promise<number>;
+  };
+};
 export type ApiModule = {
   createApp(options: {
     observability?: Observability;
@@ -26,6 +38,7 @@ export type ApiModule = {
     pool: Pool;
     config: unknown;
     mail?: MailTransport;
+    realtimePublisher?: RealtimePublisher;
   }): EmbeddedAuthentication;
 };
 

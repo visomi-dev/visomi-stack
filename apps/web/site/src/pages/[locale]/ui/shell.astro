@@ -41,6 +41,7 @@ const destinations = [
         </Text>{' '}
         VISOMI
       </a>
+
       <div class="space-y-1">
         {destinations.map((item) => (
           <NavItem href={item.href} aria-current={item.current ? 'page' : undefined}>
@@ -54,57 +55,73 @@ const destinations = [
             >
               <path d={item.path} />
             </svg>
+
             <span>{item.label}</span>
           </NavItem>
         ))}
       </div>
+
       <Text ui-size="xs" tone="muted" slot="footer" class="border-t border-zinc-200 pt-4 dark:border-zinc-700">
         {labels.shellFooter}
       </Text>
     </Sidebar>
+
     <Topbar slot="header">
       <span slot="title">{labels.workspace}</span>
+
       <Link href={`/${locale}/ui/`} variant="muted" class="inline-flex min-h-11 items-center px-2 text-sm">
         {labels.catalogLink}
       </Link>
+
       <Label inline>
         <span>{labels.theme}</span>
+
         <ThemeSelect ui-size="xs" inline>
           <option value="system">{labels.system}</option>
+
           <option value="light">{labels.light}</option>
+
           <option value="dark">{labels.dark}</option>
         </ThemeSelect>
       </Label>
     </Topbar>
+
     <header class="mb-8 grid gap-4">
       <Text ui-size="xs" tone="accent" mono class="tracking-wide">
         VISOMI / APP SHELL
       </Text>
+
       <Heading as="h1" ui-size="title" class="max-w-2xl">
         {labels.shellTitle}
       </Heading>
+
       <Text ui-size="inherit" tone="muted" class="max-w-2xl">
         {labels.shellNote}
       </Text>
     </header>
+
     <div class="grid gap-5 sm:grid-cols-2">
       <Card>
         <Heading as="h2" ui-size="sm">
           {labels.studio}
         </Heading>
+
         <Text ui-size="sm" tone="muted">
           {labels.cardBody}
         </Text>
       </Card>
+
       <Card tone="raised">
         <Heading as="h2" ui-size="sm">
           {labels.sandbox}
         </Heading>
+
         <Text ui-size="sm" tone="muted">
           {labels.containerNote}
         </Text>
       </Card>
     </div>
+
     <Card
       as="section"
       tone="default"
@@ -116,10 +133,12 @@ const destinations = [
       <Heading as="h2" ui-size="md">
         {labels.activity}
       </Heading>
+
       <Text ui-size="inherit" tone="muted" class="mt-4">
         {labels.note}
       </Text>
     </Card>
+
     <Card
       as="section"
       tone="default"
@@ -131,14 +150,17 @@ const destinations = [
       <Heading as="h2" ui-size="md" class="mb-5">
         {labels.settings}
       </Heading>
+
       <LinkButton href={`/${locale}/ui/`}>{labels.catalogLink}</LinkButton>
     </Card>
+
     <footer
       slot="footer"
       class="border-t border-zinc-200 px-5 py-6 text-xs text-zinc-600 sm:px-8 dark:border-zinc-800 dark:text-zinc-400"
     >
       {labels.shellFooter}
     </footer>
+
     <Navbar slot="mobile" aria-label={labels.primaryNavigation}>
       {destinations.map((item) => (
         <NavItem placement="navbar" href={item.href} aria-current={item.current ? 'page' : undefined}>
@@ -152,6 +174,7 @@ const destinations = [
           >
             <path d={item.path} />
           </svg>
+
           <span>{item.label}</span>
         </NavItem>
       ))}

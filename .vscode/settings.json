@@ -1,3 +1,11 @@
 {
-  "cSpell.words": ["visomi"]
+  "cSpell.language": "en,es",
+  "cSpell.words": ["visomi"],
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact", "html", "astro"],
+  "editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
+  "[html][astro]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  }
 }

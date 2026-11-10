@@ -1,17 +1,21 @@
 ---
 import { card, linkButton } from '@visomi-stack/web-frontend-ui';
-import Label from '../label.astro';
-import ThemeSelect from '../theme-select.astro';
+import ThemeSwitcher from '../theme-switcher.astro';
 import Container from '../container.astro';
 import Text from '../text.astro';
 import Brand from './brand.astro';
 import Link from '../link.astro';
+import LinkButton from '../link-button.astro';
 import Icon from './icon.astro';
-import { siteCopy, sitePath, type SiteLocale, type SitePage } from '../../content/site';
+import { applicationPath, siteCopy, sitePath, type SiteLocale, type SitePage } from '../../content/site';
 type Props = { locale: SiteLocale; page: SitePage };
 const { locale, page } = Astro.props;
 const copy = siteCopy[locale];
 const pages = ['home', 'architecture', 'docs', 'ui'] as const;
+const languages = [
+  ['en', 'English'],
+  ['es', 'Español'],
+] as const;
 ---
 
 <header
@@ -20,6 +24,7 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
 >
   <Container as="div" width="xl" gutter="compact" class="flex min-h-20 items-center justify-between gap-2">
     <Brand locale={locale} compact />
+
     <nav aria-label={copy.menu} class="hidden lg:flex lg:items-center lg:gap-1">
       {pages.map((destination) => (
         <Link
@@ -33,32 +38,37 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
         </Link>
       ))}
     </nav>
+
     <div class="flex items-center gap-1.5 sm:gap-3">
-      <nav aria-label={copy.language} class="flex gap-0.5 text-xs font-medium">
-        {(['en', 'es'] as const).map((language) => (
-          <Link
-            href={sitePath(language, page)}
-            hreflang={language}
-            lang={language}
-            aria-current={locale === language ? 'page' : undefined}
-            variant="muted"
-            underline="none"
-            class="inline-flex min-h-11 min-w-11 items-center justify-center"
-          >
-            {language.toUpperCase()}
-          </Link>
-        ))}
+      <div class="hidden lg:block">
+        <LinkButton href={applicationPath(locale)} size="sm">
+          {copy.openApp}
+        </LinkButton>
+      </div>
+
+      <nav aria-label={copy.language} class="flex items-center gap-2">
+        {languages.map(([language, label]) =>
+          locale === language ? (
+            <span lang={language} aria-current="true" class="inline-flex min-h-11 items-center text-sm font-medium">
+              {label}
+            </span>
+          ) : (
+            <Link
+              href={sitePath(language, page)}
+              hreflang={language}
+              lang={language}
+              variant="muted"
+              underline="hover"
+              class="inline-flex min-h-11 items-center text-sm"
+            >
+              {label}
+            </Link>
+          ),
+        )}
       </nav>
-      <Label>
-        <Text as="span" ui-size="inherit" tone="inherit" class="sr-only">
-          {copy.theme}
-        </Text>
-        <ThemeSelect ui-size="xs" inline>
-          <option value="system">{copy.system}</option>
-          <option value="light">{copy.light}</option>
-          <option value="dark">{copy.dark}</option>
-        </ThemeSelect>
-      </Label>
+
+      <ThemeSwitcher label={copy.themeToggle} />
+
       <details class="group relative lg:hidden" data-site-menu>
         <summary
           class:list={[
@@ -69,8 +79,10 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
           <Text as="span" ui-size="inherit" tone="inherit" class="sr-only">
             {copy.menu}
           </Text>
+
           <Icon name="menu" />
         </summary>
+
         <nav
           aria-label={copy.menu}
           class:list={[
@@ -89,6 +101,10 @@ const pages = ['home', 'architecture', 'docs', 'ui'] as const;
               {copy.nav[destination]}
             </Link>
           ))}
+
+          <LinkButton href={applicationPath(locale)} size="sm" class="mt-1">
+            {copy.openApp}
+          </LinkButton>
         </nav>
       </details>
     </div>

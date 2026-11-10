@@ -1,0 +1,21 @@
+<form novalidate [attr.data-submitted]="attempted() ? '' : null" (submit)="verify($event)" class="space-y-5">
+  <app-field
+    #field="appField"
+    control-id="verification-code"
+    [label]="label"
+    [error]="fields.code().errors()[0]?.message ?? ''"
+  >
+    <input
+      appUI
+      [formField]="fields.code"
+      [id]="field.controlId()"
+      [attr.aria-describedby]="field.describedBy()"
+      [attr.aria-invalid]="fields.code().touched() && fields.code().invalid()"
+      [attr.autocomplete]="backup() ? 'off' : 'one-time-code'"
+      [attr.inputmode]="backup() ? 'text' : 'numeric'"
+      placeholder=" "
+    />
+  </app-field>
+
+  <button appUI type="submit" class="w-full" [disabled]="busy()" i18n="@@authVerify">Verify</button>
+</form>

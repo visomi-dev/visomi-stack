@@ -1,0 +1,21 @@
+@import '../../styles.base.css';
+
+.development-progress {
+  animation: development-progress 1.4s ease-in-out infinite;
+}
+
+@keyframes development-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(400%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .development-progress {
+    animation: none;
+    width: 100%;
+  }
+}

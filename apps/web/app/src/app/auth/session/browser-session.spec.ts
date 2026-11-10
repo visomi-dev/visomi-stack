@@ -1,0 +1,363 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { EnvironmentInjector, TransferState, createEnvironmentInjector } from '@angular/core';
+
+import { CodeEntry } from '../shared/code-entry';
+
+import { Session, initialSessionState } from './session';
+import { BrowserRealtimeSession } from './browser-realtime-session';
+import { BrowserSession } from './browser-session';
+import type { SessionView } from './models';
+
+const anonymous: SessionView = {
+  authenticated: false,
+  user: null,
+  access: 'anonymous',
+  method: null,
+  nextStep: null,
+  csrfToken: 'synthetic-anonymous-csrf',
+};
+const full: SessionView = {
+  authenticated: true,
+  user: { id: 'synthetic-user', email: 'demo@example.test', emailVerified: true },
+  access: 'full',
+  method: 'passkey',
+  nextStep: null,
+  csrfToken: 'synthetic-rotated-csrf',
+};
+
+const connectSession = vi.fn<BrowserRealtimeSession['connectSession']>();
+
+beforeEach(() => {
+  connectSession.mockReset().mockImplementation(() => () => undefined);
+  TestBed.configureTestingModule({
+    providers: [
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      BrowserSession,
+      { provide: Session, useExisting: BrowserSession },
+      { provide: BrowserRealtimeSession, useValue: { connectSession } },
+    ],
+  });
+});
+
+afterEach(() => {
+  TestBed.inject(HttpTestingController).verify();
+  vi.restoreAllMocks();
+});
+
+it('cleans up when the injector is destroyed before the first render', () => {
+  const injector = createEnvironmentInjector([BrowserSession], TestBed.inject(EnvironmentInjector));
+  const cancellation = injector.get(BrowserSession).cancellation();
+
+  injector.destroy();
+
+  expect(cancellation.aborted).toBe(true);
+});
+
+it('connects after sign-in, replaces a rotated connection and refreshes on revocation', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const fixture = TestBed.createComponent(CodeEntry);
+  const closeFirst = vi.fn();
+  const closeSecond = vi.fn();
+
+  connectSession.mockReturnValueOnce(closeFirst).mockReturnValueOnce(closeSecond);
+  fixture.detectChanges();
+
+  await vi.waitFor(() => http.expectOne('/api/auth/session').flush(anonymous));
+
+  await vi.waitFor(() => http.expectOne('/api/auth/providers').flush({ passkey: true }));
+
+  await fixture.whenStable();
+
+  expect(connectSession).not.toHaveBeenCalled();
+  session.accept(full);
+
+  await fixture.whenStable();
+
+  expect(connectSession).toHaveBeenCalledOnce();
+  session.accept({ ...full, csrfToken: 'synthetic-next-token' }, false);
+
+  await fixture.whenStable();
+
+  expect(closeFirst).toHaveBeenCalledOnce();
+  expect(connectSession).toHaveBeenCalledTimes(2);
+  const beforeNotice = session.load(true);
+
+  connectSession.mock.calls[1][0]();
+  http.expectOne('/api/auth/session').flush({ ...full, csrfToken: 'synthetic-next-token' });
+
+  await beforeNotice;
+
+  await vi.waitFor(() => http.expectOne('/api/auth/session').flush(anonymous));
+
+  await fixture.whenStable();
+
+  expect(session.full()).toBe(false);
+  expect(closeSecond).toHaveBeenCalledOnce();
+});
+
+it('starts browser revalidation once and releases its focus listener with the injector', async () => {
+  const add = vi.spyOn(window, 'addEventListener');
+  const remove = vi.spyOn(window, 'removeEventListener');
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const fixture = TestBed.createComponent(CodeEntry);
+  const cancellation = session.cancellation();
+
+  fixture.detectChanges();
+
+  await vi.waitFor(() => http.expectOne('/api/auth/session').flush(anonymous));
+
+  await vi.waitFor(() =>
+    http.expectOne('/api/auth/providers').flush({
+      passkey: true,
+      password: true,
+      google: { enabled: false, clientId: null },
+      totp: false,
+    }),
+  );
+
+  await fixture.whenStable();
+
+  expect(session).toBe(TestBed.inject(BrowserSession));
+  const focusListener = add.mock.calls.find(([type]) => type === 'focus')?.[1];
+
+  expect(focusListener).toBeTypeOf('function');
+  window.dispatchEvent(new Event('focus'));
+  http.expectOne('/api/auth/session').flush(full);
+
+  await fixture.whenStable();
+
+  expect(session.full()).toBe(true);
+  TestBed.resetTestingModule();
+  expect(cancellation.aborted).toBe(true);
+  expect(remove).toHaveBeenCalledWith('focus', focusListener);
+  TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+});
+
+it('hydrates the transferred snapshot before HTTP revalidation and removes the consumed state', async () => {
+  const { csrfToken: _csrf, ...snapshot } = full;
+  const transfer = TestBed.inject(TransferState);
+
+  transfer.set(initialSessionState, { available: true, session: snapshot });
+  const session = TestBed.inject(Session);
+
+  expect(session.snapshot()).toEqual(snapshot);
+  expect(session.full()).toBe(true);
+  expect(transfer.hasKey(initialSessionState)).toBe(false);
+  const read = session.load();
+
+  TestBed.inject(HttpTestingController).expectNone('/api/auth/session');
+
+  await read;
+
+  const token = session.token();
+
+  TestBed.inject(HttpTestingController).expectOne('/api/auth/session').flush(full);
+
+  await expect(token).resolves.toBe(full.csrfToken);
+});
+
+it('keeps standalone auth unavailable without attempting session or provider requests', async () => {
+  TestBed.inject(TransferState).set(initialSessionState, { available: false, session: null });
+  const session = TestBed.inject(Session);
+
+  await session.load(true);
+
+  await session.loadProviders();
+
+  expect(session.status()).toBe('unavailable');
+  expect(session.full()).toBe(false);
+  TestBed.inject(HttpTestingController).expectNone('/api/auth/session');
+  TestBed.inject(HttpTestingController).expectNone('/api/auth/providers');
+});
+
+it('shares one session request between concurrent consumers', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const first = session.load();
+  const second = session.load();
+
+  http.expectOne('/api/auth/session').flush(anonymous);
+
+  await Promise.all([first, second]);
+
+  expect(session.snapshot().access).toBe('anonymous');
+  expect(session.status()).toBe('ready');
+});
+
+it('ignores a response started before logout', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const request = session.load();
+
+  session.clear();
+  http.expectOne('/api/auth/session').flush(full);
+
+  await request;
+
+  expect(session.snapshot().user).toBeNull();
+  expect(session.full()).toBe(false);
+});
+
+it('preserves a rotated token when an older session read completes', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const request = session.load();
+
+  session.accept(full);
+  http.expectOne('/api/auth/session').flush(anonymous);
+
+  await request;
+
+  const result1 = await session.token();
+
+  expect(result1).toBe(full.csrfToken);
+  expect(session.full()).toBe(true);
+});
+
+it('distinguishes temporary failure from anonymous access and locks private content', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+
+  session.accept(full);
+  const request = session.load(true);
+
+  http
+    .expectOne('/api/auth/session')
+    .flush({ error: 'authentication_unavailable' }, { status: 503, statusText: 'Unavailable' });
+
+  await request;
+
+  expect(session.snapshot().user).toEqual(full.user);
+  expect(session.status()).toBe('unavailable');
+  expect(session.full()).toBe(false);
+});
+
+it('obtains a fresh CSRF token after invalidation without retrying a mutation', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+
+  session.accept(full);
+  session.invalidateToken();
+  const token = session.token();
+
+  http.expectOne('/api/auth/session').flush({ ...full, csrfToken: 'synthetic-new-token' });
+
+  const result2 = await token;
+
+  expect(result2).toBe('synthetic-new-token');
+});
+
+it('discards an in-flight read before revalidating a change from another tab', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+
+  session.accept(full);
+  const stale = session.load(true);
+  const fresh = session.invalidate();
+
+  expect(session.full()).toBe(false);
+  http.expectOne('/api/auth/session').flush(full);
+
+  await stale;
+
+  await vi.waitFor(() => http.expectOne('/api/auth/session').flush(anonymous));
+
+  await fresh;
+
+  expect(session.snapshot().access).toBe('anonymous');
+  expect(session.full()).toBe(false);
+});
+
+it('rejects an inconsistent server response without manufacturing access', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const operation = session.load();
+
+  http.expectOne('/api/auth/session').flush({ ...anonymous, access: 'full' });
+
+  await operation;
+
+  expect(session.status()).toBe('unavailable');
+  expect(session.full()).toBe(false);
+});
+
+it('cancels session and provider reads when its injector is destroyed', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+  const loading = session.load();
+  const providers = session.loadProviders();
+  const sessionRequest = http.expectOne('/api/auth/session');
+  const providerRequest = http.expectOne('/api/auth/providers');
+
+  TestBed.resetTestingModule();
+
+  await Promise.all([loading, providers]);
+
+  expect(sessionRequest.cancelled).toBe(true);
+  expect(providerRequest.cancelled).toBe(true);
+  expect(session.snapshot().user).toBeNull();
+  TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+});
+
+it('retries a failed session check even when the previous CSRF token is cached', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+
+  session.accept(full);
+  const failed = session.load(true);
+
+  http.expectOne('/api/auth/session').flush(null, { status: 503, statusText: 'Unavailable' });
+
+  await failed;
+
+  const retry = session.token();
+
+  http.expectOne('/api/auth/session').flush(full);
+
+  await expect(retry).resolves.toBe(full.csrfToken);
+
+  expect(session.status()).toBe('ready');
+});
+
+it('cancels account-bound operations when a refresh discovers a different identity', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+
+  session.accept(full);
+  const cancellation = session.cancellation();
+  const refresh = session.load(true);
+
+  http.expectOne('/api/auth/session').flush({
+    ...full,
+    user: { ...full.user!, id: 'another-user', email: 'other@example.test' },
+    csrfToken: 'another-csrf',
+  });
+
+  await refresh;
+
+  expect(cancellation.aborted).toBe(true);
+  expect(session.cancellation().aborted).toBe(false);
+  expect(session.user()?.id).toBe('another-user');
+});
+
+it('preserves account-bound operations on a same-identity refresh', async () => {
+  const session = TestBed.inject(Session);
+  const http = TestBed.inject(HttpTestingController);
+
+  session.accept(full);
+  const cancellation = session.cancellation();
+  const refresh = session.load(true);
+
+  http.expectOne('/api/auth/session').flush({ ...full, csrfToken: 'refreshed-csrf' });
+
+  await refresh;
+
+  expect(session.cancellation()).toBe(cancellation);
+  expect(cancellation.aborted).toBe(false);
+  expect(session.full()).toBe(true);
+});

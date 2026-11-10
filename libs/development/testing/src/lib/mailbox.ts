@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 export async function readMailCode(email: string) {
-  const directory = process.env.VISOMI_E2E_TELEMETRY_DIR;
+  const directory = process.env['VISOMI_E2E_TELEMETRY_DIR'];
 
   if (!directory) {
     throw new Error('isolated_mailbox_required');

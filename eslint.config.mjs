@@ -1,11 +1,15 @@
 import { configs as nxConfigs } from '@nx/eslint-plugin';
+import { templateParser } from 'angular-eslint';
 import stylistic from '@stylistic/eslint-plugin';
 import * as tsParser from '@typescript-eslint/parser';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
+import { configs as astroConfigs } from 'eslint-plugin-astro';
 import { importX } from 'eslint-plugin-import-x';
 import perfectionist from 'eslint-plugin-perfectionist';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
+
+import templateSiblingNewlines from './tools/lint-rules/template-sibling-newlines.mjs';
 
 const importXFiles = ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'];
 
@@ -14,6 +18,23 @@ const functionOrClassDeclaration = {
     ':matches(FunctionDeclaration, ClassDeclaration, ExportNamedDeclaration[declaration.type=/^(FunctionDeclaration|ClassDeclaration)$/], ExportDefaultDeclaration[declaration.type=/^(FunctionDeclaration|ClassDeclaration)$/])',
 };
 const awaitedStatement = { selector: 'ExpressionStatement[expression.type="AwaitExpression"]' };
+
+export const statementPadding = [
+  'error',
+  { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
+  { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
+  // Separate the import block from code without splitting imports or their attached comments.
+  { blankLine: 'always', prev: 'import', next: '*' },
+  { blankLine: 'any', prev: 'import', next: 'import' },
+  { blankLine: 'always', prev: 'export', next: 'expression' },
+  { blankLine: 'always', prev: '*', next: functionOrClassDeclaration },
+  { blankLine: 'always', prev: '*', next: awaitedStatement },
+  { blankLine: 'always', prev: awaitedStatement, next: '*' },
+  { blankLine: 'always', prev: '*', next: ['return', 'throw'] },
+  { blankLine: 'always', prev: '*', next: 'if' },
+  { blankLine: 'always', prev: 'if', next: '*' },
+  { blankLine: 'always', prev: '*', next: 'try' },
+];
 
 export const moduleBoundaryOptions = {
   enforceBuildableLibDependency: true,
@@ -46,7 +67,17 @@ export default [
   ...nxConfigs['flat/base'],
   ...nxConfigs['flat/typescript'],
   ...nxConfigs['flat/javascript'],
+  ...astroConfigs.base,
   eslintConfigPrettier,
+  {
+    files: ['**/*.html'],
+    languageOptions: { parser: templateParser },
+  },
+  {
+    files: ['**/*.html', '**/*.astro'],
+    plugins: { workspace: { rules: { 'template-sibling-newlines': templateSiblingNewlines } } },
+    rules: { 'workspace/template-sibling-newlines': 'error' },
+  },
   {
     ...importX.flatConfigs.recommended,
     files: importXFiles,
@@ -151,7 +182,7 @@ export default [
             {
               groupName: 'angular-state',
               selector: 'property',
-              elementValuePattern: '^(?:signal|linkedSignal)(?:<[^>]*>)?\\s*\\(',
+              elementValuePattern: '^(?:signal|linkedSignal|toSignal)(?:<[^>]*>)?\\s*\\(',
             },
             {
               groupName: 'angular-forms',
@@ -184,7 +215,15 @@ export default [
         },
       ],
       '@typescript-eslint/no-non-null-assertion': 'off',
-      'import-x/order': ['error', { 'newlines-between': 'always' }],
+      'import-x/order': [
+        'error',
+        {
+          'newlines-between': 'always',
+          // Treat the testing package consistently from root hooks and project-level Nx tasks.
+          pathGroups: [{ pattern: '@visomi-stack/dev-testing{,/**}', group: 'external' }],
+          pathGroupsExcludedImportTypes: ['builtin'],
+        },
+      ],
       'import-x/no-named-as-default': 'off',
       'import-x/no-duplicates': 'error',
       'import-x/no-unresolved': 'off',
@@ -230,6 +269,17 @@ export default [
         'error',
         {
           selector:
+            'ClassDeclaration:has(Decorator > CallExpression[callee.name=/^(Component|Directive|Service|Injectable)$/]) > ClassBody CallExpression[callee.name=/^(effect|afterRenderEffect|afterNextRender|afterEveryRender)$/]:not(PropertyDefinition[readonly=true] > CallExpression)',
+          message: 'Assign Angular effects and render hooks to readonly class properties, ordered after methods.',
+        },
+        {
+          selector:
+            'ClassDeclaration:has(Decorator > CallExpression[callee.name=/^(Component|Directive|Service|Injectable)$/]) > ClassBody CallExpression[callee.type="MemberExpression"][callee.property.name=/^(setAttribute|removeAttribute|querySelector|querySelectorAll)$/]',
+          message:
+            'Use Angular template/host bindings for attributes and view queries or host references for owned elements.',
+        },
+        {
+          selector:
             ':matches(ImportDeclaration, ExportNamedDeclaration, ExportAllDeclaration, ImportExpression)[source.value=/^\\..*\\.[jt]sx?$/]',
           message: 'Omit JavaScript and TypeScript file extensions from relative module imports and exports.',
         },
@@ -240,22 +290,7 @@ export default [
         },
       ],
       'padding-line-between-statements': 'off',
-      '@stylistic/padding-line-between-statements': [
-        'error',
-        { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
-        { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
-        // Separate the import block from code without splitting imports or their attached comments.
-        { blankLine: 'always', prev: 'import', next: '*' },
-        { blankLine: 'any', prev: 'import', next: 'import' },
-        { blankLine: 'always', prev: 'export', next: 'expression' },
-        { blankLine: 'always', prev: functionOrClassDeclaration, next: functionOrClassDeclaration },
-        { blankLine: 'always', prev: '*', next: awaitedStatement },
-        { blankLine: 'always', prev: awaitedStatement, next: '*' },
-        { blankLine: 'always', prev: '*', next: ['return', 'throw'] },
-        { blankLine: 'always', prev: '*', next: 'if' },
-        { blankLine: 'always', prev: 'if', next: '*' },
-        { blankLine: 'always', prev: '*', next: 'try' },
-      ],
+      '@stylistic/padding-line-between-statements': statementPadding,
     },
   },
   {

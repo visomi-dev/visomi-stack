@@ -1,0 +1,44 @@
+---
+import { themeSwitcher } from '@visomi-stack/web-frontend-ui';
+import ThemeBehavior from './theme-behavior.astro';
+
+type Props = { label: string };
+const { label } = Astro.props;
+---
+
+<button
+  type="button"
+  data-theme-switcher
+  aria-label={label}
+  aria-pressed="false"
+  disabled
+  class={themeSwitcher.classes()}
+>
+  <svg
+    aria-hidden="true"
+    class={themeSwitcher.sunClasses}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    stroke="currentColor"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d={themeSwitcher.sunPath} />
+  </svg>
+
+  <svg
+    aria-hidden="true"
+    class={themeSwitcher.moonClasses}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    stroke="currentColor"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d={themeSwitcher.moonPath} />
+  </svg>
+</button>
+
+<ThemeBehavior />

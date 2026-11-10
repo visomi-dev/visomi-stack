@@ -5,6 +5,40 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "continuous": true,
+      "options": {
+        "command": "node tools/development/live-reload.mjs",
+        "tty": true
+      }
+    },
+    "development-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/tools/development/**/*",
+        "{workspaceRoot}/libs/web/frontend/ui/src/lib/layout.ts",
+        "{workspaceRoot}/libs/web/frontend/ui/src/lib/typography.ts",
+        "{workspaceRoot}/styles.base.css",
+        "{workspaceRoot}/eslint.config.mjs",
+        {
+          "externalDependencies": [
+            "postcss",
+            "@tailwindcss/postcss",
+            "@fontsource/inter",
+            "@fontsource/manrope",
+            "@fontsource/jetbrains-mono"
+          ]
+        }
+      ],
+      "options": {
+        "commands": ["eslint tools/development/*.mjs", "node --test tools/development/*.spec.mjs"],
+        "parallel": false
+      }
+    },
     "jaeger-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -25,6 +59,7 @@
     },
     "deployment-check": {
       "executor": "nx:run-commands",
+      "dependsOn": ["development-check"],
       "options": {
         "commands": [
           "tsc --noEmit --module esnext --moduleResolution bundler --allowImportingTsExtensions --target es2022 --types node --skipLibCheck .railway/railway.ts",
@@ -38,8 +73,9 @@
         "default",
         "{workspaceRoot}/.railway/**/*",
         "{workspaceRoot}/tools/deployment/**/*",
+        "{workspaceRoot}/tools/development/**/*",
         "{workspaceRoot}/eslint.config.mjs",
-        "{workspaceRoot}/tools/eslint-rules/**/*",
+        "{workspaceRoot}/tools/lint-rules/**/*",
         {
           "externalDependencies": ["typescript", "eslint", "railway"]
         },
@@ -152,7 +188,7 @@
         "^default",
         "{workspaceRoot}/eslint.config.mjs",
         "{workspaceRoot}/apps/web/gateway/eslint.config.mjs",
-        "{workspaceRoot}/tools/eslint-rules/**/*",
+        "{workspaceRoot}/tools/lint-rules/**/*",
         {
           "externalDependencies": ["eslint"]
         }
@@ -188,5 +224,5 @@
       }
     }
   },
-  "implicitDependencies": ["web-api", "web-site", "web-app"]
+  "implicitDependencies": ["web-api", "web-site", "web-app", "web-realtime"]
 }

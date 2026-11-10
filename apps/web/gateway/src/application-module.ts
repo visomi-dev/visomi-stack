@@ -1,11 +1,21 @@
 import type { Observability } from '@visomi-stack/web-backend-shared';
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
+
+export type AuthSnapshot = {
+  authenticated: boolean;
+  user: { id: string; email: string | null; emailVerified: boolean } | null;
+  access: 'anonymous' | 'unverified' | 'full' | 'recovery' | 'enrollment';
+  method: 'passkey' | 'password' | 'google' | 'recovery' | 'device' | null;
+  nextStep: 'verify_email' | 'add_email' | 'enroll_method' | null;
+};
 
 export type ApplicationModule = {
   createApp(options: {
     observability?: Observability;
     errorMode: 'inherited';
     helmetMode: 'inherited';
+    trustProxy?: string[];
+    authContext?: (request: Request) => { available: boolean; session: AuthSnapshot | null };
   }): RequestHandler;
   clientDirectory: string;
 };

@@ -1,0 +1,30 @@
+<div class="flex min-h-dvh flex-col bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
+  <header class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
+    <a href="/" class="font-heading text-lg font-bold tracking-tight ui-focus-ring">
+      VISOMI
+      <span class="ml-1 text-blue-600">.</span>
+    </a>
+
+    <div class="flex flex-wrap items-center gap-3 text-sm">
+      <app-language-switcher />
+
+      <button app-theme-switcher aria-label="Dark theme" i18n-aria-label="@@themeToggle"></button>
+    </div>
+  </header>
+
+  <main id="auth-main" class="flex flex-1 items-center justify-center px-5 py-8 sm:py-14">
+    <section appUI="card" layout="plain" padding="lg" class="w-full max-w-md shadow-sm">
+      <ng-content />
+
+      @if (navigation.notificationFailed()) {
+        <div appUI="alert" role="status" class="mt-5" i18n="@@authNotificationFailed">
+          The change was saved, but the notification could not be sent.
+        </div>
+      }
+    </section>
+  </main>
+
+  <footer class="px-5 pb-6 text-center text-xs text-zinc-500 dark:text-zinc-400" i18n="@@authFooter">
+    Your account. Your choice of how to sign in.
+  </footer>
+</div>

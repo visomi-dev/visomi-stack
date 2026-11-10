@@ -51,7 +51,8 @@ services:
       start_period: ${HEALTHCHECK_START_PERIOD:-5s}
 
   minio-init:
-    image: docker.io/minio/mc:latest
+    # Reuse the bundled mc client; the standalone Docker Hub image is unavailable.
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     restart: 'no'
     depends_on:
       minio:
@@ -86,7 +87,7 @@ services:
       dockerfile: Dockerfile
       target: runtime
       args:
-        APP_NAME: ${APP_NAME:-web-api}
+        APP_NAME: ${APP_NAME:-web-gateway}
     # Public browser URLs stay on localhost; service connections use container DNS.
     environment:
       - HOST=0.0.0.0

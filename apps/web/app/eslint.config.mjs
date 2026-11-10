@@ -1,6 +1,6 @@
 import { configs } from '@nx/eslint-plugin';
 
-import baseConfig, { moduleBoundaryOptions } from '../../../eslint.config.mjs';
+import baseConfig, { moduleBoundaryOptions, statementPadding } from '../../../eslint.config.mjs';
 
 export default [
   ...configs['flat/angular'],
@@ -30,6 +30,15 @@ export default [
   {
     files: ['**/*.ts'],
     rules: {
+      '@stylistic/padding-line-between-statements': [
+        ...statementPadding,
+        {
+          blankLine: 'always',
+          prev: 'expression',
+          next: { selector: 'VariableDeclaration:has(VariableDeclarator > AwaitExpression.init)' },
+        },
+        { blankLine: 'always', prev: 'multiline-expression', next: 'expression' },
+      ],
       '@angular-eslint/prefer-service-decorator': 'error',
       '@angular-eslint/prefer-inject': 'error',
       '@angular-eslint/directive-selector': [

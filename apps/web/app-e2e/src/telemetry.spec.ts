@@ -11,7 +11,7 @@ test('measures Angular router transitions without URLs, parameters, fragments or
     await route.fulfill({ response });
   });
 
-  await page.goto('/app/en/');
+  await page.goto('/app/en/foundations');
 
   await expect.poll(() => reports.length).toBeGreaterThan(0);
 
@@ -58,7 +58,7 @@ test('measures real page performance without exporting URLs, attribution or brow
     await route.fulfill({ response });
   });
 
-  await page.goto('/app/en/?secret=SYNTHETIC_PRIVATE_PERFORMANCE');
+  await page.goto('/app/en/foundations?secret=SYNTHETIC_PRIVATE_PERFORMANCE');
 
   await expect
     .poll(() =>
@@ -98,7 +98,7 @@ test('reports browser failures without private data and keeps source maps privat
 
   const configuration = page.waitForResponse((response) => response.url().endsWith('/telemetry/config'));
 
-  await page.goto('/app/en/');
+  await page.goto('/app/en/foundations');
 
   const response = await configuration;
   const config = await response.json();
@@ -169,8 +169,8 @@ test('reports browser failures without private data and keeps source maps privat
 });
 
 test('uses a fresh CSP nonce per response for SSR and hydration scripts', async ({ request }) => {
-  const first = await request.get('/app/en/');
-  const second = await request.get('/app/es/');
+  const first = await request.get('/app/en/foundations');
+  const second = await request.get('/app/es/foundations');
   const firstHtml = await first.text();
   const secondHtml = await second.text();
   const firstNonce = firstHtml.match(/ngcspnonce="([^"]+)"/i)?.[1];
