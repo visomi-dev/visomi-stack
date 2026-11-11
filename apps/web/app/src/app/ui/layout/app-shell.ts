@@ -13,10 +13,10 @@ import { appShell, type ShellLayout } from '@visomi-stack/web-frontend-ui';
     <div [class]="frameClasses()">
       <div [class]="sidebarClasses()"><ng-content select="app-sidebar,[data-shell-sidebar]" /></div>
 
-      <div class="min-w-0">
+      <div class="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
         <div [class]="headerClasses"><ng-content select="[app-topbar],[data-shell-header]" /></div>
 
-        <main [id]="contentId()" tabindex="-1" [class]="contentClasses"><ng-content /></main>
+        <main data-slot="page-scroll" [id]="contentId()" tabindex="-1" [class]="contentClasses"><ng-content /></main>
 
         <ng-content select="[data-shell-footer]" />
       </div>

@@ -7,7 +7,12 @@
     </p>
   </header>
 
-  <app-email-entry [busy]="action.busy()" [label]="createLabel" (confirmed)="register($event)" />
+  <app-email-entry
+    [busy]="action.busy()"
+    [label]="createLabel"
+    (confirmed)="register($event)"
+    [loading]="action.pending() === 'register'"
+  />
 
   <app-auth-feedback [action]="action" />
 

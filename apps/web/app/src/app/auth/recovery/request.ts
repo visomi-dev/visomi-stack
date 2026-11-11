@@ -24,12 +24,15 @@ export class RecoveryRequest {
   readonly action = inject(Action);
 
   request(email: string): void {
-    void this.action.run(async () => {
-      const pending = await this.api.request(email);
+    void this.action.run(
+      async () => {
+        const pending = await this.api.request(email);
 
-      this.journey.start('recovery', pending);
+        this.journey.start('recovery', pending);
 
-      await this.router.navigate(['/auth/recovery/verify']);
-    });
+        await this.router.navigate(['/auth/recovery/verify']);
+      },
+      { name: 'request' },
+    );
   }
 }

@@ -1,7 +1,7 @@
-import { Component, LOCALE_ID, booleanAttribute, computed, inject, input } from '@angular/core';
+import { Component, LOCALE_ID, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { Link } from '../ui';
+import { LinkButton } from '../ui';
 import { AuthNavigation } from '../auth/shared/navigation';
 
 const authRestarts: Record<string, string> = Object.freeze({
@@ -13,16 +13,15 @@ const authRestarts: Record<string, string> = Object.freeze({
 
 @Component({
   selector: 'app-language-switcher',
-  imports: [Link],
+  imports: [LinkButton],
   templateUrl: './language-switcher.html',
-  host: { '[class]': "compact() ? 'contents' : ''" },
+  host: { class: 'inline-flex shrink-0' },
 })
 export class LanguageSwitcher {
   private readonly router = inject(Router);
   private readonly navigation = inject(AuthNavigation);
   readonly locale = inject(LOCALE_ID);
 
-  readonly compact = input(false, { transform: booleanAttribute });
   readonly path = input<string>();
 
   private readonly url = computed(() => {
@@ -30,9 +29,6 @@ export class LanguageSwitcher {
 
     return url ? this.router.serializeUrl(url) : this.router.url;
   });
-  protected readonly linkClasses = computed(() =>
-    this.compact() ? 'inline-flex min-h-11 min-w-11 items-center px-2' : 'inline-flex min-h-11 items-center text-sm',
-  );
   private readonly localizedPath = computed(() => this.path() ?? this.stablePath());
   // Compile-time locales use separate bundles, so switching language requires document navigation.
   readonly english = computed(() => '/app/en' + this.localizedPath());
@@ -47,6 +43,8 @@ export class LanguageSwitcher {
       if (typeof request === 'string' && /^[a-f0-9-]{36}$/.test(request)) {
         return path + '?requestId=' + encodeURIComponent(request);
       }
+
+      return path;
     }
 
     if (path.startsWith('/auth/')) {
@@ -56,6 +54,6 @@ export class LanguageSwitcher {
       return this.router.serializeUrl(this.router.createUrlTree([restart], { queryParams }));
     }
 
-    return path;
+    return this.url();
   }
 }

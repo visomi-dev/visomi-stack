@@ -4,7 +4,12 @@
   @if (pending(); as pending) {
     <p appUI tone="muted">{{ pending.factor === 'email' ? emailHint : totpHint }}</p>
 
-    <app-code-entry [busy]="action.busy()" [backup]="backup()" (confirmed)="verify($event)" />
+    <app-code-entry
+      [busy]="action.busy()"
+      [backup]="backup()"
+      (confirmed)="verify($event)"
+      [loading]="action.pending() === 'verify'"
+    />
 
     @if (pending.factor === 'email') {
       <app-resend-code />

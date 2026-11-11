@@ -6,7 +6,7 @@ import { Session } from '../auth/session/session';
 import { Foundations } from './foundations';
 
 describe('design foundations', () => {
-  it('provides a labelled native theme control and both localized entry points', async () => {
+  it('provides a labelled native theme control and the destination language', async () => {
     TestBed.configureTestingModule({
       providers: [provideRouter([]), { provide: Session, useValue: {} }],
     });
@@ -21,8 +21,7 @@ describe('design foundations', () => {
     expect(select?.closest('label')?.textContent).toContain('Appearance');
     expect(Array.from(select?.options ?? [], (option) => option.value)).toEqual(['system', 'light', 'dark']);
     expect(Array.from(languageLinks, (link) => [link.textContent.trim(), link.getAttribute('href')])).toEqual([
-      ['EN', '/app/en/foundations'],
-      ['ES', '/app/es/foundations'],
+      ['Español', '/app/es/foundations'],
     ]);
 
     expect(element.querySelector('a[href$="#main"]')).not.toBeNull();

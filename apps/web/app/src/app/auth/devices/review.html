@@ -28,7 +28,15 @@
       </app-field>
 
       <div class="flex flex-wrap gap-3">
-        <button appUI type="submit" [disabled]="action.busy()" i18n="@@authApproveDevice">Approve request</button>
+        <button
+          appUI
+          type="submit"
+          [disabled]="action.busy()"
+          i18n="@@authApproveDevice"
+          [attr.aria-busy]="action.pending() === 'approve'"
+        >
+          Approve request
+        </button>
 
         <button
           appUI
@@ -37,6 +45,7 @@
           [disabled]="action.busy()"
           (click)="decide($event, false)"
           i18n="@@authDenyDevice"
+          [attr.aria-busy]="action.pending() === 'deny'"
         >
           Deny request
         </button>

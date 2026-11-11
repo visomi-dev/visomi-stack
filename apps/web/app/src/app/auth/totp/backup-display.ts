@@ -20,11 +20,14 @@ export class BackupDisplay {
   protected readonly downloadUrl = signal<string | null>(null);
 
   copy(): void {
-    void this.action.run(async () => {
-      await this.document.defaultView!.navigator.clipboard.writeText(this.codes().join('\n'));
+    void this.action.run(
+      async () => {
+        await this.document.defaultView!.navigator.clipboard.writeText(this.codes().join('\n'));
 
-      this.action.setNotice($localize`:@@authCopied:Copied.`);
-    });
+        this.action.setNotice($localize`:@@authCopied:Copied.`);
+      },
+      { name: 'copy' },
+    );
   }
 
   private readonly prepareDownload = afterRenderEffect({

@@ -29,7 +29,14 @@
         </p>
 
         <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <button appUI variant="danger" [disabled]="action.busy()" (click)="regenerate()" i18n="@@authConfirm">
+          <button
+            appUI
+            variant="danger"
+            [disabled]="action.busy()"
+            (click)="regenerate()"
+            i18n="@@authConfirm"
+            [attr.aria-busy]="action.pending() === 'regenerate'"
+          >
             Confirm
           </button>
 

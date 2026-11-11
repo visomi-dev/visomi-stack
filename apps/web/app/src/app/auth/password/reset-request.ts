@@ -24,12 +24,15 @@ export class ResetRequest {
   readonly action = inject(Action);
 
   request(email: string): void {
-    void this.action.run(async () => {
-      const pending = await this.passwords.reset(email);
+    void this.action.run(
+      async () => {
+        const pending = await this.passwords.reset(email);
 
-      this.journey.start('reset', pending);
+        this.journey.start('reset', pending);
 
-      await this.router.navigate(['/auth/reset-password']);
-    });
+        await this.router.navigate(['/auth/reset-password']);
+      },
+      { name: 'request' },
+    );
   }
 }

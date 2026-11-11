@@ -39,13 +39,16 @@ export class EmailVerify {
   });
 
   request(address?: string): void {
-    void this.action.run(async () => {
-      const pending = await this.email.request(address);
+    void this.action.run(
+      async () => {
+        const pending = await this.email.request(address);
 
-      this.journey.start('email', pending);
+        this.journey.start('email', pending);
 
-      await this.session.load(true);
-    });
+        await this.session.load(true);
+      },
+      { name: 'request' },
+    );
   }
 
   verify(code: string): void {
@@ -55,13 +58,16 @@ export class EmailVerify {
       return;
     }
 
-    void this.action.run(async () => {
-      await this.email.verify(pending.flowId, code);
+    void this.action.run(
+      async () => {
+        await this.email.verify(pending.flowId, code);
 
-      this.journey.clear();
+        this.journey.clear();
 
-      await this.navigation.complete();
-    });
+        await this.navigation.complete();
+      },
+      { name: 'verify' },
+    );
   }
 
   logout(): void {

@@ -78,28 +78,31 @@ export class DeviceApproval {
   }
 
   start(email: string): void {
-    void this.action.run(async () => {
-      this.stopWatching();
+    void this.action.run(
+      async () => {
+        this.stopWatching();
 
-      const pending = await this.api.request(email);
+        const pending = await this.api.request(email);
 
-      if (this.destroyRef.destroyed) {
-        return;
-      }
-
-      this.request.set(pending);
-      this.status.set('pending');
-      this.disconnect = this.realtime?.watchDeviceApproval(pending.requestId, (event) => {
-        if (event === 'disconnected' && !this.live) {
+        if (this.destroyRef.destroyed) {
           return;
         }
 
-        this.live = event !== 'disconnected';
-        this.refreshStatus();
-      });
+        this.request.set(pending);
+        this.status.set('pending');
+        this.disconnect = this.realtime?.watchDeviceApproval(pending.requestId, (event) => {
+          if (event === 'disconnected' && !this.live) {
+            return;
+          }
 
-      void this.poll();
-    });
+          this.live = event !== 'disconnected';
+          this.refreshStatus();
+        });
+
+        void this.poll();
+      },
+      { name: 'start' },
+    );
   }
 
   async poll(): Promise<void> {
@@ -170,12 +173,15 @@ export class DeviceApproval {
     const pending = this.request();
 
     if (pending) {
-      void this.action.run(async () => {
-        await this.api.cancel(pending.requestId);
+      void this.action.run(
+        async () => {
+          await this.api.cancel(pending.requestId);
 
-        this.stopWatching();
-        this.status.set('cancelled');
-      });
+          this.stopWatching();
+          this.status.set('cancelled');
+        },
+        { name: 'cancel' },
+      );
     }
   }
 
@@ -183,13 +189,16 @@ export class DeviceApproval {
     const pending = this.request();
 
     if (pending) {
-      void this.action.run(async () => {
-        await this.api.consume(pending.requestId, pending.userCode);
+      void this.action.run(
+        async () => {
+          await this.api.consume(pending.requestId, pending.userCode);
 
-        this.stopWatching();
+          this.stopWatching();
 
-        await this.navigation.complete();
-      });
+          await this.navigation.complete();
+        },
+        { name: 'consume' },
+      );
     }
   }
 

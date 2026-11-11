@@ -29,23 +29,29 @@ export class Account {
   readonly changeLabel = $localize`:@@authChangeEmail:Change email`;
 
   change(email: string): void {
-    void this.action.run(async () => {
-      const pending = await this.email.change(email);
+    void this.action.run(
+      async () => {
+        const pending = await this.email.change(email);
 
-      this.pending.set(pending);
-    });
+        this.pending.set(pending);
+      },
+      { name: 'change' },
+    );
   }
 
   resend(): void {
     const pending = this.pending();
 
     if (pending) {
-      void this.action.run(async () => {
-        const next = await this.email.resend(pending.flowId);
+      void this.action.run(
+        async () => {
+          const next = await this.email.resend(pending.flowId);
 
-        this.pending.set(next);
-        this.action.setNotice($localize`:@@authCodeSent:A new code has been requested. Check your email.`);
-      });
+          this.pending.set(next);
+          this.action.setNotice($localize`:@@authCodeSent:A new code has been requested. Check your email.`);
+        },
+        { name: 'resend' },
+      );
     }
   }
 
@@ -56,15 +62,18 @@ export class Account {
       return;
     }
 
-    void this.action.run(async () => {
-      const result = await this.email.completeChange(pending.flowId, code);
+    void this.action.run(
+      async () => {
+        const result = await this.email.completeChange(pending.flowId, code);
 
-      this.pending.set(null);
-      this.action.setNotice(
-        result.notificationSent === false
-          ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
-          : $localize`:@@authEmailChanged:Your email has been updated.`,
-      );
-    });
+        this.pending.set(null);
+        this.action.setNotice(
+          result.notificationSent === false
+            ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
+            : $localize`:@@authEmailChanged:Your email has been updated.`,
+        );
+      },
+      { name: 'verify' },
+    );
   }
 }

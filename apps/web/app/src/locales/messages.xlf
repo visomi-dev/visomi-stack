@@ -2191,6 +2191,12 @@
           <context context-type="linenumber">59</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="shellMenu" datatype="html">
+        <source>Menu</source>
+      </trans-unit>
+      <trans-unit id="shellCloseNavigation" datatype="html">
+        <source>Close navigation</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

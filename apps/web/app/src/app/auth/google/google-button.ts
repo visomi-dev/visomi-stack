@@ -1,4 +1,4 @@
-import { Component, ElementRef, afterNextRender, inject, input, output, viewChild } from '@angular/core';
+import { Component, ElementRef, afterNextRender, inject, input, output, signal, viewChild } from '@angular/core';
 
 import { Button } from '../../ui';
 import type { Pending, SessionView } from '../session/models';
@@ -12,7 +12,7 @@ import { Google } from './google';
   selector: 'app-google-button',
   imports: [Button, AuthFeedback],
   providers: [Action, AuthHttp, Google],
-  host: { class: 'flex min-w-0 flex-col gap-3' },
+  host: { class: 'flex w-full max-w-[400px] min-w-0 flex-col gap-3 self-center' },
   templateUrl: './google-button.html',
 })
 export class GoogleButton {
@@ -24,28 +24,35 @@ export class GoogleButton {
   readonly completed = output<SessionView | (Pending & { factor: 'email' })>();
   readonly processing = output<boolean>();
 
+  readonly pending = signal(false);
+
   private readonly button = viewChild.required<ElementRef<HTMLElement>>('button');
 
-  render(): void {
-    void this.action.run(() =>
-      this.google.button(
-        this.button().nativeElement,
-        this.intent(),
-        (result) => {
-          this.completed.emit(result);
+  render(retry = false): void {
+    void this.action.run(
+      () =>
+        this.google.button(
+          this.button().nativeElement,
+          this.intent(),
+          (result) => {
+            this.completed.emit(result);
 
-          if (this.intent() === 'link' && 'access' in result) {
-            this.render();
-          }
-        },
-        (error) => {
-          void this.action.run(async () => {
-            throw error;
-          });
-        },
-        () => !this.disabled(),
-        (active) => this.processing.emit(active),
-      ),
+            if (this.intent() === 'link' && 'access' in result) {
+              this.render();
+            }
+          },
+          (error) => {
+            void this.action.run(async () => {
+              throw error;
+            });
+          },
+          () => !this.disabled(),
+          (active) => {
+            this.pending.set(active);
+            this.processing.emit(active);
+          },
+        ),
+      { name: retry ? 'retry' : undefined },
     );
   }
 

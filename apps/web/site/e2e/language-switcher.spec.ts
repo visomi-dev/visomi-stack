@@ -20,6 +20,8 @@ for (const locale of ['en', 'es']) {
 
         await expect(language).toHaveText(destination === 'es' ? 'Español' : 'English');
 
+        await expect(language.locator('svg[aria-hidden="true"]')).toHaveCount(1);
+
         await expect(language).toHaveAttribute('lang', destination);
 
         await expect(language).toHaveAttribute('hreflang', destination);

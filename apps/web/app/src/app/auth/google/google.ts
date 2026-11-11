@@ -1,9 +1,10 @@
 import { DOCUMENT } from '@angular/common';
-import { CSP_NONCE, DestroyRef, Service, inject } from '@angular/core';
+import { CSP_NONCE, DestroyRef, LOCALE_ID, Service, afterRenderEffect, inject, signal } from '@angular/core';
 
 import { AuthHttp } from '../shared/http';
 import { Session } from '../session/session';
 import type { Pending, SessionView, SessionResult } from '../session/models';
+import { Theme } from '../../ui/theme/theme';
 
 type GoogleApi = {
   accounts: {
@@ -16,7 +17,15 @@ type GoogleApi = {
       }): void;
       renderButton(
         element: HTMLElement,
-        options: { type: string; theme: string; size: string; width: number; text: string },
+        options: {
+          type: string;
+          theme: string;
+          size: string;
+          width: string;
+          text: string;
+          shape: string;
+          locale: string;
+        },
       ): void;
       cancel(): void;
     };
@@ -31,6 +40,13 @@ export class Google {
   private readonly http = inject(AuthHttp);
   private readonly destroyRef = inject(DestroyRef);
   private readonly session = inject(Session);
+  private readonly theme = inject(Theme);
+  private readonly locale = inject(LOCALE_ID);
+
+  private readonly width = signal(0);
+  private readonly focused = signal(false);
+
+  private readonly renderer = signal<((width: number, dark: boolean) => void) | null>(null);
 
   private buttonLifetime: AbortController | undefined;
   private readonly cleanup = this.destroyRef.onDestroy(() => this.buttonLifetime?.abort());
@@ -68,6 +84,7 @@ export class Google {
     cancellation.addEventListener(
       'abort',
       () => {
+        controller.abort();
         element.replaceChildren();
 
         if (active) {
@@ -113,13 +130,49 @@ export class Google {
       },
     });
 
-    google.accounts.id.renderButton(element, {
-      type: 'standard',
-      theme: 'outline',
-      size: 'large',
-      width: Math.min(360, element.clientWidth || 300),
-      text: intent === 'link' ? 'continue_with' : 'signin_with',
+    this.width.set(element.clientWidth);
+    this.focused.set(false);
+    let renderedWidth = 0;
+    let renderedDark: boolean | undefined;
+
+    this.renderer.set((width, dark) => {
+      const buttonWidth = Math.min(400, Math.floor(width));
+
+      // Never replace controls after credential submission or reuse a consumed nonce.
+      if (
+        used ||
+        lifetime.aborted ||
+        cancellation.aborted ||
+        (buttonWidth === renderedWidth && dark === renderedDark)
+      ) {
+        return;
+      }
+
+      try {
+        element.replaceChildren();
+        google.accounts.id.renderButton(element, {
+          type: 'standard',
+          theme: dark ? 'filled_black' : 'outline',
+          size: 'large',
+          width: String(buttonWidth),
+          text: intent === 'link' ? 'continue_with' : 'signin_with',
+          shape: 'rectangular',
+          locale: this.locale.startsWith('es') ? 'es' : 'en',
+        });
+
+        renderedWidth = buttonWidth;
+        renderedDark = dark;
+      } catch (error) {
+        failed(error);
+      }
     });
+
+    const observer = new ResizeObserver(() => this.width.set(element.clientWidth));
+
+    observer.observe(element);
+    element.addEventListener('focusin', () => this.focused.set(true), { signal: lifetime });
+    element.addEventListener('focusout', () => this.focused.set(false), { signal: lifetime });
+    lifetime.addEventListener('abort', () => observer.disconnect(), { once: true });
   }
 
   verify(flowId: string, code: string): Promise<SessionView> {
@@ -187,4 +240,17 @@ export class Google {
 
     return library;
   }
+
+  private readonly updatePresentation = afterRenderEffect({
+    write: () => {
+      const render = this.renderer();
+      const width = this.width();
+      const dark = this.theme.isDark();
+
+      // Keep keyboard focus in the provider frame; apply the latest layout when focus leaves it.
+      if (render && width > 0 && !this.focused()) {
+        render(width, dark);
+      }
+    },
+  });
 }

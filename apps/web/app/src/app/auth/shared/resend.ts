@@ -43,21 +43,24 @@ export class ResendCode {
       return;
     }
 
-    void this.action.run(async () => {
-      try {
-        const pending = await this.email.resend(current.flowId);
+    void this.action.run(
+      async () => {
+        try {
+          const pending = await this.email.resend(current.flowId);
 
-        this.journey.start(current.purpose, { ...pending, factor: current.factor });
-        this.sent.emit();
-        this.action.setNotice($localize`:@@authCodeSent:A new code has been requested. Check your email.`);
-      } catch (error) {
-        if (error instanceof HttpErrorResponse) {
-          this.retryAt.set(Date.now() + (retryDelay(error.headers) ?? 60) * 1000);
+          this.journey.start(current.purpose, { ...pending, factor: current.factor });
+          this.sent.emit();
+          this.action.setNotice($localize`:@@authCodeSent:A new code has been requested. Check your email.`);
+        } catch (error) {
+          if (error instanceof HttpErrorResponse) {
+            this.retryAt.set(Date.now() + (retryDelay(error.headers) ?? 60) * 1000);
+          }
+
+          throw error;
         }
-
-        throw error;
-      }
-    });
+      },
+      { name: 'resend' },
+    );
   }
 
   private readonly initialize = afterNextRender(() => {

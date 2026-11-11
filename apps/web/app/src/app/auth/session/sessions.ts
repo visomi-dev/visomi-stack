@@ -55,29 +55,35 @@ export class Sessions {
   }
 
   revoke(id: string): void {
-    void this.action.run(async () => {
-      await this.api.revoke(id);
+    void this.action.run(
+      async () => {
+        await this.api.revoke(id);
 
-      this.confirm.set(null);
+        this.confirm.set(null);
 
-      await this.session.load(true);
+        await this.session.load(true);
 
-      if (this.session.full()) {
-        await this.reload();
-      } else {
-        await this.navigation.complete();
-      }
-    });
+        if (this.session.full()) {
+          await this.reload();
+        } else {
+          await this.navigation.complete();
+        }
+      },
+      { name: 'revoke:' + id },
+    );
   }
 
   revokeOthers(): void {
-    void this.action.run(async () => {
-      await this.api.revokeOthers();
+    void this.action.run(
+      async () => {
+        await this.api.revokeOthers();
 
-      this.confirm.set(null);
+        this.confirm.set(null);
 
-      await this.reload();
-    });
+        await this.reload();
+      },
+      { name: 'revokeOthers' },
+    );
   }
 
   private readonly initialize = afterNextRender(() => void this.action.run(() => this.reload()));

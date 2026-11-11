@@ -31,10 +31,7 @@ export class Action {
     }
 
     this.busyState.set(active);
-
-    if (!active) {
-      this.pendingState.set(null);
-    }
+    this.pendingState.set(active ? 'provider' : null);
   }
 
   setError(message: string): void {

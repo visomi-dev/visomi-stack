@@ -1,10 +1,17 @@
 <div class="flex min-w-0 flex-col gap-3" [attr.inert]="disabled() ? '' : null">
-  <div #button class="flex min-h-11 justify-center"></div>
+  <div #button class="flex min-h-11 w-full items-center justify-center" [attr.aria-busy]="pending()"></div>
 
-  <app-auth-feedback [action]="action" />
+  <app-auth-feedback [action]="action" [indicator]="false" />
 
-  @if (action.error()) {
-    <button appUI variant="secondary" [disabled]="action.busy()" (click)="render()" i18n="@@authGoogleRetry">
+  @if (action.error() || action.pending() === 'retry') {
+    <button
+      appUI
+      variant="secondary"
+      [disabled]="action.busy()"
+      [attr.aria-busy]="action.pending() === 'retry'"
+      (click)="render(true)"
+      i18n="@@authGoogleRetry"
+    >
       Try Google again
     </button>
   }

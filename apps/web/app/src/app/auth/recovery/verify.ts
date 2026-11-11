@@ -60,30 +60,33 @@ export class RecoveryVerify {
     this.attempted.set(true);
     void submit(this.fields, {
       action: async () =>
-        this.action.run(async () => {
-          const pending = this.journey.challenge();
+        this.action.run(
+          async () => {
+            const pending = this.journey.challenge();
 
-          if (pending?.purpose !== 'recovery') {
-            return;
-          }
+            if (pending?.purpose !== 'recovery') {
+              return;
+            }
 
-          const value = this.model();
+            const value = this.model();
 
-          try {
-            const result = await this.api.verify(
-              pending.flowId,
-              value.code,
-              value.kind === 'none' ? undefined : { kind: value.kind as Factor['kind'], code: value.factor },
-            );
+            try {
+              const result = await this.api.verify(
+                pending.flowId,
+                value.code,
+                value.kind === 'none' ? undefined : { kind: value.kind as Factor['kind'], code: value.factor },
+              );
 
-            this.journey.clear();
+              this.journey.clear();
 
-            await this.navigation.complete(result);
-          } finally {
-            this.fields().reset({ ...this.model(), code: '', factor: '' });
-            this.attempted.set(false);
-          }
-        }),
+              await this.navigation.complete(result);
+            } finally {
+              this.fields().reset({ ...this.model(), code: '', factor: '' });
+              this.attempted.set(false);
+            }
+          },
+          { name: 'verify' },
+        ),
       onInvalid: focusInvalid,
     });
   }

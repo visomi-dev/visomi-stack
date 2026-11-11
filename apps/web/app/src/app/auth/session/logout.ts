@@ -19,27 +19,30 @@ export class Logout {
   private readonly session = inject(Session);
 
   run({ clearFlowState, checkSessionOnFailure = false }: LogoutOptions = {}): Promise<void> {
-    return this.action.run(async () => {
-      try {
-        this.session.cancelOperations();
+    return this.action.run(
+      async () => {
+        try {
+          this.session.cancelOperations();
 
-        await this.http.request('POST', '/logout', {});
+          await this.http.request('POST', '/logout', {});
 
-        this.session.clear();
-        clearFlowState?.();
-      } catch (error) {
-        if (!checkSessionOnFailure) {
-          throw error;
+          this.session.clear();
+          clearFlowState?.();
+        } catch (error) {
+          if (!checkSessionOnFailure) {
+            throw error;
+          }
+
+          await this.session.load(true);
+
+          if (this.session.snapshot().access !== 'anonymous' || this.session.status() !== 'ready') {
+            throw error;
+          }
         }
 
-        await this.session.load(true);
-
-        if (this.session.snapshot().access !== 'anonymous' || this.session.status() !== 'ready') {
-          throw error;
-        }
-      }
-
-      await this.router.navigate(['/auth/sign-in']);
-    });
+        await this.router.navigate(['/auth/sign-in']);
+      },
+      { name: 'logout' },
+    );
   }
 }

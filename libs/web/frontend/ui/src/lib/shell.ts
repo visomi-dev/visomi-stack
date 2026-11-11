@@ -5,25 +5,27 @@ export type NavigationPlacement = 'sidebar' | 'navbar';
 
 export const appShell = {
   classes(): string {
-    return 'block min-h-dvh bg-white pb-[calc(6rem+env(safe-area-inset-bottom))] text-zinc-950 lg:pb-0 dark:bg-zinc-950 dark:text-zinc-50 [&_:focus]:scroll-mb-28 [&_:target]:scroll-mt-24';
+    return 'flex h-dvh min-h-0 flex-col overflow-hidden bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50';
   },
   frameClasses({ layout = 'sidebar' }: { layout?: ShellLayout } = {}): string {
-    return layout === 'sidebar' ? 'min-h-dvh lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]' : 'min-h-dvh';
+    return layout === 'sidebar'
+      ? 'min-h-0 flex-1 overflow-hidden lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]'
+      : 'min-h-0 flex-1 overflow-hidden';
   },
   sidebarClasses({ layout = 'sidebar' }: { layout?: ShellLayout } = {}): string {
-    return layout === 'sidebar' ? 'hidden lg:sticky lg:top-0 lg:block lg:h-dvh lg:min-h-0' : 'hidden';
+    return layout === 'sidebar' ? 'hidden min-h-0 lg:block' : 'hidden';
   },
   contentClasses(): string {
     return [
       container.classes({ width: 'xl', gutter: 'compact' }),
-      'scroll-mt-24 py-8 focus:outline-none sm:py-12',
+      'min-h-0 flex-1 overflow-y-auto overscroll-y-contain py-8 focus:outline-none sm:py-12 [&_:focus]:scroll-my-4 [&_:target]:scroll-mt-4',
     ].join(' ');
   },
   headerClasses(): string {
-    return 'lg:sticky lg:top-0 lg:z-30';
+    return 'z-30 shrink-0';
   },
   mobileClasses(): string {
-    return 'fixed inset-x-0 bottom-0 z-40 lg:hidden';
+    return 'z-40 shrink-0 lg:hidden';
   },
   skipClasses(): string {
     return 'ui-focus-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-white focus:p-4 focus:text-zinc-950';

@@ -26,7 +26,14 @@
       <p role="status" i18n="@@authEndOtherConfirm">End every other session? They will need to sign in again.</p>
 
       <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <button appUI variant="danger" [disabled]="action.busy()" (click)="revokeOthers()" i18n="@@authConfirm">
+        <button
+          appUI
+          variant="danger"
+          [disabled]="action.busy()"
+          (click)="revokeOthers()"
+          i18n="@@authConfirm"
+          [attr.aria-busy]="action.pending() === 'revokeOthers'"
+        >
           Confirm
         </button>
 
@@ -84,7 +91,14 @@
           </p>
 
           <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <button appUI variant="danger" [disabled]="action.busy()" (click)="revoke(entry.id)" i18n="@@authConfirm">
+            <button
+              appUI
+              variant="danger"
+              [disabled]="action.busy()"
+              (click)="revoke(entry.id)"
+              i18n="@@authConfirm"
+              [attr.aria-busy]="action.pending() === 'revoke:' + entry.id"
+            >
               Confirm
             </button>
 

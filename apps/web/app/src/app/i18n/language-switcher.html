@@ -1,33 +1,26 @@
-<nav [class]="compact() ? 'flex gap-3' : 'flex items-center gap-2'" aria-label="Language" i18n-aria-label="@@language">
-  @if (!compact() && locale.startsWith('en')) {
-    <span lang="en" aria-current="true" class="inline-flex min-h-11 items-center text-sm font-medium">English</span>
-  } @else {
-    <a
-      appUI
-      variant="muted"
-      [underline]="compact() ? 'none' : 'hover'"
-      [class]="linkClasses()"
-      [href]="english()"
-      hreflang="en"
-      lang="en"
+<nav aria-label="Language" i18n-aria-label="@@language">
+  <a
+    appUI="button"
+    variant="secondary"
+    size="sm"
+    [href]="locale.startsWith('en') ? spanish() : english()"
+    [attr.hreflang]="locale.startsWith('en') ? 'es' : 'en'"
+    [attr.lang]="locale.startsWith('en') ? 'es' : 'en'"
+    data-language-switcher
+  >
+    <svg
+      class="size-4 shrink-0"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+      focusable="false"
     >
-      {{ compact() ? 'EN' : 'English' }}
-    </a>
-  }
-
-  @if (!compact() && !locale.startsWith('en')) {
-    <span lang="es" aria-current="true" class="inline-flex min-h-11 items-center text-sm font-medium">Español</span>
-  } @else {
-    <a
-      appUI
-      variant="muted"
-      [underline]="compact() ? 'none' : 'hover'"
-      [class]="linkClasses()"
-      [href]="spanish()"
-      hreflang="es"
-      lang="es"
-    >
-      {{ compact() ? 'ES' : 'Español' }}
-    </a>
-  }
+      <path d="m5 8 6 6m-7 0 6-6 2-3H2m5-3v3M13 21l5-11 5 11m-8-4h6" />
+    </svg>
+    {{ locale.startsWith('en') ? 'Español' : 'English' }}
+  </a>
 </nav>

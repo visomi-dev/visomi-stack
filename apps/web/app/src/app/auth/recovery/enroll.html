@@ -14,7 +14,12 @@
       authenticator code.
     </p>
 
-    <app-code-entry [busy]="action.busy()" [backup]="backup()" (confirmed)="completePassword($event)" />
+    <app-code-entry
+      [busy]="action.busy()"
+      [backup]="backup()"
+      (confirmed)="completePassword($event)"
+      [loading]="action.pending() === 'completePassword'"
+    />
 
     @if (pending()?.factor === 'email') {
       <p appUI tone="muted" class="text-sm" i18n="@@authReplacementEmailRestart">
@@ -43,11 +48,25 @@
       Your replacement passkey is created. Sign in with that passkey to finish recovery.
     </p>
 
-    <button appUI class="w-full" [disabled]="action.busy()" (click)="provePasskey()" i18n="@@authVerifyPasskey">
+    <button
+      appUI
+      class="w-full"
+      [disabled]="action.busy()"
+      (click)="provePasskey()"
+      i18n="@@authVerifyPasskey"
+      [attr.aria-busy]="action.pending() === 'provePasskey'"
+    >
       Verify replacement passkey
     </button>
   } @else {
-    <button appUI class="w-full" [disabled]="action.busy()" (click)="passkey()" i18n="@@authCreateReplacementPasskey">
+    <button
+      appUI
+      class="w-full"
+      [disabled]="action.busy()"
+      (click)="passkey()"
+      i18n="@@authCreateReplacementPasskey"
+      [attr.aria-busy]="action.pending() === 'passkey'"
+    >
       Create a replacement passkey
     </button>
 
@@ -91,7 +110,14 @@
           </div>
         </app-field>
 
-        <button appUI type="submit" class="w-full" [disabled]="action.busy()" i18n="@@authSavePassword">
+        <button
+          appUI
+          type="submit"
+          class="w-full"
+          [disabled]="action.busy()"
+          i18n="@@authSavePassword"
+          [attr.aria-busy]="action.pending() === 'password'"
+        >
           Save password
         </button>
       </form>
@@ -100,7 +126,15 @@
 
   <app-auth-feedback [action]="action" />
 
-  <button appUI variant="secondary" [disabled]="action.busy()" (click)="logout()" i18n="@@authSignOut" class="w-full">
+  <button
+    appUI
+    variant="secondary"
+    [disabled]="action.busy()"
+    (click)="logout()"
+    [attr.aria-busy]="action.pending() === 'logout'"
+    i18n="@@authSignOut"
+    class="w-full"
+  >
     Sign out
   </button>
 </section>

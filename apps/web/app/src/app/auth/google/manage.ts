@@ -54,7 +54,7 @@ export class ManageGoogle {
 
   linked(result: SessionView | (Pending & { factor: 'email' })): void {
     if ('access' in result) {
-      void this.action.run(() => this.reload());
+      void this.action.run(() => this.reload(), { name: 'provider' });
     } else {
       this.pending.set(result);
     }
@@ -64,36 +64,42 @@ export class ManageGoogle {
     const pending = this.pending();
 
     if (pending) {
-      void this.action.run(async () => {
-        await this.google.verify(pending.flowId, code);
+      void this.action.run(
+        async () => {
+          await this.google.verify(pending.flowId, code);
 
-        this.pending.set(null);
+          this.pending.set(null);
 
-        await this.reload();
-      });
+          await this.reload();
+        },
+        { name: 'verify' },
+      );
     }
   }
 
   unlink(id: string): void {
-    void this.action.run(async () => {
-      const result = await this.google.unlink(id);
+    void this.action.run(
+      async () => {
+        const result = await this.google.unlink(id);
 
-      await this.session.load(true);
+        await this.session.load(true);
 
-      if (this.session.full()) {
-        this.confirm.set(null);
+        if (this.session.full()) {
+          this.confirm.set(null);
 
-        await this.reload();
+          await this.reload();
 
-        if (result?.notificationSent === false) {
-          this.action.setNotice(
-            $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
-          );
+          if (result?.notificationSent === false) {
+            this.action.setNotice(
+              $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
+            );
+          }
+        } else {
+          await this.navigation.complete(result ?? undefined);
         }
-      } else {
-        await this.navigation.complete(result ?? undefined);
-      }
-    });
+      },
+      { name: 'unlink:' + id },
+    );
   }
 
   private readonly initialize = afterNextRender(() => void this.action.run(() => this.reload()));

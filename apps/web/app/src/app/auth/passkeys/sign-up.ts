@@ -32,26 +32,32 @@ export class SignUp {
   readonly createLabel = $localize`:@@authCreatePasskeyAccount:Create account with a passkey`;
 
   register(email: string): void {
-    void this.action.run(async () => {
-      const result = await this.keys.register(email);
+    void this.action.run(
+      async () => {
+        const result = await this.keys.register(email);
 
-      if (result.flowId && result.expiresAt) {
-        this.journey.start('email', { flowId: result.flowId, expiresAt: result.expiresAt });
-      }
+        if (result.flowId && result.expiresAt) {
+          this.journey.start('email', { flowId: result.flowId, expiresAt: result.expiresAt });
+        }
 
-      await this.navigation.complete();
-    });
+        await this.navigation.complete();
+      },
+      { name: 'register' },
+    );
   }
 
   google(result: SessionView | (Pending & { factor: 'email' })): void {
-    void this.action.run(async () => {
-      if ('access' in result) {
-        await this.navigation.complete();
-      } else {
-        this.journey.start('google', result);
+    void this.action.run(
+      async () => {
+        if ('access' in result) {
+          await this.navigation.complete();
+        } else {
+          this.journey.start('google', result);
 
-        await this.router.navigate(['/auth/google/verify-email'], { queryParams: this.navigation.returnQuery() });
-      }
-    });
+          await this.router.navigate(['/auth/google/verify-email'], { queryParams: this.navigation.returnQuery() });
+        }
+      },
+      { name: 'provider' },
+    );
   }
 }

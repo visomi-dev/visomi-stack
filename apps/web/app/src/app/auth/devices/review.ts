@@ -79,7 +79,7 @@ export class DeviceReview {
               }
             }
           },
-          { signal },
+          { signal, name: approve ? 'approve' : 'deny' },
         ),
       onInvalid: focusInvalid,
     });

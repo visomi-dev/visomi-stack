@@ -68,32 +68,36 @@ export class PasswordReset {
     this.attempted.set(true);
     void submit(this.fields, {
       action: async () =>
-        this.action.run(async () => {
-          const pending = this.journey.challenge();
+        this.action.run(
+          async () => {
+            const pending = this.journey.challenge();
 
-          if (pending?.purpose !== 'reset') {
-            return;
-          }
-
-          const value = this.model();
-          const factor = value.kind === 'none' ? undefined : { kind: value.kind as Factor['kind'], code: value.factor };
-
-          try {
-            const result = await this.passwords.completeReset(pending.flowId, value.code, value.password, factor);
-
-            this.journey.clear();
-            this.done.set(true);
-
-            if (!result.notificationSent) {
-              this.action.setNotice(
-                $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
-              );
+            if (pending?.purpose !== 'reset') {
+              return;
             }
-          } finally {
-            this.fields().reset({ ...this.model(), password: '', code: '', factor: '' });
-            this.attempted.set(false);
-          }
-        }),
+
+            const value = this.model();
+            const factor =
+              value.kind === 'none' ? undefined : { kind: value.kind as Factor['kind'], code: value.factor };
+
+            try {
+              const result = await this.passwords.completeReset(pending.flowId, value.code, value.password, factor);
+
+              this.journey.clear();
+              this.done.set(true);
+
+              if (!result.notificationSent) {
+                this.action.setNotice(
+                  $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
+                );
+              }
+            } finally {
+              this.fields().reset({ ...this.model(), password: '', code: '', factor: '' });
+              this.attempted.set(false);
+            }
+          },
+          { name: 'save' },
+        ),
       onInvalid: focusInvalid,
     });
   }
