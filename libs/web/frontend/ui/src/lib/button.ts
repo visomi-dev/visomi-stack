@@ -51,7 +51,7 @@ export const button = {
       variants[variant],
       sizes[size],
       // Binding aria-busy reserves the trailing slot before loading can wrap the label.
-      "aria-busy:cursor-wait [&[aria-busy]]:after:content-[''] [&[aria-busy]]:after:size-4 [&[aria-busy]]:after:shrink-0 aria-[busy=false]:after:invisible aria-busy:after:rounded-full aria-busy:after:border-2 aria-busy:after:border-current aria-busy:after:border-r-transparent aria-busy:after:animate-spin motion-reduce:aria-busy:after:animate-none",
+      "aria-busy:cursor-wait [&[aria-busy]]:after:content-[''] [&[aria-busy]]:after:size-4 [&[aria-busy]]:after:shrink-0 aria-[busy=false]:after:invisible aria-busy:after:ui-loader",
     ].join(' ');
   },
 } as const;

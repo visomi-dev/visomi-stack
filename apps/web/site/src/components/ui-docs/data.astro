@@ -1,4 +1,5 @@
 ---
+import isotype from '../../../../../../assets/brand/isotype.svg?url';
 import Text from '../text.astro';
 import { uiDocs, type UiLocale } from '../../ui-docs';
 import Badge from '../badge.astro';
@@ -31,9 +32,9 @@ const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
   id="avatar"
   locale={locale}
   angular={
-    '<span appUI="avatar" uiSize="md" role="img" aria-label="Morgan Lee">ML</span>\n<img appUI src="/favicon.svg" alt="Demo workspace" />'
+    '<span appUI="avatar" uiSize="md" role="img" aria-label="Morgan Lee">ML</span>\n<img appUI src="brand/isotype.svg" alt="Demo workspace" />'
   }
-  astro={'<Avatar label="Morgan Lee" ui-size="md">ML</Avatar>\n<Avatar src="/favicon.svg" label="Demo workspace" />'}
+  astro={'<Avatar label="Morgan Lee" ui-size="md">ML</Avatar>\n<Avatar src={isotype} label="Demo workspace" />'}
 >
   <div class="flex flex-wrap items-center gap-4">
     <Avatar label={labels.sampleName} ui-size="sm">
@@ -46,7 +47,7 @@ const tones = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
       ML
     </Avatar>
 
-    <Avatar label={labels.workspace} src="/favicon.svg" />
+    <Avatar label={labels.workspace} src={isotype} class="dark:[&_img]:invert" />
   </div>
 </Preview>
 

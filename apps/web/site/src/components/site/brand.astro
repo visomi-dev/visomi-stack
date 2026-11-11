@@ -1,5 +1,7 @@
 ---
 import { sitePath, type SiteLocale } from '../../content/site';
+import isotype from '../../../../../../assets/brand/isotype.svg?url';
+import logotype from '../../../../../../assets/brand/logotype-stack.svg?url';
 type Props = { locale: SiteLocale; compact?: boolean };
 const { locale, compact = false } = Astro.props;
 ---
@@ -7,11 +9,17 @@ const { locale, compact = false } = Astro.props;
 <a
   href={sitePath(locale, 'home')}
   aria-label="Visomi Stack"
-  class="ui-focus-ring inline-flex min-h-11 shrink-0 items-center gap-3 rounded-lg font-heading text-base font-bold tracking-tight"
+  class="ui-focus-ring inline-flex min-h-11 shrink-0 items-center rounded-lg"
 >
-  <span class="flex size-9 items-center justify-center rounded-xl bg-blue-600 text-lg text-white">V</span>
+  <picture>
+    {compact && <source media="(max-width: 639px)" srcset={isotype} />}
 
-  <span class:list={[compact ? 'hidden sm:inline' : '']}>
-    visomi<span class="mx-1 font-sans font-normal text-zinc-400 dark:text-zinc-500">/</span>stack
-  </span>
+    <img
+      src={logotype}
+      alt=""
+      width="194"
+      height="40"
+      class:list={['h-10 object-contain dark:invert', compact ? 'w-10 sm:w-[194px]' : 'w-[194px]']}
+    />
+  </picture>
 </a>

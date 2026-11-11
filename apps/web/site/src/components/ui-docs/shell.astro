@@ -1,4 +1,5 @@
 ---
+import logotype from '../../../../../../assets/brand/logotype-stack.svg?url';
 import Card from '../card.astro';
 import Text from '../text.astro';
 import { uiDocs, type UiLocale } from '../../ui-docs';
@@ -36,17 +37,22 @@ const labels = uiDocs[locale];
   id="sidebar"
   locale={locale}
   angular={
-    '<app-sidebar label="Primary">\n  <strong data-slot="brand">VISOMI</strong>\n  <a appUI="nav-item" href="/app/en/" aria-current="page">Overview</a>\n  <a data-slot="footer" href="/help">Help</a>\n</app-sidebar>'
+    '<app-sidebar label="Primary">\n  <img data-slot="brand" src="brand/logotype-stack.svg" alt="Visomi Stack" />\n  <a appUI="nav-item" href="/app/en/" aria-current="page">Overview</a>\n  <a data-slot="footer" href="/help">Help</a>\n</app-sidebar>'
   }
   astro={
-    '<Sidebar label="Primary">\n  <strong slot="brand">VISOMI</strong>\n  <NavItem href="/en/" aria-current="page">Overview</NavItem>\n  <a slot="footer" href="/help">Help</a>\n</Sidebar>'
+    '<Sidebar label="Primary">\n  <img slot="brand" src={logotype} alt="Visomi Stack" />\n  <NavItem href="/en/" aria-current="page">Overview</NavItem>\n  <a slot="footer" href="/help">Help</a>\n</Sidebar>'
   }
 >
   <Card as="div" padding="none" layout="plain" class="h-80 max-w-xs overflow-hidden">
     <Sidebar label={labels.primaryNavigation}>
-      <strong slot="brand" class="font-heading tracking-wide">
-        VISOMI
-      </strong>
+      <img
+        slot="brand"
+        src={logotype}
+        alt="Visomi Stack"
+        width="194"
+        height="40"
+        class="h-10 w-[194px] object-contain dark:invert"
+      />
 
       <div class="space-y-1">
         <NavItem href={`/${locale}/ui/shell/`} aria-current="page">

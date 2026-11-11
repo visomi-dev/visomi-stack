@@ -1,8 +1,13 @@
 <app-shell content-id="workspace-main" skip-label="Skip to content" i18n-skip-label="@@skip">
   <app-sidebar label="Primary navigation" i18n-label="@@shellPrimary">
-    <a data-slot="brand" routerLink="/home" class="rounded font-heading text-xl font-bold ui-focus-ring">
-      VISOMI
-      <span class="text-blue-600">.</span>
+    <a data-slot="brand" routerLink="/home" class="inline-flex min-h-11 items-center rounded-lg ui-focus-ring">
+      <img
+        src="brand/logotype-stack.svg"
+        alt="Visomi Stack"
+        width="194"
+        height="40"
+        class="h-10 w-[194px] object-contain dark:invert"
+      />
     </a>
 
     <div class="space-y-1">
@@ -37,7 +42,19 @@
   </app-sidebar>
 
   <header app-topbar>
-    <a data-slot="title" routerLink="/home" class="rounded font-heading font-bold ui-focus-ring">VISOMI</a>
+    <a data-slot="title" routerLink="/home" class="inline-flex min-h-11 items-center rounded-lg ui-focus-ring">
+      <picture>
+        <source media="(min-width: 640px)" srcset="brand/logotype-stack.svg" />
+
+        <img
+          src="brand/isotype.svg"
+          alt="Visomi Stack"
+          width="175"
+          height="36"
+          class="h-9 w-9 object-contain sm:w-[175px] dark:invert"
+        />
+      </picture>
+    </a>
 
     <div data-slot="actions" class="flex flex-wrap items-center gap-2 sm:gap-4">
       <app-language-switcher />

@@ -28,6 +28,14 @@ for (const locale of ['en', 'es']) {
     test(`${locale} ${method} sign-in keeps progress inside the active button`, async ({ page, browserName }, info) => {
       // eslint-disable-next-line playwright/no-skipped-test -- Match the existing Chromium-only WebAuthn coverage.
       test.skip(method === 'passkey' && browserName !== 'chromium', 'Passkey browser coverage uses Chromium.');
+      const failures: string[] = [];
+
+      page.on('pageerror', (error) => failures.push(error.name));
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          failures.push(message.text());
+        }
+      });
 
       await page.setViewportSize({ width: 390, height: 844 });
 
@@ -72,13 +80,21 @@ for (const locale of ['en', 'es']) {
         const spinner = await button.evaluate((element) => {
           const style = getComputedStyle(element, '::after');
 
-          return { content: style.content, width: style.width, height: style.height, animation: style.animationName };
+          return {
+            content: style.content,
+            width: style.width,
+            height: style.height,
+            mask: style.maskImage,
+            ink: style.backgroundColor,
+            color: getComputedStyle(element).color,
+          };
         });
 
         expect(spinner.content).toBe('""');
         expect(spinner.width).toBe('16px');
         expect(spinner.height).toBe('16px');
-        expect(spinner.animation).not.toBe('none');
+        expect(spinner.mask).toContain('visomi-loader-smil');
+        expect(spinner.ink).toBe(spinner.color);
         const during = await button.boundingBox();
 
         expect(during?.width).toBe(before?.width);
@@ -89,13 +105,26 @@ for (const locale of ['en', 'es']) {
 
         await expect(feedback).toHaveClass(/sr-only/);
 
-        await page.screenshot({ path: info.outputPath(`${locale}-${method}-loading.png`), animations: 'disabled' });
+        expect(failures).toEqual([]);
+        const firstFrame = await button.screenshot({ caret: 'initial' });
+
+        await expect
+          .poll(async () => {
+            const frame = await button.screenshot({ caret: 'initial' });
+
+            return !frame.equals(firstFrame);
+          })
+          .toBe(true);
+
+        await page.screenshot({ path: info.outputPath(`${locale}-${method}-loading.png`), caret: 'initial' });
 
         await page.emulateMedia({ reducedMotion: 'reduce' });
 
-        const reducedAnimation = await button.evaluate((element) => getComputedStyle(element, '::after').animationName);
+        const reducedMask = await button.evaluate((element) => getComputedStyle(element, '::after').maskImage);
 
-        expect(reducedAnimation).toBe('none');
+        expect(reducedMask).toContain('isotype');
+
+        await page.screenshot({ path: info.outputPath(`${locale}-${method}-static.png`), caret: 'initial' });
 
         await button.evaluate((element: HTMLButtonElement) => element.click());
 

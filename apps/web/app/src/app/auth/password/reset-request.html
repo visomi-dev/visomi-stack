@@ -11,7 +11,16 @@
 
   <app-auth-feedback [action]="action" />
 
-  <a appUI routerLink="/auth/sign-in/password" i18n="@@authBackSignIn" class="inline-flex min-h-11 items-center">
-    Back to sign in
-  </a>
+  <footer
+    class="flex flex-col items-center gap-3 border-t border-zinc-200 pt-5 text-center text-sm dark:border-zinc-800"
+  >
+    <a
+      appUI
+      routerLink="/auth/sign-in/password"
+      class="inline-flex min-h-11 items-center justify-center text-center"
+      i18n="@@authBackSignIn"
+    >
+      Back to sign in
+    </a>
+  </footer>
 </section>

@@ -35,6 +35,24 @@ const labels = uiDocs[locale];
     </Button>
   </div>
 
+  <div class="mt-5 flex flex-wrap items-center gap-3" data-busy-examples>
+    <Button aria-busy="true" disabled>
+      {labels.save}
+    </Button>
+
+    <Button variant="secondary" aria-busy="true" disabled>
+      {labels.cancel}
+    </Button>
+
+    <Button variant="ghost" aria-busy="true" disabled>
+      {labels.continue}
+    </Button>
+
+    <Button variant="danger" aria-busy="true" disabled>
+      {labels.remove}
+    </Button>
+  </div>
+
   <div class="mt-5 flex flex-wrap items-center gap-3">
     <Button size="sm">sm</Button>
 

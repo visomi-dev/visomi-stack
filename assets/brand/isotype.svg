@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="545" height="547" viewBox="0 0 545 547" role="img" aria-labelledby="title desc">
+  <title id="title">Visomi isotype</title>
+  <desc id="desc">Approved Visomi isotype. Three black ribbons on a transparent background.</desc>
+ <g fill="#000000">
+  <path id="upper-ribbon" d="M 194 69 L 237 18 L 284 0 L 476 0 L 505 27 L 505 65 L 434 161 L 383 135 L 424 70 L 297 70 L 265 101 L 265 286 L 276 302 L 213 335 L 194 311 Z"/>
+  <path id="lower-left-ribbon" d="M 179 192 L 87 192 L 46 212 L 12 266 L 13 300 L 72 404 L 116 435 L 204 435 L 406 325 L 414 269 L 352 239 L 342 276 L 173 364 L 144 364 L 91 273 L 103 256 L 179 256 Z"/>
+  <path id="lower-right-ribbon" d="M 281 127 L 345 127 L 518 227 L 545 267 L 545 384 L 520 425 L 397 519 L 350 547 L 298 547 L 265 521 L 265 417 L 348 372 L 348 456 L 464 372 L 464 287 L 302 193 L 281 193 Z"/>
+ </g>
+</svg>

@@ -279,6 +279,7 @@ test('rate-limits anonymous session creation even through implicit HEAD routes',
   const responses = await Promise.all(Array.from({ length: 61 }, () => request.head('/auth/session')));
   const statuses = responses.map((response) => response.status());
 
+  expect(statuses.filter((status) => status !== 200 && status !== 429)).toEqual([]);
   expect(statuses.filter((status) => status === 200)).toHaveLength(60);
   expect(statuses.filter((status) => status === 429)).toHaveLength(1);
 });

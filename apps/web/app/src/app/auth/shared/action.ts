@@ -118,7 +118,7 @@ export class Action {
 
 export function errorMessage(error: unknown): string {
   if (error instanceof Error && error.message === 'authentication_unavailable') {
-    return $localize`:@@authUnavailable:We could not connect to authentication. Check your connection and try again.`;
+    return $localize`:@@authUnavailable:Authentication is temporarily unavailable. Please try again later.`;
   }
 
   if (error instanceof Error && ['NotAllowedError', 'AbortError'].includes(error.name)) {
@@ -135,8 +135,12 @@ export function errorMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
     const code: unknown = error.error?.error;
 
-    if (error.status === 0 || error.status >= 500) {
-      return $localize`:@@authUnavailable:We could not connect to authentication. Check your connection and try again.`;
+    if (error.status === 0) {
+      return $localize`:@@authNetworkError:We could not reach authentication. Check your connection and try again.`;
+    }
+
+    if (error.status >= 500) {
+      return $localize`:@@authUnavailable:Authentication is temporarily unavailable. Please try again later.`;
     }
 
     if (error.status === 429) {

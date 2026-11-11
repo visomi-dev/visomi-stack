@@ -30,7 +30,7 @@ test('measures real page performance without exporting URLs, attribution or brow
 
   const sizes = await Promise.all(scripts);
 
-  expect(sizes).toHaveLength(3);
+  expect(sizes).toHaveLength(4);
   expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(65536);
 
   for (const report of reports) {

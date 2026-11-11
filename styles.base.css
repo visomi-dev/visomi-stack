@@ -45,6 +45,20 @@
   }
 }
 
+/* An external image keeps SVG mask IDs isolated across simultaneous indicators. */
+@utility ui-loader {
+  background-color: currentColor;
+  mask-image: url('./assets/brand/visomi-loader-smil.svg');
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  mask-mode: alpha;
+
+  @media (prefers-reduced-motion: reduce) {
+    mask-image: url('./assets/brand/isotype.svg');
+  }
+}
+
 @utility ui-focus-ring {
   outline: 2px solid transparent;
   outline-offset: 3px;

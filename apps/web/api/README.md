@@ -40,6 +40,46 @@ Production cookies are secure, HttpOnly, host-only `__Host-visomi.sid`, with
 SameSite=Strict and path `/`. Loopback HTTP uses `visomi.sid`. Only configured
 proxy addresses may influence forwarded-protocol handling.
 
+### Railway deployment
+
+`.railway/railway.ts` declares PostgreSQL and Redis with their volumes, the gateway's
+private database reference, authentication origin, relying party, ingress proxy
+allowlist and pre-deploy migration command. `preserve()` retains the session secret
+and SMTP configuration already held by Railway. Redis provides the private
+realtime transport; authentication sessions remain in PostgreSQL. Revalidate the proxy allowlist when ingress networking
+changes; it is a deployment setting rather than a platform-wide guarantee.
+
+Provision PostgreSQL in the same project and environment as `web-gateway` and
+reference its private `DATABASE_URL`. Set `AUTH_ORIGIN` to the public HTTPS origin,
+`AUTH_RP_ID` to its hostname, and generate a high-entropy `SESSION_SECRET` directly
+through a secure variable workflow. Keep SMTP, Google and TOTP configuration
+independent; do not enable optional providers to work around missing persistence.
+
+The production image includes the existing SQL migrations and a separate command
+that uses the installed Drizzle ORM migrator, without development dependencies:
+
+```sh
+node libs/backend/shared/tools/database/migrate.mjs
+```
+
+Configure that command as the gateway's Railway pre-deploy command, with
+`DATABASE_URL` available. It applies pending migrations before the listener starts
+and exits nonzero with a controlled message on failure. Deploy an image containing
+the command before applying this setting. The local `backend-shared:db-migrate`
+target uses the same executable. Application imports and startup never migrate.
+
+Before enabling the deployment, confirm any new database/storage charges and
+verify the ingress proxy configuration. Configure `AUTH_TRUST_PROXY` only with
+verified proxy addresses/CIDRs. Do not infer a stable allowlist from a single
+request or trust arbitrary forwarded headers. Check `/api/auth/session` and
+`/api/auth/providers` on the public origin, verify that the host-only secure cookie
+persists across requests, and verify SSR session state. A successful health check
+on `/api/` alone does not establish that authentication works.
+
+Email verification, password second-factor email and recovery still require an
+SMTP provider. Verify production delivery only with an authorized test recipient;
+isolated SMTP fixtures do not demonstrate real delivery.
+
 ## Identity and authorization
 
 Registration asks for email before creating the initial passkey or password.

@@ -11,15 +11,35 @@
 
   <app-auth-feedback [action]="action" />
 
-  <div class="space-y-3 border-t border-zinc-200 pt-5 text-sm dark:border-zinc-800">
-    <a appUI routerLink="/auth/device-approval" class="block" i18n="@@authUseOpenDevice">
+  <footer
+    class="flex flex-col items-center gap-3 border-t border-zinc-200 pt-5 text-center text-sm dark:border-zinc-800"
+  >
+    <a
+      appUI
+      routerLink="/auth/device-approval"
+      class="inline-flex min-h-11 items-center justify-center text-center"
+      i18n="@@authUseOpenDevice"
+    >
       Use a device where you are signed in
     </a>
 
-    <a appUI routerLink="/auth/forgot-password" class="block" i18n="@@authOnlyResetPassword">
+    <a
+      appUI
+      routerLink="/auth/forgot-password"
+      class="inline-flex min-h-11 items-center justify-center text-center"
+      i18n="@@authOnlyResetPassword"
+    >
       Only need to reset your password?
     </a>
 
-    <a appUI variant="muted" routerLink="/auth/sign-in" class="block" i18n="@@authBackSignIn">Back to sign in</a>
-  </div>
+    <a
+      appUI
+      variant="muted"
+      routerLink="/auth/sign-in"
+      class="inline-flex min-h-11 items-center justify-center text-center"
+      i18n="@@authBackSignIn"
+    >
+      Back to sign in
+    </a>
+  </footer>
 </section>

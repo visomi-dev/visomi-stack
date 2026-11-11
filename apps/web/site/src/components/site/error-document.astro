@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/base.astro';
+import Brand from './brand.astro';
 import Card from '../card.astro';
 import Container from '../container.astro';
 import Heading from '../heading.astro';
@@ -27,9 +28,7 @@ const labels = {
   <meta name="robots" content="noindex" slot="head" />
 
   <header class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
-    <a href={home} class="font-heading text-lg font-bold tracking-tight ui-focus-ring">
-      VISOMI<span class="ml-1 text-blue-600">.</span>
-    </a>
+    <Brand locale={locale} compact />
 
     <ThemeSwitcher label={labels.theme} />
   </header>

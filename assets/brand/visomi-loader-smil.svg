@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 545 547">
+  <title>Visomi loading indicator</title>
+  <defs>
+    <mask id="ribbon-0" maskUnits="userSpaceOnUse" x="-60" y="-60" width="665" height="667">
+      <path
+        fill="none"
+        stroke="white"
+        stroke-width="104"
+        stroke-linejoin="round"
+        stroke-linecap="square"
+        stroke-dasharray="100 200"
+        stroke-dashoffset="100"
+        pathLength="100"
+        d="M 244 319 L 230 298 L 230 85 L 267 35 L 463 35 L 470 48 L 408 148"
+      >
+        <animate
+          attributeName="stroke-dashoffset"
+          values="100;0;0"
+          keyTimes="0;0.21767477;1"
+          dur="1.6s"
+          repeatCount="indefinite"
+        />
+        <animate attributeName="opacity" values="0;1;1" keyTimes="0;.0125;1" dur="1.6s" repeatCount="indefinite" />
+      </path>
+    </mask>
+    <mask id="ribbon-1" maskUnits="userSpaceOnUse" x="-60" y="-60" width="665" height="667">
+      <path
+        fill="none"
+        stroke="white"
+        stroke-width="104"
+        stroke-linejoin="round"
+        stroke-linecap="square"
+        stroke-dasharray="100 200"
+        stroke-dashoffset="100"
+        pathLength="100"
+        d="M 382 251 L 376 301 L 188 400 L 130 400 L 100 377 L 52 287 L 52 269 L 85 224 L 179 224"
+      >
+        <animate
+          attributeName="stroke-dashoffset"
+          values="100;100;0;0"
+          keyTimes="0;0.21767477;0.43520142;1"
+          dur="1.6s"
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="opacity"
+          values="0;0;1;1"
+          keyTimes="0;0.21767477;0.23017477;1"
+          dur="1.6s"
+          repeatCount="indefinite"
+        />
+      </path>
+    </mask>
+    <mask id="ribbon-2" maskUnits="userSpaceOnUse" x="-60" y="-60" width="665" height="667">
+      <path
+        fill="none"
+        stroke="white"
+        stroke-width="104"
+        stroke-linejoin="round"
+        stroke-linecap="square"
+        stroke-dasharray="100 200"
+        stroke-dashoffset="100"
+        pathLength="100"
+        d="M 281 160 L 328 160 L 494 257 L 505 277 L 505 380 L 491 400 L 326 518 L 306 510 L 306 395"
+      >
+        <animate
+          attributeName="stroke-dashoffset"
+          values="100;100;0;0"
+          keyTimes="0;0.43520142;0.6875;1"
+          dur="1.6s"
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="opacity"
+          values="0;0;1;1"
+          keyTimes="0;0.43520142;0.44770142;1"
+          dur="1.6s"
+          repeatCount="indefinite"
+        />
+      </path>
+    </mask>
+  </defs>
+  <g fill="black">
+    <path
+      d="M 194 69 L 237 18 L 284 0 L 476 0 L 505 27 L 505 65 L 434 161 L 383 135 L 424 70 L 297 70 L 265 101 L 265 286 L 276 302 L 213 335 L 194 311 Z"
+      mask="url(#ribbon-0)"
+    />
+    <path
+      d="M 179 192 L 87 192 L 46 212 L 12 266 L 13 300 L 72 404 L 116 435 L 204 435 L 406 325 L 414 269 L 352 239 L 342 276 L 173 364 L 144 364 L 91 273 L 103 256 L 179 256 Z"
+      mask="url(#ribbon-1)"
+    />
+    <path
+      d="M 281 127 L 345 127 L 518 227 L 545 267 L 545 384 L 520 425 L 397 519 L 350 547 L 298 547 L 265 521 L 265 417 L 348 372 L 348 456 L 464 372 L 464 287 L 302 193 L 281 193 Z"
+      mask="url(#ribbon-2)"
+    />
+    <animate
+      attributeName="opacity"
+      values="1;1;0"
+      keyTimes="0;.78;1"
+      calcMode="spline"
+      keySplines="0 0 1 1;.42 0 .58 1"
+      dur="1.6s"
+      repeatCount="indefinite"
+    />
+  </g>
+</svg>

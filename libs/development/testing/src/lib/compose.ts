@@ -72,7 +72,8 @@ export function runTestCompose(
     {
       cwd: workspaceRoot,
       signal,
-      timeout: 300000,
+      // Match the HTTP readiness window for cold builds; keep routine Compose commands bounded.
+      timeout: args[0] === 'build' ? 600000 : 300000,
       maxBuffer: 10 * 1024 * 1024,
       env: {
         ...process.env,

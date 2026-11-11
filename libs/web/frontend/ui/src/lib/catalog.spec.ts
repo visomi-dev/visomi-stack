@@ -110,7 +110,7 @@ describe('portable UI recipes', () => {
       expect(ui.dialog.classes({ size })).toContain('backdrop:');
     }
 
-    expect(ui.loader.classes().split(' ')).toContain('motion-safe:animate-spin');
+    expect(ui.loader.classes().split(' ')).toContain('ui-loader');
     expect(ui.loader.classes().split(' ')).not.toContain('animate-spin');
     expect(ui.disclosure.classes()).toContain('summary:focus-visible');
   });

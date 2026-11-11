@@ -1,0 +1,22 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 545 547" role="img" aria-labelledby="visomi-loader-center-title visomi-loader-center-desc">
+<ns0:title id="visomi-loader-center-title">Visomi: indicador de carga</ns0:title>
+<ns0:desc id="visomi-loader-center-desc">Las cintas negras se dibujan en orden arriba, izquierda y derecha, y se desvanecen suavemente antes de repetir. Con movimiento reducido se muestra el isotipo completo.</ns0:desc>
+
+<ns0:style>
+.visomi-loader-draw {fill:none;stroke:white;stroke-width:104;stroke-linejoin:round;stroke-linecap:square;stroke-dasharray:100 200;stroke-dashoffset:0;animation-duration:1.6s;animation-timing-function:linear;animation-iteration-count:infinite;}
+.visomi-loader-ink {animation:visomi-loader-fade 1.6s linear infinite;}
+@keyframes visomi-loader-fade {0%,78%{opacity:1} 78%{animation-timing-function:ease-in-out} 100%{opacity:0}}
+@keyframes visomi-loader-draw-0 {0%,0.000000%{stroke-dashoffset:100;opacity:0} 1.250000%{opacity:1} 21.767477%,100%{stroke-dashoffset:0;opacity:1}}
+@keyframes visomi-loader-draw-1 {0%,21.767477%{stroke-dashoffset:100;opacity:0} 23.017477%{opacity:1} 43.520142%,100%{stroke-dashoffset:0;opacity:1}}
+@keyframes visomi-loader-draw-2 {0%,43.520142%{stroke-dashoffset:100;opacity:0} 44.770142%{opacity:1} 68.750000%,100%{stroke-dashoffset:0;opacity:1}}
+@media (prefers-reduced-motion:reduce){.visomi-loader-draw{animation:none;stroke-dashoffset:0;opacity:1}.visomi-loader-ink{animation:none;opacity:1}}
+</ns0:style>
+<ns0:defs>
+<ns0:mask id="visomi-loader-center-mask-0" maskUnits="userSpaceOnUse" x="-60" y="-60" width="665" height="667" style="mask-type:luminance"><ns0:path class="visomi-loader-draw" pathLength="100" d="M 244 319 L 230 298 L 230 85 L 267 35 L 463 35 L 470 48 L 408 148" style="animation-name:visomi-loader-draw-0" /></ns0:mask>
+<ns0:mask id="visomi-loader-center-mask-1" maskUnits="userSpaceOnUse" x="-60" y="-60" width="665" height="667" style="mask-type:luminance"><ns0:path class="visomi-loader-draw" pathLength="100" d="M 382 251 L 376 301 L 188 400 L 130 400 L 100 377 L 52 287 L 52 269 L 85 224 L 179 224" style="animation-name:visomi-loader-draw-1" /></ns0:mask>
+<ns0:mask id="visomi-loader-center-mask-2" maskUnits="userSpaceOnUse" x="-60" y="-60" width="665" height="667" style="mask-type:luminance"><ns0:path class="visomi-loader-draw" pathLength="100" d="M 281 160 L 328 160 L 494 257 L 505 277 L 505 380 L 491 400 L 326 518 L 306 510 L 306 395" style="animation-name:visomi-loader-draw-2" /></ns0:mask>
+</ns0:defs>
+<ns0:g class="visomi-loader-ink"><ns0:path fill="#000000" d="M 194 69 L 237 18 L 284 0 L 476 0 L 505 27 L 505 65 L 434 161 L 383 135 L 424 70 L 297 70 L 265 101 L 265 286 L 276 302 L 213 335 L 194 311 Z" mask="url(#visomi-loader-center-mask-0)" />
+<ns0:path fill="#000000" d="M 179 192 L 87 192 L 46 212 L 12 266 L 13 300 L 72 404 L 116 435 L 204 435 L 406 325 L 414 269 L 352 239 L 342 276 L 173 364 L 144 364 L 91 273 L 103 256 L 179 256 Z" mask="url(#visomi-loader-center-mask-1)" />
+<ns0:path fill="#000000" d="M 281 127 L 345 127 L 518 227 L 545 267 L 545 384 L 520 425 L 397 519 L 350 547 L 298 547 L 265 521 L 265 417 L 348 372 L 348 456 L 464 372 L 464 287 L 302 193 L 281 193 Z" mask="url(#visomi-loader-center-mask-2)" />
+</ns0:g></ns0:svg>
