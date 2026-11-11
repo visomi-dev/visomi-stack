@@ -44,15 +44,15 @@ export default defineRailway(() => {
   broker.volumeAttachments = {
     'redis-volume': { volume: brokerData.address, mountPath: '/data', volumeConfig: brokerData.config },
   };
-  const authenticationData = volume('postgres-volume', { sizeMB: 50000, region: 'us-east4-eqdc4a' });
-  const authentication = postgres('Postgres', { region: 'us-east4-eqdc4a' });
+  const databaseVolume = volume('postgres-volume', { sizeMB: 50000, region: 'us-east4-eqdc4a' });
+  const appDatabase = postgres('Postgres', { region: 'us-east4-eqdc4a' });
 
-  authentication.tracing = { enabled: false, autoInstrumentation: false };
-  authentication.volumeAttachments = {
+  appDatabase.tracing = { enabled: false, autoInstrumentation: false };
+  appDatabase.volumeAttachments = {
     'postgres-volume': {
-      volume: authenticationData.address,
+      volume: databaseVolume.address,
       mountPath: '/var/lib/postgresql/data',
-      volumeConfig: authenticationData.config,
+      volumeConfig: databaseVolume.config,
     },
   };
   const traces = volume('jaeger-data', { sizeMB: 1024, region: 'us-east4-eqdc4a' });
@@ -103,10 +103,11 @@ export default defineRailway(() => {
       HOST: '0.0.0.0',
       PORT: '8080',
       NODE_ENV: 'production',
-      DATABASE_URL: authentication.env.DATABASE_URL,
+      DATABASE_URL: appDatabase.env.DATABASE_URL,
       AUTH_ORIGIN: 'https://stack.visomi.dev',
       AUTH_RP_ID: 'stack.visomi.dev',
       SESSION_SECRET: preserve(),
+      GOOGLE_AUTH_CLIENT_ID: preserve(),
       // Restrict forwarded-header trust to verified ingress; revalidate after networking changes.
       AUTH_TRUST_PROXY: '100.64.0.0/10',
       REALTIME_REDIS_URL: broker.env.REDIS_URL,
@@ -131,6 +132,6 @@ export default defineRailway(() => {
   });
 
   return project('visomi-stack', {
-    resources: [gateway, jaeger, broker, brokerData, authentication, authenticationData],
+    resources: [gateway, jaeger, broker, brokerData, appDatabase, databaseVolume],
   });
 });
