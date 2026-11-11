@@ -48,7 +48,7 @@ for (const locale of ['en', 'es']) {
     }
   });
 
-  test(`the ${locale} homepage keeps theme and error reporting scripts small`, async ({ page }) => {
+  test(`the ${locale} homepage keeps theme, language and error reporting scripts small`, async ({ page }) => {
     await disablePerformanceCapture(page);
 
     const scripts: Promise<number>[] = [];
@@ -67,9 +67,10 @@ for (const locale of ['en', 'es']) {
 
     const sizes = await Promise.all(scripts);
 
-    expect(sizes).toHaveLength(2);
-    // The fixed budget includes Vite's optional-module loader, but excludes the disabled performance SDK.
-    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(6144);
+    expect(sizes).toHaveLength(3);
+    // Include fragment retention and Vite's loader, excluding the disabled performance SDK.
+    expect(Math.min(...sizes)).toBeLessThan(256);
+    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(6400);
     expect(errors).toEqual([]);
 
     await page.getByRole('checkbox').uncheck();
@@ -142,7 +143,7 @@ test('mobile navigation and locale changes work without JavaScript', async ({ br
     const language = page.getByRole('navigation', { name: 'Idioma', exact: true });
     const english = language.getByRole('link', { name: 'English', exact: true });
 
-    await expect(language.getByText('Español', { exact: true })).toHaveAttribute('aria-current', 'true');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'es');
 
     await expect(language.getByRole('link')).toHaveCount(1);
 
@@ -154,10 +155,13 @@ test('mobile navigation and locale changes work without JavaScript', async ({ br
 
     await expect(page).toHaveURL(/\/en\/architecture\/$/);
 
-    await expect(page.getByRole('navigation', { name: 'Language', exact: true }).getByText('English')).toHaveAttribute(
-      'aria-current',
-      'true',
-    );
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Language', exact: true })
+        .getByRole('link', { name: 'Español', exact: true }),
+    ).toHaveAttribute('hreflang', 'es');
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('One system. Clear boundaries.');
 

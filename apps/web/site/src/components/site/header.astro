@@ -12,10 +12,9 @@ type Props = { locale: SiteLocale; page: SitePage };
 const { locale, page } = Astro.props;
 const copy = siteCopy[locale];
 const pages = ['home', 'architecture', 'docs', 'ui'] as const;
-const languages = [
-  ['en', 'English'],
-  ['es', 'Español'],
-] as const;
+const language = locale === 'en' ? 'es' : 'en';
+const languageLabel = language === 'es' ? 'Español' : 'English';
+const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language}`) + Astro.url.search;
 ---
 
 <header
@@ -39,32 +38,24 @@ const languages = [
       ))}
     </nav>
 
-    <div class="flex items-center gap-1.5 sm:gap-3">
-      <div class="hidden lg:block">
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="hidden lg:mr-3 lg:block">
         <LinkButton href={applicationPath(locale)} size="sm">
           {copy.openApp}
         </LinkButton>
       </div>
 
-      <nav aria-label={copy.language} class="flex items-center gap-2">
-        {languages.map(([language, label]) =>
-          locale === language ? (
-            <span lang={language} aria-current="true" class="inline-flex min-h-11 items-center text-sm font-medium">
-              {label}
-            </span>
-          ) : (
-            <Link
-              href={sitePath(language, page)}
-              hreflang={language}
-              lang={language}
-              variant="muted"
-              underline="hover"
-              class="inline-flex min-h-11 items-center text-sm"
-            >
-              {label}
-            </Link>
-          ),
-        )}
+      <nav aria-label={copy.language}>
+        <LinkButton
+          href={languagePath}
+          hreflang={language}
+          lang={language}
+          variant="secondary"
+          size="sm"
+          data-language-switcher
+        >
+          {languageLabel}
+        </LinkButton>
       </nav>
 
       <ThemeSwitcher label={copy.themeToggle} />
@@ -110,3 +101,19 @@ const languages = [
     </div>
   </Container>
 </header>
+
+<script>
+  const languageLink = document.querySelector<HTMLAnchorElement>('[data-language-switcher]');
+
+  if (languageLink) {
+    const path = languageLink.getAttribute('href')!;
+
+    // Fragments never reach SSR; enhance the native link without intercepting navigation.
+    const preserveFragment = () => {
+      languageLink.setAttribute('href', path + window.location.hash);
+    };
+
+    preserveFragment();
+    window.addEventListener('hashchange', preserveFragment);
+  }
+</script>
