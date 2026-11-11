@@ -1,5 +1,6 @@
 ---
 import Avatar from '../avatar.astro';
+import isotype from '../../../../../../assets/brand/isotype.svg?url';
 import { text } from '@visomi-stack/web-frontend-ui';
 import Code from '../code.astro';
 import Card from '../card.astro';
@@ -41,9 +42,7 @@ const copy = siteCopy[locale].home;
 
     <div class="grid grid-cols-[3rem_minmax(0,1fr)] sm:grid-cols-[3.5rem_minmax(0,1fr)]">
       <div class="flex flex-col items-center gap-5 border-r border-zinc-200 bg-zinc-50 py-5 text-zinc-400 dark:border-zinc-700 dark:bg-zinc-950">
-        <span class="flex size-7 items-center justify-center rounded-lg bg-blue-600 font-heading text-xs font-bold text-white">
-          V
-        </span>
+        <img src={isotype} alt="Visomi Stack" width="28" height="28" class="size-7 object-contain dark:invert" />
 
         <Icon name="layers" class="size-4 text-blue-700 dark:text-blue-400" />
 

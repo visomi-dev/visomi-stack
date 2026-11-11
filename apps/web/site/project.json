@@ -91,5 +91,8 @@
       ]
     }
   },
-  "implicitDependencies": ["web-frontend-ui"]
+  "implicitDependencies": ["web-frontend-ui"],
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals", "{workspaceRoot}/assets/brand/*.svg"]
+  }
 }

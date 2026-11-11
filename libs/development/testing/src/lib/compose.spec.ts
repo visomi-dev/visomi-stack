@@ -65,6 +65,17 @@ describe('test Compose command ownership', () => {
     expect(execFile).not.toHaveBeenCalled();
   });
 
+  it('allows a cold application build the full HTTP readiness window', async () => {
+    await runTestCompose(owner, ['build', 'database-init', 'app']);
+
+    expect(execFile).toHaveBeenCalledWith(
+      'docker',
+      expect.arrayContaining(['build', 'database-init', 'app']),
+      expect.objectContaining({ timeout: 600000 }),
+      expect.any(Function),
+    );
+  });
+
   it.each(['web-api', 'web-gateway'] as const)('isolates %s from ambient development settings', async (app) => {
     vi.stubEnv('APP_DATABASE_URL', 'postgresql://synthetic-development/never-use');
     vi.stubEnv('POSTGRES_DB', 'synthetic-development');
@@ -75,10 +86,11 @@ describe('test Compose command ownership', () => {
     const [command, args, options] = vi.mocked(execFile).mock.calls[0] as unknown as [
       string,
       string[],
-      { env: Record<string, string> },
+      { env: Record<string, string>; timeout: number },
     ];
 
     expect(command).toBe('docker');
+    expect(options.timeout).toBe(300000);
     expect(args).toEqual(
       expect.arrayContaining([
         'compose',

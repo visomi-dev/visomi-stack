@@ -16,8 +16,9 @@
         "tsConfig": "apps/web/app/tsconfig.app.json",
         "assets": [
           {
-            "glob": "**/*",
-            "input": "apps/web/app/public"
+            "glob": "*.svg",
+            "input": "assets/brand",
+            "output": "brand"
           }
         ],
         "styles": ["apps/web/app/src/styles.css"],
@@ -170,5 +171,8 @@
         "subPath": "es"
       }
     }
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals", "{workspaceRoot}/assets/brand/*.svg"]
   }
 }

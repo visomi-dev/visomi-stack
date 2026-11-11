@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css';
 import SiteTelemetry from '../components/site/telemetry.astro';
+import favicon from '../../../../../assets/brand/favicon.svg?url';
+import darkFavicon from '../../../../../assets/brand/favicon-dark.svg?url';
 
 type Props = {
   locale: 'en' | 'es';
@@ -33,7 +35,9 @@ const { locale, title, description, telemetry = true } = Astro.props;
 
     <meta property="og:locale" content={locale === 'en' ? 'en_US' : 'es_ES'} />
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+
+    <link rel="icon" type="image/svg+xml" href={darkFavicon} media="(prefers-color-scheme: dark)" />
 
     <slot name="head" />
 

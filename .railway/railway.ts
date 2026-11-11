@@ -12,6 +12,7 @@ export const watchPatterns = [
   '/apps/web/api/**',
   '/apps/web/site/**',
   '/apps/web/app/**',
+  '/assets/brand/**',
   '/libs/backend/shared/**',
   '/libs/web/backend/shared/**',
   '/libs/web/frontend/ui/**',
