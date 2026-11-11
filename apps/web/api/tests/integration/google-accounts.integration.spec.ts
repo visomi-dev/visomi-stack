@@ -1,6 +1,7 @@
 import { generateKeyPairSync, createSign, randomUUID } from 'node:crypto';
 
 import { authSchema } from '@visomi-stack/backend-shared';
+import { authenticator } from '@visomi-stack/dev-testing';
 import { eq } from 'drizzle-orm';
 import { OAuth2Client } from 'google-auth-library';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -51,6 +52,34 @@ async function login(email: string, sub: string, changes = {}) {
   return { browser, result, start, token };
 }
 
+async function passkeyAccount(email: string) {
+  const browser = await f.client();
+  const device = authenticator();
+  const options = await browser.call('POST', '/passkeys/registration/options', { email });
+
+  expect(options.status).toBe(200);
+  const registered = await browser.call('POST', '/passkeys/registration/verify', {
+    challengeId: options.data.challengeId,
+    response: device.register(options.data.options.challenge, f.origin, f.runtime.config.rpId),
+    label: 'Synthetic original passkey',
+  });
+
+  expect(registered.status).toBe(201);
+  expect(registered.data.access).toBe('unverified');
+  const verified = await browser.call('POST', '/email/verify', {
+    flowId: registered.data.flowId,
+    code: f.lastCode(email),
+  });
+
+  expect(verified.status).toBe(200);
+  expect(verified.data.access).toBe('full');
+  const before = await browser.call('GET', '/passkeys');
+
+  expect(before.data.credentials).toHaveLength(1);
+
+  return { browser, device, userId: verified.data.user.id as string, credentials: before.data.credentials };
+}
+
 describe('Google identity verification and automatic account unification', () => {
   it('unifies by verified email, retaining identity, password and existing methods', async () => {
     const email = `${randomUUID()}@gmail.com`;
@@ -64,6 +93,82 @@ describe('Google identity verification and automatic account unification', () =>
 
     expect(after).toHaveLength(1);
     expect(after[0].passwordHash).toBe(before[0].passwordHash);
+  });
+
+  it.each(['gmail.com', 'example.test'])(
+    'retains a verified passkey account through Google login for %s',
+    async (domain) => {
+      const email = `${randomUUID()}@${domain}`;
+      const account = await passkeyAccount(email);
+      const before = await f.db.select().from(authSchema.users).where(eq(authSchema.users.id, account.userId));
+
+      await account.browser.call('POST', '/logout', {});
+
+      const google = await login(email, randomUUID());
+      let result = google.result;
+
+      if (domain === 'example.test') {
+        expect(result.status).toBe(202);
+        const verified = await google.browser.call('POST', '/google/email/verify', {
+          flowId: result.data.flowId,
+          code: f.lastCode(email),
+        });
+
+        result = verified;
+      }
+
+      expect(result.status).toBe(200);
+      expect(result.data).toMatchObject({ access: 'full', method: 'google', user: { id: account.userId } });
+      const users = await f.db.select().from(authSchema.users).where(eq(authSchema.users.email, email));
+
+      expect(users).toHaveLength(1);
+      expect(users[0].emailVerifiedAt).toEqual(before[0].emailVerifiedAt);
+      expect(users[0].passwordHash).toBeNull();
+      const keys = await google.browser.call('GET', '/passkeys');
+
+      expect(keys.data.credentials).toEqual(account.credentials);
+
+      await google.browser.call('POST', '/logout', {});
+
+      const returning = await f.client();
+      const challenge = await returning.call('POST', '/passkeys/authentication/options', {});
+
+      expect(challenge.status).toBe(200);
+      const returned = await returning.call('POST', '/passkeys/authentication/verify', {
+        challengeId: challenge.data.challengeId,
+        response: account.device.authenticate(
+          challenge.data.options.challenge,
+          f.origin,
+          f.runtime.config.rpId,
+          account.userId,
+        ),
+      });
+
+      expect(returned.status).toBe(200);
+      expect(returned.data).toMatchObject({ access: 'full', method: 'passkey', user: { id: account.userId } });
+      const identities = await f.db
+        .select()
+        .from(authSchema.federatedIdentities)
+        .where(eq(authSchema.federatedIdentities.userId, account.userId));
+
+      expect(identities).toHaveLength(1);
+    },
+  );
+
+  it('explicitly links Google from a fresh verified passkey session without replacing the passkey', async () => {
+    const email = `${randomUUID()}@gmail.com`;
+    const account = await passkeyAccount(email);
+    const start = await account.browser.call('POST', '/google/start', { intent: 'link' });
+    const linked = await account.browser.call('POST', '/google/complete', {
+      flowId: start.data.flowId,
+      idToken: signed(start.data.nonce, email, randomUUID()),
+    });
+
+    expect(linked.status).toBe(200);
+    expect(linked.data.user.id).toBe(account.userId);
+    const keys = await account.browser.call('GET', '/passkeys');
+
+    expect(keys.data.credentials).toEqual(account.credentials);
   });
 
   it('keeps linked subject authority when Google changes the email', async () => {
