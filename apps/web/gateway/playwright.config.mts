@@ -19,7 +19,8 @@ export default defineConfig({
   workers: 1,
   use: { baseURL: 'http://127.0.0.1:3317', trace: 'off' },
   webServer: {
-    timeout: 300000,
+    // Readiness includes a cold container build, database initialization and process startup.
+    timeout: 600000,
     command: 'pnpm exec tsx --tsconfig apps/web/gateway/tsconfig.spec.json apps/web/gateway/e2e/support/serve.ts',
     url: 'http://127.0.0.1:3317/api/',
     reuseExistingServer: false,

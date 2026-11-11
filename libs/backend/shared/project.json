@@ -17,7 +17,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "libs/backend/shared",
-        "command": "drizzle-kit migrate --config drizzle.config.ts"
+        "command": "node tools/database/migrate.mjs"
       }
     },
     "typecheck-tests": {

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-import { defineRailway, github, image, preserve, project, redis, service, volume } from 'railway/iac';
+import { database, defineRailway, github, image, postgres, preserve, project, service, volume } from 'railway/iac';
 
 export const jaegerImage =
   'jaegertracing/jaeger:2.22.0@sha256:4d9387a02389204ef9a256cf291a36cfbae91983010e403b4d300202d07eff2a';
@@ -31,7 +31,29 @@ export const watchPatterns = [
 ];
 
 export default defineRailway(() => {
-  const broker = redis('redis');
+  const brokerData = volume('redis-volume', { sizeMB: 50000, region: 'us-east4-eqdc4a' });
+  const broker = database('Redis', 'redis', {
+    image: 'redis:8.2',
+    output: 'REDIS_URL',
+    defaultMountPath: '/data',
+    region: 'us-east4-eqdc4a',
+  });
+
+  broker.tracing = { enabled: false, autoInstrumentation: false };
+  broker.volumeAttachments = {
+    'redis-volume': { volume: brokerData.address, mountPath: '/data', volumeConfig: brokerData.config },
+  };
+  const authenticationData = volume('postgres-volume', { sizeMB: 50000, region: 'us-east4-eqdc4a' });
+  const authentication = postgres('Postgres', { region: 'us-east4-eqdc4a' });
+
+  authentication.tracing = { enabled: false, autoInstrumentation: false };
+  authentication.volumeAttachments = {
+    'postgres-volume': {
+      volume: authenticationData.address,
+      mountPath: '/var/lib/postgresql/data',
+      volumeConfig: authenticationData.config,
+    },
+  };
   const traces = volume('jaeger-data', { sizeMB: 1024, region: 'us-east4-eqdc4a' });
   const jaeger = service('jaeger', {
     source: image(jaegerImage),
@@ -66,6 +88,8 @@ export default defineRailway(() => {
     build: { builder: 'DOCKERFILE', dockerfilePath: 'Dockerfile', watchPatterns },
     deploy: {
       startCommand: 'node dist/apps/web/gateway/main.js',
+      preDeployCommand: ['node libs/backend/shared/tools/database/migrate.mjs'],
+      preDeployTimeoutSeconds: 120,
       healthcheckPath: '/api/',
       healthcheckTimeout: 60,
       restartPolicyType: 'ON_FAILURE',
@@ -78,7 +102,19 @@ export default defineRailway(() => {
       HOST: '0.0.0.0',
       PORT: '8080',
       NODE_ENV: 'production',
+      DATABASE_URL: authentication.env.DATABASE_URL,
+      AUTH_ORIGIN: 'https://stack.visomi.dev',
+      AUTH_RP_ID: 'stack.visomi.dev',
+      SESSION_SECRET: preserve(),
+      // Restrict forwarded-header trust to verified ingress; revalidate after networking changes.
+      AUTH_TRUST_PROXY: '100.64.0.0/10',
       REALTIME_REDIS_URL: broker.env.REDIS_URL,
+      SMTP_HOST: preserve(),
+      SMTP_PORT: preserve(),
+      SMTP_SECURE: preserve(),
+      SMTP_FROM: preserve(),
+      SMTP_USER: preserve(),
+      SMTP_PASSWORD: preserve(),
       ASTRO_TELEMETRY_DISABLED: '1',
       VISOMI_OTLP_TRACING: 'true',
       VISOMI_RAILWAY_TRACING: preserve(),
@@ -93,5 +129,7 @@ export default defineRailway(() => {
     },
   });
 
-  return project('visomi-stack', { resources: [gateway, jaeger, broker] });
+  return project('visomi-stack', {
+    resources: [gateway, jaeger, broker, brokerData, authentication, authenticationData],
+  });
 });

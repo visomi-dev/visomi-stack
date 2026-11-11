@@ -495,7 +495,11 @@
         <target>Elige cómo iniciar sesión. Tu clave de acceso puede usar el desbloqueo de tu dispositivo.</target>
       </trans-unit>
       <trans-unit id="authUnavailable" datatype="html">
-        <source>We could not connect to authentication. Check your connection and try again.</source>
+        <source>Authentication is temporarily unavailable. Please try again later.</source>
+        <target>El servicio de autenticación no está disponible temporalmente. Inténtalo más tarde.</target>
+      </trans-unit>
+      <trans-unit id="authNetworkError" datatype="html">
+        <source>We could not reach authentication. Check your connection and try again.</source>
         <target>No pudimos conectar con el servicio de autenticación. Comprueba tu conexión e inténtalo de nuevo.</target>
       </trans-unit>
       <trans-unit id="authRetry" datatype="html">

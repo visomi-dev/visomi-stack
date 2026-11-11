@@ -11,6 +11,10 @@ history. `schema-auth.ts` defines the current authentication
 tables and is exposed as `authSchema`; `schema.ts` is Kit's schema discovery
 barrel. Existing migration SQL, identifiers and snapshots are preserved.
 
+`tools/database/migrate.mjs` applies that history with the installed Drizzle ORM
+migrator. Both the Nx migration target and production pre-deploy command use it.
+It closes its own pool and reports failures without connection details or SQL.
+
 Run commands from the workspace root:
 
 ```sh

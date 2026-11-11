@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -6,7 +7,7 @@ import { provideRouter } from '@angular/router';
 import { Session } from '../session/session';
 import { BackupDisplay } from '../totp/backup-display';
 
-import { Action } from './action';
+import { Action, errorMessage } from './action';
 
 @Component({
   imports: [BackupDisplay],
@@ -16,6 +17,23 @@ import { Action } from './action';
 class ActionOwner {
   readonly action = inject(Action);
 }
+
+it('distinguishes network failures from server unavailability without exposing internal details', () => {
+  const internal = { error: 'synthetic_internal_error', message: 'synthetic private detail' };
+  const network = errorMessage(new HttpErrorResponse({ status: 0, error: internal }));
+
+  expect(network).toBe('We could not reach authentication. Check your connection and try again.');
+
+  for (const status of [500, 502, 503, 504]) {
+    expect(errorMessage(new HttpErrorResponse({ status, error: internal }))).toBe(
+      'Authentication is temporarily unavailable. Please try again later.',
+    );
+  }
+
+  expect(errorMessage(new Error('authentication_unavailable'))).toBe(
+    'Authentication is temporarily unavailable. Please try again later.',
+  );
+});
 
 beforeEach(() => {
   TestBed.configureTestingModule({

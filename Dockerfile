@@ -76,6 +76,8 @@ COPY --from=production-deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY --from=build /workspace/dist/apps/web ./dist/apps/web
 COPY --from=build /workspace/app-entrypoint ./app-entrypoint
+COPY --from=build /workspace/libs/backend/shared/tools/database/migrate.mjs ./libs/backend/shared/tools/database/migrate.mjs
+COPY --from=build /workspace/libs/backend/shared/src/lib/database/migrations ./libs/backend/shared/src/lib/database/migrations
 
 USER node
 
