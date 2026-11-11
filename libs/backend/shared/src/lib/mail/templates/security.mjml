@@ -1,1 +1,3 @@
-<mj-text css-class="mail-muted" color="#52525b" font-size="14px">If you did not make this change, recover your account from the sign-in page.</mj-text>
+<mj-text css-class="mail-muted" color="#52525b" font-size="14px"
+  >If you did not make this change, recover your account from the sign-in page.</mj-text
+>

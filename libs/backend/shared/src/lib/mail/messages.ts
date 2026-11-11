@@ -41,8 +41,9 @@ const escape = (value: string) =>
 
 export function renderMessage(kind: 'verification' | 'security', title: string, description: string, code = '') {
   const fields = { title, description, code };
-  const html = templates[kind].replace(/\{\{(title|description|code)\}\}/g, (_match, field: keyof typeof fields) =>
-    escape(fields[field]),
+  const html = templates[kind].replace(
+    /\{\{\s*(title|description|code)\s*\}\}/g,
+    (_match, field: keyof typeof fields) => escape(fields[field]),
   );
 
   return {
