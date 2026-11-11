@@ -1,0 +1,16 @@
+diff --git a/src/utils/server-rendering/manifest.js b/src/utils/server-rendering/manifest.js
+index a450d34f2f38ec72f0bc4f9281c130b9bcbaf893..fb2767692f4d9a26eed2e81302a2a424c399d3a4 100755
+--- a/src/utils/server-rendering/manifest.js
++++ b/src/utils/server-rendering/manifest.js
+@@ -184,8 +184,10 @@ async function generateAngularServerAppManifest(additionalHtmlOutputFiles, outpu
+         }
+         else if (inlineCriticalCss && extension === '.css') {
+             const sheet = compileSheet(file.text, {
+-                href: (0, url_1.joinUrlParts)(publicPath ?? '', file.path),
++                href: (0, url_1.joinUrlParts)(publicPath ?? baseHref, file.path),
+             });
++            // Resource URLs use the deployment base; sheet matching uses the emitted link href.
++            sheet.href = (0, url_1.joinUrlParts)(publicPath ?? '', file.path);
+             criticalCssPlans.push(encodePlan(sheet));
+         }
+     }

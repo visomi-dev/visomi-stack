@@ -27,3 +27,10 @@ keeps stream cancellation best effort without logging request URLs or errors.
 The current application uses `AngularNodeAppEngine`; CommonEngine is not part of
 the supported composition. Keep this patch until upstream behavior passes the
 real compiled SSR listener/host-validation and response-cancellation regressions.
+
+The pinned `@angular/build` patch resolves critical CSS resources against the
+localized base href when no deploy URL is configured. Without it, SSR rewrites
+the loader mask to `/media/...` instead of `/app/en/media/...` or
+`/app/es/media/...`, causing a failed request before the external stylesheet loads.
+Explicit deploy URLs retain precedence. The compiled browser boundary E2E checks
+cover both locales and hosts; keep this patch until upstream preserves those URLs.

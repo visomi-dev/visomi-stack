@@ -7,6 +7,6 @@ export const alert = {
 } as const;
 export const loader = {
   classes(): string {
-    return 'inline-block size-5 shrink-0 rounded-full border-2 border-current border-r-transparent text-blue-600 motion-safe:animate-spin dark:text-blue-400';
+    return 'ui-loader inline-block size-5 shrink-0 text-blue-600 dark:text-blue-400';
   },
 } as const;

@@ -37,6 +37,8 @@ test('routes index.html through Angular with a fresh nonce and working hydration
     expect(response.headers()['content-security-policy']).toContain(`'nonce-${nonce}'`);
     expect(response.headers()['cache-control']).toBe('no-store');
     expect(html).not.toContain('__VISOMI_CSP_NONCE__');
+    expect(html).toContain(`/app/${locale}/media/visomi-loader-smil-`);
+    expect(html).not.toContain('url("/media/');
 
     await page.goto(path);
 

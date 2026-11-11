@@ -28,3 +28,17 @@ The integration covers the public site's header/footer and error pages, the
 Astro shell previews, Angular authentication and error layouts, authenticated
 navigation and the foundations shell. Textual product names, page titles and
 technical references to Nx remain ordinary content.
+
+## Loading indicators
+
+`visomi-loader.svg` is the owner's original editable animation source, preserved
+unchanged. `visomi-loader-smil.svg` is the runtime derivative: the same ribbon
+geometry, drawing sequence and 1.6-second fade use declarative SVG animation. It
+contains no scripts or embedded/inline styles, and animates as an external mask
+in Chromium, Firefox and WebKit under the existing CSP.
+
+The shared `ui-loader` CSS utility paints the animated mask with `currentColor`.
+Buttons retain their native markup, `aria-busy` API, reserved trailing slot and
+action labels. Standalone loaders retain their existing accessible status labels.
+Each SVG image isolates its internal mask IDs. Reduced-motion users receive the
+complete static `isotype.svg` mask instead of the animated resource.

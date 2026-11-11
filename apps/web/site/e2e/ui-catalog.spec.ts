@@ -197,7 +197,7 @@ for (const width of [360, 1280]) {
     test(`catalog layout at ${width}px in ${theme}`, async ({ page }, info) => {
       await page.setViewportSize({ width, height: 850 });
 
-      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
 
       await page.goto('/es/ui/');
 
@@ -211,7 +211,49 @@ for (const width of [360, 1280]) {
 
       expect(fits).toBe(true);
 
-      await expect(page.locator('#loader [aria-hidden]')).toHaveCSS('animation-name', 'none');
+      await expect(page.locator('#loader [aria-hidden]')).toHaveCSS('mask-image', /visomi-loader-smil/);
+
+      const busyButtons = await page.locator('[data-busy-examples] button').all();
+
+      for (const button of busyButtons) {
+        const indicator = await button.evaluate((element) => {
+          const style = getComputedStyle(element, '::after');
+
+          return { mask: style.maskImage, ink: style.backgroundColor, color: getComputedStyle(element).color };
+        });
+
+        expect(indicator.mask).toContain('visomi-loader-smil');
+        expect(indicator.ink).toBe(indicator.color);
+
+        const busyBox = await button.boundingBox();
+
+        await button.evaluate((element) => element.setAttribute('aria-busy', 'false'));
+
+        const idleBox = await button.boundingBox();
+        const hidden = await button.evaluate((element) => getComputedStyle(element, '::after').visibility);
+
+        expect(idleBox).toEqual(busyBox);
+        expect(hidden).toBe('hidden');
+
+        await button.evaluate((element) => element.setAttribute('aria-busy', 'true'));
+      }
+
+      await page.locator('[data-busy-examples]').screenshot({ path: info.outputPath('busy-buttons.png') });
+
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+
+      await expect(page.locator('#loader [aria-hidden]')).toHaveCSS('mask-image', /isotype/);
+
+      for (const button of busyButtons) {
+        const mask = await button.evaluate((element) => getComputedStyle(element, '::after').maskImage);
+
+        expect(mask).toContain('isotype');
+      }
+
+      const ordinaryButton = page.locator('#button [data-preview] button').first();
+      const missing = await ordinaryButton.evaluate((element) => getComputedStyle(element, '::after').content);
+
+      expect(missing).toBe('none');
 
       await page.screenshot({ path: info.outputPath('catalog.png'), animations: 'disabled' });
 
