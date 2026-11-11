@@ -418,21 +418,26 @@ historical or unrelated results do not establish current coverage.
 - Use Conventional Commit messages, enforced by Commitlint.
 
 The Husky pre-commit hook runs lint-staged, which formats staged files and lints
-staged code, followed sequentially by these checks:
+staged code. The commit-message hook runs Commitlint.
+
+The pre-push hook runs the affected unit tests and then E2E for each ref being
+pushed, comparing the remote SHA with the local SHA supplied by Git:
 
 ```sh
-pnpm exec nx affected -t test --base=HEAD --nxBail
-pnpm exec nx affected -t e2e --base=HEAD --nxBail
+pnpm exec nx affected -t test --base="$base" --head="$local_sha" --nxBail
+pnpm exec nx affected -t e2e --base="$base" --head="$local_sha" --nxBail
 ```
 
-Comparing against `HEAD` includes staged, unstaged and untracked changes, including
-shared test support. Tests enforce the coverage threshold before E2E starts; any
-failed step stops the hook and blocks the commit. The PostgreSQL integration and
+For a new remote ref, the base is its merge base with `origin/main`. Deletions
+skip these checks. The comparison includes committed changes being published;
+staged, unstaged and untracked edits are excluded from affected-file selection.
+Tests execute in the current checkout, so push from the branch being validated
+with a clean working tree. Tests enforce the coverage threshold before E2E starts;
+any failed step stops the hook and blocks the push. The PostgreSQL integration and
 E2E suites use dedicated disposable databases under `tmp/api-e2e`, so the local
 PostgreSQL test prerequisites described in the API guide are required.
 
-The commit-message hook
-runs Commitlint. These hooks contain machine-specific Node paths: pre-commit uses
+These hooks contain machine-specific Node paths: pre-commit and pre-push use
 24.15.0, while commit-msg still points to 24.14.1. They need a later portability
 review; do not describe them as verified on a fresh checkout. The API owns its
 Playwright E2E configuration and directory; no separate E2E project is needed.

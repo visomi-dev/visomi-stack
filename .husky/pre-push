@@ -1,0 +1,22 @@
+set -eu
+
+export NX_DAEMON=false
+export PATH="$HOME/.local/share/fnm/node-versions/v24.15.0/installation/bin:$HOME/.local/share/pnpm:$PATH"
+
+zero=0000000000000000000000000000000000000000
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # Deleting a remote ref does not publish code to validate.
+  if [ "$local_sha" = "$zero" ]; then
+    continue
+  fi
+
+  base=$remote_sha
+  if [ "$base" = "$zero" ]; then
+    base=$(git merge-base "$local_sha" origin/main)
+  fi
+
+  # Keep Git's ref list on stdin available for subsequent ref updates.
+  pnpm exec nx affected -t test --base="$base" --head="$local_sha" --nxBail </dev/null
+  pnpm exec nx affected -t e2e --base="$base" --head="$local_sha" --nxBail </dev/null
+done
