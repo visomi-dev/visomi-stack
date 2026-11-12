@@ -15,6 +15,7 @@ export class Theme {
   private readonly selection = signal<ThemePreference>('system');
   private readonly systemDark = signal(false);
   private readonly changed = signal(false);
+  private readonly transitioning = signal(false);
 
   readonly preference = this.selection.asReadonly();
   readonly colorScheme = computed(() => {
@@ -25,8 +26,17 @@ export class Theme {
   readonly isDark = computed(() => this.colorScheme() === 'dark');
 
   readonly hasChanged = this.changed.asReadonly();
+  readonly isTransitioning = this.transitioning.asReadonly();
 
   private readonly storageKey = 'visomi.theme';
+
+  private transitionTimer: number | undefined;
+  private transitionFrame: number | undefined;
+
+  private readonly cleanup = this.destroyRef.onDestroy(() => {
+    this.document.defaultView?.clearTimeout(this.transitionTimer);
+    this.document.defaultView?.cancelAnimationFrame?.(this.transitionFrame ?? 0);
+  });
 
   setTheme(value: string): void {
     if (!isPreference(value)) {
@@ -39,6 +49,7 @@ export class Theme {
 
     if (wasDark !== this.isDark()) {
       this.changed.set(true);
+      this.transition();
     }
 
     try {
@@ -46,6 +57,25 @@ export class Theme {
     } catch {
       // The selected theme remains active for the current page.
     }
+  }
+
+  private transition(): void {
+    const view = this.document.defaultView;
+
+    if (!view?.requestAnimationFrame) {
+      return;
+    }
+
+    const duration = Number(
+      view.getComputedStyle(this.document.documentElement).getPropertyValue('--ui-theme-duration-ms'),
+    );
+
+    view.clearTimeout(this.transitionTimer);
+    view.cancelAnimationFrame(this.transitionFrame ?? 0);
+    this.transitioning.set(true);
+    this.transitionFrame = view.requestAnimationFrame(() => {
+      this.transitionTimer = view.setTimeout(() => this.transitioning.set(false), duration);
+    });
   }
 
   private readonly initialize = afterNextRender(() => {
@@ -72,6 +102,7 @@ export class Theme {
 
       if (wasDark !== this.isDark()) {
         this.changed.set(true);
+        this.transition();
       }
     };
 

@@ -24,6 +24,11 @@ of conflicting utilities in a class string does not define precedence.
 
 Theme behavior lives in each frontend rather than in the shared recipe library.
 The `themeSwitcher` recipe shares the sun/moon artwork and vertical reel transition.
+The shared stylesheet defines its 400ms duration and `ease-in-out` curve. Both
+frontends use the same timing for page colors, borders, shadows, SVG colors and
+logo filters during a theme change, including open dialogs. The temporary
+transition marker is removed afterward so normal hover timing is preserved.
+Reduced-motion preferences disable both the reel and theme color transitions.
 Angular and Astro headers use native toggle buttons with a localized label,
 pressed state and reduced-motion support. They use the system theme initially and
 persist an explicit light or dark choice after activation; the native selector

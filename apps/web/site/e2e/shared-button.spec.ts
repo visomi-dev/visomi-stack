@@ -131,8 +131,8 @@ test('the website loads small theme, error reporting and native demo scripts', a
 
   expect(resources).toHaveLength(3);
   expect(resources.some((resource) => resource.path.includes('button-demo.'))).toBe(true);
-  // The demo includes both native selection and the shared icon-toggle behavior.
-  expect(totalRaw).toBeLessThan(6656);
+  // Include native controls and the coordinated theme-color transition lifecycle.
+  expect(totalRaw).toBeLessThan(6912);
 
   await writeFile(info.outputPath('javascript-cost.json'), JSON.stringify({ resources, totalRaw }, null, 2));
 });

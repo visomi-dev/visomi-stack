@@ -207,7 +207,8 @@ local validation, reduced motion and mobile/desktop layouts in both themes.
 
 The compiled catalog loads two scripts: the Astro theme-control script and a
 documentation enhancement. The recipes add no browser
-JavaScript. The browser test caps their combined raw size at 6 KiB, excluding
+JavaScript. The browser test caps their combined raw size at 6.5 KiB, including
+the coordinated theme-color transition lifecycle and excluding
 CSS, fonts and HTTP headers.
 
 Field errors and responsive table options are described in the shared library

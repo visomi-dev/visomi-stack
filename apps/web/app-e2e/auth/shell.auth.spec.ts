@@ -2,6 +2,73 @@ import type { Page, TestInfo } from '@playwright/test';
 
 import { expect, test, signup } from './support/fixtures';
 
+test('animates an open mobile menu when the system theme changes', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
+
+  await signup(page);
+
+  await page.goto('/app/en/home');
+
+  await page.locator('nav[appUI="navbar"]').getByRole('button', { name: 'Menu', exact: true }).click();
+
+  const dialog = page.getByRole('dialog');
+
+  await expect(dialog).toBeVisible();
+
+  for (const colorScheme of ['dark', 'light'] as const) {
+    await page.emulateMedia({ colorScheme });
+
+    await expect
+      .poll(
+        () =>
+          dialog.evaluate((element) =>
+            element
+              .getAnimations()
+              .some(
+                (animation) =>
+                  animation instanceof CSSTransition && animation.transitionProperty === 'background-color',
+              ),
+          ),
+        { intervals: [0, 10, 20, 50] },
+      )
+      .toBe(true);
+
+    const motion = await dialog.evaluate((element) => {
+      const animation = element
+        .getAnimations()
+        .find((value) => value instanceof CSSTransition && value.transitionProperty === 'background-color')!;
+      const timing = animation.effect!.getTiming();
+
+      animation.pause();
+
+      const samples = [0, 200, 399].map((time) => {
+        animation.currentTime = time;
+
+        return getComputedStyle(element).backgroundColor;
+      });
+
+      animation.finish();
+
+      return { duration: timing.duration, easing: timing.easing, samples };
+    });
+
+    expect(motion.duration).toBe(400);
+    expect(motion.easing).toBe('ease-in-out');
+    expect(motion.samples[1]).not.toBe(motion.samples[0]);
+    expect(motion.samples[1]).not.toBe(motion.samples[2]);
+
+    await expect(page.locator('[data-theme-transition]')).toHaveCount(0);
+
+    await expect(dialog).toBeVisible();
+  }
+
+  await page.keyboard.press('Escape');
+
+  await expect(dialog).toBeHidden();
+});
+
 async function checkNavigation(page: Page, locale: string, width: number, info: TestInfo): Promise<void> {
   const navbar = page.locator('nav[appUI="navbar"]');
   const dialog = page.getByRole('dialog');
