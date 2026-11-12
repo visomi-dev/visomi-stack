@@ -91,7 +91,11 @@ for (const locale of ['en', 'es']) {
 
         await expect(page.locator('[data-language-switcher]')).toHaveText(locale === 'en' ? 'Español' : 'English');
 
-        await expect(page.locator('[data-language-switcher] svg[aria-hidden="true"]')).toHaveCount(1);
+        await expect(page.locator('app-language-switcher nav > svg[aria-hidden="true"]')).toHaveCount(1);
+
+        await expect(page.locator('app-language-switcher [aria-current="true"]')).toHaveText(
+          locale === 'en' ? 'English' : 'Español',
+        );
 
         const initial = await header.boundingBox();
 

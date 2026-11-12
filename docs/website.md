@@ -28,6 +28,12 @@ Public content lives in `src/content/en.ts` and `es.ts`. `site.ts` owns the type
 page identifiers and localized paths, so changing language retains the current
 public page. The mobile menu uses native `details`, and FAQs use the existing
 native disclosure adapter. No client router or extra UI runtime is required.
+Both website and application headers show the current language as selected text
+with `aria-current="true"` and the alternate language as a native link. Full
+native names (`English`, `Español`) follow the
+[GOV.UK language navigation pattern](https://design-system.service.gov.uk/components/language-navigation/).
+Ordinary pages preserve their query and fragment when switching language;
+authentication screens retain their existing safe restart rules.
 The header, mobile menu and footer link to `/app/en/` or `/app/es/` on the same
 origin, preserving the website language when opening the mounted application.
 

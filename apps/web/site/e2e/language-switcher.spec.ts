@@ -20,7 +20,21 @@ for (const locale of ['en', 'es']) {
 
         await expect(language).toHaveText(destination === 'es' ? 'Español' : 'English');
 
-        await expect(language.locator('svg[aria-hidden="true"]')).toHaveCount(1);
+        const navigation = header.getByRole('navigation', {
+          name: locale === 'en' ? 'Language' : 'Idioma',
+          exact: true,
+        });
+        const current = navigation.locator('[data-current-language]');
+
+        await expect(navigation.locator('svg[aria-hidden="true"]')).toHaveCount(1);
+
+        await expect(current).toHaveText(locale === 'en' ? 'English' : 'Español');
+
+        await expect(current).toHaveAttribute('aria-current', 'true');
+
+        await expect(current).toHaveAttribute('lang', locale);
+
+        await expect(navigation.getByRole('link')).toHaveCount(1);
 
         await expect(language).toHaveAttribute('lang', destination);
 
@@ -40,9 +54,11 @@ for (const locale of ['en', 'es']) {
         const geometry = await language.evaluate((element) => {
           const link = element.getBoundingClientRect();
           const toggle = document.querySelector('[data-theme-switcher]')!.getBoundingClientRect();
+          const group = element.closest('nav')!.getBoundingClientRect();
           const style = getComputedStyle(element);
           const canvas = document.createElement('canvas').getContext('2d')!;
           const luminance = (color: string) => {
+            canvas.clearRect(0, 0, 1, 1);
             canvas.fillStyle = color;
             canvas.fillRect(0, 0, 1, 1);
             const channels = Array.from(canvas.getImageData(0, 0, 1, 1).data)
@@ -55,13 +71,29 @@ for (const locale of ['en', 'es']) {
 
             return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
           };
+          let surface: Element | null = element;
+          let backgroundColor = style.backgroundColor;
+
+          while (surface) {
+            backgroundColor = getComputedStyle(surface).backgroundColor;
+            canvas.clearRect(0, 0, 1, 1);
+            canvas.fillStyle = backgroundColor;
+            canvas.fillRect(0, 0, 1, 1);
+
+            if (canvas.getImageData(0, 0, 1, 1).data[3] > 0) {
+              break;
+            }
+
+            surface = surface.parentElement;
+          }
+
           const foreground = luminance(style.color);
-          const background = luminance(style.backgroundColor);
+          const background = luminance(backgroundColor);
 
           return {
             width: link.width,
             height: link.height,
-            gap: toggle.left - link.right,
+            gap: toggle.left - group.right,
             fits: document.documentElement.scrollWidth <= innerWidth,
             contrast: (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05),
           };

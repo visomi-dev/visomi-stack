@@ -47,8 +47,15 @@ for (const locale of ['en-US', 'es']) {
         expect(links[0].getAttribute('href')).toBe(`/app/${target}${destination}`);
         expect(links[0].getAttribute('lang')).toBe(target);
         expect(links[0].getAttribute('hreflang')).toBe(target);
+        expect(links[0].getAttribute('rel')).toBe('alternate');
         expect(links[0].textContent?.trim()).toBe(target === 'es' ? 'Español' : 'English');
-        expect(links[0].querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+        const currentLanguage = fixture.nativeElement.querySelector('[data-current-language]') as HTMLElement;
+
+        expect(currentLanguage.tagName).toBe('SPAN');
+        expect(currentLanguage.getAttribute('aria-current')).toBe('true');
+        expect(currentLanguage.getAttribute('lang')).toBe(locale === 'es' ? 'es' : 'en');
+        expect(currentLanguage.textContent?.trim()).toBe(locale === 'es' ? 'Español' : 'English');
+        expect(fixture.nativeElement.querySelector('nav > svg')?.getAttribute('aria-hidden')).toBe('true');
       });
     }
   });

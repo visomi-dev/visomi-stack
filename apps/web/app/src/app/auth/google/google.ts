@@ -47,6 +47,7 @@ export class Google {
   private readonly focused = signal(false);
 
   private readonly renderer = signal<((width: number, dark: boolean) => void) | null>(null);
+  private readonly language = this.locale.startsWith('es') ? 'es' : 'en';
 
   private buttonLifetime: AbortController | undefined;
   private readonly cleanup = this.destroyRef.onDestroy(() => this.buttonLifetime?.abort());
@@ -155,9 +156,9 @@ export class Google {
           theme: dark ? 'filled_black' : 'outline',
           size: 'large',
           width: String(buttonWidth),
-          text: intent === 'link' ? 'continue_with' : 'signin_with',
+          text: 'continue_with',
           shape: 'rectangular',
-          locale: this.locale.startsWith('es') ? 'es' : 'en',
+          locale: this.language,
         });
 
         renderedWidth = buttonWidth;
@@ -204,7 +205,7 @@ export class Google {
       // Google requires an executable external script; Angular templates do not execute script elements.
       const script = this.document.createElement('script');
 
-      script.src = 'https://accounts.google.com/gsi/client';
+      script.src = 'https://accounts.google.com/gsi/client?hl=' + this.language;
       script.async = true;
 
       if (this.nonce) {
