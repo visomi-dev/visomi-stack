@@ -32,6 +32,7 @@ describe('shared Helmet policy', () => {
     expect(csp).toContain("script-src-attr 'none'");
     expect(csp).not.toContain('unsafe-inline');
     expect(values.get('cross-origin-opener-policy')).toBe('same-origin-allow-popups');
+    expect(values.get('referrer-policy')).toBe('strict-origin');
   });
   it('applies browser isolation and content protections without legacy product permissions', () => {
     const { values, next, response } = headers(false);

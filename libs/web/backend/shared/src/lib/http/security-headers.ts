@@ -27,7 +27,13 @@ export function securityHeaders(
     },
     // HTTPS policy must not pin local HTTP development or unrelated subdomains.
     strictTransportSecurity: production ? { maxAge: 31536000, includeSubDomains: false } : false,
-    ...(options.google ? { crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' as const } } : {}),
+    ...(options.google
+      ? {
+          crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' as const },
+          // GIS checks the embedding origin; never disclose a document's path or query.
+          referrerPolicy: { policy: 'strict-origin' as const },
+        }
+      : {}),
   });
 
   return (request, response, next) => {

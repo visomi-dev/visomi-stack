@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, maxLength, disabled, submit } from '@angular/forms/signals';
@@ -15,7 +16,20 @@ import { Passkeys, type Passkey } from './passkeys';
 
 @Component({
   selector: 'app-manage-passkeys',
-  imports: [NavigationHeading, Button, Heading, Text, Link, Field, Input, Card, FormField, RouterLink, AuthFeedback],
+  imports: [
+    NavigationHeading,
+    Button,
+    Heading,
+    Text,
+    Link,
+    Field,
+    Input,
+    Card,
+    FormField,
+    RouterLink,
+    AuthFeedback,
+    DatePipe,
+  ],
   providers: [Action, AuthHttp, Passkeys],
   templateUrl: './manage.html',
 })
@@ -38,6 +52,25 @@ export class ManagePasskeys {
   });
 
   readonly nameLabel = $localize`:@@authPasskeyName:Passkey name`;
+  readonly syncedLabel = $localize`:@@authPasskeySynced:Synced passkey`;
+  readonly syncableLabel = $localize`:@@authPasskeySyncable:Syncable passkey`;
+  readonly deviceBoundLabel = $localize`:@@authPasskeyDeviceBound:Device-bound passkey`;
+
+  displayName(key: Passkey): string {
+    if (key.labelIsCustom || key.label !== 'Passkey') {
+      return key.label;
+    }
+
+    return key.providerName ?? this.kind(key);
+  }
+
+  kind(key: Passkey): string {
+    if (key.backupState) {
+      return this.syncedLabel;
+    }
+
+    return key.backupEligible ? this.syncableLabel : this.deviceBoundLabel;
+  }
 
   async reload(): Promise<void> {
     const result = await this.api.list();
@@ -60,7 +93,7 @@ export class ManagePasskeys {
 
   edit(key: Passkey): void {
     this.removing.set(null);
-    this.fields().reset({ label: key.label });
+    this.fields().reset({ label: this.displayName(key) });
     this.attempted.set(false);
     this.editing.set(key.id);
   }

@@ -13,4 +13,6 @@ export async function selectTheme(page: Page, theme: string): Promise<void> {
   }
 
   await expect(switcher).toHaveAttribute('aria-pressed', pressed);
+
+  await expect(page.locator('[data-theme-transition]')).toHaveCount(0);
 }

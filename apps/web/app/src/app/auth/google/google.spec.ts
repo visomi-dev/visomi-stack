@@ -207,7 +207,7 @@ it('does not complete a Google callback after its owning view is destroyed', asy
   TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
 });
 
-it('loads the provider script with the Angular CSP nonce', async () => {
+it('loads the localized provider script with the Angular CSP nonce', async () => {
   vi.stubGlobal('google', undefined);
   TestBed.overrideProvider(CSP_NONCE, { useValue: 'synthetic-angular-nonce' });
   const api = TestBed.inject(Google);
@@ -223,10 +223,12 @@ it('loads the provider script with the Angular CSP nonce', async () => {
   });
 
   await vi.waitFor(() =>
-    expect(document.querySelector('script[src="https://accounts.google.com/gsi/client"]')).not.toBeNull(),
+    expect(document.querySelector('script[src="https://accounts.google.com/gsi/client?hl=en"]')).not.toBeNull(),
   );
 
-  const script = document.querySelector<HTMLScriptElement>('script[src="https://accounts.google.com/gsi/client"]')!;
+  const script = document.querySelector<HTMLScriptElement>(
+    'script[src="https://accounts.google.com/gsi/client?hl=en"]',
+  )!;
 
   try {
     expect(script.nonce).toBe('synthetic-angular-nonce');

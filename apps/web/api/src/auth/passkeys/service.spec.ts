@@ -87,8 +87,9 @@ describe('passkey capability authorization', () => {
     const options = webAuthn.registration.mock.calls[0][0];
     const stored = fixture.persist.mock.calls[0][0];
 
-    expect(options.userName).toMatch(/^[a-f0-9-]{36}$/);
-    expect(options.userID.toString()).toBe(options.userName);
+    expect(options.userName).toBe('Visomi Stack account');
+    expect(options.userDisplayName).toBe('Visomi Stack account');
+    expect(options.userID.toString()).toMatch(/^[a-f0-9-]{36}$/);
     expect(options).toMatchObject({
       rpID: config.rpId,
       attestationType: 'none',
@@ -99,7 +100,7 @@ describe('passkey capability authorization', () => {
       id: result.challengeId,
       sessionId: 'synthetic-session',
       purpose: 'signup',
-      subjectId: options.userName,
+      subjectId: options.userID.toString(),
       challengeHash: createHash('sha256').update(challenge).digest('hex'),
     });
     expect(stored.challengeHash).not.toBe(challenge);
@@ -118,13 +119,32 @@ describe('passkey capability authorization', () => {
 
     expect(webAuthn.registration).toHaveBeenCalledWith(
       expect.objectContaining({
-        userName: user.id,
+        userName: 'Visomi Stack account',
+        userDisplayName: 'Visomi Stack account',
         userID: Buffer.from(user.id),
         excludeCredentials: [{ id: 'synthetic_existing_key', transports: ['internal'] }],
       }),
     );
     expect(fixture.persist).toHaveBeenCalledWith(
       expect.objectContaining({ purpose: 'enrollment', subjectId: user.id }),
+    );
+  });
+
+  it('uses the account email as a readable name without changing the opaque user handle', async () => {
+    const fixture = optionsFixture();
+    const email = 'synthetic@example.test';
+
+    await fixture.passkeys.registrationOptions('synthetic-session', undefined, email);
+
+    expect(webAuthn.registration).toHaveBeenLastCalledWith(
+      expect.objectContaining({ userName: email, userDisplayName: email, userID: expect.any(Buffer) }),
+    );
+    const user = { id: randomUUID(), email, authenticatedAt: Date.now() };
+
+    await fixture.passkeys.registrationOptions('synthetic-session', user);
+
+    expect(webAuthn.registration).toHaveBeenLastCalledWith(
+      expect.objectContaining({ userName: email, userDisplayName: email, userID: Buffer.from(user.id) }),
     );
   });
 

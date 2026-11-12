@@ -16,6 +16,8 @@
 
 @layer base {
   :root {
+    --ui-theme-duration-ms: 400;
+    --ui-theme-easing: ease-in-out;
     color-scheme: light;
   }
 
@@ -41,6 +43,43 @@
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
+    }
+  }
+}
+
+/* Limit the shared timing to theme changes, including modal backdrops and the page canvas. */
+@media (prefers-reduced-motion: no-preference) {
+  :root:is([data-theme-transition], :has([data-theme-transition])) {
+    &,
+    & *,
+    & *::before,
+    & *::after,
+    & *::placeholder,
+    & *::marker,
+    & *::file-selector-button,
+    & ::backdrop {
+      transition-property:
+        color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, box-shadow, filter,
+        --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+      transition-duration: calc(var(--ui-theme-duration-ms) * 1ms);
+      transition-timing-function: var(--ui-theme-easing);
+      transition-delay: 0s;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:is([data-theme-transition], :has([data-theme-transition])) {
+    &,
+    & *,
+    & *::before,
+    & *::after,
+    & *::placeholder,
+    & *::marker,
+    & *::file-selector-button,
+    & ::backdrop {
+      transition-duration: 0s;
+      transition-delay: 0s;
     }
   }
 }
@@ -98,11 +137,11 @@
   @media (prefers-reduced-motion: no-preference) {
     .ui-theme-switcher[data-theme-animated] {
       .ui-theme-sun {
-        animation: ui-theme-enter 400ms ease-in-out;
+        animation: ui-theme-enter calc(var(--ui-theme-duration-ms) * 1ms) var(--ui-theme-easing);
       }
 
       .ui-theme-moon {
-        animation: ui-theme-leave 400ms ease-in-out;
+        animation: ui-theme-leave calc(var(--ui-theme-duration-ms) * 1ms) var(--ui-theme-easing);
       }
 
       .dark & .ui-theme-sun {

@@ -1,4 +1,4 @@
-import { Component, afterNextRender, inject, signal } from '@angular/core';
+import { Component, afterNextRender, inject, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, disabled, submit } from '@angular/forms/signals';
 
@@ -53,6 +53,14 @@ export class Reauthenticate {
   private readonly journey = inject(Journey);
   readonly action = inject(Action);
 
+  readonly embedded = input(false);
+  readonly heading = input($localize`:@@authReauthTitle:Confirm it is you`);
+  readonly description = input(
+    $localize`:@@authReauthDescription:Use an existing sign-in method before changing your account's security. You will review the change again afterwards.`,
+  );
+  readonly completed = output<void>();
+  readonly cancelled = output<void>();
+
   readonly methods = signal<MethodsView | null>(null);
   readonly pending = signal<Reauthentication | null>(null);
   readonly backup = signal(false);
@@ -69,12 +77,17 @@ export class Reauthenticate {
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authPassword:Password`;
 
+  cancel(): void {
+    this.journey.clear();
+    this.cancelled.emit();
+  }
+
   passkey(): void {
     void this.action.run(
       async () => {
         await this.passkeys.authenticate();
 
-        await this.navigation.complete();
+        await this.complete();
       },
       { name: 'passkey' },
     );
@@ -124,7 +137,7 @@ export class Reauthenticate {
 
         this.journey.clear();
 
-        await this.navigation.complete();
+        await this.complete();
       },
       { name: 'verify' },
     );
@@ -132,11 +145,21 @@ export class Reauthenticate {
 
   google(result: SessionView | (Pending & { factor: 'email' })): void {
     if ('access' in result) {
-      void this.action.run(() => this.navigation.complete(), { name: 'provider' });
+      void this.action.run(() => this.complete(), { name: 'provider' });
     } else {
       this.pending.set({ ...result, method: 'google' });
       this.backup.set(false);
       this.journey.start('google', result);
+    }
+  }
+
+  private async complete(): Promise<void> {
+    this.journey.clear();
+
+    if (this.embedded()) {
+      this.completed.emit();
+    } else {
+      await this.navigation.complete();
     }
   }
 

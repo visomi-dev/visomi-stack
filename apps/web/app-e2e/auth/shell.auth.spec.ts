@@ -2,6 +2,111 @@ import type { Page, TestInfo } from '@playwright/test';
 
 import { expect, test, signup } from './support/fixtures';
 
+test('animates an open mobile menu when the system theme changes', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
+
+  await signup(page);
+
+  await page.goto('/app/en/home');
+
+  await page.locator('nav[appUI="navbar"]').getByRole('button', { name: 'Menu', exact: true }).click();
+
+  const dialog = page.getByRole('dialog');
+
+  await expect(dialog).toBeVisible();
+
+  for (const colorScheme of ['dark', 'light'] as const) {
+    await page.emulateMedia({ colorScheme });
+
+    await expect
+      .poll(
+        () =>
+          dialog.evaluate((element) =>
+            element
+              .getAnimations()
+              .some(
+                (animation) =>
+                  animation instanceof CSSTransition && animation.transitionProperty === 'background-color',
+              ),
+          ),
+        { intervals: [0, 10, 20, 50] },
+      )
+      .toBe(true);
+
+    const motion = await dialog.evaluate((element) => {
+      const animation = element
+        .getAnimations()
+        .find((value) => value instanceof CSSTransition && value.transitionProperty === 'background-color')!;
+      const timing = animation.effect!.getTiming();
+
+      animation.pause();
+
+      const samples = [0, 200, 399].map((time) => {
+        animation.currentTime = time;
+
+        return getComputedStyle(element).backgroundColor;
+      });
+
+      animation.finish();
+
+      return { duration: timing.duration, easing: timing.easing, samples };
+    });
+
+    expect(motion.duration).toBe(400);
+    expect(motion.easing).toBe('ease-in-out');
+    expect(motion.samples[1]).not.toBe(motion.samples[0]);
+    expect(motion.samples[1]).not.toBe(motion.samples[2]);
+
+    await expect(page.locator('[data-theme-transition]')).toHaveCount(0);
+
+    await expect(dialog).toBeVisible();
+  }
+
+  await page.keyboard.press('Escape');
+
+  await expect(dialog).toBeHidden();
+});
+
+async function checkMobilePosition(page: Page, width: number): Promise<void> {
+  if (width >= 1024) {
+    return;
+  }
+
+  const bounds = await page.locator('nav[appUI="navbar"]').boundingBox();
+  const height = await page.evaluate(() => innerHeight);
+
+  expect(Math.round(bounds!.y + bounds!.height)).toBe(height);
+}
+
+async function checkMobileViewport(page: Page, width: number, route: string): Promise<void> {
+  if (width >= 1024 || route !== 'home') {
+    return;
+  }
+
+  const height = width === 844 ? 390 : 844;
+  const navbar = page.locator('nav[appUI="navbar"]');
+
+  for (const visibleHeight of [height, height - 120, height]) {
+    await page.setViewportSize({ width, height: visibleHeight });
+
+    await checkMobilePosition(page, width);
+
+    const bounds = await navbar.boundingBox();
+
+    await navbar.hover();
+
+    await page.mouse.wheel(0, 600);
+
+    await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollTop)).toBe(0);
+
+    const after = await navbar.boundingBox();
+
+    expect(after?.y).toBe(bounds?.y);
+  }
+}
+
 async function checkNavigation(page: Page, locale: string, width: number, info: TestInfo): Promise<void> {
   const navbar = page.locator('nav[appUI="navbar"]');
   const dialog = page.getByRole('dialog');
@@ -91,9 +196,15 @@ for (const locale of ['en', 'es']) {
 
         await expect(page.locator('[data-language-switcher]')).toHaveText(locale === 'en' ? 'Español' : 'English');
 
-        await expect(page.locator('[data-language-switcher] svg[aria-hidden="true"]')).toHaveCount(1);
+        await expect(page.locator('app-language-switcher nav > svg[aria-hidden="true"]')).toHaveCount(1);
+
+        await expect(page.locator('app-language-switcher [aria-current="true"]')).toHaveText(
+          locale === 'en' ? 'English' : 'Español',
+        );
 
         const initial = await header.boundingBox();
+
+        await checkMobileViewport(page, width, route);
 
         await main.evaluate((element) => {
           const fixture = document.createElement('div');
@@ -121,6 +232,8 @@ for (const locale of ['en', 'es']) {
         expect(after!.y).toBeGreaterThanOrEqual(0);
         expect(documentScroll).toEqual({ top: 0, fits: true, height: true });
 
+        await checkMobilePosition(page, width);
+
         await main.evaluate((element) => {
           element.scrollTop = element.scrollHeight;
         });
@@ -133,6 +246,16 @@ for (const locale of ['en', 'es']) {
       await checkNavigation(page, locale, width, info);
 
       await expect(page).toHaveURL(`/app/${locale}/auth/sign-in`);
+
+      await page.setViewportSize({ width, height: 390 });
+
+      await page.goto(`/app/${locale}/auth/sign-up/password`);
+
+      await page.mouse.move(width / 2, 200);
+
+      await page.mouse.wheel(0, 1200);
+
+      await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollTop)).toBeGreaterThan(0);
     });
   }
 }

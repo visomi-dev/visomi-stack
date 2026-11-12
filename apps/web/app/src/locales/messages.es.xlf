@@ -622,6 +622,22 @@
         <source>New password</source>
         <target>Nueva contraseña</target>
       </trans-unit>
+      <trans-unit id="authPasswordConfirmTitle" datatype="html">
+        <source>Confirm your password change</source>
+        <target>Confirma el cambio de contraseña</target>
+      </trans-unit>
+      <trans-unit id="authPasswordConfirmDescription" datatype="html">
+        <source>Confirm your identity to save the password you just entered. It will be saved automatically after verification.</source>
+        <target>Confirma tu identidad para guardar la contraseña que acabas de escribir. Se guardará automáticamente después de la verificación.</target>
+      </trans-unit>
+      <trans-unit id="authConfirmPasskey" datatype="html">
+        <source>Confirm with a passkey</source>
+        <target>Confirmar con una clave de acceso</target>
+      </trans-unit>
+      <trans-unit id="authConfirmPassword" datatype="html">
+        <source>Confirm with your password</source>
+        <target>Confirmar con tu contraseña</target>
+      </trans-unit>
       <trans-unit id="authPasswordSaved" datatype="html">
         <source>Your password has been saved.</source>
         <target>Tu contraseña se guardó.</target>
@@ -997,6 +1013,38 @@
       <trans-unit id="shellCloseNavigation" datatype="html">
         <source>Close navigation</source>
         <target>Cerrar navegación</target>
+      </trans-unit>
+      <trans-unit id="authPasskeySynced" datatype="html">
+        <source>Synced passkey</source>
+        <target>Clave de acceso sincronizada</target>
+      </trans-unit>
+      <trans-unit id="authPasskeySyncable" datatype="html">
+        <source>Syncable passkey</source>
+        <target>Clave de acceso sincronizable</target>
+      </trans-unit>
+      <trans-unit id="authPasskeyDeviceBound" datatype="html">
+        <source>Device-bound passkey</source>
+        <target>Clave vinculada a un dispositivo</target>
+      </trans-unit>
+      <trans-unit id="authPasskeyCreatedWith" datatype="html">
+        <source>Created with</source>
+        <target>Creada con</target>
+      </trans-unit>
+      <trans-unit id="authPasskeyType" datatype="html">
+        <source>Type</source>
+        <target>Tipo</target>
+      </trans-unit>
+      <trans-unit id="authPasskeyCreated" datatype="html">
+        <source>Created</source>
+        <target>Creada</target>
+      </trans-unit>
+      <trans-unit id="authPasskeyLastUsed" datatype="html">
+        <source>Last used</source>
+        <target>Último uso</target>
+      </trans-unit>
+      <trans-unit id="authPasskeyNotUsed" datatype="html">
+        <source>Not used yet</source>
+        <target>Aún no se ha usado</target>
       </trans-unit>
     </body>
   </file>

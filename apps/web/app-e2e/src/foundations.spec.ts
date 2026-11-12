@@ -5,6 +5,27 @@ function route(locale = 'en') {
 }
 
 for (const locale of ['en', 'es']) {
+  const destination = locale === 'en' ? 'es' : 'en';
+
+  test(`keeps the current ${locale} language and the Foundations fragment when switching`, async ({ page }) => {
+    await page.goto(`${route(locale)}?view=buttons#button-heading`);
+
+    const current = page.locator('app-language-switcher [data-current-language]');
+    const alternate = page.locator('app-language-switcher [data-language-switcher]');
+
+    await expect(current).toHaveText(locale === 'en' ? 'English' : 'Español');
+
+    await expect(current).toHaveAttribute('aria-current', 'true');
+
+    await expect(alternate).toHaveAttribute('href', `/app/${destination}/foundations?view=buttons#button-heading`);
+
+    await alternate.click();
+
+    await expect(page).toHaveURL(`/app/${destination}/foundations?view=buttons#button-heading`);
+
+    await expect(page.locator('#button-heading')).toBeVisible();
+  });
+
   test(`renders ${locale} on the server, loads assets and hydrates without errors`, async ({ page, request }, info) => {
     const path = route(locale);
     const response = await request.get(path);

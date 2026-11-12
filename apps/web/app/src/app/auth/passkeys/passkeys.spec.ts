@@ -12,6 +12,8 @@ vi.hoisted(() => {
 });
 
 vi.mock('@simplewebauthn/browser', () => ({
+  bufferToBase64URLString: vi.fn(() => 'synthetic_encoded_owner'),
+  sendSignal: vi.fn().mockResolvedValue(undefined),
   startAuthentication: vi.fn(),
   startRegistration: vi.fn(),
   browserSupportsWebAuthn: () => true,
@@ -87,4 +89,64 @@ it('cancels conditional autofill before another authentication can complete', as
   await rejected;
 
   expect(request).toHaveBeenCalledTimes(1);
+});
+
+for (const unsupported of [false, true]) {
+  it(`updates a saved account name after successful authentication (unsupported signal: ${unsupported})`, async () => {
+    const result = {
+      access: 'full',
+      user: { id: 'synthetic-owner', email: 'synthetic@example.test' },
+    };
+
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce({ challengeId: 'synthetic-challenge', options: { rpId: 'localhost' } })
+      .mockResolvedValueOnce(result);
+
+    vi.mocked(webauthn.startAuthentication).mockResolvedValue({} as never);
+    vi.mocked(webauthn.sendSignal).mockImplementation(async () => {
+      if (unsupported) {
+        throw new Error('synthetic_signal_unsupported');
+      }
+    });
+
+    TestBed.configureTestingModule({
+      providers: [
+        Passkeys,
+        { provide: Session, useValue: { cancellation: () => new AbortController().signal } },
+        { provide: AuthHttp, useValue: { request } },
+      ],
+    });
+
+    const authenticated = await TestBed.inject(Passkeys).authenticate();
+
+    expect(authenticated).toBe(result);
+    expect(webauthn.sendSignal).toHaveBeenCalledExactlyOnceWith({
+      signalName: 'currentUserDetails',
+      rpID: 'localhost',
+      userID: 'synthetic_encoded_owner',
+      userName: 'synthetic@example.test',
+      userDisplayName: 'synthetic@example.test',
+    });
+  });
+}
+
+it('never signals unverified account details to a credential manager', async () => {
+  const request = vi
+    .fn()
+    .mockResolvedValueOnce({ challengeId: 'synthetic-challenge', options: { rpId: 'localhost' } })
+    .mockResolvedValueOnce({ access: 'unverified', user: { id: 'synthetic', email: 'synthetic@example.test' } });
+
+  vi.mocked(webauthn.startAuthentication).mockResolvedValue({} as never);
+  TestBed.configureTestingModule({
+    providers: [
+      Passkeys,
+      { provide: Session, useValue: { cancellation: () => new AbortController().signal } },
+      { provide: AuthHttp, useValue: { request } },
+    ],
+  });
+
+  await TestBed.inject(Passkeys).authenticate();
+
+  expect(webauthn.sendSignal).not.toHaveBeenCalled();
 });

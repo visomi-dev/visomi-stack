@@ -1,7 +1,7 @@
-import { Component, LOCALE_ID, computed, inject, input } from '@angular/core';
+import { Component, LOCALE_ID, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { LinkButton } from '../ui';
+import { Link } from '../ui';
 import { AuthNavigation } from '../auth/shared/navigation';
 
 const authRestarts: Record<string, string> = Object.freeze({
@@ -13,7 +13,7 @@ const authRestarts: Record<string, string> = Object.freeze({
 
 @Component({
   selector: 'app-language-switcher',
-  imports: [LinkButton],
+  imports: [Link],
   templateUrl: './language-switcher.html',
   host: { class: 'inline-flex shrink-0' },
 })
@@ -22,17 +22,20 @@ export class LanguageSwitcher {
   private readonly navigation = inject(AuthNavigation);
   readonly locale = inject(LOCALE_ID);
 
-  readonly path = input<string>();
-
   private readonly url = computed(() => {
     const url = this.router.lastSuccessfulNavigation()?.finalUrl;
 
     return url ? this.router.serializeUrl(url) : this.router.url;
   });
-  private readonly localizedPath = computed(() => this.path() ?? this.stablePath());
+  private readonly localizedPath = computed(() => this.stablePath());
   // Compile-time locales use separate bundles, so switching language requires document navigation.
   readonly english = computed(() => '/app/en' + this.localizedPath());
   readonly spanish = computed(() => '/app/es' + this.localizedPath());
+
+  readonly languages = [
+    { code: 'en', label: 'English' },
+    { code: 'es', label: 'Español' },
+  ] as const;
 
   private stablePath(): string {
     const path = this.url().split(/[?#]/, 1)[0];

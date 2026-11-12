@@ -1,4 +1,4 @@
-import { Directive, ElementRef, afterRenderEffect, computed, inject, untracked } from '@angular/core';
+import { Directive, ElementRef, afterRenderEffect, computed, inject, input, untracked } from '@angular/core';
 
 import { Navigation } from './navigation';
 
@@ -13,11 +13,13 @@ export class NavigationHeading {
   private readonly navigation = inject(Navigation);
   private readonly element = inject(ElementRef<HTMLHeadingElement>);
 
-  protected readonly focusable = computed(() => this.navigation.headingFocus() !== null);
+  readonly appHeadingFocus = input(false);
+
+  protected readonly focusable = computed(() => this.appHeadingFocus() || this.navigation.headingFocus() !== null);
 
   private readonly focusAfterNavigation = afterRenderEffect({
     write: () => {
-      if (this.navigation.headingFocus()) {
+      if (this.navigation.headingFocus() || this.appHeadingFocus()) {
         untracked(() => this.element.nativeElement.focus());
       }
     },

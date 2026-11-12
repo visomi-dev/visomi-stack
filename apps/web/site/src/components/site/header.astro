@@ -13,7 +13,10 @@ const { locale, page } = Astro.props;
 const copy = siteCopy[locale];
 const pages = ['home', 'architecture', 'docs', 'ui'] as const;
 const language = locale === 'en' ? 'es' : 'en';
-const languageLabel = language === 'es' ? 'Español' : 'English';
+const languages = [
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Español' },
+] as const;
 const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language}`) + Astro.url.search;
 ---
 
@@ -45,19 +48,36 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
         </LinkButton>
       </div>
 
-      <nav aria-label={copy.language}>
-        <LinkButton
-          href={languagePath}
-          hreflang={language}
-          lang={language}
-          variant="secondary"
-          size="sm"
-          data-language-switcher
-        >
-          <Icon name="languages" class="size-4 shrink-0" />
+      <nav class="inline-flex items-center gap-1.5" aria-label={copy.language}>
+        <Icon name="languages" class="hidden size-4 shrink-0 sm:block" />
 
-          {languageLabel}
-        </LinkButton>
+        <ul class="inline-flex items-center text-sm">
+          {languages.map(({ code, label }) => (
+            <li>
+              {code === locale ? (
+                <span
+                  class="inline-flex min-h-11 items-center rounded-md bg-zinc-100 px-1.5 font-semibold text-zinc-950 sm:px-2 dark:bg-zinc-900 dark:text-zinc-50"
+                  lang={code}
+                  aria-current="true"
+                  data-current-language
+                >
+                  {label}
+                </span>
+              ) : (
+                <Link
+                  href={languagePath}
+                  hreflang={code}
+                  lang={code}
+                  rel="alternate"
+                  class="inline-flex min-h-11 items-center rounded-md px-1.5 sm:px-2"
+                  data-language-switcher
+                >
+                  {label}
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
       </nav>
 
       <ThemeSwitcher label={copy.themeToggle} />

@@ -389,7 +389,7 @@ describe('authentication router decisions and delegation', () => {
         'synthetic-session',
         challengeId,
         response,
-        label === undefined ? 'Passkey' : 'Named passkey',
+        label === undefined ? undefined : 'Named passkey',
         undefined,
       );
       expect(fixture.logIn).toHaveBeenCalledWith(user, expect.any(Function));

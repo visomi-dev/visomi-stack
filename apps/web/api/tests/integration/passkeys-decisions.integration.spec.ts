@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server';
+import { decodeAttestationObject, isoCBOR } from '@simplewebauthn/server/helpers';
 import { authSchema, createDatabase } from '@visomi-stack/backend-shared';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -43,7 +44,7 @@ afterAll(async () => {
   await resource?.close();
 
   await postgres?.stop();
-});
+}, 120000);
 
 async function session() {
   const sid = randomUUID();
@@ -69,6 +70,61 @@ async function registered() {
 }
 
 describe('passkey persistence decisions with real PostgreSQL', () => {
+  it('persists registration metadata separately from a custom passkey name', async () => {
+    const sid = await session();
+    const device = authenticator();
+    const pending = await passkeys.registrationOptions(sid);
+    const response = device.register(pending.options.challenge, config.origin, config.rpId);
+    const aaguid = 'ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4';
+    const attestation = decodeAttestationObject(Buffer.from(response.response.attestationObject, 'base64url'));
+    const authData = attestation.get('authData');
+
+    authData.set(Buffer.from(aaguid.replace(/-/g, ''), 'hex'), 37);
+    const payload = new Map<string, Parameters<typeof isoCBOR.encode>[0]>([
+      ['fmt', 'none'],
+      ['attStmt', new Map()],
+      ['authData', authData],
+    ]);
+
+    response.response.attestationObject = Buffer.from(isoCBOR.encode(payload)).toString('base64url');
+
+    const user = await passkeys.register(sid, pending.challengeId, response, undefined);
+    const [stored] = await resource.db.select().from(credentials).where(eq(credentials.id, user.credentialId));
+
+    expect(stored.aaguid).toBe(aaguid);
+    expect(stored.label).toBe('Passkey');
+    expect(stored.labelIsCustom).toBe(false);
+    const original = await passkeys.list(user);
+
+    expect(original).toEqual([expect.objectContaining({ label: 'Passkey', providerName: 'Google Password Manager' })]);
+
+    await passkeys.rename(sid, user, user.credentialId, 'Travel key');
+
+    const [listed] = await passkeys.list(user);
+
+    expect(listed.label).toBe('Travel key');
+    expect(listed.providerName).toBe('Google Password Manager');
+    expect(listed.labelIsCustom).toBe(true);
+    expect(listed).not.toHaveProperty('aaguid');
+    expect(listed).not.toHaveProperty('credentialId');
+    expect(listed).not.toHaveProperty('publicKey');
+
+    await resource.db
+      .update(credentials)
+      .set({ aaguid: null, labelIsCustom: null })
+      .where(eq(credentials.id, user.credentialId));
+
+    const legacy = await passkeys.list(user);
+
+    expect(legacy).toEqual([expect.objectContaining({ label: 'Travel key', labelIsCustom: null, providerName: null })]);
+
+    await passkeys.rename(sid, user, user.credentialId, 'Passkey');
+
+    const explicitlyNamed = await passkeys.list(user);
+
+    expect(explicitlyNamed[0]).toMatchObject({ label: 'Passkey', labelIsCustom: true });
+  });
+
   it('lists only public credential metadata and renames an owned active credential', async () => {
     const f = await registered();
 
@@ -80,6 +136,8 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
       {
         id: f.user.credentialId,
         label: 'Synthetic renamed passkey',
+        labelIsCustom: true,
+        providerName: null,
         createdAt: expect.any(Date),
         lastUsedAt: null,
         backupEligible: false,

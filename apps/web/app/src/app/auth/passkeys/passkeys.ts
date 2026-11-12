@@ -5,6 +5,8 @@ import {
   browserSupportsWebAuthn,
   browserSupportsWebAuthnAutofill,
   WebAuthnAbortService,
+  sendSignal,
+  bufferToBase64URLString,
   type PublicKeyCredentialRequestOptionsJSON,
   type PublicKeyCredentialCreationOptionsJSON,
 } from '@simplewebauthn/browser';
@@ -16,6 +18,8 @@ import type { Pending, SessionView } from '../session/models';
 export type Passkey = {
   id: string;
   label: string;
+  labelIsCustom?: boolean | null;
+  providerName?: string | null;
   createdAt: string;
   lastUsedAt: string | null;
   backupEligible: boolean;
@@ -100,12 +104,27 @@ export class Passkeys {
 
     signal.throwIfAborted();
 
-    return this.http.request(
+    const result = await this.http.request<SessionView>(
       'POST',
       '/passkeys/authentication/verify',
       { challengeId: options.challengeId, response },
       signal,
     );
+
+    signal.throwIfAborted();
+
+    if (result.access === 'full' && result.user?.email && options.options.rpId) {
+      // Credential managers may update old UUID labels; unsupported signals must not block authentication.
+      void sendSignal({
+        signalName: 'currentUserDetails',
+        rpID: options.options.rpId,
+        userID: bufferToBase64URLString(new TextEncoder().encode(result.user.id).buffer),
+        userName: result.user.email,
+        userDisplayName: result.user.email,
+      }).catch(() => undefined);
+    }
+
+    return result;
   }
 
   list(): Promise<{ credentials: Passkey[] }> {

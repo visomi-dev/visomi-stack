@@ -29,7 +29,7 @@ it('applies the production migration command to an empty isolated database and c
       );
       const history = await pool.query('SELECT * FROM drizzle.__drizzle_migrations');
 
-      expect(history.rows).toHaveLength(4);
+      expect(history.rows).toHaveLength(5);
     }
   } finally {
     await pool.end();

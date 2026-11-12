@@ -170,6 +170,12 @@ verification, reset or recovery proof requires restarting that step. A valid
 unverified or restricted server session is still restored and directed to its
 permitted task. Switching language uses a stable route and does not carry proofs.
 
+Password management keeps a submitted password only in its owning component while
+an in-place identity check is pending. Successful proof completes that requested
+save automatically. Cancellation, departure, a changed account or session
+invalidation clears the draft; it never enters URLs or browser storage. Other
+security pages continue using the routed reauthentication flow and review step.
+
 TOTP QR codes are generated locally in a lazily loaded module. The manual key is
 also available. Backup codes are displayed only immediately after creation and
 can be copied or downloaded explicitly. They are cleared on departure; a reload

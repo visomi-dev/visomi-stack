@@ -43,6 +43,21 @@ export async function expireEmailVerification(email: string): Promise<void> {
   }
 }
 
+export async function expireAuthentication(email: string): Promise<void> {
+  const pool = await isolatedPool();
+
+  try {
+    const result = await pool.query(
+      "UPDATE auth_sessions SET sess = jsonb_set(sess, '{passport,user,authenticatedAt}', to_jsonb($1::bigint)) WHERE sess->'passport'->'user'->>'id' = (SELECT id::text FROM auth_users WHERE email = $2) AND revoked_at IS NULL",
+      [Date.now() - 600000, email],
+    );
+
+    expect(result.rowCount).toBe(1);
+  } finally {
+    await pool.end();
+  }
+}
+
 async function resetLimits(): Promise<void> {
   const pool = await isolatedPool();
 
