@@ -58,19 +58,25 @@ export class Enroll {
   });
 
   passkey(): void {
-    void this.action.run(async () => {
-      await this.keys.register();
+    void this.action.run(
+      async () => {
+        await this.keys.register();
 
-      this.registered.set(true);
-    });
+        this.registered.set(true);
+      },
+      { name: 'passkey' },
+    );
   }
 
   provePasskey(): void {
-    void this.action.run(async () => {
-      await this.keys.authenticate();
+    void this.action.run(
+      async () => {
+        await this.keys.authenticate();
 
-      await this.navigation.complete();
-    });
+        await this.navigation.complete();
+      },
+      { name: 'provePasskey' },
+    );
   }
 
   password(event: Event): void {
@@ -78,22 +84,25 @@ export class Enroll {
     this.attempted.set(true);
     void submit(this.fields, {
       action: async () =>
-        this.action.run(async () => {
-          try {
-            this.replacement = this.model().password;
+        this.action.run(
+          async () => {
+            try {
+              this.replacement = this.model().password;
 
-            const pending = await this.api.password(this.replacement);
+              const pending = await this.api.password(this.replacement);
 
-            this.pending.set(pending);
-          } catch (error) {
-            this.replacement = '';
+              this.pending.set(pending);
+            } catch (error) {
+              this.replacement = '';
 
-            throw error;
-          } finally {
-            this.fields().reset({ password: '' });
-            this.attempted.set(false);
-          }
-        }),
+              throw error;
+            } finally {
+              this.fields().reset({ password: '' });
+              this.attempted.set(false);
+            }
+          },
+          { name: 'password' },
+        ),
       onInvalid: focusInvalid,
     });
   }
@@ -105,17 +114,20 @@ export class Enroll {
       return;
     }
 
-    void this.action.run(async () => {
-      const result = await this.api.completePassword(pending.flowId, this.replacement, {
-        kind: this.backup() ? 'recovery_code' : pending.factor,
-        code,
-      });
+    void this.action.run(
+      async () => {
+        const result = await this.api.completePassword(pending.flowId, this.replacement, {
+          kind: this.backup() ? 'recovery_code' : pending.factor,
+          code,
+        });
 
-      this.replacement = '';
-      this.pending.set(null);
+        this.replacement = '';
+        this.pending.set(null);
 
-      await this.navigation.complete(result);
-    });
+        await this.navigation.complete(result);
+      },
+      { name: 'completePassword' },
+    );
   }
 
   restart(): void {

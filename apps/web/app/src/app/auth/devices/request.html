@@ -24,7 +24,14 @@
     <p role="status">{{ statusText() }}</p>
 
     @if (status() === 'approved') {
-      <button appUI class="w-full" [disabled]="action.busy()" (click)="consume()" i18n="@@authContinueRecovery">
+      <button
+        appUI
+        class="w-full"
+        [disabled]="action.busy()"
+        (click)="consume()"
+        i18n="@@authContinueRecovery"
+        [attr.aria-busy]="action.pending() === 'consume'"
+      >
         Continue recovery
       </button>
     }
@@ -37,6 +44,7 @@
         [disabled]="action.busy()"
         (click)="cancel()"
         i18n="@@authCancelRequest"
+        [attr.aria-busy]="action.pending() === 'cancel'"
       >
         Cancel request
       </button>
@@ -49,7 +57,7 @@
       signed in.
     </p>
 
-    <app-email-entry [busy]="action.busy()" (confirmed)="start($event)" />
+    <app-email-entry [busy]="action.busy()" (confirmed)="start($event)" [loading]="action.pending() === 'start'" />
   }
 
   <app-auth-feedback [action]="action" />

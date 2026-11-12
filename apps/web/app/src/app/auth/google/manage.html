@@ -8,7 +8,7 @@
   </header>
 
   @if (pending()) {
-    <app-code-entry [busy]="action.busy()" (confirmed)="verify($event)" />
+    <app-code-entry [busy]="action.busy()" (confirmed)="verify($event)" [loading]="action.pending() === 'verify'" />
   } @else if (session.providers()?.google?.enabled) {
     <app-google-button
       [disabled]="action.busy()"
@@ -54,6 +54,7 @@
               [disabled]="action.busy()"
               (click)="unlink(provider.id)"
               i18n="@@authConfirmRemove"
+              [attr.aria-busy]="action.pending() === 'unlink:' + provider.id"
             >
               Confirm removal
             </button>

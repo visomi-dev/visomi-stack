@@ -27,11 +27,14 @@ export class BackupCodes {
   private readonly cleanup = this.destroyRef.onDestroy(() => this.codes.set([]));
 
   regenerate(): void {
-    void this.action.run(async () => {
-      const result = await this.api.regenerate();
+    void this.action.run(
+      async () => {
+        const result = await this.api.regenerate();
 
-      this.codes.set(result.recoveryCodes);
-      this.confirm.set(false);
-    });
+        this.codes.set(result.recoveryCodes);
+        this.confirm.set(false);
+      },
+      { name: 'regenerate' },
+    );
   }
 }

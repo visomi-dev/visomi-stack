@@ -55,14 +55,17 @@ export class SignIn {
   }
 
   google(result: SessionView | (Pending & { factor: 'email' })): void {
-    void this.action.run(async () => {
-      if ('access' in result) {
-        await this.navigation.complete();
-      } else {
-        this.journey.start('google', result);
+    void this.action.run(
+      async () => {
+        if ('access' in result) {
+          await this.navigation.complete();
+        } else {
+          this.journey.start('google', result);
 
-        await this.router.navigate(['/auth/google/verify-email'], { queryParams: this.navigation.returnQuery() });
-      }
-    });
+          await this.router.navigate(['/auth/google/verify-email'], { queryParams: this.navigation.returnQuery() });
+        }
+      },
+      { name: 'provider' },
+    );
   }
 }

@@ -67,26 +67,29 @@ export class PasswordCredentials {
     this.attempted.set(true);
     void submit(this.fields, {
       action: async () =>
-        this.action.run(async () => {
-          this.passkeys.cancel();
-          const { email, password } = this.model();
+        this.action.run(
+          async () => {
+            this.passkeys.cancel();
+            const { email, password } = this.model();
 
-          try {
-            const operation = this.signup
-              ? this.passwords.signup(email, password)
-              : this.passwords.signin(email, password);
-            const pending = await operation;
+            try {
+              const operation = this.signup
+                ? this.passwords.signup(email, password)
+                : this.passwords.signin(email, password);
+              const pending = await operation;
 
-            this.journey.start(this.signup ? 'email' : 'password', pending);
+              this.journey.start(this.signup ? 'email' : 'password', pending);
 
-            await this.router.navigate([this.signup ? '/auth/verify-email' : '/auth/sign-in/verify'], {
-              queryParams: this.navigation.returnQuery(),
-            });
-          } finally {
-            this.fields.password().reset('');
-            this.attempted.set(false);
-          }
-        }),
+              await this.router.navigate([this.signup ? '/auth/verify-email' : '/auth/sign-in/verify'], {
+                queryParams: this.navigation.returnQuery(),
+              });
+            } finally {
+              this.fields.password().reset('');
+              this.attempted.set(false);
+            }
+          },
+          { name: 'send' },
+        ),
       onInvalid: focusInvalid,
     });
   }

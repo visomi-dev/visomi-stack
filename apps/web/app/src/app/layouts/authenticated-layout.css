@@ -1,0 +1,16 @@
+:host .mobile-navigation {
+  margin: 0;
+  height: 100dvh;
+  max-height: none;
+  width: min(24rem, 100%);
+  max-width: none;
+  border-radius: 0;
+  padding-top: max(1.5rem, env(safe-area-inset-top));
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}
+
+:host .mobile-navigation:open {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}

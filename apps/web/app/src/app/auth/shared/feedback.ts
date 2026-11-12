@@ -11,7 +11,7 @@ import type { Action } from './action';
   host: {
     class: 'block min-w-0 space-y-3',
     '[hidden]': '!action().error() && !action().notice() && !action().busy()',
-    '[class.sr-only]': '!indicator() && !action().error() && !action().notice()',
+    '[class.sr-only]': '(!indicator() || action().pending() !== null) && !action().error() && !action().notice()',
   },
 })
 export class AuthFeedback {

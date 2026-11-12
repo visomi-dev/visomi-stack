@@ -13,6 +13,7 @@ import { codeMessage, requiredMessage, focusInvalid } from './form-errors';
 })
 export class CodeEntry {
   readonly busy = input(false);
+  readonly loading = input<boolean>();
   readonly backup = input(false);
   readonly confirmed = output<string>();
 

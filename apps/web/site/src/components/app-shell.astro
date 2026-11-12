@@ -21,12 +21,12 @@ const {
       <slot name="sidebar" />
     </div>
 
-    <div class="min-w-0">
+    <div class="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
       <div class={appShell.headerClasses()}>
         <slot name="header" />
       </div>
 
-      <main id={contentId} tabindex="-1" class={appShell.contentClasses()}>
+      <main data-slot="page-scroll" id={contentId} tabindex="-1" class={appShell.contentClasses()}>
         <slot />
       </main>
 

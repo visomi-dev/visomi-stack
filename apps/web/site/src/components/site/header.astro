@@ -54,6 +54,8 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
           size="sm"
           data-language-switcher
         >
+          <Icon name="languages" class="size-4 shrink-0" />
+
           {languageLabel}
         </LinkButton>
       </nav>

@@ -11,7 +11,15 @@
   </ul>
 
   <div class="flex flex-wrap gap-3">
-    <button appUI variant="secondary" (click)="copy()" i18n="@@authCopyCodes">Copy codes</button>
+    <button
+      appUI
+      variant="secondary"
+      (click)="copy()"
+      i18n="@@authCopyCodes"
+      [attr.aria-busy]="action.pending() === 'copy'"
+    >
+      Copy codes
+    </button>
 
     <a
       appUI="button"

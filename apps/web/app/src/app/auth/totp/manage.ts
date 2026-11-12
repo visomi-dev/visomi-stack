@@ -51,11 +51,14 @@ export class ManageTotp {
   });
 
   start(): void {
-    void this.action.run(async () => {
-      const setup = await this.api.setup();
+    void this.action.run(
+      async () => {
+        const setup = await this.api.setup();
 
-      this.setup.set(setup);
-    });
+        this.setup.set(setup);
+      },
+      { name: 'start' },
+    );
   }
 
   confirmCode(code: string): void {
@@ -65,35 +68,41 @@ export class ManageTotp {
       return;
     }
 
-    void this.action.run(async () => {
-      const result = await this.api.confirm(pending.enrollmentId, code);
+    void this.action.run(
+      async () => {
+        const result = await this.api.confirm(pending.enrollmentId, code);
 
-      this.setup.set(null);
-      this.codes.set(result.recoveryCodes);
-      this.enabled.set(true);
+        this.setup.set(null);
+        this.codes.set(result.recoveryCodes);
+        this.enabled.set(true);
 
-      if (result.notificationSent === false) {
-        this.action.setNotice(
-          $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
-        );
-      }
-    });
+        if (result.notificationSent === false) {
+          this.action.setNotice(
+            $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
+          );
+        }
+      },
+      { name: 'confirmCode' },
+    );
   }
 
   remove(): void {
-    void this.action.run(async () => {
-      const result = await this.api.remove();
+    void this.action.run(
+      async () => {
+        const result = await this.api.remove();
 
-      this.enabled.set(false);
-      this.removing.set(false);
-      this.codes.set([]);
+        this.enabled.set(false);
+        this.removing.set(false);
+        this.codes.set([]);
 
-      if (result.notificationSent === false) {
-        this.action.setNotice(
-          $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
-        );
-      }
-    });
+        if (result.notificationSent === false) {
+          this.action.setNotice(
+            $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`,
+          );
+        }
+      },
+      { name: 'remove' },
+    );
   }
 
   private readonly initialize = afterNextRender(

@@ -16,7 +16,11 @@
 
     <code appUI block class="break-all whitespace-normal">{{ pending.secret }}</code>
 
-    <app-code-entry [busy]="action.busy()" (confirmed)="confirmCode($event)" />
+    <app-code-entry
+      [busy]="action.busy()"
+      (confirmed)="confirmCode($event)"
+      [loading]="action.pending() === 'confirmCode'"
+    />
 
     <button appUI variant="secondary" (click)="setup.set(null)" i18n="@@authCancel" class="w-full sm:w-fit">
       Cancel
@@ -49,7 +53,14 @@
         </p>
 
         <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <button appUI variant="danger" [disabled]="action.busy()" (click)="remove()" i18n="@@authConfirm">
+          <button
+            appUI
+            variant="danger"
+            [disabled]="action.busy()"
+            (click)="remove()"
+            i18n="@@authConfirm"
+            [attr.aria-busy]="action.pending() === 'remove'"
+          >
             Confirm
           </button>
 
@@ -60,7 +71,14 @@
       </section>
     }
   } @else if (session.providers()?.totp) {
-    <button appUI [disabled]="action.busy()" (click)="start()" i18n="@@authEnableTotp" class="w-full sm:w-fit">
+    <button
+      appUI
+      [disabled]="action.busy()"
+      (click)="start()"
+      i18n="@@authEnableTotp"
+      class="w-full sm:w-fit"
+      [attr.aria-busy]="action.pending() === 'start'"
+    >
       Set up authenticator
     </button>
   } @else {

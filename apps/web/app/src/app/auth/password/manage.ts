@@ -51,46 +51,52 @@ export class ManagePassword {
     this.attempted.set(true);
     void submit(this.fields, {
       action: async () =>
-        this.action.run(async () => {
-          try {
-            const result = await this.api.save(this.model().password, this.exists());
+        this.action.run(
+          async () => {
+            try {
+              const result = await this.api.save(this.model().password, this.exists());
 
-            this.exists.set(true);
-            this.action.setNotice(
-              result.notificationSent === false
-                ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
-                : $localize`:@@authPasswordSaved:Your password has been saved.`,
-            );
-          } finally {
-            this.fields().reset({ password: '' });
-            this.attempted.set(false);
-          }
-        }),
+              this.exists.set(true);
+              this.action.setNotice(
+                result.notificationSent === false
+                  ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
+                  : $localize`:@@authPasswordSaved:Your password has been saved.`,
+              );
+            } finally {
+              this.fields().reset({ password: '' });
+              this.attempted.set(false);
+            }
+          },
+          { name: 'save' },
+        ),
       onInvalid: focusInvalid,
     });
   }
 
   remove(): void {
-    void this.action.run(async () => {
-      const result = await this.api.remove();
+    void this.action.run(
+      async () => {
+        const result = await this.api.remove();
 
-      this.confirm.set(false);
+        this.confirm.set(false);
 
-      await this.session.load(true);
+        await this.session.load(true);
 
-      if (!this.session.full()) {
-        await this.navigation.complete();
+        if (!this.session.full()) {
+          await this.navigation.complete();
 
-        return;
-      }
+          return;
+        }
 
-      this.exists.set(false);
-      this.action.setNotice(
-        result?.notificationSent === false
-          ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
-          : $localize`:@@authPasswordRemoved:Your password has been removed.`,
-      );
-    });
+        this.exists.set(false);
+        this.action.setNotice(
+          result?.notificationSent === false
+            ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
+            : $localize`:@@authPasswordRemoved:Your password has been removed.`,
+        );
+      },
+      { name: 'remove' },
+    );
   }
 
   private readonly initialize = afterNextRender(

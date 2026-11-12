@@ -548,7 +548,7 @@
       </trans-unit>
       <trans-unit id="authCreatePasskeyAccount" datatype="html">
         <source>Create account with a passkey</source>
-        <target>Crear cuenta con una clave de acceso</target>
+        <target>Crear cuenta</target>
       </trans-unit>
       <trans-unit id="authForgotPassword" datatype="html">
         <source>Forgot your password?</source>
@@ -989,6 +989,14 @@
       <trans-unit id="authReplacementEmailRestart" datatype="html">
         <source>If the email does not arrive, start again and enter your replacement password to request a new code.</source>
         <target>Si el correo no llega, vuelve a empezar e introduce tu contraseña de reemplazo para solicitar un código nuevo.</target>
+      </trans-unit>
+      <trans-unit id="shellMenu" datatype="html">
+        <source>Menu</source>
+        <target>Menú</target>
+      </trans-unit>
+      <trans-unit id="shellCloseNavigation" datatype="html">
+        <source>Close navigation</source>
+        <target>Cerrar navegación</target>
       </trans-unit>
     </body>
   </file>

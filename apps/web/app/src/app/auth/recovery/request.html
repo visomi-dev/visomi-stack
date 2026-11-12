@@ -7,7 +7,7 @@
     </p>
   </header>
 
-  <app-email-entry [busy]="action.busy()" (confirmed)="request($event)" />
+  <app-email-entry [busy]="action.busy()" (confirmed)="request($event)" [loading]="action.pending() === 'request'" />
 
   <app-auth-feedback [action]="action" />
 

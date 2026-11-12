@@ -56,15 +56,18 @@ export class PasswordVerify {
       return;
     }
 
-    void this.action.run(async () => {
-      await this.passwords.verify(pending.flowId, {
-        kind: this.backup() ? 'recovery_code' : (pending.factor ?? 'email'),
-        code,
-      });
+    void this.action.run(
+      async () => {
+        await this.passwords.verify(pending.flowId, {
+          kind: this.backup() ? 'recovery_code' : (pending.factor ?? 'email'),
+          code,
+        });
 
-      this.journey.clear();
+        this.journey.clear();
 
-      await this.navigation.complete();
-    });
+        await this.navigation.complete();
+      },
+      { name: 'verify' },
+    );
   }
 }

@@ -76,7 +76,16 @@ export async function signup(page: Page, email = address()): Promise<string> {
 }
 
 export async function logout(page: Page): Promise<void> {
-  await page.locator('app-sidebar').getByRole('button', { name: 'Sign out', exact: true }).click();
+  const sidebar = page.locator('app-sidebar');
+  const desktop = await sidebar.isVisible();
+
+  if (desktop) {
+    await sidebar.getByRole('button', { name: 'Sign out', exact: true }).click();
+  } else {
+    await page.locator('nav[appUI="navbar"]').getByRole('button', { name: 'Menu', exact: true }).click();
+
+    await page.getByRole('dialog').getByRole('button', { name: 'Sign out', exact: true }).click();
+  }
 
   await expect(page.getByRole('heading', { name: 'Sign in to your space.', exact: true })).toBeVisible();
 }

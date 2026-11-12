@@ -7,7 +7,14 @@
     </p>
   </header>
 
-  <button appUI [disabled]="action.busy()" (click)="add()" i18n="@@authAddPasskey" class="w-full sm:w-fit">
+  <button
+    appUI
+    [disabled]="action.busy()"
+    (click)="add()"
+    i18n="@@authAddPasskey"
+    class="w-full sm:w-fit"
+    [attr.aria-busy]="action.pending() === 'add'"
+  >
     Add a passkey
   </button>
 
@@ -46,7 +53,15 @@
           </app-field>
 
           <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <button appUI type="submit" [disabled]="action.busy()" i18n="@@authSave">Save</button>
+            <button
+              appUI
+              type="submit"
+              [disabled]="action.busy()"
+              i18n="@@authSave"
+              [attr.aria-busy]="action.pending() === 'rename:' + key.id"
+            >
+              Save
+            </button>
 
             <button appUI type="button" variant="secondary" (click)="editing.set(null)" i18n="@@authCancel">
               Cancel
@@ -86,6 +101,7 @@
                 [disabled]="action.busy()"
                 (click)="remove(key.id)"
                 i18n="@@authConfirmRemove"
+                [attr.aria-busy]="action.pending() === 'remove:' + key.id"
               >
                 Confirm removal
               </button>

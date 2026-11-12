@@ -7,5 +7,9 @@
 }
 
 @if (action().busy()) {
-  <span appUI="loader" role="status" aria-label="Working…" i18n-aria-label="@@authWorking"></span>
+  @if (indicator() && action().pending() === null) {
+    <span appUI="loader" role="status" aria-label="Working…" i18n-aria-label="@@authWorking"></span>
+  } @else {
+    <span role="status" aria-label="Working…" i18n-aria-label="@@authWorking"></span>
+  }
 }

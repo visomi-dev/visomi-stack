@@ -13,7 +13,12 @@
       <p appUI tone="muted" i18n="@@authGoogleVerifyDescription">Verify your email to finish continuing with Google.</p>
     }
 
-    <app-code-entry [backup]="backup()" [busy]="action.busy()" (confirmed)="verify($event)" />
+    <app-code-entry
+      [backup]="backup()"
+      [busy]="action.busy()"
+      (confirmed)="verify($event)"
+      [loading]="action.pending() === 'verify'"
+    />
 
     @if (pending()?.factor === 'email') {
       <app-resend-code />
@@ -24,7 +29,14 @@
     }
   } @else {
     @if (methods()?.passkeys?.length) {
-      <button appUI class="w-full" [disabled]="action.busy()" (click)="passkey()" i18n="@@authSignInPasskey">
+      <button
+        appUI
+        class="w-full"
+        [disabled]="action.busy()"
+        (click)="passkey()"
+        i18n="@@authSignInPasskey"
+        [attr.aria-busy]="action.pending() === 'passkey'"
+      >
         Sign in with a passkey
       </button>
     }
@@ -75,7 +87,14 @@
           </div>
         </app-field>
 
-        <button appUI type="submit" class="w-full" [disabled]="action.busy()" i18n="@@authUsePassword">
+        <button
+          appUI
+          type="submit"
+          class="w-full"
+          [disabled]="action.busy()"
+          i18n="@@authUsePassword"
+          [attr.aria-busy]="action.pending() === 'password'"
+        >
           Use a password
         </button>
       </form>

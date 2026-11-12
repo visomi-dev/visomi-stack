@@ -17,5 +17,7 @@
     />
   </app-field>
 
-  <button appUI class="w-full" type="submit" [disabled]="busy()">{{ label() }}</button>
+  <button appUI class="w-full" type="submit" [disabled]="busy()" [attr.aria-busy]="loading() ?? busy()">
+    {{ label() }}
+  </button>
 </form>

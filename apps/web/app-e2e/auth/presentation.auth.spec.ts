@@ -48,9 +48,7 @@ async function reviewSizes(page: Page, check: () => Promise<void>): Promise<void
 test('keeps access actions separated, password controls usable and language changes explicit', async ({ page }) => {
   await page.goto('/app/es/auth/sign-up/password');
 
-  await expect(
-    page.getByRole('navigation', { name: 'Idioma', exact: true }).locator('[aria-current="true"]'),
-  ).toHaveText('Español');
+  await expect(page.getByRole('navigation', { name: 'Idioma', exact: true }).getByRole('link')).toHaveText('English');
 
   await expect(page.getByRole('link', { name: 'Español', exact: true })).toHaveCount(0);
 

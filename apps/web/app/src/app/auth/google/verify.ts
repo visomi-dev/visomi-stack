@@ -32,12 +32,15 @@ export class GoogleVerify {
       return;
     }
 
-    void this.action.run(async () => {
-      await this.google.verify(pending.flowId, code);
+    void this.action.run(
+      async () => {
+        await this.google.verify(pending.flowId, code);
 
-      this.journey.clear();
+        this.journey.clear();
 
-      await this.navigation.complete();
-    });
+        await this.navigation.complete();
+      },
+      { name: 'verify' },
+    );
   }
 }

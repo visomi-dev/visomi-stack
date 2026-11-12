@@ -70,11 +70,14 @@ export class Reauthenticate {
   readonly passwordLabel = $localize`:@@authPassword:Password`;
 
   passkey(): void {
-    void this.action.run(async () => {
-      await this.passkeys.authenticate();
+    void this.action.run(
+      async () => {
+        await this.passkeys.authenticate();
 
-      await this.navigation.complete();
-    });
+        await this.navigation.complete();
+      },
+      { name: 'passkey' },
+    );
   }
 
   password(event: Event): void {
@@ -82,18 +85,21 @@ export class Reauthenticate {
     this.attempted.set(true);
     void submit(this.fields, {
       action: async () =>
-        this.action.run(async () => {
-          try {
-            const pending = await this.passwords.startReauth(this.model().password);
+        this.action.run(
+          async () => {
+            try {
+              const pending = await this.passwords.startReauth(this.model().password);
 
-            this.pending.set({ ...pending, method: 'password' });
-            this.backup.set(false);
-            this.journey.start('password', pending);
-          } finally {
-            this.fields().reset({ password: '' });
-            this.attempted.set(false);
-          }
-        }),
+              this.pending.set({ ...pending, method: 'password' });
+              this.backup.set(false);
+              this.journey.start('password', pending);
+            } finally {
+              this.fields().reset({ password: '' });
+              this.attempted.set(false);
+            }
+          },
+          { name: 'password' },
+        ),
       onInvalid: focusInvalid,
     });
   }
@@ -105,25 +111,28 @@ export class Reauthenticate {
       return;
     }
 
-    void this.action.run(async () => {
-      if (pending.method === 'google') {
-        await this.googleApi.verify(pending.flowId, code);
-      } else {
-        await this.passwords.completeReauth(pending.flowId, {
-          kind: pending.factor === 'totp' && this.backup() ? 'recovery_code' : pending.factor,
-          code,
-        });
-      }
+    void this.action.run(
+      async () => {
+        if (pending.method === 'google') {
+          await this.googleApi.verify(pending.flowId, code);
+        } else {
+          await this.passwords.completeReauth(pending.flowId, {
+            kind: pending.factor === 'totp' && this.backup() ? 'recovery_code' : pending.factor,
+            code,
+          });
+        }
 
-      this.journey.clear();
+        this.journey.clear();
 
-      await this.navigation.complete();
-    });
+        await this.navigation.complete();
+      },
+      { name: 'verify' },
+    );
   }
 
   google(result: SessionView | (Pending & { factor: 'email' })): void {
     if ('access' in result) {
-      void this.action.run(() => this.navigation.complete());
+      void this.action.run(() => this.navigation.complete(), { name: 'provider' });
     } else {
       this.pending.set({ ...result, method: 'google' });
       this.backup.set(false);

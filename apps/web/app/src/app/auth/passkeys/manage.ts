@@ -46,13 +46,16 @@ export class ManagePasskeys {
   }
 
   add(): void {
-    void this.action.run(async () => {
-      await this.api.register();
+    void this.action.run(
+      async () => {
+        await this.api.register();
 
-      await this.reload();
+        await this.reload();
 
-      this.action.setNotice($localize`:@@authPasskeyAdded:Your passkey has been added.`);
-    });
+        this.action.setNotice($localize`:@@authPasskeyAdded:Your passkey has been added.`);
+      },
+      { name: 'add' },
+    );
   }
 
   edit(key: Passkey): void {
@@ -67,31 +70,37 @@ export class ManagePasskeys {
     this.attempted.set(true);
     void submit(this.fields, {
       action: async () =>
-        this.action.run(async () => {
-          await this.api.rename(id, this.model().label);
+        this.action.run(
+          async () => {
+            await this.api.rename(id, this.model().label);
 
-          this.editing.set(null);
+            this.editing.set(null);
 
-          await this.reload();
-        }),
+            await this.reload();
+          },
+          { name: 'rename:' + id },
+        ),
       onInvalid: focusInvalid,
     });
   }
 
   remove(id: string): void {
-    void this.action.run(async () => {
-      await this.api.revoke(id);
+    void this.action.run(
+      async () => {
+        await this.api.revoke(id);
 
-      this.removing.set(null);
+        this.removing.set(null);
 
-      await this.session.load(true);
+        await this.session.load(true);
 
-      if (this.session.full()) {
-        await this.reload();
-      } else {
-        await this.navigation.complete();
-      }
-    });
+        if (this.session.full()) {
+          await this.reload();
+        } else {
+          await this.navigation.complete();
+        }
+      },
+      { name: 'remove:' + id },
+    );
   }
 
   private readonly initialize = afterNextRender(() => void this.action.run(() => this.reload()));

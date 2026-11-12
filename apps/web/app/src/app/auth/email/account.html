@@ -12,7 +12,7 @@
   @if (pending()) {
     <p appUI tone="muted" i18n="@@authNewEmailCode">Enter the code sent to your new email address.</p>
 
-    <app-code-entry [busy]="action.busy()" (confirmed)="verify($event)" />
+    <app-code-entry [busy]="action.busy()" (confirmed)="verify($event)" [loading]="action.pending() === 'verify'" />
 
     <button
       appUI
@@ -21,6 +21,7 @@
       (click)="resend()"
       i18n="@@authResend"
       class="w-full sm:w-fit"
+      [attr.aria-busy]="action.pending() === 'resend'"
     >
       Send a new code
     </button>
@@ -29,7 +30,12 @@
       Cancel
     </button>
   } @else {
-    <app-email-entry [label]="changeLabel" [busy]="action.busy()" (confirmed)="change($event)" />
+    <app-email-entry
+      [label]="changeLabel"
+      [busy]="action.busy()"
+      (confirmed)="change($event)"
+      [loading]="action.pending() === 'change'"
+    />
   }
 
   <app-auth-feedback [action]="action" />

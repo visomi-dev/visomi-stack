@@ -6,10 +6,14 @@ import { format, resolveConfig } from 'prettier';
 async function build() {
   const root = 'libs/backend/shared/src/lib/mail';
   const templates: Record<string, string> = {};
+  const layout = await readFile(`${root}/templates/layout.mjml`, 'utf8');
 
   for (const name of ['verification', 'security']) {
     const source = await readFile(`${root}/templates/${name}.mjml`, 'utf8');
-    const result = await mjml2html(source, { validationLevel: 'strict', fonts: {}, ignoreIncludes: true });
+    const document = layout
+      .replace('<!-- preview -->', name === 'verification' ? 'Your verification code' : 'Account security')
+      .replace('<!-- content -->', source);
+    const result = await mjml2html(document, { validationLevel: 'strict', fonts: {}, ignoreIncludes: true });
 
     templates[name] = result.html;
   }

@@ -97,7 +97,14 @@
         </app-field>
       }
 
-      <button appUI type="submit" class="w-full" [disabled]="action.busy()" i18n="@@authResetPassword">
+      <button
+        appUI
+        type="submit"
+        class="w-full"
+        [disabled]="action.busy()"
+        i18n="@@authResetPassword"
+        [attr.aria-busy]="action.pending() === 'save'"
+      >
         Reset password
       </button>
     </form>

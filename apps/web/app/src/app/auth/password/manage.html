@@ -50,6 +50,7 @@
       class="w-full sm:w-fit"
       [disabled]="action.busy() || !loaded()"
       i18n="@@authSavePassword"
+      [attr.aria-busy]="action.pending() === 'save'"
     >
       Save password
     </button>
@@ -77,7 +78,14 @@
         </p>
 
         <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <button appUI variant="danger" [disabled]="action.busy()" (click)="remove()" i18n="@@authConfirmRemove">
+          <button
+            appUI
+            variant="danger"
+            [disabled]="action.busy()"
+            (click)="remove()"
+            i18n="@@authConfirmRemove"
+            [attr.aria-busy]="action.pending() === 'remove'"
+          >
             Confirm removal
           </button>
 

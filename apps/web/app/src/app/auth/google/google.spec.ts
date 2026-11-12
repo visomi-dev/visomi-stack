@@ -23,10 +23,23 @@ const initialize = vi.fn((options: { callback: typeof callback }) => {
   callback = options.callback;
 });
 const renderButton = vi.fn();
+const disconnect = vi.fn();
 let cancellation: AbortController;
 
 beforeEach(() => {
   cancellation = new AbortController();
+  vi.spyOn(Element.prototype, 'clientWidth', 'get').mockReturnValue(320);
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      disconnect = disconnect;
+
+      observe(): void {
+        /* The browser suite exercises resize delivery. */
+      }
+    },
+  );
+
   vi.stubGlobal('google', { accounts: { id: { initialize, renderButton, cancel: vi.fn() } } });
   TestBed.configureTestingModule({
     providers: [
@@ -52,6 +65,7 @@ beforeEach(() => {
 afterEach(() => {
   TestBed.inject(HttpTestingController).verify();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
   vi.clearAllMocks();
 });
 
@@ -77,6 +91,8 @@ it('uses the server nonce and submits a Google credential only once', async () =
   });
 
   await ready;
+
+  TestBed.tick();
 
   expect(initialize).toHaveBeenCalledWith(
     expect.objectContaining({ nonce: 'synthetic-nonce', client_id: 'synthetic-client', auto_select: false }),
@@ -121,6 +137,8 @@ it('releases reauthentication and permits a new Google attempt after session inv
     });
 
     await ready;
+
+    TestBed.tick();
   };
 
   await render('first');
@@ -175,10 +193,13 @@ it('does not complete a Google callback after its owning view is destroyed', asy
 
   await ready;
 
+  TestBed.tick();
+
   const destroy = TestBed.inject(HttpClient);
 
   expect(destroy).toBeDefined();
   TestBed.resetTestingModule();
+  expect(disconnect).toHaveBeenCalledOnce();
   callback({ credential: 'synthetic-id-token' });
   expect(complete).not.toHaveBeenCalled();
   expect(failed).not.toHaveBeenCalled();
@@ -213,6 +234,8 @@ it('loads the provider script with the Angular CSP nonce', async () => {
     script.dispatchEvent(new Event('load'));
 
     await ready;
+
+    TestBed.tick();
 
     expect(renderButton).toHaveBeenCalledOnce();
   } finally {

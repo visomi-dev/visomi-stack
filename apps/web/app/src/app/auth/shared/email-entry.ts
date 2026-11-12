@@ -13,6 +13,7 @@ import { emailMessage, requiredMessage, focusInvalid } from './form-errors';
 })
 export class EmailEntry {
   readonly busy = input(false);
+  readonly loading = input<boolean>();
   readonly label = input($localize`:@@authContinue:Continue`);
   readonly confirmed = output<string>();
 
