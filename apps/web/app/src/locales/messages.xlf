@@ -1133,6 +1133,34 @@
           <context context-type="linenumber">50</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="authPasswordConfirmTitle" datatype="html">
+        <source>Confirm your password change</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
+          <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authPasswordConfirmDescription" datatype="html">
+        <source>Confirm your identity to save the password you just entered. It will be saved automatically after verification.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
+          <context context-type="linenumber">58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authConfirmPasskey" datatype="html">
+        <source> Confirm with a passkey </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="linenumber">37,41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authConfirmPassword" datatype="html">
+        <source> Confirm with your password </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="linenumber">95,97</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="authPasswordSaved" datatype="html">
         <source>Your password has been saved.</source>
         <context-group purpose="location">

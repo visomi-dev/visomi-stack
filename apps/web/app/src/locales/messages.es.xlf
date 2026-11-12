@@ -622,6 +622,22 @@
         <source>New password</source>
         <target>Nueva contraseña</target>
       </trans-unit>
+      <trans-unit id="authPasswordConfirmTitle" datatype="html">
+        <source>Confirm your password change</source>
+        <target>Confirma el cambio de contraseña</target>
+      </trans-unit>
+      <trans-unit id="authPasswordConfirmDescription" datatype="html">
+        <source>Confirm your identity to save the password you just entered. It will be saved automatically after verification.</source>
+        <target>Confirma tu identidad para guardar la contraseña que acabas de escribir. Se guardará automáticamente después de la verificación.</target>
+      </trans-unit>
+      <trans-unit id="authConfirmPasskey" datatype="html">
+        <source>Confirm with a passkey</source>
+        <target>Confirmar con una clave de acceso</target>
+      </trans-unit>
+      <trans-unit id="authConfirmPassword" datatype="html">
+        <source>Confirm with your password</source>
+        <target>Confirmar con tu contraseña</target>
+      </trans-unit>
       <trans-unit id="authPasswordSaved" datatype="html">
         <source>Your password has been saved.</source>
         <target>Tu contraseña se guardó.</target>
