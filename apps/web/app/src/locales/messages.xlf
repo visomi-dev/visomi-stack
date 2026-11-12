@@ -2197,6 +2197,62 @@
       <trans-unit id="shellCloseNavigation" datatype="html">
         <source>Close navigation</source>
       </trans-unit>
+      <trans-unit id="authPasskeyCreatedWith" datatype="html">
+        <source>Created with</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="linenumber">35,37</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authPasskeyType" datatype="html">
+        <source>Type</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="linenumber">40,42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authPasskeyCreated" datatype="html">
+        <source>Created</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="linenumber">44,46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authPasskeyLastUsed" datatype="html">
+        <source>Last used</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="linenumber">50,52</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authPasskeyNotUsed" datatype="html">
+        <source>Not used yet</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="linenumber">56,58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authPasskeySynced" datatype="html">
+        <source>Synced passkey</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.ts</context>
+          <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authPasskeySyncable" datatype="html">
+        <source>Syncable passkey</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.ts</context>
+          <context context-type="linenumber">43</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authPasskeyDeviceBound" datatype="html">
+        <source>Device-bound passkey</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.ts</context>
+          <context context-type="linenumber">44</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

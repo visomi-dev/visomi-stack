@@ -28,7 +28,39 @@
 
   @for (key of keys(); track key.id) {
     <section appUI="card">
-      <h2 class="font-semibold break-words">{{ key.label }}</h2>
+      <h2 class="font-semibold break-words">{{ displayName(key) }}</h2>
+
+      <dl class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-5 gap-y-2 text-sm">
+        @if (key.providerName) {
+          <dt i18n="@@authPasskeyCreatedWith">Created with</dt>
+
+          <dd class="min-w-0 break-words">{{ key.providerName }}</dd>
+        }
+
+        <dt i18n="@@authPasskeyType">Type</dt>
+
+        <dd class="min-w-0 break-words">{{ kind(key) }}</dd>
+
+        <dt i18n="@@authPasskeyCreated">Created</dt>
+
+        <dd class="min-w-0 break-words">
+          <time [attr.datetime]="key.createdAt">
+            {{ key.createdAt | date: 'mediumDate' }} {{ key.createdAt | date: 'shortTime' }}
+          </time>
+        </dd>
+
+        <dt i18n="@@authPasskeyLastUsed">Last used</dt>
+
+        <dd class="min-w-0 break-words">
+          @if (key.lastUsedAt) {
+            <time [attr.datetime]="key.lastUsedAt">
+              {{ key.lastUsedAt | date: 'mediumDate' }} {{ key.lastUsedAt | date: 'shortTime' }}
+            </time>
+          } @else {
+            <span i18n="@@authPasskeyNotUsed">Not used yet</span>
+          }
+        </dd>
+      </dl>
 
       @if (editing() === key.id) {
         <form
