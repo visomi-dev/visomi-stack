@@ -38,8 +38,8 @@ for (const locale of ['en', 'es']) {
     const sizes = await Promise.all(scripts);
 
     expect(sizes).toHaveLength(2);
-    // The fixed budget includes Vite's optional-module loader, but excludes the disabled performance SDK.
-    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(6144);
+    // Include theme-color coordination and Vite's loader, excluding the disabled performance SDK.
+    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(6656);
     expect(errors).toEqual([]);
   });
 }

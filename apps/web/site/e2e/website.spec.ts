@@ -68,9 +68,9 @@ for (const locale of ['en', 'es']) {
     const sizes = await Promise.all(scripts);
 
     expect(sizes).toHaveLength(3);
-    // Include fragment retention and Vite's loader, excluding the disabled performance SDK.
+    // Include theme-color coordination, fragment retention and Vite's loader, excluding the performance SDK.
     expect(Math.min(...sizes)).toBeLessThan(256);
-    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(6400);
+    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(6656);
     expect(errors).toEqual([]);
 
     await page.getByRole('checkbox').uncheck();

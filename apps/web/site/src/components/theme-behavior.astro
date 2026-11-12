@@ -6,6 +6,7 @@
   }
 
   const storageKey = 'visomi.theme';
+  const root = document.documentElement;
   const media = window.matchMedia('(prefers-color-scheme: dark)');
   let stored: unknown;
 
@@ -16,12 +17,26 @@
   }
 
   let preference: ThemePreference = isPreference(stored) ? stored : 'system';
+  let initialized = false;
+  let transitionTimer: ReturnType<typeof setTimeout> | undefined;
+  let transitionFrame = 0;
 
   function apply() {
     const dark = preference === 'system' ? media.matches : preference === 'dark';
     const pressed = String(dark);
 
-    document.documentElement.classList.toggle('dark', dark);
+    if (initialized && root.classList.contains('dark') !== dark) {
+      const duration = Number(getComputedStyle(root).getPropertyValue('--ui-theme-duration-ms'));
+
+      clearTimeout(transitionTimer);
+      cancelAnimationFrame(transitionFrame);
+      root.dataset.themeTransition = '';
+      transitionFrame = requestAnimationFrame(() => {
+        transitionTimer = setTimeout(() => delete root.dataset.themeTransition, duration);
+      });
+    }
+
+    root.classList.toggle('dark', dark);
     for (const control of document.querySelectorAll<HTMLSelectElement>('select[data-theme-select]')) {
       control.value = preference;
     }
@@ -33,6 +48,7 @@
       control.ariaPressed = pressed;
       control.disabled = false;
     }
+    initialized = true;
   }
 
   function select(value: ThemePreference) {
@@ -57,7 +73,7 @@
   });
   document.addEventListener('click', (event) => {
     if (event.target instanceof Element && event.target.closest('button[data-theme-switcher]')) {
-      select(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
+      select(root.classList.contains('dark') ? 'light' : 'dark');
     }
   });
 </script>

@@ -6,6 +6,7 @@ import { Theme } from './theme';
   selector: '[appUIThemeHost]',
   host: {
     '[class.dark]': 'theme.isDark()',
+    '[attr.data-theme-transition]': "theme.isTransitioning() ? '' : null",
   },
 })
 export class ThemeHost {
