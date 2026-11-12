@@ -1,6 +1,6 @@
 import { readMailCode } from '@visomi-stack/dev-testing';
 
-import { expect, test, address, password, logout } from './support/fixtures';
+import { expect, test, address, password, logout, expireAuthentication } from './support/fixtures';
 
 test('registers and authenticates a real virtual passkey through the browser', async ({ page }) => {
   const cdp = await page.context().newCDPSession(page);
@@ -24,7 +24,15 @@ test('registers and authenticates a real virtual passkey through the browser', a
 
   await page.getByLabel('Email address', { exact: true }).fill(email);
 
+  const registration = page.waitForResponse('**/api/auth/passkeys/registration/options');
+
   await page.getByRole('button', { name: 'Create account with a passkey', exact: true }).click();
+
+  const registrationResponse = await registration;
+  const options = await registrationResponse.json();
+
+  expect(options.options.user).toMatchObject({ name: email, displayName: email });
+  expect(Buffer.from(options.options.user.id, 'base64url').toString()).toMatch(/^[a-f0-9-]{36}$/);
 
   await expect(page.getByRole('heading', { name: 'Verify your email', exact: true })).toBeVisible();
 
@@ -70,11 +78,19 @@ test('registers and authenticates a real virtual passkey through the browser', a
 
   await expect(page.getByRole('alert')).toContainText('Keep at least one working sign-in method');
 
+  await expireAuthentication(email);
+
   await page.goto('/app/en/security/password');
 
   await page.getByLabel('New password', { exact: true }).fill(password);
 
   await page.getByRole('button', { name: 'Save password', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Confirm your password change', exact: true })).toBeFocused();
+
+  await expect(page.getByLabel('New password', { exact: true })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Confirm with a passkey', exact: true }).click();
 
   await expect(page.getByText('Your password has been saved.', { exact: true })).toBeVisible();
 

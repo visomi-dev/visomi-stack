@@ -1,7 +1,16 @@
 import { generate } from 'otplib';
 import { readMailCode } from '@visomi-stack/dev-testing';
 
-import { expect, test, address, signup, logout, passwordStart, password } from './support/fixtures';
+import {
+  expect,
+  test,
+  address,
+  signup,
+  logout,
+  passwordStart,
+  password,
+  expireAuthentication,
+} from './support/fixtures';
 
 test('cancels reauthentication back to the exact device review', async ({ page }) => {
   await signup(page);
@@ -80,20 +89,18 @@ test('sets up TOTP locally and signs in with a replacement backup code', async (
   await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
 });
 
-test('reauthenticates without replaying a sensitive change or retaining its password', async ({ page }) => {
+test('confirms a pending password change and saves it without another entry or submit', async ({ page }) => {
   const email = await signup(page);
+
+  await expireAuthentication(email);
 
   await page.goto('/app/en/security/password');
 
   let mutations = 0;
 
-  await page.route('**/api/auth/password/change', async (route) => {
-    mutations++;
-
-    if (mutations === 1) {
-      await route.fulfill({ status: 401, json: { error: 'reauthentication_required' } });
-    } else {
-      await route.continue();
+  page.on('request', (request) => {
+    if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/auth/password/change') {
+      mutations++;
     }
   });
 
@@ -101,11 +108,19 @@ test('reauthenticates without replaying a sensitive change or retaining its pass
 
   await page.getByRole('button', { name: 'Save password', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Confirm it is you', exact: true })).toBeVisible();
+  const heading = page.getByRole('heading', { name: 'Confirm your password change', exact: true });
+
+  await expect(heading).toBeVisible();
+
+  await expect(heading).toBeFocused();
+
+  await expect(page).toHaveURL('/app/en/security/password');
+
+  await expect(page.getByLabel('New password', { exact: true })).toHaveCount(0);
 
   await page.getByLabel('Password', { exact: true }).fill(password);
 
-  await page.getByRole('button', { name: 'Use a password', exact: true }).click();
+  await page.getByRole('button', { name: 'Confirm with your password', exact: true }).click();
 
   await expect(page.getByLabel('Verification code', { exact: true })).toBeVisible();
 
@@ -119,7 +134,9 @@ test('reauthenticates without replaying a sensitive change or retaining its pass
 
   await expect(page.getByLabel('New password', { exact: true })).toHaveValue('');
 
-  expect(mutations).toBe(1);
+  await expect(page.getByText('Your password has been saved.', { exact: true })).toBeVisible();
+
+  expect(mutations).toBe(2);
 });
 
 test('changes email and revokes another session from the security pages', async ({ page, browser }) => {

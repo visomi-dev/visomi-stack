@@ -17,11 +17,13 @@ import { Methods } from './methods';
 const pending = { flowId: 'synthetic-google-reauth', expiresAt: '2099-01-01T00:00:00Z', factor: 'email' as const };
 const verifyGoogle = vi.fn();
 const verifyPassword = vi.fn();
+const verifyPasskey = vi.fn();
 const complete = vi.fn();
 
 beforeEach(() => {
   verifyGoogle.mockReset().mockResolvedValue(undefined);
   verifyPassword.mockReset().mockResolvedValue(undefined);
+  verifyPasskey.mockReset().mockResolvedValue(undefined);
   complete.mockReset().mockResolvedValue(undefined);
   TestBed.configureTestingModule({
     providers: [
@@ -45,11 +47,55 @@ beforeEach(() => {
         Action,
         { provide: Google, useValue: { verify: verifyGoogle } },
         { provide: Passwords, useValue: { completeReauth: verifyPassword } },
-        { provide: Passkeys, useValue: {} },
+        { provide: Passkeys, useValue: { authenticate: verifyPasskey } },
         { provide: Methods, useValue: { list: async () => ({ google: [], passkeys: [], password: false }) } },
       ],
     },
   });
+});
+
+it('confirms in place only after a successful assertion, allowing a cancelled prompt to be retried', async () => {
+  const fixture = TestBed.createComponent(Reauthenticate);
+  const page = fixture.componentInstance;
+  const completed = vi.fn();
+
+  fixture.componentRef.setInput('embedded', true);
+  page.completed.subscribe(completed);
+
+  await fixture.whenStable();
+
+  verifyPasskey.mockRejectedValueOnce(Object.assign(new Error('Synthetic cancellation'), { name: 'NotAllowedError' }));
+  page.passkey();
+
+  await fixture.whenStable();
+
+  expect(completed).not.toHaveBeenCalled();
+  expect(complete).not.toHaveBeenCalled();
+  expect(page.action.error()).toContain('cancelled');
+  page.passkey();
+
+  await fixture.whenStable();
+
+  expect(completed).toHaveBeenCalledOnce();
+  expect(complete).not.toHaveBeenCalled();
+});
+
+it('cancels an in-place confirmation and discards its factor challenge', async () => {
+  const fixture = TestBed.createComponent(Reauthenticate);
+  const page = fixture.componentInstance;
+  const cancelled = vi.fn();
+  const journey = TestBed.inject(Journey);
+
+  fixture.componentRef.setInput('embedded', true);
+  page.cancelled.subscribe(cancelled);
+
+  await fixture.whenStable();
+
+  page.google(pending);
+  page.cancel();
+  expect(journey.challenge()).toBeNull();
+  expect(cancelled).toHaveBeenCalledOnce();
+  expect(complete).not.toHaveBeenCalled();
 });
 
 it('keeps a Google email challenge and verifies it before completing reauthentication', async () => {

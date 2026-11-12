@@ -51,7 +51,8 @@ export class Passkeys {
       rpName: 'Visomi Stack',
       rpID: this.config.rpId,
       userID: Buffer.from(subjectId),
-      userName: subjectId,
+      userName: user?.email ?? email ?? 'Visomi Stack account',
+      userDisplayName: user?.email ?? email ?? 'Visomi Stack account',
       attestationType: 'none',
       authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
       excludeCredentials: existing.map((item) => ({

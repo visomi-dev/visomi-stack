@@ -1,11 +1,8 @@
 <section class="flex min-w-0 flex-col gap-6">
   <header class="space-y-3">
-    <h1 appUI appNavigationHeading i18n="@@authReauthTitle">Confirm it is you</h1>
+    <h1 appUI appNavigationHeading [appHeadingFocus]="embedded()">{{ heading() }}</h1>
 
-    <p appUI tone="muted" i18n="@@authReauthDescription">
-      Use an existing sign-in method before changing your account's security. You will review the change again
-      afterwards.
-    </p>
+    <p appUI tone="muted">{{ description() }}</p>
   </header>
 
   @if (pending()) {
@@ -34,10 +31,10 @@
         class="w-full"
         [disabled]="action.busy()"
         (click)="passkey()"
-        i18n="@@authSignInPasskey"
+        i18n="@@authConfirmPasskey"
         [attr.aria-busy]="action.pending() === 'passkey'"
       >
-        Sign in with a passkey
+        Confirm with a passkey
       </button>
     }
 
@@ -92,10 +89,10 @@
           type="submit"
           class="w-full"
           [disabled]="action.busy()"
-          i18n="@@authUsePassword"
+          i18n="@@authConfirmPassword"
           [attr.aria-busy]="action.pending() === 'password'"
         >
-          Use a password
+          Confirm with your password
         </button>
       </form>
     }
@@ -103,7 +100,11 @@
 
   <app-auth-feedback [action]="action" />
 
-  <a appUI [routerLink]="navigation.returnLink()" i18n="@@authCancel" class="inline-flex min-h-11 items-center">
-    Cancel
-  </a>
+  @if (embedded()) {
+    <button appUI variant="secondary" [disabled]="action.busy()" (click)="cancel()" i18n="@@authCancel">Cancel</button>
+  } @else {
+    <a appUI [routerLink]="navigation.returnLink()" i18n="@@authCancel" class="inline-flex min-h-11 items-center">
+      Cancel
+    </a>
+  }
 </section>
