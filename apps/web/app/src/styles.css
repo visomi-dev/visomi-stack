@@ -9,6 +9,15 @@
     scrollbar-gutter: stable;
   }
 
+  /* The shell owns scrolling; a larger document viewport must not move its navigation. */
+  html:has(app-shell),
+  body:has(app-shell) {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    overscroll-behavior-y: none;
+  }
+
   body {
     background-color: var(--color-white);
     color: var(--color-zinc-950);

@@ -2,6 +2,44 @@ import type { Page, TestInfo } from '@playwright/test';
 
 import { expect, test, signup } from './support/fixtures';
 
+async function checkMobilePosition(page: Page, width: number): Promise<void> {
+  if (width >= 1024) {
+    return;
+  }
+
+  const bounds = await page.locator('nav[appUI="navbar"]').boundingBox();
+  const height = await page.evaluate(() => innerHeight);
+
+  expect(Math.round(bounds!.y + bounds!.height)).toBe(height);
+}
+
+async function checkMobileViewport(page: Page, width: number, route: string): Promise<void> {
+  if (width >= 1024 || route !== 'home') {
+    return;
+  }
+
+  const height = width === 844 ? 390 : 844;
+  const navbar = page.locator('nav[appUI="navbar"]');
+
+  for (const visibleHeight of [height, height - 120, height]) {
+    await page.setViewportSize({ width, height: visibleHeight });
+
+    await checkMobilePosition(page, width);
+
+    const bounds = await navbar.boundingBox();
+
+    await navbar.hover();
+
+    await page.mouse.wheel(0, 600);
+
+    await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollTop)).toBe(0);
+
+    const after = await navbar.boundingBox();
+
+    expect(after?.y).toBe(bounds?.y);
+  }
+}
+
 async function checkNavigation(page: Page, locale: string, width: number, info: TestInfo): Promise<void> {
   const navbar = page.locator('nav[appUI="navbar"]');
   const dialog = page.getByRole('dialog');
@@ -95,6 +133,8 @@ for (const locale of ['en', 'es']) {
 
         const initial = await header.boundingBox();
 
+        await checkMobileViewport(page, width, route);
+
         await main.evaluate((element) => {
           const fixture = document.createElement('div');
 
@@ -121,6 +161,8 @@ for (const locale of ['en', 'es']) {
         expect(after!.y).toBeGreaterThanOrEqual(0);
         expect(documentScroll).toEqual({ top: 0, fits: true, height: true });
 
+        await checkMobilePosition(page, width);
+
         await main.evaluate((element) => {
           element.scrollTop = element.scrollHeight;
         });
@@ -133,6 +175,16 @@ for (const locale of ['en', 'es']) {
       await checkNavigation(page, locale, width, info);
 
       await expect(page).toHaveURL(`/app/${locale}/auth/sign-in`);
+
+      await page.setViewportSize({ width, height: 390 });
+
+      await page.goto(`/app/${locale}/auth/sign-up/password`);
+
+      await page.mouse.move(width / 2, 200);
+
+      await page.mouse.wheel(0, 1200);
+
+      await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollTop)).toBeGreaterThan(0);
     });
   }
 }
