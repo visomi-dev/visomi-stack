@@ -70,7 +70,7 @@ afterAll(async () => {
   if (directory) {
     await rm(directory, { recursive: true, force: true });
   }
-});
+}, 120000);
 
 async function launch(databaseUrl?: string, trustProxy?: string) {
   const portProbe = createServer();
