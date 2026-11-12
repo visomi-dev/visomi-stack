@@ -44,7 +44,7 @@ export class PasskeysController {
       request.sessionID,
       input.body.challengeId,
       input.body.response,
-      input.body.label === undefined ? 'Passkey' : input.body.label,
+      input.body.label,
       request.user,
     );
 

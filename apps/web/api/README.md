@@ -106,6 +106,23 @@ accepted time steps cannot be replayed, including across concurrent requests.
 Ten high-entropy backup codes are displayed once; regeneration invalidates all
 previous codes. TOTP and backups are not standalone primary login methods.
 
+Passkey registration also retains the authenticator's AAGUID as nullable display
+metadata. Management responses resolve it through a local provider-name catalog
+and return only `providerName`, alongside the existing label, backup flags and
+creation/last-use dates. The catalog is a frozen 2026-11-12 snapshot of
+[community AAGUID names](https://github.com/passkeydeveloper/passkey-authenticator-aaguids),
+upstream blob `e97ba94ce7f73faa58314110ce3314438bc355c0`. That source is deprecated;
+unknown or zero AAGUIDs remain valid and use generic display labels. Updates are
+deliberate local data changes; authentication never fetches metadata remotely.
+Provider names are UX hints, not attestation or authorization evidence. They
+describe the provider at registration, which may differ from a credential's
+current location. See the [lookup guidance](https://github.com/passkeydeveloper/passkey-authenticator-aaguids/wiki/RP-Fallback).
+No user-agent inference is used. Existing credentials without an AAGUID retain
+their names and authentication behavior; the UI can still show their type and
+dates. Custom labels remain independent of provider metadata. New registrations
+and renames also record whether a label was explicitly chosen, including a custom
+label that happens to be exactly `Passkey`; legacy records have an unknown label source.
+
 Google tokens are verified by `google-auth-library`, including audience, issuer,
 expiry and a session-bound nonce. A linked `(issuer, subject)` always determines
 the identity, even when Google changes its email. Otherwise a proven matching

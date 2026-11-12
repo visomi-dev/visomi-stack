@@ -1,0 +1,63 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "e3b0bc42-c7f9-4414-9aa2-7060389c4f98",
+  "prevIds": ["e7252d61-c432-43c0-8092-aec23f85ae6a"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "auth_credentials", "aaguid"],
+      "writes": [
+        "s|col|public.auth_credentials.aaguid",
+        "n|col|public.auth_credentials.aaguid",
+        "e|col|public.auth_credentials.aaguid"
+      ],
+      "reads": ["n|tbl|public.auth_credentials", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "auth_credentials", "label_is_custom"],
+      "writes": [
+        "s|col|public.auth_credentials.label_is_custom",
+        "n|col|public.auth_credentials.label_is_custom",
+        "e|col|public.auth_credentials.label_is_custom"
+      ],
+      "reads": ["n|tbl|public.auth_credentials", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_credentials",
+        "name": "aaguid",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "auth_credentials",
+        "name": "label_is_custom",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

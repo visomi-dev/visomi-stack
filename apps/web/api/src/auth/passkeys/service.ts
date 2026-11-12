@@ -20,6 +20,8 @@ import { AUTH_CONFIG, type AuthConfig } from '../shared/config';
 import { lastMethod, lockIdentity, principal } from '../shared/identity';
 import { requireFresh } from '../shared/security';
 
+import { passkeyProviderName } from './provider-name';
+
 const { challenges, credentials, sessions, users } = authSchema;
 
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -68,7 +70,7 @@ export class Passkeys {
     sid: string,
     challengeId: string,
     response: RegistrationResponseJSON,
-    label: string,
+    label: string | undefined,
     user?: Express.User,
   ) {
     const pending = await this.consume(sid, challengeId, user ? 'enrollment' : 'signup');
@@ -123,10 +125,12 @@ export class Passkeys {
         publicKey: Buffer.from(info.credential.publicKey).toString('base64url'),
         counter: info.credential.counter,
         transports: info.credential.transports ?? [],
+        aaguid: info.aaguid,
         backupEligible: info.credentialDeviceType === 'multiDevice',
         backupState: info.credentialBackedUp,
         rpId: this.config.rpId,
-        label,
+        label: label ?? 'Passkey',
+        labelIsCustom: label !== undefined,
         pendingGrantId: user?.grantId,
       });
 
@@ -250,10 +254,12 @@ export class Passkeys {
   }
 
   async list(user: Express.User) {
-    return this.database
+    const result = await this.database
       .select({
         id: credentials.id,
         label: credentials.label,
+        labelIsCustom: credentials.labelIsCustom,
+        aaguid: credentials.aaguid,
         createdAt: credentials.createdAt,
         lastUsedAt: credentials.lastUsedAt,
         backupEligible: credentials.backupEligible,
@@ -261,6 +267,11 @@ export class Passkeys {
       })
       .from(credentials)
       .where(and(eq(credentials.userId, user.id), isNull(credentials.revokedAt), isNull(credentials.pendingGrantId)));
+
+    return result.map(({ aaguid, ...credential }) => ({
+      ...credential,
+      providerName: passkeyProviderName(aaguid),
+    }));
   }
 
   async rename(sid: string, user: Express.User, id: string, label: string) {
@@ -273,7 +284,7 @@ export class Passkeys {
 
       const updated = await tx
         .update(credentials)
-        .set({ label, updatedAt: new Date() })
+        .set({ label, labelIsCustom: true, updatedAt: new Date() })
         .where(and(eq(credentials.id, id), eq(credentials.userId, user.id), isNull(credentials.revokedAt)))
         .returning({ id: credentials.id });
 

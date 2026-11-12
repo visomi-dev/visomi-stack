@@ -16,6 +16,8 @@ import type { Pending, SessionView } from '../session/models';
 export type Passkey = {
   id: string;
   label: string;
+  labelIsCustom?: boolean | null;
+  providerName?: string | null;
   createdAt: string;
   lastUsedAt: string | null;
   backupEligible: boolean;

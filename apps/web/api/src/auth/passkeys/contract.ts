@@ -71,6 +71,8 @@ const registrationOptionsSchema = z.looseObject({
 const credentialSchema = z.object({
   id: identifierSchema,
   label: z.string(),
+  labelIsCustom: z.boolean().nullable(),
+  providerName: z.string().nullable(),
   createdAt: expirySchema,
   lastUsedAt: expirySchema.nullable(),
   backupEligible: z.boolean(),

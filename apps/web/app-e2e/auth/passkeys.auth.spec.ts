@@ -44,6 +44,10 @@ test('registers and authenticates a real virtual passkey through the browser', a
 
   await page.goto('/app/en/security/passkeys');
 
+  await expect(page.getByRole('heading', { name: 'Device-bound passkey', exact: true })).toBeVisible();
+
+  await expect(page.locator('app-manage-passkeys time')).toHaveCount(2);
+
   await page.getByRole('button', { name: 'Rename', exact: true }).click();
 
   await page.getByLabel('Passkey name', { exact: true }).fill('Primary synthetic key');
