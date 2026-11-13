@@ -48,53 +48,58 @@
     }
 
     @if (methods()?.password) {
-      <form novalidate [attr.data-submitted]="attempted() ? '' : null" class="space-y-4" (submit)="password($event)">
-        <app-field
-          #field="appField"
-          control-id="reauth-password"
-          [label]="passwordLabel"
-          [error]="fields.password().errors()[0]?.message ?? ''"
-        >
-          <div class="relative">
-            <input
-              appUI
-              class="pr-24"
-              id="reauth-password"
-              [type]="visible() ? 'text' : 'password'"
-              autocomplete="current-password"
-              [formField]="fields.password"
-              [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
-              [attr.aria-describedby]="field.describedBy()"
-            />
+      <details appUI [open]="!otherMethods()">
+        <summary i18n="@@authUseCurrentPassword">Use your current password</summary>
 
-            <button
-              appUI
-              variant="ghost"
-              size="sm"
-              type="button"
-              class="absolute inset-y-0 right-0 min-w-16"
-              [attr.aria-pressed]="visible()"
-              aria-controls="reauth-password"
-              aria-label="Show or hide password"
-              i18n-aria-label="@@authTogglePassword"
-              (click)="visible.set(!visible())"
-            >
-              {{ visible() ? hideLabel : showLabel }}
-            </button>
-          </div>
-        </app-field>
+        <form novalidate [attr.data-submitted]="attempted() ? '' : null" class="space-y-4" (submit)="password($event)">
+          <app-field
+            #field="appField"
+            control-id="reauth-password"
+            [label]="passwordLabel"
+            [error]="fields.password().errors()[0]?.message ?? ''"
+          >
+            <div class="relative">
+              <input
+                appUI
+                class="pr-24"
+                id="reauth-password"
+                [type]="visible() ? 'text' : 'password'"
+                autocomplete="current-password"
+                [formField]="fields.password"
+                [attr.aria-invalid]="fields.password().touched() && fields.password().invalid()"
+                [attr.aria-describedby]="field.describedBy()"
+              />
 
-        <button
-          appUI
-          type="submit"
-          class="w-full"
-          [disabled]="action.busy()"
-          i18n="@@authConfirmPassword"
-          [attr.aria-busy]="action.pending() === 'password'"
-        >
-          Confirm with your password
-        </button>
-      </form>
+              <button
+                appUI
+                variant="ghost"
+                size="sm"
+                type="button"
+                class="absolute inset-y-0 right-0 min-w-16"
+                [attr.aria-pressed]="visible()"
+                aria-controls="reauth-password"
+                aria-label="Show or hide password"
+                i18n-aria-label="@@authTogglePassword"
+                (click)="visible.set(!visible())"
+              >
+                {{ visible() ? hideLabel : showLabel }}
+              </button>
+            </div>
+          </app-field>
+
+          <button
+            appUI
+            type="submit"
+            [variant]="otherMethods() ? 'secondary' : 'primary'"
+            class="w-full"
+            [disabled]="action.busy()"
+            i18n="@@authConfirmPassword"
+            [attr.aria-busy]="action.pending() === 'password'"
+          >
+            Continue
+          </button>
+        </form>
+      </details>
     }
   }
 

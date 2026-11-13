@@ -1,11 +1,60 @@
-@if (verifying()) {
+@if (phase() === 'verify') {
   <app-reauthenticate
+    class="block max-w-lg"
     [embedded]="true"
     [heading]="confirmationTitle"
     [description]="confirmationDescription"
     (completed)="verified()"
     (cancelled)="cancelVerification()"
   />
+} @else if (phase() === 'saving') {
+  <section class="flex max-w-lg min-w-0 flex-col gap-6" aria-busy="true">
+    <h1 appUI appNavigationHeading i18n="@@authPasswordSaving">Saving your password</h1>
+
+    <button appUI type="button" class="w-full sm:w-fit" disabled aria-busy="true" i18n="@@authSavePassword">
+      Save password
+    </button>
+
+    <app-auth-feedback [action]="action" />
+  </section>
+} @else if (phase() === 'saved') {
+  <section class="flex max-w-lg min-w-0 flex-col gap-6">
+    <svg
+      class="size-12 rounded-full bg-green-50 p-3 text-green-700 dark:bg-green-950 dark:text-green-300"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      aria-hidden="true"
+    >
+      <path d="m5 12 4 4L19 6" />
+    </svg>
+
+    <header class="space-y-3">
+      <h1 appUI appNavigationHeading [appHeadingFocus]="true" i18n="@@authPasswordSaved">Password saved</h1>
+
+      <p appUI tone="muted" i18n="@@authPasswordSavedDescription">
+        Your new password is ready to use. Password sign-in still has a second verification step.
+      </p>
+    </header>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+      <a appUI="button" routerLink="/security" i18n="@@authBackSecurity">Back to security</a>
+
+      <button
+        appUI
+        type="button"
+        variant="ghost"
+        [disabled]="action.busy()"
+        (click)="editAgain()"
+        i18n="@@authPasswordChangeAgain"
+      >
+        Change password again
+      </button>
+    </div>
+
+    <app-auth-feedback [action]="action" />
+  </section>
 } @else {
   <section class="flex max-w-lg min-w-0 flex-col gap-6">
     <header class="space-y-3">

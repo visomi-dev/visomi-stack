@@ -1,9 +1,9 @@
-import { Component, afterNextRender, inject, input, output, signal } from '@angular/core';
+import { Component, afterNextRender, computed, inject, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, disabled, submit } from '@angular/forms/signals';
 
 import { NavigationHeading } from '../../shared/navigation-heading';
-import { Button, Heading, Text, Link, Field, Input } from '../../ui';
+import { Button, Heading, Text, Link, Field, Input, Disclosure } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
@@ -33,6 +33,7 @@ type Reauthentication = (FactorPending & { method: 'password' }) | (Pending & { 
     Link,
     Field,
     Input,
+    Disclosure,
     FormField,
     RouterLink,
     AuthFeedback,
@@ -73,9 +74,15 @@ export class Reauthenticate {
     disabled(path, { when: () => this.action.busy() });
   });
 
+  protected readonly otherMethods = computed(
+    () =>
+      !!this.methods()?.passkeys.length ||
+      (!!this.methods()?.google.length && !!this.session.providers()?.google?.enabled),
+  );
+
   readonly showLabel = $localize`:@@authShowPassword:Show`;
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
-  readonly passwordLabel = $localize`:@@authPassword:Password`;
+  readonly passwordLabel = $localize`:@@authCurrentPassword:Current password`;
 
   cancel(): void {
     this.journey.clear();
@@ -168,9 +175,9 @@ export class Reauthenticate {
       void this.action.run(async () => {
         const methods = await this.methodApi.list();
 
-        this.methods.set(methods);
-
         await this.session.loadProviders();
+
+        this.methods.set(methods);
       }),
   );
 }

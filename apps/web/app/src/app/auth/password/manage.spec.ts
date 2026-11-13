@@ -57,9 +57,11 @@ it('retains the submitted password in its owner and saves it once proof succeeds
   const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
   const { fixture, page } = await pending();
 
-  expect(page.verifying()).toBe(true);
+  expect(page.phase()).toBe('verify');
   expect(page.model().password).toBe(secret);
   expect(navigate).not.toHaveBeenCalled();
+  page.verified();
+  expect(page.phase()).toBe('saving');
   page.verified();
 
   await fixture.whenStable();
@@ -70,9 +72,9 @@ it('retains the submitted password in its owner and saves it once proof succeeds
   ]);
 
   expect(page.model().password).toBe('');
-  expect(page.verifying()).toBe(false);
+  expect(page.phase()).toBe('saved');
   expect(page.exists()).toBe(true);
-  expect(page.action.notice()).toBe('Your password has been saved.');
+  expect(page.action.notice()).toBe('');
   page.verified();
 
   await fixture.whenStable();
@@ -90,7 +92,7 @@ it('discards a cancelled password change and ignores late verification', async (
 
   expect(save).toHaveBeenCalledOnce();
   expect(page.model().password).toBe('');
-  expect(page.verifying()).toBe(false);
+  expect(page.phase()).toBe('edit');
 });
 
 it('discards a draft when the account changes and never submits it for the next account', async () => {
@@ -101,7 +103,7 @@ it('discards a draft when the account changes and never submits it for the next 
   await fixture.whenStable();
 
   expect(page.model().password).toBe('');
-  expect(page.verifying()).toBe(false);
+  expect(page.phase()).toBe('edit');
   page.model.set({ password: secret });
   page.save(new Event('submit'));
 
@@ -139,7 +141,72 @@ it('keeps the draft available after an ordinary save failure', async () => {
 
   await fixture.whenStable();
 
-  expect(page.verifying()).toBe(false);
+  expect(page.phase()).toBe('edit');
   expect(page.model().password).toBe(secret);
   expect(page.action.error()).not.toBe('');
+});
+
+it('returns to editing with the draft after the verified save fails', async () => {
+  const { fixture, page } = await pending();
+
+  save.mockRejectedValueOnce(new HttpErrorResponse({ status: 503 }));
+  page.verified();
+
+  await fixture.whenStable();
+
+  expect(page.phase()).toBe('edit');
+  expect(page.model().password).toBe(secret);
+
+  await vi.waitFor(() => expect(page.action.error()).toContain('temporarily unavailable'));
+});
+
+it('requires an explicit new edit after success and keeps notification failure separate from saving', async () => {
+  const { fixture, page } = await pending();
+
+  save.mockResolvedValueOnce({ notificationSent: false });
+  page.verified();
+
+  await fixture.whenStable();
+
+  expect(page.phase()).toBe('saved');
+  expect(page.model().password).toBe('');
+  expect(page.action.notice()).toContain('notification could not be sent');
+  page.save(new Event('submit'));
+
+  await fixture.whenStable();
+
+  expect(save).toHaveBeenCalledTimes(2);
+  page.editAgain();
+  expect(page.phase()).toBe('edit');
+  expect(page.model().password).toBe('');
+  expect(page.exists()).toBe(true);
+  expect(page.action.notice()).toBe('');
+});
+
+it('does not show a saved result for a different account after a late response', async () => {
+  const fixture = TestBed.createComponent(ManagePassword);
+  const page = fixture.componentInstance;
+  let finish!: (result: { notificationSent: boolean }) => void;
+
+  await fixture.whenStable();
+
+  save.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+
+  page.model.set({ password: secret });
+  page.save(new Event('submit'));
+
+  await vi.waitFor(() => expect(save).toHaveBeenCalledOnce());
+
+  user.set({ id: 'another-synthetic-owner' });
+  finish({ notificationSent: true });
+
+  await fixture.whenStable();
+
+  expect(page.phase()).toBe('edit');
+  expect(page.model().password).toBe('');
 });
