@@ -56,6 +56,8 @@ for (const locale of ['en', 'es']) {
           const toggle = document.querySelector('[data-theme-switcher]')!.getBoundingClientRect();
           const group = element.closest('nav')!.getBoundingClientRect();
           const style = getComputedStyle(element);
+          const current = element.closest('nav')!.querySelector('[aria-current="true"]')!;
+          const selected = current.getBoundingClientRect();
           const canvas = document.createElement('canvas').getContext('2d')!;
           const luminance = (color: string) => {
             canvas.clearRect(0, 0, 1, 1);
@@ -96,6 +98,9 @@ for (const locale of ['en', 'es']) {
             gap: toggle.left - group.right,
             fits: document.documentElement.scrollWidth <= innerWidth,
             contrast: (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05),
+            equalOptions: Math.abs(link.width - selected.width) < 1 && link.height === selected.height,
+            underline: style.textDecorationLine,
+            distinctSelection: style.backgroundColor !== getComputedStyle(current).backgroundColor,
           };
         });
 
@@ -104,6 +109,9 @@ for (const locale of ['en', 'es']) {
         expect(geometry.gap).toBeGreaterThanOrEqual(8);
         expect(geometry.fits).toBe(true);
         expect(geometry.contrast).toBeGreaterThanOrEqual(4.5);
+        expect(geometry.equalOptions).toBe(true);
+        expect(geometry.underline).toBe('none');
+        expect(geometry.distinctSelection).toBe(true);
 
         // 720 CSS px also covers the reflow width of a 1440px desktop at 200% zoom.
         await page.evaluate(() => document.fonts.ready);

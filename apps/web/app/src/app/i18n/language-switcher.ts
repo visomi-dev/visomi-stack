@@ -1,8 +1,9 @@
 import { Component, LOCALE_ID, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { Link } from '../ui';
 import { AuthNavigation } from '../auth/shared/navigation';
+
+import { languageSwitcher } from '@visomi-stack/web-frontend-ui';
 
 const authRestarts: Record<string, string> = Object.freeze({
   '/auth/sign-in/verify': '/auth/sign-in/password',
@@ -13,7 +14,6 @@ const authRestarts: Record<string, string> = Object.freeze({
 
 @Component({
   selector: 'app-language-switcher',
-  imports: [Link],
   templateUrl: './language-switcher.html',
   host: { class: 'inline-flex shrink-0' },
 })
@@ -36,6 +36,8 @@ export class LanguageSwitcher {
     { code: 'en', label: 'English' },
     { code: 'es', label: 'Español' },
   ] as const;
+
+  protected readonly styles = languageSwitcher;
 
   private stablePath(): string {
     const path = this.url().split(/[?#]/, 1)[0];

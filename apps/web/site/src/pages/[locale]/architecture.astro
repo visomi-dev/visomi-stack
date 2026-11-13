@@ -122,14 +122,18 @@ const copy = labels.architecture;
         {copy.nextBody}
       </Text>
 
-      <div class="mt-6 flex flex-wrap gap-3">
-        <LinkButton href={sitePath(locale, 'docs')}>
+      <div class="mt-6 grid gap-3 sm:flex sm:flex-wrap" data-cta-group>
+        <LinkButton href={sitePath(locale, 'docs')} class="w-full sm:w-auto">
           {labels.start}
 
           <Icon name="arrow-right" class="size-4" />
         </LinkButton>
 
-        <LinkButton href={`${repositoryUrl}/blob/main/docs/architecture.md`} variant="secondary">
+        <LinkButton
+          href={`${repositoryUrl}/blob/main/docs/architecture.md`}
+          variant="secondary"
+          class="w-full sm:w-auto"
+        >
           {labels.repoDocs}
         </LinkButton>
       </div>

@@ -68,14 +68,14 @@ const count = Object.values(componentGroups).flat().length;
           {copy.intro}
         </Text>
 
-        <div class="mt-9 flex flex-wrap gap-3">
-          <LinkButton href={sitePath(locale, 'docs')}>
+        <div class="mt-9 grid gap-3 sm:flex sm:flex-wrap" data-cta-group>
+          <LinkButton href={sitePath(locale, 'docs')} class="w-full sm:w-auto">
             {labels.start}
 
             <Icon name="arrow-right" class="size-4" />
           </LinkButton>
 
-          <LinkButton href={sitePath(locale, 'architecture')} variant="secondary">
+          <LinkButton href={sitePath(locale, 'architecture')} variant="secondary" class="w-full sm:w-auto">
             {copy.secondary}
           </LinkButton>
         </div>
@@ -240,12 +240,12 @@ const count = Object.values(componentGroups).flat().length;
             {copy.sampleCheckbox}
           </Label>
 
-          <div class="flex flex-wrap gap-3">
-            <LinkButton href={sitePath(locale, 'ui')} size="sm">
+          <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap" data-cta-group>
+            <LinkButton href={sitePath(locale, 'ui')} size="sm" class="w-full sm:w-auto">
               {copy.sampleSave}
             </LinkButton>
 
-            <LinkButton href={sitePath(locale, 'foundations')} size="sm" variant="secondary">
+            <LinkButton href={sitePath(locale, 'foundations')} size="sm" variant="secondary" class="w-full sm:w-auto">
               {copy.sampleCancel}
             </LinkButton>
           </div>
@@ -399,14 +399,14 @@ pnpm nx serve web-site`}
       {copy.finalBody}
     </Text>
 
-    <div class="mt-8 flex flex-wrap justify-center gap-3">
-      <LinkButton href={sitePath(locale, 'docs')}>
+    <div class="mt-8 grid gap-3 sm:flex sm:flex-wrap sm:justify-center" data-cta-group>
+      <LinkButton href={sitePath(locale, 'docs')} class="w-full sm:w-auto">
         {labels.start}
 
         <Icon name="arrow-right" class="size-4" />
       </LinkButton>
 
-      <LinkButton href={sitePath(locale, 'ui')} variant="secondary">
+      <LinkButton href={sitePath(locale, 'ui')} variant="secondary" class="w-full sm:w-auto">
         {labels.nav.ui}
       </LinkButton>
     </div>

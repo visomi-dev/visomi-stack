@@ -1,5 +1,5 @@
 ---
-import { card, linkButton } from '@visomi-stack/web-frontend-ui';
+import { card, languageSwitcher, linkButton } from '@visomi-stack/web-frontend-ui';
 import ThemeSwitcher from '../theme-switcher.astro';
 import Container from '../container.astro';
 import Text from '../text.astro';
@@ -51,12 +51,12 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
       <nav class="inline-flex items-center gap-1.5" aria-label={copy.language}>
         <Icon name="languages" class="hidden size-4 shrink-0 sm:block" />
 
-        <ul class="inline-flex items-center text-sm">
+        <ul class={languageSwitcher.classes()}>
           {languages.map(({ code, label }) => (
             <li>
               {code === locale ? (
                 <span
-                  class="inline-flex min-h-11 items-center rounded-md bg-zinc-100 px-1.5 font-semibold text-zinc-950 sm:px-2 dark:bg-zinc-900 dark:text-zinc-50"
+                  class={languageSwitcher.optionClasses(true)}
                   lang={code}
                   aria-current="true"
                   data-current-language
@@ -64,16 +64,16 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
                   {label}
                 </span>
               ) : (
-                <Link
+                <a
                   href={languagePath}
                   hreflang={code}
                   lang={code}
                   rel="alternate"
-                  class="inline-flex min-h-11 items-center rounded-md px-1.5 sm:px-2"
+                  class={languageSwitcher.optionClasses(false)}
                   data-language-switcher
                 >
                   {label}
-                </Link>
+                </a>
               )}
             </li>
           ))}

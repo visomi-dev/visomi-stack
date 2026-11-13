@@ -1,5 +1,6 @@
 export { button, linkButton } from './lib/button';
 export { themeSwitcher } from './lib/theme-switcher';
+export { languageSwitcher } from './lib/language-switcher';
 export type { ButtonOptions, ButtonSize, ButtonVariant } from './lib/button';
 export { heading, text, link, divider, code } from './lib/typography';
 export type {
