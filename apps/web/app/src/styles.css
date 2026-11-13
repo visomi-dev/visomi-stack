@@ -9,6 +9,11 @@
     scrollbar-gutter: stable;
   }
 
+  /* Full-screen navigation also covers the space reserved for document scrollbars. */
+  html:has(#mobile-navigation:modal) {
+    scrollbar-gutter: auto;
+  }
+
   /* The shell owns scrolling; a larger document viewport must not move its navigation. */
   html:has(app-shell),
   body:has(app-shell) {
