@@ -1,17 +1,41 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createInjector, MAIL_TRANSPORT } from '../../index';
+import { createInjector, MAIL_TRANSPORT, MAIL_ORIGIN } from '../../index';
 
 import { AuthMail, renderMessage, type CodePurpose, type SecurityNotice } from './messages';
 
 describe('shared authentication mail', () => {
+  it('does not send a broken branded message when its canonical origin is missing', async () => {
+    const send = vi.fn();
+    const mail = createInjector([
+      AuthMail,
+      { provide: MAIL_TRANSPORT, useValue: { send, close: vi.fn() } },
+    ]).get<AuthMail>(AuthMail);
+
+    await expect(mail.code('synthetic@example.test', 'recovery', '123456')).rejects.toThrow('mail_unavailable');
+
+    await expect(mail.notice('synthetic@example.test', 'password_changed')).rejects.toThrow('mail_unavailable');
+
+    expect(send).not.toHaveBeenCalled();
+  });
+
   it('escapes dynamic email values and sanitizes transport failures', async () => {
-    const message = renderMessage('verification', '<script>', '"quoted" & \'single\'', '123456');
+    const message = renderMessage(
+      'https://app.example.test',
+      'verification',
+      '<script>',
+      '"quoted" & \'single\'',
+      '123456',
+    );
 
     expect(message.html).not.toContain('<script>');
     expect(message.html).toContain('&lt;script&gt;');
     expect(message.text).toContain('123456');
-    const security = renderMessage('security', 'Security', 'A setting changed.');
+    expect(message.html).toContain('https://app.example.test/static/brand/email/v1/logotype-stack.png');
+    expect(message.html).toContain('alt="Visomi Stack"');
+    expect(message.html).not.toContain('{{');
+    expect(message.text).not.toContain('/static/');
+    const security = renderMessage('https://app.example.test', 'security', 'Security', 'A setting changed.');
 
     expect(security.text).toContain('recover your account');
 
@@ -25,6 +49,7 @@ describe('shared authentication mail', () => {
 
     const mail = createInjector([
       AuthMail,
+      { provide: MAIL_ORIGIN, useValue: 'https://app.example.test' },
       {
         provide: MAIL_TRANSPORT,
         useValue: {
@@ -46,6 +71,7 @@ describe('shared authentication mail', () => {
     const send = vi.fn().mockResolvedValue(undefined);
     const mail = createInjector([
       AuthMail,
+      { provide: MAIL_ORIGIN, useValue: 'https://app.example.test' },
       { provide: MAIL_TRANSPORT, useValue: { send, close: vi.fn() } },
     ]).get<AuthMail>(AuthMail);
     const purposes: CodePurpose[] = [

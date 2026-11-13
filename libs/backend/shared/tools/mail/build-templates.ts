@@ -6,7 +6,10 @@ import { format, resolveConfig } from 'prettier';
 async function build() {
   const root = 'libs/backend/shared/src/lib/mail';
   const templates: Record<string, string> = {};
-  const layout = await readFile(`${root}/templates/layout.mjml`, 'utf8');
+  const brandSource = await readFile('assets/brand/public.json', 'utf8');
+  const brand = JSON.parse(brandSource) as { emailLogo: string };
+  const layoutSource = await readFile(`${root}/templates/layout.mjml`, 'utf8');
+  const layout = layoutSource.replace('{{ logoUrl }}', `{{ origin }}/static/brand/${brand.emailLogo}`);
 
   for (const name of ['verification', 'security']) {
     const source = await readFile(`${root}/templates/${name}.mjml`, 'utf8');
