@@ -27,7 +27,7 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
   <Container as="div" width="xl" gutter="compact" class="flex min-h-20 items-center justify-between gap-2">
     <Brand locale={locale} compact />
 
-    <nav aria-label={copy.menu} class="hidden lg:flex lg:items-center lg:gap-1">
+    <nav aria-label={copy.menu} class="hidden xl:flex xl:items-center xl:gap-1">
       {pages.map((destination) => (
         <Link
           href={sitePath(locale, destination)}
@@ -42,7 +42,7 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
     </nav>
 
     <div class="flex items-center gap-2 sm:gap-3">
-      <div class="hidden lg:mr-3 lg:block">
+      <div class="hidden xl:mr-3 xl:block">
         <LinkButton href={applicationPath(locale)} size="sm">
           {copy.openApp}
         </LinkButton>
@@ -82,7 +82,7 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
 
       <ThemeSwitcher label={copy.themeToggle} />
 
-      <details class="group relative lg:hidden" data-site-menu>
+      <details class="group relative xl:hidden" data-site-menu>
         <summary
           class:list={[
             linkButton.classes({ variant: 'secondary', size: 'icon' }),

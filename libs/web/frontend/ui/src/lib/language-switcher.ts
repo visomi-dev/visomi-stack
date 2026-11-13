@@ -1,6 +1,6 @@
 export const languageSwitcher = {
   classes(): string {
-    return 'grid grid-cols-2 gap-0.5 rounded-lg border border-zinc-300 bg-zinc-100 p-0.5 text-sm dark:border-zinc-700 dark:bg-zinc-900';
+    return 'grid shrink-0 grid-cols-2 gap-0.5 rounded-lg border border-zinc-300 bg-zinc-100 p-0.5 text-sm dark:border-zinc-700 dark:bg-zinc-900';
   },
   optionClasses(current: boolean): string {
     return [
