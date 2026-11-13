@@ -43,7 +43,8 @@
         {
           "externalDependencies": ["mjml", "prettier"]
         },
-        "{workspaceRoot}/.prettierrc.json"
+        "{workspaceRoot}/.prettierrc.json",
+        "{workspaceRoot}/assets/brand/public.json"
       ],
       "outputs": ["{projectRoot}/src/lib/mail/templates.generated.ts"]
     },
@@ -63,5 +64,8 @@
     "test": {
       "dependsOn": ["emails-build"]
     }
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals", "{workspaceRoot}/assets/brand/public.json"]
   }
 }

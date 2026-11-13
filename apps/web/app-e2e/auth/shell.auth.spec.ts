@@ -80,6 +80,35 @@ async function checkMobilePosition(page: Page, width: number): Promise<void> {
   expect(Math.round(bounds!.y + bounds!.height)).toBe(height);
 }
 
+async function checkHeaderLanguage(page: Page): Promise<void> {
+  await page.evaluate(() => document.fonts.ready);
+
+  const language = page.locator('[data-language-switcher]');
+  const geometry = await language.evaluate((element) => {
+    const link = element.getBoundingClientRect();
+    const current = element.closest('nav')!.querySelector('[aria-current="true"]')!;
+    const selected = current.getBoundingClientRect();
+    const style = getComputedStyle(element);
+
+    return {
+      usable: link.width >= 44 && link.height >= 44,
+      equalOptions: Math.abs(link.width - selected.width) < 1 && link.height === selected.height,
+      underline: style.textDecorationLine,
+      distinctSelection: style.backgroundColor !== getComputedStyle(current).backgroundColor,
+    };
+  });
+
+  expect(geometry).toEqual({ usable: true, equalOptions: true, underline: 'none', distinctSelection: true });
+
+  await language.focus();
+
+  await expect(language).toBeFocused();
+
+  const focus = await language.evaluate((element) => getComputedStyle(element).outlineWidth);
+
+  expect(focus).not.toBe('0px');
+}
+
 async function checkMobileViewport(page: Page, width: number, route: string): Promise<void> {
   if (width >= 1024 || route !== 'home') {
     return;
@@ -201,6 +230,8 @@ for (const locale of ['en', 'es']) {
         await expect(page.locator('app-language-switcher [aria-current="true"]')).toHaveText(
           locale === 'en' ? 'English' : 'Español',
         );
+
+        await checkHeaderLanguage(page);
 
         const initial = await header.boundingBox();
 

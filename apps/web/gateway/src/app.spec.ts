@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
 import { once } from 'node:events';
 import { Socket, type AddressInfo } from 'node:net';
+import { fileURLToPath } from 'node:url';
 
 import { AuthHttpError, HttpError, httpErrorHandler, initializeObservability } from '@visomi-stack/web-backend-shared';
 import type { Request, RequestHandler, Response } from 'express';
@@ -41,6 +42,75 @@ function apiFixture(handler: RequestHandler = (request, response) => response.js
 }
 
 describe('gateway composition', () => {
+  it('serves packaged public branding without authentication, cookies or website fallbacks', async () => {
+    const authenticate = vi.fn<RequestHandler>((_request, _response, next) =>
+      next(new Error('synthetic_auth_unavailable')),
+    );
+    const renderSite = vi.fn<RequestHandler>((_request, response) => {
+      response.send('synthetic_site');
+    });
+    const server = createGatewayApp({
+      api: apiFixture(),
+      auth: { middleware: [authenticate] },
+      site: { clientDirectory: '/synthetic/unused', handler: renderSite },
+      staticDirectory: fileURLToPath(new URL('../../../../dist/apps/web/gateway/static/', import.meta.url)),
+    }).listen(0, '127.0.0.1');
+
+    await once(server, 'listening');
+
+    const origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    const logo = `${origin}/static/brand/email/v1/logotype-stack.png`;
+
+    try {
+      const response = await fetch(logo);
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get('content-type')).toContain('image/png');
+      expect(response.headers.get('cache-control')).toContain('immutable');
+      expect(response.headers.get('cross-origin-resource-policy')).toBe('cross-origin');
+      expect(response.headers.get('set-cookie')).toBeNull();
+      const image = await response.arrayBuffer();
+
+      expect(image.byteLength).toBeGreaterThan(0);
+      const unchanged = await fetch(logo, {
+        headers: { 'if-none-match': response.headers.get('etag')!, 'cache-control': 'max-age=0' },
+      });
+
+      expect(unchanged.status).toBe(304);
+      for (const path of [
+        '/static',
+        '/static/brand/',
+        '/static/missing.png',
+        '/static/.env',
+        '/static/%2e%2e%2fpackage.json',
+        '/static/source.map',
+      ]) {
+        const missing = await fetch(origin + path);
+
+        expect(missing.status).toBe(404);
+        expect(missing.headers.get('cache-control')).toBe('no-store');
+        expect(missing.headers.get('set-cookie')).toBeNull();
+
+        await expect(missing.json()).resolves.toEqual({ error: 'not_found' });
+      }
+      const unsupported = await fetch(logo, { method: 'POST' });
+
+      expect(unsupported.status).toBe(404);
+      const malformed = await fetch(`${origin}/static/%zz`);
+
+      expect(malformed.status).toBe(400);
+
+      await expect(malformed.json()).resolves.toEqual({ error: 'request_invalid' });
+
+      expect(authenticate).not.toHaveBeenCalled();
+      expect(renderSite).not.toHaveBeenCalled();
+    } finally {
+      server.closeAllConnections();
+
+      await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+    }
+  });
+
   it.each([undefined, { middleware: [(_request: Request, _response: Response, next: () => void) => next()] }])(
     'renders an unavailable context when the host has no snapshot integration',
     async (auth) => {

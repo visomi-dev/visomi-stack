@@ -469,6 +469,9 @@ describe('compiled ESM gateway and embedded API', () => {
       expect(cookie).not.toBe(originalCookie);
       token = registered.body.csrfToken;
       const code = messages[messages.length - 1].match(/\b\d{6}\b/)![0];
+      const mail = messages[messages.length - 1].replace(/=\r?\n/g, '').replace(/=3D/g, '=');
+
+      expect(mail).toContain(`${gateway.url}/static/brand/email/v1/logotype-stack.png`);
       const verified = await request('POST', '/email/verify', { flowId: registered.body.flowId, code });
 
       expect(verified.status).toBe(200);

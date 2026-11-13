@@ -1,6 +1,6 @@
 <div class="flex w-full min-w-0 flex-col gap-3" [attr.inert]="disabled() ? '' : null">
   <!-- GIS owns its colors; matching its light color scheme keeps the iframe canvas transparent in dark mode. -->
-  <div #button class="grid min-h-11 w-full min-w-0 place-items-center scheme-light" [attr.aria-busy]="pending()"></div>
+  <div #button class="grid min-h-11 w-full min-w-0 items-center scheme-light" [attr.aria-busy]="pending()"></div>
 
   <app-auth-feedback [action]="action" [indicator]="false" />
 

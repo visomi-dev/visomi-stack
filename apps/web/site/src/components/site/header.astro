@@ -1,5 +1,5 @@
 ---
-import { card, linkButton } from '@visomi-stack/web-frontend-ui';
+import { languageSwitcher, linkButton } from '@visomi-stack/web-frontend-ui';
 import ThemeSwitcher from '../theme-switcher.astro';
 import Container from '../container.astro';
 import Text from '../text.astro';
@@ -27,7 +27,7 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
   <Container as="div" width="xl" gutter="compact" class="flex min-h-20 items-center justify-between gap-2">
     <Brand locale={locale} compact />
 
-    <nav aria-label={copy.menu} class="hidden lg:flex lg:items-center lg:gap-1">
+    <nav aria-label={copy.menu} class="hidden xl:flex xl:items-center xl:gap-1">
       {pages.map((destination) => (
         <Link
           href={sitePath(locale, destination)}
@@ -42,7 +42,7 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
     </nav>
 
     <div class="flex items-center gap-2 sm:gap-3">
-      <div class="hidden lg:mr-3 lg:block">
+      <div class="hidden xl:mr-3 xl:block">
         <LinkButton href={applicationPath(locale)} size="sm">
           {copy.openApp}
         </LinkButton>
@@ -51,12 +51,12 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
       <nav class="inline-flex items-center gap-1.5" aria-label={copy.language}>
         <Icon name="languages" class="hidden size-4 shrink-0 sm:block" />
 
-        <ul class="inline-flex items-center text-sm">
+        <ul class={languageSwitcher.classes()}>
           {languages.map(({ code, label }) => (
             <li>
               {code === locale ? (
                 <span
-                  class="inline-flex min-h-11 items-center rounded-md bg-zinc-100 px-1.5 font-semibold text-zinc-950 sm:px-2 dark:bg-zinc-900 dark:text-zinc-50"
+                  class={languageSwitcher.optionClasses(true)}
                   lang={code}
                   aria-current="true"
                   data-current-language
@@ -64,16 +64,16 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
                   {label}
                 </span>
               ) : (
-                <Link
+                <a
                   href={languagePath}
                   hreflang={code}
                   lang={code}
                   rel="alternate"
-                  class="inline-flex min-h-11 items-center rounded-md px-1.5 sm:px-2"
+                  class={languageSwitcher.optionClasses(false)}
                   data-language-switcher
                 >
                   {label}
-                </Link>
+                </a>
               )}
             </li>
           ))}
@@ -82,7 +82,7 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
 
       <ThemeSwitcher label={copy.themeToggle} />
 
-      <details class="group relative lg:hidden" data-site-menu>
+      <details class="group xl:hidden" data-site-menu>
         <summary
           class:list={[
             linkButton.classes({ variant: 'secondary', size: 'icon' }),
@@ -98,10 +98,7 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
 
         <nav
           aria-label={copy.menu}
-          class:list={[
-            card.classes({ padding: 'sm', layout: 'plain' }),
-            'absolute top-14 right-0 grid w-64 max-w-[calc(100vw-2.5rem)] gap-1 shadow-xl shadow-zinc-950/10',
-          ]}
+          class="absolute inset-x-0 top-full grid w-full gap-1 border-b border-zinc-200 bg-white p-5 shadow-xl shadow-zinc-950/10 sm:px-8 dark:border-zinc-800 dark:bg-zinc-950"
         >
           {pages.map((destination) => (
             <Link

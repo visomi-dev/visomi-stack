@@ -4,6 +4,12 @@ The original SVGs in this directory were supplied and approved by the owner
 for VIS-15. They are the shared source of truth; keep their paths, proportions and
 outlined lettering intact. No font download is required to render the wordmark.
 
+`public.json` allowlists versioned email PNG and BIMI derivatives for the gateway's
+`/static/brand/` namespace. Keep published files and bytes when adding new versions.
+See [email branding and BIMI](../../docs/email-branding.md) for export, pipeline,
+rollback and certificate activation requirements. The BIMI SVG is prepared for
+issuer review; publishing it does not activate sender verification.
+
 | Asset                | Use                                                                |
 | -------------------- | ------------------------------------------------------------------ |
 | `isotype.svg`        | Compact headers, previews and workspace avatars                    |

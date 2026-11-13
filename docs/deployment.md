@@ -28,6 +28,13 @@ or tracing. Its deployment, request-quota behavior and rollback are documented
 in [the edge project](../apps/web/edge/README.md). Application releases do not
 deploy this Worker.
 
+The gateway also packages an explicit allowlist of versioned brand assets under
+`/static/brand/`, independently of localized frontend builds. Its build prerequisite
+checks the assets and their retention; the production smoke check verifies their
+bytes and HTTP behavior. See [email branding and BIMI](email-branding.md) for the
+mail-origin configuration, immutable URLs, rollback constraints and separate BIMI
+activation requirements.
+
 ## CI and automatic deployments
 
 `.github/workflows/ci.yml` runs on every PR and push to `main`:

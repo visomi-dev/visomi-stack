@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+import brand from '../../assets/brand/public.json' with { type: 'json' };
 
 const origin = new URL(process.argv[2]);
 const request = (path) => fetch(new URL(path, origin), { redirect: 'manual', signal: AbortSignal.timeout(10000) });
@@ -81,5 +84,59 @@ assert.equal(missingApplication.status, 404);
 assert.match(missingApplication.headers.get('content-type'), /text\/html/);
 assert.ok(missingApplicationHtml.includes('<app-root'));
 assert.ok(missingApplicationHtml.includes('Page not found'));
+
+for (const file of brand.files) {
+  const path = `/static/brand/${file}`;
+  const response = await request(path);
+  const body = await response.arrayBuffer();
+  const bytes = Buffer.from(body);
+  const expected = await readFile(new URL(`../../assets/brand/${file}`, import.meta.url));
+
+  assert.equal(response.status, 200);
+  assert.match(
+    response.headers.get('content-type'),
+    file.endsWith('.png')
+      ? /image\/png/
+      : file.endsWith('.svg')
+        ? /image\/svg\+xml/
+        : /application\/(?:x-pem-file|x-x509-ca-cert|octet-stream)/,
+  );
+  assert.match(response.headers.get('cache-control'), /max-age=31536000/);
+  assert.match(response.headers.get('cache-control'), /immutable/);
+  assert.equal(response.headers.get('cross-origin-resource-policy'), 'cross-origin');
+  assert.equal(response.headers.get('set-cookie'), null);
+  assert.ok(bytes.equals(expected), 'The published asset must match the versioned source');
+  const head = await fetch(new URL(path, origin), { method: 'HEAD', redirect: 'manual' });
+
+  assert.equal(head.status, 200);
+  const headBody = await head.arrayBuffer();
+
+  assert.equal(headBody.byteLength, 0);
+}
+
+for (const path of [
+  '/static',
+  '/static/brand/',
+  '/static/missing.png',
+  '/static/.env',
+  '/static/%2e%2e%2fpackage.json',
+  '/STATIC/missing.png',
+]) {
+  const response = await request(path);
+
+  assert.equal(response.status, 404);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.equal(response.headers.get('set-cookie'), null);
+  const body = await response.json();
+
+  assert.deepEqual(body, { error: 'not_found' });
+}
+
+const malformedStatic = await request('/static/%zz');
+const malformedBody = await malformedStatic.json();
+
+assert.equal(malformedStatic.status, 400);
+assert.equal(malformedStatic.headers.get('cache-control'), 'no-store');
+assert.deepEqual(malformedBody, { error: 'request_invalid' });
 
 console.log('Gateway, localized Angular and Astro SSR, static assets, and route boundaries verified.');

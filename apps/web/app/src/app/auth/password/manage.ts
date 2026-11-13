@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { form, FormField, required, disabled, submit } from '@angular/forms/signals';
 
 import { NavigationHeading } from '../../shared/navigation-heading';
-import { Button, Heading, Text, Link, Field, Input, Card } from '../../ui';
+import { Button, LinkButton, Heading, Text, Link, Field, Input, Card } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
@@ -23,6 +23,7 @@ import { Passwords } from './passwords';
   imports: [
     NavigationHeading,
     Button,
+    LinkButton,
     Heading,
     Text,
     Link,
@@ -51,7 +52,7 @@ export class ManagePassword {
   readonly visible = signal(false);
   readonly model = signal({ password: '' });
   readonly attempted = signal(false);
-  readonly verifying = signal(false);
+  readonly phase = signal<'edit' | 'verify' | 'saving' | 'saved'>('edit');
   readonly restoreFocus = signal(false);
 
   readonly fields = form(this.model, (path) => {
@@ -64,14 +65,19 @@ export class ManagePassword {
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authNewPassword:New password`;
   readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
-  readonly confirmationTitle = $localize`:@@authPasswordConfirmTitle:Confirm your password change`;
-  readonly confirmationDescription = $localize`:@@authPasswordConfirmDescription:Confirm your identity to save the password you just entered. It will be saved automatically after verification.`;
+  readonly confirmationTitle = $localize`:@@authPasswordConfirmTitle:Confirm your identity`;
+  readonly confirmationDescription = $localize`:@@authPasswordConfirmDescription:Confirm it's you to save your new password automatically.`;
 
   private readonly owner = this.session.user()?.id;
   private readonly cleanup = this.destroyRef.onDestroy(() => this.model.set({ password: '' }));
 
   save(event: Event): void {
     event.preventDefault();
+
+    if (this.phase() !== 'edit') {
+      return;
+    }
+
     this.attempted.set(true);
     void submit(this.fields, {
       action: async () => this.action.run(() => this.persist(), { name: 'save' }),
@@ -80,12 +86,11 @@ export class ManagePassword {
   }
 
   verified(): void {
-    if (!this.verifying()) {
+    if (this.phase() !== 'verify' || this.action.busy()) {
       return;
     }
 
-    this.verifying.set(false);
-    this.restoreFocus.set(true);
+    this.phase.set('saving');
     void this.action.run(() => this.persist(), { name: 'save' });
   }
 
@@ -93,8 +98,19 @@ export class ManagePassword {
     this.fields().reset({ password: '' });
     this.attempted.set(false);
     this.visible.set(false);
-    this.verifying.set(false);
+    this.phase.set('edit');
     this.restoreFocus.set(true);
+  }
+
+  editAgain(): void {
+    if (this.phase() !== 'saved' || this.action.busy()) {
+      return;
+    }
+
+    this.action.reset();
+    this.confirm.set(false);
+    this.restoreFocus.set(true);
+    this.phase.set('edit');
   }
 
   remove(): void {
@@ -131,16 +147,24 @@ export class ManagePassword {
     }
 
     try {
+      const cancellation = this.session.cancellation();
       const result = await this.api.save(this.model().password, this.exists());
+
+      if (cancellation.aborted || !this.session.full() || this.session.user()?.id !== this.owner) {
+        this.cancelVerification();
+
+        throw new DOMException('Cancelled', 'AbortError');
+      }
 
       this.exists.set(true);
       this.fields().reset({ password: '' });
       this.attempted.set(false);
       this.visible.set(false);
+      this.phase.set('saved');
       this.action.setNotice(
         result.notificationSent === false
           ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
-          : $localize`:@@authPasswordSaved:Your password has been saved.`,
+          : '',
       );
     } catch (error) {
       if (
@@ -149,8 +173,11 @@ export class ManagePassword {
         this.session.full()
       ) {
         this.visible.set(false);
-        this.verifying.set(true);
+        this.phase.set('verify');
       } else {
+        this.phase.set('edit');
+        this.restoreFocus.set(false);
+
         throw error;
       }
     }

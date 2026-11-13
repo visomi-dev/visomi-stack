@@ -4,7 +4,7 @@ import { disablePerformanceCapture } from './support/performance';
 import { selectTheme } from './support/theme';
 
 for (const locale of ['en', 'es']) {
-  for (const width of [360, 1440]) {
+  for (const width of [360, 1024, 1440]) {
     test(`the ${locale} website opens the mounted app at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
 
@@ -13,7 +13,7 @@ for (const locale of ['en', 'es']) {
       const header = page.locator('[data-site-header]');
       const label = locale === 'en' ? 'Open app' : 'Abrir app';
 
-      if (width < 1024) {
+      if (width < 1280) {
         await header.locator('[data-site-menu] summary').click();
       }
 

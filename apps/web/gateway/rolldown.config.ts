@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig } from 'rolldown';
 
 import packageJson from './package.json' with { type: 'json' };
@@ -15,8 +18,24 @@ export default defineConfig([
       id === '@nx/js/ready-signal' || dependencies.some((dep) => id === dep || id.startsWith(`${dep}/`)),
     plugins: [
       {
-        name: 'gateway-package-metadata',
+        name: 'gateway-runtime-assets',
         generateBundle() {
+          const manifest = new URL('../../../assets/brand/public.json', import.meta.url);
+
+          this.addWatchFile(fileURLToPath(manifest));
+          const publicBrand = JSON.parse(readFileSync(manifest, 'utf8')) as { files: string[] };
+
+          for (const file of publicBrand.files) {
+            const source = new URL(`../../../assets/brand/${file}`, import.meta.url);
+
+            this.addWatchFile(fileURLToPath(source));
+            this.emitFile({
+              type: 'asset',
+              fileName: `static/brand/${file}`,
+              source: readFileSync(source),
+            });
+          }
+
           this.emitFile({
             type: 'asset',
             fileName: 'package.json',

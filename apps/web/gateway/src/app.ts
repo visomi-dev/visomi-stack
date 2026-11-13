@@ -22,6 +22,7 @@ export function createGatewayApp(options: {
   trustProxy?: string[];
   helmetMode?: 'managed' | 'inherited';
   errorMode?: 'managed' | 'inherited';
+  staticDirectory?: string;
 }) {
   const app = express();
   const errors = pageErrors(options.site?.clientDirectory);
@@ -48,6 +49,39 @@ export function createGatewayApp(options: {
       ),
     );
   }
+
+  // This namespace never falls through to authentication or website rendering.
+  const publicFiles = Router();
+
+  publicFiles.use((request, response, next) => {
+    try {
+      decodeURIComponent(request.path);
+    } catch {
+      response.status(400).set('cache-control', 'no-store').json({ error: 'request_invalid' });
+
+      return;
+    }
+
+    next();
+  });
+
+  if (options.staticDirectory) {
+    publicFiles.use(
+      serveStatic(options.staticDirectory, {
+        index: false,
+        redirect: false,
+        dotfiles: 'ignore',
+        maxAge: '1y',
+        immutable: true,
+        setHeaders: (response) => response.setHeader('cross-origin-resource-policy', 'cross-origin'),
+      }),
+    );
+  }
+
+  publicFiles.use((_request, response) =>
+    response.status(404).set('cache-control', 'no-store').json({ error: 'not_found' }),
+  );
+  app.use('/static', publicFiles);
 
   app.use((request, response, next) => {
     let path: string;
