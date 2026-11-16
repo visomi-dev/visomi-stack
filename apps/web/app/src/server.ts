@@ -7,6 +7,8 @@ import type { Request } from 'express';
 import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 
 import type { AuthRenderContext } from './app/auth/session/models';
+import { createSsrProxyPolicy } from './ssr-proxy-policy';
+import { createSsrRequest } from './ssr-request';
 
 import {
   type Observability,
@@ -18,7 +20,6 @@ import {
 } from '@visomi-stack/web-backend-shared';
 
 export const clientDirectory = resolve(import.meta.dirname, '../browser');
-let engine: AngularNodeAppEngine | undefined;
 
 export function createApp(
   options: {
@@ -26,11 +27,13 @@ export function createApp(
     browserTelemetry?: Pick<ReturnType<typeof createBrowserTelemetry>, 'context' | 'router'>;
     errorMode?: 'managed' | 'inherited';
     helmetMode?: 'managed' | 'inherited';
-    trustProxy?: string[];
+    trustProxy?: string[] | 1;
     authContext?: (request: Request) => AuthRenderContext;
   } = {},
 ) {
   const app = express();
+  const proxyPolicy = createSsrProxyPolicy(process.env);
+  let engine: AngularNodeAppEngine | undefined;
 
   app.disable('x-powered-by');
 
@@ -138,10 +141,18 @@ export function createApp(
   );
 
   documents.use((request, response, next) => {
-    engine ??= new AngularNodeAppEngine();
+    if (proxyPolicy && !proxyPolicy.accepts(request)) {
+      next(new HttpError(400, 'request_invalid'));
+
+      return;
+    }
+
+    engine ??= new AngularNodeAppEngine(proxyPolicy?.engineOptions);
 
     engine
-      .handle(request, { auth: options.authContext?.(request) ?? { available: false, session: null } })
+      .handle(createSsrRequest(request, proxyPolicy?.engineOptions.trustProxyHeaders), {
+        auth: options.authContext?.(request) ?? { available: false, session: null },
+      })
       .then(async (rendered) => {
         if (!rendered) {
           next();
@@ -149,6 +160,8 @@ export function createApp(
           return;
         }
 
+        rendered.headers.set('cache-control', 'no-store');
+        rendered.headers.delete('etag');
         const nonce = response.locals['cspNonce'] as string | undefined;
 
         if (nonce && rendered.headers.get('content-type')?.includes('text/html')) {
@@ -157,8 +170,6 @@ export function createApp(
           const headers = new Headers(rendered.headers);
 
           headers.delete('content-length');
-          headers.delete('etag');
-          headers.set('cache-control', 'no-store');
           rendered = new Response(html.replace(/__VISOMI_CSP_NONCE__/g, nonce), {
             status: rendered.status,
             statusText: rendered.statusText,

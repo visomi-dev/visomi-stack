@@ -14,7 +14,7 @@ export type ApplicationModule = {
     observability?: Observability;
     errorMode: 'inherited';
     helmetMode: 'inherited';
-    trustProxy?: string[];
+    trustProxy?: string[] | 1;
     authContext?: (request: Request) => { available: boolean; session: AuthSnapshot | null };
   }): RequestHandler;
   clientDirectory: string;

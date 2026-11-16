@@ -19,7 +19,7 @@ export function createGatewayApp(options: {
   auth?: EmbeddedAuthentication;
   observability?: Observability;
   browserTelemetry?: Pick<ReturnType<typeof createBrowserTelemetry>, 'context' | 'router'>;
-  trustProxy?: string[];
+  trustProxy?: string[] | 1;
   helmetMode?: 'managed' | 'inherited';
   errorMode?: 'managed' | 'inherited';
   staticDirectory?: string;

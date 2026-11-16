@@ -24,9 +24,14 @@ const boundary = vi.hoisted(() => ({
 }));
 
 vi.mock('node:http', () => ({ createServer: boundary.createServer }));
-vi.mock('@visomi-stack/web-backend-shared', () => ({
-  initializeObservability: boundary.initialize,
-}));
+vi.mock('@visomi-stack/web-backend-shared', async (original) => {
+  const { proxyConfiguration } = await original<typeof import('@visomi-stack/web-backend-shared')>();
+
+  return {
+    proxyConfiguration,
+    initializeObservability: boundary.initialize,
+  };
+});
 vi.mock('@visomi-stack/backend-shared', async (original) => {
   const shared = await original<typeof import('@visomi-stack/backend-shared')>();
 
@@ -88,6 +93,14 @@ afterEach(() => {
 });
 
 describe('API executable lifecycle', () => {
+  it('passes the explicit single-hop ingress policy to the application', async () => {
+    vi.stubEnv('AUTH_TRUST_PROXY', '1-hop');
+
+    await import('./main');
+
+    expect(boundary.createApp).toHaveBeenCalledWith(expect.objectContaining({ trustProxy: 1 }));
+  });
+
   it('publishes through Redis independently of a socket server', async () => {
     vi.stubEnv('DATABASE_URL', 'postgresql://synthetic/unused');
     vi.stubEnv('REALTIME_REDIS_URL', 'redis://synthetic');

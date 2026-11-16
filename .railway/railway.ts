@@ -109,8 +109,8 @@ export default defineRailway(() => {
       AUTH_RP_ID: 'stack.visomi.dev',
       SESSION_SECRET: preserve(),
       GOOGLE_AUTH_CLIENT_ID: preserve(),
-      // Restrict forwarded-header trust to verified ingress; revalidate after networking changes.
-      AUTH_TRUST_PROXY: '100.64.0.0/10',
+      // One sanitizing HTTP ingress; no raw TCP exposure and only trusted private callers.
+      AUTH_TRUST_PROXY: '1-hop',
       REALTIME_REDIS_URL: broker.env.REDIS_URL,
       SMTP_HOST: preserve(),
       SMTP_PORT: preserve(),

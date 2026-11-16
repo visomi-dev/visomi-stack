@@ -12,7 +12,7 @@ import {
   type DatabaseResource,
   type RealtimeTransport,
 } from '@visomi-stack/backend-shared';
-import { initializeObservability } from '@visomi-stack/web-backend-shared';
+import { initializeObservability, proxyConfiguration } from '@visomi-stack/web-backend-shared';
 
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -64,9 +64,7 @@ try {
   application = createApp({
     observability,
     ...(auth ? { auth } : {}),
-    ...(process.env.AUTH_TRUST_PROXY
-      ? { trustProxy: process.env.AUTH_TRUST_PROXY.split(',').map((value) => value.trim()) }
-      : {}),
+    ...proxyConfiguration(process.env.AUTH_TRUST_PROXY),
   });
 } catch {
   startupFailed = true;

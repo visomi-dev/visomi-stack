@@ -16,7 +16,12 @@ import {
   type DatabaseResource,
   type RealtimeRuntime,
 } from '@visomi-stack/backend-shared';
-import { browserAssets, createBrowserTelemetry, initializeObservability } from '@visomi-stack/web-backend-shared';
+import {
+  browserAssets,
+  createBrowserTelemetry,
+  initializeObservability,
+  proxyConfiguration,
+} from '@visomi-stack/web-backend-shared';
 
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -191,9 +196,7 @@ async function bootstrap() {
       ? resolve(process.env.STATIC_ASSETS_PATH)
       : fileURLToPath(new URL('./static/', import.meta.url)),
     ...(browserTelemetry ? { browserTelemetry } : {}),
-    ...(process.env.AUTH_TRUST_PROXY
-      ? { trustProxy: process.env.AUTH_TRUST_PROXY.split(',').map((value) => value.trim()) }
-      : {}),
+    ...proxyConfiguration(process.env.AUTH_TRUST_PROXY),
   });
 
   server.on('request', application);

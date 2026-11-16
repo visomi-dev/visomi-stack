@@ -372,6 +372,24 @@ describe('gateway composition', () => {
     ]);
   });
 
+  it('uses only the nearest forwarded address under an explicit single-hop policy', async () => {
+    const api = apiFixture((request, response) => response.json({ ip: request.ip, secure: request.secure }));
+    const server = createGatewayApp({ api, trustProxy: 1 }).listen(0, '127.0.0.1');
+
+    await once(server, 'listening');
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${(server.address() as AddressInfo).port}/api/`, {
+        headers: { 'x-forwarded-for': '198.51.100.25, 192.0.2.17', 'x-forwarded-proto': 'https' },
+      });
+      const body = await response.json();
+
+      expect(body).toEqual({ ip: '192.0.2.17', secure: true });
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
+
   it('sanitizes failures from the mounted API', async () => {
     const api = apiFixture((_request, _response, next) => next(new Error('SYNTHETIC_PRIVATE_FAILURE')));
 
