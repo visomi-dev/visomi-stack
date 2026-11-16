@@ -47,48 +47,61 @@ it.each(['password', 'backups', 'remove-totp', 'replace-totp', 'email', 'passkey
 
     let result;
 
-    if (operation === 'password') {
-      const changed = await browser.call('POST', '/password/change', { password: 'Synthetic replacement password!' });
+    switch (operation) {
+      case 'password': {
+        const changed = await browser.call('POST', '/password/change', { password: 'Synthetic replacement password!' });
 
-      result = changed;
-    } else if (operation === 'backups') {
-      const changed = await browser.call('POST', '/recovery-codes/regenerate', {});
+        result = changed;
+        break;
+      }
+      case 'backups': {
+        const changed = await browser.call('POST', '/recovery-codes/regenerate', {});
 
-      result = changed;
-    } else if (operation === 'remove-totp') {
-      const changed = await browser.call('DELETE', '/totp');
+        result = changed;
+        break;
+      }
+      case 'remove-totp': {
+        const changed = await browser.call('DELETE', '/totp');
 
-      result = changed;
-    } else if (operation === 'replace-totp') {
-      const next = await browser.call('POST', '/totp/setup', {});
+        result = changed;
+        break;
+      }
+      case 'replace-totp': {
+        const next = await browser.call('POST', '/totp/setup', {});
 
-      const code = await generate({ secret: next.data.secret });
-      const changed = await browser.call('POST', '/totp/confirm', {
-        enrollmentId: next.data.enrollmentId,
-        code,
-      });
+        const code = await generate({ secret: next.data.secret });
+        const changed = await browser.call('POST', '/totp/confirm', {
+          enrollmentId: next.data.enrollmentId,
+          code,
+        });
 
-      result = changed;
-    } else if (operation === 'email') {
-      const nextEmail = `${randomUUID()}@example.test`;
-      const next = await browser.call('POST', '/email/change/request', { email: nextEmail });
+        result = changed;
+        break;
+      }
+      case 'email': {
+        const nextEmail = `${randomUUID()}@example.test`;
+        const next = await browser.call('POST', '/email/change/request', { email: nextEmail });
 
-      const changed = await browser.call('POST', '/email/change/verify', {
-        flowId: next.data.flowId,
-        code: f.lastCode(nextEmail),
-      });
+        const changed = await browser.call('POST', '/email/change/verify', {
+          flowId: next.data.flowId,
+          code: f.lastCode(nextEmail),
+        });
 
-      result = changed;
-    } else {
-      const device = authenticator();
-      const options = await browser.call('POST', '/passkeys/registration/options', {});
+        result = changed;
+        break;
+      }
+      default: {
+        const device = authenticator();
+        const options = await browser.call('POST', '/passkeys/registration/options', {});
 
-      const changed = await browser.call('POST', '/passkeys/registration/verify', {
-        challengeId: options.data.challengeId,
-        response: device.register(options.data.options.challenge, f.origin, '127.0.0.1'),
-      });
+        const changed = await browser.call('POST', '/passkeys/registration/verify', {
+          challengeId: options.data.challengeId,
+          response: device.register(options.data.options.challenge, f.origin, '127.0.0.1'),
+        });
 
-      result = changed;
+        result = changed;
+        break;
+      }
     }
 
     expect(result.status).toBe(operation === 'passkey' ? 201 : 200);

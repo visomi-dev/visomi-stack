@@ -78,28 +78,34 @@ export class Action {
 
       const code: unknown = error instanceof HttpErrorResponse ? error.error?.error : null;
 
-      if (code === 'reauthentication_required' && !this.session.full()) {
-        this.errorState.set(
-          $localize`:@@authRestrictedExpired:This verification can no longer continue. Sign out and start recovery again.`,
-        );
+      switch (code) {
+        case 'reauthentication_required': {
+          if (!this.session.full()) {
+            this.errorState.set(
+              $localize`:@@authRestrictedExpired:This verification can no longer continue. Sign out and start recovery again.`,
+            );
 
-        this.errorFocusState.update((value) => value + 1);
-      } else if (code === 'reauthentication_required') {
-        const returnTo = safeReturnTo(this.router.url, this.location.prepareExternalUrl('/'));
+            this.errorFocusState.update((value) => value + 1);
+          } else {
+            const returnTo = safeReturnTo(this.router.url, this.location.prepareExternalUrl('/'));
 
-        await this.router.navigate(['/auth/reauthenticate'], { queryParams: returnTo ? { returnTo } : {} });
-      } else if (
-        code === 'account_verification_required' ||
-        code === 'anonymous_session_required' ||
-        code === 'authentication_required' ||
-        code === 'session_expired'
-      ) {
-        await this.session.load(true);
+            await this.router.navigate(['/auth/reauthenticate'], { queryParams: returnTo ? { returnTo } : {} });
+          }
 
-        await this.router.navigateByUrl(destination(this.session.snapshot()));
-      } else {
-        this.errorState.set(errorMessage(error));
-        this.errorFocusState.update((value) => value + 1);
+          break;
+        }
+        case 'account_verification_required':
+        case 'anonymous_session_required':
+        case 'authentication_required':
+        case 'session_expired':
+          await this.session.load(true);
+
+          await this.router.navigateByUrl(destination(this.session.snapshot()));
+
+          break;
+        default:
+          this.errorState.set(errorMessage(error));
+          this.errorFocusState.update((value) => value + 1);
       }
     } finally {
       if (!this.destroyRef.destroyed && !signal?.aborted) {

@@ -116,31 +116,32 @@ export async function activeMethod(tx: Transaction | Database, user: Principal):
     }
   }
 
-  if (user.method === 'passkey') {
-    const [key] = await tx
-      .select()
-      .from(credentials)
-      .where(and(eq(credentials.id, user.methodId!), eq(credentials.userId, user.id), isNull(credentials.revokedAt)));
+  switch (user.method) {
+    case 'passkey': {
+      const [key] = await tx
+        .select()
+        .from(credentials)
+        .where(and(eq(credentials.id, user.methodId!), eq(credentials.userId, user.id), isNull(credentials.revokedAt)));
 
-    return Boolean(key && (!key.pendingGrantId || key.pendingGrantId === user.grantId));
+      return Boolean(key && (!key.pendingGrantId || key.pendingGrantId === user.grantId));
+    }
+    case 'google': {
+      const [provider] = await tx
+        .select()
+        .from(federatedIdentities)
+        .where(
+          and(
+            eq(federatedIdentities.id, user.methodId!),
+            eq(federatedIdentities.userId, user.id),
+            isNull(federatedIdentities.revokedAt),
+          ),
+        );
+
+      return Boolean(provider);
+    }
+    default:
+      return true;
   }
-
-  if (user.method === 'google') {
-    const [provider] = await tx
-      .select()
-      .from(federatedIdentities)
-      .where(
-        and(
-          eq(federatedIdentities.id, user.methodId!),
-          eq(federatedIdentities.userId, user.id),
-          isNull(federatedIdentities.revokedAt),
-        ),
-      );
-
-    return Boolean(provider);
-  }
-
-  return true;
 }
 
 export async function readPrincipal(database: Database, serialized: unknown): Promise<Principal | false> {

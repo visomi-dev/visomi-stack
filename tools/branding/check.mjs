@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { X509Certificate } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { extname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import brand from '../../assets/brand/public.json' with { type: 'json' };
@@ -62,12 +63,15 @@ export async function checkBrand() {
     assert.match(file, /^(?:email\/v[1-9]\d*\/[a-z0-9-]+\.png|bimi\/v[1-9]\d*\/[a-z0-9-]+\.(?:svg|pem))$/);
     const bytes = await readFile(new URL(`../../assets/brand/${file}`, import.meta.url));
 
-    if (file.endsWith('.png')) {
-      checkPng(bytes);
-    } else if (file.endsWith('.svg')) {
-      checkBimiSvg(bytes.toString('utf8'));
-    } else {
-      checkPublicCertificate(bytes.toString('utf8'));
+    switch (extname(file)) {
+      case '.png':
+        checkPng(bytes);
+        break;
+      case '.svg':
+        checkBimiSvg(bytes.toString('utf8'));
+        break;
+      default:
+        checkPublicCertificate(bytes.toString('utf8'));
     }
   }
 }

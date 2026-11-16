@@ -47,48 +47,49 @@ export class Factors {
       throw unavailable();
     }
 
-    if (factor.kind === 'totp') {
-      if (!this.config.totpKey) {
-        throw new HttpError(503, 'totp_unavailable');
+    switch (factor.kind) {
+      case 'totp': {
+        if (!this.config.totpKey) {
+          throw new HttpError(503, 'totp_unavailable');
+        }
+
+        const step = await totpStep(decryptSecret(enrollment.encryptedSecret, this.config.totpKey), factor.code);
+
+        if (step <= enrollment.lastStep) {
+          throw unavailable();
+        }
+
+        await tx.update(totpEnrollments).set({ lastStep: step }).where(eq(totpEnrollments.id, enrollment.id));
+
+        return;
       }
+      case 'recovery_code': {
+        const candidates = await tx
+          .select()
+          .from(recoveryCodes)
+          .where(and(eq(recoveryCodes.userId, user.id), isNull(recoveryCodes.usedAt)));
+        const hash = digest(this.config.secret, `backup:${user.id}`, factor.code.split('-').join('').toUpperCase());
+        const candidate = candidates.find((c) => matches(c.codeHash, hash));
 
-      const step = await totpStep(decryptSecret(enrollment.encryptedSecret, this.config.totpKey), factor.code);
+        if (!candidate) {
+          throw unavailable();
+        }
 
-      if (step <= enrollment.lastStep) {
+        const [consumed] = await tx
+          .update(recoveryCodes)
+          .set({ usedAt: new Date() })
+          .where(and(eq(recoveryCodes.id, candidate.id), isNull(recoveryCodes.usedAt)))
+          .returning();
+
+        if (!consumed) {
+          throw unavailable();
+        }
+
+        return;
+      }
+      default:
         throw unavailable();
-      }
-
-      await tx.update(totpEnrollments).set({ lastStep: step }).where(eq(totpEnrollments.id, enrollment.id));
-
-      return;
     }
-
-    if (factor.kind === 'recovery_code') {
-      const candidates = await tx
-        .select()
-        .from(recoveryCodes)
-        .where(and(eq(recoveryCodes.userId, user.id), isNull(recoveryCodes.usedAt)));
-      const hash = digest(this.config.secret, `backup:${user.id}`, factor.code.split('-').join('').toUpperCase());
-      const candidate = candidates.find((c) => matches(c.codeHash, hash));
-
-      if (!candidate) {
-        throw unavailable();
-      }
-
-      const [consumed] = await tx
-        .update(recoveryCodes)
-        .set({ usedAt: new Date() })
-        .where(and(eq(recoveryCodes.id, candidate.id), isNull(recoveryCodes.usedAt)))
-        .returning();
-
-      if (!consumed) {
-        throw unavailable();
-      }
-
-      return;
-    }
-
-    throw unavailable();
   }
 
   async setup(sid: string, current: Express.User) {
