@@ -156,7 +156,12 @@ export class DeviceCustody {
     return action;
   }
 
-  async open(binding: DeliveryBinding, delivery: ApprovedDelivery, trusted: SigningPin): Promise<Uint8Array> {
+  async open(
+    binding: DeliveryBinding,
+    delivery: ApprovedDelivery,
+    trusted: SigningPin,
+    historicalGeneration?: number,
+  ): Promise<Uint8Array> {
     const { identity, epoch } = this.active();
 
     if (
@@ -171,7 +176,13 @@ export class DeviceCustody {
     let raw: Uint8Array | undefined;
 
     try {
-      const result = await this.devices.accept(identity.encryption.privateKey, binding, delivery, trusted);
+      const result = await this.devices.accept(
+        identity.encryption.privateKey,
+        binding,
+        delivery,
+        trusted,
+        historicalGeneration,
+      );
 
       raw = result;
       this.current(epoch);

@@ -218,7 +218,7 @@ export class VaultSession {
     const storage = await IndexedDbVaultStorage.open(view.indexedDB, ownerId);
 
     try {
-      const wrapped = await storage.getKey(keyDomainId(ownerId, key));
+      const wrapped = await storage.getCurrentKey(ownerId, key);
 
       if (!this.current(epoch, session)) {
         throw new VaultError('stale-operation');

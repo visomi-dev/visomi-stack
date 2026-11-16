@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserVault, IndexedDbVaultStorage, PrfUnlock, WebCryptoCipher } from '@visomi-stack/web-shared-vault';
-import type { WrappingContext } from '@visomi-stack/shared-persistence';
+import { VaultError, type WrappingContext } from '@visomi-stack/shared-persistence';
 
 import { Session } from '../auth/session/session';
 
@@ -40,8 +40,10 @@ function fixture(browser = true) {
   vi.spyOn(WebCryptoCipher.prototype, 'importDataKey').mockResolvedValue({} as CryptoKey);
   vi.spyOn(PrfUnlock.prototype, 'secret').mockImplementation(async () => new Uint8Array(32));
   const close = vi.spyOn(BrowserVault.prototype, 'close');
+  const currentKey = vi.fn(async () => ({ context: binding }));
   const openStorage = vi.spyOn(IndexedDbVaultStorage, 'open').mockResolvedValue({
     getKey: vi.fn(async () => ({ context: binding })),
+    getCurrentKey: currentKey,
     getUnit: vi.fn(async () => ({})),
     close: vi.fn(),
   } as unknown as IndexedDbVaultStorage);
@@ -76,11 +78,22 @@ function fixture(browser = true) {
 
   TestBed.tick();
 
-  return { vault, user, full, version, cancellation, openCipher, close, openStorage };
+  return { vault, user, full, version, cancellation, openCipher, close, openStorage, currentKey };
 }
 
 describe('vault account lifecycle', () => {
   afterEach(() => vi.restoreAllMocks());
+  it('selects active local bindings through the current-generation guard and preserves rollback rejection', async () => {
+    const f = fixture();
+    const current = await f.vault.localBinding(binding.key);
+
+    expect(current).toEqual(binding);
+    expect(f.currentKey).toHaveBeenCalledWith(binding.ownerId, binding.key);
+    f.currentKey.mockRejectedValueOnce(new VaultError('corrupt'));
+
+    await expect(f.vault.localBinding(binding.key)).rejects.toMatchObject({ code: 'corrupt' });
+  });
+
   it('keeps cloud login locked, unlocks only explicitly and clears on synchronous cancellation', async () => {
     const f = fixture();
 

@@ -31,7 +31,8 @@ Actions sign product/domain/key scope/generation, signer device, random operatio
 ID, current roster epoch, controlled action, and SHA-256 of the strictly parsed
 request body without its authorization field. Clients must construct schema-normalized
 DTOs before hashing. `deviceActionMessage` is the signed array encoding. Enrollment
-approvals hash `{proof, delivery}`, revocation hashes `{deviceId}`, rotation hashes
+approvals hash `{proof, delivery}` or, for an explicit historical grant,
+`{proof, delivery, history}` in that field order. Revocation hashes `{deviceId}`, rotation hashes
 `{deliveries}`, and sync hashes `{protocol, operationId, expectedRevision, head, envelope}`
 in that field order. Epoch/generation mismatches reject replay; membership is read
 again under the same tenant lock as the mutation.
@@ -45,6 +46,67 @@ signing pin, verify that witness before OAEP decryption and reject server-create
 replacement keys. The initial example bootstraps a new local authority; it does not
 provide a complete remote-recipient approval UI. Human verification of pins and
 first-use trust remain part of the independent threat review.
+
+### Enrollment after rotation
+
+A new device starts at cursor zero and must authenticate retained events, including
+obsolete revisions and tombstones. Receiving only the current DEK is insufficient
+after rotation. The optional `history` array is an explicit grant of up to 64
+earlier-generation recipient deliveries, sorted by strictly increasing generation.
+The current authorized sharing device signs the entire normalized approval body;
+the server never creates historical keys or infers consent to distribute them.
+The same recipient, challenge/fingerprint, product, domain and key scope must bind
+every delivery. Duplicate/current/future or substituted contexts fail with
+`device_history_invalid`. Omitting a generation needed by retained replay fails
+with `device_history_required` before enrollment commits. A failed attempt still
+consumes its challenge. HTTP body limits also apply to the complete request.
+
+The client verifies the complete witness and separately trusted signer before
+opening either the current delivery or a selected historical member.
+`BrowserVault.deliverHistory` prepares a grant only from an already locally held,
+PRF-wrapped historical key in the same scope. `DeviceCustody.open` takes an explicit
+historical generation while its expected binding remains the current recipient
+binding. After verification, `BrowserVault.installHistory` wraps that key under
+the recipient's own PRF context with its local encryption budget exhausted.
+It preserves the selected current writing generation. Historical decryption
+unwraps the retained local key transiently, checks AEAD under that exact generation,
+and clears temporary key/plaintext bytes on success, failure and lock races.
+The historical PRF context uses the same owner/device/credential/origin binding;
+different wrapping credentials are not guessed or recovered automatically.
+
+Historical grants disclose the retained ciphertext history protected by those
+scope keys, including older revisions; they cannot restrict an old DEK to selected
+records. A product that forbids that disclosure needs a separately authenticated
+complete-state bootstrap instead. This branch deliberately retains full AEAD
+replay and introduces no server-trusted snapshot or historical-key derivation from
+the current DEK. Re-encryption, deleting history or skipping AEAD is not a fallback.
+Revoked recipients receive no future generation. Old keys cannot decrypt new data;
+previously copied history cannot be cryptographically revoked retroactively.
+
+`SyncReplica` requires the known `KeyDomain` generation and accepts a minimum
+roster epoch in addition to its durable pin. New recipients use their verified
+current approval's generation and authorization epoch plus one. The example also
+retains its known current vault binding as a generation floor. Old control state is rejected even
+when old event AEAD can now be verified. Pins, revisions and pending writes still
+commit through the existing atomic IndexedDB rules. Missing local historical keys
+raise `recovery-required` without advancing the pin or clearing the outbox.
+
+Active binding selection also checks locally retained key-wrapper metadata through
+`IndexedDbVaultStorage.getCurrentKey`. The example rejects a cloud request to open
+an older generation when a higher wrapper is already present in that same local
+key scope. Explicit archival reads continue to use their selected historical key.
+This requires no local schema migration and does not claim detection after trusted
+local state is erased or lost.
+
+This pre-release extension preserves existing current-only signed bytes where no
+historical grant is needed. A client without historical-grant support must reject
+such a witness; strict parsing and `device_history_required` are not bypassed for
+compatibility. The example still has no complete recipient approval/rotation UI.
+Install an enrollment grant before its delivery is superseded by a later rotation;
+the API retains one current delivery, not an unlimited delivery archive. A missed
+grant requires a fresh authorized enrollment flow, not trust in a cloud roster.
+Compacted/expired history continues to return `sync_history_expired`; receiving old
+keys does not reconstruct removed events or authorize resetting a surviving pin.
 
 ## Revocation and rotation
 

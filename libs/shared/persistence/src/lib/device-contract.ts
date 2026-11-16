@@ -58,6 +58,8 @@ export const deviceDeliverySchema = z.strictObject({
 });
 export type DeliveryBinding = z.infer<typeof deliveryBindingSchema>;
 export type DeviceDelivery = z.infer<typeof deviceDeliverySchema>;
+/** Explicit recipient grants for earlier generations; never an implicit server key archive. */
+export const deviceHistorySchema = z.array(deviceDeliverySchema).min(1).max(64);
 
 export const deviceActionSchema = z.strictObject({
   key: keyDomainSchema,
@@ -76,7 +78,12 @@ export const approvedDeliverySchema = z.strictObject({
   delivery: deviceDeliverySchema,
   authorization: deviceActionSchema,
   witness: z.discriminatedUnion('kind', [
-    z.strictObject({ kind: z.literal('enrollment'), proof: deviceProofSchema, delivery: deviceDeliverySchema }),
+    z.strictObject({
+      kind: z.literal('enrollment'),
+      proof: deviceProofSchema,
+      delivery: deviceDeliverySchema,
+      history: deviceHistorySchema.optional(),
+    }),
     z.strictObject({ kind: z.literal('rotation'), deliveries: z.array(deviceDeliverySchema).min(1).max(64) }),
   ]),
 });

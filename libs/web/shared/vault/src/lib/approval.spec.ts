@@ -6,6 +6,8 @@ import {
   approvedDeliverySchema,
   deviceChallengeSchema,
   deviceActionMessage,
+  deviceDeliveryLabel,
+  deviceProofMessage,
   type ApprovedDelivery,
   type DeliveryBinding,
   type SigningPin,
@@ -16,6 +18,9 @@ import { WebCryptoDevices, type DeviceIdentity } from './devices';
 
 const reference = JSON.parse(
   readFileSync(new URL('../../../../../shared/persistence/fixtures/devices-v1.json', import.meta.url), 'utf8'),
+);
+const historyReference = JSON.parse(
+  readFileSync(new URL('../../../../../shared/persistence/fixtures/devices-history-v1.json', import.meta.url), 'utf8'),
 );
 const devices = new WebCryptoDevices(webcrypto as unknown as Crypto);
 let recipient: DeviceIdentity;
@@ -69,6 +74,125 @@ beforeAll(async () => {
 });
 
 describe('client-verifiable recipient approval', () => {
+  it('decodes the independent public Node historical-grant fixture without changing its signed bytes', async () => {
+    const value = approvedDeliverySchema.parse(historyReference.approval);
+    const privateKey = await webcrypto.subtle.importKey(
+      'pkcs8',
+      Buffer.from(reference.encryptionPrivatePkcs8, 'base64url'),
+      { name: 'RSA-OAEP', hash: 'SHA-256' },
+      false,
+      ['decrypt'],
+    );
+
+    if (value.witness.kind !== 'enrollment' || !value.witness.history) {
+      throw new Error('synthetic_history_required');
+    }
+
+    expect(deviceProofMessage(value.witness.proof)).toBe(historyReference.message);
+    expect(deviceActionMessage(value.authorization)).toBe(historyReference.approvalMessage);
+    expect(deviceDeliveryLabel(value.delivery.binding)).toBe(historyReference.currentLabel);
+    expect(deviceDeliveryLabel(value.witness.history[0].binding)).toBe(historyReference.historicalLabel);
+    const trusted = { deviceId: value.authorization.deviceId, signing: reference.challenge.keys.signing };
+    const current = await devices.accept(privateKey as unknown as CryptoKey, value.delivery.binding, value, trusted);
+    const historical = await devices.accept(
+      privateKey as unknown as CryptoKey,
+      value.delivery.binding,
+      value,
+      trusted,
+      1,
+    );
+
+    try {
+      expect(Buffer.from(current).toString('hex')).toBe(historyReference.currentDataKeyHex);
+      expect(Buffer.from(historical).toString('hex')).toBe(historyReference.historicalDataKeyHex);
+      expect(current).not.toEqual(historical);
+    } finally {
+      current.fill(0);
+      historical.fill(0);
+    }
+  });
+  it('opens only exact historically granted keys under the current approval signature and trusted pin', async () => {
+    const keys = await devices.publicKeys(recipient);
+    const challenge = deviceChallengeSchema.parse({
+      ...reference.challenge,
+      key: { ...binding.key, generation: 2 },
+      keys,
+    });
+    const proof = await devices.prove(recipient, challenge);
+    const fingerprint = await devices.fingerprint(proof);
+    const expected = { ...binding, key: challenge.key, fingerprint };
+    const delivery = await devices.seal(new Uint8Array(32).fill(23), expected);
+    const historical = await devices.seal(new Uint8Array(32).fill(7), { ...expected, key: binding.key });
+    const body = { proof, delivery, history: [historical] };
+    const digest = await webcrypto.subtle.digest('SHA-256', Buffer.from(JSON.stringify(body)));
+    const { signature: _signature, ...action } = approved.authorization;
+    const authorization = await devices.signAction(signer, {
+      ...action,
+      key: expected.key,
+      epoch: 3,
+      bodyHash: encodeBytes(new Uint8Array(digest)),
+    });
+    const value = approvedDeliverySchema.parse({
+      ...approved,
+      delivery,
+      authorization,
+      witness: { kind: 'enrollment', ...body },
+    });
+    const raw = await devices.accept(recipient.encryption.privateKey, expected, value, pin, 1);
+
+    expect(raw).toEqual(new Uint8Array(32).fill(7));
+    raw.fill(0);
+    const latest = await devices.accept(recipient.encryption.privateKey, expected, value, pin);
+
+    expect(latest).toEqual(new Uint8Array(32).fill(23));
+    latest.fill(0);
+
+    for (const history of [
+      [historical, historical],
+      [delivery],
+      [{ ...historical, binding: { ...historical.binding, deviceId: binding.ownerId } }],
+    ]) {
+      await expect(
+        devices.accept(
+          recipient.encryption.privateKey,
+          expected,
+          {
+            ...value,
+            witness: { kind: 'enrollment', ...body, history },
+          },
+          pin,
+          1,
+        ),
+      ).rejects.toMatchObject({ code: 'context-mismatch' });
+    }
+
+    const substitute = await devices.seal(new Uint8Array(32).fill(13), historical.binding);
+
+    await expect(
+      devices.accept(
+        recipient.encryption.privateKey,
+        expected,
+        {
+          ...value,
+          witness: { kind: 'enrollment', ...body, history: [substitute] },
+        },
+        pin,
+        1,
+      ),
+    ).rejects.toMatchObject({ code: 'integrity-failure' });
+
+    await expect(devices.accept(recipient.encryption.privateKey, expected, value, pin, 2)).rejects.toMatchObject({
+      code: 'context-mismatch',
+    });
+
+    await expect(devices.accept(recipient.encryption.privateKey, expected, value, pin, 3)).rejects.toMatchObject({
+      code: 'context-mismatch',
+    });
+
+    await expect(
+      devices.accept(recipient.encryption.privateKey, expected, value, { ...pin, signing: keys.signing }, 1),
+    ).rejects.toMatchObject({ code: 'integrity-failure' });
+  });
   it('accepts the independently signed public Node approval fixture byte for byte', async () => {
     const value = approvedDeliverySchema.parse(reference.approval);
 

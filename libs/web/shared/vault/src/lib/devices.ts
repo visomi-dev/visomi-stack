@@ -225,7 +225,13 @@ export class WebCryptoDevices {
   }
 
   /** The signing pin must come from the existing trusted approval channel, never just the fetched cloud roster. */
-  async accept(key: CryptoKey, expected: DeliveryBinding, input: unknown, trusted: SigningPin): Promise<Uint8Array> {
+  async accept(
+    key: CryptoKey,
+    expected: DeliveryBinding,
+    input: unknown,
+    trusted: SigningPin,
+    historicalGeneration?: number,
+  ): Promise<Uint8Array> {
     const parsed = approvedDeliverySchema.safeParse(input);
     const pin = signingPinSchema.safeParse(trusted);
     const binding = deliveryBindingSchema.safeParse(expected);
@@ -254,9 +260,36 @@ export class WebCryptoDevices {
       throw new CryptoContractError('context-mismatch');
     }
 
+    const history = witness.kind === 'enrollment' ? (witness.history ?? []) : [];
+    let previous = 0;
+
+    for (const item of history) {
+      const generation = item.binding.key.generation;
+      const context = { ...binding.data, key: { ...binding.data.key, generation } };
+
+      if (
+        generation <= previous ||
+        generation >= binding.data.key.generation ||
+        deviceDeliveryLabel(item.binding) !== deviceDeliveryLabel(context)
+      ) {
+        throw new CryptoContractError('context-mismatch');
+      }
+
+      previous = generation;
+    }
+
+    const selected =
+      historicalGeneration === undefined
+        ? delivery
+        : history.find((item) => item.binding.key.generation === historicalGeneration);
+
+    if (!selected) {
+      throw new CryptoContractError('context-mismatch');
+    }
+
     const body =
       witness.kind === 'enrollment'
-        ? { proof: witness.proof, delivery: witness.delivery }
+        ? { proof: witness.proof, delivery: witness.delivery, ...(witness.history ? { history: witness.history } : {}) }
         : { deliveries: witness.deliveries };
 
     if (witness.kind === 'enrollment') {
@@ -289,7 +322,7 @@ export class WebCryptoDevices {
     } catch {
       throw new CryptoContractError('integrity-failure');
     }
-    const raw = await this.open(key, binding.data, delivery);
+    const raw = await this.open(key, selected.binding, selected);
 
     return raw;
   }

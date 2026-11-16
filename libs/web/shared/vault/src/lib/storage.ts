@@ -3,6 +3,8 @@ import {
   dataEnvelopeSchema,
   wrappedKeySchema,
   VaultError,
+  keyDomainId,
+  type KeyDomain,
   type DataEnvelope,
   type VaultStorage,
   type WrappedKey,
@@ -71,6 +73,59 @@ export class IndexedDbVaultStorage implements VaultStorage {
     }
 
     return result.data.envelope;
+  }
+
+  /** Active binding selection cannot follow cloud metadata back to a locally retained historical wrapper. */
+  getCurrentKey(ownerId: string, key: KeyDomain): Promise<WrappedKey | undefined> {
+    const prefix = keyDomainId(ownerId, { ...key, generation: 1 }).slice(0, -2);
+
+    return new Promise((resolve, reject) => {
+      let tx: IDBTransaction;
+
+      try {
+        tx = this.database.transaction('keys', 'readonly');
+      } catch (error) {
+        reject(storageError(error));
+
+        return;
+      }
+
+      let value: WrappedKey | undefined;
+      let failure: VaultError | undefined;
+      const request = tx.objectStore('keys').openCursor();
+
+      tx.oncomplete = () => resolve(value);
+      tx.onabort = tx.onerror = () => reject(failure ?? storageError(tx.error));
+      request.onsuccess = () => {
+        const cursor = request.result;
+
+        if (!cursor) {
+          return;
+        }
+
+        if (typeof cursor.key === 'string' && cursor.key.startsWith(prefix)) {
+          const parsed = storedKeySchema.safeParse(cursor.value);
+
+          if (
+            !parsed.success ||
+            parsed.data.id !== cursor.key ||
+            keyDomainId(parsed.data.envelope.context.ownerId, parsed.data.envelope.context.key) !== cursor.key ||
+            parsed.data.envelope.context.key.generation > key.generation
+          ) {
+            failure = new VaultError('corrupt');
+            tx.abort();
+
+            return;
+          }
+
+          if (parsed.data.envelope.context.key.generation === key.generation) {
+            value = parsed.data.envelope;
+          }
+        }
+
+        cursor.continue();
+      };
+    });
   }
 
   async putKey(id: string, envelope: WrappedKey, exhausted = false): Promise<void> {

@@ -6,6 +6,7 @@ import {
   deviceProofSchema,
   deviceProofMessage,
   deviceDeliverySchema,
+  deviceHistorySchema,
   deviceActionSchema,
   deviceActionMessage,
   deviceDeliveryLabel,
@@ -22,6 +23,7 @@ import { input, type Access, type ScopeAccess, type SessionActor } from '../acce
 
 import { publicHash, verifyDeviceAction, verifyDeviceProof } from './device-proof';
 import { keyPredicate, VaultAccess } from './vault-access';
+import { requireHistory } from './device-history';
 
 const { keyScopes, keyDevices, keyChallenges } = vaultSchema;
 
@@ -29,6 +31,7 @@ export const enrollmentRequestSchema = z.strictObject({ deviceId: protocolIdSche
 export const approvalSchema = z.strictObject({
   proof: deviceProofSchema,
   delivery: deviceDeliverySchema,
+  history: deviceHistorySchema.optional(),
   authorization: deviceActionSchema,
 });
 export const revokeDeviceSchema = z.strictObject({ deviceId: protocolIdSchema, authorization: deviceActionSchema });
@@ -163,6 +166,7 @@ export class KeyDevices {
       await this.authorize(context, registry, value.authorization, 'approve', {
         proof: value.proof,
         delivery: value.delivery,
+        ...(value.history ? { history: value.history } : {}),
       });
 
       await this.access.requireRecipient(context, value.proof.ownerId);
@@ -178,6 +182,9 @@ export class KeyDevices {
       }
 
       this.delivery(value.proof, value.delivery, key.generation);
+
+      await requireHistory(context, key, value.proof, value.history ?? []);
+
       const { proof: _proof, ...challenge } = value.proof;
 
       await context.tx.insert(keyDevices).values({
@@ -194,7 +201,12 @@ export class KeyDevices {
           version: 1,
           delivery: value.delivery,
           authorization: value.authorization,
-          witness: { kind: 'enrollment', proof: value.proof, delivery: value.delivery },
+          witness: {
+            kind: 'enrollment',
+            proof: value.proof,
+            delivery: value.delivery,
+            ...(value.history ? { history: value.history } : {}),
+          },
         },
       });
 

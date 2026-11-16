@@ -20,10 +20,12 @@ import {
   type DeviceDelivery,
   type ProductPolicy,
   type WrappedKey,
+  type KeyDomain,
 } from '@visomi-stack/shared-persistence';
 
 import { WebCryptoCipher } from './crypto';
 import type { WebCryptoDevices } from './devices';
+import { historicalBinding, storeHistoricalKey, withStoredKey } from './stored-key';
 
 /** One independently locked key scope; records are loaded/decrypted individually. */
 export class BrowserVault implements VaultPort {
@@ -65,6 +67,22 @@ export class BrowserVault implements VaultPort {
     }
 
     return this.initializeKey(context, supplied);
+  }
+
+  /** Caller verifies the signed recipient grant first. Keep current writing authority selected. */
+  async installHistory(key: KeyDomain, supplied: Uint8Array): Promise<void> {
+    if (!this.binding || !this.key) {
+      throw new VaultError('locked');
+    }
+
+    const epoch = this.epoch;
+    const binding = historicalBinding(this.binding, key);
+
+    try {
+      await storeHistoricalKey(this.storage, this.unlocker, this.crypto, binding, supplied, () => this.current(epoch));
+    } catch (error) {
+      throw this.failure(error, epoch);
+    }
   }
 
   async unlock(context: WrappingContext): Promise<void> {
@@ -155,7 +173,7 @@ export class BrowserVault implements VaultPort {
       throw new VaultError('corrupt');
     }
 
-    const key = this.dataKey(parsed.data);
+    const key = await this.decryptionKey(parsed.data);
     let plaintext: Uint8Array | undefined;
 
     try {
@@ -188,6 +206,23 @@ export class BrowserVault implements VaultPort {
     }
 
     return this.withRawKey((raw) => devices.seal(raw, parsed.data));
+  }
+
+  /** Explicit historical grant preparation; the caller signs this ciphertext in the current approval body. */
+  async deliverHistory(recipient: DeliveryBinding, devices: WebCryptoDevices): Promise<DeviceDelivery> {
+    const parsed = deliveryBindingSchema.safeParse(recipient);
+
+    if (!parsed.success) {
+      throw new VaultError('corrupt');
+    }
+
+    if (!this.binding || !this.key) {
+      throw new VaultError('locked');
+    }
+
+    const binding = historicalBinding(this.binding, parsed.data.key);
+
+    return this.withRawKey((raw) => devices.seal(raw, parsed.data), binding);
   }
 
   async createRecovery(policy: ProductPolicy, context: WrappingContext, recovery: VaultUnlock): Promise<WrappedKey> {
@@ -439,42 +474,26 @@ export class BrowserVault implements VaultPort {
     }
   }
 
-  private async withRawKey<T>(work: (raw: Uint8Array) => Promise<T>): Promise<T> {
-    const binding = this.binding;
-
+  private async withRawKey<T>(work: (raw: Uint8Array) => Promise<T>, binding = this.binding): Promise<T> {
     if (!binding || !this.key) {
       throw new VaultError('locked');
     }
 
     const epoch = this.epoch;
-    let secret: Uint8Array | undefined;
-    let raw: Uint8Array | undefined;
 
     try {
-      const envelope = await this.storage.getKey(keyDomainId(this.ownerId, binding.key));
-
-      if (!envelope) {
-        throw new VaultError('recovery-required');
-      }
-
-      const unlocked = await this.unlocker.secret(binding);
-
-      secret = unlocked;
-      this.current(epoch);
-      const unwrapped = await this.crypto.unwrap(secret, binding, envelope);
-
-      raw = unwrapped;
-      this.current(epoch);
-      const result = await work(raw);
-
-      this.current(epoch);
+      const result = await withStoredKey(
+        this.storage,
+        this.unlocker,
+        this.crypto,
+        binding,
+        () => this.current(epoch),
+        work,
+      );
 
       return result;
     } catch (error) {
       throw this.failure(error, epoch);
-    } finally {
-      secret?.fill(0);
-      raw?.fill(0);
     }
   }
 
@@ -506,6 +525,14 @@ export class BrowserVault implements VaultPort {
     }
 
     return this.key;
+  }
+
+  private async decryptionKey(context: DataContext): Promise<CryptoKey> {
+    if (this.binding && context.key.generation < this.binding.key.generation) {
+      return this.withRawKey((raw) => this.crypto.importDataKey(raw), historicalBinding(this.binding, context.key));
+    }
+
+    return this.dataKey(context);
   }
 
   private current(epoch: number): void {
@@ -541,6 +568,9 @@ export class BrowserVault implements VaultPort {
     if (state !== 'quota') {
       this.key = undefined;
       this.binding = undefined;
+      // Failed authentication invalidates other in-flight reads under this unlocked state as well.
+      this.epoch++;
+      this.unlocker.cancel();
     }
 
     return error instanceof VaultError ? error : new VaultError(state);

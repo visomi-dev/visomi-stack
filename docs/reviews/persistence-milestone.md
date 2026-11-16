@@ -34,6 +34,77 @@ used to stop branch implementation.
 
 ## Executed evidence
 
+### Luma follow-up: new-device enrollment after rotation
+
+Luma's hypothesis was reproduced against commit
+`2a1665e9b1a8961ca36da7f7597ab349e1fdff81` using the real authenticated API,
+isolated PostgreSQL, native Chromium PRF/device custody, IndexedDB and `SyncReplica`.
+A generation-one record, rotation to a distinct generation-two DEK, and a new
+approved device receiving only generation two failed its initial pull with
+`VaultError: corrupt`. The current-key-only vault and example validation could
+not authenticate historical events. This was a confirmed development defect,
+separate from the documented compacted-history release gate.
+
+The reversible resolution is an explicit historical-key grant within the existing
+signed recipient approval. Every retained replay generation must be granted to
+that exact recipient or approval fails with `device_history_required`; bindings,
+ordering, current sharing/device authority and the signed body are checked before
+enrollment commits. The server stores only recipient ciphertext. Local historical
+keys remain PRF-wrapped and are installed without allocating an old-generation
+write budget. The example accepts supported, correctly scoped older envelopes
+only through actual key authentication. A replica's explicit known minimum
+generation/epoch prevents an initial rollback that historical AEAD alone cannot
+detect. Full history authentication, durable checkpoints, revision fences and
+explicit outbox acknowledgement are retained.
+
+An authenticated snapshot was considered. It would additionally need trusted
+complete-state enumeration, tombstone/revision completeness, fresh recipient-bound
+attestation and atomic bootstrap rules. The existing retained-history path already
+supports contextual replay, so explicitly authorized historical keys solve this
+case with a smaller protocol change. No snapshot is trusted merely because it
+came from the server, no ciphertext is re-encrypted/deleted by the server and no
+live database or provider configuration changes are part of this fix.
+
+The regression covers live old-generation data, an old tombstone, current-generation
+data, missing history grants/keys, generation and epoch rollback, unchanged pending
+ciphertext, a legitimate new-device write with authenticated acknowledgement,
+and subsequent revocation/rotation excluding that device from generation three.
+Additional tests cover multiple required historical generations, wrong/duplicate/
+future recipient grants, unsigned or substituted ciphertext, trusted signing pins,
+persisted read-only wrappers, and clearing plaintext/raw key bytes during lock races.
+Three Angular consumer tests retain explicit future-generation/schema failures.
+Active local binding selection rejects a server-selected historical wrapper when
+a higher-generation wrapper is already present in the same local scope. The
+native store test covers both allowed current selection and that rejection; the
+Angular session test preserves the explicit error without falling back to an old
+wrapper. No new database schema or live migration is needed for this check.
+An additional native-browser regression reproduced a concurrent authentication
+failure allowing another in-flight read to finish after the vault entered its
+corrupt state. Non-quota authentication failures now invalidate the operation
+epoch and cancel the unlock ceremony, so the original explicit error is preserved
+and the concurrent read fails stale while clearing its plaintext/raw key copies.
+The independent Node historical-grant fixture publishes exact signed body/label
+bytes and distinct current/historical keys; both Node and WebCrypto verify it.
+
+Initial fixture errors and one concurrent-load browser timeout were failed checks,
+not passing evidence. No existing test, assertion, coverage threshold or test-body
+deadline was removed or relaxed. The corrected complete local suites passed API
+354 (all required coverage dimensions 100%), vault 65 and Angular 165. The complete
+final workspace run passed **1,133 tests across all 12 projects** (20 test/dependency
+tasks, 11 cached). All 41 static-check tasks passed (14 cached), including vectors,
+and all six application builds passed (eight build/dependency tasks, four cached).
+Final publication checks and exact-head CI evidence are recorded in the PR.
+
+Release limits remain separate: these grants expose the history encrypted under
+the explicitly granted scope keys, including older revisions. Products requiring
+selective current-state disclosure need an authenticated complete-state bootstrap.
+Compacted history still fails closed, delivery installation must precede its
+supersession by rotation (otherwise fresh enrollment is needed), and distinct
+historical wrapping credentials are not automatically recovered. No Nive recovery
+policy, independent crypto audit, native client, production acceptance, merge,
+deployment or live migration is claimed. See the
+[full grant and custody contract](../architecture/contracts/persistence-keys-sync.md#enrollment-after-rotation).
+
 Green evidence includes:
 
 - Two actual Chromium clients against the authenticated API/private PostgreSQL:
@@ -174,6 +245,9 @@ console error is filtered or ignored.
 The complete repeated site suite passed all 99 cases with those fixtures.
 
 ### Final follow-up verification
+
+The following counts describe the earlier retention follow-up. The later Luma
+enrollment review and its final verification are recorded above and in the PR.
 
 Full local suites after the retention fixes passed **1,121 tests** across all
 12 projects with a test target: API 352, web vault 59, neutral contracts 40,

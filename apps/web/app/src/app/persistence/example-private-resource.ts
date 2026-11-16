@@ -211,6 +211,7 @@ export class ExamplePrivateResource {
 
         return this.vault.readEnvelope(envelope, false);
       },
+      registry.epoch,
     );
 
     this.replica = replica;
@@ -414,7 +415,12 @@ export class ExamplePrivateResource {
 
     if (
       !binding ||
-      dataAad({ ...envelope.context, key: binding.key, target: binding.key.scope }) !== dataAad(envelope.context)
+      envelope.context.key.generation > binding.key.generation ||
+      dataAad({
+        ...envelope.context,
+        key: { ...binding.key, generation: envelope.context.key.generation },
+        target: binding.key.scope,
+      }) !== dataAad(envelope.context)
     ) {
       throw new VaultError('corrupt');
     }

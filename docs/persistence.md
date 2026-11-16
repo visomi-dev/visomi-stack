@@ -85,10 +85,18 @@ PRF credential; it does not select a reader mode for the user.
 4. Persist device private identity only through a separate device-local encrypted
    custody vault. Do not protect a signing private key with a shared resource DEK.
    Pin and verify the recipient identity before approving a delivery.
+   After rotation, explicitly prepare and sign the retained historical-generation
+   grants needed for a new recipient's replay. Verify the whole witness before
+   `installHistory`; these local wrappers cannot allocate an old-generation write
+   budget. See [enrollment after rotation](architecture/contracts/persistence-keys-sync.md#enrollment-after-rotation)
+   for authority, binding, disclosure and expired-history limits.
 5. Use `SyncReplica` with an `IndexedDbReplicaStorage` per account and target stream.
    Its authentication callback must verify contextual AEAD with the correct historical
    generation and clear transient plaintext before returning. Abort/stop replicas
    on lock/logout. Domain conflicts require explicit client rebase.
+   Supply the independently known current `KeyDomain` and minimum roster epoch
+   when constructing a new replica, rather than treating a fresh cursor-zero store
+   as permission to accept pre-approval server control state.
 6. Keep the encrypted outbox on failed writes. Never delete it just because an HTTP
    request returned success. Use the explicit conflict-resolution port only after
    the user/domain has chosen a rebase or discard; do not rewrite an old operation

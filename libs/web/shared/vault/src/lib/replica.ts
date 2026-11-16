@@ -40,12 +40,13 @@ export class SyncReplica {
 
   constructor(
     private readonly id: string,
-    private readonly key: Omit<KeyDomain, 'generation'>,
+    private readonly key: KeyDomain,
     private readonly target: CryptoScope,
     private readonly store: ReplicaStorage,
     private readonly transport: ReplicaTransport,
     private readonly crypto: Crypto,
     private readonly authenticate: (envelope: DataEnvelope) => Promise<void>,
+    private readonly minimumEpoch = 1,
   ) {}
 
   async pull(): Promise<SyncPage> {
@@ -64,7 +65,11 @@ export class SyncReplica {
 
     const page = result.data;
 
-    if (page.generation < pin.generation || page.epoch < pin.epoch || page.head.cursor < pin.cursor) {
+    if (
+      page.generation < Math.max(pin.generation, this.key.generation) ||
+      page.epoch < Math.max(pin.epoch, this.minimumEpoch) ||
+      page.head.cursor < pin.cursor
+    ) {
       throw new CryptoContractError('context-mismatch');
     }
 
