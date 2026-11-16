@@ -2,7 +2,7 @@
 // @nx-target-name: serve
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
   createDatabase,
@@ -16,7 +16,12 @@ import {
   type DatabaseResource,
   type RealtimeRuntime,
 } from '@visomi-stack/backend-shared';
-import { browserAssets, createBrowserTelemetry, initializeObservability } from '@visomi-stack/web-backend-shared';
+import {
+  browserAssets,
+  createBrowserTelemetry,
+  initializeObservability,
+  proxyConfiguration,
+} from '@visomi-stack/web-backend-shared';
 
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -187,10 +192,11 @@ async function bootstrap() {
     application: angular,
     auth,
     observability,
+    staticDirectory: process.env.STATIC_ASSETS_PATH
+      ? resolve(process.env.STATIC_ASSETS_PATH)
+      : fileURLToPath(new URL('./static/', import.meta.url)),
     ...(browserTelemetry ? { browserTelemetry } : {}),
-    ...(process.env.AUTH_TRUST_PROXY
-      ? { trustProxy: process.env.AUTH_TRUST_PROXY.split(',').map((value) => value.trim()) }
-      : {}),
+    ...proxyConfiguration(process.env.AUTH_TRUST_PROXY),
   });
 
   server.on('request', application);

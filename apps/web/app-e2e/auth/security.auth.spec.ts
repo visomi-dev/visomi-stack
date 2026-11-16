@@ -108,7 +108,7 @@ test('confirms a pending password change and saves it without another entry or s
 
   await page.getByRole('button', { name: 'Save password', exact: true }).click();
 
-  const heading = page.getByRole('heading', { name: 'Confirm your password change', exact: true });
+  const heading = page.getByRole('heading', { name: 'Confirm your identity', exact: true });
 
   await expect(heading).toBeVisible();
 
@@ -118,9 +118,9 @@ test('confirms a pending password change and saves it without another entry or s
 
   await expect(page.getByLabel('New password', { exact: true })).toHaveCount(0);
 
-  await page.getByLabel('Password', { exact: true }).fill(password);
+  await page.getByLabel('Current password', { exact: true }).fill(password);
 
-  await page.getByRole('button', { name: 'Confirm with your password', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
 
   await expect(page.getByLabel('Verification code', { exact: true })).toBeVisible();
 
@@ -130,11 +130,13 @@ test('confirms a pending password change and saves it without another entry or s
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Manage password', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Password saved', exact: true })).toBeFocused();
 
-  await expect(page.getByLabel('New password', { exact: true })).toHaveValue('');
+  await expect(page.getByLabel('New password', { exact: true })).toHaveCount(0);
 
-  await expect(page.getByText('Your password has been saved.', { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Back to security', exact: true }).click();
+
+  await expect(page).toHaveURL('/app/en/security');
 
   expect(mutations).toBe(2);
 });

@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
 
 for (const locale of ['en', 'es']) {
   for (const theme of ['light', 'dark'] as const) {
-    for (const width of [320, 375, 720, 1440]) {
+    for (const width of [320, 375, 720, 1024, 1280, 1440]) {
       test(`${locale} language link in ${theme} at ${width}px`, async ({ page }, info) => {
         await page.setViewportSize({ width, height: 900 });
 
@@ -56,6 +56,17 @@ for (const locale of ['en', 'es']) {
           const toggle = document.querySelector('[data-theme-switcher]')!.getBoundingClientRect();
           const group = element.closest('nav')!.getBoundingClientRect();
           const style = getComputedStyle(element);
+          const current = element.closest('nav')!.querySelector('[aria-current="true"]')!;
+          const selected = current.getBoundingClientRect();
+          const textFits = (option: Element) => {
+            const range = document.createRange();
+
+            range.selectNodeContents(option);
+            const text = range.getBoundingClientRect();
+            const bounds = option.getBoundingClientRect();
+
+            return text.left >= bounds.left + 3 && text.right <= bounds.right - 3;
+          };
           const canvas = document.createElement('canvas').getContext('2d')!;
           const luminance = (color: string) => {
             canvas.clearRect(0, 0, 1, 1);
@@ -96,6 +107,10 @@ for (const locale of ['en', 'es']) {
             gap: toggle.left - group.right,
             fits: document.documentElement.scrollWidth <= innerWidth,
             contrast: (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05),
+            equalOptions: Math.abs(link.width - selected.width) < 1 && link.height === selected.height,
+            underline: style.textDecorationLine,
+            distinctSelection: style.backgroundColor !== getComputedStyle(current).backgroundColor,
+            textFits: textFits(element) && textFits(current),
           };
         });
 
@@ -104,6 +119,10 @@ for (const locale of ['en', 'es']) {
         expect(geometry.gap).toBeGreaterThanOrEqual(8);
         expect(geometry.fits).toBe(true);
         expect(geometry.contrast).toBeGreaterThanOrEqual(4.5);
+        expect(geometry.equalOptions).toBe(true);
+        expect(geometry.underline).toBe('none');
+        expect(geometry.distinctSelection).toBe(true);
+        expect(geometry.textFits).toBe(true);
 
         // 720 CSS px also covers the reflow width of a 1440px desktop at 200% zoom.
         await page.evaluate(() => document.fonts.ready);

@@ -34,11 +34,16 @@ const boundary = vi.hoisted(() => ({
 }));
 
 vi.mock('node:http', () => ({ createServer: boundary.createServer }));
-vi.mock('@visomi-stack/web-backend-shared', () => ({
-  initializeObservability: boundary.initialize,
-  browserAssets: boundary.browserAssets,
-  createBrowserTelemetry: boundary.browserTelemetry,
-}));
+vi.mock('@visomi-stack/web-backend-shared', async (original) => {
+  const { proxyConfiguration } = await original<typeof import('@visomi-stack/web-backend-shared')>();
+
+  return {
+    proxyConfiguration,
+    initializeObservability: boundary.initialize,
+    browserAssets: boundary.browserAssets,
+    createBrowserTelemetry: boundary.browserTelemetry,
+  };
+});
 vi.mock('@visomi-stack/backend-shared', async (original) => {
   const shared = await original<typeof import('@visomi-stack/backend-shared')>();
 
@@ -131,6 +136,24 @@ async function start() {
 }
 
 describe('gateway executable ownership', () => {
+  it('passes the explicit single-hop ingress policy to the application', async () => {
+    vi.stubEnv('AUTH_TRUST_PROXY', '1-hop');
+
+    await start();
+
+    expect(boundary.createGatewayApp).toHaveBeenCalledWith(expect.objectContaining({ trustProxy: 1 }));
+  });
+
+  it('resolves the explicit public asset directory used by source-based development', async () => {
+    vi.stubEnv('STATIC_ASSETS_PATH', '/synthetic/compiled/gateway/static');
+
+    await start();
+
+    expect(boundary.createGatewayApp).toHaveBeenCalledWith(
+      expect.objectContaining({ staticDirectory: '/synthetic/compiled/gateway/static' }),
+    );
+  });
+
   const approvals = { origin: 'https://app.example.test' };
 
   it('uses the configured Redis transport and closes it with the host', async () => {
@@ -392,6 +415,7 @@ describe('gateway executable ownership', () => {
       application: boundary.application,
       auth: undefined,
       observability: boundary.observability,
+      staticDirectory: expect.stringMatching(/gateway\/src\/static\/$/),
     });
     expect(boundary.server.on).toHaveBeenCalledWith('request', 'synthetic-app');
     expect(boundary.server.listen).toHaveBeenCalledWith(3456, '127.0.0.1', expect.any(Function));

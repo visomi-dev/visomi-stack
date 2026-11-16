@@ -6,15 +6,17 @@ import { Session } from './session';
 import type { SessionSnapshot } from './models';
 
 export function destination(session: SessionSnapshot): string {
-  if (session.access === 'unverified') {
-    return '/auth/verify-email';
+  switch (session.access) {
+    case 'unverified':
+      return '/auth/verify-email';
+    case 'recovery':
+    case 'enrollment':
+      return '/auth/recovery/enroll';
+    case 'full':
+      return session.user?.emailVerified ? '/home' : '/auth/sign-in';
+    default:
+      return '/auth/sign-in';
   }
-
-  if (session.access === 'recovery' || session.access === 'enrollment') {
-    return '/auth/recovery/enroll';
-  }
-
-  return session.access === 'full' && session.user?.emailVerified ? '/home' : '/auth/sign-in';
 }
 
 export function safeReturnTo(value: string | null, base: string): string | null {

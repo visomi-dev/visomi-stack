@@ -623,24 +623,24 @@
         <target>Nueva contraseña</target>
       </trans-unit>
       <trans-unit id="authPasswordConfirmTitle" datatype="html">
-        <source>Confirm your password change</source>
-        <target>Confirma el cambio de contraseña</target>
+        <source>Confirm your identity</source>
+        <target>Confirma tu identidad</target>
       </trans-unit>
       <trans-unit id="authPasswordConfirmDescription" datatype="html">
-        <source>Confirm your identity to save the password you just entered. It will be saved automatically after verification.</source>
-        <target>Confirma tu identidad para guardar la contraseña que acabas de escribir. Se guardará automáticamente después de la verificación.</target>
+        <source>Confirm it&apos;s you to save your new password automatically.</source>
+        <target>Confirma que eres tú para guardar automáticamente tu nueva contraseña.</target>
       </trans-unit>
       <trans-unit id="authConfirmPasskey" datatype="html">
         <source>Confirm with a passkey</source>
         <target>Confirmar con una clave de acceso</target>
       </trans-unit>
       <trans-unit id="authConfirmPassword" datatype="html">
-        <source>Confirm with your password</source>
-        <target>Confirmar con tu contraseña</target>
+        <source>Continue</source>
+        <target>Continuar</target>
       </trans-unit>
       <trans-unit id="authPasswordSaved" datatype="html">
-        <source>Your password has been saved.</source>
-        <target>Tu contraseña se guardó.</target>
+        <source>Password saved</source>
+        <target>Contraseña guardada</target>
       </trans-unit>
       <trans-unit id="authPasswordRemoved" datatype="html">
         <source>Your password has been removed.</source>
@@ -1045,6 +1045,26 @@
       <trans-unit id="authPasskeyNotUsed" datatype="html">
         <source>Not used yet</source>
         <target>Aún no se ha usado</target>
+      </trans-unit>
+      <trans-unit id="authPasswordSaving" datatype="html">
+        <source>Saving your password</source>
+        <target>Guardando tu contraseña</target>
+      </trans-unit>
+      <trans-unit id="authPasswordSavedDescription" datatype="html">
+        <source>Your new password is ready to use. Password sign-in still has a second verification step.</source>
+        <target>Tu nueva contraseña ya está lista. Al iniciar sesión seguirás completando un segundo paso de verificación.</target>
+      </trans-unit>
+      <trans-unit id="authPasswordChangeAgain" datatype="html">
+        <source>Change password again</source>
+        <target>Volver a cambiar la contraseña</target>
+      </trans-unit>
+      <trans-unit id="authCurrentPassword" datatype="html">
+        <source>Current password</source>
+        <target>Contraseña actual</target>
+      </trans-unit>
+      <trans-unit id="authUseCurrentPassword" datatype="html">
+        <source>Use your current password</source>
+        <target>Usar tu contraseña actual</target>
       </trans-unit>
     </body>
   </file>

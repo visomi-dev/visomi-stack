@@ -55,13 +55,15 @@ export function isSession(value: unknown): value is SessionView {
     return false;
   }
 
-  if (session.access === 'full') {
-    return session.user.emailVerified && session.nextStep === null;
+  switch (session.access) {
+    case 'full':
+      return session.user.emailVerified && session.nextStep === null;
+    case 'unverified':
+      return session.nextStep === 'add_email' || session.nextStep === 'verify_email';
+    case 'recovery':
+    case 'enrollment':
+      return session.nextStep === 'enroll_method';
+    default:
+      return false;
   }
-
-  if (session.access === 'unverified') {
-    return session.nextStep === 'add_email' || session.nextStep === 'verify_email';
-  }
-
-  return (session.access === 'recovery' || session.access === 'enrollment') && session.nextStep === 'enroll_method';
 }

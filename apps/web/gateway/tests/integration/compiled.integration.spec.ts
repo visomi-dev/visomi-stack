@@ -72,7 +72,7 @@ afterAll(async () => {
   }
 }, 120000);
 
-async function launch(databaseUrl?: string, trustProxy?: string) {
+async function launch(databaseUrl?: string, trustProxy?: string, secure = false) {
   const portProbe = createServer();
 
   await new Promise<void>((ready) => portProbe.listen(0, '127.0.0.1', ready));
@@ -100,7 +100,7 @@ async function launch(databaseUrl?: string, trustProxy?: string) {
             SMTP_FROM: 'auth@example.test',
             SMTP_ALLOW_INSECURE_LOCAL: 'true',
             DATABASE_URL: databaseUrl,
-            AUTH_ORIGIN: url,
+            AUTH_ORIGIN: secure ? url.replace('http:', 'https:') : url,
             AUTH_RP_ID: '127.0.0.1',
             SESSION_SECRET: 'synthetic-gateway-session-secret-32-bytes',
           }
@@ -407,112 +407,164 @@ describe('compiled ESM gateway and embedded API', () => {
     }
   });
 
-  it('uses one inherited auth chain with real PostgreSQL, valid WebAuthn and owned-pool cleanup', async () => {
-    const name = 'gateway_' + randomUUID();
-    const connection = new URL(postgres.url);
-
-    connection.searchParams.set('application_name', name);
-    const gateway = await launch(connection.toString());
-    const device = authenticator();
-    let cookie = '';
-    let token = '';
-    let requests = 0;
-    const request = async (method: string, path: string, body?: unknown) => {
-      const response = await fetch(gateway.url + '/api/auth' + path, {
-        method,
-        headers: {
-          origin: gateway.url,
-          cookie,
-          'x-csrf-token': token,
-          ...(body ? { 'content-type': 'application/json' } : {}),
-        },
-        ...(body ? { body: JSON.stringify(body) } : {}),
-      });
-      const updated = response.headers.getSetCookie()[0];
-
-      if (updated) {
-        cookie = updated.split(';')[0];
-      }
-
-      requests++;
-      const responseBody = await (response.status === 204 ? undefined : response.json());
-
-      return { status: response.status, body: responseBody };
-    };
+  it('does not persist HTTPS session cookies when the ingress is not trusted', async () => {
+    const gateway = await launch(postgres.url, undefined, true);
 
     try {
-      const anonymous = await request('GET', '/session');
+      const response = await fetch(gateway.url + '/api/auth/session', {
+        headers: { 'x-forwarded-proto': 'https' },
+      });
+      const anonymous = await response.json();
 
-      token = anonymous.body.csrfToken;
-      expect(anonymous.status).toBe(200);
-      expect(anonymous.body.authenticated).toBe(false);
-      const denied = await request('GET', '/passkeys');
-
-      expect(denied.status).toBe(401);
-      expect(denied.body).toEqual({ error: 'authentication_required' });
-      const csrfToken = token;
-
-      token = 'synthetic_invalid_csrf';
-      const forbidden = await request('POST', '/passkeys/registration/options', {});
-
-      token = csrfToken;
-      expect(forbidden.status).toBe(403);
-      expect(forbidden.body).toEqual({ error: 'csrf_invalid' });
-      const signup = await request('POST', '/passkeys/registration/options', { email: `${randomUUID()}@example.test` });
-      const originalCookie = cookie;
-      const registered = await request('POST', '/passkeys/registration/verify', {
-        challengeId: signup.body.challengeId,
-        response: device.register(signup.body.options.challenge, gateway.url, '127.0.0.1'),
+      expect(response.status).toBe(200);
+      expect(response.headers.getSetCookie()).toEqual([]);
+      const mutation = await fetch(gateway.url + '/api/auth/passkeys/registration/options', {
+        method: 'POST',
+        headers: {
+          origin: gateway.url.replace('http:', 'https:'),
+          'x-forwarded-proto': 'https',
+          'x-csrf-token': anonymous.csrfToken,
+          'content-type': 'application/json',
+        },
+        body: '{}',
       });
 
-      expect(registered.status).toBe(201);
-      expect(cookie).not.toBe(originalCookie);
-      token = registered.body.csrfToken;
-      const code = messages[messages.length - 1].match(/\b\d{6}\b/)![0];
-      const verified = await request('POST', '/email/verify', { flowId: registered.body.flowId, code });
+      expect(mutation.status).toBe(403);
 
-      expect(verified.status).toBe(200);
-      token = verified.body.csrfToken;
-      const listed = await request('GET', '/passkeys');
-
-      expect(listed.status).toBe(200);
-      expect(listed.body.credentials).toHaveLength(1);
-      const logout = await request('POST', '/logout', {});
-
-      expect(logout.status).toBe(204);
-      const session = await request('GET', '/session');
-
-      token = session.body.csrfToken;
-      expect(session.body.authenticated).toBe(false);
-      const pending = await request('POST', '/passkeys/authentication/options', {});
-      const login = await request('POST', '/passkeys/authentication/verify', {
-        challengeId: pending.body.challengeId,
-        response: device.authenticate(
-          pending.body.options.challenge,
-          gateway.url,
-          '127.0.0.1',
-          registered.body.user.id,
-        ),
-      });
-
-      expect(login.status).toBe(200);
-      expect(login.body.user.id).toBe(registered.body.user.id);
-      const active = await probe.pool.query('SELECT count(*) FROM pg_stat_activity WHERE application_name = $1', [
-        name,
-      ]);
-
-      expect(Number(active.rows[0].count)).toBeGreaterThan(0);
-      const result = await gateway.stop('SIGTERM');
-      const closed = await probe.pool.query('SELECT count(*) FROM pg_stat_activity WHERE application_name = $1', [
-        name,
-      ]);
-
-      expect(result.code).toBe(0);
-      expect(Number(closed.rows[0].count)).toBe(0);
-      expect(result.events.filter((event) => event.event === 'http.request')).toHaveLength(requests);
-      expect(result.events.every((event) => event.service === 'web-gateway')).toBe(true);
+      await expect(mutation.json()).resolves.toEqual({ error: 'csrf_invalid' });
     } finally {
       await gateway.cleanup();
     }
   });
+
+  it.each([
+    { trustProxy: undefined, secure: false },
+    { trustProxy: '127.0.0.1', secure: true },
+    { trustProxy: '1-hop', secure: true },
+  ])(
+    'uses one inherited auth chain with real PostgreSQL, valid WebAuthn and pool cleanup ($trustProxy)',
+    async ({ trustProxy, secure }) => {
+      const name = 'gateway_' + randomUUID();
+      const connection = new URL(postgres.url);
+
+      connection.searchParams.set('application_name', name);
+      const gateway = await launch(connection.toString(), trustProxy, secure);
+      const authOrigin = secure ? gateway.url.replace('http:', 'https:') : gateway.url;
+      const device = authenticator();
+      let cookie = '';
+      let token = '';
+      let requests = 0;
+      const request = async (method: string, path: string, body?: unknown) => {
+        const response = await fetch(gateway.url + '/api/auth' + path, {
+          method,
+          headers: {
+            origin: authOrigin,
+            ...(secure ? { 'x-forwarded-proto': 'https' } : {}),
+            cookie,
+            'x-csrf-token': token,
+            ...(body ? { 'content-type': 'application/json' } : {}),
+          },
+          ...(body ? { body: JSON.stringify(body) } : {}),
+        });
+        const updated = response.headers.getSetCookie()[0];
+
+        if (updated) {
+          if (secure) {
+            expect(updated).toMatch(/^__Host-visomi\.sid=/);
+            expect(updated).toContain('Secure');
+            expect(updated).toContain('HttpOnly');
+            expect(updated).toContain('SameSite=Strict');
+            expect(updated).not.toMatch(/;\s*Domain=/i);
+          }
+
+          cookie = updated.split(';')[0];
+        }
+
+        requests++;
+        const responseBody = await (response.status === 204 ? undefined : response.json());
+
+        return { status: response.status, body: responseBody };
+      };
+
+      try {
+        const anonymous = await request('GET', '/session');
+
+        token = anonymous.body.csrfToken;
+        expect(anonymous.status).toBe(200);
+        expect(anonymous.body.authenticated).toBe(false);
+        const denied = await request('GET', '/passkeys');
+
+        expect(denied.status).toBe(401);
+        expect(denied.body).toEqual({ error: 'authentication_required' });
+        const csrfToken = token;
+
+        token = 'synthetic_invalid_csrf';
+        const forbidden = await request('POST', '/passkeys/registration/options', {});
+
+        token = csrfToken;
+        expect(forbidden.status).toBe(403);
+        expect(forbidden.body).toEqual({ error: 'csrf_invalid' });
+        const signup = await request('POST', '/passkeys/registration/options', {
+          email: `${randomUUID()}@example.test`,
+        });
+        const originalCookie = cookie;
+        const registered = await request('POST', '/passkeys/registration/verify', {
+          challengeId: signup.body.challengeId,
+          response: device.register(signup.body.options.challenge, authOrigin, '127.0.0.1'),
+        });
+
+        expect(registered.status).toBe(201);
+        expect(cookie).not.toBe(originalCookie);
+        token = registered.body.csrfToken;
+        const code = messages[messages.length - 1].match(/\b\d{6}\b/)![0];
+        const mail = messages[messages.length - 1].replace(/=\r?\n/g, '').replace(/=3D/g, '=');
+
+        expect(mail).toContain(`${authOrigin}/static/brand/email/v1/logotype-stack.png`);
+        const verified = await request('POST', '/email/verify', { flowId: registered.body.flowId, code });
+
+        expect(verified.status).toBe(200);
+        token = verified.body.csrfToken;
+        const listed = await request('GET', '/passkeys');
+
+        expect(listed.status).toBe(200);
+        expect(listed.body.credentials).toHaveLength(1);
+        const logout = await request('POST', '/logout', {});
+
+        expect(logout.status).toBe(204);
+        const session = await request('GET', '/session');
+
+        token = session.body.csrfToken;
+        expect(session.body.authenticated).toBe(false);
+        const pending = await request('POST', '/passkeys/authentication/options', {});
+        const login = await request('POST', '/passkeys/authentication/verify', {
+          challengeId: pending.body.challengeId,
+          response: device.authenticate(
+            pending.body.options.challenge,
+            authOrigin,
+            '127.0.0.1',
+            registered.body.user.id,
+          ),
+        });
+
+        expect(login.status).toBe(200);
+        expect(login.body.user.id).toBe(registered.body.user.id);
+        const active = await probe.pool.query('SELECT count(*) FROM pg_stat_activity WHERE application_name = $1', [
+          name,
+        ]);
+
+        expect(Number(active.rows[0].count)).toBeGreaterThan(0);
+        const result = await gateway.stop('SIGTERM');
+        const closed = await probe.pool.query('SELECT count(*) FROM pg_stat_activity WHERE application_name = $1', [
+          name,
+        ]);
+
+        expect(result.code).toBe(0);
+        expect(Number(closed.rows[0].count)).toBe(0);
+        expect(result.events.filter((event) => event.event === 'http.request')).toHaveLength(requests);
+        expect(result.events.every((event) => event.service === 'web-gateway')).toBe(true);
+      } finally {
+        await gateway.cleanup();
+      }
+    },
+  );
 });

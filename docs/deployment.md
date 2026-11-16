@@ -28,6 +28,13 @@ or tracing. Its deployment, request-quota behavior and rollback are documented
 in [the edge project](../apps/web/edge/README.md). Application releases do not
 deploy this Worker.
 
+The gateway also packages an explicit allowlist of versioned brand assets under
+`/static/brand/`, independently of localized frontend builds. Its build prerequisite
+checks the assets and their retention; the production smoke check verifies their
+bytes and HTTP behavior. See [email branding and BIMI](email-branding.md) for the
+mail-origin configuration, immutable URLs, rollback constraints and separate BIMI
+activation requirements.
+
 ## CI and automatic deployments
 
 `.github/workflows/ci.yml` runs on every PR and push to `main`:
@@ -113,9 +120,34 @@ headers, exceptions, traces or credentials when diagnosing a deployment.
 Provision a private PostgreSQL service and supply its connection through
 `DATABASE_URL`. Supply a random session secret
 of at least 32 bytes, the HTTPS `AUTH_ORIGIN`, its hostname as `AUTH_RP_ID`, and
-an explicit trusted ingress range in `AUTH_TRUST_PROXY`. This setting accepts
-Express proxy addresses/ranges; Nive's numeric hop setting is not compatible.
-Never use a broad proxy trust setting without verifying the ingress topology.
+a reviewed proxy policy in `AUTH_TRUST_PROXY`. The checked-in Railway profile
+and environment example select `1-hop`. That policy requires one sanitizing HTTP
+ingress, no raw TCP exposure of the Node port, and only trusted private-network
+callers. It trusts the nearest forwarded address, not the entire address chain.
+Verified comma-separated Express proxy addresses/ranges are still supported.
+Unset/blank values disable proxy trust; bare numeric strings are not hop modes.
+Revalidate the boundary when public networking or private callers change.
+
+Do not set `1-hop` on a running image that predates support for that mode: the
+older address-only parser cannot start with it. Release the compatible image
+before applying the new environment value. When rolling back to an older image,
+restore its compatible address/CIDR setting as part of that operation.
+
+Angular SSR has a separate origin policy. In production with an HTTPS
+`AUTH_ORIGIN`, document requests must carry exactly one matching `Host`,
+`X-Forwarded-Host` and HTTPS `X-Forwarded-Proto`. Duplicates, comma lists, foreign
+hosts/ports and insecure protocols are rejected before rendering. Development,
+standalone rendering without a public origin and local HTTP test origins do not
+enable forwarded-URL trust. This canonical-origin check limits rendering URLs;
+it does not establish the network identity of private callers.
+
+The official Angular Node adapter creates a separate Web Request. Network
+identity headers, including `Forwarded`, `X-Forwarded-For` and the listed
+provider IP/geo headers, are removed only from that rendering copy. Express
+retains its original headers, raw headers and socket for sessions and rate
+limits. Cookies, method/body, cancellation and request-scoped authentication
+context are preserved. SSR engines are scoped to each composed application and
+rendered responses are not cached, including when a parent owns Helmet.
 
 Run the checked-in migrations as an explicit release step before enabling the
 database-backed service. The current `database-init` image owns migration tooling;

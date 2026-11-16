@@ -24,7 +24,7 @@ export type AppOptions = {
   authMode?: 'managed' | 'inherited';
   errorMode?: 'managed' | 'inherited';
   helmetMode?: 'managed' | 'inherited';
-  trustProxy?: string[];
+  trustProxy?: string[] | 1;
   basePath?: string;
 };
 

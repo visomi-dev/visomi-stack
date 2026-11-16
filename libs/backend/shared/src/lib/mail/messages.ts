@@ -1,7 +1,9 @@
-import { inject } from '../injection';
+import { inject, InjectionToken } from '../injection';
 
 import { MAIL_TRANSPORT, type MailTransport } from './smtp';
 import { templates } from './templates.generated';
+
+export const MAIL_ORIGIN = new InjectionToken<string>('canonical mail asset origin');
 
 const copy = {
   email_verify: ['Verify your email', 'Enter this code to finish setting up your account.'],
@@ -39,10 +41,16 @@ const escape = (value: string) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-export function renderMessage(kind: 'verification' | 'security', title: string, description: string, code = '') {
-  const fields = { title, description, code };
+export function renderMessage(
+  origin: string,
+  kind: 'verification' | 'security',
+  title: string,
+  description: string,
+  code = '',
+) {
+  const fields = { title, description, code, origin: new URL(origin).origin };
   const html = templates[kind].replace(
-    /\{\{\s*(title|description|code)\s*\}\}/g,
+    /\{\{\s*(title|description|code|origin)\s*\}\}/g,
     (_match, field: keyof typeof fields) => escape(fields[field]),
   );
 
@@ -55,28 +63,32 @@ export function renderMessage(kind: 'verification' | 'security', title: string, 
 
 export class AuthMail {
   private readonly transport = inject<MailTransport>(MAIL_TRANSPORT, { optional: true });
+  private readonly origin = inject(MAIL_ORIGIN, { optional: true });
 
   async code(to: string, purpose: CodePurpose, code: string) {
-    if (!this.transport) {
+    if (!this.transport || !this.origin) {
       throw new Error('mail_unavailable');
     }
 
     const [title, description] = copy[purpose];
 
     try {
-      await this.transport.send({ to, ...renderMessage('verification', title, description, code) });
+      await this.transport.send({ to, ...renderMessage(this.origin, 'verification', title, description, code) });
     } catch {
       throw new Error('mail_unavailable');
     }
   }
 
   async notice(to: string, notice: SecurityNotice) {
-    if (!this.transport) {
+    if (!this.transport || !this.origin) {
       throw new Error('mail_unavailable');
     }
 
     try {
-      await this.transport.send({ to, ...renderMessage('security', 'Account security update', notices[notice]) });
+      await this.transport.send({
+        to,
+        ...renderMessage(this.origin, 'security', 'Account security update', notices[notice]),
+      });
     } catch {
       throw new Error('mail_unavailable');
     }

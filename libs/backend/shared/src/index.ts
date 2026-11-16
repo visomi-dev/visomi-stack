@@ -3,7 +3,7 @@ export type { Database, DatabaseResource } from './lib/database/database';
 export * as authSchema from './lib/database/schema-auth';
 export { createSmtp, smtpConfig, MAIL_TRANSPORT } from './lib/mail/smtp';
 export type { MailMessage, MailTransport, SmtpConfig } from './lib/mail/smtp';
-export { AuthMail, renderMessage } from './lib/mail/messages';
+export { AuthMail, renderMessage, MAIL_ORIGIN } from './lib/mail/messages';
 export type { CodePurpose, SecurityNotice } from './lib/mail/messages';
 export { createInjector, inject, InjectionToken, Injector, runInInjectionContext } from './lib/injection';
 export type { Provider, Type } from './lib/injection';

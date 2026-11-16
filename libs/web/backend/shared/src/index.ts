@@ -17,3 +17,4 @@ export { httpObservability, operationalErrorHandler } from './lib/observability/
 export { browserAssets } from './lib/observability/browser/assets';
 export type { BrowserAssets } from './lib/observability/browser/assets';
 export { createBrowserTelemetry } from './lib/observability/browser/intake';
+export { proxyConfiguration } from './lib/http/proxy-configuration';

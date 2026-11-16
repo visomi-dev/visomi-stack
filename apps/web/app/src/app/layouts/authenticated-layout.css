@@ -2,7 +2,7 @@
   margin: 0;
   height: 100dvh;
   max-height: none;
-  width: min(24rem, 100%);
+  width: 100dvw;
   max-width: none;
   border-radius: 0;
   padding-top: max(1.5rem, env(safe-area-inset-top));

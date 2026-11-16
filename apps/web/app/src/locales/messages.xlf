@@ -1134,17 +1134,17 @@
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordConfirmTitle" datatype="html">
-        <source>Confirm your password change</source>
+        <source>Confirm your identity</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
-          <context context-type="linenumber">57</context>
+          <context context-type="linenumber">67</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordConfirmDescription" datatype="html">
-        <source>Confirm your identity to save the password you just entered. It will be saved automatically after verification.</source>
+        <source>Confirm it&apos;s you to save your new password automatically.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
-          <context context-type="linenumber">58</context>
+          <context context-type="linenumber">68</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authConfirmPasskey" datatype="html">
@@ -1155,17 +1155,17 @@
         </context-group>
       </trans-unit>
       <trans-unit id="authConfirmPassword" datatype="html">
-        <source> Confirm with your password </source>
+        <source> Continue </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
-          <context context-type="linenumber">95,97</context>
+          <context context-type="linenumber">99,101</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordSaved" datatype="html">
-        <source>Your password has been saved.</source>
+        <source>Password saved</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
-          <context context-type="linenumber">73</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="linenumber">33,35</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordRemoved" datatype="html">
@@ -2279,6 +2279,41 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.ts</context>
           <context context-type="linenumber">44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authPasswordSaving" datatype="html">
+        <source>Saving your password</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="linenumber">11,13</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authPasswordSavedDescription" datatype="html">
+        <source> Your new password is ready to use. Password sign-in still has a second verification step. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="linenumber">36,40</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authPasswordChangeAgain" datatype="html">
+        <source> Change password again </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="linenumber">51,55</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authCurrentPassword" datatype="html">
+        <source>Current password</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.ts</context>
+          <context context-type="linenumber">85</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="authUseCurrentPassword" datatype="html">
+        <source>Use your current password</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="linenumber">52,54</context>
         </context-group>
       </trans-unit>
     </body>

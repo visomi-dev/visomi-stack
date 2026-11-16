@@ -15,7 +15,7 @@ files, connect resources, migrate schemas or create seeds.
 | `AUTH_ORIGIN`                | Exact browser origin, without a trailing slash; HTTPS except loopback development.              |
 | `AUTH_RP_ID`                 | WebAuthn relying party host or permitted parent domain.                                         |
 | `SESSION_SECRET`             | Shared high-entropy session/HMAC secret, at least 32 bytes.                                     |
-| `AUTH_TRUST_PROXY`           | Optional explicit proxy addresses/CIDRs, comma separated.                                       |
+| `AUTH_TRUST_PROXY`           | Verified proxy CIDRs/addresses or explicit reviewed `1-hop`; unset/blank disables trust.        |
 | `SMTP_HOST`, `SMTP_PORT`     | SMTP server; port defaults to 587.                                                              |
 | `SMTP_SECURE`                | `true` for implicit TLS, usually port 465; otherwise STARTTLS is required.                      |
 | `SMTP_FROM`                  | Sender address.                                                                                 |
@@ -69,9 +69,22 @@ the command before applying this setting. The local `backend-shared:db-migrate`
 target uses the same executable. Application imports and startup never migrate.
 
 Before enabling the deployment, confirm any new database/storage charges and
-verify the ingress proxy configuration. Configure `AUTH_TRUST_PROXY` only with
-verified proxy addresses/CIDRs. Do not infer a stable allowlist from a single
-request or trust arbitrary forwarded headers. Check `/api/auth/session` and
+verify the ingress proxy configuration. The checked-in Railway profile and
+environment example select `AUTH_TRUST_PROXY=1-hop`: one sanitizing HTTP ingress,
+no raw TCP exposure of the Node port, and only trusted private-network callers.
+This mode trusts only the nearest forwarded address; it does not authenticate
+private callers or validate an arbitrary client-supplied forwarded host/protocol.
+Keep the boundary under review when networking changes. Verified comma-separated
+proxy addresses/CIDRs remain supported; an unset/blank setting disables proxy
+trust, and a bare numeric string is not the single-hop mode.
+
+Deploy an image containing `proxyConfiguration` before changing an existing
+service variable to `1-hop`. Older images parse the string as an address and
+cannot start with it. Update the application image and configuration together;
+do not independently activate this value on an incompatible release.
+
+Do not infer a stable allowlist from one request or trust arbitrary forwarded
+headers. Check `/api/auth/session` and
 `/api/auth/providers` on the public origin, verify that the host-only secure cookie
 persists across requests, and verify SSR session state. A successful health check
 on `/api/` alone does not establish that authentication works.

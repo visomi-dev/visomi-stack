@@ -63,9 +63,9 @@
       "options": {
         "commands": [
           "tsc --noEmit --module esnext --moduleResolution bundler --allowImportingTsExtensions --target es2022 --types node --skipLibCheck .railway/railway.ts",
-          "eslint .railway tools/deployment/*.mjs",
+          "eslint .railway tools/deployment/*.mjs tools/branding/*.mjs",
           "bash -n tools/deployment/container.sh",
-          "node --test tools/deployment/affected.spec.mjs tools/deployment/resolve-browser-error.spec.mjs"
+          "node --test tools/deployment/affected.spec.mjs tools/deployment/resolve-browser-error.spec.mjs tools/deployment/bimi-check.spec.mjs"
         ],
         "parallel": false
       },
@@ -122,7 +122,7 @@
     },
     "serve": {
       "continuous": true,
-      "dependsOn": ["^build"],
+      "dependsOn": ["build"],
       "readyWhen": {
         "signal": true
       },
@@ -130,7 +130,8 @@
         "env": {
           "API_APP_PATH": "../../../dist/apps/web/api/app.js",
           "SITE_APP_PATH": "../../../dist/apps/web/site/server/entry.mjs",
-          "APPLICATION_APP_PATH": "../../../dist/apps/web/app/server/server.mjs"
+          "APPLICATION_APP_PATH": "../../../dist/apps/web/app/server/server.mjs",
+          "STATIC_ASSETS_PATH": "../../../dist/apps/web/gateway/static"
         }
       }
     },
@@ -202,7 +203,7 @@
       "dependsOn": ["test"]
     },
     "build": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build", "brand-check"]
     },
     "container-check": {
       "executor": "nx:run-commands",
@@ -222,7 +223,37 @@
       "options": {
         "command": "bash tools/deployment/container.sh"
       }
+    },
+    "brand-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/assets/brand/**/*",
+        "{workspaceRoot}/tools/branding/**/*",
+        {
+          "env": "NX_BASE"
+        }
+      ],
+      "options": {
+        "commands": ["node tools/branding/check.mjs", "node --test tools/branding/*.spec.mjs"],
+        "parallel": false
+      }
+    },
+    "bimi-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/deployment/bimi-check.mjs"
+      }
     }
   },
-  "implicitDependencies": ["web-api", "web-site", "web-app", "web-realtime"]
+  "implicitDependencies": ["web-api", "web-site", "web-app", "web-realtime"],
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+      "{workspaceRoot}/assets/brand/**/*",
+      "{workspaceRoot}/tools/branding/**/*"
+    ]
+  }
 }

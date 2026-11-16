@@ -30,12 +30,15 @@ export function createGoogleRouter(
   function startAccess(request: Request, response: Response, next: NextFunction) {
     const intent: unknown = request.body?.intent;
 
-    if (intent == null || intent === 'login') {
-      anonymous(request, response, next);
-    } else if (intent === 'link' || intent === 'reauth') {
-      return full(request, response, next);
-    } else {
-      next();
+    switch (intent ?? 'login') {
+      case 'login':
+        anonymous(request, response, next);
+        break;
+      case 'link':
+      case 'reauth':
+        return full(request, response, next);
+      default:
+        next();
     }
   }
 }
