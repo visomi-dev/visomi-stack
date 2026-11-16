@@ -24,6 +24,19 @@ export default defineConfig({
     reuseExistingServer: false,
   },
   projects: [
-    { name: 'astro-express-chromium', metadata: { application: 'astro' }, use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'astro-telemetry-chromium',
+      testMatch: '**/telemetry.spec.ts',
+      metadata: { application: 'astro' },
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'astro-express-chromium',
+      testIgnore: '**/telemetry.spec.ts',
+      // These checks need an unused intake budget before the remaining pages generate background reports.
+      dependencies: ['astro-telemetry-chromium'],
+      metadata: { application: 'astro' },
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
 });

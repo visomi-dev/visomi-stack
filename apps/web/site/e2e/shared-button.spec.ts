@@ -7,6 +7,8 @@ import { disablePerformanceCapture } from './support/performance';
 
 for (const locale of ['en', 'es']) {
   test(`Astro SSR emits native controls with shared styles in ${locale}`, async ({ page, request }) => {
+    await disablePerformanceCapture(page);
+
     const path = `/${locale}/button/`;
     const response = await request.get(path);
     const markup = await response.text();

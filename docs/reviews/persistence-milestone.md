@@ -158,6 +158,21 @@ Excluding `.angular`, `.codegraph` and `.qmd` reduced the next context to 1.237 
 The interrupted diagnostic/push attempts are not counted as green E2E evidence;
 the final per-project and published-head results are recorded separately in the PR.
 
+After the context fix, the push hook passed all 16 compiled API E2E cases and all
+six compiled gateway E2E cases. It then stopped on the site's performance-intake
+assertion: background reports from the preceding pages exhausted the unchanged
+120-request global budget, returning 429 instead of 202. The isolated case passed.
+The site's existing telemetry cases now run in a prerequisite Playwright project
+before the remaining pages generate that background traffic. All 99 cases and
+their assertions remain; the production intake limiter and its rejection tests
+are unchanged. The failed full-suite attempt is not recorded as a pass.
+The next full run confirmed the telemetry cases but found the same 429 in the
+native-button case's unchanged empty-console assertion. That case now uses the
+existing `disablePerformanceCapture` fixture, as the shell/catalog/bundle-budget
+checks already do, so dedicated telemetry cases own the opt-in traffic. No
+console error is filtered or ignored.
+The complete repeated site suite passed all 99 cases with those fixtures.
+
 ### Final follow-up verification
 
 Full local suites after the retention fixes passed **1,121 tests** across all
