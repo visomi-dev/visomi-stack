@@ -13,7 +13,6 @@ import {
 import { decodeBytes } from './crypto';
 import { WebCryptoDevices, type DeviceIdentity } from './devices';
 
-
 const fixture = JSON.parse(
   readFileSync(new URL('../../../../../shared/persistence/fixtures/devices-v1.json', import.meta.url), 'utf8'),
 );

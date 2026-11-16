@@ -18,7 +18,6 @@ import { PersistenceHttp } from './http';
 import { ExamplePrivateResource, type ExampleTarget } from './example-private-resource';
 import { vaultMessage } from './vault-messages';
 
-
 const targetSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid(), objectId: z.uuid() });
 const scopeSchema = targetSchema.omit({ objectId: true });
 const cloudSchema = z.object({

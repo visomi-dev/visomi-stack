@@ -5,7 +5,6 @@ import type { PendingWrite } from '../src/lib/replica';
 
 import { browser, prepare, vector, type FixtureWindow } from './support/browser';
 
-
 describe('actual Chromium ciphertext replicas', () => {
   it('requires an explicit matching operation to rebase or discard a conflicting encrypted outbox', async () => {
     const page = await browser.newPage();

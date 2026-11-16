@@ -9,7 +9,6 @@ import {
 
 import { decodeBytes, encodeBytes } from './crypto';
 
-
 /** Local WebAuthn ceremony only: PRF output/assertions are never sent to the cloud. */
 export class PrfUnlock implements VaultUnlock {
   private pending: AbortController | undefined;

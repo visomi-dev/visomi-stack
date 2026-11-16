@@ -6,7 +6,6 @@ import { VaultError } from '@visomi-stack/shared-persistence';
 
 import { Session } from '../auth/session/session';
 
-
 /** Same-origin, non-transferable persistence calls; the existing interceptor supplies CSRF on mutations. */
 @Service({ autoProvided: false })
 export class PersistenceHttp {

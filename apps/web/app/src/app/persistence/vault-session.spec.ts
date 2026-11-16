@@ -8,7 +8,6 @@ import { Session } from '../auth/session/session';
 
 import { VaultSession } from './vault-session';
 
-
 const binding: WrappingContext = {
   key: {
     product: 'synthetic-example',

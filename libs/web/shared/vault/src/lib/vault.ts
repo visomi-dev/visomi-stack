@@ -25,7 +25,6 @@ import {
 import { WebCryptoCipher } from './crypto';
 import type { WebCryptoDevices } from './devices';
 
-
 /** One independently locked key scope; records are loaded/decrypted individually. */
 export class BrowserVault implements VaultPort {
   private readonly recoveryOperations = new Set<VaultUnlock>();

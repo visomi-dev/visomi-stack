@@ -6,7 +6,6 @@ import { Button, Field, Heading, Text, Textarea } from '../ui';
 import { VaultSession } from './vault-session';
 import { vaultMessage } from './vault-messages';
 
-
 /** Consumers supply a configured scope and a separately provisioned PRF credential. */
 @Component({
   selector: 'app-vault-panel',

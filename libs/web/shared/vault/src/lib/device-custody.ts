@@ -17,7 +17,6 @@ import { WebCryptoDevices, type DeviceIdentity } from './devices';
 import { provisionDeviceIdentity, restoreDeviceIdentity } from './identity-custody';
 import { BrowserVault } from './vault';
 
-
 export function deviceCustodyContext(input: WrappingContext): WrappingContext {
   const value = wrappingContextSchema.parse(input);
 

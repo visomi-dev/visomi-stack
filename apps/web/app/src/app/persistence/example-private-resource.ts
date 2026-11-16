@@ -29,7 +29,6 @@ import { Session } from '../auth/session/session';
 import { PersistenceHttp } from './http';
 import { VaultSession } from './vault-session';
 
-
 export type ExampleTarget = { tenantId: string; scopeId: string; objectId: string };
 const rosterSchema = z.object({
   key: keyDomainSchema,

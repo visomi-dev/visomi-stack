@@ -20,7 +20,6 @@ import {
 
 import { decodeBytes, encodeBytes } from './crypto';
 
-
 export type DeviceIdentity = { signing: CryptoKeyPair; encryption: CryptoKeyPair };
 
 /** Ephemeral operational identity. Persistent custody must encrypt exported material separately. */

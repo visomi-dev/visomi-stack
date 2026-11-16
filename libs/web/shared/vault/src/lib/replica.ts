@@ -15,7 +15,6 @@ import {
 
 import { encodeBytes } from './crypto';
 
-
 export type ReplicaPin = SyncHead & { generation: number; epoch: number };
 export type PendingWrite = ReturnType<typeof syncWriteSchema.parse>;
 export type ReplicaStorage = {

@@ -16,7 +16,6 @@ import {
 
 import { decodeBytes, encodeBytes, WebCryptoCipher } from './crypto';
 
-
 const vectors = JSON.parse(
   readFileSync(new URL('../../../../../shared/persistence/fixtures/crypto-v1.json', import.meta.url), 'utf8'),
 ) as {

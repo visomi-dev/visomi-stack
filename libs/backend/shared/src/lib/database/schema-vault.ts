@@ -16,7 +16,6 @@ import type { DataEnvelope, DeviceChallenge, ApprovedDelivery } from '@visomi-st
 
 import { memberships, scopes } from './schema-persistence';
 
-
 export const keyScopes = pgTable(
   'vault_key_scopes',
   {

@@ -11,7 +11,6 @@ import {
 
 import type { PendingWrite, ReplicaPin, ReplicaStorage } from './replica';
 
-
 const pinSchema = syncHeadSchema.safeExtend({
   generation: z.number().int().min(1).max(2_147_483_647),
   epoch: z.number().int().min(1).max(2_147_483_647),

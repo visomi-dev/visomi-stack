@@ -129,6 +129,14 @@ compaction must supply independently trusted complete state before enabling that
 operation. No trusted full-replica transfer UI is claimed. This is an explicit
 adapter limitation, not an invented Nive policy or an independent-audit finding.
 
+Final commit verification also exposed extra blank lines emitted by import
+fixers after the hook's initial Prettier pass. A final file-scoped Prettier pass
+now follows ESLint in lint-staged. This preserves both checks and makes committed
+bytes match CI formatting; hooks were not bypassed.
+The two new source aliases are also classified explicitly in import ordering,
+matching the existing testing-alias convention, so root hooks and project tasks
+resolve their groups consistently. No import or module-boundary rule was disabled.
+
 ### Final follow-up verification
 
 Full local suites after the retention fixes passed **1,121 tests** across all
