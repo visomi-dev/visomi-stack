@@ -1,0 +1,76 @@
+<section class="space-y-5" [attr.aria-busy]="busy()">
+  <header class="space-y-2">
+    <h2 appUI i18n="@@vaultHeading">Private resource</h2>
+
+    <p appUI tone="muted" i18n="@@vaultSeparation">
+      Signing in does not unlock this resource. Unlock it separately on this device.
+    </p>
+  </header>
+
+  <p role="status" aria-live="polite">{{ status() }}</p>
+
+  <div class="flex flex-wrap gap-3">
+    <button appUI type="button" [disabled]="busy() || ready()" (click)="unlock()" i18n="@@vaultUnlock">
+      Unlock with passkey
+    </button>
+
+    @if (allowInitialize()) {
+      <button
+        appUI
+        type="button"
+        variant="secondary"
+        [disabled]="busy() || ready()"
+        (click)="unlock(true)"
+        i18n="@@vaultInitialize"
+      >
+        Initialize an empty local vault
+      </button>
+    }
+
+    <button appUI type="button" variant="secondary" (click)="lock()" i18n="@@vaultLock">Lock private resources</button>
+  </div>
+
+  @if (ready()) {
+    <form class="space-y-4" (submit)="$event.preventDefault(); save()">
+      <app-field
+        [control-id]="controlId()"
+        #field="appField"
+        label="Private text"
+        i18n-label="@@vaultPrivateText"
+        description="Stored as ciphertext on this device. Keep a recovery method or an encrypted backup if your product supports one."
+        i18n-description="@@vaultLocalDescription"
+      >
+        <textarea
+          appUI
+          [id]="controlId()"
+          [attr.aria-describedby]="field.describedBy()"
+          #privateText
+          name="private-text"
+          rows="4"
+          maxlength="8192"
+          autocomplete="off"
+          spellcheck="false"
+          [value]="editor()"
+          [disabled]="busy()"
+          (input)="editor.set(privateText.value)"
+        ></textarea>
+      </app-field>
+
+      <div class="flex flex-wrap gap-3">
+        <button appUI type="submit" [disabled]="busy()" i18n="@@vaultSave">Save encrypted change</button>
+
+        <button appUI type="button" variant="secondary" [disabled]="busy()" (click)="read()" i18n="@@vaultRead">
+          Read on this device
+        </button>
+      </div>
+    </form>
+
+    @if (vault.plaintext()) {
+      <pre class="rounded-lg border p-4 break-words whitespace-pre-wrap">{{ vault.plaintext() }}</pre>
+    }
+  }
+
+  @if (notice()) {
+    <p role="status" aria-live="polite">{{ notice() }}</p>
+  }
+</section>

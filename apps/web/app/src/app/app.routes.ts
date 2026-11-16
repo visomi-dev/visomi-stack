@@ -93,6 +93,11 @@ export const appRoutes: Routes = [
     loadComponent: () => import('./layouts/authenticated-layout').then((m) => m.AuthenticatedLayout),
     children: [
       { path: 'home', loadComponent: () => import('./home/home').then((m) => m.Home) },
+      { path: 'persistence', loadComponent: () => import('./persistence/example').then((m) => m.PersistenceExample) },
+      {
+        path: 'persistence/:tenantId/:scopeId/:objectId',
+        loadComponent: () => import('./persistence/example').then((m) => m.PersistenceExample),
+      },
       { path: 'account', loadComponent: () => import('./auth/email/account').then((m) => m.Account) },
       {
         path: 'security',

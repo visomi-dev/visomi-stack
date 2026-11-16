@@ -84,8 +84,16 @@ export default defineConfig(
         },
         projects: [
           { name: 'auth-chromium', use: { ...devices['Desktop Chrome'] } },
-          { name: 'auth-firefox', testIgnore: '**/passkeys.auth.spec.ts', use: { ...devices['Desktop Firefox'] } },
-          { name: 'auth-webkit', testIgnore: '**/passkeys.auth.spec.ts', use: { ...devices['Desktop Safari'] } },
+          {
+            name: 'auth-firefox',
+            testIgnore: ['**/passkeys.auth.spec.ts', '**/persistence.auth.spec.ts'],
+            use: { ...devices['Desktop Firefox'] },
+          },
+          {
+            name: 'auth-webkit',
+            testIgnore: ['**/passkeys.auth.spec.ts', '**/persistence.auth.spec.ts'],
+            use: { ...devices['Desktop Safari'] },
+          },
         ],
       }
     : foundations,
