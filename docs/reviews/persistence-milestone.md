@@ -150,6 +150,13 @@ legacy teardown hooks using Vitest's 10-second default. Only those disposable
 container cleanup hooks now share their existing setup budget of 120 seconds;
 test-body deadlines and security assertions remain unchanged. A timed-out cleanup
 is still a failed suite, not a pass.
+The repeated push then passed all 20 test/build tasks, but its E2E phase did not
+publish the branch. A separate gateway run confirmed the existing 600-second
+container-readiness timeout. An isolated streamed build exposed a 556.7 MB build
+context containing local caches, including 735 MB of allocated Angular cache.
+Excluding `.angular`, `.codegraph` and `.qmd` reduced the next context to 1.237 MB.
+The interrupted diagnostic/push attempts are not counted as green E2E evidence;
+the final per-project and published-head results are recorded separately in the PR.
 
 ### Final follow-up verification
 
