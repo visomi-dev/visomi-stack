@@ -137,6 +137,20 @@ The two new source aliases are also classified explicitly in import ordering,
 matching the existing testing-alias convention, so root hooks and project tasks
 resolve their groups consistently. No import or module-boundary rule was disabled.
 
+The first authenticated push attempt ran the existing pre-push hook and exposed
+a migration-test timeout under default concurrent file execution. It did not
+publish the branch. The previously green bounded-worker commands were not the
+hook's execution profile. Heavy PostgreSQL/browser suites now explicitly cap file
+workers at two, matching their verified profile; the existing 60-second migration
+budget and all assertions remain unchanged. The migration test also forwards
+Vitest cancellation to its owned PostgreSQL setup and child migration process.
+No hook, test case, timeout failure or coverage gate was bypassed.
+The subsequent default-profile run passed all 352 API assertions but exposed two
+legacy teardown hooks using Vitest's 10-second default. Only those disposable
+container cleanup hooks now share their existing setup budget of 120 seconds;
+test-body deadlines and security assertions remain unchanged. A timed-out cleanup
+is still a failed suite, not a pass.
+
 ### Final follow-up verification
 
 Full local suites after the retention fixes passed **1,121 tests** across all

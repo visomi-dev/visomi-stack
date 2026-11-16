@@ -10,8 +10,8 @@ import { testPostgres } from './postgres';
 const execute = promisify(execFile);
 const script = fileURLToPath(new URL('../../../../../libs/backend/shared/tools/database/migrate.mjs', import.meta.url));
 
-it('applies the production migration command to an empty isolated database and can repeat it', async () => {
-  const database = await testPostgres();
+it('applies the production migration command to an empty isolated database and can repeat it', async ({ signal }) => {
+  const database = await testPostgres(undefined, 'web-api', signal);
   const pool = new Pool({ connectionString: database.url });
 
   try {
@@ -19,7 +19,10 @@ it('applies the production migration command to an empty isolated database and c
     await pool.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public; DROP SCHEMA drizzle CASCADE;');
 
     for (let attempt = 0; attempt < 2; attempt++) {
-      const result = await execute(process.execPath, [script], { env: { ...process.env, DATABASE_URL: database.url } });
+      const result = await execute(process.execPath, [script], {
+        signal,
+        env: { ...process.env, DATABASE_URL: database.url },
+      });
 
       expect(result.stderr).toBe('');
       const tables = await pool.query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");

@@ -8,6 +8,7 @@ export default defineConfig(() => ({
   },
   test: {
     name: 'web-shared-vault',
+    maxWorkers: 2,
     watch: false,
     globals: true,
     environment: 'node',
