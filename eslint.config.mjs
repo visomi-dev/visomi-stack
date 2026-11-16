@@ -46,11 +46,11 @@ export const moduleBoundaryOptions = {
   depConstraints: [
     {
       sourceTag: 'scope:web-frontend',
-      onlyDependOnLibsWithTags: ['scope:web-frontend', 'scope:web-shared'],
+      onlyDependOnLibsWithTags: ['scope:web-frontend', 'scope:web-shared', 'scope:shared'],
     },
     {
       sourceTag: 'scope:web-shared',
-      onlyDependOnLibsWithTags: ['scope:web-shared'],
+      onlyDependOnLibsWithTags: ['scope:web-shared', 'scope:shared'],
     },
     {
       sourceTag: 'scope:web-backend',

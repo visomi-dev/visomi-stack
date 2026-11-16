@@ -7,6 +7,7 @@ import { AuthHttpError, HttpError, httpErrorHandler, initializeObservability } f
 import type { Request, RequestHandler, Response } from 'express';
 import express, { Router } from 'express';
 import { describe, expect, it, vi } from 'vitest';
+import { syntheticHybridPolicy } from '@visomi-stack/shared-persistence';
 
 import type { ApiModule, EmbeddedAuthentication } from './api-module';
 import { createGatewayApp } from './app';
@@ -42,6 +43,15 @@ function apiFixture(handler: RequestHandler = (request, response) => response.js
 }
 
 describe('gateway composition', () => {
+  it('passes an explicit persistence manifest only to a compatible compiled API', () => {
+    expect(() => createGatewayApp({ api: apiFixture(), persistence: syntheticHybridPolicy })).toThrow(
+      'api_persistence_unavailable',
+    );
+    const api = { ...apiFixture(), persistenceVersion: 1 as const };
+
+    createGatewayApp({ api, persistence: syntheticHybridPolicy });
+    expect(api.createApp).toHaveBeenCalledWith(expect.objectContaining({ persistence: syntheticHybridPolicy }));
+  });
   it('serves packaged public branding without authentication, cookies or website fallbacks', async () => {
     const authenticate = vi.fn<RequestHandler>((_request, _response, next) =>
       next(new Error('synthetic_auth_unavailable')),

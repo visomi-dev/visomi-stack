@@ -25,11 +25,19 @@ it('applies the production migration command to an empty isolated database and c
       const tables = await pool.query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
 
       expect(tables.rows.map((row) => row.tablename)).toEqual(
-        expect.arrayContaining(['auth_users', 'auth_sessions', 'auth_credentials', 'auth_flows']),
+        expect.arrayContaining([
+          'auth_users',
+          'auth_sessions',
+          'auth_credentials',
+          'auth_flows',
+          'persistence_tenants',
+          'persistence_records',
+          'persistence_grants',
+        ]),
       );
       const history = await pool.query('SELECT * FROM drizzle.__drizzle_migrations');
 
-      expect(history.rows).toHaveLength(5);
+      expect(history.rows).toHaveLength(8);
     }
   } finally {
     await pool.end();

@@ -6,6 +6,7 @@ import {
   type Observability,
 } from '@visomi-stack/web-backend-shared';
 import express, { Router, static as serveStatic } from 'express';
+import type { ProductPolicy } from '@visomi-stack/shared-persistence';
 
 import type { ApiModule, EmbeddedAuthentication } from './api-module';
 import type { SiteModule } from './site-module';
@@ -14,6 +15,7 @@ import { pageErrors } from './page-errors';
 
 export function createGatewayApp(options: {
   api: ApiModule;
+  persistence?: ProductPolicy;
   site?: SiteModule;
   application?: ApplicationModule;
   auth?: EmbeddedAuthentication;
@@ -24,6 +26,10 @@ export function createGatewayApp(options: {
   errorMode?: 'managed' | 'inherited';
   staticDirectory?: string;
 }) {
+  if (options.persistence && options.api.persistenceVersion !== 1) {
+    throw new Error('api_persistence_unavailable');
+  }
+
   const app = express();
   const errors = pageErrors(options.site?.clientDirectory);
 
@@ -138,6 +144,7 @@ export function createGatewayApp(options: {
       helmetMode: 'inherited',
       auth: options.auth,
       observability: options.observability,
+      ...(options.persistence ? { persistence: options.persistence } : {}),
     }),
   );
 

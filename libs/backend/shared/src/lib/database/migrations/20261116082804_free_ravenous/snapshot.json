@@ -1,0 +1,1513 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "8513add8-7fb8-43ee-ab0d-898ee1a5e97f",
+  "prevIds": ["032e0a7b-06c0-4fc0-8014-cb422415a398"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "vault_key_challenges"],
+      "writes": [
+        "s|tbl|public.vault_key_challenges",
+        "n|tbl|public.vault_key_challenges",
+        "e|tbl|public.vault_key_challenges",
+        "n|rel|public.vault_key_challenges",
+        "n|type|public.vault_key_challenges",
+        "n|rel|public.vault_key_challenges_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "vault_key_devices"],
+      "writes": [
+        "s|tbl|public.vault_key_devices",
+        "n|tbl|public.vault_key_devices",
+        "e|tbl|public.vault_key_devices",
+        "n|rel|public.vault_key_devices",
+        "n|type|public.vault_key_devices",
+        "n|rel|public.vault_key_devices_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "vault_key_scopes"],
+      "writes": [
+        "s|tbl|public.vault_key_scopes",
+        "n|tbl|public.vault_key_scopes",
+        "e|tbl|public.vault_key_scopes",
+        "n|rel|public.vault_key_scopes",
+        "n|type|public.vault_key_scopes",
+        "n|rel|public.vault_key_scopes_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "vault_opaque_commands"],
+      "writes": [
+        "s|tbl|public.vault_opaque_commands",
+        "n|tbl|public.vault_opaque_commands",
+        "e|tbl|public.vault_opaque_commands",
+        "n|rel|public.vault_opaque_commands",
+        "n|type|public.vault_opaque_commands",
+        "n|rel|public.vault_opaque_commands_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "vault_opaque_events"],
+      "writes": [
+        "s|tbl|public.vault_opaque_events",
+        "n|tbl|public.vault_opaque_events",
+        "e|tbl|public.vault_opaque_events",
+        "n|rel|public.vault_opaque_events",
+        "n|type|public.vault_opaque_events",
+        "n|rel|public.vault_opaque_events_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "vault_opaque_streams"],
+      "writes": [
+        "s|tbl|public.vault_opaque_streams",
+        "n|tbl|public.vault_opaque_streams",
+        "e|tbl|public.vault_opaque_streams",
+        "n|rel|public.vault_opaque_streams",
+        "n|type|public.vault_opaque_streams",
+        "n|rel|public.vault_opaque_streams_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "vault_opaque_units"],
+      "writes": [
+        "s|tbl|public.vault_opaque_units",
+        "n|tbl|public.vault_opaque_units",
+        "e|tbl|public.vault_opaque_units",
+        "n|rel|public.vault_opaque_units",
+        "n|type|public.vault_opaque_units",
+        "n|rel|public.vault_opaque_units_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "vault_key_challenges"],
+      "writes": [
+        "s|fk|public.vault_key_challenges.vault_key_challenges_bszqteMo8X2W_fkey",
+        "n|fk|public.vault_key_challenges.vault_key_challenges_bszqteMo8X2W_fkey",
+        "e|fk|public.vault_key_challenges.vault_key_challenges_bszqteMo8X2W_fkey",
+        "n|con|public.vault_key_challenges.vault_key_challenges_bszqteMo8X2W_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.vault_key_challenges",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.vault_key_challenges.tenant_id",
+        "n|col|public.vault_key_challenges.scope_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "vault_key_challenges"],
+      "writes": [
+        "s|fk|public.vault_key_challenges.vault_key_challenges_v0M0tq3FbfHR_fkey",
+        "n|fk|public.vault_key_challenges.vault_key_challenges_v0M0tq3FbfHR_fkey",
+        "e|fk|public.vault_key_challenges.vault_key_challenges_v0M0tq3FbfHR_fkey",
+        "n|con|public.vault_key_challenges.vault_key_challenges_v0M0tq3FbfHR_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.vault_key_challenges",
+        "n|sch|public",
+        "n|tbl|public.persistence_memberships",
+        "n|sch|public",
+        "n|col|public.vault_key_challenges.tenant_id",
+        "n|col|public.vault_key_challenges.owner_id",
+        "n|col|public.persistence_memberships.tenant_id",
+        "n|col|public.persistence_memberships.user_id",
+        "e|uniqueness|public.persistence_memberships.tenant_id.user_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "vault_key_devices"],
+      "writes": [
+        "s|fk|public.vault_key_devices.vault_key_devices_RiN2e2KXmhg1_fkey",
+        "n|fk|public.vault_key_devices.vault_key_devices_RiN2e2KXmhg1_fkey",
+        "e|fk|public.vault_key_devices.vault_key_devices_RiN2e2KXmhg1_fkey",
+        "n|con|public.vault_key_devices.vault_key_devices_RiN2e2KXmhg1_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.vault_key_devices",
+        "n|sch|public",
+        "n|tbl|public.vault_key_scopes",
+        "n|sch|public",
+        "n|col|public.vault_key_devices.tenant_id",
+        "n|col|public.vault_key_devices.scope_id",
+        "n|col|public.vault_key_devices.domain",
+        "n|col|public.vault_key_scopes.tenant_id",
+        "n|col|public.vault_key_scopes.scope_id",
+        "n|col|public.vault_key_scopes.domain",
+        "e|uniqueness|public.vault_key_scopes.domain.scope_id.tenant_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "vault_key_devices"],
+      "writes": [
+        "s|fk|public.vault_key_devices.vault_key_devices_TmqQwVyCYBmo_fkey",
+        "n|fk|public.vault_key_devices.vault_key_devices_TmqQwVyCYBmo_fkey",
+        "e|fk|public.vault_key_devices.vault_key_devices_TmqQwVyCYBmo_fkey",
+        "n|con|public.vault_key_devices.vault_key_devices_TmqQwVyCYBmo_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.vault_key_devices",
+        "n|sch|public",
+        "n|tbl|public.persistence_memberships",
+        "n|sch|public",
+        "n|col|public.vault_key_devices.tenant_id",
+        "n|col|public.vault_key_devices.owner_id",
+        "n|col|public.persistence_memberships.tenant_id",
+        "n|col|public.persistence_memberships.user_id",
+        "e|uniqueness|public.persistence_memberships.tenant_id.user_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "vault_key_scopes"],
+      "writes": [
+        "s|fk|public.vault_key_scopes.vault_key_scopes_qH7sfCtjQADP_fkey",
+        "n|fk|public.vault_key_scopes.vault_key_scopes_qH7sfCtjQADP_fkey",
+        "e|fk|public.vault_key_scopes.vault_key_scopes_qH7sfCtjQADP_fkey",
+        "n|con|public.vault_key_scopes.vault_key_scopes_qH7sfCtjQADP_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.vault_key_scopes",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.vault_key_scopes.tenant_id",
+        "n|col|public.vault_key_scopes.scope_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "vault_opaque_commands"],
+      "writes": [
+        "s|fk|public.vault_opaque_commands.vault_opaque_commands_dXmmI4wZUuTy_fkey",
+        "n|fk|public.vault_opaque_commands.vault_opaque_commands_dXmmI4wZUuTy_fkey",
+        "e|fk|public.vault_opaque_commands.vault_opaque_commands_dXmmI4wZUuTy_fkey",
+        "n|con|public.vault_opaque_commands.vault_opaque_commands_dXmmI4wZUuTy_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.vault_opaque_commands",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.vault_opaque_commands.tenant_id",
+        "n|col|public.vault_opaque_commands.scope_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "vault_opaque_events"],
+      "writes": [
+        "s|fk|public.vault_opaque_events.vault_opaque_events_n5SKmEv0COsr_fkey",
+        "n|fk|public.vault_opaque_events.vault_opaque_events_n5SKmEv0COsr_fkey",
+        "e|fk|public.vault_opaque_events.vault_opaque_events_n5SKmEv0COsr_fkey",
+        "n|con|public.vault_opaque_events.vault_opaque_events_n5SKmEv0COsr_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.vault_opaque_events",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.vault_opaque_events.tenant_id",
+        "n|col|public.vault_opaque_events.scope_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "vault_opaque_streams"],
+      "writes": [
+        "s|fk|public.vault_opaque_streams.vault_opaque_streams_nXnTxy2aPIFv_fkey",
+        "n|fk|public.vault_opaque_streams.vault_opaque_streams_nXnTxy2aPIFv_fkey",
+        "e|fk|public.vault_opaque_streams.vault_opaque_streams_nXnTxy2aPIFv_fkey",
+        "n|con|public.vault_opaque_streams.vault_opaque_streams_nXnTxy2aPIFv_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.vault_opaque_streams",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.vault_opaque_streams.tenant_id",
+        "n|col|public.vault_opaque_streams.scope_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "vault_opaque_units"],
+      "writes": [
+        "s|fk|public.vault_opaque_units.vault_opaque_units_pEtL1EFjNZfb_fkey",
+        "n|fk|public.vault_opaque_units.vault_opaque_units_pEtL1EFjNZfb_fkey",
+        "e|fk|public.vault_opaque_units.vault_opaque_units_pEtL1EFjNZfb_fkey",
+        "n|con|public.vault_opaque_units.vault_opaque_units_pEtL1EFjNZfb_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.vault_opaque_units",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.vault_opaque_units.tenant_id",
+        "n|col|public.vault_opaque_units.scope_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "vault_key_challenges",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "vault_key_devices",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "vault_key_scopes",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "vault_opaque_commands",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "vault_opaque_events",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "vault_opaque_streams",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "vault_opaque_units",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "domain",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "owner_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "value",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "expires_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "consumed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "domain",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "owner_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "signing",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "encryption",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "challenge",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "delivery",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "revoked_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_scopes",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_scopes",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_scopes",
+        "name": "domain",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_scopes",
+        "name": "generation",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "1",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_scopes",
+        "name": "epoch",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "1",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_scopes",
+        "name": "phase",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'ready'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "domain",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "operation_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "fingerprint",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "cursor",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "checkpoint",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "domain",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "cursor",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "checkpoint",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "previous_checkpoint",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "envelope",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "bytes",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_streams",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_streams",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_streams",
+        "name": "domain",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_streams",
+        "name": "cursor",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_streams",
+        "name": "checkpoint",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "domain",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "revision",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "generation",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "cursor",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "checkpoint",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "envelope",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "bytes",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "vault_key_challenges_bszqteMo8X2W_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "vault_key_challenges_v0M0tq3FbfHR_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "owner_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_memberships",
+        "columnsTo": ["tenant_id", "user_id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "vault_key_devices_RiN2e2KXmhg1_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id", "domain"],
+        "schemaTo": "public",
+        "tableTo": "vault_key_scopes",
+        "columnsTo": ["tenant_id", "scope_id", "domain"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "vault_key_devices_TmqQwVyCYBmo_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "owner_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_memberships",
+        "columnsTo": ["tenant_id", "user_id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_scopes",
+        "name": "vault_key_scopes_qH7sfCtjQADP_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "vault_opaque_commands_dXmmI4wZUuTy_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "vault_opaque_events_n5SKmEv0COsr_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_streams",
+        "name": "vault_opaque_streams_nXnTxy2aPIFv_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "vault_opaque_units_pEtL1EFjNZfb_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "vault_key_challenges_pkey",
+        "columns": ["tenant_id", "scope_id", "domain", "id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_devices",
+        "name": "vault_key_devices_pkey",
+        "columns": ["tenant_id", "scope_id", "domain", "id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_scopes",
+        "name": "vault_key_scopes_pkey",
+        "columns": ["tenant_id", "scope_id", "domain"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "vault_opaque_commands_pkey",
+        "columns": ["tenant_id", "scope_id", "domain", "user_id", "operation_id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "vault_opaque_events_pkey",
+        "columns": ["tenant_id", "scope_id", "domain", "cursor"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_streams",
+        "name": "vault_opaque_streams_pkey",
+        "columns": ["tenant_id", "scope_id", "domain"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "vault_opaque_units_pkey",
+        "columns": ["tenant_id", "scope_id", "domain", "id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_scopes",
+        "name": "vault_key_generation",
+        "value": "\"generation\" > 0 AND \"epoch\" > 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_scopes",
+        "name": "vault_key_phase",
+        "value": "\"phase\" IN ('ready','rotating')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_streams",
+        "name": "vault_stream_cursor",
+        "value": "(\"cursor\" = 0 AND \"checkpoint\" IS NULL) OR (\"cursor\" > 0 AND \"checkpoint\" IS NOT NULL)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "vault_unit_versions",
+        "value": "\"revision\" > 0 AND \"generation\" > 0 AND \"cursor\" > 0 AND \"bytes\" > 0",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

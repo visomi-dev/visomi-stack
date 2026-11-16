@@ -1,0 +1,1365 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "032e0a7b-06c0-4fc0-8014-cb422415a398",
+  "prevIds": ["e3b0bc42-c7f9-4414-9aa2-7060389c4f98"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "persistence_commands"],
+      "writes": [
+        "s|tbl|public.persistence_commands",
+        "n|tbl|public.persistence_commands",
+        "e|tbl|public.persistence_commands",
+        "n|rel|public.persistence_commands",
+        "n|type|public.persistence_commands",
+        "n|rel|public.persistence_commands_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "persistence_grants"],
+      "writes": [
+        "s|tbl|public.persistence_grants",
+        "n|tbl|public.persistence_grants",
+        "e|tbl|public.persistence_grants",
+        "n|rel|public.persistence_grants",
+        "n|type|public.persistence_grants",
+        "n|rel|public.persistence_grants_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "persistence_memberships"],
+      "writes": [
+        "s|tbl|public.persistence_memberships",
+        "n|tbl|public.persistence_memberships",
+        "e|tbl|public.persistence_memberships",
+        "n|rel|public.persistence_memberships",
+        "n|type|public.persistence_memberships",
+        "n|rel|public.persistence_memberships_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "persistence_records"],
+      "writes": [
+        "s|tbl|public.persistence_records",
+        "n|tbl|public.persistence_records",
+        "e|tbl|public.persistence_records",
+        "n|rel|public.persistence_records",
+        "n|type|public.persistence_records",
+        "n|rel|public.persistence_records_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "persistence_scopes"],
+      "writes": [
+        "s|tbl|public.persistence_scopes",
+        "n|tbl|public.persistence_scopes",
+        "e|tbl|public.persistence_scopes",
+        "n|rel|public.persistence_scopes",
+        "n|type|public.persistence_scopes",
+        "n|rel|public.persistence_scopes_pkey",
+        "n|rel|public.persistence_scope_tenant_id"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "persistence_tenants"],
+      "writes": [
+        "s|tbl|public.persistence_tenants",
+        "n|tbl|public.persistence_tenants",
+        "e|tbl|public.persistence_tenants",
+        "n|rel|public.persistence_tenants",
+        "n|type|public.persistence_tenants",
+        "n|rel|public.persistence_tenants_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "persistence_memberships", "persistence_membership_user"],
+      "writes": [
+        "s|idx|public.persistence_membership_user",
+        "n|idx|public.persistence_membership_user",
+        "e|idx|public.persistence_membership_user",
+        "n|rel|public.persistence_membership_user"
+      ],
+      "reads": ["n|tbl|public.persistence_memberships", "n|sch|public", "n|col|public.persistence_memberships.user_id"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "persistence_records", "persistence_record_page"],
+      "writes": [
+        "s|idx|public.persistence_record_page",
+        "n|idx|public.persistence_record_page",
+        "e|idx|public.persistence_record_page",
+        "n|rel|public.persistence_record_page"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_records",
+        "n|sch|public",
+        "n|col|public.persistence_records.tenant_id",
+        "n|col|public.persistence_records.scope_id",
+        "n|col|public.persistence_records.domain",
+        "n|col|public.persistence_records.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "persistence_scopes", "persistence_scope_parent"],
+      "writes": [
+        "s|idx|public.persistence_scope_parent",
+        "n|idx|public.persistence_scope_parent",
+        "e|idx|public.persistence_scope_parent",
+        "n|rel|public.persistence_scope_parent"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.parent_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "persistence_commands"],
+      "writes": [
+        "s|fk|public.persistence_commands.persistence_commands_Z5J9u9DKIiar_fkey",
+        "n|fk|public.persistence_commands.persistence_commands_Z5J9u9DKIiar_fkey",
+        "e|fk|public.persistence_commands.persistence_commands_Z5J9u9DKIiar_fkey",
+        "n|con|public.persistence_commands.persistence_commands_Z5J9u9DKIiar_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_commands",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.persistence_commands.tenant_id",
+        "n|col|public.persistence_commands.scope_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "persistence_commands"],
+      "writes": [
+        "s|fk|public.persistence_commands.persistence_commands_qNeXL66WsR0o_fkey",
+        "n|fk|public.persistence_commands.persistence_commands_qNeXL66WsR0o_fkey",
+        "e|fk|public.persistence_commands.persistence_commands_qNeXL66WsR0o_fkey",
+        "n|con|public.persistence_commands.persistence_commands_qNeXL66WsR0o_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_commands",
+        "n|sch|public",
+        "n|tbl|public.persistence_memberships",
+        "n|sch|public",
+        "n|col|public.persistence_commands.tenant_id",
+        "n|col|public.persistence_commands.user_id",
+        "n|col|public.persistence_memberships.tenant_id",
+        "n|col|public.persistence_memberships.user_id",
+        "e|uniqueness|public.persistence_memberships.tenant_id.user_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "persistence_grants"],
+      "writes": [
+        "s|fk|public.persistence_grants.persistence_grants_qjqGSz2vDkS0_fkey",
+        "n|fk|public.persistence_grants.persistence_grants_qjqGSz2vDkS0_fkey",
+        "e|fk|public.persistence_grants.persistence_grants_qjqGSz2vDkS0_fkey",
+        "n|con|public.persistence_grants.persistence_grants_qjqGSz2vDkS0_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_grants",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.persistence_grants.tenant_id",
+        "n|col|public.persistence_grants.scope_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "persistence_grants"],
+      "writes": [
+        "s|fk|public.persistence_grants.persistence_grants_vUgeVPWFDvtD_fkey",
+        "n|fk|public.persistence_grants.persistence_grants_vUgeVPWFDvtD_fkey",
+        "e|fk|public.persistence_grants.persistence_grants_vUgeVPWFDvtD_fkey",
+        "n|con|public.persistence_grants.persistence_grants_vUgeVPWFDvtD_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_grants",
+        "n|sch|public",
+        "n|tbl|public.persistence_memberships",
+        "n|sch|public",
+        "n|col|public.persistence_grants.tenant_id",
+        "n|col|public.persistence_grants.user_id",
+        "n|col|public.persistence_memberships.tenant_id",
+        "n|col|public.persistence_memberships.user_id",
+        "e|uniqueness|public.persistence_memberships.tenant_id.user_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "persistence_memberships"],
+      "writes": [
+        "s|fk|public.persistence_memberships.persistence_memberships_tenant_id_persistence_tenants_id_fkey",
+        "n|fk|public.persistence_memberships.persistence_memberships_tenant_id_persistence_tenants_id_fkey",
+        "e|fk|public.persistence_memberships.persistence_memberships_tenant_id_persistence_tenants_id_fkey",
+        "n|con|public.persistence_memberships.persistence_memberships_tenant_id_persistence_tenants_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_memberships",
+        "n|sch|public",
+        "n|tbl|public.persistence_tenants",
+        "n|sch|public",
+        "n|col|public.persistence_memberships.tenant_id",
+        "n|col|public.persistence_tenants.id",
+        "e|uniqueness|public.persistence_tenants.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "persistence_memberships"],
+      "writes": [
+        "s|fk|public.persistence_memberships.persistence_memberships_user_id_auth_users_id_fkey",
+        "n|fk|public.persistence_memberships.persistence_memberships_user_id_auth_users_id_fkey",
+        "e|fk|public.persistence_memberships.persistence_memberships_user_id_auth_users_id_fkey",
+        "n|con|public.persistence_memberships.persistence_memberships_user_id_auth_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_memberships",
+        "n|sch|public",
+        "n|tbl|public.auth_users",
+        "n|sch|public",
+        "n|col|public.persistence_memberships.user_id",
+        "n|col|public.auth_users.id",
+        "e|uniqueness|public.auth_users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "persistence_records"],
+      "writes": [
+        "s|fk|public.persistence_records.persistence_records_owner_id_auth_users_id_fkey",
+        "n|fk|public.persistence_records.persistence_records_owner_id_auth_users_id_fkey",
+        "e|fk|public.persistence_records.persistence_records_owner_id_auth_users_id_fkey",
+        "n|con|public.persistence_records.persistence_records_owner_id_auth_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_records",
+        "n|sch|public",
+        "n|tbl|public.auth_users",
+        "n|sch|public",
+        "n|col|public.persistence_records.owner_id",
+        "n|col|public.auth_users.id",
+        "e|uniqueness|public.auth_users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "persistence_records"],
+      "writes": [
+        "s|fk|public.persistence_records.persistence_records_cNbEf7qQ0jxt_fkey",
+        "n|fk|public.persistence_records.persistence_records_cNbEf7qQ0jxt_fkey",
+        "e|fk|public.persistence_records.persistence_records_cNbEf7qQ0jxt_fkey",
+        "n|con|public.persistence_records.persistence_records_cNbEf7qQ0jxt_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_records",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.persistence_records.tenant_id",
+        "n|col|public.persistence_records.scope_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "persistence_scopes"],
+      "writes": [
+        "s|fk|public.persistence_scopes.persistence_scopes_tenant_id_persistence_tenants_id_fkey",
+        "n|fk|public.persistence_scopes.persistence_scopes_tenant_id_persistence_tenants_id_fkey",
+        "e|fk|public.persistence_scopes.persistence_scopes_tenant_id_persistence_tenants_id_fkey",
+        "n|con|public.persistence_scopes.persistence_scopes_tenant_id_persistence_tenants_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|tbl|public.persistence_tenants",
+        "n|sch|public",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_tenants.id",
+        "e|uniqueness|public.persistence_tenants.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "persistence_scopes"],
+      "writes": [
+        "s|fk|public.persistence_scopes.persistence_scopes_7vGc0dk5RPXM_fkey",
+        "n|fk|public.persistence_scopes.persistence_scopes_7vGc0dk5RPXM_fkey",
+        "e|fk|public.persistence_scopes.persistence_scopes_7vGc0dk5RPXM_fkey",
+        "n|con|public.persistence_scopes.persistence_scopes_7vGc0dk5RPXM_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.parent_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "persistence_commands",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "persistence_grants",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "persistence_memberships",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "persistence_records",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "persistence_scopes",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "persistence_tenants",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "operation_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "fingerprint",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "result",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_grants",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_grants",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_grants",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_grants",
+        "name": "role",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_memberships",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_memberships",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_memberships",
+        "name": "owner",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_memberships",
+        "name": "revoked_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "domain",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "owner_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "audience",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "title",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "body",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "revision",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "deleted_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "kind",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "parent_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_tenants",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_tenants",
+        "name": "product",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_tenants",
+        "name": "policy_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_tenants",
+        "name": "epoch",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "1",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_tenants",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_memberships",
+        "name": "persistence_membership_user",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "persistence_record_page",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "tenant_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "scope_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "domain",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "persistence_scope_parent",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "tenant_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "parent_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "persistence_commands_Z5J9u9DKIiar_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "persistence_commands_qNeXL66WsR0o_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "user_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_memberships",
+        "columnsTo": ["tenant_id", "user_id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_grants",
+        "name": "persistence_grants_qjqGSz2vDkS0_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_grants",
+        "name": "persistence_grants_vUgeVPWFDvtD_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "user_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_memberships",
+        "columnsTo": ["tenant_id", "user_id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_memberships",
+        "name": "persistence_memberships_tenant_id_persistence_tenants_id_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_tenants",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_memberships",
+        "name": "persistence_memberships_user_id_auth_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["user_id"],
+        "schemaTo": "public",
+        "tableTo": "auth_users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "persistence_records_owner_id_auth_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["owner_id"],
+        "schemaTo": "public",
+        "tableTo": "auth_users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "persistence_records_cNbEf7qQ0jxt_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "persistence_scopes_tenant_id_persistence_tenants_id_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_tenants",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "persistence_scopes_7vGc0dk5RPXM_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "parent_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "persistence_commands_pkey",
+        "columns": ["tenant_id", "scope_id", "user_id", "operation_id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_grants",
+        "name": "persistence_grants_pkey",
+        "columns": ["tenant_id", "scope_id", "user_id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_memberships",
+        "name": "persistence_memberships_pkey",
+        "columns": ["tenant_id", "user_id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "persistence_records_pkey",
+        "columns": ["tenant_id", "id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "persistence_scopes_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_tenants",
+        "name": "persistence_tenants_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "persistence_scope_tenant_id",
+        "nameExplicit": true,
+        "columns": ["tenant_id", "id"],
+        "nullsNotDistinct": false,
+        "entityType": "uniques"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_grants",
+        "name": "persistence_grant_role",
+        "value": "\"role\" IN ('viewer','editor','manager','blocked')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "persistence_record_revision",
+        "value": "\"revision\" > 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_records",
+        "name": "persistence_record_audience",
+        "value": "\"audience\" IN ('owner','scope')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "persistence_scope_kind",
+        "value": "\"kind\" IN ('tenant','group','resource')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "persistence_scope_root",
+        "value": "(\"kind\" = 'tenant' AND \"id\" = \"tenant_id\" AND \"parent_id\" IS NULL) OR (\"kind\" <> 'tenant' AND \"parent_id\" IS NOT NULL AND \"id\" <> \"parent_id\")",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_tenants",
+        "name": "persistence_tenant_epoch",
+        "value": "\"epoch\" > 0",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

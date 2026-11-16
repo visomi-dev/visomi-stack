@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
 import { Socket } from 'node:net';
 
+import { syntheticHybridPolicy } from '@visomi-stack/shared-persistence';
 import type { Observability } from '@visomi-stack/web-backend-shared';
 import { currentObservability, HttpError, httpErrorHandler, httpObservability } from '@visomi-stack/web-backend-shared';
 import type { Request, Response } from 'express';
@@ -59,6 +60,12 @@ beforeEach(() => {
 });
 
 describe('API composition', () => {
+  it('fails closed when persistence is composed without an authentication runtime', async () => {
+    const response = await dispatch(createApp({ persistence: syntheticHybridPolicy }), '/persistence/tenants');
+
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({ error: 'authentication_unavailable' });
+  });
   it.each([
     ['/', 200, { message: 'Hello API' }],
     ['/missing', 404, { error: 'not_found' }],

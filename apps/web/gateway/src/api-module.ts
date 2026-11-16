@@ -2,6 +2,7 @@ import type { Database, MailTransport, RealtimePublisher } from '@visomi-stack/b
 import type { Observability } from '@visomi-stack/web-backend-shared';
 import type { Request, RequestHandler } from 'express';
 import type { Pool } from 'pg';
+import type { ProductPolicy } from '@visomi-stack/shared-persistence';
 
 import type { AuthSnapshot } from './application-module';
 
@@ -18,6 +19,7 @@ export type EmbeddedAuthentication = {
   };
 };
 export type ApiModule = {
+  persistenceVersion?: 1;
   createApp(options: {
     observability?: Observability;
     basePath?: string;
@@ -25,6 +27,7 @@ export type ApiModule = {
     authMode: 'inherited';
     errorMode: 'inherited';
     helmetMode: 'inherited';
+    persistence?: ProductPolicy;
   }): RequestHandler;
   authConfig(input: {
     origin: string;

@@ -53,7 +53,7 @@ describe('API process and compiled boundaries', () => {
         connections: 0,
         providers: 0,
         intervals: 0,
-        exports: ['anonymous', 'authConfig', 'createApp', 'createAuthentication'],
+        exports: ['anonymous', 'authConfig', 'createApp', 'createAuthentication', 'persistenceVersion'],
       });
       const metadataText = await readFile(join(directory, 'api/package.json'), 'utf8');
       const metadata = JSON.parse(metadataText);

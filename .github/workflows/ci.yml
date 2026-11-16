@@ -59,11 +59,16 @@ jobs:
       - name: Lint affected projects
         run: pnpm nx "$NX_TASK_COMMAND" -t lint --parallel=2
       - name: Check affected types and generated email templates
-        run: pnpm nx "$NX_TASK_COMMAND" -t typecheck typecheck-tests emails-check deployment-check --parallel=2
+        run: pnpm nx "$NX_TASK_COMMAND" -t typecheck typecheck-tests emails-check deployment-check vectors-check --parallel=2
       - name: Build affected applications
         run: pnpm nx "$NX_TASK_COMMAND" -t build --parallel=2
       - name: Run affected unit and isolated PostgreSQL integration tests
-        run: pnpm nx "$NX_TASK_COMMAND" -t test --parallel=2
+        # Vault integration executes native WebCrypto/PRF/IndexedDB in Chromium.
+        # The later E2E job has a separate filesystem and cannot install it here.
+        # This uses the workspace's existing pinned Playwright version.
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm nx "$NX_TASK_COMMAND" -t test --parallel=2
 
   e2e:
     needs: verify
