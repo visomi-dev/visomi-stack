@@ -141,7 +141,7 @@ export class PersistenceMaintenance {
     limit: number,
     now: number,
   ) {
-    const { key } = await new VaultAccess(this.access).registry(context, policy);
+    const key = new VaultAccess(this.access).key(context, policy, 1);
     const challenges = await context.tx
       .select({ id: keyChallenges.id })
       .from(keyChallenges)

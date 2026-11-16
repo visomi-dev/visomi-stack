@@ -21,6 +21,8 @@ It contains no record IDs, content or cryptographic material. Repeat batches unt
 eligible work is exhausted. No loop, scheduler, pool, listener or cleanup starts
 merely by importing application code. Product operations must separately decide
 when to invoke this endpoint; the implementation only invokes it in isolated tests.
+Expired enrollment challenges can be removed before any key registry is initialized.
+Cleanup derives only their authorized scope and never bootstraps a key to permit deletion.
 
 ## Receipt expiry without executing an old request again
 

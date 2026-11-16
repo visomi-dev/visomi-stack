@@ -159,6 +159,21 @@ describe('explicit bounded persistence retention', () => {
 
   it('expires consumed/unused challenges before a stream exists and retains unexpired ones', async () => {
     const f = await fixture();
+    const uninitialized = await request(f.owner, f.target, identity());
+
+    await resource.db
+      .update(keyChallenges)
+      .set({ expiresAt: ago(1) })
+      .where(eq(keyChallenges.id, uninitialized.requestId));
+
+    const beforeBootstrap = await f.owner.call(maintainPath(f, 'private-resources'), 'POST', { limit: 1 });
+    const registries = await resource.db
+      .select()
+      .from(vaultSchema.keyScopes)
+      .where(eq(vaultSchema.keyScopes.tenantId, f.target.tenantId));
+
+    expect(beforeBootstrap.body).toMatchObject({ challenges: 1 });
+    expect(registries).toHaveLength(0);
     const device = identity();
     const proof = await boot(f, device);
 
