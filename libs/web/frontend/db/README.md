@@ -2,7 +2,7 @@
 
 Provisional browser implementation of the platform-neutral contracts in
 `@visomi-stack/shared-db`: contextual AES-256-GCM/HKDF, RSA-OAEP/P-256,
-PRF-only unlock, ciphertext IndexedDB, independent device custody and opaque sync.
+explicit PRF/PIN unlock, ciphertext IndexedDB, independent device custody and opaque sync.
 The explicitly selected `PinUnlock` adapter supports offline short-PIN unlock
 with a fixed Argon2id profile and disclosed offline guessing limitations; see the
 [PIN contract](../../../../docs/architecture/contracts/offline-pin.md).
@@ -12,7 +12,7 @@ runtimes is best effort.
 
 `BrowserVault` owns one independently lockable key scope/generation. `seal` commits
 an encrypted local unit; `encrypt` prepares ciphertext for an atomic sync outbox.
-`DeviceCustody` keeps private device identity in an independent local PRF vault,
+`DeviceCustody` keeps private device identity in an independent local unlock vault,
 never under a shared resource DEK. Recipient installation requires a signed witness
 and an explicitly trusted signing pin. Do not obtain that pin solely from a cloud
 roster. Low-level OAEP decryption is not an enrollment approval workflow.

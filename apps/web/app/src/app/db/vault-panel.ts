@@ -6,7 +6,7 @@ import { Button, Field, Heading, Text, Textarea, Input } from '../ui';
 import { VaultSession } from './vault-session';
 import { vaultMessage } from './vault-messages';
 
-/** Consumers supply a configured scope and a separately provisioned PRF credential. */
+/** Consumers supply a configured scope and an explicit local unlock binding. */
 @Component({
   selector: 'app-vault-panel',
   imports: [Button, Field, Heading, Text, Textarea, Input],
