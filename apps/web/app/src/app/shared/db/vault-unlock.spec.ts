@@ -24,10 +24,13 @@ it('presents native PIN controls and emits an explicit unlock without session, R
   input.value = '012345';
   input.dispatchEvent(new Event('input'));
   expect(view.componentInstance.pin()).toBe('012345');
+  expect(input.closest('app-pin-input')).toBeTruthy();
   expect(input.type).toBe('password');
   expect(input.inputMode).toBe('numeric');
   expect(input.autocomplete).toBe('off');
   expect(input.id).toBe('local-vault-pin');
+  expect(input.getAttribute('aria-describedby')).toBe('local-vault-pin-help');
+  expect(view.nativeElement.querySelector('#local-vault-pin-help').textContent).toBe('4 to 6 digits');
   expect(view.nativeElement.querySelector('label').htmlFor).toBe(input.id);
   const event = new Event('submit', { cancelable: true });
 
@@ -35,6 +38,29 @@ it('presents native PIN controls and emits an explicit unlock without session, R
 
   expect(event.defaultPrevented).toBe(true);
   expect(requested).toHaveBeenCalledExactlyOnceWith(undefined);
+});
+
+it('uses six decorative slots and accepts four to six ASCII digits without submitting on input', () => {
+  const view = mount('length-check');
+  const control = view.nativeElement.querySelector('app-pin-input') as HTMLElement;
+  const input = control.querySelector('input') as HTMLInputElement;
+  const requested = vi.fn();
+
+  view.componentInstance.unlock.subscribe(requested);
+  expect(control.querySelectorAll('input')).toHaveLength(1);
+  expect(control.querySelectorAll('[aria-hidden=true] > span')).toHaveLength(6);
+
+  for (const pin of ['', '012', '0123', '01234', '012345', '0123456', '01a3']) {
+    input.value = pin;
+    input.dispatchEvent(new Event('input'));
+    expect(view.componentInstance.pin()).toBe(pin);
+    expect(input.checkValidity()).toBe(['0123', '01234', '012345'].includes(pin));
+  }
+
+  expect(requested).not.toHaveBeenCalled();
+  view.componentInstance.pin.set('');
+  view.detectChanges();
+  expect(input.value).toBe('');
 });
 
 it('isolates caller-supplied IDs and clears drafts on context changes while blocking duplicate busy submissions', () => {

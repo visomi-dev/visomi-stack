@@ -2560,6 +2560,9 @@
           <context context-type="linenumber">98,100</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="vaultPinLength" datatype="html">
+        <source>4 to 6 digits</source>
+      </trans-unit>
       <trans-unit id="vaultPinLabel" datatype="html">
         <source>Local unlock PIN</source>
         <context-group purpose="location">

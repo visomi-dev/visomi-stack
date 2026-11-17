@@ -14,23 +14,14 @@
           weaker than a passkey.
         </p>
 
-        <app-field [control-id]="pinId()" label="Local unlock PIN" i18n-label="@@vaultPinLabel" #field="appField">
-          <input
-            appUI
-            [id]="pinId()"
-            type="password"
-            inputmode="numeric"
-            autocomplete="off"
-            minlength="4"
-            maxlength="6"
-            pattern="[0-9]{4,6}"
-            required
-            [attr.aria-describedby]="field.describedBy()"
-            [disabled]="busy()"
-            [value]="pin()"
-            #pinInput
-            (input)="pin.set(pinInput.value)"
-          />
+        <app-field
+          [control-id]="pinId()"
+          label="Local unlock PIN"
+          i18n-label="@@vaultPinLabel"
+          description="4 to 6 digits"
+          i18n-description="@@vaultPinLength"
+        >
+          <app-pin-input required [disabled]="busy()" [draft]="pin" />
         </app-field>
       }
 

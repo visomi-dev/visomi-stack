@@ -1210,6 +1210,10 @@
         <source> Without passkey support, you can choose a 4–6 digit PIN. Someone with a copy of your encrypted storage can try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local unlock works offline in an already signed-in session. </source>
         <target>Si tu dispositivo no admite passkeys, puedes elegir un PIN de 4 a 6 dígitos. Quien obtenga una copia del almacenamiento cifrado puede probar todos los PIN sin conexión. Ofrece menos protección que una passkey. La configuración inicial requiere conexión; después puedes desbloquear localmente sin conexión dentro de una sesión ya iniciada.</target>
       </trans-unit>
+      <trans-unit id="vaultPinLength" datatype="html">
+        <source>4 to 6 digits</source>
+        <target>De 4 a 6 dígitos</target>
+      </trans-unit>
       <trans-unit id="vaultPinLabel" datatype="html">
         <source>Local unlock PIN</source>
         <target>PIN de desbloqueo local</target>

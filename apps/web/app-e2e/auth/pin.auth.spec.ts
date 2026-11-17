@@ -22,7 +22,23 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await expect(page.getByLabel('Local unlock PIN', { exact: true })).toBeEnabled();
 
-  await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
+  const pin = page.getByLabel('Local unlock PIN', { exact: true });
+
+  await pin.pressSequentially('0482');
+
+  await expect(pin).toHaveValue('0482');
+
+  await pin.press('ArrowLeft');
+
+  await pin.press('Backspace');
+
+  await expect(pin).toHaveValue('042');
+
+  await pin.fill('048261');
+
+  await expect(page.locator('app-pin-input')).toHaveCount(2);
+
+  await expect(pin).toHaveJSProperty('scrollLeft', 0);
 
   await page.getByLabel('Confirm PIN for initial setup', { exact: true }).fill('048261');
 

@@ -1,15 +1,16 @@
 import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { VaultError, type DataContext, type DataEnvelope, type WrappingContext } from '@visomi-stack/shared-db';
 
-import { Button, Field, Heading, Text, Textarea, Input } from '../../ui';
+import { Button, Field, Heading, Text, Textarea } from '../../ui';
 
+import { PinInput } from './pin-input';
 import { VaultSession } from './vault-session';
 import { vaultMessage } from './vault-messages';
 
 /** Consumers supply a configured scope and an explicit local unlock binding. */
 @Component({
   selector: 'app-vault-panel',
-  imports: [Button, Field, Heading, Text, Textarea, Input],
+  imports: [PinInput, Button, Field, Heading, Text, Textarea],
   providers: [VaultSession],
   templateUrl: './vault-panel.html',
 })

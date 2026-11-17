@@ -1,11 +1,13 @@
 import { Component, computed, effect, input, model, output, untracked } from '@angular/core';
 import type { WrappingContext } from '@visomi-stack/shared-db';
 
-import { Button, Field, Heading, Input, Text } from '../../ui';
+import { Button, Field, Heading, Text } from '../../ui';
+
+import { PinInput } from './pin-input';
 
 @Component({
   selector: 'app-vault-unlock',
-  imports: [Button, Field, Heading, Input, Text],
+  imports: [PinInput, Button, Field, Heading, Text],
   templateUrl: './vault-unlock.html',
 })
 export class VaultUnlock {

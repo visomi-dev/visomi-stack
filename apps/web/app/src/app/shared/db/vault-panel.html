@@ -19,21 +19,10 @@
       [control-id]="controlId() + '-pin'"
       label="Local unlock PIN"
       i18n-label="@@vaultPinLabel"
-      #pinField="appField"
+      description="4 to 6 digits"
+      i18n-description="@@vaultPinLength"
     >
-      <input
-        appUI
-        [id]="controlId() + '-pin'"
-        type="password"
-        inputmode="numeric"
-        autocomplete="off"
-        maxlength="6"
-        [attr.aria-describedby]="pinField.describedBy()"
-        #pinInput
-        [value]="pinDraft()"
-        (input)="pinDraft.set(pinInput.value)"
-        [disabled]="busy()"
-      />
+      <app-pin-input [disabled]="busy()" [draft]="pinDraft" />
     </app-field>
 
     @if (allowInitialize()) {
@@ -41,21 +30,8 @@
         [control-id]="controlId() + '-confirm'"
         label="Confirm PIN for initial setup"
         i18n-label="@@vaultPinConfirm"
-        #confirmField="appField"
       >
-        <input
-          appUI
-          [id]="controlId() + '-confirm'"
-          type="password"
-          inputmode="numeric"
-          autocomplete="off"
-          maxlength="6"
-          [attr.aria-describedby]="confirmField.describedBy()"
-          #confirmation
-          [value]="pinConfirmation()"
-          (input)="pinConfirmation.set(confirmation.value)"
-          [disabled]="busy()"
-        />
+        <app-pin-input [disabled]="busy()" [draft]="pinConfirmation" />
       </app-field>
     }
   }
