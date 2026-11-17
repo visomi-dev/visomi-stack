@@ -195,6 +195,20 @@ export class IndexedDbReplicaStorage implements ReplicaStorage {
     });
   }
 
+  /** Retain an authorized roster floor even if synchronization or its view is interrupted. */
+  async advanceEpoch(id: string, minimumEpoch: number): Promise<void> {
+    await this.transaction(async () => {
+      const current = await this.pin(id);
+      const next = pinSchema.safeParse({ ...current, epoch: Math.max(current.epoch, minimumEpoch) });
+
+      if (!Number.isSafeInteger(minimumEpoch) || minimumEpoch < 1 || !next.success) {
+        throw new VaultError('corrupt');
+      }
+
+      await this.database.pins.put(next.data, id);
+    });
+  }
+
   async commit(id: string, expected: ReplicaPin, next: ReplicaPin, events: readonly SyncEvent[]): Promise<void> {
     const parsed = pinSchema.safeParse(next);
 

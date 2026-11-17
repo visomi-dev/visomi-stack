@@ -28,8 +28,8 @@ import { Session } from '../auth/session/session';
 import { DatabaseHttp } from './http';
 import { ClientDatabase } from './database';
 import { VaultSession } from './vault-session';
-import { openLocalPin } from './local-pin';
-import { rosterSchema, validateExampleEnvelope } from './example-contracts';
+import { openLocalVault } from './local-unlock';
+import { rosterSchema, validateExampleEnvelope, exampleLocalKey } from './example-contracts';
 
 export type ExampleTarget = { tenantId: string; scopeId: string; objectId: string };
 
@@ -49,7 +49,7 @@ export class ExamplePrivateResource {
   readonly vault = inject(VaultSession);
   private readonly cleanup = this.destroyRef.onDestroy(() => {
     this.close();
-    this.vault.lock();
+    this.vault.release();
   });
 
   private storage: IndexedDbReplicaStorage | undefined;
@@ -66,7 +66,7 @@ export class ExamplePrivateResource {
 
   async unlock(target: ExampleTarget, rpId: string, initialize: boolean, pin?: Uint8Array): Promise<void> {
     this.close();
-    this.vault.lock(false);
+    this.vault.release();
     const signal = this.controller.signal;
 
     this.target = { ...target };
@@ -82,7 +82,7 @@ export class ExamplePrivateResource {
     let registry: z.infer<typeof rosterSchema> | undefined;
 
     if (pin && !initialize) {
-      await this.unlockLocalPin(target, rpId, pin, ownerId, signal);
+      await this.restoreLocal(target, rpId, pin, ownerId, signal);
 
       return;
     }
@@ -208,6 +208,7 @@ export class ExamplePrivateResource {
     this.current(signal);
 
     if (!device || device.signing !== keys.signing || device.encryption !== keys.encryption) {
+      this.vault.lockContext(binding);
       this.close();
 
       throw new VaultError('recovery-required');
@@ -223,6 +224,10 @@ export class ExamplePrivateResource {
 
     this.storage = storage;
     const id = replicaId(ownerId, key, key.scope);
+
+    await storage.advanceEpoch(id, registry.epoch);
+
+    this.current(signal);
     const replica = new SyncReplica(
       id,
       key,
@@ -413,7 +418,6 @@ export class ExamplePrivateResource {
     this.replica = undefined;
     this.storage?.close();
     this.storage = undefined;
-    this.custody?.lock();
     this.custody = undefined;
     this.binding = undefined;
     this.target = undefined;
@@ -421,15 +425,34 @@ export class ExamplePrivateResource {
     this.synchronizedState.set(false);
   }
 
+  async resume(target: ExampleTarget, rpId: string): Promise<void> {
+    this.close();
+    const signal = this.controller.signal;
+
+    this.version = this.session.operationVersion();
+
+    const binding = await this.vault.localLatestBinding(exampleLocalKey(target));
+
+    this.current(signal);
+
+    if (!binding || !this.vault.canResume(binding)) {
+      return;
+    }
+
+    this.target = { ...target };
+
+    await this.restoreLocal(target, rpId, undefined, binding.ownerId, this.controller.signal);
+  }
+
   /** Explicit local unlock: no roster/network lookup. Server authorization is rechecked by later synchronization. */
-  private async unlockLocalPin(
+  private async restoreLocal(
     target: ExampleTarget,
     rpId: string,
-    pin: Uint8Array,
+    pin: Uint8Array | undefined,
     ownerId: string,
     signal: AbortSignal,
   ): Promise<void> {
-    const opened = await openLocalPin({
+    const opened = await openLocalVault({
       vault: this.vault,
       database: this.database,
       target,
@@ -444,15 +467,14 @@ export class ExamplePrivateResource {
     this.custody = custody;
     this.binding = local;
     this.storage = storage;
-    const key = local.key;
-    const id = replicaId(ownerId, key, key.scope);
+    const id = replicaId(ownerId, local.key, local.key.scope);
 
     const path = this.path(target);
 
     this.replica = new SyncReplica(
       id,
-      key,
-      key.scope,
+      local.key,
+      local.key.scope,
       storage,
       {
         pull: (head, signal) => this.api.request(`${path}/sync/pull`, { protocol: 1, head }, signal),

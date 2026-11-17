@@ -9,11 +9,15 @@ import { AuthFeedback } from '../auth/shared/feedback';
 import { Session } from '../auth/session/session';
 import { Logout } from '../auth/session/logout';
 import { AuthNavigation } from '../auth/shared/navigation';
+import { AppVaultUnlock } from '../db/app-vault-unlock';
+import { AppVaults } from '../db/app-vaults';
+import { DatabaseHttp } from '../db/http';
 import { LanguageSwitcher } from '../i18n/language-switcher';
 
 @Component({
   selector: 'app-authenticated-layout',
   imports: [
+    AppVaultUnlock,
     AppShell,
     Sidebar,
     Topbar,
@@ -30,7 +34,7 @@ import { LanguageSwitcher } from '../i18n/language-switcher';
     AuthFeedback,
     Dialog,
   ],
-  providers: [Action, AuthHttp, Logout],
+  providers: [Action, AuthHttp, Logout, AppVaults, DatabaseHttp],
   templateUrl: './authenticated-layout.html',
   styleUrl: './authenticated-layout.css',
 })
@@ -41,6 +45,7 @@ export class AuthenticatedLayout {
 
   private readonly mobileMenu = viewChild.required(Dialog);
 
+  readonly vaults = inject(AppVaults);
   readonly session = inject(Session);
   readonly navigation = inject(AuthNavigation);
   readonly action = inject(Action);

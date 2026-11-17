@@ -5,12 +5,15 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { z } from 'zod';
 import { createOperationId, productPolicySchema, syntheticHybridPolicy, VaultError } from '@visomi-stack/shared-db';
+import type { WrappingContext } from '@visomi-stack/shared-db';
 
 import { Session } from '../auth/session/session';
 import { Navigation } from '../shared/navigation';
 
 import { DatabaseHttp } from './http';
 import { ExamplePrivateResource, type ExampleTarget } from './example-private-resource';
+import { UnlockCapabilities } from './unlock-capabilities';
+import { exampleLocalKey } from './example-contracts';
 import { vaultMessage } from './vault-messages';
 
 const targetSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid(), objectId: z.uuid() });
@@ -42,6 +45,8 @@ export class ExampleWorkspace {
   private readonly configured = signal(false);
   private readonly busyState = signal(false);
   private readonly noticeState = signal('');
+  private readonly binding = signal<WrappingContext | null>(null);
+  private readonly methodLoaded = signal(false);
   private readonly targetState = signal<ExampleTarget | null>(null);
 
   private readonly ownerId = this.session.user()?.id;
@@ -58,6 +63,7 @@ export class ExampleWorkspace {
   private controller = new AbortController();
   private profile: z.infer<typeof profileSchema> | undefined;
 
+  readonly capabilities = inject(UnlockCapabilities);
   readonly privateResource = inject(ExamplePrivateResource);
 
   readonly cloudDraft = signal('');
@@ -76,6 +82,18 @@ export class ExampleWorkspace {
 
   readonly vault = this.privateResource.vault;
   readonly status = computed(() => vaultMessage(this.vault.state()));
+  readonly showPin = computed(
+    () =>
+      this.methodLoaded() &&
+      (this.binding()?.method === 'pin-argon2id' || (!this.binding() && this.capabilities.prf() === 'unavailable')),
+  );
+  readonly showPrf = computed(
+    () =>
+      this.methodLoaded() &&
+      (this.binding()?.method === 'passkey-prf' ||
+        (!this.binding() && ['available', 'unknown'].includes(this.capabilities.prf()))),
+  );
+  readonly canInitialize = computed(() => this.methodLoaded() && !this.binding());
 
   readonly busy = this.busyState.asReadonly();
   readonly notice = this.noticeState.asReadonly();
@@ -137,9 +155,25 @@ export class ExampleWorkspace {
         throw new VaultError('unavailable');
       }
 
-      await this.privateResource.unlock(this.requiredTarget(), this.profile.rpId, initialize);
+      try {
+        await this.privateResource.unlock(this.requiredTarget(), this.profile.rpId, initialize);
+      } catch (error) {
+        this.current(signal);
+
+        await this.loadBinding(this.requiredTarget(), signal);
+
+        this.current(signal);
+
+        if (error instanceof VaultError && error.code === 'unsupported-prf') {
+          this.capabilities.unavailable();
+        }
+
+        throw error;
+      }
 
       this.current(signal);
+
+      await this.loadBinding(this.requiredTarget(), signal);
     });
   }
 
@@ -153,6 +187,10 @@ export class ExampleWorkspace {
 
     try {
       await this.run(async (signal) => {
+        if (initialize && !this.showPin()) {
+          throw new VaultError('unsupported-prf');
+        }
+
         if (!/^[0-9]{4,6}$/.test(value) || (initialize && value !== confirmation)) {
           throw new VaultError('pin-invalid');
         }
@@ -164,6 +202,8 @@ export class ExampleWorkspace {
         await this.privateResource.unlock(this.requiredTarget(), this.profile.rpId, initialize, pin);
 
         this.current(signal);
+
+        await this.loadBinding(this.requiredTarget(), signal);
       });
     } finally {
       pin.fill(0);
@@ -216,6 +256,14 @@ export class ExampleWorkspace {
     return target;
   }
 
+  private async loadBinding(target: ExampleTarget, signal: AbortSignal): Promise<void> {
+    const binding = await this.vault.localLatestBinding(exampleLocalKey(target));
+
+    this.current(signal);
+    this.binding.set(binding ?? null);
+    this.methodLoaded.set(true);
+  }
+
   private async loadCloud(target: ExampleTarget, signal: AbortSignal) {
     const raw = await this.api.request(`${this.records(target)}?limit=1`, undefined, signal);
 
@@ -245,7 +293,9 @@ export class ExampleWorkspace {
     this.controller.abort();
     this.controller = new AbortController();
     this.privateResource.close();
-    this.vault.lock();
+    this.vault.release();
+    this.binding.set(null);
+    this.methodLoaded.set(false);
     this.configured.set(false);
     this.profile = undefined;
     this.targetState.set(null);
@@ -348,6 +398,14 @@ export class ExampleWorkspace {
         this.configured.set(true);
 
         if (target) {
+          await this.loadBinding(target, signal);
+
+          this.current(signal);
+
+          await this.privateResource.resume(target, profile.rpId);
+
+          this.current(signal);
+
           await this.loadCloud(target, signal);
         }
       });

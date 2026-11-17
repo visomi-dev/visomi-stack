@@ -2,7 +2,7 @@ import { IndexedDbVaultStorage } from '@visomi-stack/web-frontend-db/storage';
 import { DOCUMENT } from '@angular/common';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { BrowserVault, PrfUnlock, WebCryptoCipher } from '@visomi-stack/web-frontend-db';
+import { BrowserVault, DeviceCustody, PrfUnlock, WebCryptoCipher } from '@visomi-stack/web-frontend-db';
 import { VaultError, type WrappingContext } from '@visomi-stack/shared-db';
 
 import { Session } from '../auth/session/session';
@@ -42,9 +42,11 @@ function fixture(browser = true) {
   vi.spyOn(PrfUnlock.prototype, 'secret').mockImplementation(async () => new Uint8Array(32));
   const close = vi.spyOn(BrowserVault.prototype, 'close');
   const currentKey = vi.fn(async () => ({ context: binding }));
+  const latestBindings = vi.fn(async () => [binding]);
   const openStorage = vi.spyOn(IndexedDbVaultStorage, 'open').mockResolvedValue({
     getKey: vi.fn(async () => ({ context: binding })),
     getCurrentKey: currentKey,
+    latestBindings,
     getUnit: vi.fn(async () => ({})),
     close: vi.fn(),
   } as unknown as IndexedDbVaultStorage);
@@ -79,7 +81,7 @@ function fixture(browser = true) {
 
   TestBed.tick();
 
-  return { vault, user, full, version, cancellation, openCipher, close, openStorage, currentKey };
+  return { vault, user, full, version, cancellation, openCipher, close, openStorage, currentKey, latestBindings };
 }
 
 describe('vault account lifecycle', () => {
@@ -195,4 +197,129 @@ it('does not let a late previous connect lock a newer explicit unlock of the sam
   await rejected;
 
   expect(f.vault.ready()).toBe(true);
+});
+
+it('retains fully opened custody across view release without a second PRF ceremony, but clears the display', async () => {
+  const f = fixture();
+  const secret = vi.mocked(PrfUnlock.prototype.secret);
+
+  await f.vault.connect(binding, 'synthetic.example.test');
+
+  await f.vault.read(context);
+
+  f.vault.release();
+
+  expect(f.vault.ready()).toBe(false);
+  expect(f.vault.plaintext()).toBe('');
+  expect(f.vault.isOpen(binding)).toBe(true);
+
+  await f.vault.connect(binding, 'synthetic.example.test');
+
+  expect(f.vault.ready()).toBe(true);
+  expect(secret).toHaveBeenCalledTimes(1);
+  expect(f.vault.resume({ ...binding, deviceId: '55555555-5555-4555-8555-555555555555' })).toBe(false);
+  f.vault.lock();
+  expect(f.vault.isOpen(binding)).toBe(false);
+
+  await f.vault.connect(binding, 'synthetic.example.test');
+
+  expect(secret).toHaveBeenCalledTimes(2);
+});
+
+it('synchronously cancels a pending ceremony on release instead of treating its late result as an opened vault', async () => {
+  const f = fixture();
+  let finish!: (bytes: Uint8Array) => void;
+  const secret = vi.mocked(PrfUnlock.prototype.secret).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const pending = f.vault.connect(binding, 'synthetic.example.test');
+  const rejected = expect(pending).rejects.toMatchObject({ code: 'stale-operation' });
+
+  await vi.waitFor(() => expect(secret).toHaveBeenCalled());
+
+  f.vault.release();
+  const late = new Uint8Array(32).fill(7);
+
+  finish(late);
+
+  await rejected;
+
+  expect(f.vault.isOpen(binding)).toBe(false);
+  expect(f.vault.ready()).toBe(false);
+  expect(late.every((byte) => byte === 0)).toBe(true);
+});
+
+it('does not forget a newly opened vault when startup metadata discovery finishes late', async () => {
+  const f = fixture();
+  let finish!: (bindings: WrappingContext[]) => void;
+
+  f.latestBindings.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const discovery = f.vault.discover();
+
+  await vi.waitFor(() => expect(f.latestBindings).toHaveBeenCalled());
+
+  await f.vault.connect(binding, 'synthetic.example.test');
+
+  finish([]);
+
+  await discovery;
+
+  expect(f.vault.knownBindings()).toEqual([binding]);
+  f.cancellation.abort();
+  expect(f.vault.knownBindings()).toEqual([]);
+});
+
+it('requires both resource key and independent device custody for an application view to resume', async () => {
+  const f = fixture();
+
+  vi.spyOn(DeviceCustody.prototype, 'unlock').mockResolvedValue(undefined);
+  vi.spyOn(DeviceCustody.prototype, 'ready', 'get').mockReturnValue(true);
+
+  await f.vault.connect(binding, 'synthetic.example.test');
+
+  expect(f.vault.canResume(binding)).toBe(false);
+
+  const custody = await f.vault.device(binding, 'synthetic.example.test');
+
+  expect(f.vault.canResume(binding)).toBe(true);
+  f.vault.release();
+  expect(f.vault.canResume(binding)).toBe(true);
+
+  const reused = await f.vault.device(binding, 'synthetic.example.test');
+
+  expect(reused).toBe(custody);
+  expect(DeviceCustody.prototype.unlock).toHaveBeenCalledOnce();
+  const lock = vi.spyOn(custody, 'lock');
+
+  f.vault.lockContext(binding);
+  expect(lock).toHaveBeenCalledOnce();
+  expect(f.vault.canResume(binding)).toBe(false);
+});
+
+it('keeps an unrelated opened scope available when another local unlock fails', async () => {
+  const f = fixture();
+  const other = {
+    ...binding,
+    key: { ...binding.key, scope: { kind: 'tenant' as const, tenantId: '55555555-5555-4555-8555-555555555555' } },
+  };
+
+  await f.vault.connect(binding, 'synthetic.example.test');
+
+  await f.vault.connect(other, 'synthetic.example.test');
+
+  f.vault.lockContext(other);
+
+  expect(f.vault.isOpen(binding)).toBe(true);
+  expect(f.vault.isOpen(other)).toBe(false);
+  expect(f.vault.plaintext()).toBe('');
+  f.vault.lock();
+  expect(f.vault.isOpen(binding)).toBe(false);
 });

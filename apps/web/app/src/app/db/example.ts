@@ -6,12 +6,11 @@ import { Button, Field, Heading, Text, Textarea, Input } from '../ui';
 import { ExampleWorkspace } from './example-workspace';
 import { ExamplePrivateResource } from './example-private-resource';
 import { DatabaseHttp } from './http';
-import { VaultSession } from './vault-session';
 
 @Component({
   selector: 'app-database-example',
   imports: [Button, Field, Heading, Text, Textarea, Input, NavigationHeading],
-  providers: [ExampleWorkspace, DatabaseHttp, ExamplePrivateResource, VaultSession],
+  providers: [ExampleWorkspace, DatabaseHttp, ExamplePrivateResource],
   templateUrl: './example.html',
 })
 export class DatabaseExample {

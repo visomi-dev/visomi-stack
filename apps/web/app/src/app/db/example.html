@@ -65,34 +65,34 @@
         keys can permanently lose access. Password reset does not recover private content.
       </p>
 
-      <div class="flex flex-wrap gap-3">
-        <button
-          appUI
-          type="button"
-          [disabled]="workspace.busy() || workspace.vault.ready()"
-          (click)="workspace.unlock()"
-          i18n="@@vaultUnlock"
-        >
-          Unlock with passkey
-        </button>
+      @if (workspace.showPrf() && !workspace.vault.ready()) {
+        <div class="flex flex-wrap gap-3">
+          <button
+            appUI
+            type="button"
+            [disabled]="workspace.busy() || workspace.vault.ready()"
+            (click)="workspace.unlock()"
+            i18n="@@vaultUnlock"
+          >
+            Unlock with passkey
+          </button>
 
-        <button
-          appUI
-          type="button"
-          variant="secondary"
-          [disabled]="workspace.busy() || workspace.vault.ready()"
-          (click)="workspace.unlock(true)"
-          i18n="@@persistenceInitializePrivate"
-        >
-          Provision an empty private resource
-        </button>
+          @if (workspace.canInitialize()) {
+            <button
+              appUI
+              type="button"
+              variant="secondary"
+              [disabled]="workspace.busy() || workspace.vault.ready()"
+              (click)="workspace.unlock(true)"
+              i18n="@@persistenceInitializePrivate"
+            >
+              Provision an empty private resource
+            </button>
+          }
+        </div>
+      }
 
-        <button appUI type="button" variant="secondary" (click)="workspace.lock()" i18n="@@vaultLock">
-          Lock private resources
-        </button>
-      </div>
-
-      @if (!workspace.vault.ready()) {
+      @if (workspace.showPin() && !workspace.vault.ready()) {
         <form class="space-y-4" (submit)="$event.preventDefault(); workspace.unlockWithPin()">
           <p appUI tone="muted" i18n="@@vaultPinWarning">
             Without passkey support, you can choose a 4–6 digit PIN. Someone with a copy of your encrypted storage can
@@ -122,37 +122,39 @@
             Unlock locally with PIN
           </button>
 
-          <app-field
-            control-id="vault-pin-confirm"
-            label="Confirm PIN for initial setup"
-            i18n-label="@@vaultPinConfirm"
-            #confirmField="appField"
-          >
-            <input
-              appUI
-              id="vault-pin-confirm"
-              type="password"
-              inputmode="numeric"
-              autocomplete="off"
-              maxlength="6"
-              [attr.aria-describedby]="confirmField.describedBy()"
-              [disabled]="workspace.busy()"
-              #confirmInput
-              [value]="workspace.pinConfirmation()"
-              (input)="workspace.pinConfirmation.set(confirmInput.value)"
-            />
-          </app-field>
+          @if (workspace.canInitialize()) {
+            <app-field
+              control-id="vault-pin-confirm"
+              label="Confirm PIN for initial setup"
+              i18n-label="@@vaultPinConfirm"
+              #confirmField="appField"
+            >
+              <input
+                appUI
+                id="vault-pin-confirm"
+                type="password"
+                inputmode="numeric"
+                autocomplete="off"
+                maxlength="6"
+                [attr.aria-describedby]="confirmField.describedBy()"
+                [disabled]="workspace.busy()"
+                #confirmInput
+                [value]="workspace.pinConfirmation()"
+                (input)="workspace.pinConfirmation.set(confirmInput.value)"
+              />
+            </app-field>
 
-          <button
-            appUI
-            type="button"
-            variant="secondary"
-            [disabled]="workspace.busy()"
-            (click)="workspace.unlockWithPin(true)"
-            i18n="@@vaultPinInitialize"
-          >
-            Set up an empty private resource with PIN
-          </button>
+            <button
+              appUI
+              type="button"
+              variant="secondary"
+              [disabled]="workspace.busy()"
+              (click)="workspace.unlockWithPin(true)"
+              i18n="@@vaultPinInitialize"
+            >
+              Set up an empty private resource with PIN
+            </button>
+          }
         </form>
       }
 

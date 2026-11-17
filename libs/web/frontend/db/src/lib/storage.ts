@@ -124,6 +124,43 @@ export class IndexedDbVaultStorage implements VaultStorage {
     }
   }
 
+  /** Metadata discovery only; each returned wrapper must still authenticate before use. */
+  async latestBindings(ownerId: string): Promise<WrappedKey['context'][]> {
+    try {
+      const bindings = await this.database.transaction('r', this.database.keys, async () => {
+        const latest = new Map<string, WrappedKey>();
+
+        const rows = await this.database.keys.toArray();
+
+        for (const row of rows) {
+          const parsed = storedKeySchema.safeParse(row);
+
+          if (
+            !parsed.success ||
+            parsed.data.envelope.context.ownerId !== ownerId ||
+            keyDomainId(ownerId, parsed.data.envelope.context.key) !== row.id
+          ) {
+            throw new VaultError('corrupt');
+          }
+
+          const envelope = parsed.data.envelope;
+          const id = keyDomainId(ownerId, { ...envelope.context.key, generation: 1 });
+          const previous = latest.get(id);
+
+          if (!previous || previous.context.key.generation < envelope.context.key.generation) {
+            latest.set(id, envelope);
+          }
+        }
+
+        return [...latest.values()].map(({ context }) => context);
+      });
+
+      return bindings;
+    } catch (error) {
+      throw storageError(error);
+    }
+  }
+
   async putKey(id: string, envelope: WrappedKey, exhausted = false): Promise<void> {
     const result = wrappedKeySchema.safeParse(envelope);
 

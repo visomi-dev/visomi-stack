@@ -4,6 +4,7 @@ import { BrowserVault, DeviceCustody, PinUnlock, PrfUnlock, WebCryptoCipher } fr
 import {
   VaultError,
   keyDomainId,
+  wrappingAad,
   type DataContext,
   type DataEnvelope,
   type VaultState,
@@ -27,8 +28,10 @@ export class VaultSession {
   private readonly selected = signal<{ id: string; version: number; ownerId: string } | null>(null);
   private readonly phase = signal<VaultState>('locked');
   private readonly cleartext = signal('');
+  private readonly catalog = signal<WrappingContext[]>([]);
 
   private readonly scopes = new Map<string, BrowserVault>();
+  private readonly bindings = new Map<string, WrappingContext>();
   private readonly devices = new Map<string, DeviceCustody>();
   private readonly cleanup = this.destroyRef.onDestroy(() => this.dispose());
 
@@ -50,6 +53,11 @@ export class VaultSession {
   });
   readonly ready = computed(() => this.state() === 'ready');
   readonly plaintext = computed(() => (this.ready() ? this.cleartext() : ''));
+  readonly knownBindings = computed(() =>
+    this.session.full() && this.observedVersion === this.session.operationVersion()
+      ? this.catalog().filter((binding) => binding.ownerId === this.session.user()?.id)
+      : [],
+  );
 
   isSelected(context: WrappingContext): boolean {
     return this.selected()?.id === keyDomainId(context.ownerId, context.key);
@@ -57,6 +65,82 @@ export class VaultSession {
 
   clearDisplay(): void {
     this.cleartext.set('');
+  }
+
+  isOpen(context: WrappingContext): boolean {
+    this.revision();
+    const id = keyDomainId(context.ownerId, context.key);
+
+    return (
+      this.session.full() &&
+      context.ownerId === this.session.user()?.id &&
+      !this.session.cancellation().aborted &&
+      this.observedVersion === this.session.operationVersion() &&
+      Boolean(this.bindings.get(id) && wrappingAad(this.bindings.get(id)!) === wrappingAad(context)) &&
+      this.scopes.get(id)?.state === 'ready'
+    );
+  }
+
+  canResume(context: WrappingContext): boolean {
+    return this.isOpen(context) && this.devices.get(this.deviceId(context))?.ready === true;
+  }
+
+  resume(context: WrappingContext): boolean {
+    if (!this.isOpen(context)) {
+      return false;
+    }
+
+    this.selected.set({
+      id: keyDomainId(context.ownerId, context.key),
+      version: this.session.operationVersion(),
+      ownerId: context.ownerId,
+    });
+
+    this.phase.set('ready');
+    this.clearDisplay();
+
+    return true;
+  }
+
+  /** Cancel obsolete view work synchronously, keeping only fully unlocked custody in this account session. */
+  release(): void {
+    this.epoch++;
+    this.selected.set(null);
+    this.clearDisplay();
+    this.phase.set('locked');
+    for (const vault of this.scopes.values()) {
+      if (vault.state !== 'ready') {
+        vault.lock(false);
+      }
+    }
+    for (const device of this.devices.values()) {
+      if (!device.ready) {
+        device.lock();
+      }
+    }
+  }
+
+  async discover(): Promise<void> {
+    const ownerId = this.session.user()?.id;
+
+    if (!ownerId) {
+      throw new VaultError('locked');
+    }
+
+    const session = this.identity(ownerId);
+    const storage = await this.database.vault(ownerId, session.signal);
+
+    try {
+      const bindings = await storage.latestBindings(ownerId);
+
+      if (!this.current(this.epoch, session)) {
+        throw new VaultError('stale-operation');
+      }
+
+      this.remember(bindings.filter((binding) => binding.key.domain !== 'device-custody'));
+    } finally {
+      storage.close();
+    }
   }
 
   async connect(context: WrappingContext, rpId: string, initialize = false, pin?: Uint8Array): Promise<void> {
@@ -71,6 +155,10 @@ export class VaultSession {
       !view.isSecureContext
     ) {
       throw new VaultError('unavailable');
+    }
+
+    if (!initialize && this.resume(context)) {
+      return;
     }
 
     this.bindCancellation(session.signal);
@@ -136,6 +224,7 @@ export class VaultSession {
       this.scopes.set(id, vault);
     }
 
+    this.bindings.set(id, context);
     this.selected.set({ id, version: session.version, ownerId: context.ownerId });
     this.cleartext.set('');
 
@@ -149,6 +238,8 @@ export class VaultSession {
       // lock/dispose already invalidated the SDK operation. Do not lock a newer unlock of this cached instance.
       throw new VaultError('stale-operation');
     }
+
+    this.remember([context]);
   }
 
   async seal(context: DataContext, value: string): Promise<DataEnvelope> {
@@ -281,14 +372,11 @@ export class VaultSession {
     }
 
     this.bindCancellation(session.signal);
-    const id = JSON.stringify([
-      binding.ownerId,
-      binding.key.product,
-      binding.key.scope.tenantId,
-      binding.deviceId,
-      binding.methodId,
-      binding.origin,
-    ]);
+    const id = this.deviceId(binding);
+
+    if (!provision && this.devices.get(id)?.ready) {
+      return this.devices.get(id)!;
+    }
 
     if (binding.method === 'pin-argon2id') {
       if (!pin) {
@@ -334,7 +422,31 @@ export class VaultSession {
       throw new VaultError('stale-operation');
     }
 
+    this.revision.update((value) => value + 1);
+
     return device;
+  }
+
+  /** Failed local unlock affects only this binding; explicit lock/logout still closes every scope. */
+  lockContext(context: WrappingContext): void {
+    const id = keyDomainId(context.ownerId, context.key);
+    const binding = this.bindings.get(id);
+
+    if (binding && wrappingAad(binding) !== wrappingAad(context)) {
+      return;
+    }
+
+    this.epoch++;
+    this.clearDisplay();
+
+    if (this.selected()?.id === id) {
+      this.selected.set(null);
+      this.phase.set('locked');
+    }
+
+    this.scopes.get(id)?.lock(false);
+    this.devices.get(this.deviceId(context))?.lock();
+    this.revision.update((value) => value + 1);
   }
 
   lock(broadcast = true): void {
@@ -347,6 +459,34 @@ export class VaultSession {
     for (const device of this.devices.values()) {
       device.lock();
     }
+  }
+
+  private remember(bindings: WrappingContext[]): void {
+    this.catalog.update((current) => {
+      const latest = new Map<string, WrappingContext>();
+
+      for (const binding of [...current, ...bindings]) {
+        const id = keyDomainId(binding.ownerId, { ...binding.key, generation: 1 });
+        const previous = latest.get(id);
+
+        if (!previous || previous.key.generation <= binding.key.generation) {
+          latest.set(id, binding);
+        }
+      }
+
+      return [...latest.values()];
+    });
+  }
+
+  private deviceId(binding: WrappingContext): string {
+    return JSON.stringify([
+      binding.ownerId,
+      binding.key.product,
+      binding.key.scope.tenantId,
+      binding.deviceId,
+      binding.methodId,
+      binding.origin,
+    ]);
   }
 
   private identity(ownerId: string) {
@@ -408,6 +548,8 @@ export class VaultSession {
       vault.close();
     }
     this.scopes.clear();
+    this.bindings.clear();
+    this.catalog.set([]);
     for (const device of this.devices.values()) {
       device.close();
     }

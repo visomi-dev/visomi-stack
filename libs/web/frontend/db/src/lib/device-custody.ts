@@ -78,6 +78,10 @@ export class DeviceCustody {
     );
   }
 
+  get ready(): boolean {
+    return Boolean(this.identity && this.vault.state === 'ready');
+  }
+
   async unlock(provision = false): Promise<void> {
     this.identity = undefined;
     // Starting the vault operation synchronously emits its initial lock. Capture before yielding to other operations.

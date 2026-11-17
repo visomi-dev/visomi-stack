@@ -3,7 +3,7 @@ import { VaultError, type WrappingContext } from '@visomi-stack/shared-db';
 
 import type { ClientDatabase } from './database';
 import type { VaultSession } from './vault-session';
-import { openLocalPin } from './local-pin';
+import { openLocalVault } from './local-unlock';
 
 const target = {
   tenantId: '11111111-1111-4111-8111-111111111111',
@@ -36,6 +36,9 @@ function fixture() {
     connect: vi.fn(async () => undefined),
     device: vi.fn(async () => custody),
     lock: vi.fn(),
+    lockContext: vi.fn(),
+    canResume: vi.fn(() => false),
+    isOpen: vi.fn(() => true),
   };
   const database = { replica: vi.fn(async () => storage) };
   const options = {
@@ -59,7 +62,7 @@ function fixture() {
 describe('local PIN connection ownership and rollback boundary', () => {
   it('opens local custody without a transport or a WebAuthn dependency and transfers the persisted pins intact', async () => {
     const f = fixture();
-    const result = await openLocalPin(f.options);
+    const result = await openLocalVault(f.options);
 
     expect(f.vault.connect).toHaveBeenCalledWith(binding, f.options.rpId, false, f.options.pin);
     expect(result.pinned).toEqual({ cursor: 8, checkpoint: 'synthetic-checkpoint', generation: 2, epoch: 3 });
@@ -72,11 +75,10 @@ describe('local PIN connection ownership and rollback boundary', () => {
 
     f.storage.pin.mockResolvedValueOnce({ cursor: 8, checkpoint: 'synthetic-checkpoint', generation: 3, epoch: 3 });
 
-    await expect(openLocalPin(f.options)).rejects.toMatchObject({ code: 'corrupt' });
+    await expect(openLocalVault(f.options)).rejects.toMatchObject({ code: 'corrupt' });
 
     expect(f.storage.close).toHaveBeenCalledOnce();
-    expect(f.custody.lock).toHaveBeenCalledOnce();
-    expect(f.vault.lock).toHaveBeenCalledWith(false);
+    expect(f.vault.lockContext).toHaveBeenCalledWith(binding);
   });
 
   it('closes a late connection after cancellation without locking a newer selected vault', async () => {
@@ -88,10 +90,11 @@ describe('local PIN connection ownership and rollback boundary', () => {
       return f.storage;
     });
 
-    await expect(openLocalPin(f.options)).rejects.toMatchObject({ code: 'stale-operation' });
+    await expect(openLocalVault(f.options)).rejects.toMatchObject({ code: 'stale-operation' });
 
     expect(f.storage.close).toHaveBeenCalledOnce();
     expect(f.vault.lock).not.toHaveBeenCalled();
+    expect(f.vault.lockContext).not.toHaveBeenCalled();
   });
 
   it('locks the unlocked resource if signing custody cannot be restored', async () => {
@@ -99,10 +102,10 @@ describe('local PIN connection ownership and rollback boundary', () => {
 
     f.vault.device.mockRejectedValueOnce(new VaultError('corrupt'));
 
-    await expect(openLocalPin(f.options)).rejects.toMatchObject({ code: 'corrupt' });
+    await expect(openLocalVault(f.options)).rejects.toMatchObject({ code: 'corrupt' });
 
     expect(f.database.replica).not.toHaveBeenCalled();
-    expect(f.vault.lock).toHaveBeenCalledWith(false);
+    expect(f.vault.lockContext).toHaveBeenCalledWith(binding);
   });
 
   it('does not reinterpret a PRF binding as PIN fallback', async () => {
@@ -110,8 +113,26 @@ describe('local PIN connection ownership and rollback boundary', () => {
 
     f.vault.localLatestBinding.mockResolvedValueOnce({ ...binding, method: 'passkey-prf' });
 
-    await expect(openLocalPin(f.options)).rejects.toMatchObject({ code: 'recovery-required' });
+    await expect(openLocalVault(f.options)).rejects.toMatchObject({ code: 'recovery-required' });
 
     expect(f.vault.connect).not.toHaveBeenCalled();
   });
+});
+
+it('does not lock retained custody used by a newer view when an obsolete local connection finishes late', async () => {
+  const f = fixture();
+
+  f.vault.canResume.mockReturnValue(true);
+  f.database.replica.mockImplementationOnce(async () => {
+    f.controller.abort();
+
+    return f.storage;
+  });
+
+  await expect(openLocalVault({ ...f.options, pin: undefined })).rejects.toMatchObject({ code: 'stale-operation' });
+
+  expect(f.storage.close).toHaveBeenCalledOnce();
+  expect(f.custody.lock).not.toHaveBeenCalled();
+  expect(f.vault.lock).not.toHaveBeenCalled();
+  expect(f.vault.lockContext).not.toHaveBeenCalled();
 });

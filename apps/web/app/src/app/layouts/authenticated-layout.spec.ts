@@ -37,6 +37,7 @@ it('recreates private routed content only when the account identity changes', as
           user: computed(() => snapshot().user),
           full: () => true,
           status: () => 'ready',
+          operationVersion: signal(0),
           cancellation: () => new AbortController().signal,
         },
       },

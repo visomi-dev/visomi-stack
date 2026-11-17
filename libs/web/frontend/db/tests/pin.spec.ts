@@ -39,6 +39,27 @@ it('encrypts and reopens local data and independent signing custody with a PIN w
         vault.close();
         const reopenedStorage = await open();
         const located = await reopenedStorage.getLatestKey(owner, binding.key);
+        const replicaStore = await api.IndexedDbReplicaStorage.open(indexedDB, owner);
+        const replicaId = api.replicaId(owner, binding.key, binding.key.scope);
+
+        await replicaStore.advanceEpoch(replicaId, 3);
+
+        await replicaStore.advanceEpoch(replicaId, 2);
+
+        const retained = await replicaStore.pin(replicaId);
+        const rosterFloor =
+          retained.epoch === 3 && retained.cursor === 0 && retained.checkpoint === null && retained.generation === 1;
+
+        replicaStore.close();
+        const catalog = await reopenedStorage.latestBindings(owner);
+        const discovered =
+          catalog.length === 2 &&
+          catalog.some((value) => value.key.domain === 'device-custody') &&
+          catalog.some((value) => value.key.domain === binding.key.domain);
+        const wrongOwner = await reopenedStorage.latestBindings(crypto.randomUUID()).then(
+          () => 'accepted',
+          (error) => error.code,
+        );
         const reopened = new api.BrowserVault(owner, reopenedStorage, source(), new api.WebCryptoCipher(crypto));
 
         await reopened.unlock(located!.context);
@@ -91,12 +112,21 @@ it('encrypts and reopens local data and independent signing custody with a PIN w
         afterFailure.fill(0);
         correct.close();
 
-        return { equal, sameIdentity, onlyCiphertext, rejected, preserved };
+        return { equal, sameIdentity, onlyCiphertext, rejected, preserved, discovered, wrongOwner, rosterFloor };
       },
       { vector },
     );
 
-    expect(result).toEqual({ equal: true, sameIdentity: true, onlyCiphertext: true, rejected: true, preserved: true });
+    expect(result).toEqual({
+      equal: true,
+      sameIdentity: true,
+      onlyCiphertext: true,
+      rejected: true,
+      preserved: true,
+      discovered: true,
+      wrongOwner: 'corrupt',
+      rosterFloor: true,
+    });
   } finally {
     await page.close();
   }

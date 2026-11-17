@@ -1,5 +1,13 @@
 import { z } from 'zod';
-import { keyDomainSchema, dataAad, VaultError, type WrappingContext, type DataEnvelope } from '@visomi-stack/shared-db';
+import {
+  keyDomainSchema,
+  dataAad,
+  VaultError,
+  syntheticHybridPolicy,
+  type KeyDomain,
+  type WrappingContext,
+  type DataEnvelope,
+} from '@visomi-stack/shared-db';
 
 export const rosterSchema = z.object({
   key: keyDomainSchema,
@@ -32,4 +40,12 @@ export function validateExampleEnvelope(binding: WrappingContext | undefined, en
   ) {
     throw new VaultError('corrupt');
   }
+}
+
+export function exampleLocalKey(target: { tenantId: string; scopeId: string }): Omit<KeyDomain, 'generation'> {
+  return {
+    product: syntheticHybridPolicy.product,
+    domain: 'private-resources',
+    scope: { kind: 'resource', tenantId: target.tenantId, groupId: null, resourceId: target.scopeId },
+  };
 }

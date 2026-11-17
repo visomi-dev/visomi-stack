@@ -1,35 +1,31 @@
-import { replicaId, type DeviceCustody } from '@visomi-stack/web-frontend-db';
-import { syntheticHybridPolicy, VaultError } from '@visomi-stack/shared-db';
+import { replicaId } from '@visomi-stack/web-frontend-db';
+import { VaultError } from '@visomi-stack/shared-db';
 
 import type { ClientDatabase } from './database';
 import type { VaultSession } from './vault-session';
 import type { ExampleTarget } from './example-private-resource';
+import { exampleLocalKey } from './example-contracts';
 
 /** Transfer connection ownership only after local custody and persisted generation checks succeed. */
-export async function openLocalPin(options: {
+export async function openLocalVault(options: {
   vault: VaultSession;
   database: ClientDatabase;
   target: ExampleTarget;
   rpId: string;
-  pin: Uint8Array;
+  pin?: Uint8Array;
   ownerId: string;
   signal: AbortSignal;
   current: () => void;
 }) {
   const { vault, database, target, rpId, pin, ownerId, signal, current } = options;
-  const binding = await vault.localLatestBinding({
-    product: syntheticHybridPolicy.product,
-    domain: 'private-resources',
-    scope: { kind: 'resource', tenantId: target.tenantId, groupId: null, resourceId: target.scopeId },
-  });
+  const binding = await vault.localLatestBinding(exampleLocalKey(target));
 
   current();
 
-  if (!binding || binding.method !== 'pin-argon2id' || binding.ownerId !== ownerId) {
+  if (!binding || binding.ownerId !== ownerId || (pin ? binding.method !== 'pin-argon2id' : !vault.isOpen(binding))) {
     throw new VaultError('recovery-required');
   }
 
-  let custody: DeviceCustody | undefined;
   let storage: Awaited<ReturnType<ClientDatabase['replica']>> | undefined;
 
   try {
@@ -39,7 +35,6 @@ export async function openLocalPin(options: {
 
     const identity = await vault.device(binding, rpId, false, pin);
 
-    custody = identity;
     current();
 
     const connection = await database.replica(ownerId, signal);
@@ -55,13 +50,12 @@ export async function openLocalPin(options: {
       throw new VaultError('corrupt');
     }
 
-    return { binding, custody, storage, pinned };
+    return { binding, custody: identity, storage, pinned };
   } catch (error) {
     storage?.close();
-    custody?.lock();
 
     if (!signal.aborted) {
-      vault.lock(false);
+      vault.lockContext(binding);
     }
 
     throw error;

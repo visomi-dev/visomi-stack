@@ -1238,6 +1238,22 @@
         <source>Unlock locally with PIN</source>
         <target>Desbloquear localmente con PIN</target>
       </trans-unit>
+      <trans-unit id="appVaultUnlockHeading" datatype="html">
+        <source>Unlock your private resources</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/app-vault-unlock.html</context>
+          <context context-type="linenumber">7,9</context>
+        </context-group>
+        <target>Desbloquea tus recursos privados</target>
+      </trans-unit>
+      <trans-unit id="appVaultUnlockDescription" datatype="html">
+        <source> A local vault is closed. Unlock it to use its private resources. Other local vaults may use a different key or PIN. Navigating in this session keeps an opened vault unlocked until you lock it or sign out. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/app-vault-unlock.html</context>
+          <context context-type="linenumber">10,14</context>
+        </context-group>
+        <target>Un vault local está cerrado. Desbloquéalo para usar sus recursos privados. Otros vaults locales pueden usar otra clave o PIN. Navegar durante esta sesión mantiene abierto un vault hasta que lo bloquees o cierres sesión.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

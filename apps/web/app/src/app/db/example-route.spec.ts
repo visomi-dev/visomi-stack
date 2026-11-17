@@ -6,7 +6,7 @@ import { TestBed } from '@angular/core/testing';
 import { NavigationStart, provideRouter, Router, RouterOutlet } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { filter, firstValueFrom } from 'rxjs';
-import { syntheticHybridPolicy, type VaultState } from '@visomi-stack/shared-db';
+import { syntheticHybridPolicy, VaultError, type VaultState } from '@visomi-stack/shared-db';
 
 import { appRoutes } from '../app.routes';
 import { Session } from '../auth/session/session';
@@ -16,6 +16,7 @@ import { DatabaseExample } from './example';
 import { ExampleWorkspace } from './example-workspace';
 import { ExamplePrivateResource, type ExampleTarget } from './example-private-resource';
 import { DatabaseHttp } from './http';
+import { UnlockCapabilities } from './unlock-capabilities';
 
 @Component({ selector: 'app-test-persistence-layout', imports: [RouterOutlet], template: '<router-outlet />' })
 class TestLayout {}
@@ -37,7 +38,10 @@ const records = (target: ExampleTarget) =>
 function fixture(
   intercept?: (path: string, body: unknown, signal?: AbortSignal) => Promise<unknown> | undefined,
   guard: () => boolean | Promise<boolean> = () => true,
+  support = 'unavailable',
 ) {
+  const prf = signal(support);
+  const capabilities = { prf, unavailable: vi.fn(() => prf.set('unavailable')) };
   const state = signal<VaultState>('locked');
   const plaintext = signal('');
   const lock = vi.fn(() => {
@@ -45,11 +49,19 @@ function fixture(
     plaintext.set('');
   });
   const privateResource = {
-    vault: { state, ready: computed(() => state() === 'ready'), plaintext, lock },
+    vault: {
+      state,
+      release: lock,
+      localLatestBinding: vi.fn(async () => undefined),
+      ready: computed(() => state() === 'ready'),
+      plaintext,
+      lock,
+    },
     pending: signal(false),
     synchronized: signal(false),
     conflict: signal(false),
     close: vi.fn(),
+    resume: vi.fn(async () => undefined),
     unlock: vi.fn(async (_target: ExampleTarget, _rpId: string, _initialize: boolean, _pin?: Uint8Array) => {
       state.set('ready');
       plaintext.set('Synthetic private A');
@@ -96,6 +108,7 @@ function fixture(
 
   TestBed.configureTestingModule({
     providers: [
+      { provide: UnlockCapabilities, useValue: capabilities },
       provideLocationMocks(),
       provideRouter([
         {
@@ -127,7 +140,7 @@ function fixture(
     },
   });
 
-  return { api, privateResource, requests, lock };
+  return { api, privateResource, requests, lock, capabilities };
 }
 
 afterEach(() => {
@@ -245,7 +258,7 @@ it('does not refresh A or clear the busy state of B after an already dispatched 
   expect(f.requests.filter(({ body }) => body !== undefined).map(({ path }) => path)).toEqual([records(a), records(b)]);
 });
 
-it('uses shared navigation cancellation to lock before a pending guard resolves or change detection runs', async () => {
+it('invalidates the selected view synchronously before a pending guard resolves or change detection runs', async () => {
   const gate = deferred<boolean>();
   let guarded = false;
   const f = fixture(undefined, () => (guarded ? gate.promise : true));
@@ -287,26 +300,29 @@ it('uses shared navigation cancellation to lock before a pending guard resolves 
   expect(page.vault.ready()).toBe(false);
 });
 
-it.each(['tenantId', 'scopeId', 'objectId'] as const)('locks and resets for a change to $0 alone', async (part) => {
-  const f = fixture();
-  const harness = await RouterTestingHarness.create();
-  const page = await navigate(harness, a);
+it.each(['tenantId', 'scopeId', 'objectId'] as const)(
+  'clears the selected view and drafts for a change to $0 alone',
+  async (part) => {
+    const f = fixture();
+    const harness = await RouterTestingHarness.create();
+    const page = await navigate(harness, a);
 
-  await page.unlock();
+    await page.unlock();
 
-  page.privateDraft.set('Unfinished A');
+    page.privateDraft.set('Unfinished A');
 
-  await navigate(harness, { ...a, [part]: b[part] });
+    await navigate(harness, { ...a, [part]: b[part] });
 
-  expect(page.target()).toEqual({ ...a, [part]: b[part] });
-  expect(page.privateDraft()).toBe('');
-  expect(page.vault.plaintext()).toBe('');
-  expect(page.vault.ready()).toBe(false);
-  expect(f.privateResource.close).toHaveBeenCalled();
-  expect(f.privateResource.save).not.toHaveBeenCalled();
-});
+    expect(page.target()).toEqual({ ...a, [part]: b[part] });
+    expect(page.privateDraft()).toBe('');
+    expect(page.vault.plaintext()).toBe('');
+    expect(page.vault.ready()).toBe(false);
+    expect(f.privateResource.close).toHaveBeenCalled();
+    expect(f.privateResource.save).not.toHaveBeenCalled();
+  },
+);
 
-it('rebinds browser history back and forward without restoring an unlocked vault or A revisions into B', async () => {
+it('rebinds browser history without implicit unlock when no opened local binding can resume', async () => {
   const f = fixture();
   const harness = await RouterTestingHarness.create();
   const page = await navigate(harness, a);
@@ -382,3 +398,65 @@ it('clears PIN drafts and rejects a pending PIN unlock after Router reuses the c
   expect(page.notice()).toBe('');
   expect(bytes.every((byte) => byte === 0)).toBe(true);
 });
+
+it.each(['available', 'unknown', 'unavailable'])(
+  'offers new PIN setup only when PRF is unavailable: %s',
+  async (support) => {
+    fixture(undefined, undefined, support);
+
+    const harness = await RouterTestingHarness.create();
+    const page = await navigate(harness, a);
+
+    expect(page.showPin()).toBe(support === 'unavailable');
+    expect(page.showPrf()).toBe(support !== 'unavailable');
+    expect(page.canInitialize()).toBe(true);
+    expect(harness.routeNativeElement?.querySelector('#vault-pin') !== null).toBe(support === 'unavailable');
+  },
+);
+
+it('offers PIN after an actual unsupported PRF response, but never after a user cancellation', async () => {
+  const f = fixture(undefined, undefined, 'available');
+  const harness = await RouterTestingHarness.create();
+  const page = await navigate(harness, a);
+
+  f.privateResource.unlock.mockRejectedValueOnce(new VaultError('cancelled'));
+
+  await page.unlock(true);
+
+  expect(page.showPin()).toBe(false);
+  f.privateResource.unlock.mockRejectedValueOnce(new VaultError('unsupported-prf'));
+
+  await page.unlock(true);
+
+  expect(page.showPin()).toBe(true);
+  expect(f.capabilities.unavailable).toHaveBeenCalledOnce();
+});
+
+it.each(['passkey-prf', 'pin-argon2id'] as const)(
+  'honors an existing %s binding regardless of current capabilities',
+  async (method) => {
+    const f = fixture(undefined, undefined, method === 'passkey-prf' ? 'unavailable' : 'available');
+    const local = {
+      key: {
+        product: 'synthetic-example',
+        domain: 'private-resources',
+        generation: 1,
+        scope: { kind: 'resource' as const, tenantId: a.tenantId, groupId: null, resourceId: a.scopeId },
+      },
+      ownerId: '77777777-7777-4777-8777-777777777777',
+      deviceId: a.objectId,
+      method,
+      methodId: method === 'pin-argon2id' ? 'A'.repeat(43) : 'AQ',
+      origin: document.location.origin,
+    };
+
+    f.privateResource.vault.localLatestBinding.mockResolvedValue(local as never);
+
+    const harness = await RouterTestingHarness.create();
+    const page = await navigate(harness, a);
+
+    expect(page.showPin()).toBe(method === 'pin-argon2id');
+    expect(page.showPrf()).toBe(method === 'passkey-prf');
+    expect(page.canInitialize()).toBe(false);
+  },
+);

@@ -66,7 +66,8 @@ keeps cloud-readable operations and client-encrypted notes in separate domains.
 Only current verified users may obtain `/persistence/policy`. Do not put customer
 records, wrapped keys, plaintext, or persistence responses into SSR transfer caches.
 The Angular application excludes persistence requests from transfer caching, and
-`VaultSession` creates browser adapters only on explicit unlock. `VaultPanel` is a
+`VaultSession` never decrypts before explicit unlock. The shell may open a metadata-only
+storage connection to discover closed local vaults after rendering. `VaultPanel` is a
 consumer component with a supplied stable object context and separately provisioned
 PRF credential; it does not select a reader mode for the user. Each panel owns its
 own `VaultSession`, so simultaneous editors do not share a plaintext display or
@@ -138,11 +139,21 @@ services. Existing HTTP/UI routes and protocol errors retain their public names.
 The route-scoped `ExampleWorkspace` service binds to the live `ActivatedRoute.paramMap`, including Router
 reuse and browser history. The shared `Navigation` service exposes navigation state and cancellation as signals,
 and drives the page loader. Each `NavigationStart` synchronously aborts HTTP work,
-stops/closes the replica and device custody, locks the vault, and clears cloud
-revisions, plaintext and unfinished UI drafts. End/cancel/error reloads the current
-route under a fresh context. Query-only or canceled navigation also locks; the user
-must explicitly unlock again. This conservative behavior is a reversible technical
-choice. Encrypted pending changes and trusted checkpoints remain in IndexedDB.
+stops/closes the view's replica connection, releases its selected display and clears
+cloud revisions, plaintext and unfinished drafts. The account-bound `VaultSession`
+retains already opened key and independent signing custody across ordinary,
+query-only and canceled navigation. Reentering a scope restores only its requested
+object and retained replica pins without repeating a ceremony; a different closed
+scope still needs explicit unlock. Late operations cannot lock retained custody
+used by the new view. Explicit lock, logout, account/version invalidation and full
+reload close custody. Encrypted pending changes and checkpoints remain in IndexedDB.
+
+After browser rendering, the authenticated shell discovers existing local vault
+metadata and offers unlock for closed vaults at Home/Account/Security. The resource
+screen owns its contextual controls, so the shell does not duplicate those prompts.
+No app-wide PIN, automatic enrollment or PRF conversion is introduced. For a new
+resource, PIN setup appears only after client/ceremony PRF unavailability; existing
+bindings always retain their method. See the [PIN contract](architecture/contracts/offline-pin.md).
 
 Every asynchronous continuation captures its context and checks it after awaits.
 Late reads, writes, errors and `finally` handlers cannot update another route's
