@@ -196,12 +196,22 @@ export class IndexedDbReplicaStorage implements ReplicaStorage {
   }
 
   /** Retain an authorized roster floor even if synchronization or its view is interrupted. */
-  async advanceEpoch(id: string, minimumEpoch: number): Promise<void> {
+  async advanceControl(id: string, minimum: Pick<ReplicaPin, 'epoch' | 'generation'>): Promise<void> {
     await this.transaction(async () => {
       const current = await this.pin(id);
-      const next = pinSchema.safeParse({ ...current, epoch: Math.max(current.epoch, minimumEpoch) });
+      const next = pinSchema.safeParse({
+        ...current,
+        epoch: Math.max(current.epoch, minimum.epoch),
+        generation: Math.max(current.generation, minimum.generation),
+      });
 
-      if (!Number.isSafeInteger(minimumEpoch) || minimumEpoch < 1 || !next.success) {
+      if (
+        !Number.isSafeInteger(minimum.epoch) ||
+        minimum.epoch < 1 ||
+        !Number.isSafeInteger(minimum.generation) ||
+        minimum.generation < 1 ||
+        !next.success
+      ) {
         throw new VaultError('corrupt');
       }
 

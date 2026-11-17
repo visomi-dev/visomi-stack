@@ -62,8 +62,9 @@ async function fixture(generation = 1, schemaVersion = 1) {
   const storage = {
     pin: vi.fn(async () => initial),
     commit,
-    advanceEpoch: vi.fn(async (_id: string, epoch: number) => {
-      initial.epoch = Math.max(initial.epoch, epoch);
+    advanceControl: vi.fn(async (_id: string, minimum: { epoch: number; generation: number }) => {
+      initial.epoch = Math.max(initial.epoch, minimum.epoch);
+      initial.generation = Math.max(initial.generation, minimum.generation);
     }),
     unit: vi.fn(async () => envelope),
     pending: vi.fn(async () => undefined),
@@ -288,7 +289,7 @@ it('rejects a late navigation resume before it can replace the target or reconne
   expect(f.api.request).not.toHaveBeenCalled();
 });
 
-it('retains the authorized roster epoch through navigation before the first sync page arrives', async () => {
+it('retains the authorized roster epoch and generation through navigation before the first sync page arrives', async () => {
   const f = await fixture();
   const request = f.api.request.getMockImplementation()!;
   let finish!: (page: Awaited<ReturnType<typeof request>>) => void;
@@ -317,7 +318,7 @@ it('retains the authorized roster epoch through navigation before the first sync
   await expect(f.resource.synchronize(f.target)).rejects.toMatchObject({ code: 'context-mismatch' });
 
   expect(f.commit).not.toHaveBeenCalled();
-  expect(f.initial).toEqual({ cursor: 0, checkpoint: null, generation: 1, epoch: 3 });
+  expect(f.initial).toEqual({ cursor: 0, checkpoint: null, generation: 2, epoch: 3 });
 
   const page = await request('/sync/pull');
 

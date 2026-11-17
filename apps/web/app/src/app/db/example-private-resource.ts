@@ -225,7 +225,7 @@ export class ExamplePrivateResource {
     this.storage = storage;
     const id = replicaId(ownerId, key, key.scope);
 
-    await storage.advanceEpoch(id, registry.epoch);
+    await storage.advanceControl(id, { epoch: registry.epoch, generation: key.generation });
 
     this.current(signal);
     const replica = new SyncReplica(

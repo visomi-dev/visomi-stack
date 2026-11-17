@@ -78,10 +78,11 @@ cannot know about revocations it has not received. Pending changes survive error
 
 Local key discovery selects the highest retained wrapper. A wrapper older than
 the independent replica generation pin is rejected. AEAD and checkpoint checks
-remain in force. An authorized online roster epoch is persisted monotonically in
-the existing replica pin before starting synchronization; interrupted navigation
-cannot forget that floor. This advances no cursor/checkpoint/generation and does
-not modify encrypted units or outboxes. Removing all client state still removes local trust anchors;
+remain in force. Authorized online roster epoch and key generation are persisted
+monotonically in the existing replica pin before starting synchronization;
+interrupted navigation cannot forget either floor. A removed latest local wrapper
+cannot restore an older active writing binding while the independent pin remains. This
+advances no cursor/checkpoint and does not modify encrypted units or outboxes. Removing all client state still removes local trust anchors;
 this method introduces no server-trusted reset or expired-history bootstrap.
 
 The reusable vault panel accepts PIN contexts supplied by its consumer. Inputs

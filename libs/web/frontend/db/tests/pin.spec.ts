@@ -42,13 +42,13 @@ it('encrypts and reopens local data and independent signing custody with a PIN w
         const replicaStore = await api.IndexedDbReplicaStorage.open(indexedDB, owner);
         const replicaId = api.replicaId(owner, binding.key, binding.key.scope);
 
-        await replicaStore.advanceEpoch(replicaId, 3);
+        await replicaStore.advanceControl(replicaId, { epoch: 3, generation: 2 });
 
-        await replicaStore.advanceEpoch(replicaId, 2);
+        await replicaStore.advanceControl(replicaId, { epoch: 2, generation: 1 });
 
         const retained = await replicaStore.pin(replicaId);
         const rosterFloor =
-          retained.epoch === 3 && retained.cursor === 0 && retained.checkpoint === null && retained.generation === 1;
+          retained.epoch === 3 && retained.cursor === 0 && retained.checkpoint === null && retained.generation === 2;
 
         replicaStore.close();
         const catalog = await reopenedStorage.latestBindings(owner);
