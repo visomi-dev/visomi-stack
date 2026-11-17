@@ -2,6 +2,7 @@ import {
   afterRenderEffect,
   booleanAttribute,
   Component,
+  computed,
   ElementRef,
   inject,
   input,
@@ -9,17 +10,25 @@ import {
   type WritableSignal,
 } from '@angular/core';
 
-import { Field } from '../../ui';
+import { Field } from './field';
 
 @Component({
   selector: 'app-pin-input',
   templateUrl: './pin-input.html',
+  host: { '[style.--digits]': 'digits()' },
   styleUrl: './pin-input.css',
 })
 export class PinInput {
   private readonly control = viewChild.required<ElementRef<HTMLInputElement>>('control');
 
   protected readonly field = inject(Field);
+
+  readonly digits = input(6);
+  protected readonly slots = computed(() => Array.from({ length: this.digits() }, (_, index) => index));
+
+  readonly minlength = input<number>();
+  protected readonly minDigits = computed(() => this.minlength() ?? this.digits());
+  protected readonly pattern = computed(() => `[0-9]{${this.minDigits()},${this.digits()}}`);
 
   readonly disabled = input(false);
   readonly required = input(false, { transform: booleanAttribute });

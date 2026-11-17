@@ -10,11 +10,11 @@ import {
   type DeviceChallenge,
 } from '@visomi-stack/shared-db';
 
-import { decodeBytes } from './crypto';
+import { decodeBytes } from './cipher';
 import { WebCryptoDevices, type DeviceIdentity } from './devices';
 
 const fixture = JSON.parse(
-  readFileSync(new URL('../../../../../shared/db/fixtures/devices-v1.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../../../../../../shared/db/fixtures/devices-v1.json', import.meta.url), 'utf8'),
 );
 const challenge = deviceChallengeSchema.parse(fixture.challenge);
 const delivery = deviceDeliverySchema.parse(fixture.delivery);

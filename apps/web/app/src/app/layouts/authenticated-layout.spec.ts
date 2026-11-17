@@ -8,7 +8,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import type { SessionSnapshot } from '../auth/session/models';
 import { Session } from '../auth/session/session';
 import { BackupCodes } from '../auth/totp/backup-codes';
-import { Vaults } from '../shared/db/vaults';
+import { Vaults } from '../shared/vault/vaults';
 
 import { AuthenticatedLayout } from './authenticated-layout';
 

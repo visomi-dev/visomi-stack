@@ -13,14 +13,14 @@ import {
   type SigningPin,
 } from '@visomi-stack/shared-db';
 
-import { encodeBytes } from './crypto';
+import { encodeBytes } from './cipher';
 import { WebCryptoDevices, type DeviceIdentity } from './devices';
 
 const reference = JSON.parse(
-  readFileSync(new URL('../../../../../shared/db/fixtures/devices-v1.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../../../../../../shared/db/fixtures/devices-v1.json', import.meta.url), 'utf8'),
 );
 const historyReference = JSON.parse(
-  readFileSync(new URL('../../../../../shared/db/fixtures/devices-history-v1.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../../../../../../shared/db/fixtures/devices-history-v1.json', import.meta.url), 'utf8'),
 );
 const devices = new WebCryptoDevices(webcrypto as unknown as Crypto);
 let recipient: DeviceIdentity;

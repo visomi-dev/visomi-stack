@@ -66,6 +66,10 @@ bootstrap remains unsupported. Global nonce accounting, independent crypto revie
 provider operations and additional runtimes remain release work; no production
 acceptance is claimed.
 
-Angular consumers share their session/database services and vault components in
-`apps/web/app/src/app/shared/db`; the authenticated layout owns route-specific
-composition. This SDK retains browser primitives without an Angular dependency.
+Within `src/lib`, `db/` owns Dexie schemas and IndexedDB transactions, `crypto/`
+owns WebCrypto primitives, `vault/` owns key custody, PIN and PRF unlock, backup
+and recovery, and `sync/` owns replica state transitions. Consumers use the
+existing SDK entrypoints. The separate `/storage` entrypoint loads Dexie on demand.
+
+In Angular, `shared/db` supplies database connections and transport, `shared/vault`
+owns unlock and custody, and `ui/forms` supplies the reusable PIN control.

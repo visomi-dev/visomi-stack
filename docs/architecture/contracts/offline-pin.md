@@ -62,7 +62,8 @@ unlock does not count as a fully opened application vault. Account/version chang
 logout, explicit lock and full document reload require unlock again; a canceled or
 query-only navigation does not by itself discard an already opened vault.
 
-Angular frontend adapters live in `apps/web/app/src/app/shared/db`. `Vaults`
+Angular vault adapters live in `app/shared/vault` and use connections from
+`app/shared/db`. The PIN field is shared through `app/ui/forms`. `Vaults`
 owns shared unlock orchestration; `VaultUnlock` presents a form through signal
 inputs/model and an explicit action output. The authenticated layout owns route
 exclusions. The platform-neutral `shared-db` contracts and framework-independent

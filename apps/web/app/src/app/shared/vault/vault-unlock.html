@@ -21,7 +21,7 @@
           description="4 to 6 digits"
           i18n-description="@@vaultPinLength"
         >
-          <app-pin-input required [disabled]="busy()" [draft]="pin" />
+          <app-pin-input [minlength]="4" required [disabled]="busy()" [draft]="pin" />
         </app-field>
       }
 

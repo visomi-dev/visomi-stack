@@ -56,7 +56,7 @@ for (const mode of ['root', 'project']) {
   test(`${mode}: shared contracts reject runtime adapters and browser adapters reject server imports`, async () => {
     for (const [project, file, imports] of [
       ['libs/shared/db', 'src/lib/policy.ts', ['dexie', 'node:crypto', '@angular/core', 'express', 'drizzle-orm']],
-      ['libs/web/frontend/db', 'src/lib/crypto.ts', ['node:crypto', '@angular/core', 'express', 'drizzle-orm']],
+      ['libs/web/frontend/db', 'src/lib/crypto/cipher.ts', ['node:crypto', '@angular/core', 'express', 'drizzle-orm']],
       ['apps/web/api', 'src/db/records.ts', ['dexie']],
       ['libs/backend/db', 'src/lib/schema-vault.ts', ['dexie']],
       ['libs/backend/shared', 'src/lib/injection.ts', ['dexie']],

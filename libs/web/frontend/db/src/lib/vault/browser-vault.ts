@@ -23,8 +23,9 @@ import {
   type KeyDomain,
 } from '@visomi-stack/shared-db';
 
-import { WebCryptoCipher } from './crypto';
-import type { WebCryptoDevices } from './devices';
+import { WebCryptoCipher } from '../crypto/cipher';
+import type { WebCryptoDevices } from '../crypto/devices';
+
 import { historicalBinding, storeHistoricalKey, withStoredKey } from './stored-key';
 
 /** One independently locked key scope; records are loaded/decrypted individually. */

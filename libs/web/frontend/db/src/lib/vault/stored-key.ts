@@ -8,7 +8,7 @@ import {
   type WrappingContext,
 } from '@visomi-stack/shared-db';
 
-import type { WebCryptoCipher } from './crypto';
+import type { WebCryptoCipher } from '../crypto/cipher';
 
 export function historicalBinding(current: WrappingContext, key: KeyDomain): WrappingContext {
   const parsed = keyDomainSchema.safeParse(key);

@@ -9,8 +9,9 @@ import {
   type SyncEvent,
 } from '@visomi-stack/shared-db';
 
+import type { PendingWrite, ReplicaPin, ReplicaStorage } from '../sync/replica';
+
 import { ReplicaDatabase, openDatabase, storageError } from './database';
-import type { PendingWrite, ReplicaPin, ReplicaStorage } from './replica';
 
 const pinSchema = syncHeadSchema.safeExtend({
   generation: z.number().int().min(1).max(2_147_483_647),

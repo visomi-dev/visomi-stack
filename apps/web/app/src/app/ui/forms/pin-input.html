@@ -3,7 +3,7 @@
   dir="ltr"
 >
   <div aria-hidden="true" class="pointer-events-none flex gap-1">
-    @for (slot of [0, 1, 2, 3, 4, 5]; track slot) {
+    @for (slot of slots(); track slot) {
       <span class="slot"></span>
     }
   </div>
@@ -13,9 +13,9 @@
     type="password"
     inputmode="numeric"
     autocomplete="off"
-    minlength="4"
-    maxlength="6"
-    pattern="[0-9]{4,6}"
+    [minLength]="minDigits()"
+    [maxLength]="digits()"
+    [pattern]="pattern()"
     data-slot="control"
     class="absolute inset-y-0 start-0 rounded-lg bg-transparent font-mono outline-hidden disabled:cursor-not-allowed"
     [id]="field.controlId()"

@@ -18,7 +18,7 @@ import {
   type SigningPin,
 } from '@visomi-stack/shared-db';
 
-import { decodeBytes, encodeBytes } from './crypto';
+import { decodeBytes, encodeBytes } from './cipher';
 
 export type DeviceIdentity = { signing: CryptoKeyPair; encryption: CryptoKeyPair };
 

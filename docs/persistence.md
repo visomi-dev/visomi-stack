@@ -136,12 +136,16 @@ services. Existing HTTP/UI routes and protocol errors retain their public names.
 
 ## Angular routes and browser databases
 
-Angular-specific reuse lives in `apps/web/app/src/app/shared/db`, following the
-existing `shared/navigation` convention. It contains `ClientDatabase`,
-`DatabaseHttp`, `VaultSession`, `Vaults`, capability detection, localized vault
-messages, `VaultPanel` and `VaultUnlock`. This is shared infrastructure between
-features of the Angular frontend; its session dependency is the existing account
-port. `app/db` retains the synthetic resource consumer and its policy/schema logic.
+In the Angular application, `shared/db` opens account-bound IndexedDB connections
+through `ClientDatabase` and provides the persistence transport, `DatabaseHttp`.
+`shared/vault` owns unlock ceremonies, device and key custody, session lifetime,
+capability detection, messages and unlock panels. The example in `app/db` selects
+its product key domain and passes it to the vault when opening a local replica.
+
+`ui/forms/PinInput` is a masked numeric form control exported by the Angular UI
+catalog. Its caller supplies the draft and may select a digit count or a minimum
+length. Vault forms accept four to six digits and submit explicitly. The control
+and its containing `Field` can also be used outside persistence.
 
 `VaultUnlock` receives method, busy/notice state, a PIN model and a caller-supplied
 stable `control-id`, and emits an explicit unlock action. It does not inject a

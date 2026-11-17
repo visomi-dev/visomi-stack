@@ -12,7 +12,7 @@ import { appRoutes } from '../app.routes';
 import { Session } from '../auth/session/session';
 import { Navigation } from '../shared/navigation';
 import { DatabaseHttp } from '../shared/db/http';
-import { UnlockCapabilities } from '../shared/db/unlock-capabilities';
+import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 
 import { DatabaseExample } from './example';
 import { ExampleWorkspace } from './example-workspace';

@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { VaultError, type WrappingContext } from '@visomi-stack/shared-db';
 
-import type { ClientDatabase } from '../shared/db/database';
-import type { VaultSession } from '../shared/db/vault-session';
+import type { ClientDatabase } from '../db/database';
 
+import type { VaultSession } from './vault-session';
 import { openLocalVault } from './local-unlock';
 
 const target = {
@@ -45,7 +45,7 @@ function fixture() {
   const options = {
     vault: vault as unknown as VaultSession,
     database: database as unknown as ClientDatabase,
-    target,
+    key: { product: binding.key.product, domain: binding.key.domain, scope: binding.key.scope },
     rpId: 'synthetic.example.test',
     pin: new TextEncoder().encode('012345'),
     ownerId: binding.ownerId,
@@ -65,6 +65,7 @@ describe('local PIN connection ownership and rollback boundary', () => {
     const f = fixture();
     const result = await openLocalVault(f.options);
 
+    expect(f.vault.localLatestBinding).toHaveBeenCalledWith(f.options.key);
     expect(f.vault.connect).toHaveBeenCalledWith(binding, f.options.rpId, false, f.options.pin);
     expect(result.pinned).toEqual({ cursor: 8, checkpoint: 'synthetic-checkpoint', generation: 2, epoch: 3 });
     expect(result.storage).toBe(f.storage);

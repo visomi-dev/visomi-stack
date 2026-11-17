@@ -26,9 +26,9 @@ import {
 import { Session } from '../auth/session/session';
 import { DatabaseHttp } from '../shared/db/http';
 import { ClientDatabase } from '../shared/db/database';
-import { VaultSession } from '../shared/db/vault-session';
+import { VaultSession } from '../shared/vault/vault-session';
+import { openLocalVault } from '../shared/vault/local-unlock';
 
-import { openLocalVault } from './local-unlock';
 import { rosterSchema, validateExampleEnvelope, exampleLocalKey } from './example-contracts';
 
 export type ExampleTarget = { tenantId: string; scopeId: string; objectId: string };
@@ -455,7 +455,7 @@ export class ExamplePrivateResource {
     const opened = await openLocalVault({
       vault: this.vault,
       database: this.database,
-      target,
+      key: exampleLocalKey(target),
       rpId,
       pin,
       ownerId,

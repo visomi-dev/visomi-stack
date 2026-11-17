@@ -1,7 +1,7 @@
 import { argon2id } from 'hash-wasm';
 import { VaultError, wrappingContextSchema, type VaultUnlock, type WrappingContext } from '@visomi-stack/shared-db';
 
-import { decodeBytes, encodeBytes } from './crypto';
+import { decodeBytes, encodeBytes } from '../crypto/cipher';
 
 // A fixed method name versions the KDF profile; stored data cannot choose weaker or unbounded parameters.
 export const pinMethod = 'pin-argon2id' as const;

@@ -22,7 +22,7 @@
       description="4 to 6 digits"
       i18n-description="@@vaultPinLength"
     >
-      <app-pin-input [disabled]="busy()" [draft]="pinDraft" />
+      <app-pin-input [minlength]="4" [disabled]="busy()" [draft]="pinDraft" />
     </app-field>
 
     @if (allowInitialize()) {
@@ -31,7 +31,7 @@
         label="Confirm PIN for initial setup"
         i18n-label="@@vaultPinConfirm"
       >
-        <app-pin-input [disabled]="busy()" [draft]="pinConfirmation" />
+        <app-pin-input [minlength]="4" [disabled]="busy()" [draft]="pinConfirmation" />
       </app-field>
     }
   }

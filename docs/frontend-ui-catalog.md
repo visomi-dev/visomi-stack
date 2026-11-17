@@ -96,7 +96,14 @@ keyboard contracts beyond their CSS. They are not represented as equivalent
 widgets by a styled native select or disclosure. Their headless primitive choice
 needs its own implementation and accessibility validation.
 
-Authentication layouts, password strength, PIN input, specialized password/color controls and financial
+Angular's `ui/forms/PinInput` composes with `Field` and a caller-owned draft.
+It uses masked numeric input, supports a configured digit count and accepts an
+optional shorter minimum. Its location and configurable slots follow the
+[v0 form control](https://github.com/visomi-dev/visomi-stack-v0/blob/d72af8c39f969d05076fa2f3bb05865b08f9b176/apps/web/app/src/app/shared/ui/forms/pin-input/pin-input.ts)
+and the [Nive v6 form control](https://github.com/visomi-dev/nive-archive-v6/blob/52f9b4adfa829459635a58540e0d78473400a32e/apps/web/app/src/app/shared/ui/forms/pin-input/pin-input.ts).
+The browser handles paste and cursor navigation in one native password field.
+
+Authentication layouts, password strength, specialized password/color controls and financial
 formatting remain application-specific compositions. The catalog does not port
 Nive's product logic or authentication flows. Native controls compose with the
 application's Signal Forms or Reactive Forms model.

@@ -14,10 +14,10 @@ import {
   type WrappingContext,
 } from '@visomi-stack/shared-db';
 
-import { decodeBytes, encodeBytes, WebCryptoCipher } from './crypto';
+import { decodeBytes, encodeBytes, WebCryptoCipher } from './cipher';
 
 const vectors = JSON.parse(
-  readFileSync(new URL('../../../../../shared/db/fixtures/crypto-v1.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../../../../../../shared/db/fixtures/crypto-v1.json', import.meta.url), 'utf8'),
 ) as {
   dataKeyHex: string;
   secretHex: string;

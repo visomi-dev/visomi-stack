@@ -5,11 +5,11 @@ import type { WrappingContext } from '@visomi-stack/shared-db';
 
 import { Session } from '../../auth/session/session';
 import { Navigation } from '../navigation';
+import { ClientDatabase } from '../db/database';
+import { DatabaseHttp } from '../db/http';
 
 import { Vaults } from './vaults';
 import { VaultSession } from './vault-session';
-import { ClientDatabase } from './database';
-import { DatabaseHttp } from './http';
 
 const binding: WrappingContext = {
   ownerId: '11111111-1111-4111-8111-111111111111',

@@ -4,7 +4,7 @@
 }
 
 div {
-  --slot-width: min(2.5rem, 15cqi);
+  --slot-width: min(2.5rem, calc(100cqi / (var(--digits) + 1)));
 }
 
 .slot {
@@ -15,10 +15,10 @@ div {
   width: calc(var(--slot-width) - 0.25rem);
 }
 
-/* Leave room after the sixth mask so native selection and the caret do not scroll the first digit out of its slot. */
+/* Leave room after the last mask so native selection and the caret do not scroll the first digit out of its slot. */
 input {
   box-sizing: border-box;
-  width: calc(6.5 * var(--slot-width));
+  width: calc((var(--digits) + 0.5) * var(--slot-width));
   padding-inline-start: calc((var(--slot-width) - 0.25rem - 1ch) / 2);
   letter-spacing: calc(var(--slot-width) - 1ch);
 }

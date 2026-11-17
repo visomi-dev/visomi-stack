@@ -12,10 +12,11 @@ import {
   type WrappingContext,
 } from '@visomi-stack/shared-db';
 
-import { WebCryptoCipher } from './crypto';
-import { WebCryptoDevices, type DeviceIdentity } from './devices';
+import { WebCryptoCipher } from '../crypto/cipher';
+import { WebCryptoDevices, type DeviceIdentity } from '../crypto/devices';
+
 import { provisionDeviceIdentity, restoreDeviceIdentity } from './identity-custody';
-import { BrowserVault } from './vault';
+import { BrowserVault } from './browser-vault';
 
 export function deviceCustodyContext(input: WrappingContext): WrappingContext {
   const value = wrappingContextSchema.parse(input);

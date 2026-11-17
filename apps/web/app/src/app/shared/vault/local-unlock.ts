@@ -1,25 +1,23 @@
 import { replicaId } from '@visomi-stack/web-frontend-db';
-import { VaultError } from '@visomi-stack/shared-db';
+import { VaultError, type KeyDomain } from '@visomi-stack/shared-db';
 
-import type { ClientDatabase } from '../shared/db/database';
-import type { VaultSession } from '../shared/db/vault-session';
+import type { ClientDatabase } from '../db/database';
 
-import type { ExampleTarget } from './example-private-resource';
-import { exampleLocalKey } from './example-contracts';
+import type { VaultSession } from './vault-session';
 
 /** Transfer connection ownership only after local custody and persisted generation checks succeed. */
 export async function openLocalVault(options: {
   vault: VaultSession;
   database: ClientDatabase;
-  target: ExampleTarget;
+  key: Omit<KeyDomain, 'generation'>;
   rpId: string;
   pin?: Uint8Array;
   ownerId: string;
   signal: AbortSignal;
   current: () => void;
 }) {
-  const { vault, database, target, rpId, pin, ownerId, signal, current } = options;
-  const binding = await vault.localLatestBinding(exampleLocalKey(target));
+  const { vault, database, key, rpId, pin, ownerId, signal, current } = options;
+  const binding = await vault.localLatestBinding(key);
 
   current();
 

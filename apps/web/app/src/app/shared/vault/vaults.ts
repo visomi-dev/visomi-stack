@@ -6,10 +6,10 @@ import { replicaId } from '@visomi-stack/web-frontend-db';
 
 import { Session } from '../../auth/session/session';
 import { Navigation } from '../navigation';
+import { ClientDatabase } from '../db/database';
+import { DatabaseHttp } from '../db/http';
 
 import { VaultSession } from './vault-session';
-import { ClientDatabase } from './database';
-import { DatabaseHttp } from './http';
 import { vaultMessage } from './vault-messages';
 
 /** Local unlock of existing vaults in an authenticated frontend; no product vault is created or converted here. */

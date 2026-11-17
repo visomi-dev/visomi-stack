@@ -2,8 +2,9 @@ import { webcrypto } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
+import { WebCryptoDevices } from '../crypto/devices';
+
 import { provisionDeviceIdentity, restoreDeviceIdentity } from './identity-custody';
-import { WebCryptoDevices } from './devices';
 
 const crypto = webcrypto as unknown as Crypto;
 const devices = new WebCryptoDevices(crypto);

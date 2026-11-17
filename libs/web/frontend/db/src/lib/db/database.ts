@@ -1,7 +1,7 @@
 import Dexie, { type Table } from 'dexie';
 import { VaultError, type DataEnvelope, type WrappedKey } from '@visomi-stack/shared-db';
 
-import type { PendingWrite, ReplicaPin } from './replica';
+import type { PendingWrite, ReplicaPin } from '../sync/replica';
 
 export type StoredKey = { id: string; envelope: WrappedKey; used: number };
 export type StoredUnit = { id: string; envelope: DataEnvelope };

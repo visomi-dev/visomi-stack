@@ -1,8 +1,7 @@
 import { Component, inject } from '@angular/core';
 
 import { NavigationHeading } from '../shared/navigation-heading';
-import { Button, Field, Heading, Text, Textarea } from '../ui';
-import { PinInput } from '../shared/db/pin-input';
+import { Button, Field, PinInput, Heading, Text, Textarea } from '../ui';
 import { DatabaseHttp } from '../shared/db/http';
 
 import { ExampleWorkspace } from './example-workspace';

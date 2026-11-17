@@ -13,7 +13,7 @@ import {
   type SyncPage,
 } from '@visomi-stack/shared-db';
 
-import { encodeBytes } from './crypto';
+import { encodeBytes } from '../crypto/cipher';
 
 export type ReplicaPin = SyncHead & { generation: number; epoch: number };
 export type PendingWrite = ReturnType<typeof syncWriteSchema.parse>;

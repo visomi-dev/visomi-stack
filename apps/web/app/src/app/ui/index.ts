@@ -29,6 +29,7 @@ export { Label } from './forms/label';
 export { Description } from './forms/description';
 export { ErrorMessage } from './forms/error-message';
 export { Input } from './forms/input';
+export { PinInput } from './forms/pin-input';
 export { Textarea } from './forms/textarea';
 export { Select } from './forms/select';
 export { Checkbox } from './forms/checkbox';
@@ -69,6 +70,7 @@ import { Label } from './forms/label';
 import { Description } from './forms/description';
 import { ErrorMessage } from './forms/error-message';
 import { Input } from './forms/input';
+import { PinInput } from './forms/pin-input';
 import { Textarea } from './forms/textarea';
 import { Select } from './forms/select';
 import { Checkbox } from './forms/checkbox';
@@ -110,6 +112,7 @@ export const UI_IMPORTS = [
   Description,
   ErrorMessage,
   Input,
+  PinInput,
   Textarea,
   Select,
   Checkbox,

@@ -13,8 +13,7 @@ import {
 } from '@visomi-stack/shared-db';
 
 import { Session } from '../../auth/session/session';
-
-import { ClientDatabase } from './database';
+import { ClientDatabase } from '../db/database';
 
 /** Browser-only key custody bound to the current cloud account, never an automatic login side effect. */
 @Service()

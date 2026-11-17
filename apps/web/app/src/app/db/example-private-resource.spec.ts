@@ -7,7 +7,7 @@ import { dataEnvelopeSchema, syncCheckpointMessage, type WrappingContext } from 
 
 import { Session } from '../auth/session/session';
 import { DatabaseHttp } from '../shared/db/http';
-import { VaultSession } from '../shared/db/vault-session';
+import { VaultSession } from '../shared/vault/vault-session';
 
 import { ExamplePrivateResource } from './example-private-resource';
 

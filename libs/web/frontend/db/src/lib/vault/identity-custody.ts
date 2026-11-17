@@ -1,6 +1,6 @@
 import { CryptoContractError } from '@visomi-stack/shared-db';
 
-import type { DeviceIdentity } from './devices';
+import type { DeviceIdentity } from '../crypto/devices';
 
 /** Capture only during provisioning, encrypt with the unlocked vault, then use nonextractable operational keys. */
 export async function provisionDeviceIdentity(

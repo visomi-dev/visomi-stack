@@ -10,8 +10,8 @@ import type { WrappingContext } from '@visomi-stack/shared-db';
 import { Session } from '../auth/session/session';
 import { Navigation } from '../shared/navigation';
 import { DatabaseHttp } from '../shared/db/http';
-import { UnlockCapabilities } from '../shared/db/unlock-capabilities';
-import { vaultMessage } from '../shared/db/vault-messages';
+import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
+import { vaultMessage } from '../shared/vault/vault-messages';
 
 import { ExamplePrivateResource, type ExampleTarget } from './example-private-resource';
 import { exampleLocalKey } from './example-contracts';

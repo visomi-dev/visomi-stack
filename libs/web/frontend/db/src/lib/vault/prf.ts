@@ -7,7 +7,7 @@ import {
   type WrappingContext,
 } from '@visomi-stack/shared-db';
 
-import { decodeBytes, encodeBytes } from './crypto';
+import { decodeBytes, encodeBytes } from '../crypto/cipher';
 
 /** Local WebAuthn ceremony only: PRF output/assertions are never sent to the cloud. */
 export class PrfUnlock implements VaultUnlock {
