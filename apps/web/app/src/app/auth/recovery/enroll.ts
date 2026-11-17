@@ -30,9 +30,17 @@ export class Enroll {
   private readonly session = inject(Session);
   private readonly signOut = inject(Logout);
   private readonly destroyRef = inject(DestroyRef);
-  readonly action = inject(Action);
+
+  private replacement = '';
 
   readonly model = signal({ password: '' });
+  private readonly cleanup = this.destroyRef.onDestroy(() => {
+    this.replacement = '';
+    this.model.set({ password: '' });
+  });
+
+  readonly action = inject(Action);
+
   readonly pending = signal<FactorPending | null>(null);
   readonly backup = signal(false);
   readonly registered = signal(this.session.snapshot().method === 'passkey');
@@ -49,13 +57,6 @@ export class Enroll {
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authNewPassword:New password`;
   readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
-
-  private replacement = '';
-
-  private readonly cleanup = this.destroyRef.onDestroy(() => {
-    this.replacement = '';
-    this.model.set({ password: '' });
-  });
 
   passkey(): void {
     void this.action.run(

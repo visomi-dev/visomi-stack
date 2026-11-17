@@ -51,14 +51,11 @@ const rosterSchema = z.object({
 export class ExamplePrivateResource {
   private readonly api = inject(PersistenceHttp);
   private readonly database = inject(PersistenceDatabase);
-  readonly vault = inject(VaultSession);
   private readonly session = inject(Session);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly pending = signal(false);
-  readonly synchronized = signal(false);
-  readonly conflict = signal(false);
+  readonly vault = inject(VaultSession);
 
   private readonly cleanup = this.destroyRef.onDestroy(() => {
     this.close();
@@ -72,6 +69,10 @@ export class ExamplePrivateResource {
   private controller = new AbortController();
   private target: ExampleTarget | undefined;
   private version = 0;
+
+  readonly pending = signal(false);
+  readonly synchronized = signal(false);
+  readonly conflict = signal(false);
 
   async unlock(target: ExampleTarget, rpId: string, initialize: boolean): Promise<void> {
     this.close();

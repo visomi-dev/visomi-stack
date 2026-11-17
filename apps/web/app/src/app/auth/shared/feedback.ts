@@ -15,13 +15,13 @@ import type { Action } from './action';
   },
 })
 export class AuthFeedback {
-  readonly action = input.required<Action>();
-  readonly indicator = input(true);
-
   private readonly alert = viewChild<ElementRef<HTMLElement>>('error');
 
   private focusedAction: Action | null = null;
   private focusedVersion = 0;
+
+  readonly action = input.required<Action>();
+  readonly indicator = input(true);
 
   private readonly renderEffect = afterRenderEffect({
     write: () => {

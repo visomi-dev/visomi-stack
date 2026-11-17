@@ -12,8 +12,8 @@ import { sidebar } from '@visomi-stack/web-frontend-ui';
   host: { '[class]': 'classes' },
 })
 export class Sidebar {
-  readonly label = input.required<string>();
-
   protected readonly classes = sidebar.classes();
   protected readonly navigationClasses = sidebar.navigationClasses();
+
+  readonly label = input.required<string>();
 }

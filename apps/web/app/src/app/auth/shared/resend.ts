@@ -20,6 +20,7 @@ export class ResendCode {
   private readonly email = inject(Email);
   private readonly journey = inject(Journey);
   private readonly destroyRef = inject(DestroyRef);
+
   readonly action = inject(Action);
 
   readonly sent = output<void>();

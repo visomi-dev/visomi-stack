@@ -35,14 +35,15 @@ import { LanguageSwitcher } from '../i18n/language-switcher';
   styleUrl: './authenticated-layout.css',
 })
 export class AuthenticatedLayout {
-  readonly session = inject(Session);
-  readonly navigation = inject(AuthNavigation);
   private readonly signOut = inject(Logout);
-  readonly action = inject(Action);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly mobileMenu = viewChild.required(Dialog);
+
+  readonly session = inject(Session);
+  readonly navigation = inject(AuthNavigation);
+  readonly action = inject(Action);
 
   logout(): void {
     void this.signOut.run({

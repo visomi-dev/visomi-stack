@@ -28,6 +28,7 @@ const { users } = authSchema;
 export class Passwords {
   private readonly database = inject<Database>(DATABASE);
   private readonly config = inject<AuthConfig>(AUTH_CONFIG);
+
   readonly flows = inject(Flows);
   readonly factors = inject(Factors);
 

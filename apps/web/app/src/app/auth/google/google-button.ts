@@ -17,6 +17,9 @@ import { Google } from './google';
 })
 export class GoogleButton {
   private readonly google = inject(Google);
+
+  private readonly button = viewChild.required<ElementRef<HTMLElement>>('button');
+
   readonly action = inject(Action);
 
   readonly intent = input<'login' | 'link' | 'reauth'>('login');
@@ -25,8 +28,6 @@ export class GoogleButton {
   readonly processing = output<boolean>();
 
   readonly pending = signal(false);
-
-  private readonly button = viewChild.required<ElementRef<HTMLElement>>('button');
 
   render(retry = false): void {
     void this.action.run(

@@ -28,6 +28,14 @@ export class VaultSession {
   private readonly phase = signal<VaultState>('locked');
   private readonly cleartext = signal('');
 
+  private readonly scopes = new Map<string, BrowserVault>();
+  private readonly devices = new Map<string, DeviceCustody>();
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.dispose());
+
+  private observedVersion = this.session.operationVersion();
+  private epoch = 0;
+  private removeCancellation: (() => void) | undefined;
+
   readonly state = computed<VaultState>(() => {
     const selection = this.selected();
 
@@ -42,14 +50,6 @@ export class VaultSession {
   });
   readonly ready = computed(() => this.state() === 'ready');
   readonly plaintext = computed(() => (this.ready() ? this.cleartext() : ''));
-
-  private readonly scopes = new Map<string, BrowserVault>();
-  private readonly devices = new Map<string, DeviceCustody>();
-  private readonly cleanup = this.destroyRef.onDestroy(() => this.dispose());
-
-  private observedVersion = this.session.operationVersion();
-  private epoch = 0;
-  private removeCancellation: (() => void) | undefined;
 
   isSelected(context: WrappingContext): boolean {
     return this.selected()?.id === keyDomainId(context.ownerId, context.key);

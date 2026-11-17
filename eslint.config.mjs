@@ -19,6 +19,36 @@ const functionOrClassDeclaration = {
 };
 const awaitedStatement = { selector: 'ExpressionStatement[expression.type="AwaitExpression"]' };
 
+const propertyVisibility = ['private', 'protected', 'public'];
+const angularPropertyGroups = [
+  {
+    groupName: 'injected-dependencies',
+    selector: 'property',
+    elementValuePattern: '^inject(?:<[^>]*>)?\\s*\\(',
+  },
+  {
+    groupName: 'angular-bindings',
+    selector: 'property',
+    elementValuePattern:
+      '^(?:input|output|model|viewChild|viewChildren|contentChild|contentChildren)(?:\\.required)?(?:<[^>]*>)?\\s*\\(',
+  },
+  {
+    groupName: 'angular-state',
+    selector: 'property',
+    elementValuePattern: '^(?:signal|linkedSignal|toSignal)(?:<[^>]*>)?\\s*\\(',
+  },
+  {
+    groupName: 'angular-forms',
+    selector: 'property',
+    elementValuePattern: '^form(?:<[^>]*>)?\\s*\\(',
+  },
+  {
+    groupName: 'angular-computed',
+    selector: 'property',
+    elementValuePattern: '^computed(?:<[^>]*>)?\\s*\\(',
+  },
+];
+
 export const statementPadding = [
   'error',
   { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
@@ -120,7 +150,7 @@ export default [
       'perfectionist/sort-classes': [
         'error',
         {
-          // Group members without alphabetizing or discarding initialization dependencies.
+          // Group properties by visibility, then role; initialization dependencies still take precedence.
           type: 'unsorted',
           // Keep fields compact within groups and separate behavioral members.
           newlinesBetween: 1,
@@ -128,19 +158,13 @@ export default [
           newlinesBetweenOverloadSignatures: 0,
           groups: [
             'index-signature',
-            'static-property',
+            ...propertyVisibility.map((visibility) => `${visibility}-static-property`),
             { group: 'static-block', newlinesInside: 1 },
-            'injected-dependencies',
-            'angular-bindings',
-            'angular-state',
-            'angular-forms',
-            'angular-computed',
-            'public-readonly-property',
-            'protected-readonly-property',
-            'private-readonly-property',
-            'public-property',
-            'protected-property',
-            'private-property',
+            ...propertyVisibility.flatMap((visibility) => [
+              ...angularPropertyGroups.map(({ groupName }) => `${visibility}-${groupName}`),
+              `${visibility}-readonly-property`,
+              `${visibility}-property`,
+            ]),
             'constructor',
             {
               group: ['public-get-method', 'public-set-method', 'public-method', 'public-function-property'],
@@ -160,45 +184,27 @@ export default [
               newlinesInside: 1,
             },
             'unknown',
-            { group: 'angular-effects', newlinesInside: 1 },
+            ...propertyVisibility.map((visibility) => ({ group: `${visibility}-angular-effects`, newlinesInside: 1 })),
           ],
           customGroups: [
-            {
-              groupName: 'static-property',
-              selector: 'property',
-              modifiers: ['static'],
-            },
-            {
-              groupName: 'injected-dependencies',
-              selector: 'property',
-              elementValuePattern: '^inject(?:<[^>]*>)?\\s*\\(',
-            },
-            {
-              groupName: 'angular-bindings',
-              selector: 'property',
-              elementValuePattern:
-                '^(?:input|output|model|viewChild|viewChildren|contentChild|contentChildren)(?:\\.required)?(?:<[^>]*>)?\\s*\\(',
-            },
-            {
-              groupName: 'angular-state',
-              selector: 'property',
-              elementValuePattern: '^(?:signal|linkedSignal|toSignal)(?:<[^>]*>)?\\s*\\(',
-            },
-            {
-              groupName: 'angular-forms',
-              selector: 'property',
-              elementValuePattern: '^form(?:<[^>]*>)?\\s*\\(',
-            },
-            {
-              groupName: 'angular-computed',
-              selector: 'property',
-              elementValuePattern: '^computed(?:<[^>]*>)?\\s*\\(',
-            },
-            {
-              groupName: 'angular-effects',
-              selector: 'property',
-              elementValuePattern: '^(?:effect|afterRenderEffect|afterNextRender|afterEveryRender)\\s*\\(',
-            },
+            ...propertyVisibility.flatMap((visibility) => [
+              {
+                groupName: `${visibility}-static-property`,
+                selector: 'property',
+                modifiers: [visibility, 'static'],
+              },
+              ...angularPropertyGroups.map((group) => ({
+                ...group,
+                groupName: `${visibility}-${group.groupName}`,
+                modifiers: [visibility],
+              })),
+              {
+                groupName: `${visibility}-angular-effects`,
+                selector: 'property',
+                modifiers: [visibility],
+                elementValuePattern: '^(?:effect|afterRenderEffect|afterNextRender|afterEveryRender)\\s*\\(',
+              },
+            ]),
           ],
         },
       ],

@@ -19,12 +19,14 @@ import { Totp } from './totp';
 export class BackupCodes {
   private readonly api = inject(Totp);
   private readonly destroyRef = inject(DestroyRef);
-  readonly action = inject(Action);
 
   readonly codes = signal<string[]>([]);
-  readonly confirm = signal(false);
 
   private readonly cleanup = this.destroyRef.onDestroy(() => this.codes.set([]));
+
+  readonly action = inject(Action);
+
+  readonly confirm = signal(false);
 
   regenerate(): void {
     void this.action.run(

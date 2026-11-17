@@ -31,17 +31,16 @@ import { appShell, type ShellLayout } from '@visomi-stack/web-frontend-ui';
 export class AppShell {
   private readonly location = inject(Location);
 
-  readonly contentId = input.required<string>({ alias: 'content-id' });
-  readonly skipLabel = input.required<string>({ alias: 'skip-label' });
-  readonly layout = input<ShellLayout>('sidebar');
-
   private readonly path = toSignal(
     new Observable<string>((subscriber) => this.location.onUrlChange(() => subscriber.next(this.location.path()))),
     { initialValue: this.location.path() },
   );
 
+  readonly layout = input<ShellLayout>('sidebar');
   protected readonly frameClasses = computed(() => appShell.frameClasses({ layout: this.layout() }));
   protected readonly sidebarClasses = computed(() => appShell.sidebarClasses({ layout: this.layout() }));
+
+  readonly contentId = input.required<string>({ alias: 'content-id' });
   protected readonly skipHref = computed(() => {
     // A bare fragment resolves against the localized base, not the current routed page.
     return this.location.prepareExternalUrl(this.path() + '#' + this.contentId());
@@ -52,4 +51,6 @@ export class AppShell {
   protected readonly contentClasses = appShell.contentClasses();
   protected readonly headerClasses = appShell.headerClasses();
   protected readonly mobileClasses = appShell.mobileClasses();
+
+  readonly skipLabel = input.required<string>({ alias: 'skip-label' });
 }

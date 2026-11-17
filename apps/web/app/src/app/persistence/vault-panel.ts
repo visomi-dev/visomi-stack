@@ -19,32 +19,35 @@ import { vaultMessage } from './vault-messages';
   templateUrl: './vault-panel.html',
 })
 export class VaultPanel {
-  readonly vault = inject(VaultSession);
   private readonly destroyRef = inject(DestroyRef);
+
+  private readonly latest = signal<DataContext | null>(null);
+  private readonly unlocked = signal<string | null>(null);
 
   readonly binding = input.required<WrappingContext>();
   readonly context = input.required<DataContext>();
   readonly rpId = input.required<string>({ alias: 'rp-id' });
+  private readonly selection = computed(() => JSON.stringify([this.binding(), this.context(), this.rpId()]));
+
+  readonly vault = inject(VaultSession);
+  private readonly selected = computed(
+    () => this.unlocked() === this.selection() && this.vault.isSelected(this.binding()),
+  );
+
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.invalidate(true));
+
+  private epoch = 0;
+
   readonly allowInitialize = input(false, { alias: 'allow-initialize' });
   readonly saved = output<DataEnvelope>();
 
   readonly busy = signal(false);
   readonly editor = signal('');
   readonly notice = signal('');
-  private readonly latest = signal<DataContext | null>(null);
-  private readonly unlocked = signal<string | null>(null);
 
-  private readonly selection = computed(() => JSON.stringify([this.binding(), this.context(), this.rpId()]));
-  private readonly selected = computed(
-    () => this.unlocked() === this.selection() && this.vault.isSelected(this.binding()),
-  );
   readonly status = computed(() => vaultMessage(this.selected() ? this.vault.state() : 'locked'));
   readonly ready = computed(() => this.selected() && this.vault.ready());
   readonly controlId = computed(() => `vault-${this.context().objectId}`);
-
-  private readonly cleanup = this.destroyRef.onDestroy(() => this.invalidate(true));
-
-  private epoch = 0;
 
   async unlock(initialize = false): Promise<void> {
     if (initialize && !this.allowInitialize()) {

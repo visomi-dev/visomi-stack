@@ -26,16 +26,9 @@ export class BrowserSession implements Session {
   private readonly rendered = signal(false);
 
   readonly full = computed(() => isFullSession(this.state(), this.value()));
-  readonly user = computed(() => this.value().user);
-  readonly cancellation = computed(() => this.cancellationScope().signal);
   private readonly realtimeSession = computed(() =>
     this.rendered() && this.full() ? this.realtimeGeneration() : null,
   );
-
-  readonly snapshot = this.value.asReadonly();
-  readonly status = this.state.asReadonly();
-  readonly providers = this.capabilities.asReadonly();
-  readonly operationVersion = this.transition.asReadonly();
 
   private readonly available = this.restoreInitialSession();
   private readonly cleanup = this.destroyRef.onDestroy(() => this.dispose());
@@ -46,6 +39,14 @@ export class BrowserSession implements Session {
   private providerRequest: Promise<void> | null = null;
   private channel: BroadcastChannel | null = null;
   private destroyed = false;
+
+  readonly user = computed(() => this.value().user);
+  readonly cancellation = computed(() => this.cancellationScope().signal);
+
+  readonly snapshot = this.value.asReadonly();
+  readonly status = this.state.asReadonly();
+  readonly providers = this.capabilities.asReadonly();
+  readonly operationVersion = this.transition.asReadonly();
 
   async load(force = false): Promise<void> {
     if (!this.available || this.destroyed) {

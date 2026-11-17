@@ -7,9 +7,9 @@ type ApprovalEvent = 'connected' | 'disconnected' | 'changed';
 export class BrowserRealtimeSession {
   private readonly online = signal(false);
 
-  readonly connected = this.online.asReadonly();
-
   private session: Socket | undefined;
+
+  readonly connected = this.online.asReadonly();
 
   connectSession(refresh: () => void): () => void {
     const close = this.open('/session', (socket) => {

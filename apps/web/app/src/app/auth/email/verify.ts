@@ -22,15 +22,16 @@ import { Email } from './email';
   templateUrl: './verify.html',
 })
 export class EmailVerify {
-  readonly session = inject(Session);
-  readonly journey = inject(Journey);
   private readonly email = inject(Email);
   private readonly navigation = inject(AuthNavigation);
   private readonly signOut = inject(Logout);
-  readonly action = inject(Action);
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly clock = signal(0);
+
+  readonly session = inject(Session);
+  readonly journey = inject(Journey);
+  readonly action = inject(Action);
 
   readonly pending = computed(() => {
     const challenge = this.journey.challenge();

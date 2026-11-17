@@ -47,7 +47,6 @@ const profileSchema = z.strictObject({
 })
 export class PersistenceExample {
   private readonly api = inject(PersistenceHttp);
-  readonly privateResource = inject(ExamplePrivateResource);
   private readonly session = inject(Session);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -58,28 +57,10 @@ export class PersistenceExample {
   private readonly rendered = signal(false);
   private readonly navigating = signal(false);
   private readonly navigation = signal(0);
-  readonly busy = signal(false);
   private readonly configured = signal(false);
-  readonly notice = signal('');
-  readonly target = signal<ExampleTarget | null>(null);
-  readonly cloudDraft = signal('');
-  readonly privateDraft = signal('');
 
   private readonly ownerId = this.session.user()?.id;
   private readonly version = this.session.operationVersion();
-  readonly available = computed(
-    () =>
-      this.configured() &&
-      !this.navigating() &&
-      this.session.full() &&
-      this.session.user()?.id === this.ownerId &&
-      this.session.operationVersion() === this.version,
-  );
-
-  readonly vault = this.privateResource.vault;
-
-  readonly status = computed(() => vaultMessage(this.vault.state()));
-
   private readonly cloud = signal<z.infer<typeof cloudSchema>['items'][number] | null>(null);
   // Invalidate synchronously at NavigationStart, before guards or parameter emissions can finish.
   private readonly routeNavigation = this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
@@ -99,6 +80,26 @@ export class PersistenceExample {
 
   private controller = new AbortController();
   private profile: z.infer<typeof profileSchema> | undefined;
+
+  readonly privateResource = inject(ExamplePrivateResource);
+
+  readonly busy = signal(false);
+  readonly notice = signal('');
+  readonly target = signal<ExampleTarget | null>(null);
+  readonly cloudDraft = signal('');
+  readonly privateDraft = signal('');
+
+  readonly available = computed(
+    () =>
+      this.configured() &&
+      !this.navigating() &&
+      this.session.full() &&
+      this.session.user()?.id === this.ownerId &&
+      this.session.operationVersion() === this.version,
+  );
+
+  readonly vault = this.privateResource.vault;
+  readonly status = computed(() => vaultMessage(this.vault.state()));
 
   async createWorkspace(): Promise<void> {
     await this.run(async (signal) => {

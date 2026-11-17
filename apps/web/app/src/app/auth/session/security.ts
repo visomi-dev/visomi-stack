@@ -17,8 +17,9 @@ import { Session } from './session';
   templateUrl: './security.html',
 })
 export class Security {
-  readonly session = inject(Session);
   private readonly api = inject(Methods);
+
+  readonly session = inject(Session);
   readonly action = inject(Action);
 
   readonly methods = signal<MethodsView | null>(null);

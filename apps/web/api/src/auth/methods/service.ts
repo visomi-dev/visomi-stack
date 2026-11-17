@@ -8,6 +8,7 @@ const { users, federatedIdentities, credentials } = authSchema;
 
 export class Methods {
   private readonly database = inject<Database>(DATABASE);
+
   readonly factors = inject(Factors);
 
   async overview(current: Express.User) {

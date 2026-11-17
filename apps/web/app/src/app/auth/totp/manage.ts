@@ -34,21 +34,23 @@ import { Totp, type TotpSetup } from './totp';
   templateUrl: './manage.html',
 })
 export class ManageTotp {
-  readonly session = inject(Session);
   private readonly api = inject(Totp);
   private readonly methods = inject(Methods);
   private readonly destroyRef = inject(DestroyRef);
-  readonly action = inject(Action);
 
-  readonly enabled = signal(false);
   readonly setup = signal<TotpSetup | null>(null);
   readonly codes = signal<string[]>([]);
-  readonly removing = signal(false);
 
   private readonly cleanup = this.destroyRef.onDestroy(() => {
     this.setup.set(null);
     this.codes.set([]);
   });
+
+  readonly session = inject(Session);
+  readonly action = inject(Action);
+
+  readonly enabled = signal(false);
+  readonly removing = signal(false);
 
   start(): void {
     void this.action.run(

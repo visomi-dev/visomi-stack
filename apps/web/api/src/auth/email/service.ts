@@ -14,6 +14,7 @@ const { users, flows } = authSchema;
 export class EmailIdentity {
   private readonly database = inject<Database>(DATABASE);
   private readonly config = inject<AuthConfig>(AUTH_CONFIG);
+
   readonly flows = inject(Flows);
 
   async emailStart(sid: string, current: Express.User, input?: string, change = false) {

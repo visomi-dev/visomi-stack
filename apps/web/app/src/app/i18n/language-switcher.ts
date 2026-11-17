@@ -20,7 +20,6 @@ const authRestarts: Record<string, string> = Object.freeze({
 export class LanguageSwitcher {
   private readonly router = inject(Router);
   private readonly navigation = inject(AuthNavigation);
-  readonly locale = inject(LOCALE_ID);
 
   private readonly url = computed(() => {
     const url = this.router.lastSuccessfulNavigation()?.finalUrl;
@@ -28,6 +27,11 @@ export class LanguageSwitcher {
     return url ? this.router.serializeUrl(url) : this.router.url;
   });
   private readonly localizedPath = computed(() => this.stablePath());
+
+  protected readonly styles = languageSwitcher;
+
+  readonly locale = inject(LOCALE_ID);
+
   // Compile-time locales use separate bundles, so switching language requires document navigation.
   readonly english = computed(() => '/app/en' + this.localizedPath());
   readonly spanish = computed(() => '/app/es' + this.localizedPath());
@@ -36,8 +40,6 @@ export class LanguageSwitcher {
     { code: 'en', label: 'English' },
     { code: 'es', label: 'Español' },
   ] as const;
-
-  protected readonly styles = languageSwitcher;
 
   private stablePath(): string {
     const path = this.url().split(/[?#]/, 1)[0];

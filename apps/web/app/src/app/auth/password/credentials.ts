@@ -27,6 +27,7 @@ export class PasswordCredentials {
   private readonly passkeys = inject(Passkeys);
   private readonly journey = inject(Journey);
   private readonly router = inject(Router);
+
   readonly navigation = inject(AuthNavigation);
   readonly action = inject(Action);
 
