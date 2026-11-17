@@ -8,12 +8,12 @@ import {
   type Observability,
 } from '@visomi-stack/web-backend-shared';
 import express from 'express';
-import type { ProductPolicy } from '@visomi-stack/shared-persistence';
+import type { ProductPolicy } from '@visomi-stack/shared-db';
 
 import { authErrorHandler, createAuthRouter } from './auth/router';
 import type { AuthRuntime } from './auth/runtime';
 import { createOpenApiDocument, documentationContract, homeContract } from './openapi';
-import { createPersistenceRouter } from './persistence/router';
+import { createPersistenceRouter } from './db/router';
 
 export { createAuthentication } from './auth/runtime';
 export { anonymous } from './auth/shared/authorization';

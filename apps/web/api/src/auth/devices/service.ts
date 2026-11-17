@@ -1,13 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import {
-  authSchema,
-  DATABASE,
-  inject,
-  REALTIME_PUBLISHER,
-  type Database,
-  type RealtimePublisher,
-} from '@visomi-stack/backend-shared';
+import { authSchema, DATABASE, type Database } from '@visomi-stack/backend-db';
+import { inject, REALTIME_PUBLISHER, type RealtimePublisher } from '@visomi-stack/backend-shared';
 import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
 
 import { normalizeEmail } from '../email/normalization';

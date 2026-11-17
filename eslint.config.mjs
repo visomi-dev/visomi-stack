@@ -68,12 +68,13 @@ export const statementPadding = [
 
 export const moduleBoundaryOptions = {
   enforceBuildableLibDependency: true,
-  // Portable primitives and contracts are used statically by routes and lazily by root services.
-  // These are libraries, not lazy route projects; keep heavy validation/crypto out of the initial bundle.
-  checkDynamicDependenciesExceptions: ['web-shared-common'],
+  // The vault entrypoint has no Dexie dependency; its separate storage entrypoint loads on demand.
+  checkDynamicDependenciesExceptions: ['web-shared-common', '@visomi-stack/web-frontend-db'],
   // template.json is a public workspace build input, not another domain's implementation.
   allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$', '^(?:\\.\\./)+template\\.json$'],
   depConstraints: [
+    { sourceTag: 'scope:shared', onlyDependOnLibsWithTags: ['scope:shared'] },
+    { sourceTag: 'scope:backend', onlyDependOnLibsWithTags: ['scope:backend', 'scope:shared'] },
     {
       sourceTag: 'scope:web-frontend',
       onlyDependOnLibsWithTags: ['scope:web-frontend', 'scope:web-shared', 'scope:shared'],
@@ -228,8 +229,9 @@ export default [
           // Classify workspace source aliases consistently from root hooks and project-level Nx tasks.
           pathGroups: [
             { pattern: '@visomi-stack/dev-testing{,/**}', group: 'external' },
-            { pattern: '@visomi-stack/shared-persistence', group: 'external' },
-            { pattern: '@visomi-stack/web-shared-vault', group: 'external' },
+            { pattern: '@visomi-stack/backend-{db,shared}{,/**}', group: 'external' },
+            { pattern: '@visomi-stack/shared-db', group: 'external' },
+            { pattern: '@visomi-stack/web-frontend-db{,/**}', group: 'external' },
           ],
           pathGroupsExcludedImportTypes: ['builtin'],
         },
@@ -279,6 +281,11 @@ export default [
         'error',
         {
           selector:
+            'ClassDeclaration:has(Decorator > CallExpression[callee.name="Component"]) > ClassBody CallExpression[callee.name="inject"][arguments.0.name=/^(HttpClient|DatabaseHttp|AuthHttp)$/]',
+          message: 'Components invoke domain services; network transport belongs in services.',
+        },
+        {
+          selector:
             'ClassDeclaration:has(Decorator > CallExpression[callee.name=/^(Component|Directive|Service|Injectable)$/]) > ClassBody CallExpression[callee.name=/^(effect|afterRenderEffect|afterNextRender|afterEveryRender)$/]:not(PropertyDefinition[readonly=true] > CallExpression)',
           message: 'Assign Angular effects and render hooks to readonly class properties, ordered after methods.',
         },
@@ -304,6 +311,22 @@ export default [
     },
   },
   {
+    files: ['**/*.spec.ts', '**/*.test.ts'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          ...moduleBoundaryOptions,
+          // Storage tests inspect the same adapter that production opens dynamically.
+          checkDynamicDependenciesExceptions: [
+            ...moduleBoundaryOptions.checkDynamicDependenciesExceptions,
+            '@visomi-stack/web-frontend-db/storage',
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/src/**/*.{ts,tsx,js,jsx}'],
     ignores: ['**/*.spec.*', '**/*.test.*'],
     rules: {
@@ -314,6 +337,97 @@ export default [
             {
               group: ['@visomi-stack/dev-testing', '@visomi-stack/dev-testing/*'],
               message: 'Development testing helpers belong only in tests and fixtures.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    basePath: import.meta.dirname,
+    files: ['libs/shared/db/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@visomi-stack/dev-testing', '@visomi-stack/dev-testing/*'],
+              message: 'Development helpers belong only in tests and fixtures.',
+            },
+            {
+              group: ['node:*', '@angular/*', 'dexie', 'express', 'drizzle-orm', 'drizzle-orm/*'],
+              message: 'Shared database contracts must not depend on browser, server, or framework runtimes.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    basePath: import.meta.dirname,
+    files: ['libs/web/frontend/db/src/**/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@visomi-stack/dev-testing', '@visomi-stack/dev-testing/*'],
+              message: 'Development helpers belong only in tests and fixtures.',
+            },
+            {
+              group: ['node:*', '@angular/*', 'express', 'drizzle-orm', 'drizzle-orm/*'],
+              message: 'The browser database runtime is framework-independent and cannot import server adapters.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    basePath: import.meta.dirname,
+    files: ['apps/web/api/src/**/*.ts', 'libs/backend/{db,shared}/src/**/*.ts', 'libs/web/backend/shared/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@visomi-stack/dev-testing', '@visomi-stack/dev-testing/*'],
+              message: 'Development helpers belong only in tests and fixtures.',
+            },
+            { group: ['dexie'], message: 'Dexie belongs to the browser database adapter.' },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    basePath: import.meta.dirname,
+    files: ['apps/web/api/tests/integration/support/browser-server.ts'],
+    rules: {
+      // This fixture hosts a real browser; only its erased browser-client types cross the test boundary.
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          ...moduleBoundaryOptions,
+          allow: [
+            ...moduleBoundaryOptions.allow,
+            '@visomi-stack/web-frontend-db',
+            '@visomi-stack/web-frontend-db/storage',
+          ],
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@visomi-stack/web-frontend-db', '@visomi-stack/web-frontend-db/*'],
+              allowTypeImports: true,
+              message: 'Browser fixtures may import types, but must execute browser adapters in the browser.',
             },
           ],
         },

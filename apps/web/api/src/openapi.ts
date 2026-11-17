@@ -10,8 +10,8 @@ import { passwordContracts } from './auth/password/contract';
 import { recoveryContracts } from './auth/recovery/contract';
 import { sessionsContracts } from './auth/sessions/contract';
 import { totpContracts } from './auth/totp/contract';
-import { persistenceContracts } from './persistence/contracts';
-import { vaultContracts } from './persistence/vault-contracts';
+import { persistenceContracts } from './db/contracts';
+import { vaultContracts } from './db/vault-contracts';
 
 export const homeContract = defineRoute({
   method: 'get',

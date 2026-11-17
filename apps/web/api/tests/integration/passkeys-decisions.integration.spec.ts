@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server';
 import { decodeAttestationObject, isoCBOR } from '@simplewebauthn/server/helpers';
-import { authSchema, createDatabase } from '@visomi-stack/backend-shared';
+import { authSchema, createDatabase } from '@visomi-stack/backend-db';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { authenticator } from '@visomi-stack/dev-testing';

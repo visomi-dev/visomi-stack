@@ -1,4 +1,4 @@
-import { authSchema, type Database } from '@visomi-stack/backend-shared';
+import { authSchema, type Database } from '@visomi-stack/backend-db';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, gt, isNull, ne, sql } from 'drizzle-orm';
 

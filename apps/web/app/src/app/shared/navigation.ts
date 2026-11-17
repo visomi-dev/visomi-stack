@@ -1,11 +1,12 @@
-import { Service, afterNextRender, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Service, afterNextRender, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { filter, map, pairwise, skip, startWith } from 'rxjs';
 
 @Service()
 export class Navigation {
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly rendered = signal(false);
   private readonly startupTransition = signal<[string, string] | undefined>(undefined);
@@ -20,7 +21,28 @@ export class Navigation {
     ),
   );
 
-  readonly loading = computed(() => this.rendered() && this.router.currentNavigation() !== null);
+  private controller = new AbortController();
+
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.controller.abort());
+
+  /** Abort the previous context synchronously; effects may run after an old operation resumes. */
+  readonly context = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationStart),
+      map((event) => {
+        const previous = this.controller;
+
+        this.controller = new AbortController();
+        previous.abort();
+
+        return { id: event.id, cancellation: this.controller.signal };
+      }),
+    ),
+    { initialValue: { id: this.router.currentNavigation()?.id ?? 0, cancellation: this.controller.signal } },
+  );
+
+  readonly active = computed(() => this.router.currentNavigation() !== null);
+  readonly loading = computed(() => this.rendered() && this.active());
   readonly headingFocus = computed(() => {
     const transition = this.routeTransition();
 

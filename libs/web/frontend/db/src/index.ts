@@ -1,0 +1,10 @@
+export * from './lib/crypto';
+export { BrowserVault } from './lib/vault';
+export { PrfUnlock } from './lib/prf';
+export { WebCryptoDevices, type DeviceIdentity } from './lib/devices';
+export { provisionDeviceIdentity, restoreDeviceIdentity } from './lib/identity-custody';
+export { SyncReplica, replicaId, type ReplicaPin, type ReplicaStorage, type ReplicaTransport } from './lib/replica';
+export { exportEncryptedBackup, restoreEncryptedBackup } from './lib/backup';
+export { UserHeldRecovery } from './lib/recovery';
+export { createPrfCredential } from './lib/prf-credential';
+export { DeviceCustody, deviceCustodyContext } from './lib/device-custody';

@@ -1,4 +1,5 @@
-import { authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
+import { authSchema, DATABASE, type Database } from '@visomi-stack/backend-db';
+import { inject } from '@visomi-stack/backend-shared';
 import { and, eq, isNull } from 'drizzle-orm';
 
 import { requireFull } from '../shared/identity';

@@ -1,8 +1,9 @@
-import type { Database, MailTransport, RealtimePublisher } from '@visomi-stack/backend-shared';
+import type { Database } from '@visomi-stack/backend-db';
+import type { MailTransport, RealtimePublisher } from '@visomi-stack/backend-shared';
 import type { Observability } from '@visomi-stack/web-backend-shared';
 import type { Request, RequestHandler } from 'express';
 import type { Pool } from 'pg';
-import type { ProductPolicy } from '@visomi-stack/shared-persistence';
+import type { ProductPolicy } from '@visomi-stack/shared-db';
 
 import type { AuthSnapshot } from './application-module';
 

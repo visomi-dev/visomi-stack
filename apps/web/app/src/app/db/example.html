@@ -1,0 +1,190 @@
+<section class="max-w-3xl space-y-8 py-6" [attr.aria-busy]="workspace.busy()">
+  <header class="space-y-3">
+    <h1 appUI appNavigationHeading i18n="@@persistenceExampleHeading">Hybrid persistence example</h1>
+
+    <p appUI tone="muted" i18n="@@persistenceExampleDescription">
+      This development example uses synthetic workspaces. Account identity and operational notes are readable by the
+      service. Private resources require a separate local workspace.unlock.
+    </p>
+  </header>
+
+  @if (!workspace.available()) {
+    <p role="status" i18n="@@persistenceExampleUnavailable">
+      This example is available only when its development profile is configured.
+    </p>
+  } @else if (!workspace.target()) {
+    <button
+      appUI
+      type="button"
+      [disabled]="workspace.busy()"
+      (click)="workspace.createWorkspace()"
+      i18n="@@persistenceCreateWorkspace"
+    >
+      Create a synthetic workspace
+    </button>
+  } @else {
+    <section class="space-y-4 rounded-xl border p-5">
+      <h2 appUI i18n="@@persistenceCloudHeading">Operational note · service-readable</h2>
+
+      <form class="space-y-4" (submit)="$event.preventDefault(); workspace.saveCloud()">
+        <app-field
+          control-id="operations-note"
+          label="Operational content"
+          i18n-label="@@persistenceCloudLabel"
+          description="Authorized services can read and process this domain."
+          i18n-description="@@persistenceCloudDescription"
+          #cloudField="appField"
+        >
+          <textarea
+            appUI
+            id="operations-note"
+            name="operations-note"
+            rows="3"
+            maxlength="8192"
+            #cloudText
+            [attr.aria-describedby]="cloudField.describedBy()"
+            [value]="workspace.cloudDraft()"
+            [disabled]="workspace.busy()"
+            (input)="workspace.cloudDraft.set(cloudText.value)"
+          ></textarea>
+        </app-field>
+
+        <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@persistenceSaveCloud">
+          Save operational note
+        </button>
+      </form>
+    </section>
+
+    <section class="space-y-4 rounded-xl border p-5">
+      <h2 appUI i18n="@@vaultHeading">Private resource</h2>
+
+      <p role="status" aria-live="polite">{{ workspace.status() }}</p>
+
+      <p appUI tone="muted" i18n="@@persistencePrivateLimits">
+        Private content is encrypted before synchronization. This synthetic profile has no recovery: losing all usable
+        keys can permanently lose access. Password reset does not recover private content.
+      </p>
+
+      <div class="flex flex-wrap gap-3">
+        <button
+          appUI
+          type="button"
+          [disabled]="workspace.busy() || workspace.vault.ready()"
+          (click)="workspace.unlock()"
+          i18n="@@vaultUnlock"
+        >
+          Unlock with passkey
+        </button>
+
+        <button
+          appUI
+          type="button"
+          variant="secondary"
+          [disabled]="workspace.busy() || workspace.vault.ready()"
+          (click)="workspace.unlock(true)"
+          i18n="@@persistenceInitializePrivate"
+        >
+          Provision an empty private resource
+        </button>
+
+        <button appUI type="button" variant="secondary" (click)="workspace.lock()" i18n="@@vaultLock">
+          Lock private resources
+        </button>
+      </div>
+
+      @if (workspace.vault.ready()) {
+        <form class="space-y-4" (submit)="$event.preventDefault(); workspace.savePrivate()">
+          <app-field
+            control-id="private-note"
+            label="Private text"
+            i18n-label="@@vaultPrivateText"
+            description="Only ciphertext is stored locally and synchronized. An encrypted pending change stays on this device until synchronization succeeds."
+            i18n-description="@@persistencePrivateDescription"
+            #privateField="appField"
+          >
+            <textarea
+              appUI
+              id="private-note"
+              name="private-note"
+              rows="4"
+              maxlength="8192"
+              autocomplete="off"
+              spellcheck="false"
+              #privateText
+              [attr.aria-describedby]="privateField.describedBy()"
+              [value]="workspace.privateDraft()"
+              [disabled]="workspace.busy() || workspace.privateResource.pending()"
+              (input)="workspace.privateDraft.set(privateText.value)"
+            ></textarea>
+          </app-field>
+
+          <div class="flex flex-wrap gap-3">
+            <button
+              appUI
+              type="submit"
+              [disabled]="workspace.busy() || workspace.privateResource.pending()"
+              i18n="@@vaultSave"
+            >
+              Save encrypted change
+            </button>
+
+            <button
+              appUI
+              type="button"
+              variant="secondary"
+              [disabled]="workspace.busy()"
+              (click)="workspace.synchronize()"
+              i18n="@@persistenceSynchronize"
+            >
+              Synchronize encrypted changes
+            </button>
+          </div>
+        </form>
+
+        @if (workspace.privateResource.pending()) {
+          <p role="status" i18n="@@persistencePending">
+            An encrypted change is waiting for synchronization. Keep this device's storage until it succeeds.
+          </p>
+        }
+
+        @if (workspace.vault.plaintext()) {
+          <pre class="rounded-lg border p-4 break-words whitespace-pre-wrap">{{ workspace.vault.plaintext() }}</pre>
+        }
+
+        @if (workspace.privateResource.pending() && workspace.privateResource.conflict()) {
+          <p i18n="@@persistenceConflictChoice">
+            Choose which version to keep. Keeping your pending version replaces the synchronized content after checking
+            for new changes. Discarding removes your pending copy from this device.
+          </p>
+
+          <div class="flex flex-wrap gap-3">
+            <button
+              appUI
+              type="button"
+              [disabled]="workspace.busy()"
+              (click)="workspace.keepPending()"
+              i18n="@@persistenceKeepPending"
+            >
+              Keep my pending version and synchronize
+            </button>
+
+            <button
+              appUI
+              type="button"
+              variant="secondary"
+              [disabled]="workspace.busy()"
+              (click)="workspace.useSynchronized()"
+              i18n="@@persistenceDiscardPending"
+            >
+              Discard my pending change and use the synchronized version
+            </button>
+          </div>
+        }
+      }
+    </section>
+  }
+
+  @if (workspace.notice()) {
+    <p role="status" aria-live="polite">{{ workspace.notice() }}</p>
+  }
+</section>

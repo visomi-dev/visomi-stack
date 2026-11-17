@@ -1,7 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
 import { Socket } from 'node:net';
 
-import { syntheticHybridPolicy } from '@visomi-stack/shared-persistence';
+import { syntheticHybridPolicy } from '@visomi-stack/shared-db';
 import type { Observability } from '@visomi-stack/web-backend-shared';
 import { currentObservability, HttpError, httpErrorHandler, httpObservability } from '@visomi-stack/web-backend-shared';
 import type { Request, Response } from 'express';

@@ -1,12 +1,10 @@
+import { DATABASE, DATABASE_POOL, type Database } from '@visomi-stack/backend-db';
 import {
   AuthMail,
   createInjector,
-  DATABASE,
-  DATABASE_POOL,
   MAIL_TRANSPORT,
   MAIL_ORIGIN,
   REALTIME_PUBLISHER,
-  type Database,
   type MailTransport,
   type RealtimePublisher,
 } from '@visomi-stack/backend-shared';

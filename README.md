@@ -94,7 +94,8 @@ installation with `pnpm install --frozen-lockfile` has also been verified.
 ## Documentation
 
 - [API authentication and persistence](apps/web/api/README.md): schema, migrations, endpoints, ownership and verification.
-- [Shared backend infrastructure](libs/backend/shared/README.md): database module, shared schemas and explicit migration commands.
+- [Backend database infrastructure](libs/backend/db/README.md): database resources, schemas and explicit migration commands.
+- [Shared backend infrastructure](libs/backend/shared/README.md): injection, mail and realtime utilities.
 - [Public website](docs/website.md): page structure, content, design and local verification.
 - [Web foundations](docs/web-foundations.md): styling, themes, localized UI, SSR and Express integration.
 - [Architecture](docs/architecture.md): current structure, intended topology, and open decisions.

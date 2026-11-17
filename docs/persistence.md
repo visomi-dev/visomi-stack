@@ -10,7 +10,7 @@ a production enablement checklist that has already been completed. Start with th
 
 ## Choose domains before composing a product
 
-Use the strict `ProductPolicy` contract in `@visomi-stack/shared-persistence`.
+Use the strict `ProductPolicy` contract in `@visomi-stack/shared-db`.
 Name business domains and classify their content. For each domain declare storage,
 readers, authorization, retention, quotas, exposed metadata and server capabilities.
 Identity remains a separate cloud-readable domain even in a ZK product.
@@ -114,10 +114,22 @@ crypto, network and storage adapters, run those vectors, and test lifecycle/roll
 behavior on actual supported runtimes. No native application currently exists in
 this repository; none is claimed compatible because TypeScript tests pass.
 
+## Library boundaries
+
+- `shared-db`: platform-neutral policies, schemas, canonical framing and ports.
+- `backend-db`: PostgreSQL/Drizzle resources, schemas and migration history, consuming shared contracts.
+- `web-frontend-db`: browser crypto, PRF custody and Dexie adapters, consuming shared contracts.
+
+Backend injection, mail and realtime utilities remain in `backend-shared`. Database
+services live in each application's `db/` capability. `DatabaseExample` only binds
+its template to `ExampleWorkspace`; HTTP, DTO validation and orchestration stay in
+services. Existing HTTP/UI routes and protocol errors retain their public names.
+
 ## Angular routes and browser databases
 
-`PersistenceExample` binds to the live `ActivatedRoute.paramMap`, including Router
-reuse and browser history. Each `NavigationStart` synchronously aborts HTTP work,
+The route-scoped `ExampleWorkspace` service binds to the live `ActivatedRoute.paramMap`, including Router
+reuse and browser history. The shared `Navigation` service exposes navigation state and cancellation as signals,
+and drives the page loader. Each `NavigationStart` synchronously aborts HTTP work,
 stops/closes the replica and device custody, locks the vault, and clears cloud
 revisions, plaintext and unfinished UI drafts. End/cancel/error reloads the current
 route under a fresh context. Query-only or canceled navigation also locks; the user
@@ -132,7 +144,7 @@ Cancellation cannot undo a server mutation or local transaction already committe
 for A; it prevents a follow-up action or publication of A state into B. It never
 retargets a dispatched request or deletes a pending encrypted change.
 
-`PersistenceDatabase` is an Angular `@Service()` facade with a browser-only lazy
+`ClientDatabase` is an Angular `@Service()` facade with a browser-only lazy
 module, current account/version checks and cancellation checks before returning a
 connection. Creating the service does not open IndexedDB or unlock keys. Consumers
 own and close their connections; late opens are closed if their context, account or

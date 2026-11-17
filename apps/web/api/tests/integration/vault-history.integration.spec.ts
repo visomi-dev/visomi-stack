@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { approvedDeliverySchema, syncHeadSchema, type DeviceDelivery } from '@visomi-stack/shared-persistence';
+import { approvedDeliverySchema, syncHeadSchema, type DeviceDelivery } from '@visomi-stack/shared-db';
 
 import { fixture } from './support/persistence';
 import { authorize, boot, deliver, identity, push, request, vaultBase } from './support/vault';

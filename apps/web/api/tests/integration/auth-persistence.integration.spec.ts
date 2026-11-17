@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { randomUUID } from 'node:crypto';
 
-import { authSchema, createDatabase } from '@visomi-stack/backend-shared';
+import { authSchema, createDatabase } from '@visomi-stack/backend-db';
 import { eq, sql } from 'drizzle-orm';
 import type { Request, Response } from 'express';
 import { Cookie } from 'express-session';
@@ -603,7 +603,7 @@ describe('isolated PostgreSQL authentication persistence', () => {
 
     url.pathname = '/visomi_auth_cli_test';
     const command = () =>
-      execute('pnpm', ['nx', 'run', 'backend-shared:db-migrate', '--output-style=static'], {
+      execute('pnpm', ['nx', 'run', 'backend-db:db-migrate', '--output-style=static'], {
         cwd: resolve(__dirname, '../../../../..'),
         env: { ...process.env, DATABASE_URL: url.toString() },
         timeout: 20000,

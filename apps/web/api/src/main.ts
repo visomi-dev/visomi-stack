@@ -2,14 +2,13 @@
 // @nx-target-name: serve
 import { createServer } from 'node:http';
 
+import { createDatabase, type DatabaseResource } from '@visomi-stack/backend-db';
 import {
-  createDatabase,
   createRealtimePublisher,
   createRedisRealtimeTransport,
   createSmtp,
   smtpConfig,
   type MailTransport,
-  type DatabaseResource,
   type RealtimeTransport,
 } from '@visomi-stack/backend-shared';
 import { initializeObservability, proxyConfiguration } from '@visomi-stack/web-backend-shared';
@@ -18,7 +17,7 @@ import packageJson from '../package.json' with { type: 'json' };
 
 import { authConfig, createApp, createAuthentication } from './app';
 import type { AuthRuntime } from './auth/runtime';
-import { persistenceExample } from './persistence/composition';
+import { persistenceExample } from './db/composition';
 
 const observability = initializeObservability({
   service: 'web-api',

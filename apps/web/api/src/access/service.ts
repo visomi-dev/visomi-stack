@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 
-import { authSchema, persistenceSchema, vaultSchema, type Database } from '@visomi-stack/backend-shared';
-import { parseProductPolicy, type PersistenceAction, type ProductPolicy } from '@visomi-stack/shared-persistence';
+import { authSchema, persistenceSchema, vaultSchema, type Database } from '@visomi-stack/backend-db';
+import { parseProductPolicy, type PersistenceAction, type ProductPolicy } from '@visomi-stack/shared-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { z } from 'zod';

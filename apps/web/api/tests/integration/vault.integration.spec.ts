@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import { vaultSchema } from '@visomi-stack/backend-shared';
-import { deviceProofSchema, syncHeadSchema } from '@visomi-stack/shared-persistence';
+import { vaultSchema } from '@visomi-stack/backend-db';
+import { deviceProofSchema, syncHeadSchema } from '@visomi-stack/shared-db';
 import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 

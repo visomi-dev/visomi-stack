@@ -32,13 +32,13 @@ vi.mock('@visomi-stack/web-backend-shared', async (original) => {
     initializeObservability: boundary.initialize,
   };
 });
+vi.mock('@visomi-stack/backend-db', () => ({ createDatabase: boundary.createDatabase }));
 vi.mock('@visomi-stack/backend-shared', async (original) => {
   const shared = await original<typeof import('@visomi-stack/backend-shared')>();
 
   return {
     ...shared,
     createRedisRealtimeTransport: boundary.redisTransport,
-    createDatabase: boundary.createDatabase,
     smtpConfig: boundary.smtpConfig,
     createSmtp: boundary.createSmtp,
   };

@@ -1,4 +1,5 @@
-import { DATABASE_POOL, inject } from '@visomi-stack/backend-shared';
+import { DATABASE_POOL } from '@visomi-stack/backend-db';
+import { inject } from '@visomi-stack/backend-shared';
 import connectPgSimple from 'connect-pg-simple';
 import session from 'express-session';
 import type { Pool } from 'pg';

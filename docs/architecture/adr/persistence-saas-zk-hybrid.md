@@ -22,7 +22,7 @@ deployment, publication or live data/configuration changes.
 The following technical decisions are provisional and reversible in this branch:
 
 1. The per-domain policy, supported combinations, authorization boundary and
-   reference inventory below, with `shared-persistence` as the neutral contract.
+   reference inventory below, with `shared-db` as the neutral contract.
 2. The proposed v1 cryptographic profile/context binding in the
    [protocol proposal](../contracts/persistence-v1.md). It adapts existing
    primitives, requires security review and is not an audited protocol.
@@ -41,7 +41,7 @@ Only visomi-stack may change. Historical repositories are read-only references.
 
 | Area                     | Current implementation                                                                                                                                       | Reuse or adaptation                                                                                                          |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| Database                 | `libs/backend/shared/src/lib/database/database.ts`: injected Drizzle/pg pool, disabled query logger, explicit close; existing migrations                     | Reuse transactions and executable-owned resources; no import-time pool.                                                      |
+| Database                 | `libs/backend/db/src/lib/database.ts`: injected Drizzle/pg pool, disabled query logger, explicit close; existing migrations                                  | Reuse transactions and executable-owned resources; no import-time pool.                                                      |
 | Identity                 | `apps/web/api/src/auth/shared/identity.ts`: verified principal, auth version and active methods; `schema-auth.ts` owns identity/session/challenge/grant data | Reuse auth; resolve memberships separately. Auth device approval is not ZK key-possession proof.                             |
 | Browser sessions         | `apps/web/app/src/app/auth/session/browser-session.ts`: transitions, cancellation, logout and cross-tab refresh                                              | Observe identity changes, invalidate pending vault operations; no keys/plaintext in session snapshots or SSR transfer state. |
 | Composition              | Separate API app/main exports; gateway imports compiled application                                                                                          | Add domain composition without changing executable resource ownership.                                                       |
@@ -84,7 +84,7 @@ domains use client-held keys; hybrid combines them. Identity, accounts, sessions
 and approved operational metadata remain cloud-readable in every mode. Do not
 advertise the entire service as hiding all information from the server.
 
-The strict versioned Zod contract in `libs/shared/persistence/src/lib/policy.ts`
+The strict versioned Zod contract in `libs/shared/db/src/lib/policy.ts`
 rejects unknown fields, duplicate domains, mode mismatch, record keys, server
 processing on ZK, invalid quotas and incompatible tombstone/offline horizons.
 Parsing grants no access and selects no runtime adapter. Consumers must use

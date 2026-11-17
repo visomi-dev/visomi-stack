@@ -1,15 +1,9 @@
-export { createDatabase } from './lib/database/database';
-export type { Database, DatabaseResource } from './lib/database/database';
-export * as authSchema from './lib/database/schema-auth';
-export * as persistenceSchema from './lib/database/schema-persistence';
-export * as vaultSchema from './lib/database/schema-vault';
 export { createSmtp, smtpConfig, MAIL_TRANSPORT } from './lib/mail/smtp';
 export type { MailMessage, MailTransport, SmtpConfig } from './lib/mail/smtp';
 export { AuthMail, renderMessage, MAIL_ORIGIN } from './lib/mail/messages';
 export type { CodePurpose, SecurityNotice } from './lib/mail/messages';
 export { createInjector, inject, InjectionToken, Injector, runInInjectionContext } from './lib/injection';
 export type { Provider, Type } from './lib/injection';
-export { DATABASE, DATABASE_POOL } from './lib/database/tokens';
 export {
   REALTIME_PUBLISHER,
   createMemoryRealtimeTransport,

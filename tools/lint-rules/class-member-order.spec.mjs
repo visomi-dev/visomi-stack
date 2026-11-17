@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { ESLint, Linter } from 'eslint';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const filename = resolve(root, 'apps/web/app/src/app/persistence/example.ts');
+const filename = resolve(root, 'apps/web/app/src/app/db/example.ts');
 const ruleId = 'perfectionist/sort-classes';
 
 async function configuration(directory) {

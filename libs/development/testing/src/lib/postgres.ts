@@ -59,7 +59,7 @@ export async function testPostgres(manifest?: string, app: TestCompose['app'] = 
       }
 
       await migrate(db, {
-        migrationsFolder: resolve(__dirname, '../../../../../libs/backend/shared/src/lib/database/migrations'),
+        migrationsFolder: resolve(__dirname, '../../../../../libs/backend/db/src/lib/migrations'),
       });
     } finally {
       await pool.end();

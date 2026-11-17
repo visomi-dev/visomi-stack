@@ -97,9 +97,7 @@ describe('Compose PostgreSQL resource', () => {
     expect(runTestCompose).toHaveBeenCalledWith(resource.compose, ['up', '-d', 'postgres'], undefined);
     expect(boundary.clients[0].query).toHaveBeenCalledExactlyOnceWith('SELECT 1');
     expect(boundary.clients[0].end).toHaveBeenCalledOnce();
-    expect(vi.mocked(migrate).mock.calls[0][1].migrationsFolder).toMatch(
-      /libs\/backend\/shared\/src\/lib\/database\/migrations$/,
-    );
+    expect(vi.mocked(migrate).mock.calls[0][1].migrationsFolder).toMatch(/libs\/backend\/db\/src\/lib\/migrations$/);
     const first = resource.stop();
 
     expect(resource.stop()).toBe(first);

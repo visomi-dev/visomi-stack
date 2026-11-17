@@ -26,14 +26,14 @@ Template initialization, doctor and smoke scripts from the previous stack are no
 available here. Check command help before using unfamiliar
 flags. Agents should follow the Nx skill guidance in [AGENTS.md](../AGENTS.md).
 
-Drizzle configuration lives at `libs/backend/shared/drizzle.config.ts`, alongside
+Drizzle configuration lives at `libs/backend/db/drizzle.config.ts`, alongside
 `src/`. Domain schemas and migrations live in
-`libs/backend/shared/src/lib/database/`. Use the shared project's explicit
+`libs/backend/db/src/lib/`. Use the database project's explicit
 commands from the workspace root:
 
 ```sh
-pnpm nx run backend-shared:db-generate -- --name describe-schema-change
-DATABASE_URL=postgresql://localhost/visomi_stack_dev pnpm nx run backend-shared:db-migrate
+pnpm nx run backend-db:db-generate -- --name describe-schema-change
+DATABASE_URL=postgresql://localhost/visomi_stack_dev pnpm nx run backend-db:db-migrate
 ```
 
 The example database must be created separately. Do not use a developer database
@@ -239,7 +239,7 @@ docker compose up --build app
 ```
 
 Compose starts PostgreSQL, waits for its health check, then runs the one-shot
-`database-init` service. It executes `pnpm nx run backend-shared:db-migrate` and
+`database-init` service. It executes `pnpm nx run backend-db:db-migrate` and
 exits. `app` requires `service_completed_successfully`; a failed migration blocks
 its startup. Redis and MinIO remain available as separate services but are not
 dependencies of the current API. Use `up app` for this slice; starting every
@@ -294,7 +294,7 @@ The API defaults to `AUTH_ORIGIN=http://localhost:8080` and `AUTH_RP_ID=localhos
 for this local setup; override both together when needed. Compose supplies only
 the declared settings to the API and does not require an `env_file`.
 
-Migration generation stays a development action through `backend-shared:db-generate`;
+Migration generation stays a development action through `backend-db:db-generate`;
 the initializer only applies the versioned SQL already in the image. There are no
 required seeds for the current authentication schema: users are created only
 after successful passkey registration. No default identities, credentials or test

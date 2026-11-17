@@ -212,15 +212,15 @@ native/private fixture material is synthetic.
 
 Historical checks on 2026-11-16 before the retention follow-up (superseded by the final follow-up evidence below):
 
-| Suite                | Passed tests | Required coverage result                       |
-| -------------------- | -----------: | ---------------------------------------------- |
-| `web-api`            |          344 | 100% statements, branches, functions and lines |
-| `web-shared-vault`   |           58 | No coverage certification claimed              |
-| `web-app`            |          161 | No coverage certification claimed              |
-| `shared-persistence` |           37 | No coverage certification claimed              |
-| `backend-shared`     |           35 | 100% statements, branches, functions and lines |
-| `web-gateway`        |          154 | 100% statements, branches, functions and lines |
-| `dev-testing`        |           79 | 100% statements, branches, functions and lines |
+| Suite             | Passed tests | Required coverage result                       |
+| ----------------- | -----------: | ---------------------------------------------- |
+| `web-api`         |          344 | 100% statements, branches, functions and lines |
+| `web-frontend-db` |           58 | No coverage certification claimed              |
+| `web-app`         |          161 | No coverage certification claimed              |
+| `shared-db`       |           37 | No coverage certification claimed              |
+| `backend-shared`  |           35 | 100% statements, branches, functions and lines |
+| `web-gateway`     |          154 | 100% statements, branches, functions and lines |
+| `dev-testing`     |           79 | 100% statements, branches, functions and lines |
 
 All seven suites passed: 868 tests in total. The separate Chromium application
 E2E passed one hybrid scenario covering the states above. Types passed all 14
@@ -234,13 +234,13 @@ Reproduction commands (the workspace supplies installed executors/versions):
 
 ```sh
 pnpm nx run web-api:test --maxWorkers=2 --hookTimeout=120000 --output-style=static
-pnpm nx run web-shared-vault:test --maxWorkers=2 --output-style=static
+pnpm nx run web-frontend-db:test --maxWorkers=2 --output-style=static
 pnpm nx run web-app:test --output-style=static
-pnpm nx run-many -t test -p shared-persistence,backend-shared,web-gateway,dev-testing --parallel=2 --maxWorkers=1 --hookTimeout=120000 --output-style=static
-pnpm nx run-many -t typecheck,typecheck-tests -p shared-persistence,web-shared-vault,backend-shared,web-api,web-gateway,web-app,web-app-e2e,dev-testing --parallel=3 --output-style=static
-pnpm nx run-many -t lint -p shared-persistence,web-shared-vault,backend-shared,web-api,web-gateway,web-app,web-app-e2e,dev-testing --parallel=3 --output-style=static
-pnpm nx run web-shared-vault:vectors-check --output-style=static
-pnpm nx run backend-shared:db-generate --output-style=static
+pnpm nx run-many -t test -p shared-db,backend-shared,web-gateway,dev-testing --parallel=2 --maxWorkers=1 --hookTimeout=120000 --output-style=static
+pnpm nx run-many -t typecheck,typecheck-tests -p shared-db,web-frontend-db,backend-shared,web-api,web-gateway,web-app,web-app-e2e,dev-testing --parallel=3 --output-style=static
+pnpm nx run-many -t lint -p shared-db,web-frontend-db,backend-shared,web-api,web-gateway,web-app,web-app-e2e,dev-testing --parallel=3 --output-style=static
+pnpm nx run web-frontend-db:vectors-check --output-style=static
+pnpm nx run backend-db:db-generate --output-style=static
 pnpm nx run web-app-e2e:e2e:auth --args='--project=auth-chromium --grep=hybrid' --output-style=static
 ```
 
@@ -361,7 +361,7 @@ Reproduce the full local checks with:
 ```sh
 pnpm nx run-many -t lint,typecheck,typecheck-tests,emails-check,deployment-check,vectors-check --parallel=2 --output-style=static
 pnpm nx run-many -t build --parallel=2 --output-style=static
-pnpm nx run-many -t test -p web-shared-observability,dev-testing,shared-persistence,web-backend-shared,web-shared-vault,backend-shared,web-realtime,web-gateway,web-edge,web-api --parallel=2 --maxWorkers=2 --hookTimeout=120000 --output-style=static
+pnpm nx run-many -t test -p web-shared-observability,dev-testing,shared-db,web-backend-shared,web-frontend-db,backend-shared,web-realtime,web-gateway,web-edge,web-api --parallel=2 --maxWorkers=2 --hookTimeout=120000 --output-style=static
 pnpm nx run-many -t test -p web-frontend-ui,web-app --parallel=2 --output-style=static
 pnpm nx run web-app-e2e:e2e --configuration=auth --args='--fail-on-flaky-tests' --output-style=static
 ```

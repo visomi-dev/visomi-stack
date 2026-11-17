@@ -1,11 +1,9 @@
 import { createServer } from 'node:http';
 
+import { createDatabase, type Database, type DatabaseResource } from '@visomi-stack/backend-db';
 import {
-  createDatabase,
   createRedisRealtimeTransport,
   subscribeRealtime,
-  type Database,
-  type DatabaseResource,
   type RealtimeRuntime,
   type RealtimeTransport,
 } from '@visomi-stack/backend-shared';

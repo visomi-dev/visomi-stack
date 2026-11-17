@@ -67,10 +67,10 @@ without resources at `/openapi.json`; its compiled gateway mount exposes
 `/api/openapi.json` with an explicit `/api` server base. Raw validation errors are
 translated to controlled public codes and never captured by telemetry.
 
-`libs/backend/shared/drizzle.config.ts` configures Drizzle at the library root.
-`src/lib/database/` owns domain schemas and one migration history for all backend
+`libs/backend/db/drizzle.config.ts` configures Drizzle at the library root.
+`libs/backend/db/src/lib/` owns domain schemas and one migration history for all backend
 modules. The API imports its
-authentication schema through the shared library. Database initialization remains
+authentication schema through `@visomi-stack/backend-db`. Database initialization remains
 explicit: each executable creates and closes its own pool and supplies it to the
 modules it composes. Imports do not open connections or run migrations; separate
 processes share PostgreSQL state, not JavaScript resources.
