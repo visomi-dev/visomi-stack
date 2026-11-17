@@ -1,11 +1,5 @@
-import {
-  authSchema,
-  DATABASE,
-  inject,
-  REALTIME_PUBLISHER,
-  type Database,
-  type RealtimePublisher,
-} from '@visomi-stack/backend-shared';
+import { authSchema, DATABASE, type Database } from '@visomi-stack/backend-db';
+import { inject, REALTIME_PUBLISHER, type RealtimePublisher } from '@visomi-stack/backend-shared';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 

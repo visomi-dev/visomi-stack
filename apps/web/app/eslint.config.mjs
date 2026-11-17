@@ -65,7 +65,7 @@ export default [
     },
   },
   {
-    files: ['**/ui/forms/field.ts', '**/ui/layout/app-shell.ts', '**/persistence/vault-panel.ts'],
+    files: ['**/ui/forms/field.ts', '**/ui/layout/app-shell.ts', '**/db/vault-panel.ts'],
     rules: {
       // Component template APIs use kebab-case while TypeScript members remain camelCase.
       '@angular-eslint/no-input-rename': [

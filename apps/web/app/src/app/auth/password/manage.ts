@@ -44,13 +44,18 @@ export class ManagePassword {
   private readonly session = inject(Session);
   private readonly navigation = inject(AuthNavigation);
   private readonly destroyRef = inject(DestroyRef);
+
+  private readonly owner = this.session.user()?.id;
+
+  readonly model = signal({ password: '' });
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.model.set({ password: '' }));
+
   readonly action = inject(Action);
 
   readonly exists = signal(false);
   readonly loaded = signal(false);
   readonly confirm = signal(false);
   readonly visible = signal(false);
-  readonly model = signal({ password: '' });
   readonly attempted = signal(false);
   readonly phase = signal<'edit' | 'verify' | 'saving' | 'saved'>('edit');
   readonly restoreFocus = signal(false);
@@ -67,9 +72,6 @@ export class ManagePassword {
   readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
   readonly confirmationTitle = $localize`:@@authPasswordConfirmTitle:Confirm your identity`;
   readonly confirmationDescription = $localize`:@@authPasswordConfirmDescription:Confirm it's you to save your new password automatically.`;
-
-  private readonly owner = this.session.user()?.id;
-  private readonly cleanup = this.destroyRef.onDestroy(() => this.model.set({ password: '' }));
 
   save(event: Event): void {
     event.preventDefault();

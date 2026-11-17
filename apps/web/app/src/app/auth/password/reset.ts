@@ -37,8 +37,9 @@ import { Passwords } from './passwords';
   templateUrl: './reset.html',
 })
 export class PasswordReset {
-  readonly journey = inject(Journey);
   private readonly passwords = inject(Passwords);
+
+  readonly journey = inject(Journey);
   readonly action = inject(Action);
 
   readonly model = signal({ code: '', password: '', kind: 'none', factor: '' });

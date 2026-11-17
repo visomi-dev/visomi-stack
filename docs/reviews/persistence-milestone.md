@@ -4,8 +4,8 @@ Reviewed 2026-11-16: VIS-65 through VIS-74, milestone **Persistencia SaaS,
 zero-knowledge e híbrida**. All ten descriptions, relations and comment lists were
 read after their 07:03–07:04 UTC update. A later refresh confirmed their descriptions
 were unchanged. The user authorized autonomous implementation and reversible
-technical decisions in this branch. Linear issues remain Todo; no remote status or
-comment was changed. Independent security/product/privacy acceptance is a release
+technical decisions in this branch. Linear issues are now In Progress (latest remote update 21:26 UTC); this follow-up
+did not change remote statuses or comments. Independent security/product/privacy acceptance is a release
 boundary, not a per-decision development approval requirement.
 
 Branch: `codex/persistencia-saas-zero-knowledge-e-hibrida`, from updated `main`
@@ -33,6 +33,82 @@ custody/lifecycle, opaque sync and hybrid composition. No old approval gate was
 used to stop branch implementation.
 
 ## Executed evidence
+
+### Luma follow-up: reused routes and Dexie frontend integration
+
+The second hypothesis was reproduced on `87f6ebc310e92041ced494764757e5aab58706a2`
+with the actual Angular Router, production persistence route pattern and verified
+session guard. Navigation A to B retained the same component instance; saving B
+sent its body to A's operations endpoint. The red regression recorded the A path
+where B was expected. This was a confirmed cross-target development defect.
+
+The fix uses reactive route parameters and synchronous navigation invalidation.
+It aborts cloud requests, stops the old replica/custody, locks the vault and clears
+models/drafts/revisions. Per-context guards reject stale continuations independently
+of whether a transport honors abort. The private service rejects a target other
+than the exact unlocked tenant/scope/object and validates its captured context
+between storage, crypto, signature, sync and display awaits. A late completed unlock
+cannot lock a newer unlock of the same cached SDK scope. A native-browser
+regression also reproduced an old `DeviceCustody.unlock` resolving as accepted
+after lock/new unlock because it captured its epoch after the await. It now
+invalidates/captures before waiting and rejects the old operation while retaining
+the new identity. Unknown crypto/schema
+errors and existing authorization/checkpoint requirements remain explicit.
+
+The reusable `VaultPanel` had the analogous confirmed bug: a suspended A save
+emitted its A envelope after its context input changed to B, and a delayed unlock
+could leave the new object enabled. Three red component regressions reproduced
+those behaviors. It now keys readiness and continuations to its complete input
+context, requires explicit unlock on changes, preserves revision metadata on an
+explicit lock, and isolates each mounted panel's custody/display in a local
+`VaultSession`. A separate DI regression verifies independent panel instances.
+
+The reversible choice is to lock on every navigation start, including query-only
+and ultimately canceled navigation, then reload the surviving route. An explicit
+unlock is required again. A request/transaction already dispatched may commit to
+its original A target; cancellation is not a server rollback guarantee. It cannot
+be retargeted to B, and encrypted outboxes/pins are never reset on navigation.
+
+Following Michael's Dexie reference, the web SDK now uses typed Dexie tables and
+atomic transactions, with a lazy Angular database facade and browser/account/version
+checks. Native v1 database names, primary keys and ciphertext formats are preserved.
+Inspection of Dexie 4.4.7 found automatic schema patching/newer-version fallback and
+default database-name logging. Dynamic mode plus native format validation avoids
+implicit migration, and stopped default lifecycle handlers prevent account-bearing
+logs or reopening. Optimistic caching is disabled. Raw key/plaintext storage,
+recovery policy, transport and cryptographic algorithms are unchanged.
+
+Regression evidence covers actual Router reuse, each parameter independently,
+back/forward, ignored late reads, already dispatched writes and old busy/finally
+handlers; delayed binding/open/save operations; explicit unlock and account/SSR
+boundaries. Native Chromium tests open preexisting raw IndexedDB v1 ciphertext,
+restore exact pins/outboxes, enforce concurrent encryption reservations and reject
+unverified acknowledgement. Additional cases reject unknown native schemas/versions
+without modifying their data and check silent close/no reopening on version change.
+The full authentication E2E includes SPA history navigation between two provisioned
+resources with PRF unlock, an offline encrypted outbox and a ciphertext-only local
+storage audit. Exact final counts and published-head CI are recorded in the PR
+after verification; earlier passing runs below apply to their stated revisions.
+
+The first concurrent final workspace run had four local timeouts: disposable
+migration setup (60 seconds), two gateway integration cases and one API session
+case (five seconds each). An authentication attempt also had a response-body race
+and form timeouts while a rebuild overlapped its served artifacts. That attempt
+was deliberately stopped: 141 passed, 11 failed, one interrupted, eight skipped and
+139 not run. Neither attempt is recorded as green final evidence. The passkey test's CDP
+response-body race recurred without overlapping builds: automatic credential
+presence navigated before `response.json()` could retain the body. Its one-shot
+route now reads the actual upstream options response before fulfilling that same
+response to the browser. It preserves every existing identity and lifecycle
+assertion and does not replace server-generated options with a fixture.
+The subsequent stable checks use the existing native Podman Compose test adapter and sequential
+project execution where needed, without extending deadlines, filtering assertions,
+bypassing hooks or changing production/provider configuration. Final rerun counts
+and exact published-head CI are recorded separately in the PR.
+
+The [consumer integration guide](../persistence.md#angular-routes-and-browser-databases)
+records ownership, cancellation, compatibility and rollback limits. This follow-up
+does not change release gates or add the still-unimplemented remote lifecycle UI.
 
 ### Luma follow-up: new-device enrollment after rotation
 
@@ -136,15 +212,15 @@ native/private fixture material is synthetic.
 
 Historical checks on 2026-11-16 before the retention follow-up (superseded by the final follow-up evidence below):
 
-| Suite                | Passed tests | Required coverage result                       |
-| -------------------- | -----------: | ---------------------------------------------- |
-| `web-api`            |          344 | 100% statements, branches, functions and lines |
-| `web-shared-vault`   |           58 | No coverage certification claimed              |
-| `web-app`            |          161 | No coverage certification claimed              |
-| `shared-persistence` |           37 | No coverage certification claimed              |
-| `backend-shared`     |           35 | 100% statements, branches, functions and lines |
-| `web-gateway`        |          154 | 100% statements, branches, functions and lines |
-| `dev-testing`        |           79 | 100% statements, branches, functions and lines |
+| Suite             | Passed tests | Required coverage result                       |
+| ----------------- | -----------: | ---------------------------------------------- |
+| `web-api`         |          344 | 100% statements, branches, functions and lines |
+| `web-frontend-db` |           58 | No coverage certification claimed              |
+| `web-app`         |          161 | No coverage certification claimed              |
+| `shared-db`       |           37 | No coverage certification claimed              |
+| `backend-shared`  |           35 | 100% statements, branches, functions and lines |
+| `web-gateway`     |          154 | 100% statements, branches, functions and lines |
+| `dev-testing`     |           79 | 100% statements, branches, functions and lines |
 
 All seven suites passed: 868 tests in total. The separate Chromium application
 E2E passed one hybrid scenario covering the states above. Types passed all 14
@@ -158,13 +234,13 @@ Reproduction commands (the workspace supplies installed executors/versions):
 
 ```sh
 pnpm nx run web-api:test --maxWorkers=2 --hookTimeout=120000 --output-style=static
-pnpm nx run web-shared-vault:test --maxWorkers=2 --output-style=static
+pnpm nx run web-frontend-db:test --maxWorkers=2 --output-style=static
 pnpm nx run web-app:test --output-style=static
-pnpm nx run-many -t test -p shared-persistence,backend-shared,web-gateway,dev-testing --parallel=2 --maxWorkers=1 --hookTimeout=120000 --output-style=static
-pnpm nx run-many -t typecheck,typecheck-tests -p shared-persistence,web-shared-vault,backend-shared,web-api,web-gateway,web-app,web-app-e2e,dev-testing --parallel=3 --output-style=static
-pnpm nx run-many -t lint -p shared-persistence,web-shared-vault,backend-shared,web-api,web-gateway,web-app,web-app-e2e,dev-testing --parallel=3 --output-style=static
-pnpm nx run web-shared-vault:vectors-check --output-style=static
-pnpm nx run backend-shared:db-generate --output-style=static
+pnpm nx run-many -t test -p shared-db,backend-shared,web-gateway,dev-testing --parallel=2 --maxWorkers=1 --hookTimeout=120000 --output-style=static
+pnpm nx run-many -t typecheck,typecheck-tests -p shared-db,web-frontend-db,backend-shared,web-api,web-gateway,web-app,web-app-e2e,dev-testing --parallel=3 --output-style=static
+pnpm nx run-many -t lint -p shared-db,web-frontend-db,backend-shared,web-api,web-gateway,web-app,web-app-e2e,dev-testing --parallel=3 --output-style=static
+pnpm nx run web-frontend-db:vectors-check --output-style=static
+pnpm nx run backend-db:db-generate --output-style=static
 pnpm nx run web-app-e2e:e2e:auth --args='--project=auth-chromium --grep=hybrid' --output-style=static
 ```
 
@@ -285,7 +361,7 @@ Reproduce the full local checks with:
 ```sh
 pnpm nx run-many -t lint,typecheck,typecheck-tests,emails-check,deployment-check,vectors-check --parallel=2 --output-style=static
 pnpm nx run-many -t build --parallel=2 --output-style=static
-pnpm nx run-many -t test -p web-shared-observability,dev-testing,shared-persistence,web-backend-shared,web-shared-vault,backend-shared,web-realtime,web-gateway,web-edge,web-api --parallel=2 --maxWorkers=2 --hookTimeout=120000 --output-style=static
+pnpm nx run-many -t test -p web-shared-observability,dev-testing,shared-db,web-backend-shared,web-frontend-db,backend-shared,web-realtime,web-gateway,web-edge,web-api --parallel=2 --maxWorkers=2 --hookTimeout=120000 --output-style=static
 pnpm nx run-many -t test -p web-frontend-ui,web-app --parallel=2 --output-style=static
 pnpm nx run web-app-e2e:e2e --configuration=auth --args='--fail-on-flaky-tests' --output-style=static
 ```

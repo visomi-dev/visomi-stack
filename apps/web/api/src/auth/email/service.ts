@@ -1,4 +1,5 @@
-import { authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
+import { authSchema, DATABASE, type Database } from '@visomi-stack/backend-db';
+import { inject } from '@visomi-stack/backend-shared';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import { and, desc, eq, gt, isNotNull, isNull, ne } from 'drizzle-orm';
 
@@ -14,6 +15,7 @@ const { users, flows } = authSchema;
 export class EmailIdentity {
   private readonly database = inject<Database>(DATABASE);
   private readonly config = inject<AuthConfig>(AUTH_CONFIG);
+
   readonly flows = inject(Flows);
 
   async emailStart(sid: string, current: Express.User, input?: string, change = false) {

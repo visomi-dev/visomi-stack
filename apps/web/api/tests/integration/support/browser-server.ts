@@ -4,23 +4,26 @@ import { fileURLToPath } from 'node:url';
 import express, { type Request, type Response } from 'express';
 import { chromium, type BrowserContext, type Page } from '@playwright/test';
 import { createServer } from 'vite';
-import type * as VaultApi from '@visomi-stack/web-shared-vault';
-import type * as Contracts from '@visomi-stack/shared-persistence';
+import type * as VaultRuntime from '@visomi-stack/web-frontend-db';
+import type * as VaultStorage from '@visomi-stack/web-frontend-db/storage';
+import type * as Contracts from '@visomi-stack/shared-db';
 import type { Observability } from '@visomi-stack/web-backend-shared';
 
 import { authConfig, createApp, createAuthentication } from '../../../src/app';
 
 import { resource, policy, syntheticPersistenceSecret } from './persistence';
 
+type VaultApi = typeof VaultRuntime & typeof VaultStorage;
+
 export type FixtureHost = typeof globalThis & {
-  modules: { api: typeof VaultApi; contracts: typeof Contracts };
+  modules: { api: VaultApi; contracts: typeof Contracts };
   client: {
     binding: Contracts.WrappingContext;
-    vault: VaultApi.BrowserVault;
-    custody: VaultApi.DeviceCustody;
+    vault: InstanceType<VaultApi['BrowserVault']>;
+    custody: InstanceType<VaultApi['DeviceCustody']>;
     challenge: Contracts.DeviceProof;
-    storage: VaultApi.IndexedDbReplicaStorage;
-    replica?: VaultApi.SyncReplica;
+    storage: VaultStorage.IndexedDbReplicaStorage;
+    replica?: InstanceType<VaultApi['SyncReplica']>;
     csrf: string;
     path: string;
   };
@@ -100,7 +103,7 @@ export async function browserServer(observability?: Observability) {
       await page.addScriptTag({
         type: 'module',
         content:
-          "import * as api from '/libs/web/shared/vault/src/index.ts'; import * as contracts from '/libs/shared/persistence/src/index.ts'; globalThis.modules = { api, contracts };",
+          "import * as runtime from '/libs/web/frontend/db/src/index.ts'; import * as storage from '/libs/web/frontend/db/src/storage.ts'; const api = { ...runtime, ...storage }; import * as contracts from '/libs/shared/db/src/index.ts'; globalThis.modules = { api, contracts };",
       });
 
       await page.waitForFunction(() => Boolean((globalThis as FixtureHost).modules));

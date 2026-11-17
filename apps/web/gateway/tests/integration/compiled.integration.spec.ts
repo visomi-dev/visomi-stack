@@ -9,7 +9,7 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
-import { createDatabase } from '@visomi-stack/backend-shared';
+import { createDatabase } from '@visomi-stack/backend-db';
 import { authenticator } from '@visomi-stack/dev-testing';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 import { SMTPServer } from 'smtp-server';

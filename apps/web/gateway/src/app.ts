@@ -6,7 +6,7 @@ import {
   type Observability,
 } from '@visomi-stack/web-backend-shared';
 import express, { Router, static as serveStatic } from 'express';
-import type { ProductPolicy } from '@visomi-stack/shared-persistence';
+import type { ProductPolicy } from '@visomi-stack/shared-db';
 
 import type { ApiModule, EmbeddedAuthentication } from './api-module';
 import type { SiteModule } from './site-module';

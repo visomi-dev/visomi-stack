@@ -19,6 +19,36 @@ const functionOrClassDeclaration = {
 };
 const awaitedStatement = { selector: 'ExpressionStatement[expression.type="AwaitExpression"]' };
 
+const propertyVisibility = ['private', 'protected', 'public'];
+const angularPropertyGroups = [
+  {
+    groupName: 'injected-dependencies',
+    selector: 'property',
+    elementValuePattern: '^inject(?:<[^>]*>)?\\s*\\(',
+  },
+  {
+    groupName: 'angular-bindings',
+    selector: 'property',
+    elementValuePattern:
+      '^(?:input|output|model|viewChild|viewChildren|contentChild|contentChildren)(?:\\.required)?(?:<[^>]*>)?\\s*\\(',
+  },
+  {
+    groupName: 'angular-state',
+    selector: 'property',
+    elementValuePattern: '^(?:signal|linkedSignal|toSignal)(?:<[^>]*>)?\\s*\\(',
+  },
+  {
+    groupName: 'angular-forms',
+    selector: 'property',
+    elementValuePattern: '^form(?:<[^>]*>)?\\s*\\(',
+  },
+  {
+    groupName: 'angular-computed',
+    selector: 'property',
+    elementValuePattern: '^computed(?:<[^>]*>)?\\s*\\(',
+  },
+];
+
 export const statementPadding = [
   'error',
   { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
@@ -38,12 +68,13 @@ export const statementPadding = [
 
 export const moduleBoundaryOptions = {
   enforceBuildableLibDependency: true,
-  // Portable primitives and contracts are used statically by routes and lazily by root services.
-  // These are libraries, not lazy route projects; keep heavy validation/crypto out of the initial bundle.
-  checkDynamicDependenciesExceptions: ['web-shared-common'],
+  // The vault entrypoint has no Dexie dependency; its separate storage entrypoint loads on demand.
+  checkDynamicDependenciesExceptions: ['web-shared-common', '@visomi-stack/web-frontend-db'],
   // template.json is a public workspace build input, not another domain's implementation.
   allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$', '^(?:\\.\\./)+template\\.json$'],
   depConstraints: [
+    { sourceTag: 'scope:shared', onlyDependOnLibsWithTags: ['scope:shared'] },
+    { sourceTag: 'scope:backend', onlyDependOnLibsWithTags: ['scope:backend', 'scope:shared'] },
     {
       sourceTag: 'scope:web-frontend',
       onlyDependOnLibsWithTags: ['scope:web-frontend', 'scope:web-shared', 'scope:shared'],
@@ -120,7 +151,7 @@ export default [
       'perfectionist/sort-classes': [
         'error',
         {
-          // Group members without alphabetizing or discarding initialization dependencies.
+          // Group properties by visibility, then role; initialization dependencies still take precedence.
           type: 'unsorted',
           // Keep fields compact within groups and separate behavioral members.
           newlinesBetween: 1,
@@ -128,19 +159,13 @@ export default [
           newlinesBetweenOverloadSignatures: 0,
           groups: [
             'index-signature',
-            'static-property',
+            ...propertyVisibility.map((visibility) => `${visibility}-static-property`),
             { group: 'static-block', newlinesInside: 1 },
-            'injected-dependencies',
-            'angular-bindings',
-            'angular-state',
-            'angular-forms',
-            'angular-computed',
-            'public-readonly-property',
-            'protected-readonly-property',
-            'private-readonly-property',
-            'public-property',
-            'protected-property',
-            'private-property',
+            ...propertyVisibility.flatMap((visibility) => [
+              ...angularPropertyGroups.map(({ groupName }) => `${visibility}-${groupName}`),
+              `${visibility}-readonly-property`,
+              `${visibility}-property`,
+            ]),
             'constructor',
             {
               group: ['public-get-method', 'public-set-method', 'public-method', 'public-function-property'],
@@ -160,45 +185,27 @@ export default [
               newlinesInside: 1,
             },
             'unknown',
-            { group: 'angular-effects', newlinesInside: 1 },
+            ...propertyVisibility.map((visibility) => ({ group: `${visibility}-angular-effects`, newlinesInside: 1 })),
           ],
           customGroups: [
-            {
-              groupName: 'static-property',
-              selector: 'property',
-              modifiers: ['static'],
-            },
-            {
-              groupName: 'injected-dependencies',
-              selector: 'property',
-              elementValuePattern: '^inject(?:<[^>]*>)?\\s*\\(',
-            },
-            {
-              groupName: 'angular-bindings',
-              selector: 'property',
-              elementValuePattern:
-                '^(?:input|output|model|viewChild|viewChildren|contentChild|contentChildren)(?:\\.required)?(?:<[^>]*>)?\\s*\\(',
-            },
-            {
-              groupName: 'angular-state',
-              selector: 'property',
-              elementValuePattern: '^(?:signal|linkedSignal|toSignal)(?:<[^>]*>)?\\s*\\(',
-            },
-            {
-              groupName: 'angular-forms',
-              selector: 'property',
-              elementValuePattern: '^form(?:<[^>]*>)?\\s*\\(',
-            },
-            {
-              groupName: 'angular-computed',
-              selector: 'property',
-              elementValuePattern: '^computed(?:<[^>]*>)?\\s*\\(',
-            },
-            {
-              groupName: 'angular-effects',
-              selector: 'property',
-              elementValuePattern: '^(?:effect|afterRenderEffect|afterNextRender|afterEveryRender)\\s*\\(',
-            },
+            ...propertyVisibility.flatMap((visibility) => [
+              {
+                groupName: `${visibility}-static-property`,
+                selector: 'property',
+                modifiers: [visibility, 'static'],
+              },
+              ...angularPropertyGroups.map((group) => ({
+                ...group,
+                groupName: `${visibility}-${group.groupName}`,
+                modifiers: [visibility],
+              })),
+              {
+                groupName: `${visibility}-angular-effects`,
+                selector: 'property',
+                modifiers: [visibility],
+                elementValuePattern: '^(?:effect|afterRenderEffect|afterNextRender|afterEveryRender)\\s*\\(',
+              },
+            ]),
           ],
         },
       ],
@@ -222,8 +229,9 @@ export default [
           // Classify workspace source aliases consistently from root hooks and project-level Nx tasks.
           pathGroups: [
             { pattern: '@visomi-stack/dev-testing{,/**}', group: 'external' },
-            { pattern: '@visomi-stack/shared-persistence', group: 'external' },
-            { pattern: '@visomi-stack/web-shared-vault', group: 'external' },
+            { pattern: '@visomi-stack/backend-{db,shared}{,/**}', group: 'external' },
+            { pattern: '@visomi-stack/shared-db', group: 'external' },
+            { pattern: '@visomi-stack/web-frontend-db{,/**}', group: 'external' },
           ],
           pathGroupsExcludedImportTypes: ['builtin'],
         },
@@ -273,6 +281,11 @@ export default [
         'error',
         {
           selector:
+            'ClassDeclaration:has(Decorator > CallExpression[callee.name="Component"]) > ClassBody CallExpression[callee.name="inject"][arguments.0.name=/^(HttpClient|DatabaseHttp|AuthHttp)$/]',
+          message: 'Components invoke domain services; network transport belongs in services.',
+        },
+        {
+          selector:
             'ClassDeclaration:has(Decorator > CallExpression[callee.name=/^(Component|Directive|Service|Injectable)$/]) > ClassBody CallExpression[callee.name=/^(effect|afterRenderEffect|afterNextRender|afterEveryRender)$/]:not(PropertyDefinition[readonly=true] > CallExpression)',
           message: 'Assign Angular effects and render hooks to readonly class properties, ordered after methods.',
         },
@@ -298,6 +311,22 @@ export default [
     },
   },
   {
+    files: ['**/*.spec.ts', '**/*.test.ts'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          ...moduleBoundaryOptions,
+          // Storage tests inspect the same adapter that production opens dynamically.
+          checkDynamicDependenciesExceptions: [
+            ...moduleBoundaryOptions.checkDynamicDependenciesExceptions,
+            '@visomi-stack/web-frontend-db/storage',
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/src/**/*.{ts,tsx,js,jsx}'],
     ignores: ['**/*.spec.*', '**/*.test.*'],
     rules: {
@@ -308,6 +337,97 @@ export default [
             {
               group: ['@visomi-stack/dev-testing', '@visomi-stack/dev-testing/*'],
               message: 'Development testing helpers belong only in tests and fixtures.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    basePath: import.meta.dirname,
+    files: ['libs/shared/db/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@visomi-stack/dev-testing', '@visomi-stack/dev-testing/*'],
+              message: 'Development helpers belong only in tests and fixtures.',
+            },
+            {
+              group: ['node:*', '@angular/*', 'dexie', 'express', 'drizzle-orm', 'drizzle-orm/*'],
+              message: 'Shared database contracts must not depend on browser, server, or framework runtimes.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    basePath: import.meta.dirname,
+    files: ['libs/web/frontend/db/src/**/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@visomi-stack/dev-testing', '@visomi-stack/dev-testing/*'],
+              message: 'Development helpers belong only in tests and fixtures.',
+            },
+            {
+              group: ['node:*', '@angular/*', 'express', 'drizzle-orm', 'drizzle-orm/*'],
+              message: 'The browser database runtime is framework-independent and cannot import server adapters.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    basePath: import.meta.dirname,
+    files: ['apps/web/api/src/**/*.ts', 'libs/backend/{db,shared}/src/**/*.ts', 'libs/web/backend/shared/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@visomi-stack/dev-testing', '@visomi-stack/dev-testing/*'],
+              message: 'Development helpers belong only in tests and fixtures.',
+            },
+            { group: ['dexie'], message: 'Dexie belongs to the browser database adapter.' },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    basePath: import.meta.dirname,
+    files: ['apps/web/api/tests/integration/support/browser-server.ts'],
+    rules: {
+      // This fixture hosts a real browser; only its erased browser-client types cross the test boundary.
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          ...moduleBoundaryOptions,
+          allow: [
+            ...moduleBoundaryOptions.allow,
+            '@visomi-stack/web-frontend-db',
+            '@visomi-stack/web-frontend-db/storage',
+          ],
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@visomi-stack/web-frontend-db', '@visomi-stack/web-frontend-db/*'],
+              allowTypeImports: true,
+              message: 'Browser fixtures may import types, but must execute browser adapters in the browser.',
             },
           ],
         },

@@ -4,8 +4,8 @@ import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { createDatabase, type DatabaseResource } from '@visomi-stack/backend-db';
 import {
-  createDatabase,
   createMemoryRealtimeTransport,
   createRealtimePublisher,
   createRedisRealtimeTransport,
@@ -13,7 +13,6 @@ import {
   smtpConfig,
   subscribeRealtime,
   type MailTransport,
-  type DatabaseResource,
   type RealtimeRuntime,
 } from '@visomi-stack/backend-shared';
 import {
@@ -22,7 +21,7 @@ import {
   initializeObservability,
   proxyConfiguration,
 } from '@visomi-stack/web-backend-shared';
-import { developmentPersistencePolicy } from '@visomi-stack/shared-persistence';
+import { developmentPersistencePolicy } from '@visomi-stack/shared-db';
 
 import packageJson from '../package.json' with { type: 'json' };
 

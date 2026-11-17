@@ -2,9 +2,9 @@ import { createHmac, randomUUID } from 'node:crypto';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import { authSchema, createDatabase } from '@visomi-stack/backend-shared';
+import { authSchema, createDatabase } from '@visomi-stack/backend-db';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
-import { createOperationId, syntheticHybridPolicy } from '@visomi-stack/shared-persistence';
+import { createOperationId, syntheticHybridPolicy } from '@visomi-stack/shared-db';
 import { afterAll, beforeAll, beforeEach, expect } from 'vitest';
 
 import type { SessionActor } from '../../../src/access/service';

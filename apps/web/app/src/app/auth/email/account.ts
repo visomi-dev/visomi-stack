@@ -20,8 +20,9 @@ import { Email } from './email';
   templateUrl: './account.html',
 })
 export class Account {
-  readonly session = inject(Session);
   private readonly email = inject(Email);
+
+  readonly session = inject(Session);
   readonly action = inject(Action);
 
   readonly pending = signal<Pending | null>(null);

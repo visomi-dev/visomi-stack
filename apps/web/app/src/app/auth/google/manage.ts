@@ -34,10 +34,11 @@ import { Google } from './google';
   templateUrl: './manage.html',
 })
 export class ManageGoogle {
-  readonly session = inject(Session);
   private readonly google = inject(Google);
   private readonly api = inject(Methods);
   private readonly navigation = inject(AuthNavigation);
+
+  readonly session = inject(Session);
   readonly action = inject(Action);
 
   readonly methods = signal<MethodsView | null>(null);

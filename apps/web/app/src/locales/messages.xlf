@@ -2319,231 +2319,231 @@
       <trans-unit id="persistenceExampleHeading" datatype="html">
         <source>Hybrid persistence example</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceExampleDescription" datatype="html">
         <source> This development example uses synthetic workspaces. Account identity and operational notes are readable by the service. Private resources require a separate local unlock. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">5,9</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceExampleUnavailable" datatype="html">
         <source> This example is available only when its development profile is configured. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">11,14</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceCreateWorkspace" datatype="html">
         <source> Create a synthetic workspace </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">15,18</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceCloudHeading" datatype="html">
         <source>Operational note · service-readable</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">19,20</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceCloudLabel" datatype="html">
         <source>Operational content</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">23,24</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceCloudDescription" datatype="html">
         <source>Authorized services can read and process this domain.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">25,26</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceSaveCloud" datatype="html">
         <source>Save operational note</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">42,44</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultHeading" datatype="html">
         <source>Private resource</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">46,47</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistencePrivateLimits" datatype="html">
         <source> Private content is encrypted before synchronization. This synthetic profile has no recovery: losing all usable keys can permanently lose access. Password reset does not recover private content. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">49,52</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultUnlock" datatype="html">
         <source> Unlock with passkey </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">54,55</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceInitializePrivate" datatype="html">
         <source> Provision an empty private resource </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">64,66</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultLock" datatype="html">
         <source> Lock private resources </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">67,68</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultPrivateText" datatype="html">
         <source>Private text</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">74,75</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistencePrivateDescription" datatype="html">
         <source>Only ciphertext is stored locally and synchronized. An encrypted pending change stays on this device until synchronization succeeds.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">76,77</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultSave" datatype="html">
         <source> Save encrypted change </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">97,98</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceSynchronize" datatype="html">
         <source> Synchronize encrypted changes </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">107,109</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistencePending" datatype="html">
         <source> An encrypted change is waiting for synchronization. Keep this device&apos;s storage until it succeeds. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">113,115</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceCloudSaved" datatype="html">
         <source>Operational content was saved to the server-readable domain.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example-workspace.ts</context>
           <context context-type="linenumber">81</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultSaved" datatype="html">
         <source>The encrypted change is stored on this device. Synchronization is a separate operation.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example-workspace.ts</context>
           <context context-type="linenumber">97</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultLocked" datatype="html">
         <source>Private resources are locked.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
           <context context-type="linenumber">5</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultReady" datatype="html">
         <source>Unlocked on this device.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
           <context context-type="linenumber">7</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultCorrupt" datatype="html">
         <source>Integrity could not be verified. Keep the encrypted copy and restore from a trusted backup.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
           <context context-type="linenumber">11</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultQuota" datatype="html">
         <source>Storage or encryption limits were reached. Export an encrypted backup before changing storage.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
           <context context-type="linenumber">13</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultRecovery" datatype="html">
         <source>This device has no usable wrapped key. Use your product&apos;s explicit recovery or device approval flow. Resetting a password does not recover private data.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
           <context context-type="linenumber">15</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultNoPrf" datatype="html">
         <source>This credential or browser does not support the required private unlock. Use a supported device. The server cannot unlock this resource.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
           <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultCancelled" datatype="html">
         <source>Unlock was cancelled. Your private resources remain locked.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
           <context context-type="linenumber">19</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultOrigin" datatype="html">
         <source>This unlock credential belongs to a different site. Return to the original site.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
           <context context-type="linenumber">21</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultConflict" datatype="html">
         <source>A newer encrypted change exists. Synchronize and resolve the conflict before trying again.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
           <context context-type="linenumber">23</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultUnavailable" datatype="html">
         <source>Private storage is unavailable on this device. No server-readable fallback was enabled.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
           <context context-type="linenumber">25</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceConflictChoice" datatype="html">
         <source> Choose which version to keep. Keeping your pending version replaces the synchronized content after checking for new changes. Discarding removes your pending copy from this device. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">137,141</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceKeepPending" datatype="html">
         <source> Keep my pending version and synchronize </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">143,146</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceDiscardPending" datatype="html">
         <source> Discard my pending change and use the synchronized version </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/persistence/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">154,156</context>
         </context-group>
       </trans-unit>

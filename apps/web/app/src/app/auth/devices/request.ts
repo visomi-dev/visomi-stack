@@ -27,6 +27,15 @@ export class DeviceApproval {
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
+
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.stopWatching());
+
+  private timer: ReturnType<typeof setTimeout> | null = null;
+  private polling: AbortController | null = null;
+  private disconnect: (() => void) | undefined;
+  private live = false;
+  private refreshQueued = false;
+
   readonly action = inject(Action);
 
   readonly request = signal<DeviceRequest | null>(null);
@@ -51,14 +60,6 @@ export class DeviceApproval {
 
     return origin ? new URL(path, origin).href : path;
   });
-
-  private readonly cleanup = this.destroyRef.onDestroy(() => this.stopWatching());
-
-  private timer: ReturnType<typeof setTimeout> | null = null;
-  private polling: AbortController | null = null;
-  private disconnect: (() => void) | undefined;
-  private live = false;
-  private refreshQueued = false;
 
   statusText(): string {
     switch (this.status()) {

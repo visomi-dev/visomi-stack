@@ -13,11 +13,12 @@ import { AuthFeedback } from '../shared/feedback';
 })
 export class BackupDisplay {
   private readonly document = inject(DOCUMENT);
+
+  protected readonly downloadUrl = signal<string | null>(null);
+
   readonly action = inject(Action);
 
   readonly codes = input.required<string[]>();
-
-  protected readonly downloadUrl = signal<string | null>(null);
 
   copy(): void {
     void this.action.run(

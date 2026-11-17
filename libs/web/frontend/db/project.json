@@ -1,0 +1,26 @@
+{
+  "name": "web-frontend-db",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/frontend/db/src",
+  "projectType": "library",
+  "tags": ["scope:web-frontend", "type:util"],
+  "targets": {
+    "vectors-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "node libs/web/frontend/db/tools/generate-vectors.mjs --check",
+          "node libs/web/frontend/db/tools/device-vectors.mjs"
+        ],
+        "parallel": false
+      }
+    },
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/web/frontend/db",
+        "command": "tsc -p tsconfig.spec.json --noEmit"
+      }
+    }
+  }
+}

@@ -17,17 +17,6 @@ export class Theme {
   private readonly changed = signal(false);
   private readonly transitioning = signal(false);
 
-  readonly preference = this.selection.asReadonly();
-  readonly colorScheme = computed(() => {
-    const preference = this.preference();
-
-    return preference === 'system' ? (this.systemDark() ? 'dark' : 'light') : preference;
-  });
-  readonly isDark = computed(() => this.colorScheme() === 'dark');
-
-  readonly hasChanged = this.changed.asReadonly();
-  readonly isTransitioning = this.transitioning.asReadonly();
-
   private readonly storageKey = 'visomi.theme';
 
   private transitionTimer: number | undefined;
@@ -37,6 +26,18 @@ export class Theme {
     this.document.defaultView?.clearTimeout(this.transitionTimer);
     this.document.defaultView?.cancelAnimationFrame?.(this.transitionFrame ?? 0);
   });
+
+  readonly preference = this.selection.asReadonly();
+
+  readonly colorScheme = computed(() => {
+    const preference = this.preference();
+
+    return preference === 'system' ? (this.systemDark() ? 'dark' : 'light') : preference;
+  });
+  readonly isDark = computed(() => this.colorScheme() === 'dark');
+
+  readonly hasChanged = this.changed.asReadonly();
+  readonly isTransitioning = this.transitioning.asReadonly();
 
   setTheme(value: string): void {
     if (!isPreference(value)) {

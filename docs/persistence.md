@@ -10,7 +10,7 @@ a production enablement checklist that has already been completed. Start with th
 
 ## Choose domains before composing a product
 
-Use the strict `ProductPolicy` contract in `@visomi-stack/shared-persistence`.
+Use the strict `ProductPolicy` contract in `@visomi-stack/shared-db`.
 Name business domains and classify their content. For each domain declare storage,
 readers, authorization, retention, quotas, exposed metadata and server capabilities.
 Identity remains a separate cloud-readable domain even in a ZK product.
@@ -68,7 +68,12 @@ records, wrapped keys, plaintext, or persistence responses into SSR transfer cac
 The Angular application excludes persistence requests from transfer caching, and
 `VaultSession` creates browser adapters only on explicit unlock. `VaultPanel` is a
 consumer component with a supplied stable object context and separately provisioned
-PRF credential; it does not select a reader mode for the user.
+PRF credential; it does not select a reader mode for the user. Each panel owns its
+own `VaultSession`, so simultaneous editors do not share a plaintext display or
+implicitly inherit another editor's unlock. Changes to its binding, complete data
+context or RP ID invalidate pending operations, clear drafts/revisions and require
+explicit unlock again. An explicit lock retains the same object's local revision;
+it never deletes stored ciphertext. Late saves cannot emit into a new context.
 
 ## Browser integration responsibilities
 
@@ -108,6 +113,64 @@ vectors. Swift, Kotlin and desktop clients must implement their own secure custo
 crypto, network and storage adapters, run those vectors, and test lifecycle/rollback
 behavior on actual supported runtimes. No native application currently exists in
 this repository; none is claimed compatible because TypeScript tests pass.
+
+## Library boundaries
+
+- `shared-db`: platform-neutral policies, schemas, canonical framing and ports.
+- `backend-db`: PostgreSQL/Drizzle resources, schemas and migration history, consuming shared contracts.
+- `web-frontend-db`: browser crypto, PRF custody and Dexie adapters, consuming shared contracts.
+
+Backend injection, mail and realtime utilities remain in `backend-shared`. Database
+services live in each application's `db/` capability. `DatabaseExample` only binds
+its template to `ExampleWorkspace`; HTTP, DTO validation and orchestration stay in
+services. Existing HTTP/UI routes and protocol errors retain their public names.
+
+## Angular routes and browser databases
+
+The route-scoped `ExampleWorkspace` service binds to the live `ActivatedRoute.paramMap`, including Router
+reuse and browser history. The shared `Navigation` service exposes navigation state and cancellation as signals,
+and drives the page loader. Each `NavigationStart` synchronously aborts HTTP work,
+stops/closes the replica and device custody, locks the vault, and clears cloud
+revisions, plaintext and unfinished UI drafts. End/cancel/error reloads the current
+route under a fresh context. Query-only or canceled navigation also locks; the user
+must explicitly unlock again. This conservative behavior is a reversible technical
+choice. Encrypted pending changes and trusted checkpoints remain in IndexedDB.
+
+Every asynchronous continuation captures its context and checks it after awaits.
+Late reads, writes, errors and `finally` handlers cannot update another route's
+models, notices or busy state. The private service additionally requires the exact
+unlocked tenant/scope/object and checks context before encryption/signing/enqueue.
+Cancellation cannot undo a server mutation or local transaction already committed
+for A; it prevents a follow-up action or publication of A state into B. It never
+retargets a dispatched request or deletes a pending encrypted change.
+
+`ClientDatabase` is an Angular `@Service()` facade with a browser-only lazy
+module, current account/version checks and cancellation checks before returning a
+connection. Creating the service does not open IndexedDB or unlock keys. Consumers
+own and close their connections; late opens are closed if their context, account or
+injector was invalidated. `VaultSession` owns key-custody connections, and the scoped
+private-resource service owns replica connections. The reference pattern is the
+[legacy Nive database facade](https://github.com/visomi-dev/nive-archive-latest/blob/main/apps/legacy-ng-webapp/src/app/shared/db/index.ts),
+read only. Its product entities, plaintext tables and raw exception logging are not
+ported into this stack.
+
+The web SDK uses typed Dexie tables and committed transactions. Optimistic caching
+and automatic reopening are disabled. It preserves the existing account-specific
+`visomi-vault:` and `visomi-sync:` names, native version **1**, key paths and stored
+formats. A minimal native initializer creates only an absent database; Dexie opens
+it in dynamic mode after format validation, avoiding automatic schema patching or
+newer-version fallback. Unknown versions/schemas fail closed without patching,
+resetting or deleting contents. Version-change handlers close connections and
+suppress default logging of account-bearing database names. No browser migration
+or database deletion is performed by this change.
+
+Only envelopes, wrapped keys, pins, encrypted outboxes and allowlisted protocol
+metadata enter those tables. Key reservation, CAS writes, backup restore and
+pin/unit/outbox updates remain atomic. Crypto, network operations, plaintext and UI
+drafts stay outside database transactions and tables. Dexie does not supply
+cryptography or change the origin/compromised-client threat model. Future schema
+changes require explicit reviewed migrations; do not increase a version or clear
+an outbox to work around a storage error.
 
 ## Explicit migration and disclosure
 

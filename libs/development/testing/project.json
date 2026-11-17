@@ -53,7 +53,7 @@
       "dependsOn": ["test"]
     }
   },
-  "implicitDependencies": ["backend-shared"],
+  "implicitDependencies": ["backend-db", "backend-shared"],
   "namedInputs": {
     "lintPolicy": [
       "sharedGlobals",

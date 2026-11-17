@@ -33,6 +33,7 @@ import { Passwords } from './passwords';
 export class PasswordVerify {
   private readonly journey = inject(Journey);
   private readonly passwords = inject(Passwords);
+
   readonly navigation = inject(AuthNavigation);
   readonly action = inject(Action);
 

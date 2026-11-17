@@ -1,4 +1,5 @@
-import { DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
+import { DATABASE, type Database } from '@visomi-stack/backend-db';
+import { inject } from '@visomi-stack/backend-shared';
 import { sql } from 'drizzle-orm';
 import type { Store } from 'express-rate-limit';
 

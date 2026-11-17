@@ -22,6 +22,7 @@ export class Sessions {
   private readonly api = inject(Methods);
   private readonly session = inject(Session);
   private readonly navigation = inject(AuthNavigation);
+
   readonly action = inject(Action);
 
   readonly entries = signal<SessionEntry[]>([]);

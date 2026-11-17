@@ -36,9 +36,10 @@ import { Recovery } from './recovery';
   templateUrl: './verify.html',
 })
 export class RecoveryVerify {
-  readonly journey = inject(Journey);
   private readonly api = inject(Recovery);
   private readonly navigation = inject(AuthNavigation);
+
+  readonly journey = inject(Journey);
   readonly action = inject(Action);
 
   readonly model = signal({ code: '', kind: 'none', factor: '' });

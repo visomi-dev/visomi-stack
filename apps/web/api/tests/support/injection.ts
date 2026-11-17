@@ -1,12 +1,5 @@
-import {
-  AuthMail,
-  createInjector,
-  DATABASE,
-  DATABASE_POOL,
-  type Database,
-  type Provider,
-  type Type,
-} from '@visomi-stack/backend-shared';
+import { DATABASE, DATABASE_POOL, type Database } from '@visomi-stack/backend-db';
+import { AuthMail, createInjector, type Provider, type Type } from '@visomi-stack/backend-shared';
 import type { Pool } from 'pg';
 
 import { DevicesController } from '../../src/auth/devices/controller';

@@ -8,7 +8,7 @@ import { expect, it } from 'vitest';
 import { testPostgres } from './postgres';
 
 const execute = promisify(execFile);
-const script = fileURLToPath(new URL('../../../../../libs/backend/shared/tools/database/migrate.mjs', import.meta.url));
+const script = fileURLToPath(new URL('../../../../../libs/backend/db/tools/migrate.mjs', import.meta.url));
 
 it('applies the production migration command to an empty isolated database and can repeat it', async ({ signal }) => {
   const database = await testPostgres(undefined, 'web-api', signal);

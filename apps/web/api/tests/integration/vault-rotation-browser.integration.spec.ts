@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { expect, it } from 'vitest';
-import { syncHeadSchema, type ApprovedDelivery, type KeyDomain } from '@visomi-stack/shared-persistence';
+import { syncHeadSchema, type ApprovedDelivery, type KeyDomain } from '@visomi-stack/shared-db';
 
 import { fixture } from './support/persistence';
 import { browserServer, type FixtureHost } from './support/browser-server';

@@ -2,7 +2,8 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { randomUUID } from 'node:crypto';
 
-import { authSchema, createDatabase, createSmtp } from '@visomi-stack/backend-shared';
+import { authSchema, createDatabase } from '@visomi-stack/backend-db';
+import { createSmtp } from '@visomi-stack/backend-shared';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 import { SMTPServer } from 'smtp-server';
 import { beforeAll, afterAll, beforeEach, expect } from 'vitest';

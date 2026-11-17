@@ -212,6 +212,7 @@
         "production",
         "^production",
         "webStyles",
+        "{workspaceRoot}/libs/backend/db/**/*",
         "{workspaceRoot}/libs/backend/shared/**/*",
         "{workspaceRoot}/libs/web/backend/shared/**/*",
         "{workspaceRoot}/libs/web/frontend/ui/**/*",

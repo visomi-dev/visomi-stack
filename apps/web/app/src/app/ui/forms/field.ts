@@ -27,11 +27,13 @@ import { field as styles } from '@visomi-stack/web-frontend-ui';
   },
 })
 export class Field {
+  readonly compact = input(false, { transform: booleanAttribute });
+  protected readonly classes = computed(() => styles.classes({ compact: this.compact() }));
+
   readonly controlId = input.required<string>({ alias: 'control-id' });
   readonly label = input.required<string>();
   readonly description = input('');
   readonly error = input('');
-  readonly compact = input(false, { transform: booleanAttribute });
   readonly invalid = input(false, { transform: booleanAttribute });
   readonly manualError = input<string | null>(null, { alias: 'manual-error' });
 
@@ -43,5 +45,4 @@ export class Field {
 
     return ids.filter(Boolean).join(' ') || null;
   });
-  protected readonly classes = computed(() => styles.classes({ compact: this.compact() }));
 }

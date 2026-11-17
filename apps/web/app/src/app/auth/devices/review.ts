@@ -25,13 +25,17 @@ function validRequestId(value: string | null): string | null {
 export class DeviceReview {
   private readonly api = inject(Devices);
   private readonly route = inject(ActivatedRoute);
+
+  private readonly rendered = signal(false);
+  private readonly query = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
+
+  private review: { requestId: string | null; signal: AbortSignal } | undefined;
+
   readonly action = inject(Action);
 
   readonly status = signal<DeviceStatus['status'] | null>(null);
   readonly attempted = signal(false);
   readonly model = signal({ code: '' });
-  private readonly rendered = signal(false);
-  private readonly query = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
 
   readonly fields = form(this.model, (path) => {
     required(path.code, { message: requiredMessage });
@@ -42,8 +46,6 @@ export class DeviceReview {
   readonly requestId = computed(() => validRequestId(this.query().get('requestId')));
 
   readonly codeLabel = $localize`:@@authPairingCode:Pairing code`;
-
-  private review: { requestId: string | null; signal: AbortSignal } | undefined;
 
   decide(event: Event, approve: boolean): void {
     event.preventDefault();

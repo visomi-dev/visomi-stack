@@ -59,13 +59,15 @@ The production image includes the existing SQL migrations and a separate command
 that uses the installed Drizzle ORM migrator, without development dependencies:
 
 ```sh
-node libs/backend/shared/tools/database/migrate.mjs
+node libs/backend/db/tools/migrate.mjs
 ```
 
-Configure that command as the gateway's Railway pre-deploy command, with
-`DATABASE_URL` available. It applies pending migrations before the listener starts
+The current Railway profile retains the previous `libs/backend/shared/tools/database/migrate.mjs`
+command. The runtime image supplies a symlink to the new entrypoint; no provider change
+is needed for this extraction. A future separately authorized configuration update
+can use the canonical command above, with `DATABASE_URL` available. It applies pending migrations before the listener starts
 and exits nonzero with a controlled message on failure. Deploy an image containing
-the command before applying this setting. The local `backend-shared:db-migrate`
+the command before applying this setting. The local `backend-db:db-migrate`
 target uses the same executable. Application imports and startup never migrate.
 
 Before enabling the deployment, confirm any new database/storage charges and
@@ -366,7 +368,7 @@ maintain a global mutable route registry. A documentation UI is not installed.
 
 ## Persistence and builds
 
-`backend-shared` owns `authSchema` and the single migration history. Each owner
+`backend-db` owns `authSchema` and the single migration history. Each owner
 creates its own pool; imports never run migrations. Authentication and mutations
 serialize on user/session/proof rows. Email and provider-subject claims also use
 transaction advisory locks to prevent duplicate identities during concurrent
@@ -388,8 +390,8 @@ continue through the owning HTTP error boundary. The dependency is pinned to
 `8.5.2`, whose request path has no environment-enabled debug output.
 
 ```sh
-pnpm nx run backend-shared:db-generate -- --name describe-schema-change
-DATABASE_URL=postgresql://localhost/visomi_stack_dev pnpm nx run backend-shared:db-migrate
+pnpm nx run backend-db:db-generate -- --name describe-schema-change
+DATABASE_URL=postgresql://localhost/visomi_stack_dev pnpm nx run backend-db:db-migrate
 pnpm nx run backend-shared:emails-build
 pnpm nx run backend-shared:emails-check
 ```
@@ -413,8 +415,8 @@ directories and chunks when deploying the CommonJS API beside the ESM gateway.
 ## Verification and privacy
 
 ```sh
-pnpm nx run-many -t lint typecheck typecheck-tests -p web-api web-gateway backend-shared dev-testing
-pnpm nx run-many -t test -p web-api web-gateway backend-shared dev-testing
+pnpm nx run-many -t lint typecheck typecheck-tests -p web-api web-gateway backend-db backend-shared dev-testing
+pnpm nx run-many -t test -p web-api web-gateway backend-db backend-shared dev-testing
 pnpm nx run-many -t build e2e -p web-api web-gateway
 ```
 

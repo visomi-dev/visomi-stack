@@ -24,7 +24,7 @@ import {
   type DeviceAction,
   type KeyDomain,
   type SyncHead,
-} from '@visomi-stack/shared-persistence';
+} from '@visomi-stack/shared-db';
 import { expect } from 'vitest';
 
 import { base, fixture } from './persistence';

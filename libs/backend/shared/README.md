@@ -3,47 +3,8 @@
 `@visomi-stack/backend-shared` contains backend infrastructure independent of
 HTTP. Applications and other backend modules consume its public exports.
 
-## Database
-
-`drizzle.config.ts` lives at this library root, alongside `src/`.
-`src/lib/database/` owns the Drizzle factory, domain schemas and single migration
-history. `schema-auth.ts` defines the current authentication
-tables and is exposed as `authSchema`; `schema.ts` is Kit's schema discovery
-barrel. Existing migration SQL, identifiers and snapshots are preserved.
-
-`tools/database/migrate.mjs` applies that history with the installed Drizzle ORM
-migrator. Both the Nx migration target and production pre-deploy command use it.
-It closes its own pool and reports failures without connection details or SQL.
-
-Run commands from the workspace root:
-
-```sh
-pnpm nx run backend-shared:db-generate -- --name describe-schema-change
-DATABASE_URL=postgresql://localhost/visomi_stack_dev pnpm nx run backend-shared:db-migrate
-pnpm nx test backend-shared
-pnpm nx run backend-shared:typecheck-tests
-```
-
-The example development database must be created separately. Tests create their
-own isolated PostgreSQL clusters; they never migrate a developer database.
-
-Compose runs the same `backend-shared:db-migrate` target in a separate one-shot
-`database-init` service after PostgreSQL is healthy. The application waits for
-successful completion. No authentication seeds are required or inserted; future
-required reference data belongs in this initialization step, not API startup.
-See [container initialization](../../../docs/development.md#container-database-initialization)
-for commands and reruns. Migration generation remains an explicit development
-command rather than a container startup action.
-
-The owning executable explicitly calls `createDatabase()`, passes its `db` and
-`pool` to its modules, and calls the idempotent `close()` during shutdown. Importing
-this library does not initialize a pool, connect or run migrations. A composed
-application borrows its host's resources; separate processes own separate pools
-against the same database. Query logging is disabled, and idle failures are
-reported without raw database errors.
-
-The API's [authentication guide](../../../apps/web/api/README.md) documents the
-current schema, security guarantees, configuration and integration tests.
+Database resources, tokens, schemas and migrations live in
+[`backend-db`](../db/README.md). This library does not re-export database capabilities.
 
 ## Email
 
@@ -92,8 +53,8 @@ const injector = createInjector([{ provide: SETTINGS, useValue: { name: 'Synthet
 const greeting = injector.get<Greeting>(Greeting);
 ```
 
-Services use property initializers or parameterless constructors. The shared
-resource tokens are `DATABASE`, `DATABASE_POOL` and `MAIL_TRANSPORT`; each capability
+Services use property initializers or parameterless constructors. Database tokens `DATABASE` and `DATABASE_POOL` belong to `backend-db`;
+`MAIL_TRANSPORT` belongs to this library. Each capability
 owns its configuration tokens. Resolve services once in a composition root, then
 use their captured dependencies normally in async methods. `inject()` itself is
 synchronous and cannot be called after an `await` outside a new explicit context.

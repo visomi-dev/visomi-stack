@@ -1,6 +1,6 @@
 import { generateKeyPairSync, createSign, randomUUID } from 'node:crypto';
 
-import { authSchema } from '@visomi-stack/backend-shared';
+import { authSchema } from '@visomi-stack/backend-db';
 import { authenticator } from '@visomi-stack/dev-testing';
 import { eq } from 'drizzle-orm';
 import { OAuth2Client } from 'google-auth-library';

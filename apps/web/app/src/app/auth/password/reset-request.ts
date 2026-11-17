@@ -21,6 +21,7 @@ export class ResetRequest {
   private readonly passwords = inject(Passwords);
   private readonly journey = inject(Journey);
   private readonly router = inject(Router);
+
   readonly action = inject(Action);
 
   request(email: string): void {

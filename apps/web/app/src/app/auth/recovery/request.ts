@@ -21,6 +21,7 @@ export class RecoveryRequest {
   private readonly api = inject(Recovery);
   private readonly journey = inject(Journey);
   private readonly router = inject(Router);
+
   readonly action = inject(Action);
 
   request(email: string): void {

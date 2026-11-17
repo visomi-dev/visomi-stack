@@ -1,13 +1,13 @@
 import { randomUUID } from 'node:crypto';
 
-import { persistenceSchema, vaultSchema } from '@visomi-stack/backend-shared';
-import { createOperationId, operationWindowMs, retentionDayMs, type SyncHead } from '@visomi-stack/shared-persistence';
+import { persistenceSchema, vaultSchema } from '@visomi-stack/backend-db';
+import { createOperationId, operationWindowMs, retentionDayMs, type SyncHead } from '@visomi-stack/shared-db';
 import { and, eq, inArray } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 
 import { Access } from '../../src/access/service';
-import { PersistenceMaintenance } from '../../src/persistence/maintenance';
-import { SaasRecords } from '../../src/persistence/records';
+import { PersistenceMaintenance } from '../../src/db/maintenance';
+import { SaasRecords } from '../../src/db/records';
 
 import { base, collection, fixture, grant, mutation, policy, resource } from './support/persistence';
 import { authorize, boot, identity, push, request, vaultBase } from './support/vault';

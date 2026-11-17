@@ -1,13 +1,13 @@
 import { randomUUID } from 'node:crypto';
 
-import { vaultSchema } from '@visomi-stack/backend-shared';
-import { syncHeadSchema, syntheticHybridPolicy, type ProductPolicy } from '@visomi-stack/shared-persistence';
+import { vaultSchema } from '@visomi-stack/backend-db';
+import { syncHeadSchema, syntheticHybridPolicy, type ProductPolicy } from '@visomi-stack/shared-db';
 import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 
 import { Access } from '../../src/access/service';
-import { KeyDevices } from '../../src/persistence/devices';
-import { OpaqueSync } from '../../src/persistence/opaque';
+import { KeyDevices } from '../../src/db/devices';
+import { OpaqueSync } from '../../src/db/opaque';
 
 import { base, fixture, grant, resource } from './support/persistence';
 import {

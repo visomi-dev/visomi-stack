@@ -5,11 +5,11 @@ import { Component, ElementRef, afterRenderEffect, input, signal, viewChild } fr
   templateUrl: './qr-code.html',
 })
 export class QrCode {
+  private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
+
   readonly uri = input.required<string>();
 
   readonly failed = signal(false);
-
-  private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
 
   private readonly renderEffect = afterRenderEffect({
     write: (onCleanup) => {

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import { authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
+import { authSchema, DATABASE, type Database } from '@visomi-stack/backend-db';
+import { inject } from '@visomi-stack/backend-shared';
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
 
 import { validateApproval } from '../devices/service';

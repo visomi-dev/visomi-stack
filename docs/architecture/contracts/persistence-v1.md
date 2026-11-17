@@ -60,11 +60,11 @@ are rejected, even if the replacement OAEP ciphertext is mathematically valid.
 
 Public synthetic fixtures:
 
-- `libs/shared/persistence/fixtures/crypto-v1.json`: AES-GCM data/wrapping and HKDF.
-- `libs/shared/persistence/fixtures/devices-v1.json`: ECDSA/P1363, RSA-OAEP label/
+- `libs/shared/db/fixtures/crypto-v1.json`: AES-GCM data/wrapping and HKDF.
+- `libs/shared/db/fixtures/devices-v1.json`: ECDSA/P1363, RSA-OAEP label/
   decryption and signed approval bytes. Private fixture keys are deliberately public
   synthetic values and must never be used for real data.
-- `libs/shared/persistence/fixtures/devices-history-v1.json`: a generation-two
+- `libs/shared/db/fixtures/devices-history-v1.json`: a generation-two
   enrollment approval explicitly grants generation one as well. It includes both
   contextual OAEP labels, distinct expected DEKs and exact signed body bytes;
   `devices-v1.json` supplies its deliberately public synthetic key material.

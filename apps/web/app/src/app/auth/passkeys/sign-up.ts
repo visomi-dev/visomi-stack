@@ -22,11 +22,12 @@ import { Passkeys } from './passkeys';
   templateUrl: './sign-up.html',
 })
 export class SignUp {
-  readonly session = inject(Session);
-  readonly navigation = inject(AuthNavigation);
   private readonly keys = inject(Passkeys);
   private readonly journey = inject(Journey);
   private readonly router = inject(Router);
+
+  readonly session = inject(Session);
+  readonly navigation = inject(AuthNavigation);
   readonly action = inject(Action);
 
   readonly createLabel = $localize`:@@authCreatePasskeyAccount:Create account with a passkey`;

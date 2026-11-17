@@ -22,7 +22,7 @@ const cases = [
   ['.railway/jaeger.yaml', 'jaeger-check', ['web-gateway']],
   ['tools/deployment/smoke.mjs', 'deployment-check', ['web-gateway']],
   ['tools/deployment/smoke.mjs', 'container-check', ['web-gateway']],
-  ['libs/backend/shared/src/lib/database/database.ts', 'container-check', ['web-gateway']],
+  ['libs/backend/db/src/lib/database.ts', 'container-check', ['web-gateway']],
   ['Dockerfile', 'container-check', ['web-gateway']],
   ['assets/brand/email/v1/logotype-stack.png', 'container-check', ['web-gateway']],
   ['assets/brand/bimi/v1/visomi.svg', 'container-check', ['web-gateway']],

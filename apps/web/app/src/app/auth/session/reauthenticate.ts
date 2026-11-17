@@ -45,13 +45,22 @@ type Reauthentication = (FactorPending & { method: 'password' }) | (Pending & { 
   templateUrl: './reauthenticate.html',
 })
 export class Reauthenticate {
-  readonly session = inject(Session);
-  readonly navigation = inject(AuthNavigation);
   private readonly methodApi = inject(Methods);
   private readonly passkeys = inject(Passkeys);
   private readonly passwords = inject(Passwords);
   private readonly googleApi = inject(Google);
   private readonly journey = inject(Journey);
+
+  readonly session = inject(Session);
+
+  readonly methods = signal<MethodsView | null>(null);
+  protected readonly otherMethods = computed(
+    () =>
+      !!this.methods()?.passkeys.length ||
+      (!!this.methods()?.google.length && !!this.session.providers()?.google?.enabled),
+  );
+
+  readonly navigation = inject(AuthNavigation);
   readonly action = inject(Action);
 
   readonly embedded = input(false);
@@ -62,7 +71,6 @@ export class Reauthenticate {
   readonly completed = output<void>();
   readonly cancelled = output<void>();
 
-  readonly methods = signal<MethodsView | null>(null);
   readonly pending = signal<Reauthentication | null>(null);
   readonly backup = signal(false);
   readonly visible = signal(false);
@@ -73,12 +81,6 @@ export class Reauthenticate {
     required(path.password, { message: requiredMessage });
     disabled(path, { when: () => this.action.busy() });
   });
-
-  protected readonly otherMethods = computed(
-    () =>
-      !!this.methods()?.passkeys.length ||
-      (!!this.methods()?.google.length && !!this.session.providers()?.google?.enabled),
-  );
 
   readonly showLabel = $localize`:@@authShowPassword:Show`;
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;

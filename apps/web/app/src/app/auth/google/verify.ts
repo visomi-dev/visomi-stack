@@ -20,9 +20,10 @@ import { Google } from './google';
   templateUrl: './verify.html',
 })
 export class GoogleVerify {
-  readonly journey = inject(Journey);
   private readonly google = inject(Google);
   private readonly navigation = inject(AuthNavigation);
+
+  readonly journey = inject(Journey);
   readonly action = inject(Action);
 
   verify(code: string): void {

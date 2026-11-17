@@ -1,7 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
 import { Socket } from 'node:net';
 
-import type { Database } from '@visomi-stack/backend-shared';
+import type { Database } from '@visomi-stack/backend-db';
 import type { Request, Response } from 'express';
 import express from 'express';
 import { Passport } from 'passport';

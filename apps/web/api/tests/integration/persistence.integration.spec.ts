@@ -1,13 +1,13 @@
 import { randomUUID } from 'node:crypto';
 
-import { createOperationId } from '@visomi-stack/shared-persistence';
-import { authSchema, createDatabase, persistenceSchema } from '@visomi-stack/backend-shared';
+import { createOperationId } from '@visomi-stack/shared-db';
+import { authSchema, createDatabase, persistenceSchema } from '@visomi-stack/backend-db';
 import { runTestCompose } from '@visomi-stack/dev-testing/postgres';
 import { and, eq, sql } from 'drizzle-orm';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Access } from '../../src/access/service';
-import { SaasRecords } from '../../src/persistence/records';
+import { SaasRecords } from '../../src/db/records';
 
 import {
   base,

@@ -1,0 +1,16 @@
+{
+  "name": "shared-db",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/db/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:util"],
+  "targets": {
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/shared/db",
+        "command": "tsc -p tsconfig.spec.json --noEmit"
+      }
+    }
+  }
+}

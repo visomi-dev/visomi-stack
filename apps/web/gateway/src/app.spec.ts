@@ -7,7 +7,7 @@ import { AuthHttpError, HttpError, httpErrorHandler, initializeObservability } f
 import type { Request, RequestHandler, Response } from 'express';
 import express, { Router } from 'express';
 import { describe, expect, it, vi } from 'vitest';
-import { syntheticHybridPolicy } from '@visomi-stack/shared-persistence';
+import { syntheticHybridPolicy } from '@visomi-stack/shared-db';
 
 import type { ApiModule, EmbeddedAuthentication } from './api-module';
 import { createGatewayApp } from './app';

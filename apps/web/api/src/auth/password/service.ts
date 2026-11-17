@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import { authSchema, DATABASE, inject, type Database } from '@visomi-stack/backend-shared';
+import { authSchema, DATABASE, type Database } from '@visomi-stack/backend-db';
+import { inject } from '@visomi-stack/backend-shared';
 import { AuthHttpError, HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, isNotNull, sql } from 'drizzle-orm';
 
@@ -28,6 +29,7 @@ const { users } = authSchema;
 export class Passwords {
   private readonly database = inject<Database>(DATABASE);
   private readonly config = inject<AuthConfig>(AUTH_CONFIG);
+
   readonly flows = inject(Flows);
   readonly factors = inject(Factors);
 

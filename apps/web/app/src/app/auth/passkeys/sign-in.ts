@@ -21,11 +21,12 @@ import { Passkeys } from './passkeys';
   templateUrl: './sign-in.html',
 })
 export class SignIn {
-  readonly session = inject(Session);
-  readonly navigation = inject(AuthNavigation);
   private readonly keys = inject(Passkeys);
   private readonly router = inject(Router);
   private readonly journey = inject(Journey);
+
+  readonly session = inject(Session);
+  readonly navigation = inject(AuthNavigation);
   readonly action = inject(Action);
 
   retry(): void {

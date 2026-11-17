@@ -1,4 +1,5 @@
-import { AuthMail, type Database, createInjector, MAIL_TRANSPORT } from '@visomi-stack/backend-shared';
+import { type Database } from '@visomi-stack/backend-db';
+import { AuthMail, createInjector, MAIL_TRANSPORT } from '@visomi-stack/backend-shared';
 import { vi } from 'vitest';
 
 import { authConfig } from '../../src/auth/shared/config';

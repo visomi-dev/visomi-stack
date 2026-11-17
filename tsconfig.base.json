@@ -23,8 +23,10 @@
       "@visomi-stack/dev-testing/telemetry": ["./libs/development/testing/src/telemetry.ts"],
       "@visomi-stack/web-frontend-ui": ["./libs/web/frontend/ui/src/index.ts"],
       "@visomi-stack/web-shared-observability": ["./libs/web/shared/observability/src/index.ts"],
-      "@visomi-stack/shared-persistence": ["./libs/shared/persistence/src/index.ts"],
-      "@visomi-stack/web-shared-vault": ["./libs/web/shared/vault/src/index.ts"]
+      "@visomi-stack/web-frontend-db": ["./libs/web/frontend/db/src/index.ts"],
+      "@visomi-stack/shared-db": ["./libs/shared/db/src/index.ts"],
+      "@visomi-stack/web-frontend-db/storage": ["./libs/web/frontend/db/src/storage.ts"],
+      "@visomi-stack/backend-db": ["./libs/backend/db/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

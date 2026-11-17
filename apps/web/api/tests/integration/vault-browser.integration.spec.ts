@@ -8,12 +8,12 @@ import {
   PeriodicExportingMetricReader,
 } from '@opentelemetry/sdk-metrics';
 import { initializeObservability } from '@visomi-stack/web-backend-shared';
-import { createDatabase } from '@visomi-stack/backend-shared';
+import { createDatabase } from '@visomi-stack/backend-db';
 import { runTestCompose } from '@visomi-stack/dev-testing/postgres';
-import type { ApprovedDelivery, DeviceProof, KeyDomain, SigningPin } from '@visomi-stack/shared-persistence';
+import type { ApprovedDelivery, DeviceProof, KeyDomain, SigningPin } from '@visomi-stack/shared-db';
 
 import { Access } from '../../src/access/service';
-import { OpaqueSync } from '../../src/persistence/opaque';
+import { OpaqueSync } from '../../src/db/opaque';
 
 import { fixture, grant, resource, postgres, policy } from './support/persistence';
 import { browserServer, type FixtureHost, type ProtocolBrowser } from './support/browser-server';

@@ -37,6 +37,7 @@ export class ManagePasskeys {
   private readonly api = inject(Passkeys);
   private readonly session = inject(Session);
   private readonly navigation = inject(AuthNavigation);
+
   readonly action = inject(Action);
 
   readonly keys = signal<Passkey[]>([]);
