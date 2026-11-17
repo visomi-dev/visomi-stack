@@ -1,6 +1,6 @@
-import { Component, DestroyRef, afterNextRender, inject, viewChild } from '@angular/core';
+import { Component, DestroyRef, computed, afterNextRender, inject, viewChild } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { Alert, AppShell, Sidebar, Topbar, NavItem, Navbar, Button, Link, ThemeSwitcher, Dialog } from '../ui';
 import { AuthHttp } from '../auth/shared/http';
@@ -9,15 +9,16 @@ import { AuthFeedback } from '../auth/shared/feedback';
 import { Session } from '../auth/session/session';
 import { Logout } from '../auth/session/logout';
 import { AuthNavigation } from '../auth/shared/navigation';
-import { AppVaultUnlock } from '../db/app-vault-unlock';
-import { AppVaults } from '../db/app-vaults';
-import { DatabaseHttp } from '../db/http';
+import { VaultUnlock } from '../shared/db/vault-unlock';
+import { Vaults } from '../shared/db/vaults';
+import { DatabaseHttp } from '../shared/db/http';
+import { Navigation } from '../shared/navigation';
 import { LanguageSwitcher } from '../i18n/language-switcher';
 
 @Component({
   selector: 'app-authenticated-layout',
   imports: [
-    AppVaultUnlock,
+    VaultUnlock,
     AppShell,
     Sidebar,
     Topbar,
@@ -34,7 +35,7 @@ import { LanguageSwitcher } from '../i18n/language-switcher';
     AuthFeedback,
     Dialog,
   ],
-  providers: [Action, AuthHttp, Logout, AppVaults, DatabaseHttp],
+  providers: [Action, AuthHttp, Logout, Vaults, DatabaseHttp],
   templateUrl: './authenticated-layout.html',
   styleUrl: './authenticated-layout.css',
 })
@@ -42,13 +43,24 @@ export class AuthenticatedLayout {
   private readonly signOut = inject(Logout);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private readonly pageNavigation = inject(Navigation);
 
   private readonly mobileMenu = viewChild.required(Dialog);
 
-  readonly vaults = inject(AppVaults);
+  readonly vaults = inject(Vaults);
   readonly session = inject(Session);
   readonly navigation = inject(AuthNavigation);
   readonly action = inject(Action);
+
+  // The example route owns its contextual prompt; shared vault code has no route exclusions.
+  readonly vaultMethod = computed(() => {
+    this.pageNavigation.context();
+
+    return this.vaults.show() && !this.router.url.startsWith('/persistence')
+      ? this.vaults.binding()?.method
+      : undefined;
+  });
 
   logout(): void {
     void this.signOut.run({

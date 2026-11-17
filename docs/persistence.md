@@ -136,6 +136,28 @@ services. Existing HTTP/UI routes and protocol errors retain their public names.
 
 ## Angular routes and browser databases
 
+Angular-specific reuse lives in `apps/web/app/src/app/shared/db`, following the
+existing `shared/navigation` convention. It contains `ClientDatabase`,
+`DatabaseHttp`, `VaultSession`, `Vaults`, capability detection, localized vault
+messages, `VaultPanel` and `VaultUnlock`. This is shared infrastructure between
+features of the Angular frontend; its session dependency is the existing account
+port. `app/db` retains the synthetic resource consumer and its policy/schema logic.
+
+`VaultUnlock` receives method, busy/notice state, a PIN model and a caller-supplied
+stable `control-id`, and emits an explicit unlock action. It does not inject a
+session, Router, HTTP client or vault. The authenticated layout supplies `Vaults`
+and owns the `/persistence` exclusion so the resource screen and shell never show
+duplicate prompts. `Vaults` has no product-route knowledge. Its scoped provider and
+the root account-bound `VaultSession` retain their existing lifetimes.
+
+Nx keeps `shared-db` platform-neutral and `web-frontend-db` as the framework-independent
+browser SDK; `web-frontend-ui` contains framework-independent visual recipes.
+Angular adapters stay in the Angular application, just as existing UI and navigation
+adapters do. No Angular/browser dependencies are introduced into backend/common
+libraries, and no new library, boundary exception or runtime is needed. `Vaults`
+and `VaultUnlock` omit the redundant `App` class/file prefix; the component selector
+remains `app-vault-unlock` under the existing Angular ESLint prefix convention.
+
 The route-scoped `ExampleWorkspace` service binds to the live `ActivatedRoute.paramMap`, including Router
 reuse and browser history. The shared `Navigation` service exposes navigation state and cancellation as signals,
 and drives the page loader. Each `NavigationStart` synchronously aborts HTTP work,

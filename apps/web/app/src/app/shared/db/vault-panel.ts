@@ -1,7 +1,7 @@
 import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { VaultError, type DataContext, type DataEnvelope, type WrappingContext } from '@visomi-stack/shared-db';
 
-import { Button, Field, Heading, Text, Textarea, Input } from '../ui';
+import { Button, Field, Heading, Text, Textarea, Input } from '../../ui';
 
 import { VaultSession } from './vault-session';
 import { vaultMessage } from './vault-messages';

@@ -1,24 +1,22 @@
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Service, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
-import { Router } from '@angular/router';
 import { z } from 'zod';
 import { VaultError, type WrappingContext } from '@visomi-stack/shared-db';
 import { replicaId } from '@visomi-stack/web-frontend-db';
 
-import { Session } from '../auth/session/session';
-import { Navigation } from '../shared/navigation';
+import { Session } from '../../auth/session/session';
+import { Navigation } from '../navigation';
 
 import { VaultSession } from './vault-session';
 import { ClientDatabase } from './database';
 import { DatabaseHttp } from './http';
 import { vaultMessage } from './vault-messages';
 
-/** Authenticated-shell unlock of existing local vaults; no product vault is created or converted here. */
+/** Local unlock of existing vaults in an authenticated frontend; no product vault is created or converted here. */
 @Service({ autoProvided: false })
-export class AppVaults {
+export class Vaults {
   private readonly session = inject(Session);
   private readonly navigation = inject(Navigation);
-  private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
   private readonly database = inject(ClientDatabase);
   private readonly api = inject(DatabaseHttp);
@@ -41,8 +39,7 @@ export class AppVaults {
   readonly show = computed(() => {
     this.navigation.context();
 
-    // The resource screen owns its contextual unlock controls, avoiding duplicate forms for the same vault.
-    return !this.navigation.active() && !this.router.url.startsWith('/persistence') && Boolean(this.binding());
+    return !this.navigation.active() && Boolean(this.binding());
   });
 
   async unlock(): Promise<void> {

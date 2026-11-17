@@ -65,3 +65,7 @@ and operation errors preserve local pins/outboxes. Automatic expired-history
 bootstrap remains unsupported. Global nonce accounting, independent crypto review,
 provider operations and additional runtimes remain release work; no production
 acceptance is claimed.
+
+Angular consumers share their session/database services and vault components in
+`apps/web/app/src/app/shared/db`; the authenticated layout owns route-specific
+composition. This SDK retains browser primitives without an Angular dependency.

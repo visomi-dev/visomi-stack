@@ -24,10 +24,10 @@ import {
 } from '@visomi-stack/shared-db';
 
 import { Session } from '../auth/session/session';
+import { DatabaseHttp } from '../shared/db/http';
+import { ClientDatabase } from '../shared/db/database';
+import { VaultSession } from '../shared/db/vault-session';
 
-import { DatabaseHttp } from './http';
-import { ClientDatabase } from './database';
-import { VaultSession } from './vault-session';
 import { openLocalVault } from './local-unlock';
 import { rosterSchema, validateExampleEnvelope, exampleLocalKey } from './example-contracts';
 

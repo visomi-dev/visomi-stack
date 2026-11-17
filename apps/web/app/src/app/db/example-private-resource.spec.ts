@@ -6,10 +6,10 @@ import { IndexedDbReplicaStorage } from '@visomi-stack/web-frontend-db/storage';
 import { dataEnvelopeSchema, syncCheckpointMessage, type WrappingContext } from '@visomi-stack/shared-db';
 
 import { Session } from '../auth/session/session';
+import { DatabaseHttp } from '../shared/db/http';
+import { VaultSession } from '../shared/db/vault-session';
 
 import { ExamplePrivateResource } from './example-private-resource';
-import { DatabaseHttp } from './http';
-import { VaultSession } from './vault-session';
 
 afterEach(() => {
   TestBed.resetTestingModule();

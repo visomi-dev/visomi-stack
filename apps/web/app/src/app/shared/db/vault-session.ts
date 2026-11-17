@@ -12,7 +12,7 @@ import {
   type KeyDomain,
 } from '@visomi-stack/shared-db';
 
-import { Session } from '../auth/session/session';
+import { Session } from '../../auth/session/session';
 
 import { ClientDatabase } from './database';
 

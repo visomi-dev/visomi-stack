@@ -62,6 +62,13 @@ unlock does not count as a fully opened application vault. Account/version chang
 logout, explicit lock and full document reload require unlock again; a canceled or
 query-only navigation does not by itself discard an already opened vault.
 
+Angular frontend adapters live in `apps/web/app/src/app/shared/db`. `Vaults`
+owns shared unlock orchestration; `VaultUnlock` presents a form through signal
+inputs/model and an explicit action output. The authenticated layout owns route
+exclusions. The platform-neutral `shared-db` contracts and framework-independent
+`web-frontend-db` browser SDK retain their Nx boundaries; Angular stays in the
+frontend application. See [the integration guide](../../persistence.md#angular-routes-and-browser-databases).
+
 The standalone reusable panel intentionally keeps its own scoped custody/display
 for independent mounted consumers. It is not the application's entry prompt and
 does not share its editor state or infer enrollment policy.

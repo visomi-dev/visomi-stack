@@ -9,12 +9,12 @@ import type { WrappingContext } from '@visomi-stack/shared-db';
 
 import { Session } from '../auth/session/session';
 import { Navigation } from '../shared/navigation';
+import { DatabaseHttp } from '../shared/db/http';
+import { UnlockCapabilities } from '../shared/db/unlock-capabilities';
+import { vaultMessage } from '../shared/db/vault-messages';
 
-import { DatabaseHttp } from './http';
 import { ExamplePrivateResource, type ExampleTarget } from './example-private-resource';
-import { UnlockCapabilities } from './unlock-capabilities';
 import { exampleLocalKey } from './example-contracts';
-import { vaultMessage } from './vault-messages';
 
 const targetSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid(), objectId: z.uuid() });
 const scopeSchema = targetSchema.omit({ objectId: true });

@@ -3,7 +3,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { IndexedDbReplicaStorage, IndexedDbVaultStorage } from '@visomi-stack/web-frontend-db/storage';
 
-import { Session } from '../auth/session/session';
+import { Session } from '../../auth/session/session';
 
 import { ClientDatabase } from './database';
 

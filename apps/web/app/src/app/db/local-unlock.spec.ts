@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { VaultError, type WrappingContext } from '@visomi-stack/shared-db';
 
-import type { ClientDatabase } from './database';
-import type { VaultSession } from './vault-session';
+import type { ClientDatabase } from '../shared/db/database';
+import type { VaultSession } from '../shared/db/vault-session';
+
 import { openLocalVault } from './local-unlock';
 
 const target = {

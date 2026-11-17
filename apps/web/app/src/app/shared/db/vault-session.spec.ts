@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { BrowserVault, DeviceCustody, PrfUnlock, WebCryptoCipher } from '@visomi-stack/web-frontend-db';
 import { VaultError, type WrappingContext } from '@visomi-stack/shared-db';
 
-import { Session } from '../auth/session/session';
+import { Session } from '../../auth/session/session';
 
 import { VaultSession } from './vault-session';
 

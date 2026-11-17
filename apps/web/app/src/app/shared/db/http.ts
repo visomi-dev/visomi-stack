@@ -4,7 +4,7 @@ import { DestroyRef, Service, inject } from '@angular/core';
 import { firstValueFrom, fromEvent, takeUntil } from 'rxjs';
 import { VaultError } from '@visomi-stack/shared-db';
 
-import { Session } from '../auth/session/session';
+import { Session } from '../../auth/session/session';
 
 /** Same-origin, non-transferable persistence calls; the existing interceptor supplies CSRF on mutations. */
 @Service({ autoProvided: false })

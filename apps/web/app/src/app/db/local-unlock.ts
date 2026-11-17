@@ -1,8 +1,9 @@
 import { replicaId } from '@visomi-stack/web-frontend-db';
 import { VaultError } from '@visomi-stack/shared-db';
 
-import type { ClientDatabase } from './database';
-import type { VaultSession } from './vault-session';
+import type { ClientDatabase } from '../shared/db/database';
+import type { VaultSession } from '../shared/db/vault-session';
+
 import type { ExampleTarget } from './example-private-resource';
 import { exampleLocalKey } from './example-contracts';
 

@@ -1,27 +1,23 @@
-@if (access.show()) {
-  <section
-    class="space-y-4 rounded-xl border p-5"
-    aria-labelledby="app-vault-unlock-heading"
-    [attr.aria-busy]="access.busy()"
-  >
-    <h2 appUI id="app-vault-unlock-heading" i18n="@@appVaultUnlockHeading">Unlock your private resources</h2>
+@if (method()) {
+  <section class="space-y-4 rounded-xl border p-5" [attr.aria-labelledby]="headingId()" [attr.aria-busy]="busy()">
+    <h2 appUI [id]="headingId()" i18n="@@vaultUnlockHeading">Unlock your private resources</h2>
 
-    <p appUI tone="muted" i18n="@@appVaultUnlockDescription">
+    <p appUI tone="muted" i18n="@@vaultUnlockDescription">
       A local vault is closed. Unlock it to use its private resources. Other local vaults may use a different key or
       PIN. Navigating in this session keeps an opened vault unlocked until you lock it or sign out.
     </p>
 
-    <form class="space-y-4" (submit)="$event.preventDefault(); access.unlock()">
-      @if (access.binding()?.method === 'pin-argon2id') {
+    <form class="space-y-4" (submit)="$event.preventDefault(); submit()">
+      @if (method() === 'pin-argon2id') {
         <p appUI tone="muted" i18n="@@vaultPanelPinWarning">
           This resource uses a local PIN. A copy of encrypted storage permits offline PIN guessing; PIN protection is
           weaker than a passkey.
         </p>
 
-        <app-field control-id="app-vault-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel" #field="appField">
+        <app-field [control-id]="pinId()" label="Local unlock PIN" i18n-label="@@vaultPinLabel" #field="appField">
           <input
             appUI
-            id="app-vault-pin"
+            [id]="pinId()"
             type="password"
             inputmode="numeric"
             autocomplete="off"
@@ -30,16 +26,16 @@
             pattern="[0-9]{4,6}"
             required
             [attr.aria-describedby]="field.describedBy()"
-            [disabled]="access.busy()"
-            [value]="access.pin()"
-            #pin
-            (input)="access.pin.set(pin.value)"
+            [disabled]="busy()"
+            [value]="pin()"
+            #pinInput
+            (input)="pin.set(pinInput.value)"
           />
         </app-field>
       }
 
-      <button appUI type="submit" [disabled]="access.busy()">
-        @if (access.binding()?.method === 'pin-argon2id') {
+      <button appUI type="submit" [disabled]="busy()">
+        @if (method() === 'pin-argon2id') {
           <span i18n="@@vaultPinUnlock">Unlock locally with PIN</span>
         } @else {
           <span i18n="@@vaultUnlock">Unlock with passkey</span>
@@ -49,6 +45,6 @@
   </section>
 }
 
-@if (access.notice()) {
-  <p role="status" aria-live="polite">{{ access.notice() }}</p>
+@if (notice()) {
+  <p role="status" aria-live="polite">{{ notice() }}</p>
 }

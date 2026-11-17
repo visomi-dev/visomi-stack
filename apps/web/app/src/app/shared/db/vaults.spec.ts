@@ -1,13 +1,12 @@
 import { DOCUMENT } from '@angular/common';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
 import type { WrappingContext } from '@visomi-stack/shared-db';
 
-import { Session } from '../auth/session/session';
-import { Navigation } from '../shared/navigation';
+import { Session } from '../../auth/session/session';
+import { Navigation } from '../navigation';
 
-import { AppVaults } from './app-vaults';
+import { Vaults } from './vaults';
 import { VaultSession } from './vault-session';
 import { ClientDatabase } from './database';
 import { DatabaseHttp } from './http';
@@ -60,12 +59,11 @@ function fixture(opened = false, method: WrappingContext['method'] = 'pin-argon2
 
   TestBed.configureTestingModule({
     providers: [
-      AppVaults,
+      Vaults,
       {
         provide: Session,
         useValue: { user: signal({ id: binding.ownerId }), full: signal(true), operationVersion: version },
       },
-      { provide: Router, useValue: { url: '/home' } },
       {
         provide: Navigation,
         useValue: { context: signal({ cancellation: navigation.signal }), active: signal(false) },
@@ -76,7 +74,7 @@ function fixture(opened = false, method: WrappingContext['method'] = 'pin-argon2
       { provide: DatabaseHttp, useValue: api },
     ],
   });
-  const access = TestBed.inject(AppVaults);
+  const access = TestBed.inject(Vaults);
 
   TestBed.tick();
 

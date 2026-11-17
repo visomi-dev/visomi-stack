@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { DataContext, DataEnvelope, WrappingContext } from '@visomi-stack/shared-db';
 
-import { Session } from '../auth/session/session';
+import { Session } from '../../auth/session/session';
 
 import { VaultPanel } from './vault-panel';
 import { VaultSession } from './vault-session';

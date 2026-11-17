@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Service, inject } from '@angular/core';
 import { VaultError } from '@visomi-stack/shared-db';
 
-import { Session } from '../auth/session/session';
+import { Session } from '../../auth/session/session';
 
 /** Lazy browser database facade. Consumers own their connections; no plaintext or raw keys enter this service. */
 @Service()

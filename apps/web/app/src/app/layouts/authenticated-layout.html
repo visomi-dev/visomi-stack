@@ -87,7 +87,14 @@
     }
 
     @if (session.full()) {
-      <app-vault-unlock />
+      <app-vault-unlock
+        control-id="workspace-vault"
+        [method]="vaultMethod()"
+        [busy]="vaults.busy()"
+        [notice]="vaults.notice()"
+        [(pin)]="vaults.pin"
+        (unlock)="vaults.unlock()"
+      />
 
       @for (user of [session.user()]; track user?.id) {
         <router-outlet class="hidden" />
