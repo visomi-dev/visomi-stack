@@ -30,7 +30,7 @@ it('presents native PIN controls and emits an explicit unlock without session, R
   expect(input.autocomplete).toBe('off');
   expect(input.id).toBe('local-vault-pin');
   expect(input.getAttribute('aria-describedby')).toBe('local-vault-pin-help');
-  expect(view.nativeElement.querySelector('#local-vault-pin-help').textContent).toBe('4 to 6 digits');
+  expect(view.nativeElement.querySelector('#local-vault-pin-help').textContent).toBe('6 digits');
   expect(view.nativeElement.querySelector('label').htmlFor).toBe(input.id);
   const event = new Event('submit', { cancelable: true });
 
@@ -40,7 +40,7 @@ it('presents native PIN controls and emits an explicit unlock without session, R
   expect(requested).toHaveBeenCalledExactlyOnceWith(undefined);
 });
 
-it('uses six decorative slots and accepts four to six ASCII digits without submitting on input', () => {
+it('uses six decorative slots and requires exactly six ASCII digits without submitting on input', () => {
   const view = mount('length-check');
   const control = view.nativeElement.querySelector('app-pin-input') as HTMLElement;
   const input = control.querySelector('input') as HTMLInputElement;
@@ -50,11 +50,11 @@ it('uses six decorative slots and accepts four to six ASCII digits without submi
   expect(control.querySelectorAll('input')).toHaveLength(1);
   expect(control.querySelectorAll('[aria-hidden=true] > span')).toHaveLength(6);
 
-  for (const pin of ['', '012', '0123', '01234', '012345', '0123456', '01a3']) {
+  for (const pin of ['', '012', '0123', '01234', '012345', '0123456', '01a345', '０１２３４５']) {
     input.value = pin;
     input.dispatchEvent(new Event('input'));
     expect(view.componentInstance.pin()).toBe(pin);
-    expect(input.checkValidity()).toBe(['0123', '01234', '012345'].includes(pin));
+    expect(input.checkValidity()).toBe(pin === '012345');
   }
 
   expect(requested).not.toHaveBeenCalled();

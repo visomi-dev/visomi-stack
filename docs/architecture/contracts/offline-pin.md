@@ -1,6 +1,6 @@
 # Explicit offline PIN unlock — VIS-79
 
-Michael selected a short PIN (4–6 decimal digits) with offline use as an alternative
+Michael selected a PIN of exactly six ASCII digits with offline use as an alternative
 for clients without passkeys/PRF. This is an explicit product choice after explaining
 that copied encrypted storage permits offline enumeration. It is not equivalent to
 PRF, an independent audit, or production security approval.
@@ -26,10 +26,13 @@ copies cannot be guaranteed physically erased. No raw PIN, derived secret or
 plaintext is persisted or uploaded. Device signing identity stays in an independent
 local custody vault, protected by the selected unlock method, never a shared DEK.
 
-No numeric PIN policy can create high entropy: four digits have 10,000 combinations
-and six digits have 1,000,000. Argon2 increases each guess's cost; it does not make
-an offline attack impossible. UI attempt limits, hashing and server rate limits do
-not protect an exported/stolen local wrapper. No such guarantee is claimed.
+The six-digit PIN has 1,000,000 possible values, including leading zeroes.
+Argon2 increases the cost of each offline guess. An attacker with a copy of the
+wrapper can try PINs independently of UI attempt limits and server rate limits.
+
+Development wrappers created with four or five digits cannot be unlocked with
+their original PIN in this version. Their ciphertext remains intact. Six-digit
+wrappers continue to use the same key derivation and envelope format.
 
 ## Lifecycle and frontend
 

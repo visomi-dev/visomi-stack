@@ -183,11 +183,19 @@ it('binds PIN wrapping to context and wipes disposable PINs; rejects late deriva
 
         deliver(stale);
         const code = await pending;
-        const invalid = new api.PinUnlock(async () => new TextEncoder().encode('123'));
-        const inputCode = await invalid.secret(binding).then(
-          () => 'accepted',
-          (error) => error.code,
-        );
+        const invalidPins = ['123', '0123', '01234', '0123456', '01234a', '０１２３４５'];
+        const invalidResults = [];
+
+        for (const value of invalidPins) {
+          const bytes = new TextEncoder().encode(value);
+          const invalid = new api.PinUnlock(async () => bytes);
+          const inputCode = await invalid.secret(binding).then(
+            () => 'accepted',
+            (error) => error.code,
+          );
+
+          invalidResults.push({ inputCode, wiped: bytes.every((byte) => byte === 0) });
+        }
 
         return {
           referenceMatches,
@@ -197,7 +205,7 @@ it('binds PIN wrapping to context and wipes disposable PINs; rejects late deriva
           wiped: supplied.every((byte) => byte === 0),
           staleWiped: stale.every((byte) => byte === 0),
           code,
-          inputCode,
+          invalidResults,
         };
       },
       { vector, pinVector },
@@ -211,7 +219,7 @@ it('binds PIN wrapping to context and wipes disposable PINs; rejects late deriva
       wiped: true,
       staleWiped: true,
       code: 'cancelled',
-      inputCode: 'pin-invalid',
+      invalidResults: Array(6).fill({ inputCode: 'pin-invalid', wiped: true }),
     });
   } finally {
     await page.close();

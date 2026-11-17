@@ -5,6 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { z } from 'zod';
 import { createOperationId, productPolicySchema, syntheticHybridPolicy, VaultError } from '@visomi-stack/shared-db';
+import { isVaultPin } from '@visomi-stack/web-frontend-db';
 import type { WrappingContext } from '@visomi-stack/shared-db';
 
 import { Session } from '../auth/session/session';
@@ -191,7 +192,7 @@ export class ExampleWorkspace {
           throw new VaultError('unsupported-prf');
         }
 
-        if (!/^[0-9]{4,6}$/.test(value) || (initialize && value !== confirmation)) {
+        if (!isVaultPin(pin) || (initialize && value !== confirmation)) {
           throw new VaultError('pin-invalid');
         }
 

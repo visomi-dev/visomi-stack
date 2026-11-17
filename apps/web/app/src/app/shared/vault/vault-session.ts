@@ -1,6 +1,13 @@
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Service, computed, effect, inject, signal } from '@angular/core';
-import { BrowserVault, DeviceCustody, PinUnlock, PrfUnlock, WebCryptoCipher } from '@visomi-stack/web-frontend-db';
+import {
+  BrowserVault,
+  DeviceCustody,
+  isVaultPin,
+  PinUnlock,
+  PrfUnlock,
+  WebCryptoCipher,
+} from '@visomi-stack/web-frontend-db';
 import {
   VaultError,
   keyDomainId,
@@ -164,7 +171,7 @@ export class VaultSession {
     const id = keyDomainId(context.ownerId, context.key);
 
     if (context.method === 'pin-argon2id') {
-      if (!pin) {
+      if (!pin || !isVaultPin(pin)) {
         throw new VaultError('pin-invalid');
       }
 
@@ -378,7 +385,7 @@ export class VaultSession {
     }
 
     if (binding.method === 'pin-argon2id') {
-      if (!pin) {
+      if (!pin || !isVaultPin(pin)) {
         throw new VaultError('pin-invalid');
       }
 

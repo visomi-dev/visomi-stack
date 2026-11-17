@@ -8,6 +8,10 @@ export const pinMethod = 'pin-argon2id' as const;
 const parameters = { parallelism: 1, iterations: 3, memorySize: 65536, hashLength: 32, outputType: 'binary' as const };
 let deriving = false;
 
+export function isVaultPin(pin: Uint8Array): boolean {
+  return pin.length === 6 && pin.every((byte) => byte >= 48 && byte <= 57);
+}
+
 export function createPinMethodId(crypto: Crypto): string {
   return encodeBytes(crypto.getRandomValues(new Uint8Array(32)));
 }
@@ -53,7 +57,7 @@ export class PinUnlock implements VaultUnlock {
         throw new VaultError('cancelled');
       }
 
-      if (pin.length < 4 || pin.length > 6 || pin.some((byte) => byte < 48 || byte > 57)) {
+      if (!isVaultPin(pin)) {
         throw new VaultError('pin-invalid');
       }
 

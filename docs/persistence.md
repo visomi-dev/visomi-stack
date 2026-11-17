@@ -144,7 +144,7 @@ its product key domain and passes it to the vault when opening a local replica.
 
 `ui/forms/PinInput` is a masked numeric form control exported by the Angular UI
 catalog. Its caller supplies the draft and may select a digit count or a minimum
-length. Vault forms accept four to six digits and submit explicitly. The control
+length. Vault forms require exactly six ASCII digits and submit explicitly. The control
 and its containing `Field` can also be used outside persistence.
 
 `VaultUnlock` receives method, busy/notice state, a PIN model and a caller-supplied

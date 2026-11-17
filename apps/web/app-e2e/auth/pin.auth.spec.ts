@@ -40,6 +40,8 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await expect(pin).toHaveValue('0042');
 
+  await expect(pin.and(page.locator(':invalid'))).toHaveCount(1);
+
   await expect(pin).toBeFocused();
 
   await pin.press('Tab');
@@ -49,6 +51,14 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
   await page.keyboard.press('Shift+Tab');
 
   await expect(pin).toBeFocused();
+
+  await page.getByLabel('Confirm PIN for initial setup', { exact: true }).fill('0042');
+
+  await page.getByRole('button', { name: 'Set up an empty private resource with PIN', exact: true }).click();
+
+  await expect(page.getByText('Enter a six-digit PIN. For initial setup, enter the same PIN twice.')).toBeVisible();
+
+  await expect(page.getByLabel('Private text', { exact: true })).toHaveCount(0);
 
   await pin.fill('');
 
@@ -63,6 +73,8 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
   await expect(pin).toHaveValue('042');
 
   await pin.fill('048261');
+
+  await expect(pin.and(page.locator(':valid'))).toHaveCount(1);
 
   await expect(page.locator('app-pin-input')).toHaveCount(2);
 

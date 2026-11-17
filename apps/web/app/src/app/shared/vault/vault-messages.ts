@@ -1,7 +1,7 @@
 export function vaultMessage(state: string): string {
   switch (state) {
     case 'pin-invalid':
-      return $localize`:@@vaultPinInvalid:Enter a PIN of 4 to 6 digits. For initial setup, enter the same PIN twice.`;
+      return $localize`:@@vaultPinInvalid:Enter a six-digit PIN. For initial setup, enter the same PIN twice.`;
     case 'sync_history_expired':
       return $localize`:@@vaultHistoryExpired:This device is older than the retained synchronization history. Keep its encrypted copy and pending changes. Recovery requires trusted client state; synchronization will not reset its checkpoint.`;
     case 'operation_expired':

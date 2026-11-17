@@ -2554,14 +2554,14 @@
         <source>The retry window for this pending change expired. Keep the encrypted copy, synchronize, and explicitly resolve it before creating a new operation.</source>
       </trans-unit>
       <trans-unit id="vaultPinWarning" datatype="html">
-        <source> Without passkey support, you can choose a 4–6 digit PIN. Someone with a copy of your encrypted storage can try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local unlock works offline in an already signed-in session. </source>
+        <source> Without passkey support, you can choose a six-digit PIN. Someone with a copy of your encrypted storage can try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local unlock works offline in an already signed-in session. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
           <context context-type="linenumber">98,100</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultPinLength" datatype="html">
-        <source>4 to 6 digits</source>
+        <source>6 digits</source>
       </trans-unit>
       <trans-unit id="vaultPinLabel" datatype="html">
         <source>Local unlock PIN</source>
@@ -2592,7 +2592,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="vaultPinInvalid" datatype="html">
-        <source>Enter a PIN of 4 to 6 digits. For initial setup, enter the same PIN twice.</source>
+        <source>Enter a six-digit PIN. For initial setup, enter the same PIN twice.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">4</context>

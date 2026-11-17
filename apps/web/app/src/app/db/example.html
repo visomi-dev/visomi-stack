@@ -95,7 +95,7 @@
       @if (workspace.showPin() && !workspace.vault.ready()) {
         <form class="space-y-4" (submit)="$event.preventDefault(); workspace.unlockWithPin()">
           <p appUI tone="muted" i18n="@@vaultPinWarning">
-            Without passkey support, you can choose a 4–6 digit PIN. Someone with a copy of your encrypted storage can
+            Without passkey support, you can choose a six-digit PIN. Someone with a copy of your encrypted storage can
             try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local
             unlock works offline in an already signed-in session.
           </p>
@@ -104,10 +104,10 @@
             control-id="vault-pin"
             label="Local unlock PIN"
             i18n-label="@@vaultPinLabel"
-            description="4 to 6 digits"
+            description="6 digits"
             i18n-description="@@vaultPinLength"
           >
-            <app-pin-input [minlength]="4" [disabled]="workspace.busy()" [draft]="workspace.pinDraft" />
+            <app-pin-input required [digits]="6" [disabled]="workspace.busy()" [draft]="workspace.pinDraft" />
           </app-field>
 
           <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinUnlock">
@@ -121,7 +121,7 @@
             label="Confirm PIN for initial setup"
             i18n-label="@@vaultPinConfirm"
           >
-            <app-pin-input [minlength]="4" [disabled]="workspace.busy()" [draft]="workspace.pinConfirmation" />
+            <app-pin-input required [digits]="6" [disabled]="workspace.busy()" [draft]="workspace.pinConfirmation" />
           </app-field>
 
           <button

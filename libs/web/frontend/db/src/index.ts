@@ -14,4 +14,4 @@ export { exportEncryptedBackup, restoreEncryptedBackup } from './lib/vault/backu
 export { UserHeldRecovery } from './lib/vault/recovery';
 export { createPrfCredential } from './lib/vault/prf-credential';
 export { DeviceCustody, deviceCustodyContext } from './lib/vault/device-custody';
-export { PinUnlock, createPinMethodId, pinMethod } from './lib/vault/pin';
+export { PinUnlock, createPinMethodId, isVaultPin, pinMethod } from './lib/vault/pin';

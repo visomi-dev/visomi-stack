@@ -1207,12 +1207,12 @@
         <target>Venció el plazo de reintento de este cambio pendiente. Conserva la copia cifrada, sincroniza y resuelve el cambio explícitamente antes de crear una nueva operación.</target>
       </trans-unit>
       <trans-unit id="vaultPinWarning" datatype="html">
-        <source> Without passkey support, you can choose a 4–6 digit PIN. Someone with a copy of your encrypted storage can try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local unlock works offline in an already signed-in session. </source>
-        <target>Si tu dispositivo no admite passkeys, puedes elegir un PIN de 4 a 6 dígitos. Quien obtenga una copia del almacenamiento cifrado puede probar todos los PIN sin conexión. Ofrece menos protección que una passkey. La configuración inicial requiere conexión; después puedes desbloquear localmente sin conexión dentro de una sesión ya iniciada.</target>
+        <source> Without passkey support, you can choose a six-digit PIN. Someone with a copy of your encrypted storage can try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local unlock works offline in an already signed-in session. </source>
+        <target>Si tu dispositivo no admite passkeys, puedes elegir un PIN de 6 dígitos. Quien obtenga una copia del almacenamiento cifrado puede probar todos los PIN sin conexión. Ofrece menos protección que una passkey. La configuración inicial requiere conexión; después puedes desbloquear localmente sin conexión dentro de una sesión ya iniciada.</target>
       </trans-unit>
       <trans-unit id="vaultPinLength" datatype="html">
-        <source>4 to 6 digits</source>
-        <target>De 4 a 6 dígitos</target>
+        <source>6 digits</source>
+        <target>6 dígitos</target>
       </trans-unit>
       <trans-unit id="vaultPinLabel" datatype="html">
         <source>Local unlock PIN</source>
@@ -1231,8 +1231,8 @@
         <target>Configurar un recurso privado vacío con PIN</target>
       </trans-unit>
       <trans-unit id="vaultPinInvalid" datatype="html">
-        <source>Enter a PIN of 4 to 6 digits. For initial setup, enter the same PIN twice.</source>
-        <target>Introduce un PIN de 4 a 6 dígitos. Para la configuración inicial, introduce el mismo PIN dos veces.</target>
+        <source>Enter a six-digit PIN. For initial setup, enter the same PIN twice.</source>
+        <target>Introduce un PIN de 6 dígitos. Para la configuración inicial, introduce el mismo PIN dos veces.</target>
       </trans-unit>
       <trans-unit id="vaultPanelPinWarning" datatype="html">
         <source>This resource uses a local PIN. A copy of encrypted storage permits offline PIN guessing; PIN protection is weaker than a passkey.</source>
