@@ -160,3 +160,78 @@ describe('actual Chromium PRF device identity custody', () => {
     }
   });
 });
+
+it('rejects a delayed previous identity unlock without replacing a newer unlocked identity', async () => {
+  const page = await browser.newPage();
+
+  try {
+    await prepare(page);
+
+    const result = await page.evaluate(
+      async ({ vector }) => {
+        const { api } = (globalThis as FixtureWindow).fixtureModules;
+        const binding = { ...vector.wrapped.context, method: 'passkey-prf' as const };
+        const storage = await api.IndexedDbVaultStorage.open(indexedDB, binding.ownerId);
+        const custody = new api.DeviceCustody(
+          storage,
+          binding,
+          {
+            secret: async () => new Uint8Array(32).fill(7),
+            cancel: () => undefined,
+          },
+          crypto,
+        );
+
+        await custody.unlock(true);
+
+        const before = await custody.publicKeys();
+        const original = api.BrowserVault.prototype.unlock;
+        let complete!: () => void;
+        let first = true;
+
+        api.BrowserVault.prototype.unlock = function (context) {
+          if (first) {
+            first = false;
+
+            return new Promise<void>((resolve) => {
+              complete = resolve;
+            });
+          }
+
+          return original.call(this, context);
+        };
+
+        try {
+          const old = custody.unlock().then(
+            () => 'accepted',
+            (error: { code: string }) => error.code,
+          );
+
+          custody.lock();
+
+          await custody.unlock();
+
+          const newer = await custody.publicKeys();
+
+          complete();
+          const oldResult = await old;
+          const after = await custody.publicKeys();
+
+          return {
+            oldResult,
+            newerRetained:
+              JSON.stringify(before) === JSON.stringify(newer) && JSON.stringify(newer) === JSON.stringify(after),
+          };
+        } finally {
+          api.BrowserVault.prototype.unlock = original;
+          custody.close();
+        }
+      },
+      { vector },
+    );
+
+    expect(result).toEqual({ oldResult: 'stale-operation', newerRetained: true });
+  } finally {
+    await page.close();
+  }
+}, 60_000);

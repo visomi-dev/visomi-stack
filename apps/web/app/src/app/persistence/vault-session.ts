@@ -1,12 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Service, computed, effect, inject, signal } from '@angular/core';
-import {
-  BrowserVault,
-  DeviceCustody,
-  IndexedDbVaultStorage,
-  PrfUnlock,
-  WebCryptoCipher,
-} from '@visomi-stack/web-shared-vault';
+import { BrowserVault, DeviceCustody, PrfUnlock, WebCryptoCipher } from '@visomi-stack/web-shared-vault';
 import {
   VaultError,
   keyDomainId,
@@ -19,10 +13,13 @@ import {
 
 import { Session } from '../auth/session/session';
 
+import { PersistenceDatabase } from './database';
+
 /** Browser-only key custody bound to the current cloud account, never an automatic login side effect. */
 @Service()
 export class VaultSession {
   private readonly session = inject(Session);
+  private readonly database = inject(PersistenceDatabase);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -76,7 +73,7 @@ export class VaultSession {
     let vault = this.scopes.get(id);
 
     if (!vault) {
-      const storage = await IndexedDbVaultStorage.open(view.indexedDB, context.ownerId);
+      const storage = await this.database.vault(context.ownerId, session.signal);
 
       if (!this.current(epoch, session)) {
         storage.close();
@@ -128,8 +125,7 @@ export class VaultSession {
     }
 
     if (!this.current(epoch, session)) {
-      vault.lock();
-
+      // lock/dispose already invalidated the SDK operation. Do not lock a newer unlock of this cached instance.
       throw new VaultError('stale-operation');
     }
   }
@@ -215,7 +211,7 @@ export class VaultSession {
       throw new VaultError('unavailable');
     }
 
-    const storage = await IndexedDbVaultStorage.open(view.indexedDB, ownerId);
+    const storage = await this.database.vault(ownerId, session.signal);
 
     try {
       const wrapped = await storage.getCurrentKey(ownerId, key);
@@ -251,7 +247,7 @@ export class VaultSession {
     let device = this.devices.get(id);
 
     if (!device) {
-      const storage = await IndexedDbVaultStorage.open(view.indexedDB, binding.ownerId);
+      const storage = await this.database.vault(binding.ownerId, session.signal);
 
       if (!this.current(epoch, session)) {
         storage.close();
@@ -278,8 +274,6 @@ export class VaultSession {
     await device.unlock(provision);
 
     if (!this.current(epoch, session)) {
-      device.lock();
-
       throw new VaultError('stale-operation');
     }
 

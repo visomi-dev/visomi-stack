@@ -117,6 +117,8 @@ async function fixture(generation = 1, schemaVersion = 1) {
 
   return {
     resource: TestBed.inject(ExamplePrivateResource),
+    api,
+    storage,
     target,
     binding,
     envelope,
@@ -160,3 +162,83 @@ it.each([
     expect(f.resource.synchronized()).toBe(false);
   },
 );
+
+it('rejects a late binding lookup before it can reconnect an obsolete vault', async () => {
+  const f = await fixture();
+  let resolve!: (value: WrappingContext) => void;
+
+  f.vault.localBinding.mockImplementationOnce(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  const old = f.resource.unlock(f.target, 'synthetic.example.test', false);
+  const rejected = expect(old).rejects.toMatchObject({ code: 'stale-operation' });
+
+  await vi.waitFor(() => expect(f.vault.localBinding).toHaveBeenCalledTimes(1));
+
+  f.resource.close();
+  resolve(f.binding);
+
+  await rejected;
+
+  expect(f.vault.connect).not.toHaveBeenCalled();
+  expect(f.commit).not.toHaveBeenCalled();
+});
+
+it('rejects every operation for an object other than the explicitly unlocked target', async () => {
+  const f = await fixture();
+
+  await f.resource.unlock(f.target, 'synthetic.example.test', false);
+
+  const target = { ...f.target, objectId: '66666666-6666-4666-8666-666666666666' };
+  const calls = f.api.request.mock.calls.length;
+
+  for (const action of [
+    () => f.resource.save(target, 'Wrong object'),
+    () => f.resource.synchronize(target),
+    () => f.resource.keepPending(target),
+    () => f.resource.useSynchronized(target),
+  ]) {
+    await expect(action()).rejects.toMatchObject({ code: 'stale-operation' });
+  }
+
+  expect(f.api.request.mock.calls).toHaveLength(calls);
+});
+
+it('does not resume an old save after another object is unlocked in the same scope', async () => {
+  const f = await fixture();
+
+  await f.resource.unlock(f.target, 'synthetic.example.test', false);
+
+  let resolve!: (value: undefined) => void;
+
+  f.storage.pending.mockImplementationOnce(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  const old = f.resource.save(f.target, 'Old private draft');
+  const rejected = expect(old).rejects.toMatchObject({ code: 'stale-operation' });
+
+  f.resource.close();
+  f.storage.unit.mockResolvedValueOnce(undefined as never);
+
+  await f.resource.unlock(
+    { ...f.target, objectId: '66666666-6666-4666-8666-666666666666' },
+    'synthetic.example.test',
+    false,
+  );
+
+  const reads = f.vault.readEnvelope.mock.calls.length;
+
+  resolve(undefined);
+
+  await rejected;
+
+  expect(f.vault.readEnvelope.mock.calls).toHaveLength(reads);
+  expect(f.resource.pending()).toBe(false);
+  expect(f.resource.synchronized()).toBe(true);
+});

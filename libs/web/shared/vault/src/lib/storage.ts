@@ -10,6 +10,8 @@ import {
   type WrappedKey,
 } from '@visomi-stack/shared-persistence';
 
+import { VaultDatabase, openDatabase, storageError } from './database';
+
 const storedKeySchema = z.strictObject({
   id: z.string(),
   envelope: wrappedKeySchema,
@@ -20,43 +22,18 @@ const storedUnitSchema = z.strictObject({ id: z.string(), envelope: dataEnvelope
 type StoredKey = z.infer<typeof storedKeySchema>;
 type StoredUnit = z.infer<typeof storedUnitSchema>;
 
-function storageError(error: unknown): VaultError {
-  return new VaultError(error instanceof DOMException && error.name === 'QuotaExceededError' ? 'quota' : 'unavailable');
-}
-
 /** Resolves only after transaction commit; request success alone is not durability. */
 export class IndexedDbVaultStorage implements VaultStorage {
-  private constructor(private readonly database: IDBDatabase) {}
+  private constructor(private readonly database: VaultDatabase) {}
 
   static async open(factory: IDBFactory | undefined, name: string): Promise<IndexedDbVaultStorage> {
     if (!factory) {
       throw new VaultError('unavailable');
     }
 
-    return new Promise((resolve, reject) => {
-      const request = factory.open(`visomi-vault:${name}`, 1);
-      let blocked = false;
+    const database = await openDatabase(new VaultDatabase(name, factory), factory, ['keys', 'units'], 'id');
 
-      request.onupgradeneeded = () => {
-        request.result.createObjectStore('keys', { keyPath: 'id' });
-        request.result.createObjectStore('units', { keyPath: 'id' });
-      };
-      request.onblocked = () => {
-        blocked = true;
-        reject(new VaultError('unavailable'));
-      };
-      request.onerror = () => reject(storageError(request.error));
-      request.onsuccess = () => {
-        if (blocked) {
-          request.result.close();
-
-          return;
-        }
-
-        request.result.onversionchange = () => request.result.close();
-        resolve(new IndexedDbVaultStorage(request.result));
-      };
-    });
+    return new IndexedDbVaultStorage(database);
   }
 
   async getKey(id: string): Promise<WrappedKey | undefined> {
@@ -76,46 +53,27 @@ export class IndexedDbVaultStorage implements VaultStorage {
   }
 
   /** Active binding selection cannot follow cloud metadata back to a locally retained historical wrapper. */
-  getCurrentKey(ownerId: string, key: KeyDomain): Promise<WrappedKey | undefined> {
+  async getCurrentKey(ownerId: string, key: KeyDomain): Promise<WrappedKey | undefined> {
     const prefix = keyDomainId(ownerId, { ...key, generation: 1 }).slice(0, -2);
 
-    return new Promise((resolve, reject) => {
-      let tx: IDBTransaction;
+    try {
+      const value = await this.database.transaction('r', this.database.keys, async () => {
+        const rows = await this.database.keys.where(':id').startsWith(prefix).toArray();
+        let value: WrappedKey | undefined;
 
-      try {
-        tx = this.database.transaction('keys', 'readonly');
-      } catch (error) {
-        reject(storageError(error));
+        for (const row of rows) {
+          if (typeof row.id !== 'string' || !row.id.startsWith(prefix)) {
+            continue;
+          }
 
-        return;
-      }
-
-      let value: WrappedKey | undefined;
-      let failure: VaultError | undefined;
-      const request = tx.objectStore('keys').openCursor();
-
-      tx.oncomplete = () => resolve(value);
-      tx.onabort = tx.onerror = () => reject(failure ?? storageError(tx.error));
-      request.onsuccess = () => {
-        const cursor = request.result;
-
-        if (!cursor) {
-          return;
-        }
-
-        if (typeof cursor.key === 'string' && cursor.key.startsWith(prefix)) {
-          const parsed = storedKeySchema.safeParse(cursor.value);
+          const parsed = storedKeySchema.safeParse(row);
 
           if (
             !parsed.success ||
-            parsed.data.id !== cursor.key ||
-            keyDomainId(parsed.data.envelope.context.ownerId, parsed.data.envelope.context.key) !== cursor.key ||
+            keyDomainId(parsed.data.envelope.context.ownerId, parsed.data.envelope.context.key) !== row.id ||
             parsed.data.envelope.context.key.generation > key.generation
           ) {
-            failure = new VaultError('corrupt');
-            tx.abort();
-
-            return;
+            throw new VaultError('corrupt');
           }
 
           if (parsed.data.envelope.context.key.generation === key.generation) {
@@ -123,9 +81,13 @@ export class IndexedDbVaultStorage implements VaultStorage {
           }
         }
 
-        cursor.continue();
-      };
-    });
+        return value;
+      });
+
+      return value;
+    } catch (error) {
+      throw storageError(error);
+    }
   }
 
   async putKey(id: string, envelope: WrappedKey, exhausted = false): Promise<void> {
@@ -223,124 +185,61 @@ export class IndexedDbVaultStorage implements VaultStorage {
       throw new VaultError('corrupt');
     }
 
-    await new Promise<void>((resolve, reject) => {
-      let tx: IDBTransaction;
+    try {
+      await this.database.transaction('rw', this.database.keys, this.database.units, async () => {
+        const existing = await this.database.keys.get(key.id);
 
-      try {
-        tx = this.database.transaction(['keys', 'units'], 'readwrite');
-      } catch {
-        reject(new VaultError('unavailable'));
-
-        return;
-      }
-      let failure: VaultError | undefined;
-
-      tx.oncomplete = () => resolve();
-      tx.onabort = tx.onerror = () => reject(failure ?? storageError(tx.error));
-      const keys = tx.objectStore('keys');
-      const request = keys.get(key.id);
-      const fail = () => {
-        failure = new VaultError('revision-conflict');
-        tx.abort();
-      };
-
-      request.onsuccess = () => {
-        if (request.result !== undefined) {
-          fail();
-
-          return;
+        if (existing !== undefined) {
+          throw new VaultError('revision-conflict');
         }
 
-        const store = tx.objectStore('units');
-        let index = 0;
-        const apply = () => {
-          const unit = parsedUnits.data[index++];
+        for (const unit of parsedUnits.data) {
+          const stored = await this.database.units.get(unit.id);
 
-          if (!unit) {
-            keys.put(parsedKey.data);
-
-            return;
+          if (stored !== undefined) {
+            throw new VaultError('revision-conflict');
           }
 
-          const existing = store.get(unit.id);
+          await this.database.units.put(unit);
+        }
 
-          existing.onsuccess = () => {
-            if (existing.result !== undefined) {
-              fail();
-
-              return;
-            }
-
-            store.put(unit);
-            apply();
-          };
-        };
-
-        apply();
-      };
-    });
+        await this.database.keys.put(parsedKey.data);
+      });
+    } catch (error) {
+      throw storageError(error);
+    }
   }
 
   close(): void {
     this.database.close();
   }
 
-  private read<T>(store: string, id: string): Promise<T | undefined> {
-    return new Promise((resolve, reject) => {
-      let transaction: IDBTransaction;
+  private async read<T>(store: string, id: string): Promise<T | undefined> {
+    try {
+      const value = await this.database.table<T, string>(store).get(id);
 
-      try {
-        transaction = this.database.transaction(store, 'readonly');
-      } catch (error) {
-        reject(storageError(error));
-
-        return;
-      }
-
-      const request = transaction.objectStore(store).get(id);
-      let value: T | undefined;
-
-      request.onsuccess = () => {
-        value = request.result as T | undefined;
-      };
-      transaction.oncomplete = () => resolve(value);
-      transaction.onabort = transaction.onerror = () => reject(storageError(transaction.error));
-    });
+      return value;
+    } catch (error) {
+      throw storageError(error);
+    }
   }
 
-  private change<T>(store: string, id: string, update: (current: T | undefined) => T | undefined): Promise<void> {
-    return new Promise((resolve, reject) => {
-      let transaction: IDBTransaction;
+  private async change<T>(store: string, id: string, update: (current: T | undefined) => T | undefined): Promise<void> {
+    const table = this.database.table<T, string>(store);
 
-      try {
-        transaction = this.database.transaction(store, 'readwrite');
-      } catch (error) {
-        reject(storageError(error));
+    try {
+      await this.database.transaction('rw', table, async () => {
+        const current = await table.get(id);
+        const next = update(current);
 
-        return;
-      }
-
-      const objectStore = transaction.objectStore(store);
-      const request = objectStore.get(id);
-      let failure: unknown;
-
-      request.onsuccess = () => {
-        try {
-          const value = update(request.result as T | undefined);
-
-          if (value === undefined) {
-            objectStore.delete(id);
-          } else {
-            objectStore.put(value);
-          }
-        } catch (error) {
-          failure = error;
-          transaction.abort();
+        if (next === undefined) {
+          await table.delete(id);
+        } else {
+          await table.put(next);
         }
-      };
-      transaction.oncomplete = () => resolve();
-      transaction.onabort = transaction.onerror = () =>
-        reject(failure instanceof VaultError ? failure : storageError(transaction.error));
-    });
+      });
+    } catch (error) {
+      throw storageError(error);
+    }
   }
 }

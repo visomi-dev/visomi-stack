@@ -167,3 +167,31 @@ describe('vault account lifecycle', () => {
     await expect(f.vault.connect(binding, 'synthetic.example.test')).rejects.toMatchObject({ code: 'locked' });
   });
 });
+
+it('does not let a late previous connect lock a newer explicit unlock of the same cached scope', async () => {
+  const f = fixture();
+  let resolve!: () => void;
+  const unlock = vi.spyOn(BrowserVault.prototype, 'unlock');
+
+  unlock.mockImplementationOnce(
+    () =>
+      new Promise<void>((done) => {
+        resolve = done;
+      }),
+  );
+  const old = f.vault.connect(binding, 'synthetic.example.test');
+  const rejected = expect(old).rejects.toMatchObject({ code: 'stale-operation' });
+
+  await vi.waitFor(() => expect(unlock).toHaveBeenCalledTimes(1));
+
+  f.vault.lock();
+
+  await f.vault.connect(binding, 'synthetic.example.test');
+
+  expect(f.vault.ready()).toBe(true);
+  resolve();
+
+  await rejected;
+
+  expect(f.vault.ready()).toBe(true);
+});

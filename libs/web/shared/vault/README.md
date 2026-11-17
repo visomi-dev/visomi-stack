@@ -21,6 +21,13 @@ retain an encrypted pending copy. Only exact authenticated history acknowledges 
 `resolve` is an explicit domain/user rebase or discard decision, never retry logic.
 Consumers own cloud-session/lock cancellation and historical-generation key access.
 The Angular adapter demonstrates those boundaries in the development example.
+The IndexedDB adapters use typed Dexie transactions with optimistic caching and
+implicit reopening disabled. Native version-one schemas, keys and ciphertext remain
+unchanged. Dynamic opening validates existing formats without automatic schema
+patching; unsupported formats fail closed. Crypto and HTTP stay outside database
+transactions. The Angular lazy database facade handles browser/account/context
+checks; consumers own connection cleanup. See the consumer guide for route reuse,
+late responses, canceled navigation and encrypted-outbox preservation.
 
 Encrypted exports are bounded batches; restore is atomic into an empty destination
 and remains locked. Restored/user-recovered wrappers exhaust the old generation's

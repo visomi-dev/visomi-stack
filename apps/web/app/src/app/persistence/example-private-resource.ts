@@ -6,7 +6,7 @@ import {
   createPrfCredential,
   deviceCustodyContext,
   encodeBytes,
-  IndexedDbReplicaStorage,
+  type IndexedDbReplicaStorage,
   SyncReplica,
   replicaId,
   type DeviceCustody,
@@ -27,6 +27,7 @@ import {
 import { Session } from '../auth/session/session';
 
 import { PersistenceHttp } from './http';
+import { PersistenceDatabase } from './database';
 import { VaultSession } from './vault-session';
 
 export type ExampleTarget = { tenantId: string; scopeId: string; objectId: string };
@@ -49,6 +50,7 @@ const rosterSchema = z.object({
 @Service({ autoProvided: false })
 export class ExamplePrivateResource {
   private readonly api = inject(PersistenceHttp);
+  private readonly database = inject(PersistenceDatabase);
   readonly vault = inject(VaultSession);
   private readonly session = inject(Session);
   private readonly document = inject(DOCUMENT);
@@ -68,10 +70,16 @@ export class ExamplePrivateResource {
   private custody: DeviceCustody | undefined;
   private binding: WrappingContext | undefined;
   private controller = new AbortController();
+  private target: ExampleTarget | undefined;
+  private version = 0;
 
   async unlock(target: ExampleTarget, rpId: string, initialize: boolean): Promise<void> {
     this.close();
+    this.vault.lock(false);
     const signal = this.controller.signal;
+
+    this.target = { ...target };
+    this.version = this.session.operationVersion();
     const view = this.document.defaultView;
     const ownerId = this.session.user()?.id;
 
@@ -85,12 +93,15 @@ export class ExamplePrivateResource {
     try {
       const raw = await this.api.request(`${path}/devices`, undefined, signal);
 
+      this.current(signal);
       registry = rosterSchema.parse(raw);
     } catch (error) {
       if (!(error instanceof HttpErrorResponse) || error.error?.error !== 'key_scope_uninitialized') {
         throw error;
       }
     }
+
+    this.current(signal);
 
     if (registry?.phase === 'rotating') {
       throw new VaultError('unavailable');
@@ -116,6 +127,8 @@ export class ExamplePrivateResource {
 
     const existing = await this.vault.localBinding(key);
 
+    this.current(signal);
+
     if (!existing && (!initialize || registry)) {
       throw new VaultError('recovery-required');
     }
@@ -128,6 +141,7 @@ export class ExamplePrivateResource {
         AbortSignal.any([signal, this.session.cancellation()]),
       );
 
+      this.current(signal);
       binding = {
         key,
         ownerId,
@@ -140,13 +154,11 @@ export class ExamplePrivateResource {
 
     await this.vault.connect(binding, rpId, !existing);
 
-    if (signal.aborted) {
-      this.vault.lock();
-
-      throw new VaultError('stale-operation');
-    }
+    this.current(signal);
 
     const custodyExists = await this.vault.localBinding(deviceCustodyContext(binding).key);
+
+    this.current(signal);
 
     if (!custodyExists && registry) {
       throw new VaultError('recovery-required');
@@ -154,24 +166,31 @@ export class ExamplePrivateResource {
 
     const custody = await this.vault.device(binding, rpId, !custodyExists);
 
-    if (signal.aborted) {
-      custody.lock();
-
-      throw new VaultError('stale-operation');
-    }
+    this.current(signal);
 
     this.custody = custody;
     this.binding = binding;
 
     if (!registry) {
       const keys = await custody.publicKeys();
+
+      this.current(signal);
+
       const requested = await this.api.request(`${path}/devices/request`, { deviceId: binding.deviceId, keys }, signal);
+
+      this.current(signal);
+
       const proof = await custody.prove(deviceChallengeSchema.parse(requested));
+
+      this.current(signal);
 
       await this.api.request(`${path}/devices/bootstrap`, proof, signal);
 
+      this.current(signal);
+
       const roster = await this.api.request(`${path}/devices`, undefined, signal);
 
+      this.current(signal);
       registry = rosterSchema.parse(roster);
     }
 
@@ -180,13 +199,15 @@ export class ExamplePrivateResource {
     );
     const keys = await custody.publicKeys();
 
+    this.current(signal);
+
     if (!device || device.signing !== keys.signing || device.encryption !== keys.encryption) {
       this.close();
 
       throw new VaultError('recovery-required');
     }
 
-    const storage = await IndexedDbReplicaStorage.open(view.indexedDB, ownerId);
+    const storage = await this.database.replica(ownerId, signal);
 
     if (signal.aborted) {
       storage.close();
@@ -207,6 +228,7 @@ export class ExamplePrivateResource {
       },
       view.crypto,
       (envelope) => {
+        this.current(signal);
         this.validate(envelope);
 
         return this.vault.readEnvelope(envelope, false);
@@ -220,8 +242,10 @@ export class ExamplePrivateResource {
   }
 
   async save(target: ExampleTarget, value: string): Promise<void> {
-    const { storage, replica, id } = this.active();
+    const { storage, replica, id, signal } = this.active(target);
     const pending = await storage.pending(id);
+
+    this.current(signal);
 
     if (pending) {
       throw new VaultError('revision-conflict');
@@ -229,17 +253,25 @@ export class ExamplePrivateResource {
 
     const prepared = await this.prepare(target, value);
 
+    this.current(signal);
+
     await replica.enqueue(prepared);
 
+    this.current(signal);
+
     await this.vault.readEnvelope(prepared.envelope);
+
+    this.current(signal);
 
     this.pending.set(true);
     this.synchronized.set(false);
   }
 
   async keepPending(target: ExampleTarget): Promise<void> {
-    const { storage, replica, id } = this.active();
+    const { storage, replica, id, signal } = this.active(target);
     const pending = await storage.pending(id);
+
+    this.current(signal);
 
     if (!pending || pending.envelope.context.objectId !== target.objectId) {
       throw new VaultError('revision-conflict');
@@ -247,13 +279,21 @@ export class ExamplePrivateResource {
 
     await this.show(pending.envelope, target);
 
+    this.current(signal);
+
     const value = this.vault.plaintext();
 
-    await this.pullAll();
+    await this.pullAll(target);
+
+    this.current(signal);
 
     const replacement = await this.prepare(target, value);
 
+    this.current(signal);
+
     await replica.resolve(pending.operationId, replacement);
+
+    this.current(signal);
 
     this.conflict.set(false);
 
@@ -261,21 +301,29 @@ export class ExamplePrivateResource {
   }
 
   async useSynchronized(target: ExampleTarget): Promise<void> {
-    const { storage, replica, id } = this.active();
+    const { storage, replica, id, signal } = this.active(target);
     const pending = await storage.pending(id);
+
+    this.current(signal);
 
     if (!pending || pending.envelope.context.objectId !== target.objectId) {
       throw new VaultError('revision-conflict');
     }
 
     // Network/integrity failures preserve the pending copy until a verified server version is available.
-    await this.pullAll();
+    await this.pullAll(target);
+
+    this.current(signal);
 
     await replica.resolve(pending.operationId, null);
+
+    this.current(signal);
 
     this.conflict.set(false);
 
     const current = await storage.unit(id, target.objectId);
+
+    this.current(signal);
 
     if (current && current.context.kind !== 'tombstone') {
       await this.show(current, target);
@@ -283,19 +331,24 @@ export class ExamplePrivateResource {
       this.vault.clearDisplay();
     }
 
+    this.current(signal);
     this.pending.set(false);
     this.synchronized.set(true);
   }
 
   async synchronize(target: ExampleTarget, flush = true): Promise<void> {
-    const { storage, replica, id } = this.active();
+    const { storage, replica, id, signal } = this.active(target);
     const pending = await storage.pending(id);
+
+    this.current(signal);
 
     this.pending.set(Boolean(pending));
 
     if (pending && !flush) {
       if (pending.envelope.context.objectId === target.objectId) {
         await this.show(pending.envelope, target);
+
+        this.current(signal);
       }
 
       return;
@@ -304,10 +357,15 @@ export class ExamplePrivateResource {
     try {
       if (pending) {
         await replica.flush();
+
+        this.current(signal);
       } else {
-        await this.pullAll();
+        await this.pullAll(target);
+
+        this.current(signal);
       }
     } catch (error) {
+      this.current(signal);
       const code = error instanceof HttpErrorResponse ? error.error?.error : (error as { code?: unknown })?.code;
 
       if (
@@ -327,12 +385,15 @@ export class ExamplePrivateResource {
     }
     const value = await storage.unit(id, target.objectId);
 
+    this.current(signal);
+
     if (value && value.context.kind !== 'tombstone') {
       await this.show(value, target);
     } else {
       this.vault.clearDisplay();
     }
 
+    this.current(signal);
     this.pending.set(false);
     this.synchronized.set(true);
     this.conflict.set(false);
@@ -349,15 +410,22 @@ export class ExamplePrivateResource {
     this.custody?.lock();
     this.custody = undefined;
     this.binding = undefined;
+    this.target = undefined;
     this.pending.set(false);
     this.synchronized.set(false);
   }
 
   private async prepare(target: ExampleTarget, value: string) {
-    const { storage, binding, custody, view, id } = this.active();
+    const { storage, binding, custody, view, id, signal } = this.active(target);
     const version = this.session.operationVersion();
     const pin = await storage.pin(id);
+
+    this.current(signal);
+
     const previous = await storage.unit(id, target.objectId);
+
+    this.current(signal);
+
     const envelope = await this.vault.prepare(
       {
         key: binding.key,
@@ -370,6 +438,8 @@ export class ExamplePrivateResource {
       },
       value,
     );
+
+    this.current(signal);
     const operationId = createOperationId(view.crypto);
     const body = {
       protocol: 1 as const,
@@ -379,6 +449,9 @@ export class ExamplePrivateResource {
       envelope,
     };
     const bodyHash = await view.crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(body)));
+
+    this.current(signal);
+
     const authorization = await custody.sign({
       key: binding.key,
       deviceId: binding.deviceId,
@@ -388,6 +461,8 @@ export class ExamplePrivateResource {
       bodyHash: encodeBytes(new Uint8Array(bodyHash)),
     });
 
+    this.current(signal);
+
     if (version !== this.session.operationVersion() || !this.vault.ready()) {
       throw new VaultError('stale-operation');
     }
@@ -395,12 +470,14 @@ export class ExamplePrivateResource {
     return syncWriteSchema.parse({ ...body, authorization });
   }
 
-  private async pullAll(): Promise<void> {
-    const { replica } = this.active();
+  private async pullAll(target: ExampleTarget): Promise<void> {
+    const { replica, signal } = this.active(target);
     let more: boolean;
 
     do {
       const page = await replica.pull();
+
+      this.current(signal);
 
       more = page.more;
     } while (more);
@@ -427,6 +504,8 @@ export class ExamplePrivateResource {
   }
 
   private async show(envelope: DataEnvelope, target: ExampleTarget): Promise<void> {
+    const { signal } = this.active(target);
+
     this.validate(envelope);
 
     if (envelope.context.objectId !== target.objectId) {
@@ -434,9 +513,11 @@ export class ExamplePrivateResource {
     }
 
     await this.vault.readEnvelope(envelope);
+
+    this.current(signal);
   }
 
-  private active() {
+  private active(target: ExampleTarget) {
     const storage = this.storage;
     const replica = this.replica;
     const binding = this.binding;
@@ -456,7 +537,37 @@ export class ExamplePrivateResource {
       throw new VaultError('locked');
     }
 
-    return { storage, replica, binding, custody, view, id: replicaId(binding.ownerId, binding.key, binding.key.scope) };
+    this.current(this.controller.signal);
+
+    if (
+      !this.target ||
+      target.tenantId !== this.target.tenantId ||
+      target.scopeId !== this.target.scopeId ||
+      target.objectId !== this.target.objectId
+    ) {
+      throw new VaultError('stale-operation');
+    }
+
+    return {
+      storage,
+      replica,
+      binding,
+      custody,
+      view,
+      signal: this.controller.signal,
+      id: replicaId(binding.ownerId, binding.key, binding.key.scope),
+    };
+  }
+
+  private current(signal: AbortSignal): void {
+    if (
+      signal.aborted ||
+      signal !== this.controller.signal ||
+      !this.session.full() ||
+      this.session.operationVersion() !== this.version
+    ) {
+      throw new VaultError('stale-operation');
+    }
   }
 
   private path(target: ExampleTarget) {

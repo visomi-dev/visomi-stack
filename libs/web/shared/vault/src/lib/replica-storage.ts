@@ -9,6 +9,7 @@ import {
   type SyncEvent,
 } from '@visomi-stack/shared-persistence';
 
+import { ReplicaDatabase, openDatabase, storageError } from './database';
 import type { PendingWrite, ReplicaPin, ReplicaStorage } from './replica';
 
 const pinSchema = syncHeadSchema.safeExtend({
@@ -25,38 +26,21 @@ const same = (left: ReplicaPin, right: ReplicaPin) =>
 
 /** Ciphertext and allowlisted protocol metadata only. Pins and unit revisions commit atomically across tabs. */
 export class IndexedDbReplicaStorage implements ReplicaStorage {
-  private constructor(private readonly database: IDBDatabase) {}
+  private constructor(private readonly database: ReplicaDatabase) {}
 
   static async open(factory: IDBFactory | undefined, ownerId: string): Promise<IndexedDbReplicaStorage> {
     if (!factory) {
       throw new VaultError('unavailable');
     }
 
-    return new Promise((resolve, reject) => {
-      const request = factory.open(`visomi-sync:${ownerId}`, 1);
-      let blocked = false;
+    const database = await openDatabase(
+      new ReplicaDatabase(ownerId, factory),
+      factory,
+      ['pins', 'units', 'outbox'],
+      null,
+    );
 
-      request.onupgradeneeded = () => {
-        for (const name of ['pins', 'units', 'outbox']) {
-          request.result.createObjectStore(name);
-        }
-      };
-      request.onerror = () => reject(new VaultError('unavailable'));
-      request.onblocked = () => {
-        blocked = true;
-        reject(new VaultError('unavailable'));
-      };
-      request.onsuccess = () => {
-        if (blocked) {
-          request.result.close();
-
-          return;
-        }
-
-        request.result.onversionchange = () => request.result.close();
-        resolve(new IndexedDbReplicaStorage(request.result));
-      };
-    });
+    return new IndexedDbReplicaStorage(database);
   }
 
   async pin(id: string): Promise<ReplicaPin> {
@@ -107,226 +91,164 @@ export class IndexedDbReplicaStorage implements ReplicaStorage {
     return result.data.value;
   }
 
-  enqueue(id: string, value: PendingWrite): Promise<void> {
+  async enqueue(id: string, value: PendingWrite): Promise<void> {
     const parsed = syncWriteSchema.safeParse(value);
 
     if (!parsed.success) {
       throw new VaultError('corrupt');
     }
 
-    return this.transaction(['outbox'], (tx, fail) => {
-      const store = tx.objectStore('outbox');
-      const request = store.get(id);
+    await this.transaction(async () => {
+      const raw = await this.database.outbox.get(id);
+      const current = outboxSchema.safeParse(raw);
 
-      request.onsuccess = () => {
-        const current = outboxSchema.safeParse(request.result);
+      if (
+        raw !== undefined &&
+        (!current.success || JSON.stringify(current.data.value) !== JSON.stringify(parsed.data))
+      ) {
+        throw new VaultError('revision-conflict');
+      }
 
-        if (
-          request.result !== undefined &&
-          (!current.success || JSON.stringify(current.data.value) !== JSON.stringify(parsed.data))
-        ) {
-          fail(new VaultError('revision-conflict'));
-
-          return;
-        }
-
-        store.put({ value: parsed.data, seen: current.success ? current.data.seen : false }, id);
-      };
+      await this.database.outbox.put({ value: parsed.data, seen: current.success ? current.data.seen : false }, id);
     });
   }
 
-  acknowledged(id: string, operationId: string): Promise<void> {
-    return this.transaction(['outbox'], (tx, fail) => {
-      const store = tx.objectStore('outbox');
-      const request = store.get(id);
+  async acknowledged(id: string, operationId: string): Promise<void> {
+    await this.transaction(async () => {
+      const raw = await this.database.outbox.get(id);
+      const current = outboxSchema.safeParse(raw);
 
-      request.onsuccess = () => {
-        const current = outboxSchema.safeParse(request.result);
+      if (!current.success || current.data.value.operationId !== operationId || !current.data.seen) {
+        throw new VaultError('corrupt');
+      }
 
-        if (!current.success || current.data.value.operationId !== operationId || !current.data.seen) {
-          fail(new VaultError('corrupt'));
-
-          return;
-        }
-
-        store.delete(id);
-      };
+      await this.database.outbox.delete(id);
     });
   }
 
-  resolve(id: string, operationId: string, replacement: PendingWrite | null): Promise<void> {
+  async resolve(id: string, operationId: string, replacement: PendingWrite | null): Promise<void> {
     const parsed = replacement === null ? null : syncWriteSchema.safeParse(replacement);
 
     if (parsed && !parsed.success) {
       throw new VaultError('corrupt');
     }
 
-    return this.transaction(['outbox', 'pins', 'units'], (tx, fail) => {
-      const outbox = tx.objectStore('outbox');
-      const request = outbox.get(id);
+    await this.transaction(async () => {
+      const raw = await this.database.outbox.get(id);
+      const pending = outboxSchema.safeParse(raw);
 
-      request.onsuccess = () => {
-        const pending = outboxSchema.safeParse(request.result);
+      if (!pending.success || pending.data.value.operationId !== operationId) {
+        throw new VaultError('revision-conflict');
+      }
 
-        if (!pending.success || pending.data.value.operationId !== operationId) {
-          fail(new VaultError('revision-conflict'));
+      if (!parsed) {
+        await this.database.outbox.delete(id);
 
-          return;
-        }
+        return;
+      }
 
-        if (!parsed) {
-          outbox.delete(id);
+      if (!parsed.success) {
+        throw new VaultError('corrupt');
+      }
 
-          return;
-        }
+      const value = parsed.data;
+      const before = pending.data.value.envelope.context;
+      const after = value.envelope.context;
 
-        if (!parsed.success) {
-          fail(new VaultError('corrupt'));
+      if (
+        value.operationId === operationId ||
+        before.objectId !== after.objectId ||
+        JSON.stringify(before.target) !== JSON.stringify(after.target) ||
+        before.key.product !== after.key.product ||
+        before.key.domain !== after.key.domain ||
+        JSON.stringify(before.key.scope) !== JSON.stringify(after.key.scope)
+      ) {
+        throw new VaultError('revision-conflict');
+      }
 
-          return;
-        }
+      const pinned = await this.database.pins.get(id);
+      const pin = pinned === undefined ? initial() : pinSchema.safeParse(pinned).data;
 
-        const value = parsed.data;
-        const before = pending.data.value.envelope.context;
-        const after = value.envelope.context;
+      if (
+        !pin ||
+        value.head.cursor !== pin.cursor ||
+        value.head.checkpoint !== pin.checkpoint ||
+        value.envelope.context.previousCheckpoint !== pin.checkpoint ||
+        value.envelope.context.key.generation !== pin.generation ||
+        value.authorization.epoch !== pin.epoch ||
+        value.envelope.context.revision !== value.expectedRevision + 1
+      ) {
+        throw new VaultError('revision-conflict');
+      }
 
-        if (
-          value.operationId === operationId ||
-          before.objectId !== after.objectId ||
-          JSON.stringify(before.target) !== JSON.stringify(after.target) ||
-          before.key.product !== after.key.product ||
-          before.key.domain !== after.key.domain ||
-          JSON.stringify(before.key.scope) !== JSON.stringify(after.key.scope)
-        ) {
-          fail(new VaultError('revision-conflict'));
+      const unit = await this.database.units.get(JSON.stringify([id, after.objectId]));
+      const current = dataEnvelopeSchema.safeParse(unit);
 
-          return;
-        }
+      if (
+        (unit !== undefined && !current.success) ||
+        value.expectedRevision !== (current.success ? current.data.context.revision : 0)
+      ) {
+        throw new VaultError('revision-conflict');
+      }
 
-        const pinned = tx.objectStore('pins').get(id);
-
-        pinned.onsuccess = () => {
-          const pin = pinned.result === undefined ? initial() : pinSchema.safeParse(pinned.result).data;
-
-          if (
-            !pin ||
-            value.head.cursor !== pin.cursor ||
-            value.head.checkpoint !== pin.checkpoint ||
-            value.envelope.context.previousCheckpoint !== pin.checkpoint ||
-            value.envelope.context.key.generation !== pin.generation ||
-            value.authorization.epoch !== pin.epoch ||
-            value.envelope.context.revision !== value.expectedRevision + 1
-          ) {
-            fail(new VaultError('revision-conflict'));
-
-            return;
-          }
-
-          const unit = tx.objectStore('units').get(JSON.stringify([id, after.objectId]));
-
-          unit.onsuccess = () => {
-            const current = dataEnvelopeSchema.safeParse(unit.result);
-
-            if (
-              (unit.result !== undefined && !current.success) ||
-              value.expectedRevision !== (current.success ? current.data.context.revision : 0)
-            ) {
-              fail(new VaultError('revision-conflict'));
-
-              return;
-            }
-
-            outbox.put({ value, seen: false }, id);
-          };
-        };
-      };
+      await this.database.outbox.put({ value, seen: false }, id);
     });
   }
 
-  commit(id: string, expected: ReplicaPin, next: ReplicaPin, events: readonly SyncEvent[]): Promise<void> {
+  async commit(id: string, expected: ReplicaPin, next: ReplicaPin, events: readonly SyncEvent[]): Promise<void> {
     const parsed = pinSchema.safeParse(next);
 
     if (!parsed.success) {
       throw new VaultError('corrupt');
     }
 
-    return this.transaction(['pins', 'units', 'outbox'], (tx, fail) => {
-      const pins = tx.objectStore('pins');
-      const request = pins.get(id);
+    await this.transaction(async () => {
+      const raw = await this.database.pins.get(id);
+      const current = raw === undefined ? initial() : pinSchema.safeParse(raw).data;
 
-      request.onsuccess = () => {
-        const current = request.result === undefined ? initial() : pinSchema.safeParse(request.result).data;
+      if (!current || !same(current, expected)) {
+        throw new VaultError('revision-conflict');
+      }
 
-        if (!current || !same(current, expected)) {
-          fail(new VaultError('revision-conflict'));
+      const outbox = await this.database.outbox.get(id);
+      const pending = outboxSchema.safeParse(outbox);
 
-          return;
+      if (outbox !== undefined && !pending.success) {
+        throw new VaultError('corrupt');
+      }
+
+      if (
+        pending.success &&
+        events.some(
+          (event) => serializeDataEnvelope(event.envelope) === serializeDataEnvelope(pending.data.value.envelope),
+        )
+      ) {
+        await this.database.outbox.put({ ...pending.data, seen: true }, id);
+      }
+
+      for (const event of events) {
+        const envelope = dataEnvelopeSchema.safeParse(event.envelope);
+
+        if (!envelope.success) {
+          throw new VaultError('corrupt');
         }
 
-        const outbox = tx.objectStore('outbox');
-        const pendingRequest = outbox.get(id);
+        const key = JSON.stringify([id, envelope.data.context.objectId]);
+        const existing = await this.database.units.get(key);
+        const stored = dataEnvelopeSchema.safeParse(existing);
 
-        pendingRequest.onsuccess = () => {
-          const pending = outboxSchema.safeParse(pendingRequest.result);
+        if (
+          (existing !== undefined && !stored.success) ||
+          envelope.data.context.revision !== (stored.success ? stored.data.context.revision : 0) + 1 ||
+          (stored.success && envelope.data.context.key.generation < stored.data.context.key.generation)
+        ) {
+          throw new VaultError('revision-conflict');
+        }
 
-          if (pendingRequest.result !== undefined && !pending.success) {
-            fail(new VaultError('corrupt'));
+        await this.database.units.put(envelope.data, key);
+      }
 
-            return;
-          }
-
-          if (
-            pending.success &&
-            events.some(
-              (event) => serializeDataEnvelope(event.envelope) === serializeDataEnvelope(pending.data.value.envelope),
-            )
-          ) {
-            outbox.put({ ...pending.data, seen: true }, id);
-          }
-
-          let index = 0;
-          const apply = () => {
-            const event = events[index++];
-
-            if (!event) {
-              pins.put(parsed.data, id);
-
-              return;
-            }
-
-            const envelope = dataEnvelopeSchema.safeParse(event.envelope);
-
-            if (!envelope.success) {
-              fail(new VaultError('corrupt'));
-
-              return;
-            }
-
-            const key = JSON.stringify([id, envelope.data.context.objectId]);
-            const units = tx.objectStore('units');
-            const existing = units.get(key);
-
-            existing.onsuccess = () => {
-              const stored = dataEnvelopeSchema.safeParse(existing.result);
-
-              if (
-                (existing.result !== undefined && !stored.success) ||
-                envelope.data.context.revision !== (stored.success ? stored.data.context.revision : 0) + 1 ||
-                (stored.success && envelope.data.context.key.generation < stored.data.context.key.generation)
-              ) {
-                fail(new VaultError('revision-conflict'));
-
-                return;
-              }
-
-              units.put(envelope.data, key);
-              apply();
-            };
-          };
-
-          apply();
-        };
-      };
+      await this.database.pins.put(parsed.data, id);
     });
   }
 
@@ -334,57 +256,22 @@ export class IndexedDbReplicaStorage implements ReplicaStorage {
     this.database.close();
   }
 
-  private read(store: string, id: string): Promise<unknown> {
-    return new Promise((resolve, reject) => {
-      let tx: IDBTransaction;
+  private async read(store: string, id: string): Promise<unknown> {
+    try {
+      const value = await this.database.table<unknown, string>(store).get(id);
 
-      try {
-        tx = this.database.transaction(store, 'readonly');
-      } catch {
-        reject(new VaultError('unavailable'));
-
-        return;
-      }
-      const request = tx.objectStore(store).get(id);
-      let value: unknown;
-
-      request.onsuccess = () => {
-        value = request.result;
-      };
-      tx.oncomplete = () => resolve(value);
-      tx.onabort = tx.onerror = () => reject(new VaultError('unavailable'));
-    });
+      return value;
+    } catch (error) {
+      throw storageError(error);
+    }
   }
 
-  private transaction(
-    stores: string[],
-    work: (tx: IDBTransaction, fail: (error: VaultError) => void) => void,
-  ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      let tx: IDBTransaction;
-
-      try {
-        tx = this.database.transaction(stores, 'readwrite');
-      } catch {
-        reject(new VaultError('unavailable'));
-
-        return;
-      }
-      let failure: VaultError | undefined;
-
-      tx.oncomplete = () => resolve();
-      tx.onabort = tx.onerror = () =>
-        reject(failure ?? new VaultError(tx.error?.name === 'QuotaExceededError' ? 'quota' : 'unavailable'));
-      const fail = (error: VaultError) => {
-        failure = error;
-        tx.abort();
-      };
-
-      try {
-        work(tx, fail);
-      } catch {
-        fail(new VaultError('corrupt'));
-      }
-    });
+  private async transaction(work: () => Promise<void>): Promise<void> {
+    try {
+      // Only IndexedDB promises belong here: AEAD and HTTP complete before entering this transaction.
+      await this.database.transaction('rw', this.database.pins, this.database.units, this.database.outbox, work);
+    } catch (error) {
+      throw storageError(error);
+    }
   }
 }

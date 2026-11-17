@@ -80,14 +80,13 @@ export class DeviceCustody {
 
   async unlock(provision = false): Promise<void> {
     this.identity = undefined;
-
-    if (provision) {
-      await this.vault.initialize(this.binding);
-    } else {
-      await this.vault.unlock(this.binding);
-    }
-
+    // Starting the vault operation synchronously emits its initial lock. Capture before yielding to other operations.
+    const unlocking = provision ? this.vault.initialize(this.binding) : this.vault.unlock(this.binding);
     const epoch = this.epoch;
+
+    await unlocking;
+
+    this.current(epoch);
 
     if (provision) {
       const identity = await provisionDeviceIdentity(this.crypto, async (material) => {
