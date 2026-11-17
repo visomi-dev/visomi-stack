@@ -1,0 +1,23 @@
+{
+  "name": "web-shared-vault",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/shared/vault/src",
+  "projectType": "library",
+  "tags": ["scope:web-shared", "type:util"],
+  "targets": {
+    "vectors-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "node libs/web/shared/vault/tools/generate-vectors.mjs --check",
+          "node libs/web/shared/vault/tools/device-vectors.mjs"
+        ],
+        "parallel": false
+      }
+    },
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "libs/web/shared/vault", "command": "tsc -p tsconfig.spec.json --noEmit" }
+    }
+  }
+}

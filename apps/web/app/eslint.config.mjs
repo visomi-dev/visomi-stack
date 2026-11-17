@@ -19,7 +19,12 @@ export default [
             constraint.sourceTag === 'scope:web-frontend'
               ? {
                   ...constraint,
-                  onlyDependOnLibsWithTags: ['scope:web-frontend', 'scope:web-shared', 'scope:web-backend'],
+                  onlyDependOnLibsWithTags: [
+                    'scope:web-frontend',
+                    'scope:web-shared',
+                    'scope:web-backend',
+                    'scope:shared',
+                  ],
                 }
               : constraint,
           ),
@@ -60,12 +65,12 @@ export default [
     },
   },
   {
-    files: ['**/ui/forms/field.ts', '**/ui/layout/app-shell.ts'],
+    files: ['**/ui/forms/field.ts', '**/ui/layout/app-shell.ts', '**/persistence/vault-panel.ts'],
     rules: {
       // Component template APIs use kebab-case while TypeScript members remain camelCase.
       '@angular-eslint/no-input-rename': [
         'error',
-        { allowedNames: ['control-id', 'manual-error', 'content-id', 'skip-label'] },
+        { allowedNames: ['control-id', 'manual-error', 'content-id', 'skip-label', 'rp-id', 'allow-initialize'] },
       ],
     },
   },

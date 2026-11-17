@@ -6,6 +6,9 @@
 .opencode
 .idea
 .nx
+.angular
+.codegraph
+.qmd
 .vscode
 coverage
 dist

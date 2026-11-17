@@ -8,6 +8,7 @@ export default defineConfig(() => ({
   },
   test: {
     name: 'dev-testing',
+    maxWorkers: 2,
     watch: false,
     globals: true,
     environment: 'node',

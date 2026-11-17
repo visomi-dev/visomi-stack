@@ -1,0 +1,449 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "ff9d1256-5b4c-43b5-a754-842770445d4c",
+  "prevIds": ["8513add8-7fb8-43ee-ab0d-898ee1a5e97f"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "persistence_commands", "domain"],
+      "writes": [
+        "s|col|public.persistence_commands.domain",
+        "n|col|public.persistence_commands.domain",
+        "e|col|public.persistence_commands.domain"
+      ],
+      "reads": ["n|tbl|public.persistence_commands", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "vault_opaque_commands", "created_at"],
+      "writes": [
+        "s|col|public.vault_opaque_commands.created_at",
+        "n|col|public.vault_opaque_commands.created_at",
+        "e|col|public.vault_opaque_commands.created_at"
+      ],
+      "reads": ["n|tbl|public.vault_opaque_commands", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "vault_opaque_events", "created_at"],
+      "writes": [
+        "s|col|public.vault_opaque_events.created_at",
+        "n|col|public.vault_opaque_events.created_at",
+        "e|col|public.vault_opaque_events.created_at"
+      ],
+      "reads": ["n|tbl|public.vault_opaque_events", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "vault_opaque_streams", "floor_cursor"],
+      "writes": [
+        "s|col|public.vault_opaque_streams.floor_cursor",
+        "n|col|public.vault_opaque_streams.floor_cursor",
+        "e|col|public.vault_opaque_streams.floor_cursor"
+      ],
+      "reads": ["n|tbl|public.vault_opaque_streams", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "vault_opaque_streams", "floor_checkpoint"],
+      "writes": [
+        "s|col|public.vault_opaque_streams.floor_checkpoint",
+        "n|col|public.vault_opaque_streams.floor_checkpoint",
+        "e|col|public.vault_opaque_streams.floor_checkpoint"
+      ],
+      "reads": ["n|tbl|public.vault_opaque_streams", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "vault_opaque_units", "tombstone"],
+      "writes": [
+        "s|col|public.vault_opaque_units.tombstone",
+        "n|col|public.vault_opaque_units.tombstone",
+        "e|col|public.vault_opaque_units.tombstone"
+      ],
+      "reads": ["n|tbl|public.vault_opaque_units", "n|sch|public"]
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": ["column", "public", "vault_opaque_units", "envelope"],
+      "writes": ["s|colprop|public.vault_opaque_units.envelope.notNull"],
+      "reads": ["n|tbl|public.vault_opaque_units", "n|sch|public", "n|col|public.vault_opaque_units.envelope"],
+      "sqlHash": "676414a151de5ccb"
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "persistence_commands", "persistence_command_retention"],
+      "writes": [
+        "s|idx|public.persistence_command_retention",
+        "n|idx|public.persistence_command_retention",
+        "e|idx|public.persistence_command_retention",
+        "n|rel|public.persistence_command_retention"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_commands",
+        "n|sch|public",
+        "n|col|public.persistence_commands.tenant_id",
+        "n|col|public.persistence_commands.scope_id",
+        "n|col|public.persistence_commands.domain",
+        "n|col|public.persistence_commands.created_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "vault_opaque_commands", "vault_command_retention"],
+      "writes": [
+        "s|idx|public.vault_command_retention",
+        "n|idx|public.vault_command_retention",
+        "e|idx|public.vault_command_retention",
+        "n|rel|public.vault_command_retention"
+      ],
+      "reads": [
+        "n|tbl|public.vault_opaque_commands",
+        "n|sch|public",
+        "n|col|public.vault_opaque_commands.tenant_id",
+        "n|col|public.vault_opaque_commands.scope_id",
+        "n|col|public.vault_opaque_commands.domain",
+        "n|col|public.vault_opaque_commands.created_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "vault_opaque_events", "vault_event_retention"],
+      "writes": [
+        "s|idx|public.vault_event_retention",
+        "n|idx|public.vault_event_retention",
+        "e|idx|public.vault_event_retention",
+        "n|rel|public.vault_event_retention"
+      ],
+      "reads": [
+        "n|tbl|public.vault_opaque_events",
+        "n|sch|public",
+        "n|col|public.vault_opaque_events.tenant_id",
+        "n|col|public.vault_opaque_events.scope_id",
+        "n|col|public.vault_opaque_events.domain",
+        "n|col|public.vault_opaque_events.created_at"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": ["table", "public", "vault_opaque_streams"],
+      "writes": [
+        "s|ck|public.vault_opaque_streams.vault_stream_floor",
+        "n|ck|public.vault_opaque_streams.vault_stream_floor",
+        "e|ck|public.vault_opaque_streams.vault_stream_floor",
+        "n|con|public.vault_opaque_streams.vault_stream_floor"
+      ],
+      "reads": [
+        "n|tbl|public.vault_opaque_streams",
+        "n|sch|public",
+        "n|col|public.vault_opaque_streams.floor_cursor",
+        "n|col|public.vault_opaque_streams.cursor",
+        "n|col|public.vault_opaque_streams.floor_checkpoint"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": ["table", "public", "vault_opaque_units"],
+      "writes": [
+        "s|ck|public.vault_opaque_units.vault_unit_gravestone",
+        "n|ck|public.vault_opaque_units.vault_unit_gravestone",
+        "e|ck|public.vault_opaque_units.vault_unit_gravestone",
+        "n|con|public.vault_opaque_units.vault_unit_gravestone"
+      ],
+      "reads": [
+        "n|tbl|public.vault_opaque_units",
+        "n|sch|public",
+        "n|col|public.vault_opaque_units.envelope",
+        "n|col|public.vault_opaque_units.bytes",
+        "n|col|public.vault_opaque_units.tombstone"
+      ]
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": ["table", "public", "vault_opaque_units"],
+      "writes": ["s|ck|public.vault_opaque_units.vault_unit_versions"],
+      "reads": [
+        "n|tbl|public.vault_opaque_units",
+        "n|sch|public",
+        "n|col|public.vault_opaque_units.revision",
+        "n|col|public.vault_opaque_units.generation",
+        "n|col|public.vault_opaque_units.cursor",
+        "n|col|public.vault_opaque_units.bytes",
+        "e|col|public.vault_opaque_units.revision",
+        "e|col|public.vault_opaque_units.generation",
+        "e|col|public.vault_opaque_units.cursor",
+        "e|col|public.vault_opaque_units.bytes"
+      ],
+      "sqlHash": "89970f67a4dbf9d9"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "domain",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'unclassified'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_streams",
+        "name": "floor_cursor",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_streams",
+        "name": "floor_checkpoint",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "tombstone",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_commands",
+        "name": "persistence_command_retention",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "tenant_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "scope_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "domain",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "created_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_commands",
+        "name": "vault_command_retention",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "tenant_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "scope_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "domain",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "created_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_events",
+        "name": "vault_event_retention",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "tenant_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "scope_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "domain",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "created_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_streams",
+        "name": "vault_stream_floor",
+        "value": "\"floor_cursor\" >= 0 AND \"floor_cursor\" <= \"cursor\" AND ((\"floor_cursor\" = 0 AND \"floor_checkpoint\" IS NULL) OR (\"floor_cursor\" > 0 AND \"floor_checkpoint\" IS NOT NULL))",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_opaque_units",
+        "name": "vault_unit_gravestone",
+        "value": "(\"envelope\" IS NOT NULL AND \"bytes\" > 0) OR (\"envelope\" IS NULL AND \"tombstone\" AND \"bytes\" = 0)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"vault_opaque_units\",\"envelope\"]",
+      "set": {
+        "notNull": false
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"vault_opaque_units\",\"vault_unit_versions\"]",
+      "set": {
+        "value": "\"revision\" > 0 AND \"generation\" > 0 AND \"cursor\" > 0 AND \"bytes\" >= 0"
+      }
+    }
+  ]
+}

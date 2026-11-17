@@ -10,8 +10,8 @@ import { testPostgres } from './postgres';
 const execute = promisify(execFile);
 const script = fileURLToPath(new URL('../../../../../libs/backend/shared/tools/database/migrate.mjs', import.meta.url));
 
-it('applies the production migration command to an empty isolated database and can repeat it', async () => {
-  const database = await testPostgres();
+it('applies the production migration command to an empty isolated database and can repeat it', async ({ signal }) => {
+  const database = await testPostgres(undefined, 'web-api', signal);
   const pool = new Pool({ connectionString: database.url });
 
   try {
@@ -19,17 +19,28 @@ it('applies the production migration command to an empty isolated database and c
     await pool.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public; DROP SCHEMA drizzle CASCADE;');
 
     for (let attempt = 0; attempt < 2; attempt++) {
-      const result = await execute(process.execPath, [script], { env: { ...process.env, DATABASE_URL: database.url } });
+      const result = await execute(process.execPath, [script], {
+        signal,
+        env: { ...process.env, DATABASE_URL: database.url },
+      });
 
       expect(result.stderr).toBe('');
       const tables = await pool.query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
 
       expect(tables.rows.map((row) => row.tablename)).toEqual(
-        expect.arrayContaining(['auth_users', 'auth_sessions', 'auth_credentials', 'auth_flows']),
+        expect.arrayContaining([
+          'auth_users',
+          'auth_sessions',
+          'auth_credentials',
+          'auth_flows',
+          'persistence_tenants',
+          'persistence_records',
+          'persistence_grants',
+        ]),
       );
       const history = await pool.query('SELECT * FROM drizzle.__drizzle_migrations');
 
-      expect(history.rows).toHaveLength(5);
+      expect(history.rows).toHaveLength(8);
     }
   } finally {
     await pool.end();

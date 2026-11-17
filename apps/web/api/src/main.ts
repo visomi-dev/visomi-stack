@@ -18,6 +18,7 @@ import packageJson from '../package.json' with { type: 'json' };
 
 import { authConfig, createApp, createAuthentication } from './app';
 import type { AuthRuntime } from './auth/runtime';
+import { persistenceExample } from './persistence/composition';
 
 const observability = initializeObservability({
   service: 'web-api',
@@ -62,6 +63,7 @@ try {
   }
 
   application = createApp({
+    persistence: persistenceExample(process.env),
     observability,
     ...(auth ? { auth } : {}),
     ...proxyConfiguration(process.env.AUTH_TRUST_PROXY),

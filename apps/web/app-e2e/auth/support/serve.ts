@@ -85,6 +85,7 @@ async function serve(): Promise<void> {
         SMTP_USER: '',
         SMTP_PASSWORD: '',
         VISOMI_BROWSER_TELEMETRY: 'false',
+        VISOMI_PERSISTENCE_EXAMPLE: 'true',
         API_APP_PATH: '',
         SITE_APP_PATH: '',
         APPLICATION_APP_PATH: '',

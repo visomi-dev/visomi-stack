@@ -22,6 +22,7 @@ import {
   initializeObservability,
   proxyConfiguration,
 } from '@visomi-stack/web-backend-shared';
+import { developmentPersistencePolicy } from '@visomi-stack/shared-persistence';
 
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -187,6 +188,7 @@ async function bootstrap() {
   }
 
   const application = createGatewayApp({
+    persistence: developmentPersistencePolicy(process.env),
     api,
     site,
     application: angular,

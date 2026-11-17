@@ -10,6 +10,8 @@ import { passwordContracts } from './auth/password/contract';
 import { recoveryContracts } from './auth/recovery/contract';
 import { sessionsContracts } from './auth/sessions/contract';
 import { totpContracts } from './auth/totp/contract';
+import { persistenceContracts } from './persistence/contracts';
+import { vaultContracts } from './persistence/vault-contracts';
 
 export const homeContract = defineRoute({
   method: 'get',
@@ -62,12 +64,22 @@ export const authContracts = [
   ...Object.values(passkeysContracts),
 ].map((contract) => ({ ...contract, path: `/auth${contract.path}` }));
 
-export function createOpenApiDocument(basePath = '/') {
+export function createOpenApiDocument(basePath = '/', persistence = false) {
   return createApiDocument({
     title: 'Visomi Stack API',
     version: '0.1.0',
     basePath,
-    contracts: [homeContract, documentationContract, ...authContracts],
+    contracts: [
+      homeContract,
+      documentationContract,
+      ...authContracts,
+      ...(persistence
+        ? [...Object.values(persistenceContracts), ...Object.values(vaultContracts)].map((contract) => ({
+            ...contract,
+            path: `/persistence${contract.path}`,
+          }))
+        : []),
+    ],
     components: {
       securitySchemes: {
         sessionCookie: {

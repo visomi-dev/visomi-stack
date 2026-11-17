@@ -46,11 +46,11 @@ export const moduleBoundaryOptions = {
   depConstraints: [
     {
       sourceTag: 'scope:web-frontend',
-      onlyDependOnLibsWithTags: ['scope:web-frontend', 'scope:web-shared'],
+      onlyDependOnLibsWithTags: ['scope:web-frontend', 'scope:web-shared', 'scope:shared'],
     },
     {
       sourceTag: 'scope:web-shared',
-      onlyDependOnLibsWithTags: ['scope:web-shared'],
+      onlyDependOnLibsWithTags: ['scope:web-shared', 'scope:shared'],
     },
     {
       sourceTag: 'scope:web-backend',
@@ -219,8 +219,12 @@ export default [
         'error',
         {
           'newlines-between': 'always',
-          // Treat the testing package consistently from root hooks and project-level Nx tasks.
-          pathGroups: [{ pattern: '@visomi-stack/dev-testing{,/**}', group: 'external' }],
+          // Classify workspace source aliases consistently from root hooks and project-level Nx tasks.
+          pathGroups: [
+            { pattern: '@visomi-stack/dev-testing{,/**}', group: 'external' },
+            { pattern: '@visomi-stack/shared-persistence', group: 'external' },
+            { pattern: '@visomi-stack/web-shared-vault', group: 'external' },
+          ],
           pathGroupsExcludedImportTypes: ['builtin'],
         },
       ],

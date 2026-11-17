@@ -1,0 +1,138 @@
+{
+  "status": "PUBLIC-SYNTHETIC-PRIVATE-KEYS-NEVER-USE-IN-PRODUCTION",
+  "keysFixture": "devices-v1.json",
+  "message": "[\"visomi.device-enrollment\",1,\"synthetic-example\",\"private-resources\",[\"resource\",\"11111111-1111-4111-8111-111111111111\",null,\"22222222-2222-4222-8222-222222222222\"],2,\"44444444-4444-4444-8444-444444444444\",\"55555555-5555-4555-8555-555555555555\",\"88888888-8888-4888-8888-888888888888\",\"CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCws\",\"2030-01-01T00:00:00.000Z\",\"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAES5RdtbqWIsDrsA59lXOGBZg77reaH2X-_bM9wn4nuQf4azG5Kp7HGdGyil4mUySKguP2mDuYxk1XTQ7QkLHkhg\",\"MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAt8LunIO5lXhmHSchR0BCN0G4wz2j7FL7dPzOJ1hdVRvx-ryEjxWfgX1_GCkO3Tt8NYQOylK19IDairguqP1JJGL6uT3svu72DcHynimmBzbAxqF4qVudVxdHRaGmsW0YSjC1GKXUdq0vLDNRgmkDyT_Wb3OPn9IQAp0D9jEPOWFN8q1tu4ZiiFgjzDxSh8A00xgoe-ihJLha4dtQjMiUSgSmYSUvnY8P8bn68hCGoug-6GzkYTC9HCF8v-6mgYB8C3yauyDTaQLFPbIvdiJp3sOYv51h-uswTI5N6RTq-TsKuhWij6ZUSaoG-Dmr7We6PHMYGCMQ3x4p9jED5iLpIjls_fP74nCr7WjrvZ7XkdkE4HgE938Ai1Tr43Izviv-VxBSrGzhG_JGXQVhp9hxnHKA7O7dX0yN1vUD-7i6lcQ5wRJ8Yek6UAFiOJuXbTRUnDDLcViP_JYvv62Q7GLBgIiIZteGY9gKJrrgQVGdDFStvkB8hgERCbwVXxxmFal3AgMBAAE\"]",
+  "approvalMessage": "[\"visomi.device-action\",1,\"synthetic-example\",\"private-resources\",[\"resource\",\"11111111-1111-4111-8111-111111111111\",null,\"22222222-2222-4222-8222-222222222222\"],2,\"77777777-7777-4777-8777-777777777777\",\"88888888-8888-4888-8888-888888888888\",2,\"approve\",\"aRAq4bgewceiILyCY_N3W-zhWPwvrRYIEjZkuicL21E\"]",
+  "currentLabel": "[\"visomi.device-key\",1,\"RSA-OAEP-3072-SHA-256\",\"synthetic-example\",\"private-resources\",[\"resource\",\"11111111-1111-4111-8111-111111111111\",null,\"22222222-2222-4222-8222-222222222222\"],2,\"44444444-4444-4444-8444-444444444444\",\"55555555-5555-4555-8555-555555555555\",\"88888888-8888-4888-8888-888888888888\",\"CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCws\",\"yvrIlQ4vEC6t_qZyIgLQePZKfhPZ0jfy2lE-LZv4sFI\",\"MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAt8LunIO5lXhmHSchR0BCN0G4wz2j7FL7dPzOJ1hdVRvx-ryEjxWfgX1_GCkO3Tt8NYQOylK19IDairguqP1JJGL6uT3svu72DcHynimmBzbAxqF4qVudVxdHRaGmsW0YSjC1GKXUdq0vLDNRgmkDyT_Wb3OPn9IQAp0D9jEPOWFN8q1tu4ZiiFgjzDxSh8A00xgoe-ihJLha4dtQjMiUSgSmYSUvnY8P8bn68hCGoug-6GzkYTC9HCF8v-6mgYB8C3yauyDTaQLFPbIvdiJp3sOYv51h-uswTI5N6RTq-TsKuhWij6ZUSaoG-Dmr7We6PHMYGCMQ3x4p9jED5iLpIjls_fP74nCr7WjrvZ7XkdkE4HgE938Ai1Tr43Izviv-VxBSrGzhG_JGXQVhp9hxnHKA7O7dX0yN1vUD-7i6lcQ5wRJ8Yek6UAFiOJuXbTRUnDDLcViP_JYvv62Q7GLBgIiIZteGY9gKJrrgQVGdDFStvkB8hgERCbwVXxxmFal3AgMBAAE\"]",
+  "historicalLabel": "[\"visomi.device-key\",1,\"RSA-OAEP-3072-SHA-256\",\"synthetic-example\",\"private-resources\",[\"resource\",\"11111111-1111-4111-8111-111111111111\",null,\"22222222-2222-4222-8222-222222222222\"],1,\"44444444-4444-4444-8444-444444444444\",\"55555555-5555-4555-8555-555555555555\",\"88888888-8888-4888-8888-888888888888\",\"CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCws\",\"yvrIlQ4vEC6t_qZyIgLQePZKfhPZ0jfy2lE-LZv4sFI\",\"MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAt8LunIO5lXhmHSchR0BCN0G4wz2j7FL7dPzOJ1hdVRvx-ryEjxWfgX1_GCkO3Tt8NYQOylK19IDairguqP1JJGL6uT3svu72DcHynimmBzbAxqF4qVudVxdHRaGmsW0YSjC1GKXUdq0vLDNRgmkDyT_Wb3OPn9IQAp0D9jEPOWFN8q1tu4ZiiFgjzDxSh8A00xgoe-ihJLha4dtQjMiUSgSmYSUvnY8P8bn68hCGoug-6GzkYTC9HCF8v-6mgYB8C3yauyDTaQLFPbIvdiJp3sOYv51h-uswTI5N6RTq-TsKuhWij6ZUSaoG-Dmr7We6PHMYGCMQ3x4p9jED5iLpIjls_fP74nCr7WjrvZ7XkdkE4HgE938Ai1Tr43Izviv-VxBSrGzhG_JGXQVhp9hxnHKA7O7dX0yN1vUD-7i6lcQ5wRJ8Yek6UAFiOJuXbTRUnDDLcViP_JYvv62Q7GLBgIiIZteGY9gKJrrgQVGdDFStvkB8hgERCbwVXxxmFal3AgMBAAE\"]",
+  "currentDataKeyHex": "1717171717171717171717171717171717171717171717171717171717171717",
+  "historicalDataKeyHex": "0707070707070707070707070707070707070707070707070707070707070707",
+  "approval": {
+    "format": "visomi.approved-device-key",
+    "version": 1,
+    "delivery": {
+      "format": "visomi.device-key",
+      "version": 1,
+      "algorithm": "RSA-OAEP-3072-SHA-256",
+      "binding": {
+        "key": {
+          "product": "synthetic-example",
+          "domain": "private-resources",
+          "scope": {
+            "kind": "resource",
+            "tenantId": "11111111-1111-4111-8111-111111111111",
+            "groupId": null,
+            "resourceId": "22222222-2222-4222-8222-222222222222"
+          },
+          "generation": 2
+        },
+        "ownerId": "44444444-4444-4444-8444-444444444444",
+        "deviceId": "55555555-5555-4555-8555-555555555555",
+        "requestId": "88888888-8888-4888-8888-888888888888",
+        "challenge": "CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCws",
+        "fingerprint": "yvrIlQ4vEC6t_qZyIgLQePZKfhPZ0jfy2lE-LZv4sFI",
+        "encryption": "MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAt8LunIO5lXhmHSchR0BCN0G4wz2j7FL7dPzOJ1hdVRvx-ryEjxWfgX1_GCkO3Tt8NYQOylK19IDairguqP1JJGL6uT3svu72DcHynimmBzbAxqF4qVudVxdHRaGmsW0YSjC1GKXUdq0vLDNRgmkDyT_Wb3OPn9IQAp0D9jEPOWFN8q1tu4ZiiFgjzDxSh8A00xgoe-ihJLha4dtQjMiUSgSmYSUvnY8P8bn68hCGoug-6GzkYTC9HCF8v-6mgYB8C3yauyDTaQLFPbIvdiJp3sOYv51h-uswTI5N6RTq-TsKuhWij6ZUSaoG-Dmr7We6PHMYGCMQ3x4p9jED5iLpIjls_fP74nCr7WjrvZ7XkdkE4HgE938Ai1Tr43Izviv-VxBSrGzhG_JGXQVhp9hxnHKA7O7dX0yN1vUD-7i6lcQ5wRJ8Yek6UAFiOJuXbTRUnDDLcViP_JYvv62Q7GLBgIiIZteGY9gKJrrgQVGdDFStvkB8hgERCbwVXxxmFal3AgMBAAE"
+      },
+      "ciphertext": "bKF8tPcmNyHxOPRGMYP5iI_y8vw5Jjw_lMfY7niYU96WInG2G7rJZGB_6Znr8_qmpg-8O2DjXd9p4mpsB5Hqj8Des0Xs_CQ2sZSt8h6wVkcyVPs-9frDWn_CMAnJDhI9adLVizFcsdH7f1HiQ8ZRWsKI3-75T1ikyYyv-CeNVI8QtkpR-GEBnTyJ7sfQjyM0Xk9XbUisQB1yn0PwEXUrhFtVLlfGcqhYrAhJHHS1ET69554_wpoATO9W0JzDvXeqP8j0u02AShEDUW_vmoxcrNyF4weGABClc6EdOHZw-476Z_XWAssOWXJRPPRCaaC2x-HmfcwE1EUsmZsA_rjKcg79U56xkxDrhdXDcmj48CZHQZD6ooK6_VaktekK4z2QfEMwMNM6Nm9Q5kCdN2f8gI0Jxiw84x10WWhQ1Tge_INiS3ccAeofj1QQzGJyMtpTBLW5Q5_sc85q_FBGF51Qld1WkoUp8UuD1Lgf5UwnpyVq-R9eaKUUthIr7MjUuEKt"
+    },
+    "authorization": {
+      "key": {
+        "product": "synthetic-example",
+        "domain": "private-resources",
+        "scope": {
+          "kind": "resource",
+          "tenantId": "11111111-1111-4111-8111-111111111111",
+          "groupId": null,
+          "resourceId": "22222222-2222-4222-8222-222222222222"
+        },
+        "generation": 2
+      },
+      "deviceId": "77777777-7777-4777-8777-777777777777",
+      "operationId": "88888888-8888-4888-8888-888888888888",
+      "epoch": 2,
+      "action": "approve",
+      "bodyHash": "aRAq4bgewceiILyCY_N3W-zhWPwvrRYIEjZkuicL21E",
+      "signature": "MfsvUkr3UwcmTHBqhmT3NsQlUqgkpcdLVlb_PTRkeZePqCOXen22YHFRCjceKYucwsiBZPd49ApV8gcKLQ4mTw"
+    },
+    "witness": {
+      "kind": "enrollment",
+      "proof": {
+        "format": "visomi.device-enrollment",
+        "version": 1,
+        "key": {
+          "product": "synthetic-example",
+          "domain": "private-resources",
+          "scope": {
+            "kind": "resource",
+            "tenantId": "11111111-1111-4111-8111-111111111111",
+            "groupId": null,
+            "resourceId": "22222222-2222-4222-8222-222222222222"
+          },
+          "generation": 2
+        },
+        "ownerId": "44444444-4444-4444-8444-444444444444",
+        "deviceId": "55555555-5555-4555-8555-555555555555",
+        "requestId": "88888888-8888-4888-8888-888888888888",
+        "challenge": "CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCws",
+        "expiresAt": "2030-01-01T00:00:00.000Z",
+        "keys": {
+          "signing": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAES5RdtbqWIsDrsA59lXOGBZg77reaH2X-_bM9wn4nuQf4azG5Kp7HGdGyil4mUySKguP2mDuYxk1XTQ7QkLHkhg",
+          "encryption": "MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAt8LunIO5lXhmHSchR0BCN0G4wz2j7FL7dPzOJ1hdVRvx-ryEjxWfgX1_GCkO3Tt8NYQOylK19IDairguqP1JJGL6uT3svu72DcHynimmBzbAxqF4qVudVxdHRaGmsW0YSjC1GKXUdq0vLDNRgmkDyT_Wb3OPn9IQAp0D9jEPOWFN8q1tu4ZiiFgjzDxSh8A00xgoe-ihJLha4dtQjMiUSgSmYSUvnY8P8bn68hCGoug-6GzkYTC9HCF8v-6mgYB8C3yauyDTaQLFPbIvdiJp3sOYv51h-uswTI5N6RTq-TsKuhWij6ZUSaoG-Dmr7We6PHMYGCMQ3x4p9jED5iLpIjls_fP74nCr7WjrvZ7XkdkE4HgE938Ai1Tr43Izviv-VxBSrGzhG_JGXQVhp9hxnHKA7O7dX0yN1vUD-7i6lcQ5wRJ8Yek6UAFiOJuXbTRUnDDLcViP_JYvv62Q7GLBgIiIZteGY9gKJrrgQVGdDFStvkB8hgERCbwVXxxmFal3AgMBAAE"
+        },
+        "proof": "znSmGv2F3BGIbdbF1Mp4KjpGiIuwYGZaHrNAz_aS6YB7_4atfHvG709VTDJ5zH0QcCV-hNjxXlmrVwpfpb_ghQ"
+      },
+      "delivery": {
+        "format": "visomi.device-key",
+        "version": 1,
+        "algorithm": "RSA-OAEP-3072-SHA-256",
+        "binding": {
+          "key": {
+            "product": "synthetic-example",
+            "domain": "private-resources",
+            "scope": {
+              "kind": "resource",
+              "tenantId": "11111111-1111-4111-8111-111111111111",
+              "groupId": null,
+              "resourceId": "22222222-2222-4222-8222-222222222222"
+            },
+            "generation": 2
+          },
+          "ownerId": "44444444-4444-4444-8444-444444444444",
+          "deviceId": "55555555-5555-4555-8555-555555555555",
+          "requestId": "88888888-8888-4888-8888-888888888888",
+          "challenge": "CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCws",
+          "fingerprint": "yvrIlQ4vEC6t_qZyIgLQePZKfhPZ0jfy2lE-LZv4sFI",
+          "encryption": "MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAt8LunIO5lXhmHSchR0BCN0G4wz2j7FL7dPzOJ1hdVRvx-ryEjxWfgX1_GCkO3Tt8NYQOylK19IDairguqP1JJGL6uT3svu72DcHynimmBzbAxqF4qVudVxdHRaGmsW0YSjC1GKXUdq0vLDNRgmkDyT_Wb3OPn9IQAp0D9jEPOWFN8q1tu4ZiiFgjzDxSh8A00xgoe-ihJLha4dtQjMiUSgSmYSUvnY8P8bn68hCGoug-6GzkYTC9HCF8v-6mgYB8C3yauyDTaQLFPbIvdiJp3sOYv51h-uswTI5N6RTq-TsKuhWij6ZUSaoG-Dmr7We6PHMYGCMQ3x4p9jED5iLpIjls_fP74nCr7WjrvZ7XkdkE4HgE938Ai1Tr43Izviv-VxBSrGzhG_JGXQVhp9hxnHKA7O7dX0yN1vUD-7i6lcQ5wRJ8Yek6UAFiOJuXbTRUnDDLcViP_JYvv62Q7GLBgIiIZteGY9gKJrrgQVGdDFStvkB8hgERCbwVXxxmFal3AgMBAAE"
+        },
+        "ciphertext": "bKF8tPcmNyHxOPRGMYP5iI_y8vw5Jjw_lMfY7niYU96WInG2G7rJZGB_6Znr8_qmpg-8O2DjXd9p4mpsB5Hqj8Des0Xs_CQ2sZSt8h6wVkcyVPs-9frDWn_CMAnJDhI9adLVizFcsdH7f1HiQ8ZRWsKI3-75T1ikyYyv-CeNVI8QtkpR-GEBnTyJ7sfQjyM0Xk9XbUisQB1yn0PwEXUrhFtVLlfGcqhYrAhJHHS1ET69554_wpoATO9W0JzDvXeqP8j0u02AShEDUW_vmoxcrNyF4weGABClc6EdOHZw-476Z_XWAssOWXJRPPRCaaC2x-HmfcwE1EUsmZsA_rjKcg79U56xkxDrhdXDcmj48CZHQZD6ooK6_VaktekK4z2QfEMwMNM6Nm9Q5kCdN2f8gI0Jxiw84x10WWhQ1Tge_INiS3ccAeofj1QQzGJyMtpTBLW5Q5_sc85q_FBGF51Qld1WkoUp8UuD1Lgf5UwnpyVq-R9eaKUUthIr7MjUuEKt"
+      },
+      "history": [
+        {
+          "format": "visomi.device-key",
+          "version": 1,
+          "algorithm": "RSA-OAEP-3072-SHA-256",
+          "binding": {
+            "key": {
+              "product": "synthetic-example",
+              "domain": "private-resources",
+              "scope": {
+                "kind": "resource",
+                "tenantId": "11111111-1111-4111-8111-111111111111",
+                "groupId": null,
+                "resourceId": "22222222-2222-4222-8222-222222222222"
+              },
+              "generation": 1
+            },
+            "ownerId": "44444444-4444-4444-8444-444444444444",
+            "deviceId": "55555555-5555-4555-8555-555555555555",
+            "requestId": "88888888-8888-4888-8888-888888888888",
+            "challenge": "CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCws",
+            "fingerprint": "yvrIlQ4vEC6t_qZyIgLQePZKfhPZ0jfy2lE-LZv4sFI",
+            "encryption": "MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAt8LunIO5lXhmHSchR0BCN0G4wz2j7FL7dPzOJ1hdVRvx-ryEjxWfgX1_GCkO3Tt8NYQOylK19IDairguqP1JJGL6uT3svu72DcHynimmBzbAxqF4qVudVxdHRaGmsW0YSjC1GKXUdq0vLDNRgmkDyT_Wb3OPn9IQAp0D9jEPOWFN8q1tu4ZiiFgjzDxSh8A00xgoe-ihJLha4dtQjMiUSgSmYSUvnY8P8bn68hCGoug-6GzkYTC9HCF8v-6mgYB8C3yauyDTaQLFPbIvdiJp3sOYv51h-uswTI5N6RTq-TsKuhWij6ZUSaoG-Dmr7We6PHMYGCMQ3x4p9jED5iLpIjls_fP74nCr7WjrvZ7XkdkE4HgE938Ai1Tr43Izviv-VxBSrGzhG_JGXQVhp9hxnHKA7O7dX0yN1vUD-7i6lcQ5wRJ8Yek6UAFiOJuXbTRUnDDLcViP_JYvv62Q7GLBgIiIZteGY9gKJrrgQVGdDFStvkB8hgERCbwVXxxmFal3AgMBAAE"
+          },
+          "ciphertext": "hAKhLG309zqSsdKqCTUtlIioE-otyAn9xuX1ASnpXgSsgMWu7KkL5f5FZbsXwchOa1rJsch7ZTcCrka0fkxFj-435SYJhVAcjuArBgrjQ2pvHupe_JKwwEyRzLq50lj--EL8AgqwT-CC98fHqfR5j3XtCt5Wx2JS1kRXtCpEOCfJUKoFgCOCqSCcvRJ8MityO9uQcb4Nf0YAUS2hwmuSQI6MghB8AWBqWtvVdKWWgqp_DiauKbSFcmTRzahsBXcZYnm1jAgqvyApI9qOWjljpR_d3BhYbkX07tmSQCNgH5OHNEWdOBjgzghMsfEE79sAUgOxRVXlP7uarLBuXGQPlrpy428-VBqhP4mjyefqJLETbJrvjuO1dmTVUcHLKE1zLvgpADezI0PFBgQdg0h8QPWCoWoZK6Q891yNwarnwbbsopS4108tpDuYDUQLyy9qmeLLlCWEKsQiJJW8uTin9v-NuMCkkXXL-itwZdDCanaVKxS3fDoa8CYeDKeA6tjy"
+        }
+      ]
+    }
+  }
+}

@@ -1066,6 +1066,146 @@
         <source>Use your current password</source>
         <target>Usar tu contraseña actual</target>
       </trans-unit>
+      <trans-unit id="persistenceExampleHeading" datatype="html">
+        <source>Hybrid persistence example</source>
+        <target>Ejemplo de persistencia híbrida</target>
+      </trans-unit>
+      <trans-unit id="persistenceExampleDescription" datatype="html">
+        <source> This development example uses synthetic workspaces. Account identity and operational notes are readable by the service. Private resources require a separate local unlock. </source>
+        <target>Este ejemplo de desarrollo usa espacios sintéticos. El servicio puede leer la identidad de la cuenta y las notas operativas. Los recursos privados requieren un desbloqueo local independiente.</target>
+      </trans-unit>
+      <trans-unit id="persistenceExampleUnavailable" datatype="html">
+        <source> This example is available only when its development profile is configured. </source>
+        <target>Este ejemplo solo está disponible cuando se configura su perfil de desarrollo.</target>
+      </trans-unit>
+      <trans-unit id="persistenceCreateWorkspace" datatype="html">
+        <source> Create a synthetic workspace </source>
+        <target>Crear un espacio sintético</target>
+      </trans-unit>
+      <trans-unit id="persistenceCloudHeading" datatype="html">
+        <source>Operational note · service-readable</source>
+        <target>Nota operativa · legible por el servicio</target>
+      </trans-unit>
+      <trans-unit id="persistenceCloudLabel" datatype="html">
+        <source>Operational content</source>
+        <target>Contenido operativo</target>
+      </trans-unit>
+      <trans-unit id="persistenceCloudDescription" datatype="html">
+        <source>Authorized services can read and process this domain.</source>
+        <target>Los servicios autorizados pueden leer y procesar este dominio.</target>
+      </trans-unit>
+      <trans-unit id="persistenceSaveCloud" datatype="html">
+        <source>Save operational note</source>
+        <target>Guardar nota operativa</target>
+      </trans-unit>
+      <trans-unit id="vaultHeading" datatype="html">
+        <source>Private resource</source>
+        <target>Recurso privado</target>
+      </trans-unit>
+      <trans-unit id="persistencePrivateLimits" datatype="html">
+        <source> Private content is encrypted before synchronization. This synthetic profile has no recovery: losing all usable keys can permanently lose access. Password reset does not recover private content. </source>
+        <target>El contenido privado se cifra antes de sincronizarse. Este perfil sintético no tiene recuperación: perder todas las claves utilizables puede impedir el acceso de forma permanente. Restablecer la contraseña no recupera el contenido privado.</target>
+      </trans-unit>
+      <trans-unit id="vaultUnlock" datatype="html">
+        <source> Unlock with passkey </source>
+        <target>Desbloquear con passkey</target>
+      </trans-unit>
+      <trans-unit id="persistenceInitializePrivate" datatype="html">
+        <source> Provision an empty private resource </source>
+        <target>Preparar un recurso privado vacío</target>
+      </trans-unit>
+      <trans-unit id="vaultLock" datatype="html">
+        <source> Lock private resources </source>
+        <target>Bloquear recursos privados</target>
+      </trans-unit>
+      <trans-unit id="vaultPrivateText" datatype="html">
+        <source>Private text</source>
+        <target>Texto privado</target>
+      </trans-unit>
+      <trans-unit id="persistencePrivateDescription" datatype="html">
+        <source>Only ciphertext is stored locally and synchronized. An encrypted pending change stays on this device until synchronization succeeds.</source>
+        <target>Solo se almacena y sincroniza contenido cifrado. Un cambio cifrado pendiente permanece en este dispositivo hasta que se sincroniza correctamente.</target>
+      </trans-unit>
+      <trans-unit id="vaultSave" datatype="html">
+        <source> Save encrypted change </source>
+        <target>Guardar cambio cifrado</target>
+      </trans-unit>
+      <trans-unit id="persistenceSynchronize" datatype="html">
+        <source> Synchronize encrypted changes </source>
+        <target>Sincronizar cambios cifrados</target>
+      </trans-unit>
+      <trans-unit id="persistencePending" datatype="html">
+        <source> An encrypted change is waiting for synchronization. Keep this device&#x27;s storage until it succeeds. </source>
+        <target>Hay un cambio cifrado pendiente de sincronización. Conserva el almacenamiento de este dispositivo hasta que se complete.</target>
+      </trans-unit>
+      <trans-unit id="persistenceCloudSaved" datatype="html">
+        <source>Operational content was saved to the server-readable domain.</source>
+        <target>El contenido operativo se guardó en el dominio legible por el servidor.</target>
+      </trans-unit>
+      <trans-unit id="vaultSaved" datatype="html">
+        <source>The encrypted change is stored on this device. Synchronization is a separate operation.</source>
+        <target>El cambio cifrado está guardado en este dispositivo. La sincronización es una operación independiente.</target>
+      </trans-unit>
+      <trans-unit id="vaultLocked" datatype="html">
+        <source>Private resources are locked.</source>
+        <target>Los recursos privados están bloqueados.</target>
+      </trans-unit>
+      <trans-unit id="vaultReady" datatype="html">
+        <source>Unlocked on this device.</source>
+        <target>Desbloqueado en este dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultCorrupt" datatype="html">
+        <source>Integrity could not be verified. Keep the encrypted copy and restore from a trusted backup.</source>
+        <target>No se pudo verificar la integridad. Conserva la copia cifrada y restaura desde un respaldo de confianza.</target>
+      </trans-unit>
+      <trans-unit id="vaultQuota" datatype="html">
+        <source>Storage or encryption limits were reached. Export an encrypted backup before changing storage.</source>
+        <target>Se alcanzó el límite de almacenamiento o cifrado. Exporta un respaldo cifrado antes de cambiar el almacenamiento.</target>
+      </trans-unit>
+      <trans-unit id="vaultRecovery" datatype="html">
+        <source>This device has no usable wrapped key. Use your product&#x27;s explicit recovery or device approval flow. Resetting a password does not recover private data.</source>
+        <target>Este dispositivo no tiene una clave envuelta utilizable. Usa el flujo explícito de recuperación o aprobación de dispositivos de tu producto. Restablecer una contraseña no recupera los datos privados.</target>
+      </trans-unit>
+      <trans-unit id="vaultNoPrf" datatype="html">
+        <source>This credential or browser does not support the required private unlock. Use a supported device. The server cannot unlock this resource.</source>
+        <target>Esta credencial o navegador no admite el desbloqueo privado requerido. Usa un dispositivo compatible. El servidor no puede desbloquear este recurso.</target>
+      </trans-unit>
+      <trans-unit id="vaultCancelled" datatype="html">
+        <source>Unlock was cancelled. Your private resources remain locked.</source>
+        <target>Se canceló el desbloqueo. Tus recursos privados siguen bloqueados.</target>
+      </trans-unit>
+      <trans-unit id="vaultOrigin" datatype="html">
+        <source>This unlock credential belongs to a different site. Return to the original site.</source>
+        <target>Esta credencial de desbloqueo pertenece a otro sitio. Regresa al sitio original.</target>
+      </trans-unit>
+      <trans-unit id="vaultConflict" datatype="html">
+        <source>A newer encrypted change exists. Synchronize and resolve the conflict before trying again.</source>
+        <target>Existe un cambio cifrado más reciente. Sincroniza y resuelve el conflicto antes de intentarlo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="vaultUnavailable" datatype="html">
+        <source>Private storage is unavailable on this device. No server-readable fallback was enabled.</source>
+        <target>El almacenamiento privado no está disponible en este dispositivo. No se habilitó ninguna alternativa legible por el servidor.</target>
+      </trans-unit>
+      <trans-unit id="persistenceConflictChoice" datatype="html">
+        <source> Choose which version to keep. Keeping your pending version replaces the synchronized content after checking for new changes. Discarding removes your pending copy from this device. </source>
+        <target>Elige qué versión conservar. Conservar tu versión pendiente reemplaza el contenido sincronizado después de comprobar los cambios nuevos. Descartar elimina tu copia pendiente de este dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="persistenceKeepPending" datatype="html">
+        <source> Keep my pending version and synchronize </source>
+        <target>Conservar mi versión pendiente y sincronizar</target>
+      </trans-unit>
+      <trans-unit id="persistenceDiscardPending" datatype="html">
+        <source> Discard my pending change and use the synchronized version </source>
+        <target>Descartar mi cambio pendiente y usar la versión sincronizada</target>
+      </trans-unit>
+      <trans-unit id="vaultHistoryExpired" datatype="html">
+        <source>This device is older than the retained synchronization history. Keep its encrypted copy and pending changes. Recovery requires trusted client state; synchronization will not reset its checkpoint.</source>
+        <target>Este dispositivo es anterior al historial de sincronización conservado. Conserva su copia cifrada y los cambios pendientes. La recuperación requiere el estado de un cliente de confianza; la sincronización no restablecerá su checkpoint.</target>
+      </trans-unit>
+      <trans-unit id="vaultOperationExpired" datatype="html">
+        <source>The retry window for this pending change expired. Keep the encrypted copy, synchronize, and explicitly resolve it before creating a new operation.</source>
+        <target>Venció el plazo de reintento de este cambio pendiente. Conserva la copia cifrada, sincroniza y resuelve el cambio explícitamente antes de crear una nueva operación.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
