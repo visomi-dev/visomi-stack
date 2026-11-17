@@ -38,12 +38,11 @@ deployment, live migrations, provider changes or privacy publication.
 - The runtime migration symlink is a compatibility measure for the existing IaC
   command. Removing it requires a separately authorized provider configuration
   update; this is not a development blocker.
-- The checked-in Railway watch list still names the old library locations. Before
-  an authorized release, its owner must add `/libs/backend/db/**`,
-  `/libs/shared/db/**` and `/libs/web/frontend/db/**` and apply the reviewed provider
-  settings. Otherwise a later library-only commit may not trigger a rebuild. The
-  provider configuration is intentionally unchanged in this work; local development
-  and GitHub CI selection already include the new libraries.
+- The checked-in Railway watch list includes `/libs/backend/db/**`,
+  `/libs/shared/db/**` and `/libs/web/frontend/db/**`. Applying the reviewed settings
+  to the live provider remains part of a separately authorized release. Until then,
+  live build selection may omit library-only commits. Local development and GitHub
+  CI selection already include the new libraries.
 
 ## Verification record
 

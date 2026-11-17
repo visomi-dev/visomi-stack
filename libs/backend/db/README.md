@@ -50,6 +50,6 @@ this library so the currently configured provider command remains valid. Its
 removal requires a separately authorized provider configuration update. This
 refactor changes no SQL, migration IDs, snapshot bytes, tables or stored values.
 
-Before a separately authorized release, the provider's build watch list must
-include this library, `libs/shared/db` and `libs/web/frontend/db`. The current
-Railway configuration has not been changed or applied by this extraction.
+The checked-in Railway build watch list includes this library, `libs/shared/db`
+and `libs/web/frontend/db`. Applying these settings to the live provider remains
+part of a separately authorized release.
