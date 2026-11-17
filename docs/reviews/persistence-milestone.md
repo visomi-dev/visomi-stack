@@ -87,8 +87,13 @@ migration setup (60 seconds), two gateway integration cases and one API session
 case (five seconds each). An authentication attempt also had a response-body race
 and form timeouts while a rebuild overlapped its served artifacts. That attempt
 was deliberately stopped: 141 passed, 11 failed, one interrupted, eight skipped and
-139 not run. Neither attempt is recorded as green final evidence. The subsequent
-stable checks use the existing native Podman Compose test adapter and sequential
+139 not run. Neither attempt is recorded as green final evidence. The passkey test's CDP
+response-body race recurred without overlapping builds: automatic credential
+presence navigated before `response.json()` could retain the body. Its one-shot
+route now reads the actual upstream options response before fulfilling that same
+response to the browser. It preserves every existing identity and lifecycle
+assertion and does not replace server-generated options with a fixture.
+The subsequent stable checks use the existing native Podman Compose test adapter and sequential
 project execution where needed, without extending deadlines, filtering assertions,
 bypassing hooks or changing production/provider configuration. Final rerun counts
 and exact published-head CI are recorded separately in the PR.

@@ -2,6 +2,8 @@ import { readMailCode } from '@visomi-stack/dev-testing';
 
 import { expect, test, address, password, logout, expireAuthentication } from './support/fixtures';
 
+type RegistrationOptions = { options: { user: { id: string; name: string; displayName: string } } };
+
 test('registers and authenticates a real virtual passkey through the browser', async ({ page }) => {
   const cdp = await page.context().newCDPSession(page);
 
@@ -24,9 +26,24 @@ test('registers and authenticates a real virtual passkey through the browser', a
 
   await page.getByLabel('Email address', { exact: true }).fill(email);
 
-  const registration = page
-    .waitForResponse('**/api/auth/passkeys/registration/options')
-    .then((response) => response.json());
+  let complete!: (value: RegistrationOptions) => void;
+  const registration = new Promise<RegistrationOptions>((resolve) => {
+    complete = resolve;
+  });
+
+  // Retain the real response before automatic credential presence can navigate and evict its CDP body.
+  await page.route(
+    '**/api/auth/passkeys/registration/options',
+    async (route) => {
+      const response = await route.fetch();
+      const body = await response.json();
+
+      complete(body);
+
+      await route.fulfill({ response });
+    },
+    { times: 1 },
+  );
 
   await page.getByRole('button', { name: 'Create account with a passkey', exact: true }).click();
 
