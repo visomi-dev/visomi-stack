@@ -68,7 +68,12 @@ records, wrapped keys, plaintext, or persistence responses into SSR transfer cac
 The Angular application excludes persistence requests from transfer caching, and
 `VaultSession` creates browser adapters only on explicit unlock. `VaultPanel` is a
 consumer component with a supplied stable object context and separately provisioned
-PRF credential; it does not select a reader mode for the user.
+PRF credential; it does not select a reader mode for the user. Each panel owns its
+own `VaultSession`, so simultaneous editors do not share a plaintext display or
+implicitly inherit another editor's unlock. Changes to its binding, complete data
+context or RP ID invalidate pending operations, clear drafts/revisions and require
+explicit unlock again. An explicit lock retains the same object's local revision;
+it never deletes stored ciphertext. Late saves cannot emit into a new context.
 
 ## Browser integration responsibilities
 

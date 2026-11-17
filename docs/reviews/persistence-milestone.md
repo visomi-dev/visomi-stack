@@ -55,6 +55,14 @@ invalidates/captures before waiting and rejects the old operation while retainin
 the new identity. Unknown crypto/schema
 errors and existing authorization/checkpoint requirements remain explicit.
 
+The reusable `VaultPanel` had the analogous confirmed bug: a suspended A save
+emitted its A envelope after its context input changed to B, and a delayed unlock
+could leave the new object enabled. Three red component regressions reproduced
+those behaviors. It now keys readiness and continuations to its complete input
+context, requires explicit unlock on changes, preserves revision metadata on an
+explicit lock, and isolates each mounted panel's custody/display in a local
+`VaultSession`. A separate DI regression verifies independent panel instances.
+
 The reversible choice is to lock on every navigation start, including query-only
 and ultimately canceled navigation, then reload the surviving route. An explicit
 unlock is required again. A request/transaction already dispatched may commit to

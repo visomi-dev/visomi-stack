@@ -1,5 +1,10 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
-import type { DataContext, DataEnvelope, WrappingContext } from '@visomi-stack/shared-persistence';
+import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import {
+  VaultError,
+  type DataContext,
+  type DataEnvelope,
+  type WrappingContext,
+} from '@visomi-stack/shared-persistence';
 
 import { Button, Field, Heading, Text, Textarea } from '../ui';
 
@@ -10,10 +15,12 @@ import { vaultMessage } from './vault-messages';
 @Component({
   selector: 'app-vault-panel',
   imports: [Button, Field, Heading, Text, Textarea],
+  providers: [VaultSession],
   templateUrl: './vault-panel.html',
 })
 export class VaultPanel {
   readonly vault = inject(VaultSession);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly binding = input.required<WrappingContext>();
   readonly context = input.required<DataContext>();
@@ -25,29 +32,45 @@ export class VaultPanel {
   readonly editor = signal('');
   readonly notice = signal('');
   private readonly latest = signal<DataContext | null>(null);
+  private readonly unlocked = signal<string | null>(null);
 
-  readonly status = computed(() => vaultMessage(this.vault.isSelected(this.binding()) ? this.vault.state() : 'locked'));
-  readonly ready = computed(() => this.vault.isSelected(this.binding()) && this.vault.ready());
+  private readonly selection = computed(() => JSON.stringify([this.binding(), this.context(), this.rpId()]));
+  private readonly selected = computed(
+    () => this.unlocked() === this.selection() && this.vault.isSelected(this.binding()),
+  );
+  readonly status = computed(() => vaultMessage(this.selected() ? this.vault.state() : 'locked'));
+  readonly ready = computed(() => this.selected() && this.vault.ready());
   readonly controlId = computed(() => `vault-${this.context().objectId}`);
+
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.invalidate(true));
+
+  private epoch = 0;
 
   async unlock(initialize = false): Promise<void> {
     if (initialize && !this.allowInitialize()) {
       return;
     }
 
-    await this.run(() => this.vault.connect(this.binding(), this.rpId(), initialize));
+    await this.run(async (current) => {
+      await this.vault.connect(this.binding(), this.rpId(), initialize);
+
+      current();
+      this.unlocked.set(this.selection());
+    });
   }
 
   async save(): Promise<void> {
-    const latest = this.latest();
-    const context = latest ? { ...latest, revision: latest.revision + 1 } : this.context();
-
-    await this.run(async () => {
+    await this.run(async (current) => {
+      this.requireReady();
+      const latest = this.latest();
+      const context = latest ? { ...latest, revision: latest.revision + 1 } : this.context();
       const envelope = await this.vault.seal(context, this.editor());
 
+      current();
       this.latest.set(envelope.context);
       this.editor.set('');
       this.saved.emit(envelope);
+      current();
       this.notice.set(
         $localize`:@@vaultSaved:The encrypted change is stored on this device. Synchronization is a separate operation.`,
       );
@@ -55,31 +78,72 @@ export class VaultPanel {
   }
 
   async read(): Promise<void> {
-    await this.run(() => this.vault.read(this.latest() ?? this.context()));
+    await this.run(async (current) => {
+      this.requireReady();
+
+      await this.vault.read(this.latest() ?? this.context());
+
+      current();
+    });
   }
 
   lock(): void {
-    this.editor.set('');
-    this.notice.set('');
-    this.vault.lock();
+    this.invalidate(false, true);
   }
 
-  private async run(work: () => Promise<void>): Promise<void> {
+  private requireReady(): void {
+    if (!this.ready()) {
+      throw new VaultError('locked');
+    }
+  }
+
+  private invalidate(clearRevision: boolean, broadcast = false): void {
+    this.epoch++;
+    this.unlocked.set(null);
+    this.editor.set('');
+    this.notice.set('');
+    this.busy.set(false);
+
+    if (clearRevision) {
+      this.latest.set(null);
+    }
+
+    this.vault.lock(broadcast);
+  }
+
+  private async run(work: (current: () => void) => Promise<void>): Promise<void> {
     if (this.busy()) {
       return;
     }
+
+    const epoch = this.epoch;
+    const selection = this.selection();
+    const valid = () => !this.destroyRef.destroyed && epoch === this.epoch && selection === this.selection();
+    const current = () => {
+      if (!valid()) {
+        throw new VaultError('stale-operation');
+      }
+    };
 
     this.busy.set(true);
     this.notice.set('');
 
     try {
-      await work();
+      current();
+
+      await work(current);
     } catch (error) {
+      if (!valid()) {
+        return;
+      }
+
       const code = (error as { code?: unknown })?.code;
 
       this.notice.set(vaultMessage(typeof code === 'string' ? code : 'unavailable'));
     } finally {
-      this.busy.set(false);
+      if (valid()) {
+        this.busy.set(false);
+      }
     }
   }
 
@@ -91,10 +155,7 @@ export class VaultPanel {
   });
 
   private readonly scopeChanged = effect(() => {
-    this.context();
-    this.binding();
-    this.editor.set('');
-    this.latest.set(null);
-    this.vault.clearDisplay();
+    this.selection();
+    untracked(() => this.invalidate(true));
   });
 }
