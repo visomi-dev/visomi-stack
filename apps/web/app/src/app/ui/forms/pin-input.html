@@ -20,6 +20,7 @@
     class="absolute inset-y-0 start-0 rounded-lg bg-transparent font-mono outline-hidden disabled:cursor-not-allowed"
     [id]="field.controlId()"
     [attr.aria-describedby]="field.describedBy()"
+    [attr.aria-invalid]="field.invalid() || !!field.manualError()?.trim() || null"
     [required]="required()"
     [disabled]="disabled()"
     (input)="draft().set(control.value)"

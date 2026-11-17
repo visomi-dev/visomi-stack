@@ -6,6 +6,14 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
 
+  await page.setContent('<textarea aria-label="Clipboard fixture">0042</textarea>');
+
+  const source = page.getByRole('textbox', { name: 'Clipboard fixture' });
+
+  await source.press('ControlOrMeta+KeyA');
+
+  await source.press('ControlOrMeta+KeyC');
+
   await signup(page);
 
   const sent: string[] = [];
@@ -23,6 +31,26 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
   await expect(page.getByLabel('Local unlock PIN', { exact: true })).toBeEnabled();
 
   const pin = page.getByLabel('Local unlock PIN', { exact: true });
+
+  await page.getByText('Local unlock PIN', { exact: true }).click();
+
+  await expect(pin).toBeFocused();
+
+  await pin.press('ControlOrMeta+KeyV');
+
+  await expect(pin).toHaveValue('0042');
+
+  await expect(pin).toBeFocused();
+
+  await pin.press('Tab');
+
+  await expect(pin).not.toBeFocused();
+
+  await page.keyboard.press('Shift+Tab');
+
+  await expect(pin).toBeFocused();
+
+  await pin.fill('');
 
   await pin.pressSequentially('0482');
 

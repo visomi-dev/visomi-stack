@@ -149,10 +149,15 @@ import type { ControlSize, Tone } from '@visomi-stack/web-frontend-ui';
       </dialog>
 
       <input appUI type="file" aria-label="File" /><input type="text" aria-label="Unstyled" />
+
+      <app-field control-id="catalog-pin" label="PIN">
+        <app-pin-input [draft]="pin" />
+      </app-field>
     </app-shell>
   `,
 })
 class Catalog {
+  readonly pin = signal('');
   readonly cards = signal(false);
   readonly compact = signal(false);
   readonly manualError = signal<string | null>(null);
@@ -292,7 +297,11 @@ describe('native Angular UI catalog', () => {
     expect(instances(Toggle)).toHaveLength(1);
     expect(instances(Text)).toHaveLength(2);
     expect(instances(Description)).toHaveLength(1);
-    expect(instances(ErrorMessage)).toHaveLength(1);
+    for (const field of instances(Field)) {
+      expect(field.queryAll(By.directive(ErrorMessage))).toHaveLength(1);
+    }
+
+    expect(instances(ErrorMessage)).toHaveLength(2);
     expect(instances(Link)).toHaveLength(1);
     expect(instances(LinkButton)).toHaveLength(1);
     expect(fixture.nativeElement.querySelector('input[type=file]').className).toBe('');
