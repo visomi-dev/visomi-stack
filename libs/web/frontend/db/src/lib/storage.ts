@@ -90,6 +90,40 @@ export class IndexedDbVaultStorage implements VaultStorage {
     }
   }
 
+  /** Local discovery only. The wrapper is authenticated on unlock; sync retains its independent generation pin. */
+  async getLatestKey(ownerId: string, key: Omit<KeyDomain, 'generation'>): Promise<WrappedKey | undefined> {
+    const prefix = keyDomainId(ownerId, { ...key, generation: 1 }).slice(0, -2);
+
+    try {
+      const result = await this.database.transaction('r', this.database.keys, async () => {
+        const rows = await this.database.keys.where(':id').startsWith(prefix).toArray();
+        let latest: WrappedKey | undefined;
+
+        for (const row of rows) {
+          const parsed = storedKeySchema.safeParse(row);
+
+          if (
+            !parsed.success ||
+            keyDomainId(ownerId, parsed.data.envelope.context.key) !== row.id ||
+            parsed.data.envelope.context.ownerId !== ownerId
+          ) {
+            throw new VaultError('corrupt');
+          }
+
+          if (!latest || parsed.data.envelope.context.key.generation > latest.context.key.generation) {
+            latest = parsed.data.envelope;
+          }
+        }
+
+        return latest;
+      });
+
+      return result;
+    } catch (error) {
+      throw storageError(error);
+    }
+  }
+
   async putKey(id: string, envelope: WrappedKey, exhausted = false): Promise<void> {
     const result = wrappedKeySchema.safeParse(envelope);
 

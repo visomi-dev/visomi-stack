@@ -62,6 +62,8 @@ export class ExampleWorkspace {
 
   readonly cloudDraft = signal('');
   readonly privateDraft = signal('');
+  readonly pinDraft = signal('');
+  readonly pinConfirmation = signal('');
 
   readonly available = computed(
     () =>
@@ -141,6 +143,33 @@ export class ExampleWorkspace {
     });
   }
 
+  async unlockWithPin(initialize = false): Promise<void> {
+    const value = this.pinDraft();
+    const confirmation = this.pinConfirmation();
+
+    this.pinDraft.set('');
+    this.pinConfirmation.set('');
+    const pin = new TextEncoder().encode(value);
+
+    try {
+      await this.run(async (signal) => {
+        if (!/^[0-9]{4,6}$/.test(value) || (initialize && value !== confirmation)) {
+          throw new VaultError('pin-invalid');
+        }
+
+        if (!this.profile) {
+          throw new VaultError('unavailable');
+        }
+
+        await this.privateResource.unlock(this.requiredTarget(), this.profile.rpId, initialize, pin);
+
+        this.current(signal);
+      });
+    } finally {
+      pin.fill(0);
+    }
+  }
+
   async savePrivate(): Promise<void> {
     await this.run(async (signal) => {
       await this.privateResource.save(this.requiredTarget(), this.privateDraft());
@@ -167,6 +196,8 @@ export class ExampleWorkspace {
 
   lock(): void {
     this.privateDraft.set('');
+    this.pinDraft.set('');
+    this.pinConfirmation.set('');
     this.vault.lock();
     this.privateResource.close();
   }
@@ -221,6 +252,8 @@ export class ExampleWorkspace {
     this.cloud.set(null);
     this.cloudDraft.set('');
     this.privateDraft.set('');
+    this.pinDraft.set('');
+    this.pinConfirmation.set('');
     this.noticeState.set('');
     this.busyState.set(false);
   }

@@ -116,7 +116,7 @@ export const wrappingContextSchema = z.strictObject({
   key: keyDomainSchema,
   ownerId: protocolIdSchema,
   deviceId: protocolIdSchema,
-  method: z.enum(['passkey-prf', 'recovery-key']),
+  method: z.enum(['passkey-prf', 'pin-argon2id', 'recovery-key']),
   methodId: z
     .string()
     .min(1)

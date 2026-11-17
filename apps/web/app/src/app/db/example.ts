@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 
 import { NavigationHeading } from '../shared/navigation-heading';
-import { Button, Field, Heading, Text, Textarea } from '../ui';
+import { Button, Field, Heading, Text, Textarea, Input } from '../ui';
 
 import { ExampleWorkspace } from './example-workspace';
 import { ExamplePrivateResource } from './example-private-resource';
@@ -10,7 +10,7 @@ import { VaultSession } from './vault-session';
 
 @Component({
   selector: 'app-database-example',
-  imports: [Button, Field, Heading, Text, Textarea, NavigationHeading],
+  imports: [Button, Field, Heading, Text, Textarea, Input, NavigationHeading],
   providers: [ExampleWorkspace, DatabaseHttp, ExamplePrivateResource, VaultSession],
   templateUrl: './example.html',
 })

@@ -369,8 +369,8 @@ export class BrowserVault implements VaultPort {
     }
   }
 
-  close(): void {
-    this.lock();
+  close(broadcast = true): void {
+    this.lock(broadcast);
     this.closed = true;
     this.channel?.removeEventListener('message', this.message);
     this.channel?.close();

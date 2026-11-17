@@ -20,7 +20,7 @@ import { BrowserVault } from './vault';
 export function deviceCustodyContext(input: WrappingContext): WrappingContext {
   const value = wrappingContextSchema.parse(input);
 
-  if (value.method !== 'passkey-prf') {
+  if (!['passkey-prf', 'pin-argon2id'].includes(value.method)) {
     throw new VaultError('unsupported-prf');
   }
 
@@ -35,7 +35,7 @@ export function deviceCustodyContext(input: WrappingContext): WrappingContext {
   };
 }
 
-/** Signing/decryption identity is encrypted under an independent local PRF vault, never the shared resource DEK. */
+/** Signing/decryption identity is encrypted under an independent local unlock vault, never the shared resource DEK. */
 export class DeviceCustody {
   private readonly binding: WrappingContext;
   private readonly context: DataContext;

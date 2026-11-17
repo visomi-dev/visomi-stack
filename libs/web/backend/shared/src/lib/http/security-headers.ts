@@ -5,7 +5,7 @@ import type { RequestHandler, Response } from 'express';
 import helmet from 'helmet';
 
 export function securityHeaders(
-  options: { production?: boolean; nonce?: boolean; google?: boolean } = {},
+  options: { production?: boolean; nonce?: boolean; google?: boolean; wasm?: boolean } = {},
 ): RequestHandler {
   const production = options.production ?? process.env['NODE_ENV'] === 'production';
   const nonceSource = (_request: unknown, response: ServerResponse) =>
@@ -15,7 +15,11 @@ export function securityHeaders(
     contentSecurityPolicy: {
       directives: {
         styleSrc: [...sources, ...(options.google ? ['https://accounts.google.com/gsi/style'] : [])],
-        scriptSrc: [...sources, ...(options.google ? ['https://accounts.google.com/gsi/client'] : [])],
+        scriptSrc: [
+          ...sources,
+          ...(options.wasm ? ["'wasm-unsafe-eval'"] : []),
+          ...(options.google ? ['https://accounts.google.com/gsi/client'] : []),
+        ],
         ...(options.google
           ? {
               connectSrc: ["'self'", 'https://accounts.google.com/gsi/'],

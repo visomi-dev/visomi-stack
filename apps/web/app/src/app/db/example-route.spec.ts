@@ -50,7 +50,7 @@ function fixture(
     synchronized: signal(false),
     conflict: signal(false),
     close: vi.fn(),
-    unlock: vi.fn(async () => {
+    unlock: vi.fn(async (_target: ExampleTarget, _rpId: string, _initialize: boolean, _pin?: Uint8Array) => {
       state.set('ready');
       plaintext.set('Synthetic private A');
     }),
@@ -345,4 +345,40 @@ it('rebinds browser history back and forward without restoring an unlocked vault
   await page.saveCloud();
 
   expect(f.requests.filter(({ body }) => body !== undefined).map(({ path }) => path)).toEqual([records(a), records(b)]);
+});
+
+it('clears PIN drafts and rejects a pending PIN unlock after Router reuses the component for another target', async () => {
+  const f = fixture();
+  const harness = await RouterTestingHarness.create();
+  const page = await navigate(harness, a);
+  let complete!: () => void;
+
+  f.privateResource.unlock.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        complete = resolve;
+      }),
+  );
+
+  page.pinDraft.set('012345');
+  page.pinConfirmation.set('012345');
+  const pending = page.unlockWithPin(true);
+
+  expect(page.pinDraft()).toBe('');
+  expect(page.pinConfirmation()).toBe('');
+  const bytes = f.privateResource.unlock.mock.calls[0][3]!;
+
+  expect(new TextDecoder().decode(bytes)).toBe('012345');
+
+  await navigate(harness, b);
+
+  complete();
+
+  await pending;
+
+  expect(page.target()).toEqual(b);
+  expect(page.vault.ready()).toBe(false);
+  expect(page.pinDraft()).toBe('');
+  expect(page.notice()).toBe('');
+  expect(bytes.every((byte) => byte === 0)).toBe(true);
 });

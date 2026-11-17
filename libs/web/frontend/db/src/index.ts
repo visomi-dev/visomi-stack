@@ -8,3 +8,4 @@ export { exportEncryptedBackup, restoreEncryptedBackup } from './lib/backup';
 export { UserHeldRecovery } from './lib/recovery';
 export { createPrfCredential } from './lib/prf-credential';
 export { DeviceCustody, deviceCustodyContext } from './lib/device-custody';
+export { PinUnlock, createPinMethodId, pinMethod } from './lib/pin';

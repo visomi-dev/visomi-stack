@@ -16,7 +16,8 @@ export type VaultState =
   | 'recovery-required'
   | 'unsupported-prf'
   | 'cancelled'
-  | 'origin-mismatch';
+  | 'origin-mismatch'
+  | 'pin-invalid';
 export type VaultFailure = VaultState | 'stale-operation' | 'revision-conflict' | 'unsupported-version';
 
 export class VaultError extends Error {

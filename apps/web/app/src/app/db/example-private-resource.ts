@@ -2,9 +2,10 @@ import type { IndexedDbReplicaStorage } from '@visomi-stack/web-frontend-db/stor
 import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DestroyRef, Service, effect, inject, signal } from '@angular/core';
-import { z } from 'zod';
+import type { z } from 'zod';
 import {
   createPrfCredential,
+  createPinMethodId,
   deviceCustodyContext,
   encodeBytes,
   SyncReplica,
@@ -13,9 +14,7 @@ import {
 } from '@visomi-stack/web-frontend-db';
 import {
   createOperationId,
-  dataAad,
   deviceChallengeSchema,
-  keyDomainSchema,
   syncWriteSchema,
   syntheticHybridPolicy,
   VaultError,
@@ -29,22 +28,10 @@ import { Session } from '../auth/session/session';
 import { DatabaseHttp } from './http';
 import { ClientDatabase } from './database';
 import { VaultSession } from './vault-session';
+import { openLocalPin } from './local-pin';
+import { rosterSchema, validateExampleEnvelope } from './example-contracts';
 
 export type ExampleTarget = { tenantId: string; scopeId: string; objectId: string };
-const rosterSchema = z.object({
-  key: keyDomainSchema,
-  epoch: z.number().int().positive(),
-  phase: z.enum(['ready', 'rotating']),
-  devices: z.array(
-    z.object({
-      id: z.uuid(),
-      ownerId: z.uuid(),
-      signing: z.string(),
-      encryption: z.string(),
-      revokedAt: z.string().nullable(),
-    }),
-  ),
-});
 
 /** Synthetic consumer of the common protocol. Its manifest is fixed in code, independent of a cloud response. */
 @Service({ autoProvided: false })
@@ -77,7 +64,7 @@ export class ExamplePrivateResource {
   readonly synchronized = this.synchronizedState.asReadonly();
   readonly conflict = this.conflictState.asReadonly();
 
-  async unlock(target: ExampleTarget, rpId: string, initialize: boolean): Promise<void> {
+  async unlock(target: ExampleTarget, rpId: string, initialize: boolean, pin?: Uint8Array): Promise<void> {
     this.close();
     this.vault.lock(false);
     const signal = this.controller.signal;
@@ -93,6 +80,12 @@ export class ExamplePrivateResource {
 
     const path = this.path(target);
     let registry: z.infer<typeof rosterSchema> | undefined;
+
+    if (pin && !initialize) {
+      await this.unlockLocalPin(target, rpId, pin, ownerId, signal);
+
+      return;
+    }
 
     try {
       const raw = await this.api.request(`${path}/devices`, undefined, signal);
@@ -140,23 +133,30 @@ export class ExamplePrivateResource {
     let binding = existing;
 
     if (!binding) {
-      const methodId = await createPrfCredential(
-        { origin: view.location.origin, rpId, credentials: view.navigator.credentials, crypto: view.crypto },
-        AbortSignal.any([signal, this.session.cancellation()]),
-      );
+      const method = pin
+        ? createPinMethodId(view.crypto)
+        : createPrfCredential(
+            { origin: view.location.origin, rpId, credentials: view.navigator.credentials, crypto: view.crypto },
+            AbortSignal.any([signal, this.session.cancellation()]),
+          );
+      const methodId = await method;
 
       this.current(signal);
       binding = {
         key,
         ownerId,
         deviceId: view.crypto.randomUUID(),
-        method: 'passkey-prf',
+        method: pin ? 'pin-argon2id' : 'passkey-prf',
         methodId,
         origin: view.location.origin,
       };
     }
 
-    await this.vault.connect(binding, rpId, !existing);
+    if ((binding.method === 'pin-argon2id') !== Boolean(pin)) {
+      throw new VaultError(pin ? 'pin-invalid' : 'unsupported-prf');
+    }
+
+    await (pin ? this.vault.connect(binding, rpId, !existing, pin) : this.vault.connect(binding, rpId, !existing));
 
     this.current(signal);
 
@@ -168,7 +168,9 @@ export class ExamplePrivateResource {
       throw new VaultError('recovery-required');
     }
 
-    const custody = await this.vault.device(binding, rpId, !custodyExists);
+    const custody = await (pin
+      ? this.vault.device(binding, rpId, !custodyExists, pin)
+      : this.vault.device(binding, rpId, !custodyExists));
 
     this.current(signal);
 
@@ -233,7 +235,7 @@ export class ExamplePrivateResource {
       view.crypto,
       (envelope) => {
         this.current(signal);
-        this.validate(envelope);
+        validateExampleEnvelope(this.binding, envelope);
 
         return this.vault.readEnvelope(envelope, false);
       },
@@ -419,6 +421,70 @@ export class ExamplePrivateResource {
     this.synchronizedState.set(false);
   }
 
+  /** Explicit local unlock: no roster/network lookup. Server authorization is rechecked by later synchronization. */
+  private async unlockLocalPin(
+    target: ExampleTarget,
+    rpId: string,
+    pin: Uint8Array,
+    ownerId: string,
+    signal: AbortSignal,
+  ): Promise<void> {
+    const opened = await openLocalPin({
+      vault: this.vault,
+      database: this.database,
+      target,
+      rpId,
+      pin,
+      ownerId,
+      signal,
+      current: () => this.current(signal),
+    });
+    const { binding: local, custody, storage, pinned } = opened;
+
+    this.custody = custody;
+    this.binding = local;
+    this.storage = storage;
+    const key = local.key;
+    const id = replicaId(ownerId, key, key.scope);
+
+    const path = this.path(target);
+
+    this.replica = new SyncReplica(
+      id,
+      key,
+      key.scope,
+      storage,
+      {
+        pull: (head, signal) => this.api.request(`${path}/sync/pull`, { protocol: 1, head }, signal),
+        push: (value, signal) => this.api.request(`${path}/sync/push`, value, signal),
+      },
+      this.document.defaultView!.crypto,
+      (envelope) => {
+        this.current(signal);
+        validateExampleEnvelope(this.binding, envelope);
+
+        return this.vault.readEnvelope(envelope, false);
+      },
+      pinned.epoch,
+    );
+
+    const pending = await storage.pending(id);
+
+    this.current(signal);
+    const selected =
+      pending?.envelope.context.objectId === target.objectId ? pending.envelope : storage.unit(id, target.objectId);
+    const envelope = await selected;
+
+    this.current(signal);
+
+    if (envelope && envelope.context.kind !== 'tombstone') {
+      await this.show(envelope, target);
+    }
+
+    this.current(signal);
+    this.pendingState.set(Boolean(pending));
+  }
+
   private async prepare(target: ExampleTarget, value: string) {
     const { storage, binding, custody, view, id, signal } = this.active(target);
     const version = this.session.operationVersion();
@@ -487,30 +553,10 @@ export class ExamplePrivateResource {
     } while (more);
   }
 
-  private validate(envelope: DataEnvelope): void {
-    if (envelope.context.schemaVersion !== 1 || !['record', 'tombstone'].includes(envelope.context.kind)) {
-      throw new VaultError('unsupported-version');
-    }
-
-    const binding = this.binding;
-
-    if (
-      !binding ||
-      envelope.context.key.generation > binding.key.generation ||
-      dataAad({
-        ...envelope.context,
-        key: { ...binding.key, generation: envelope.context.key.generation },
-        target: binding.key.scope,
-      }) !== dataAad(envelope.context)
-    ) {
-      throw new VaultError('corrupt');
-    }
-  }
-
   private async show(envelope: DataEnvelope, target: ExampleTarget): Promise<void> {
     const { signal } = this.active(target);
 
-    this.validate(envelope);
+    validateExampleEnvelope(this.binding, envelope);
 
     if (envelope.context.objectId !== target.objectId) {
       throw new VaultError('corrupt');

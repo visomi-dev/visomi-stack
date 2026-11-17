@@ -61,7 +61,7 @@ function fixture() {
       plaintext.set('');
     }),
     clearDisplay: () => plaintext.set(''),
-    connect: vi.fn(async () => {
+    connect: vi.fn(async (_binding: WrappingContext, _rpId: string, _initialize = false, _pin?: Uint8Array) => {
       ready.set(true);
     }),
     seal: vi.fn(async (context: DataContext, _value: string) => envelope(context)),
@@ -195,4 +195,31 @@ it('owns a separate display and custody session for each mounted panel', () => {
   expect(second.componentInstance.vault.ready()).toBe(false);
   first.destroy();
   second.destroy();
+});
+
+it('clears PIN inputs on binding changes and wipes bytes passed to local unlock', async () => {
+  const f = fixture();
+  const pinBinding = { ...binding, method: 'pin-argon2id' as const, methodId: 'A'.repeat(43) };
+
+  f.view.componentRef.setInput('binding', pinBinding);
+  f.view.detectChanges();
+  f.panel.pinDraft.set('012345');
+  const pending = deferred<void>();
+
+  f.vault.connect.mockImplementationOnce(() => pending.promise);
+  const unlocking = f.panel.unlock();
+
+  expect(f.panel.pinDraft()).toBe('');
+  const bytes = f.vault.connect.mock.calls[0][3] as Uint8Array;
+
+  expect(new TextDecoder().decode(bytes)).toBe('012345');
+  f.view.componentRef.setInput('context', b);
+  f.view.detectChanges();
+  pending.resolve();
+
+  await unlocking;
+
+  expect(bytes.every((byte) => byte === 0)).toBe(true);
+  expect(f.panel.ready()).toBe(false);
+  expect(f.panel.pinDraft()).toBe('');
 });

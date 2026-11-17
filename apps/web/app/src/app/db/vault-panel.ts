@@ -1,7 +1,7 @@
 import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { VaultError, type DataContext, type DataEnvelope, type WrappingContext } from '@visomi-stack/shared-db';
 
-import { Button, Field, Heading, Text, Textarea } from '../ui';
+import { Button, Field, Heading, Text, Textarea, Input } from '../ui';
 
 import { VaultSession } from './vault-session';
 import { vaultMessage } from './vault-messages';
@@ -9,7 +9,7 @@ import { vaultMessage } from './vault-messages';
 /** Consumers supply a configured scope and a separately provisioned PRF credential. */
 @Component({
   selector: 'app-vault-panel',
-  imports: [Button, Field, Heading, Text, Textarea],
+  imports: [Button, Field, Heading, Text, Textarea, Input],
   providers: [VaultSession],
   templateUrl: './vault-panel.html',
 })
@@ -38,6 +38,8 @@ export class VaultPanel {
 
   readonly busy = signal(false);
   readonly editor = signal('');
+  readonly pinDraft = signal('');
+  readonly pinConfirmation = signal('');
   readonly notice = signal('');
 
   readonly status = computed(() => vaultMessage(this.selected() ? this.vault.state() : 'locked'));
@@ -50,10 +52,26 @@ export class VaultPanel {
     }
 
     await this.run(async (current) => {
-      await this.vault.connect(this.binding(), this.rpId(), initialize);
+      const pin = this.binding().method === 'pin-argon2id' ? new TextEncoder().encode(this.pinDraft()) : undefined;
+      const confirmation = this.pinConfirmation();
 
-      current();
-      this.unlocked.set(this.selection());
+      this.pinDraft.set('');
+      this.pinConfirmation.set('');
+
+      try {
+        if (pin && initialize && new TextDecoder().decode(pin) !== confirmation) {
+          throw new VaultError('pin-invalid');
+        }
+
+        await (pin
+          ? this.vault.connect(this.binding(), this.rpId(), initialize, pin)
+          : this.vault.connect(this.binding(), this.rpId(), initialize));
+
+        current();
+        this.unlocked.set(this.selection());
+      } finally {
+        pin?.fill(0);
+      }
     });
   }
 
@@ -99,6 +117,8 @@ export class VaultPanel {
     this.epoch++;
     this.unlocked.set(null);
     this.editor.set('');
+    this.pinDraft.set('');
+    this.pinConfirmation.set('');
     this.notice.set('');
     this.busy.set(false);
 

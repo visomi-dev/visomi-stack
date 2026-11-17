@@ -3,6 +3,9 @@
 Provisional browser implementation of the platform-neutral contracts in
 `@visomi-stack/shared-db`: contextual AES-256-GCM/HKDF, RSA-OAEP/P-256,
 PRF-only unlock, ciphertext IndexedDB, independent device custody and opaque sync.
+The explicitly selected `PinUnlock` adapter supports offline short-PIN unlock
+with a fixed Argon2id profile and disclosed offline guessing limitations; see the
+[PIN contract](../../../../docs/architecture/contracts/offline-pin.md).
 Cloud login never unwraps a key. Unsupported PRF blocks instead of enabling a
 server-readable fallback. Operational keys are nonextractable; cleanup in managed
 runtimes is best effort.

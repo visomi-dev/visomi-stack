@@ -9,9 +9,64 @@
 
   <p role="status" aria-live="polite">{{ status() }}</p>
 
+  @if (binding().method === 'pin-argon2id' && !ready()) {
+    <p appUI tone="muted" i18n="@@vaultPanelPinWarning">
+      This resource uses a local PIN. A copy of encrypted storage permits offline PIN guessing; PIN protection is weaker
+      than a passkey.
+    </p>
+
+    <app-field
+      [control-id]="controlId() + '-pin'"
+      label="Local unlock PIN"
+      i18n-label="@@vaultPinLabel"
+      #pinField="appField"
+    >
+      <input
+        appUI
+        [id]="controlId() + '-pin'"
+        type="password"
+        inputmode="numeric"
+        autocomplete="off"
+        maxlength="6"
+        [attr.aria-describedby]="pinField.describedBy()"
+        #pinInput
+        [value]="pinDraft()"
+        (input)="pinDraft.set(pinInput.value)"
+        [disabled]="busy()"
+      />
+    </app-field>
+
+    @if (allowInitialize()) {
+      <app-field
+        [control-id]="controlId() + '-confirm'"
+        label="Confirm PIN for initial setup"
+        i18n-label="@@vaultPinConfirm"
+        #confirmField="appField"
+      >
+        <input
+          appUI
+          [id]="controlId() + '-confirm'"
+          type="password"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="6"
+          [attr.aria-describedby]="confirmField.describedBy()"
+          #confirmation
+          [value]="pinConfirmation()"
+          (input)="pinConfirmation.set(confirmation.value)"
+          [disabled]="busy()"
+        />
+      </app-field>
+    }
+  }
+
   <div class="flex flex-wrap gap-3">
-    <button appUI type="button" [disabled]="busy() || ready()" (click)="unlock()" i18n="@@vaultUnlock">
-      Unlock with passkey
+    <button appUI type="button" [disabled]="busy() || ready()" (click)="unlock()">
+      @if (binding().method === 'pin-argon2id') {
+        <span i18n="@@vaultPanelPinUnlock">Unlock locally with PIN</span>
+      } @else {
+        <span i18n="@@vaultUnlock">Unlock with passkey</span>
+      }
     </button>
 
     @if (allowInitialize()) {

@@ -22,6 +22,10 @@ export const vector = JSON.parse(
   readFileSync(new URL('../../../../../shared/db/fixtures/crypto-v1.json', import.meta.url), 'utf8'),
 ) as { data: { context: DataContext }; wrapped: { context: WrappingContext } };
 
+export const pinVector = JSON.parse(
+  readFileSync(new URL('../../../../../shared/db/fixtures/pin-v1.json', import.meta.url), 'utf8'),
+) as { pin: string; methodId: string; secret: string };
+
 export type FixtureWindow = typeof globalThis & {
   fixtureModules: { api: VaultApi; contracts: typeof VaultContracts };
   fixtureVault?: InstanceType<VaultApi['BrowserVault']>;

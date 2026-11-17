@@ -92,6 +92,70 @@
         </button>
       </div>
 
+      @if (!workspace.vault.ready()) {
+        <form class="space-y-4" (submit)="$event.preventDefault(); workspace.unlockWithPin()">
+          <p appUI tone="muted" i18n="@@vaultPinWarning">
+            Without passkey support, you can choose a 4–6 digit PIN. Someone with a copy of your encrypted storage can
+            try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local
+            unlock works offline in an already signed-in session.
+          </p>
+
+          <app-field control-id="vault-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel" #pinField="appField">
+            <input
+              appUI
+              id="vault-pin"
+              type="password"
+              inputmode="numeric"
+              autocomplete="off"
+              minlength="4"
+              maxlength="6"
+              pattern="[0-9]{4,6}"
+              [attr.aria-describedby]="pinField.describedBy()"
+              [disabled]="workspace.busy()"
+              #pinInput
+              [value]="workspace.pinDraft()"
+              (input)="workspace.pinDraft.set(pinInput.value)"
+            />
+          </app-field>
+
+          <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinUnlock">
+            Unlock locally with PIN
+          </button>
+
+          <app-field
+            control-id="vault-pin-confirm"
+            label="Confirm PIN for initial setup"
+            i18n-label="@@vaultPinConfirm"
+            #confirmField="appField"
+          >
+            <input
+              appUI
+              id="vault-pin-confirm"
+              type="password"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="6"
+              [attr.aria-describedby]="confirmField.describedBy()"
+              [disabled]="workspace.busy()"
+              #confirmInput
+              [value]="workspace.pinConfirmation()"
+              (input)="workspace.pinConfirmation.set(confirmInput.value)"
+            />
+          </app-field>
+
+          <button
+            appUI
+            type="button"
+            variant="secondary"
+            [disabled]="workspace.busy()"
+            (click)="workspace.unlockWithPin(true)"
+            i18n="@@vaultPinInitialize"
+          >
+            Set up an empty private resource with PIN
+          </button>
+        </form>
+      }
+
       @if (workspace.vault.ready()) {
         <form class="space-y-4" (submit)="$event.preventDefault(); workspace.savePrivate()">
           <app-field

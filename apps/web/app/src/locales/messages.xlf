@@ -2553,6 +2553,54 @@
       <trans-unit id="vaultOperationExpired" datatype="html">
         <source>The retry window for this pending change expired. Keep the encrypted copy, synchronize, and explicitly resolve it before creating a new operation.</source>
       </trans-unit>
+      <trans-unit id="vaultPinWarning" datatype="html">
+        <source> Without passkey support, you can choose a 4–6 digit PIN. Someone with a copy of your encrypted storage can try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local unlock works offline in an already signed-in session. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="linenumber">98,100</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPinLabel" datatype="html">
+        <source>Local unlock PIN</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="linenumber">103</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPinUnlock" datatype="html">
+        <source> Unlock locally with PIN </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="linenumber">122,123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPinConfirm" datatype="html">
+        <source>Confirm PIN for initial setup</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="linenumber">127,128</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPinInitialize" datatype="html">
+        <source> Set up an empty private resource with PIN </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="linenumber">154,156</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPinInvalid" datatype="html">
+        <source>Enter a PIN of 4 to 6 digits. For initial setup, enter the same PIN twice.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
+          <context context-type="linenumber">4</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPanelPinWarning" datatype="html">
+        <source>This resource uses a local PIN. A copy of encrypted storage permits offline PIN guessing; PIN protection is weaker than a passkey.</source>
+      </trans-unit>
+      <trans-unit id="vaultPanelPinUnlock" datatype="html">
+        <source>Unlock locally with PIN</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

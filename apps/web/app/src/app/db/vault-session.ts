@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Service, computed, effect, inject, signal } from '@angular/core';
-import { BrowserVault, DeviceCustody, PrfUnlock, WebCryptoCipher } from '@visomi-stack/web-frontend-db';
+import { BrowserVault, DeviceCustody, PinUnlock, PrfUnlock, WebCryptoCipher } from '@visomi-stack/web-frontend-db';
 import {
   VaultError,
   keyDomainId,
@@ -59,17 +59,32 @@ export class VaultSession {
     this.cleartext.set('');
   }
 
-  async connect(context: WrappingContext, rpId: string, initialize = false): Promise<void> {
+  async connect(context: WrappingContext, rpId: string, initialize = false, pin?: Uint8Array): Promise<void> {
     const session = this.identity(context.ownerId);
     const epoch = this.epoch;
     const view = this.document.defaultView;
 
-    if (!view || context.method !== 'passkey-prf' || context.origin !== view.location.origin || !view.isSecureContext) {
+    if (
+      !view ||
+      !['passkey-prf', 'pin-argon2id'].includes(context.method) ||
+      context.origin !== view.location.origin ||
+      !view.isSecureContext
+    ) {
       throw new VaultError('unavailable');
     }
 
     this.bindCancellation(session.signal);
     const id = keyDomainId(context.ownerId, context.key);
+
+    if (context.method === 'pin-argon2id') {
+      if (!pin) {
+        throw new VaultError('pin-invalid');
+      }
+
+      this.scopes.get(id)?.close(false);
+      this.scopes.delete(id);
+    }
+
     let vault = this.scopes.get(id);
 
     if (!vault) {
@@ -92,14 +107,20 @@ export class VaultSession {
       const created = new BrowserVault(
         context.ownerId,
         storage,
-        new PrfUnlock({
-          origin: view.location.origin,
-          rpId,
-          credentials: view.navigator.credentials,
-          crypto: view.crypto,
-        }),
+        context.method === 'pin-argon2id'
+          ? new PinUnlock(async () => Uint8Array.from(pin!))
+          : new PrfUnlock({
+              origin: view.location.origin,
+              rpId,
+              credentials: view.navigator.credentials,
+              crypto: view.crypto,
+            }),
         new WebCryptoCipher(view.crypto),
         (state) => {
+          if (this.scopes.get(id) !== created) {
+            return;
+          }
+
           this.cleartext.set('');
 
           if (this.selected()?.id === id) {
@@ -226,7 +247,31 @@ export class VaultSession {
     }
   }
 
-  async device(binding: WrappingContext, rpId: string, provision = false): Promise<DeviceCustody> {
+  async localLatestBinding(key: Omit<KeyDomain, 'generation'>): Promise<WrappingContext | undefined> {
+    const ownerId = this.session.user()?.id;
+
+    if (!ownerId) {
+      throw new VaultError('locked');
+    }
+
+    const session = this.identity(ownerId);
+    const epoch = this.epoch;
+    const storage = await this.database.vault(ownerId, session.signal);
+
+    try {
+      const wrapped = await storage.getLatestKey(ownerId, key);
+
+      if (!this.current(epoch, session)) {
+        throw new VaultError('stale-operation');
+      }
+
+      return wrapped?.context;
+    } finally {
+      storage.close();
+    }
+  }
+
+  async device(binding: WrappingContext, rpId: string, provision = false, pin?: Uint8Array): Promise<DeviceCustody> {
     const session = this.identity(binding.ownerId);
     const epoch = this.epoch;
     const view = this.document.defaultView;
@@ -244,6 +289,16 @@ export class VaultSession {
       binding.methodId,
       binding.origin,
     ]);
+
+    if (binding.method === 'pin-argon2id') {
+      if (!pin) {
+        throw new VaultError('pin-invalid');
+      }
+
+      this.devices.get(id)?.close();
+      this.devices.delete(id);
+    }
+
     let device = this.devices.get(id);
 
     if (!device) {
@@ -258,12 +313,14 @@ export class VaultSession {
       const created = new DeviceCustody(
         storage,
         binding,
-        new PrfUnlock({
-          origin: view.location.origin,
-          rpId,
-          credentials: view.navigator.credentials,
-          crypto: view.crypto,
-        }),
+        binding.method === 'pin-argon2id'
+          ? new PinUnlock(async () => Uint8Array.from(pin!))
+          : new PrfUnlock({
+              origin: view.location.origin,
+              rpId,
+              credentials: view.navigator.credentials,
+              crypto: view.crypto,
+            }),
         view.crypto,
       );
 

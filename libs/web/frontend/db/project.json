@@ -10,7 +10,8 @@
       "options": {
         "commands": [
           "node libs/web/frontend/db/tools/generate-vectors.mjs --check",
-          "node libs/web/frontend/db/tools/device-vectors.mjs"
+          "node libs/web/frontend/db/tools/device-vectors.mjs",
+          "node libs/web/frontend/db/tools/pin-vectors.mjs"
         ],
         "parallel": false
       }

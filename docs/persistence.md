@@ -75,6 +75,14 @@ context or RP ID invalidate pending operations, clear drafts/revisions and requi
 explicit unlock again. An explicit lock retains the same object's local revision;
 it never deletes stored ciphertext. Late saves cannot emit into a new context.
 
+## Optional offline PIN unlock
+
+Devices without passkey PRF can explicitly select the short-PIN adapter. This
+method has weaker offline-guessing resistance than PRF. Initial online setup,
+local-only unlock, fixed Argon2id parameters, compatibility, CSP and remaining
+limits are described in the [PIN contract](architecture/contracts/offline-pin.md).
+It does not convert existing vaults, reset account passwords or choose recovery.
+
 ## Browser integration responsibilities
 
 1. Establish the configured origin/RP and validate product/platform capabilities.
