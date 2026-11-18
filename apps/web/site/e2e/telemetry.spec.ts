@@ -3,6 +3,15 @@ import { test, expect } from '@playwright/test';
 test('measures real page performance without exporting URLs, attribution or browser identifiers', async ({ page }) => {
   const reports: { payload: Record<string, unknown>; status: number; headers: Record<string, string> }[] = [];
   const scripts: Promise<number>[] = [];
+  const visitsRequests: string[] = [];
+
+  page.on('request', (request) => {
+    const path = new URL(request.url()).pathname;
+
+    if (path.startsWith('/telemetry/visits') || path.startsWith('/_astro/visit-analytics.')) {
+      visitsRequests.push(path);
+    }
+  });
 
   page.on('response', (response) => {
     if (response.request().resourceType() === 'script') {
@@ -32,6 +41,7 @@ test('measures real page performance without exporting URLs, attribution or brow
 
   expect(sizes).toHaveLength(4);
   expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(65536);
+  expect(visitsRequests).toEqual([]);
 
   for (const report of reports) {
     expect(report.status).toBe(202);
