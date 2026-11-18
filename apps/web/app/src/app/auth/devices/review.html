@@ -13,8 +13,9 @@
         control-id="device-pairing-code"
         [label]="codeLabel"
         [description]="codeLength"
-        [invalid]="fields.code().touched() && fields.code().invalid()"
-        [error]="fields.code().touched() ? (fields.code().errors()[0]?.message ?? '') : ''"
+        data-show-error
+        [invalid]="attempted() && fields.code().invalid()"
+        [error]="attempted() ? (fields.code().errors()[0]?.message ?? '') : ''"
       >
         <app-pin-input [formField]="fields.code" type="text" />
       </app-field>

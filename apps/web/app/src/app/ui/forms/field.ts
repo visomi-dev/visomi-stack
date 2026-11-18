@@ -19,6 +19,14 @@ import { field as styles } from '@visomi-stack/web-frontend-ui';
 
     <p app-error [id]="errorId()" [hidden]="!message()">{{ message() }}</p>
   `,
+  styles: `
+    :host([data-show-error]) > [data-slot='error']:not([hidden]) {
+      grid-template-rows: 1fr;
+      visibility: visible;
+      opacity: 1;
+      margin-top: 0;
+    }
+  `,
   host: {
     'data-control': '',
     '[attr.data-invalid]': 'invalid() ? "" : null',

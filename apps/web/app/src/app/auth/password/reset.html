@@ -13,8 +13,9 @@
         control-id="reset-code"
         [label]="codeLabel"
         [description]="codeLength"
-        [invalid]="fields.code().touched() && fields.code().invalid()"
-        [error]="fields.code().touched() ? (fields.code().errors()[0]?.message ?? '') : ''"
+        data-show-error
+        [invalid]="attempted() && fields.code().invalid()"
+        [error]="attempted() ? (fields.code().errors()[0]?.message ?? '') : ''"
       >
         <app-pin-input [formField]="fields.code" type="text" autocomplete="one-time-code" />
       </app-field>
@@ -76,8 +77,9 @@
           control-id="reset-factor"
           [label]="factorLabel"
           [description]="model().kind === 'totp' ? codeLength : ''"
-          [invalid]="fields.factor().touched() && fields.factor().invalid()"
-          [error]="fields.factor().touched() ? (fields.factor().errors()[0]?.message ?? '') : ''"
+          data-show-error
+          [invalid]="attempted() && fields.factor().invalid()"
+          [error]="attempted() ? (fields.factor().errors()[0]?.message ?? '') : ''"
         >
           @if (model().kind === 'totp') {
             <app-pin-input [formField]="fields.factor" type="text" />

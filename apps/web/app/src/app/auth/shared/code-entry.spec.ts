@@ -92,7 +92,7 @@ it('focuses its own invalid control even when another form has an invalid field'
   }
 });
 
-it('marks an invalid edit as touched when the native input blurs', async () => {
+it('marks an edit as touched on blur and presents errors after submission', async () => {
   const fixture = TestBed.createComponent(CodeEntry);
 
   await fixture.whenStable();
@@ -108,6 +108,13 @@ it('marks an invalid edit as touched when the native input blurs', async () => {
 
   input.focus();
   input.blur();
+
+  await fixture.whenStable();
+
+  expect(fixture.componentInstance.fields.code().touched()).toBe(true);
+  expect(input.hasAttribute('aria-invalid')).toBe(false);
+
+  fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
   await fixture.whenStable();
 
