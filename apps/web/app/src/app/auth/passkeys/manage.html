@@ -95,9 +95,7 @@
               Save
             </button>
 
-            <button appUI type="button" variant="secondary" (click)="editing.set(null)" i18n="@@authCancel">
-              Cancel
-            </button>
+            <button appUI type="button" variant="secondary" (click)="cancelRename()" i18n="@@authCancel">Cancel</button>
           </div>
         </form>
       } @else {
@@ -113,7 +111,7 @@
             [attr.aria-expanded]="removing() === key.id"
             [attr.aria-controls]="'passkey-confirmation-' + key.id"
             [disabled]="action.busy()"
-            (click)="removing.set(removing() === key.id ? null : key.id)"
+            (click)="toggleRemovalConfirmation(key.id)"
             i18n="@@authRemove"
           >
             Remove
@@ -138,9 +136,7 @@
                 Confirm removal
               </button>
 
-              <button appUI variant="secondary" (click)="removing.set(null); removeKey.focus()" i18n="@@authCancel">
-                Cancel
-              </button>
+              <button appUI variant="secondary" (click)="cancelRemoval(removeKey)" i18n="@@authCancel">Cancel</button>
             </div>
           </div>
         }

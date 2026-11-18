@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { securityHeaders } from './security-headers';
 
-function headers(production?: boolean, nonce = false, google = false) {
+function headers(production?: boolean, nonce = false, google = false, wasm = false) {
   const values = new Map<string, string>();
   const response = {
     locals: {} as Record<string, string>,
@@ -12,7 +12,7 @@ function headers(production?: boolean, nonce = false, google = false) {
   };
   const next = vi.fn();
 
-  securityHeaders({ production, nonce, google })({} as Request, response as unknown as Response, next);
+  securityHeaders({ production, nonce, google, wasm })({} as Request, response as unknown as Response, next);
 
   return { values, next, response };
 }
@@ -85,4 +85,15 @@ describe('shared Helmet policy', () => {
     expect(csp).toContain("script-src-attr 'none'");
     expect(csp).not.toContain('unsafe-inline');
   });
+});
+
+it('permits WebAssembly only for the opted-in application while still rejecting JavaScript eval and inline handlers', () => {
+  const enabled = headers(false, true, false, true).values.get('content-security-policy')!;
+  const defaults = headers(false).values.get('content-security-policy')!;
+
+  expect(enabled).toContain("'wasm-unsafe-eval'");
+  expect(enabled).not.toContain("'unsafe-eval'");
+  expect(enabled).not.toContain("'unsafe-inline'");
+  expect(enabled).toContain("script-src-attr 'none'");
+  expect(defaults).not.toContain('wasm-unsafe-eval');
 });

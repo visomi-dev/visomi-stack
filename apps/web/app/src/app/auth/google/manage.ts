@@ -103,5 +103,14 @@ export class ManageGoogle {
     );
   }
 
+  protected cancelUnlink(trigger: HTMLButtonElement): void {
+    this.confirm.set(null);
+    trigger.focus();
+  }
+
+  protected toggleUnlinkConfirmation(id: string): void {
+    this.confirm.update((current) => (current === id ? null : id));
+  }
+
   private readonly initialize = afterNextRender(() => void this.action.run(() => this.reload()));
 }

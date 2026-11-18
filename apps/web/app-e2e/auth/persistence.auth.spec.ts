@@ -37,6 +37,8 @@ test('hybrid persistence keeps private content out of transport and reopens lock
 
   const workspace = page.url();
 
+  await expect(page.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
+
   await page.getByLabel('Operational content', { exact: true }).fill(cloudMarker);
 
   await page.getByRole('button', { name: 'Save operational note', exact: true }).click();
@@ -118,7 +120,13 @@ test('hybrid persistence keeps private content out of transport and reopens lock
     animations: 'disabled',
   });
 
-  await page.getByRole('button', { name: 'Desbloquear con passkey', exact: true }).focus();
+  const unlock = page.getByRole('button', { name: 'Desbloquear con passkey', exact: true });
+
+  await expect(unlock).toBeEnabled();
+
+  await unlock.focus();
+
+  await expect(unlock).toBeFocused();
 
   await page.keyboard.press('Enter');
 
@@ -149,7 +157,7 @@ test('hybrid persistence keeps private content out of transport and reopens lock
   await expect(page.getByText(privateMarker, { exact: true })).toHaveCount(0);
 });
 
-test('SPA resource navigation and browser history lock private state and retain only the correct encrypted outbox', async ({
+test('SPA resource navigation and browser history isolate views and retain only the correct encrypted outbox', async ({
   page,
   context,
 }) => {
@@ -273,11 +281,9 @@ test('SPA resource navigation and browser history lock private state and retain 
 
   await expect(page.getByLabel('Operational content', { exact: true })).toHaveValue('Synthetic cloud B');
 
-  await expect(page.getByText('Private resources are locked.', { exact: true })).toBeVisible();
-
   await expect(page.locator('pre')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Unlock with passkey', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Unlock with passkey', exact: true })).toHaveCount(0);
 
   await expect(page.getByLabel('Private text', { exact: true })).toHaveValue('');
 
@@ -287,9 +293,7 @@ test('SPA resource navigation and browser history lock private state and retain 
 
   await expect(page.getByLabel('Operational content', { exact: true })).toHaveValue('Synthetic cloud A');
 
-  await expect(page.getByText('Private resources are locked.', { exact: true })).toBeVisible();
-
-  await page.getByRole('button', { name: 'Unlock with passkey', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Unlock with passkey', exact: true })).toHaveCount(0);
 
   await expect(page.locator('pre')).toHaveText('SYNTHETIC_PRIVATE_ROUTE_A');
 

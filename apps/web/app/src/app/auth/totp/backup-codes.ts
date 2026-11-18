@@ -39,4 +39,13 @@ export class BackupCodes {
       { name: 'regenerate' },
     );
   }
+
+  protected cancelReplacement(trigger: HTMLButtonElement): void {
+    this.confirm.set(false);
+    trigger.focus();
+  }
+
+  protected toggleReplacementConfirmation(): void {
+    this.confirm.update((value) => !value);
+  }
 }

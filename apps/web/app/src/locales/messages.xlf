@@ -2459,70 +2459,70 @@
       <trans-unit id="vaultLocked" datatype="html">
         <source>Private resources are locked.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">5</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultReady" datatype="html">
         <source>Unlocked on this device.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">7</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultCorrupt" datatype="html">
         <source>Integrity could not be verified. Keep the encrypted copy and restore from a trusted backup.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">11</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultQuota" datatype="html">
         <source>Storage or encryption limits were reached. Export an encrypted backup before changing storage.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">13</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultRecovery" datatype="html">
         <source>This device has no usable wrapped key. Use your product&apos;s explicit recovery or device approval flow. Resetting a password does not recover private data.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">15</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultNoPrf" datatype="html">
         <source>This credential or browser does not support the required private unlock. Use a supported device. The server cannot unlock this resource.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultCancelled" datatype="html">
         <source>Unlock was cancelled. Your private resources remain locked.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">19</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultOrigin" datatype="html">
         <source>This unlock credential belongs to a different site. Return to the original site.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">21</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultConflict" datatype="html">
         <source>A newer encrypted change exists. Synchronize and resolve the conflict before trying again.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">23</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultUnavailable" datatype="html">
         <source>Private storage is unavailable on this device. No server-readable fallback was enabled.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/vault-messages.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">25</context>
         </context-group>
       </trans-unit>
@@ -2552,6 +2552,71 @@
       </trans-unit>
       <trans-unit id="vaultOperationExpired" datatype="html">
         <source>The retry window for this pending change expired. Keep the encrypted copy, synchronize, and explicitly resolve it before creating a new operation.</source>
+      </trans-unit>
+      <trans-unit id="vaultPinWarning" datatype="html">
+        <source> Without passkey support, you can choose a six-digit PIN. Someone with a copy of your encrypted storage can try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local unlock works offline in an already signed-in session. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="linenumber">98,100</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPinLength" datatype="html">
+        <source>6 digits</source>
+      </trans-unit>
+      <trans-unit id="vaultPinLabel" datatype="html">
+        <source>Local unlock PIN</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="linenumber">103</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPinUnlock" datatype="html">
+        <source> Unlock locally with PIN </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="linenumber">122,123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPinConfirm" datatype="html">
+        <source>Confirm PIN for initial setup</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="linenumber">127,128</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPinInitialize" datatype="html">
+        <source> Set up an empty private resource with PIN </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="linenumber">154,156</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPinInvalid" datatype="html">
+        <source>Enter a six-digit PIN. For initial setup, enter the same PIN twice.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
+          <context context-type="linenumber">4</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPanelPinWarning" datatype="html">
+        <source>This resource uses a local PIN. A copy of encrypted storage permits offline PIN guessing; PIN protection is weaker than a passkey.</source>
+      </trans-unit>
+      <trans-unit id="vaultPanelPinUnlock" datatype="html">
+        <source>Unlock locally with PIN</source>
+      </trans-unit>
+      <trans-unit id="vaultUnlockHeading" datatype="html">
+        <source>Unlock your private resources</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock.html</context>
+          <context context-type="linenumber">7,9</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultUnlockDescription" datatype="html">
+        <source> A local vault is closed. Unlock it to use its private resources. Other local vaults may use a different key or PIN. Navigating in this session keeps an opened vault unlocked until you lock it or sign out. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock.html</context>
+          <context context-type="linenumber">10,14</context>
+        </context-group>
       </trans-unit>
     </body>
   </file>

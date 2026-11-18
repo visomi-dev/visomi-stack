@@ -15,7 +15,7 @@
     variant="secondary"
     class="w-full sm:w-fit"
     [disabled]="action.busy()"
-    (click)="confirm.set(confirm() === 'others' ? null : 'others')"
+    (click)="toggleRevocationConfirmation('others')"
     i18n="@@authEndOtherSessions"
   >
     End other sessions
@@ -37,9 +37,7 @@
           Confirm
         </button>
 
-        <button appUI variant="secondary" (click)="confirm.set(null); endOthers.focus()" i18n="@@authCancel">
-          Cancel
-        </button>
+        <button appUI variant="secondary" (click)="cancelRevocation(endOthers)" i18n="@@authCancel">Cancel</button>
       </div>
     </section>
   }
@@ -75,7 +73,7 @@
         appUI
         variant="secondary"
         [disabled]="action.busy()"
-        (click)="confirm.set(confirm() === entry.id ? null : entry.id)"
+        (click)="toggleRevocationConfirmation(entry.id)"
         i18n="@@authEndSession"
       >
         End session
@@ -102,9 +100,7 @@
               Confirm
             </button>
 
-            <button appUI variant="secondary" (click)="confirm.set(null); endSession.focus()" i18n="@@authCancel">
-              Cancel
-            </button>
+            <button appUI variant="secondary" (click)="cancelRevocation(endSession)" i18n="@@authCancel">Cancel</button>
           </div>
         </div>
       }

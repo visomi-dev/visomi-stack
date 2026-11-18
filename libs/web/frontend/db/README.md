@@ -2,14 +2,17 @@
 
 Provisional browser implementation of the platform-neutral contracts in
 `@visomi-stack/shared-db`: contextual AES-256-GCM/HKDF, RSA-OAEP/P-256,
-PRF-only unlock, ciphertext IndexedDB, independent device custody and opaque sync.
+explicit PRF/PIN unlock, ciphertext IndexedDB, independent device custody and opaque sync.
+The explicitly selected `PinUnlock` adapter supports offline short-PIN unlock
+with a fixed Argon2id profile and disclosed offline guessing limitations; see the
+[PIN contract](../../../../docs/architecture/contracts/offline-pin.md).
 Cloud login never unwraps a key. Unsupported PRF blocks instead of enabling a
 server-readable fallback. Operational keys are nonextractable; cleanup in managed
 runtimes is best effort.
 
 `BrowserVault` owns one independently lockable key scope/generation. `seal` commits
 an encrypted local unit; `encrypt` prepares ciphertext for an atomic sync outbox.
-`DeviceCustody` keeps private device identity in an independent local PRF vault,
+`DeviceCustody` keeps private device identity in an independent local unlock vault,
 never under a shared resource DEK. Recipient installation requires a signed witness
 and an explicitly trusted signing pin. Do not obtain that pin solely from a cloud
 roster. Low-level OAEP decryption is not an enrollment approval workflow.
@@ -62,3 +65,11 @@ and operation errors preserve local pins/outboxes. Automatic expired-history
 bootstrap remains unsupported. Global nonce accounting, independent crypto review,
 provider operations and additional runtimes remain release work; no production
 acceptance is claimed.
+
+Within `src/lib`, `db/` owns Dexie schemas and IndexedDB transactions, `crypto/`
+owns WebCrypto primitives, `vault/` owns key custody, PIN and PRF unlock, backup
+and recovery, and `sync/` owns replica state transitions. Consumers use the
+existing SDK entrypoints. The separate `/storage` entrypoint loads Dexie on demand.
+
+In Angular, `shared/db` supplies database connections and transport, `shared/vault`
+owns unlock and custody, and `ui/forms` supplies the reusable PIN control.

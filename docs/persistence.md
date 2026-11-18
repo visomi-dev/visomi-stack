@@ -66,7 +66,8 @@ keeps cloud-readable operations and client-encrypted notes in separate domains.
 Only current verified users may obtain `/persistence/policy`. Do not put customer
 records, wrapped keys, plaintext, or persistence responses into SSR transfer caches.
 The Angular application excludes persistence requests from transfer caching, and
-`VaultSession` creates browser adapters only on explicit unlock. `VaultPanel` is a
+`VaultSession` never decrypts before explicit unlock. The shell may open a metadata-only
+storage connection to discover closed local vaults after rendering. `VaultPanel` is a
 consumer component with a supplied stable object context and separately provisioned
 PRF credential; it does not select a reader mode for the user. Each panel owns its
 own `VaultSession`, so simultaneous editors do not share a plaintext display or
@@ -74,6 +75,14 @@ implicitly inherit another editor's unlock. Changes to its binding, complete dat
 context or RP ID invalidate pending operations, clear drafts/revisions and require
 explicit unlock again. An explicit lock retains the same object's local revision;
 it never deletes stored ciphertext. Late saves cannot emit into a new context.
+
+## Optional offline PIN unlock
+
+Devices without passkey PRF can explicitly select the short-PIN adapter. This
+method has weaker offline-guessing resistance than PRF. Initial online setup,
+local-only unlock, fixed Argon2id parameters, compatibility, CSP and remaining
+limits are described in the [PIN contract](architecture/contracts/offline-pin.md).
+It does not convert existing vaults, reset account passwords or choose recovery.
 
 ## Browser integration responsibilities
 
@@ -127,14 +136,50 @@ services. Existing HTTP/UI routes and protocol errors retain their public names.
 
 ## Angular routes and browser databases
 
+In the Angular application, `shared/db` opens account-bound IndexedDB connections
+through `ClientDatabase` and provides the persistence transport, `DatabaseHttp`.
+`shared/vault` owns unlock ceremonies, device and key custody, session lifetime,
+capability detection, messages and unlock panels. The example in `app/db` selects
+its product key domain and passes it to the vault when opening a local replica.
+
+`ui/forms/PinInput` is a masked numeric form control exported by the Angular UI
+catalog. The caller supplies the current value, handles edits and can configure
+the digit count and minimum length. Vault forms require exactly six ASCII digits and submit explicitly. The control
+and its containing `Field` can also be used outside persistence.
+
+`VaultUnlock` receives method, busy/notice state, a PIN model and a caller-supplied
+stable `control-id`, and emits an explicit unlock action. It does not inject a
+session, Router, HTTP client or vault. The authenticated layout supplies `Vaults`
+and owns the `/persistence` exclusion so the resource screen and shell never show
+duplicate prompts. `Vaults` has no product-route knowledge. Its scoped provider and
+the root account-bound `VaultSession` retain their existing lifetimes.
+
+Nx keeps `shared-db` platform-neutral and `web-frontend-db` as the framework-independent
+browser SDK; `web-frontend-ui` contains framework-independent visual recipes.
+Angular adapters stay in the Angular application, just as existing UI and navigation
+adapters do. No Angular/browser dependencies are introduced into backend/common
+libraries, and no new library, boundary exception or runtime is needed. `Vaults`
+and `VaultUnlock` omit the redundant `App` class/file prefix; the component selector
+remains `app-vault-unlock` under the existing Angular ESLint prefix convention.
+
 The route-scoped `ExampleWorkspace` service binds to the live `ActivatedRoute.paramMap`, including Router
 reuse and browser history. The shared `Navigation` service exposes navigation state and cancellation as signals,
 and drives the page loader. Each `NavigationStart` synchronously aborts HTTP work,
-stops/closes the replica and device custody, locks the vault, and clears cloud
-revisions, plaintext and unfinished UI drafts. End/cancel/error reloads the current
-route under a fresh context. Query-only or canceled navigation also locks; the user
-must explicitly unlock again. This conservative behavior is a reversible technical
-choice. Encrypted pending changes and trusted checkpoints remain in IndexedDB.
+stops/closes the view's replica connection, releases its selected display and clears
+cloud revisions, plaintext and unfinished drafts. The account-bound `VaultSession`
+retains already opened key and independent signing custody across ordinary,
+query-only and canceled navigation. Reentering a scope restores only its requested
+object and retained replica pins without repeating a ceremony; a different closed
+scope still needs explicit unlock. Late operations cannot lock retained custody
+used by the new view. Explicit lock, logout, account/version invalidation and full
+reload close custody. Encrypted pending changes and checkpoints remain in IndexedDB.
+
+After browser rendering, the authenticated shell discovers existing local vault
+metadata and offers unlock for closed vaults at Home/Account/Security. The resource
+screen owns its contextual controls, so the shell does not duplicate those prompts.
+No app-wide PIN, automatic enrollment or PRF conversion is introduced. For a new
+resource, PIN setup appears only after client/ceremony PRF unavailability; existing
+bindings always retain their method. See the [PIN contract](architecture/contracts/offline-pin.md).
 
 Every asynchronous continuation captures its context and checks it after awaits.
 Late reads, writes, errors and `finally` handlers cannot update another route's

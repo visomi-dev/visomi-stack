@@ -1,17 +1,16 @@
 import { Component, inject } from '@angular/core';
 
 import { NavigationHeading } from '../shared/navigation-heading';
-import { Button, Field, Heading, Text, Textarea } from '../ui';
+import { Button, Field, PinInput, Heading, Text, Textarea } from '../ui';
+import { DatabaseHttp } from '../shared/db/http';
 
 import { ExampleWorkspace } from './example-workspace';
 import { ExamplePrivateResource } from './example-private-resource';
-import { DatabaseHttp } from './http';
-import { VaultSession } from './vault-session';
 
 @Component({
   selector: 'app-database-example',
-  imports: [Button, Field, Heading, Text, Textarea, NavigationHeading],
-  providers: [ExampleWorkspace, DatabaseHttp, ExamplePrivateResource, VaultSession],
+  imports: [PinInput, Button, Field, Heading, Text, Textarea, NavigationHeading],
+  providers: [ExampleWorkspace, DatabaseHttp, ExamplePrivateResource],
   templateUrl: './example.html',
 })
 export class DatabaseExample {

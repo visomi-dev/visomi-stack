@@ -46,7 +46,7 @@ export function createApp(
   }
 
   if ((options.helmetMode ?? 'managed') === 'managed') {
-    app.use(securityHeaders({ nonce: true }));
+    app.use(securityHeaders({ nonce: true, wasm: true }));
   }
 
   if (options.browserTelemetry) {

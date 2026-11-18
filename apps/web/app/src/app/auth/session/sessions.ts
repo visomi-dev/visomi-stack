@@ -87,5 +87,14 @@ export class Sessions {
     );
   }
 
+  protected cancelRevocation(trigger: HTMLButtonElement): void {
+    this.confirm.set(null);
+    trigger.focus();
+  }
+
+  protected toggleRevocationConfirmation(id: string): void {
+    this.confirm.update((current) => (current === id ? null : id));
+  }
+
   private readonly initialize = afterNextRender(() => void this.action.run(() => this.reload()));
 }

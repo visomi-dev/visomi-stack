@@ -137,5 +137,18 @@ export class ManagePasskeys {
     );
   }
 
+  protected cancelRemoval(trigger: HTMLButtonElement): void {
+    this.removing.set(null);
+    trigger.focus();
+  }
+
+  protected cancelRename(): void {
+    this.editing.set(null);
+  }
+
+  protected toggleRemovalConfirmation(id: string): void {
+    this.removing.update((current) => (current === id ? null : id));
+  }
+
   private readonly initialize = afterNextRender(() => void this.action.run(() => this.reload()));
 }

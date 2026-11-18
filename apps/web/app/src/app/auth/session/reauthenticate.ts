@@ -162,6 +162,14 @@ export class Reauthenticate {
     }
   }
 
+  protected togglePasswordVisibility(): void {
+    this.visible.update((value) => !value);
+  }
+
+  protected switchVerificationMethod(): void {
+    this.backup.update((value) => !value);
+  }
+
   private async complete(): Promise<void> {
     this.journey.clear();
 

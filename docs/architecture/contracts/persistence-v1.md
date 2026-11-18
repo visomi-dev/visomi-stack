@@ -91,7 +91,9 @@ consumed before verification. Every lifecycle mutation rechecks current membersh
 key scope, generation and roster epoch under the tenant transaction lock.
 
 Device signing/decryption material is encrypted under a separate local
-`device-custody` PRF vault. It is not protected by a shared resource DEK. Operational
+`device-custody` vault using explicit PRF or PIN unlock. The optional short-PIN
+profile and its offline-guessing limitation are specified in [the PIN contract](offline-pin.md).
+It is not protected by a shared resource DEK. Operational
 private keys are nonextractable. Byte clearing/dropped references are best effort
 in managed runtimes; malicious served code can invoke unlocked keys.
 

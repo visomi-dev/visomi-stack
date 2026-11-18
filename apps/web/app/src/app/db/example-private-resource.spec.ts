@@ -6,10 +6,10 @@ import { IndexedDbReplicaStorage } from '@visomi-stack/web-frontend-db/storage';
 import { dataEnvelopeSchema, syncCheckpointMessage, type WrappingContext } from '@visomi-stack/shared-db';
 
 import { Session } from '../auth/session/session';
+import { DatabaseHttp } from '../shared/db/http';
+import { VaultSession } from '../shared/vault/vault-session';
 
 import { ExamplePrivateResource } from './example-private-resource';
-import { DatabaseHttp } from './http';
-import { VaultSession } from './vault-session';
 
 afterEach(() => {
   TestBed.resetTestingModule();
@@ -62,6 +62,10 @@ async function fixture(generation = 1, schemaVersion = 1) {
   const storage = {
     pin: vi.fn(async () => initial),
     commit,
+    advanceControl: vi.fn(async (_id: string, minimum: { epoch: number; generation: number }) => {
+      initial.epoch = Math.max(initial.epoch, minimum.epoch);
+      initial.generation = Math.max(initial.generation, minimum.generation);
+    }),
     unit: vi.fn(async () => envelope),
     pending: vi.fn(async () => undefined),
     close: vi.fn(),
@@ -70,12 +74,17 @@ async function fixture(generation = 1, schemaVersion = 1) {
   vi.spyOn(IndexedDbReplicaStorage, 'open').mockResolvedValue(storage as unknown as IndexedDbReplicaStorage);
   const vault = {
     localBinding: vi.fn(async () => binding),
+    localLatestBinding: vi.fn(async () => binding),
+    canResume: vi.fn(() => true),
+    isOpen: vi.fn(() => true),
     connect: vi.fn(async () => undefined),
     device: vi.fn(async () => ({ publicKeys: async () => keys, lock: vi.fn() })),
     ready: signal(true),
     readEnvelope: vi.fn(async () => undefined),
     clearDisplay: vi.fn(),
     lock: vi.fn(),
+    lockContext: vi.fn(),
+    release: vi.fn(),
   };
   const api = {
     request: vi.fn(async (path: string) =>
@@ -242,4 +251,91 @@ it('does not resume an old save after another object is unlocked in the same sco
   expect(f.vault.readEnvelope.mock.calls).toHaveLength(reads);
   expect(f.resource.pending()).toBe(false);
   expect(f.resource.synchronized()).toBe(true);
+});
+
+it('restores an already opened local scope for its new view without any roster or synchronization request', async () => {
+  const f = await fixture();
+
+  await f.resource.resume(f.target, 'synthetic.example.test');
+
+  expect(f.api.request).not.toHaveBeenCalled();
+  expect(f.vault.canResume).toHaveBeenCalledWith(f.binding);
+  expect(f.vault.connect).toHaveBeenCalledWith(f.binding, 'synthetic.example.test', false, undefined);
+  expect(f.vault.readEnvelope).toHaveBeenCalledWith(f.envelope);
+  f.resource.close();
+  expect(f.vault.lock).not.toHaveBeenCalled();
+  expect(f.storage.close).toHaveBeenCalled();
+});
+
+it('rejects a late navigation resume before it can replace the target or reconnect custody', async () => {
+  const f = await fixture();
+  let finish!: (value: WrappingContext) => void;
+
+  f.vault.localLatestBinding.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const pending = f.resource.resume(f.target, 'synthetic.example.test');
+  const rejected = expect(pending).rejects.toMatchObject({ code: 'stale-operation' });
+
+  f.resource.close();
+  finish(f.binding);
+
+  await rejected;
+
+  expect(f.vault.connect).not.toHaveBeenCalled();
+  expect(f.api.request).not.toHaveBeenCalled();
+});
+
+it('retains the authorized roster epoch and generation through navigation before the first sync page arrives', async () => {
+  const f = await fixture();
+  const request = f.api.request.getMockImplementation()!;
+  let finish!: (page: Awaited<ReturnType<typeof request>>) => void;
+  const delayed = new Promise<Awaited<ReturnType<typeof request>>>((resolve) => {
+    finish = resolve;
+  });
+
+  f.api.request.mockImplementation((path) => (path.endsWith('/sync/pull') ? delayed : request(path)));
+  const opening = f.resource.unlock(f.target, 'synthetic.example.test', false);
+  const canceled = expect(opening).rejects.toMatchObject({ code: 'stale-operation' });
+
+  await vi.waitFor(() => expect(f.api.request.mock.calls.some(([path]) => path.endsWith('/sync/pull'))).toBe(true));
+
+  expect(f.initial.epoch).toBe(3);
+  expect(f.commit).not.toHaveBeenCalled();
+  f.resource.close();
+
+  await f.resource.resume(f.target, 'synthetic.example.test');
+
+  f.api.request.mockImplementation(async (path) => {
+    const page = await request(path);
+
+    return { ...page, epoch: 2 };
+  });
+
+  await expect(f.resource.synchronize(f.target)).rejects.toMatchObject({ code: 'context-mismatch' });
+
+  expect(f.commit).not.toHaveBeenCalled();
+  expect(f.initial).toEqual({ cursor: 0, checkpoint: null, generation: 2, epoch: 3 });
+
+  const page = await request('/sync/pull');
+
+  finish(page);
+
+  await canceled;
+});
+
+it('invalidates cached custody when the authorized roster no longer approves its device', async () => {
+  const f = await fixture();
+
+  f.api.request.mockResolvedValueOnce({ key: f.binding.key, epoch: 3, phase: 'ready', devices: [] });
+
+  await expect(f.resource.unlock(f.target, 'synthetic.example.test', false)).rejects.toMatchObject({
+    code: 'recovery-required',
+  });
+
+  expect(f.vault.lockContext).toHaveBeenCalledWith(f.binding);
+  expect(f.commit).not.toHaveBeenCalled();
 });

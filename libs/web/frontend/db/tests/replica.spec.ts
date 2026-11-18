@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DataEnvelope, SyncEvent } from '@visomi-stack/shared-db';
 
-import type { PendingWrite } from '../src/lib/replica';
+import type { PendingWrite } from '../src/lib/sync/replica';
 
 import { browser, prepare, vector, type FixtureWindow } from './support/browser';
 

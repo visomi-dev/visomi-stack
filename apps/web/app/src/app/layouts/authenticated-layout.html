@@ -65,6 +65,12 @@
     </a>
 
     <div data-slot="actions" class="flex flex-wrap items-center gap-2 sm:gap-4">
+      @if (vaults.vault.knownBindings().length) {
+        <button appUI type="button" variant="secondary" (click)="vaults.lock()" i18n="@@vaultLock">
+          Lock private resources
+        </button>
+      }
+
       <app-language-switcher />
 
       <button app-theme-switcher aria-label="Dark theme" i18n-aria-label="@@themeToggle"></button>
@@ -81,6 +87,15 @@
     }
 
     @if (session.full()) {
+      <app-vault-unlock
+        control-id="workspace-vault"
+        [method]="vaultMethod()"
+        [busy]="vaults.busy()"
+        [notice]="vaults.notice()"
+        [(pin)]="vaults.pin"
+        (unlock)="vaults.unlock()"
+      />
+
       @for (user of [session.user()]; track user?.id) {
         <router-outlet class="hidden" />
       }

@@ -1,0 +1,24 @@
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+div {
+  --slot-width: min(2.5rem, calc(100cqi / (var(--digits) + 1)));
+}
+
+.slot {
+  box-sizing: border-box;
+  height: 2.75rem;
+  border: 1px solid;
+  border-radius: 0.5rem;
+  width: calc(var(--slot-width) - 0.25rem);
+}
+
+/* Leave room after the last mask so native selection and the caret do not scroll the first digit out of its slot. */
+input {
+  box-sizing: border-box;
+  width: calc((var(--digits) + 0.5) * var(--slot-width));
+  padding-inline-start: calc((var(--slot-width) - 0.25rem - 1ch) / 2);
+  letter-spacing: calc(var(--slot-width) - 1ch);
+}

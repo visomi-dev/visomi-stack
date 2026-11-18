@@ -45,7 +45,7 @@
             [attr.aria-describedby]="cloudField.describedBy()"
             [value]="workspace.cloudDraft()"
             [disabled]="workspace.busy()"
-            (input)="workspace.cloudDraft.set(cloudText.value)"
+            (input)="workspace.editOperationalNote(cloudText.value)"
           ></textarea>
         </app-field>
 
@@ -65,32 +65,89 @@
         keys can permanently lose access. Password reset does not recover private content.
       </p>
 
-      <div class="flex flex-wrap gap-3">
-        <button
-          appUI
-          type="button"
-          [disabled]="workspace.busy() || workspace.vault.ready()"
-          (click)="workspace.unlock()"
-          i18n="@@vaultUnlock"
-        >
-          Unlock with passkey
-        </button>
+      @if (workspace.showPrf() && !workspace.vault.ready()) {
+        <div class="flex flex-wrap gap-3">
+          <button
+            appUI
+            type="button"
+            [disabled]="workspace.busy() || workspace.vault.ready()"
+            (click)="workspace.unlock()"
+            i18n="@@vaultUnlock"
+          >
+            Unlock with passkey
+          </button>
 
-        <button
-          appUI
-          type="button"
-          variant="secondary"
-          [disabled]="workspace.busy() || workspace.vault.ready()"
-          (click)="workspace.unlock(true)"
-          i18n="@@persistenceInitializePrivate"
-        >
-          Provision an empty private resource
-        </button>
+          @if (workspace.canInitialize()) {
+            <button
+              appUI
+              type="button"
+              variant="secondary"
+              [disabled]="workspace.busy() || workspace.vault.ready()"
+              (click)="workspace.unlock(true)"
+              i18n="@@persistenceInitializePrivate"
+            >
+              Provision an empty private resource
+            </button>
+          }
+        </div>
+      }
 
-        <button appUI type="button" variant="secondary" (click)="workspace.lock()" i18n="@@vaultLock">
-          Lock private resources
-        </button>
-      </div>
+      @if (workspace.showPin() && !workspace.vault.ready()) {
+        <form class="space-y-4" (submit)="$event.preventDefault(); workspace.unlockWithPin()">
+          <p appUI tone="muted" i18n="@@vaultPinWarning">
+            Without passkey support, you can choose a six-digit PIN. Someone with a copy of your encrypted storage can
+            try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local
+            unlock works offline in an already signed-in session.
+          </p>
+
+          <app-field
+            control-id="vault-pin"
+            label="Local unlock PIN"
+            i18n-label="@@vaultPinLabel"
+            description="6 digits"
+            i18n-description="@@vaultPinLength"
+          >
+            <app-pin-input
+              required
+              [digits]="6"
+              [disabled]="workspace.busy()"
+              [value]="workspace.pinDraft()"
+              (valueChange)="workspace.changePin($event)"
+            />
+          </app-field>
+
+          <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinUnlock">
+            Unlock locally with PIN
+          </button>
+        </form>
+
+        @if (workspace.canInitialize()) {
+          <app-field
+            control-id="vault-pin-confirm"
+            label="Confirm PIN for initial setup"
+            i18n-label="@@vaultPinConfirm"
+          >
+            <app-pin-input
+              required
+              [digits]="6"
+              [disabled]="workspace.busy()"
+              [value]="workspace.pinConfirmation()"
+              (valueChange)="workspace.changePinConfirmation($event)"
+            />
+          </app-field>
+
+          <button
+            appUI
+            type="button"
+            variant="secondary"
+            [disabled]="workspace.busy()"
+            (click)="workspace.unlockWithPin(true)"
+            i18n="@@vaultPinInitialize"
+          >
+            Set up an empty private resource with PIN
+          </button>
+        }
+      }
 
       @if (workspace.vault.ready()) {
         <form class="space-y-4" (submit)="$event.preventDefault(); workspace.savePrivate()">
@@ -114,7 +171,7 @@
               [attr.aria-describedby]="privateField.describedBy()"
               [value]="workspace.privateDraft()"
               [disabled]="workspace.busy() || workspace.privateResource.pending()"
-              (input)="workspace.privateDraft.set(privateText.value)"
+              (input)="workspace.editPrivateText(privateText.value)"
             ></textarea>
           </app-field>
 

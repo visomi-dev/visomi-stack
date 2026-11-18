@@ -1,0 +1,28 @@
+<div
+  class="relative w-fit rounded-lg text-zinc-950 has-focus-visible:outline-2 has-focus-visible:outline-offset-3 has-focus-visible:outline-blue-600 has-disabled:opacity-50 dark:text-zinc-50 dark:has-focus-visible:outline-blue-400"
+  dir="ltr"
+>
+  <div aria-hidden="true" class="pointer-events-none flex gap-1">
+    @for (slot of slots(); track slot) {
+      <span class="slot"></span>
+    }
+  </div>
+
+  <input
+    #control
+    type="password"
+    inputmode="numeric"
+    autocomplete="off"
+    [minLength]="minDigits()"
+    [maxLength]="digits()"
+    [pattern]="pattern()"
+    data-slot="control"
+    class="absolute inset-y-0 start-0 rounded-lg bg-transparent font-mono outline-hidden disabled:cursor-not-allowed"
+    [id]="field.controlId()"
+    [attr.aria-describedby]="field.describedBy()"
+    [attr.aria-invalid]="field.invalid() || !!field.manualError()?.trim() || null"
+    [required]="required()"
+    [disabled]="disabled()"
+    (input)="valueChange.emit(control.value)"
+  />
+</div>

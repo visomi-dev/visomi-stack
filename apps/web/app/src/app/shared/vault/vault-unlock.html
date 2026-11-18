@@ -1,0 +1,41 @@
+@if (method()) {
+  <section class="space-y-4 rounded-xl border p-5" [attr.aria-labelledby]="headingId()" [attr.aria-busy]="busy()">
+    <h2 appUI [id]="headingId()" i18n="@@vaultUnlockHeading">Unlock your private resources</h2>
+
+    <p appUI tone="muted" i18n="@@vaultUnlockDescription">
+      A local vault is closed. Unlock it to use its private resources. Other local vaults may use a different key or
+      PIN. Navigating in this session keeps an opened vault unlocked until you lock it or sign out.
+    </p>
+
+    <form class="space-y-4" (submit)="$event.preventDefault(); submit()">
+      @if (method() === 'pin-argon2id') {
+        <p appUI tone="muted" i18n="@@vaultPanelPinWarning">
+          This resource uses a local PIN. A copy of encrypted storage permits offline PIN guessing; PIN protection is
+          weaker than a passkey.
+        </p>
+
+        <app-field
+          [control-id]="pinId()"
+          label="Local unlock PIN"
+          i18n-label="@@vaultPinLabel"
+          description="6 digits"
+          i18n-description="@@vaultPinLength"
+        >
+          <app-pin-input required [digits]="6" [disabled]="busy()" [value]="pin()" (valueChange)="changePin($event)" />
+        </app-field>
+      }
+
+      <button appUI type="submit" [disabled]="busy()">
+        @if (method() === 'pin-argon2id') {
+          <span i18n="@@vaultPinUnlock">Unlock locally with PIN</span>
+        } @else {
+          <span i18n="@@vaultUnlock">Unlock with passkey</span>
+        }
+      </button>
+    </form>
+  </section>
+}
+
+@if (notice()) {
+  <p role="status" aria-live="polite">{{ notice() }}</p>
+}

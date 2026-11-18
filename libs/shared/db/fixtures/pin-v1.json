@@ -1,0 +1,14 @@
+{
+  "format": "visomi.pin-vector",
+  "version": 1,
+  "method": "pin-argon2id",
+  "pin": "048261",
+  "methodId": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+  "parameters": {
+    "parallelism": 1,
+    "memory": 65536,
+    "passes": 3,
+    "tagLength": 32
+  },
+  "secret": "dxlS5bI9LGReTPt9XDyzHJlTRb2-pID7Jpzbhto4GrU"
+}

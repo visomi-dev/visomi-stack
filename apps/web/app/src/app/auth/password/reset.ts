@@ -102,4 +102,8 @@ export class PasswordReset {
       onInvalid: focusInvalid,
     });
   }
+
+  protected togglePasswordVisibility(): void {
+    this.visible.update((value) => !value);
+  }
 }

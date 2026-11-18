@@ -45,7 +45,11 @@ export function createGatewayApp(options: {
 
   if ((options.helmetMode ?? 'managed') === 'managed') {
     const headers = securityHeaders();
-    const applicationHeaders = securityHeaders({ nonce: true, google: options.auth?.googleEnabled === true });
+    const applicationHeaders = securityHeaders({
+      nonce: true,
+      wasm: true,
+      google: options.auth?.googleEnabled === true,
+    });
 
     app.use((request, response, next) =>
       (request.path === '/app' || request.path.startsWith('/app/') ? applicationHeaders : headers)(
