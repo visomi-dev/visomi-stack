@@ -28,9 +28,11 @@ it('sends only the declared visit fields and rejects redirects', async () => {
 
   expect(transport).toHaveBeenNthCalledWith(
     2,
-    '/telemetry/visits',
+    'https://frontend.example.test/telemetry/visits',
     expect.objectContaining({
       ...transportPolicy,
+      mode: 'cors',
+      referrerPolicy: 'no-referrer',
       body: JSON.stringify({ page: 'home', locale: 'en' }),
     }),
   );

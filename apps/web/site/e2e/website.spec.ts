@@ -67,8 +67,7 @@ for (const locale of ['en', 'es']) {
 
     const sizes = await Promise.all(scripts);
 
-    expect(sizes).toHaveLength(3);
-    expect(Math.min(...sizes)).toBeLessThan(256);
+    expect(sizes).toHaveLength(2);
     expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(initialScriptBudget);
     expect(errors).toEqual([]);
 

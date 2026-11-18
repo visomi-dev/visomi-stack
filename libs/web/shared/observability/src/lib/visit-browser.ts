@@ -1,5 +1,6 @@
 import type { BrowserConsent } from './consent';
 import type { VisitPage } from './visits';
+import { telemetryPost } from './transport';
 
 const transport = { credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error' } as const;
 
@@ -7,8 +8,10 @@ export function trackVisits(
   browser: Window,
   consent: BrowserConsent,
   pageForPath: (path: string) => VisitPage | undefined,
+  options: { ignoreCurrent?: boolean } = {},
 ) {
-  let previous: string | undefined;
+  const initial = options.ignoreCurrent ? pageForPath(browser.location.pathname) : undefined;
+  let previous = initial && initial.locale + ':' + initial.page;
   let configuration: Promise<boolean> | undefined;
   let stopped = false;
 
@@ -51,12 +54,10 @@ export function trackVisits(
     void configuration.then((enabled) => {
       if (!stopped && enabled && consent.permit() === permit) {
         return browser
-          .fetch('/telemetry/visits', {
-            ...transport,
-            method: 'POST',
+          .fetch(browser.location.origin + '/telemetry/visits', {
+            ...telemetryPost,
             headers: { 'content-type': 'application/json' },
             body,
-            keepalive: true,
           })
           .catch(() => undefined);
       }

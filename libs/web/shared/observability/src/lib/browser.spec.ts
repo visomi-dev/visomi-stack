@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { BrowserConsent } from './consent';
-import { browserErrorKind, browserLocation, browserScreen, createBrowserReporter } from './browser';
+import { browserLocation, createBrowserReporter } from './browser';
+import { browserErrorKind, browserScreen } from './error-description';
 
 const marker = 'SYNTHETIC_PRIVATE_BROWSER_DATA_71d3';
 const id = 'a'.repeat(64);
@@ -120,7 +121,7 @@ describe('browser error capture policy', () => {
     expect(calls[0][1]).toMatchObject({
       credentials: 'omit',
       referrerPolicy: 'no-referrer',
-      mode: 'same-origin',
+      mode: 'cors',
       redirect: 'error',
       headers: { 'x-browser-telemetry': config.token },
     });
@@ -283,7 +284,10 @@ describe('browser error capture policy', () => {
     expect(sent).toBe(true);
     expect(f.reporter.pending()).toEqual([first]);
     expect(f.reporter.consent.permit()).toBeUndefined();
-    expect(f.transport.mock.calls.map(([path]) => path)).toEqual(['/telemetry/config', '/telemetry/errors']);
+    expect(f.transport.mock.calls.map(([path]) => path)).toEqual([
+      '/telemetry/config',
+      'https://frontend.example.test/telemetry/errors',
+    ]);
     expect(JSON.parse(String(f.transport.mock.calls[1][1]?.body))).toEqual(second);
     f.grant('new');
 

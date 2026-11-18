@@ -1,4 +1,6 @@
-import type { Page, Response } from '@playwright/test';
+import { writeFile } from 'node:fs/promises';
+
+import type { Page, Request, Response } from '@playwright/test';
 
 import { expect, signup, test } from './support/fixtures';
 
@@ -7,13 +9,25 @@ import { browserConsentKey, browserPrivacyCopy } from '@visomi-stack/web-shared-
 const marker = 'SYNTHETIC_PRIVATE_CONSENT_CONTENT';
 
 function requests(page: Page) {
-  const observed: { path: string; payload: unknown }[] = [];
+  const observed: { path: string; method: string; payload: unknown; status?: number }[] = [];
+  const records = new WeakMap<Request, (typeof observed)[number]>();
 
   page.on('request', (request) => {
     const path = new URL(request.url()).pathname;
 
     if (path.startsWith('/telemetry/')) {
-      observed.push({ path, payload: request.postDataJSON() });
+      const record = { path, method: request.method(), payload: request.postDataJSON() };
+
+      records.set(request, record);
+      observed.push(record);
+    }
+  });
+
+  page.on('response', (response) => {
+    const record = records.get(response.request());
+
+    if (record) {
+      record.status = response.status();
     }
   });
 
@@ -142,7 +156,12 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
 
   const sent = await report;
 
+  const reportHeaders = await sent.request().allHeaders();
+
+  expect(reportHeaders['origin']).toBe(new URL(sent.url()).origin);
   expect(sent.status()).toBe(202);
+  expect(reportHeaders).not.toHaveProperty('cookie');
+  expect(reportHeaders).not.toHaveProperty('referer');
   expect(sent.request().postDataJSON()).toEqual({
     application: 'web-site',
     code: 'unhandled_exception',
@@ -215,6 +234,21 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
   expect(visitHeaders).not.toHaveProperty('cookie');
   expect(visitHeaders).not.toHaveProperty('referer');
 
+  const sidebar = page.locator('app-sidebar');
+
+  await sidebar.getByRole('link', { name: 'Account', exact: true }).click();
+
+  await expect(page).toHaveURL(/\/account$/);
+
+  const returnToDashboard = endpoint(page, '/telemetry/visits');
+
+  await sidebar.getByRole('link', { name: 'Home', exact: true }).click();
+
+  const returnVisit = await returnToDashboard;
+
+  expect(returnVisit.status()).toBe(204);
+  expect(returnVisit.request().postDataJSON()).toEqual({ page: 'app-dashboard', locale: 'en' });
+
   await app.opener.click();
 
   await expect(app.dialog.getByText(app.copy.on)).toBeVisible();
@@ -271,6 +305,7 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
   expect(observed.filter(({ path }) => path === '/telemetry/visits').map(({ payload }) => payload)).toEqual([
     { page: 'docs', locale: 'en' },
     { page: 'app-dashboard', locale: 'en' },
+    { page: 'app-dashboard', locale: 'en' },
   ]);
   expect(JSON.stringify(observed)).not.toContain(marker);
 
@@ -282,7 +317,14 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
 
   expect(wrongOrigin.status()).toBe(403);
 
-  await info.attach('synthetic-network', { body: JSON.stringify(observed, null, 2), contentType: 'application/json' });
+  const artifact = info.outputPath('synthetic-network.json');
+
+  await writeFile(
+    artifact,
+    JSON.stringify({ requests: observed, foreignOrigin: wrongOrigin.status() }, null, 2) + '\n',
+  );
+
+  await info.attach('synthetic-network', { path: artifact, contentType: 'application/json' });
 });
 
 for (const signal of ['globalPrivacyControl', 'doNotTrack'] as const) {

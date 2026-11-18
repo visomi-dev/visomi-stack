@@ -1,3 +1,5 @@
+import { setImmediate } from 'node:timers/promises';
+
 import { LoggerProvider } from '@opentelemetry/sdk-logs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -97,7 +99,7 @@ describe('performance reporting lifecycle', () => {
 
     const [path, init] = f.transport.mock.calls[1];
 
-    expect(path).toBe('/telemetry/performance');
+    expect(path).toBe('https://frontend.example.test/telemetry/performance');
     expect(init).toMatchObject({
       credentials: 'omit',
       referrerPolicy: 'no-referrer',
@@ -127,6 +129,29 @@ describe('performance reporting lifecycle', () => {
     expect(f.transport).toHaveBeenCalledTimes(16);
   });
 
+  it('drops a performance sample when consent is revoked while the permit refreshes', async () => {
+    const now = Date.now();
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now);
+    const f = fixture(true);
+    let complete!: (response: Response) => void;
+    const refresh = new Promise<Response>((resolve) => {
+      complete = resolve;
+    });
+
+    await f.reporter.performanceReady;
+
+    clock.mockReturnValue(now + 240001);
+    f.transport.mockReturnValueOnce(refresh);
+    f.reporter.routeTransition('route_completed', 15);
+    f.revoke();
+    complete(Response.json({ token: 'refreshed', assets: [], performance: true }));
+
+    await setImmediate();
+
+    expect(f.transport.mock.calls.map(([path]) => path)).toEqual(['/telemetry/config', '/telemetry/config']);
+    f.reporter.stop();
+  });
+
   it('contains initialization and transport failures without creating error reports', async () => {
     vi.spyOn(LoggerProvider.prototype, 'getLogger').mockImplementationOnce(() => {
       throw new Error('synthetic-initialization');
@@ -146,7 +171,10 @@ describe('performance reporting lifecycle', () => {
     await vi.waitFor(() => expect(second.transport).toHaveBeenCalledTimes(2));
 
     second.reporter.stop();
-    expect(second.transport.mock.calls.map(([path]) => path)).toEqual(['/telemetry/config', '/telemetry/performance']);
+    expect(second.transport.mock.calls.map(([path]) => path)).toEqual([
+      '/telemetry/config',
+      'https://frontend.example.test/telemetry/performance',
+    ]);
   });
 
   it('forwards route measurements only through an active Angular performance runtime', async () => {

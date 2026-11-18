@@ -1,38 +1,14 @@
 import type { BrowserConsent } from './consent';
-import { browserErrorKinds } from './contract';
 import type {
   BrowserApplication,
-  BrowserErrorCode,
-  BrowserErrorKind,
   BrowserErrorReport,
   BrowserLocation,
-  BrowserScreen,
   BrowserTelemetryConfig,
   BrowserRouteMetric,
 } from './contract';
-
-// Only known page names cross the boundary; paths and navigation history stay in the browser.
-export function browserScreen(path: string): BrowserScreen {
-  if (/^(?:\/app)?\/(?:en|es)\/?$/.test(path) || /^\/app\/(?:en|es)\/foundations\/?$/.test(path)) {
-    return 'home';
-  }
-
-  if (/^\/app\/(?:en|es)\/home\/?$/.test(path)) {
-    return 'dashboard';
-  }
-
-  return /^(?:\/app)?\/(?:en|es)\/ui\/?$/.test(path) ? 'ui' : 'unknown';
-}
-
-export function browserErrorKind(error: unknown): BrowserErrorKind {
-  try {
-    const name = error instanceof Error ? error.name : undefined;
-
-    return browserErrorKinds.find((kind) => kind === name) ?? 'unknown';
-  } catch {
-    return 'unknown';
-  }
-}
+import { browserScreen, describeBrowserError, type UnhandledErrorCode } from './error-description';
+import { createPendingReports } from './pending-reports';
+import { telemetryPost } from './transport';
 
 export function browserLocation(
   error: unknown,
@@ -81,14 +57,15 @@ export function browserLocation(
   return undefined;
 }
 
-const pendingLimit = 5;
-const pendingLifetime = 300000;
-
 export function createBrowserReporter(
   application: BrowserApplication,
   browser: Window,
   consent: BrowserConsent,
-  options: { globalErrors?: boolean } = {},
+  options: {
+    globalErrors?: boolean;
+    pending?: ReturnType<typeof createPendingReports>;
+    documentPermit?: string | null;
+  } = {},
 ) {
   const transport = browser.fetch.bind(browser);
   let configuration: BrowserTelemetryConfig | undefined;
@@ -99,12 +76,10 @@ export function createBrowserReporter(
   let count = 0;
   const seen = new Set<string>();
   const captured = new WeakMap<object, Promise<void> | undefined>();
-  const pending: { report: BrowserErrorReport; expires: number }[] = [];
-  const listeners = new Set<() => void>();
-  let expiry: ReturnType<typeof setTimeout> | undefined;
+  const pending = options.pending ?? createPendingReports();
   let sending = false;
   let performanceRuntime: ReturnType<(typeof import('./performance'))['createBrowserPerformance']> | undefined;
-  let documentPermit = consent.permit();
+  let documentPermit = options.documentPermit === undefined ? consent.permit() : options.documentPermit;
   const performanceScreen = browserScreen(browser.location.pathname);
   const performanceAllowed = () => !stopped && !!documentPermit && consent.permit() === documentPermit;
 
@@ -115,7 +90,7 @@ export function createBrowserReporter(
       performanceRuntime = undefined;
     }
 
-    notify();
+    pending.refresh();
   });
 
   // Document timings include buffered measurements, so they require a grant at document startup.
@@ -196,38 +171,6 @@ export function createBrowserReporter(
     }
   }
 
-  function notify(): void {
-    listeners.forEach((listener) => listener());
-  }
-
-  function expire(): void {
-    clearTimeout(expiry);
-
-    const originalSize = pending.length;
-
-    while (pending[0]?.expires <= Date.now()) {
-      pending.shift();
-    }
-
-    if (pending[0]) {
-      expiry = setTimeout(expire, Math.max(1, pending[0].expires - Date.now()));
-    }
-
-    if (originalSize !== pending.length) {
-      notify();
-    }
-  }
-
-  function discard(report: BrowserErrorReport): void {
-    const index = pending.findIndex((item) => item.report === report);
-
-    if (index !== -1) {
-      pending.splice(index, 1);
-      expire();
-      notify();
-    }
-  }
-
   async function send(report: BrowserErrorReport, allowed: () => boolean, automatic: boolean): Promise<boolean> {
     try {
       if (Date.now() - windowStart >= 60000) {
@@ -257,13 +200,8 @@ export function createBrowserReporter(
         seen.add(body);
       }
 
-      const response = await transport('/telemetry/errors', {
-        method: 'POST',
-        credentials: 'omit',
-        referrerPolicy: 'no-referrer',
-        keepalive: true,
-        mode: 'same-origin',
-        redirect: 'error',
+      const response = await transport(browser.location.origin + '/telemetry/errors', {
+        ...telemetryPost,
         headers: { 'content-type': 'application/json', 'x-browser-telemetry': config.token },
         body,
         signal: AbortSignal.timeout(3000),
@@ -277,7 +215,7 @@ export function createBrowserReporter(
   }
 
   function report(
-    code: Exclude<BrowserErrorCode, 'request_failed'>,
+    code: UnhandledErrorCode,
     error?: unknown,
     source?: { filename: string; lineno: number; colno: number },
   ): Promise<void> | undefined {
@@ -297,46 +235,26 @@ export function createBrowserReporter(
   }
 
   function capture(
-    code: Exclude<BrowserErrorCode, 'request_failed'>,
+    code: UnhandledErrorCode,
     error: unknown,
     source: { filename: string; lineno: number; colno: number } | undefined,
   ): Promise<void> | undefined {
     const permit = consent.permit();
-    const sanitized: BrowserErrorReport = {
-      application,
-      code,
-      kind: browserErrorKind(error),
-      screen: browserScreen(browser.location.pathname),
-    };
+    const sanitized = describeBrowserError(application, browser.location.pathname, code, error);
 
     if (permit) {
       const location = configuration && browserLocation(error, browser.location.origin, configuration.assets, source);
 
-      return send(location ? { ...sanitized, location } : sanitized, () => consent.permit() === permit, true).then(
-        () => undefined,
-      );
+      return sendCaptured(location ? { ...sanitized, location } : sanitized, permit);
     }
 
-    expire();
-
-    if (
-      pending.some(
-        ({ report }) =>
-          report.code === sanitized.code && report.kind === sanitized.kind && report.screen === sanitized.screen,
-      )
-    ) {
-      return;
-    }
-
-    if (pending.length === pendingLimit) {
-      pending.shift();
-    }
-
-    pending.push({ report: Object.freeze(sanitized), expires: Date.now() + pendingLifetime });
-    expire();
-    notify();
+    pending.add(sanitized);
 
     return;
+  }
+
+  function sendCaptured(report: BrowserErrorReport, permit: string): Promise<void> {
+    return send(report, () => consent.permit() === permit, true).then(() => undefined);
   }
 
   function onError(event: ErrorEvent): void {
@@ -356,16 +274,12 @@ export function createBrowserReporter(
     consent,
     report,
     performanceReady,
-    pending: () => pending.map(({ report }) => report),
-    subscribePending(listener: () => void): () => void {
-      listeners.add(listener);
-
-      return () => listeners.delete(listener);
-    },
-    discard,
+    pending: pending.items,
+    subscribePending: pending.subscribe,
+    discard: pending.discard,
+    sendCaptured,
     async sendPending(report: BrowserErrorReport): Promise<boolean> {
-      expire();
-      const allowed = () => pending.some((item) => item.report === report && item.expires > Date.now());
+      const allowed = () => pending.has(report);
 
       if (sending || !allowed()) {
         return false;
@@ -377,7 +291,7 @@ export function createBrowserReporter(
         const accepted = await send(report, allowed, false);
 
         if (accepted) {
-          discard(report);
+          pending.discard(report);
         }
 
         return accepted;
@@ -393,9 +307,7 @@ export function createBrowserReporter(
     stop(): void {
       stopped = true;
       unsubscribe();
-      pending.length = 0;
-      clearTimeout(expiry);
-      listeners.clear();
+      pending.clear();
       performanceRuntime?.stop();
 
       if (options.globalErrors !== false) {

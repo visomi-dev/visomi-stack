@@ -42,48 +42,48 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
       ))}
     </nav>
 
-    <div class="flex items-center gap-2 sm:gap-3">
+    <div class="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3 xl:flex-nowrap">
       <div class="hidden xl:mr-3 xl:block">
-        <LinkButton href={applicationPath(locale)} size="sm">
+        <LinkButton href={applicationPath(locale)} size="sm" class="whitespace-nowrap">
           {copy.openApp}
         </LinkButton>
       </div>
 
-      <nav class="inline-flex items-center gap-1.5" aria-label={copy.language}>
-        <Icon name="languages" class="hidden size-4 shrink-0 sm:block" />
+      <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+        <nav class="inline-flex items-center gap-1.5" aria-label={copy.language}>
+          <Icon name="languages" class="hidden size-4 shrink-0 sm:block" />
 
-        <ul class={languageSwitcher.classes()}>
-          {languages.map(({ code, label }) => (
-            <li>
-              {code === locale ? (
-                <span
-                  class={languageSwitcher.optionClasses(true)}
-                  lang={code}
-                  aria-current="true"
-                  data-current-language
-                >
-                  {label}
-                </span>
-              ) : (
-                <a
-                  href={languagePath}
-                  hreflang={code}
-                  lang={code}
-                  rel="alternate"
-                  class={languageSwitcher.optionClasses(false)}
-                  data-language-switcher
-                >
-                  {label}
-                </a>
-              )}
-            </li>
-          ))}
-        </ul>
-      </nav>
+          <ul class={languageSwitcher.classes()}>
+            {languages.map(({ code, label }) => (
+              <li>
+                {code === locale ? (
+                  <span
+                    class={languageSwitcher.optionClasses(true)}
+                    lang={code}
+                    aria-current="true"
+                    data-current-language
+                  >
+                    {label}
+                  </span>
+                ) : (
+                  <a
+                    href={languagePath}
+                    hreflang={code}
+                    lang={code}
+                    rel="alternate"
+                    class={languageSwitcher.optionClasses(false)}
+                    data-language-switcher
+                  >
+                    {label}
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-      <BrowserPrivacy locale={locale} />
-
-      <ThemeSwitcher label={copy.themeToggle} />
+        <ThemeSwitcher label={copy.themeToggle} />
+      </div>
 
       <details class="group xl:hidden" data-site-menu>
         <summary
@@ -120,22 +120,8 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
           </LinkButton>
         </nav>
       </details>
+
+      <BrowserPrivacy locale={locale} />
     </div>
   </Container>
 </header>
-
-<script>
-  const languageLink = document.querySelector<HTMLAnchorElement>('[data-language-switcher]');
-
-  if (languageLink) {
-    const path = languageLink.getAttribute('href')!;
-
-    // Fragments never reach SSR; enhance the native link without intercepting navigation.
-    const preserveFragment = () => {
-      languageLink.setAttribute('href', path + window.location.hash);
-    };
-
-    preserveFragment();
-    window.addEventListener('hashchange', preserveFragment);
-  }
-</script>

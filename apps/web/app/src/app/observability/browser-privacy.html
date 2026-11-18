@@ -7,14 +7,16 @@
   aria-controls="browser-privacy"
   (click)="privacy.showModal()"
 >
-  {{ copy.title }}
+  <span class="flex flex-col">
+    {{ copy.title }}
 
-  @if (!automatic() && pending().length) {
-    <span class="text-xs font-semibold">{{ copy.pending }}</span>
-  }
+    @if (!automatic() && pending().length) {
+      <span class="text-xs font-semibold">{{ copy.pending }}</span>
+    }
+  </span>
 </button>
 
-<dialog appUI #privacy="appUIDialog" id="browser-privacy" aria-labelledby="browser-privacy-title">
+<dialog appUI #privacy="appUIDialog" id="browser-privacy" aria-labelledby="browser-privacy-title" class="max-sm:p-4">
   <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <h2 id="browser-privacy-title" class="font-heading text-lg font-semibold">{{ copy.title }}</h2>

@@ -18,3 +18,9 @@ export function appVisitPage(path: string): VisitPage | undefined {
 
   return;
 }
+
+export function siteVisitPage(path: string): VisitPage | undefined {
+  const match = /^\/(en|es)(?:\/(architecture|docs|ui))?\/?$/.exec(path);
+
+  return match ? { locale: match[1] === 'es' ? 'es' : 'en', page: match[2] || 'home' } : undefined;
+}

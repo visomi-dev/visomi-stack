@@ -13,6 +13,7 @@ import type {
   BrowserPerformanceMeasurement,
   BrowserRouteMetric,
 } from './contract';
+import { telemetryPost } from './transport';
 
 export function createBrowserPerformance(
   application: BrowserApplication,
@@ -47,13 +48,8 @@ export function createBrowserPerformance(
 
       const payload: BrowserPerformanceReport = { application, screen, measurements };
 
-      await transport('/telemetry/performance', {
-        method: 'POST',
-        credentials: 'omit',
-        referrerPolicy: 'no-referrer',
-        keepalive: true,
-        mode: 'same-origin',
-        redirect: 'error',
+      await transport(browser.location.origin + '/telemetry/performance', {
+        ...telemetryPost,
         headers: { 'content-type': 'application/json', 'x-browser-telemetry': config.token },
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(3000),

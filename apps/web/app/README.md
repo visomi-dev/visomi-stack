@@ -39,9 +39,11 @@ Google accounts require separate manual validation.
 
 The browser and server entrypoints merge their own platform configuration with
 `app.config.ts`. `app.config.browser.ts` registers `BrowserErrors` as `ErrorHandler`,
-Angular's global browser error listeners, the HTTP error interceptor and router
-performance measurement. These services use explicit providers and are not created
-during SSR. The browser entrypoint owns reporter initialization and shutdown.
+Angular's global browser error listeners and router performance measurement.
+Automatic sharing follows the shared browser grant. The privacy controls expose
+one selected, sanitized exception at a time for manual reporting. These services
+use explicit browser providers. The browser entrypoint owns reporter initialization
+and shutdown.
 
 `app.config.server.ts` registers `ServerErrors` as `ErrorHandler`. It emits only the
 fixed `app.render_failed` event without inspecting or serializing exceptions, in
