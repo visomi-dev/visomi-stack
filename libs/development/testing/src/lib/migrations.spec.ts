@@ -36,11 +36,12 @@ it('applies the production migration command to an empty isolated database and c
           'persistence_tenants',
           'persistence_records',
           'persistence_grants',
+          'site_visit_days',
         ]),
       );
       const history = await pool.query('SELECT * FROM drizzle.__drizzle_migrations');
 
-      expect(history.rows).toHaveLength(8);
+      expect(history.rows).toHaveLength(9);
     }
   } finally {
     await pool.end();
