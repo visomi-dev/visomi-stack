@@ -42,6 +42,7 @@ vi.mock('@visomi-stack/web-backend-shared', async (original) => {
     initializeObservability: boundary.initialize,
     browserAssets: boundary.browserAssets,
     createBrowserTelemetry: boundary.browserTelemetry,
+    createVisitAnalytics: () => ({ router: vi.fn(), summary: vi.fn(), close: vi.fn() }),
   };
 });
 vi.mock('@visomi-stack/backend-db', () => ({ createDatabase: boundary.createDatabase }));
@@ -136,6 +137,29 @@ async function start() {
 }
 
 describe('gateway executable ownership', () => {
+  it.each([undefined, 'https://synthetic.example.test'])('owns opt-in visit collection for %s', async (origin) => {
+    vi.stubEnv('VISOMI_VISIT_ANALYTICS', 'true');
+    vi.stubEnv('BROWSER_TELEMETRY_ORIGIN', origin);
+
+    await start();
+
+    expect(boundary.createGatewayApp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        visits: expect.objectContaining({
+          router: expect.any(Function),
+          summary: expect.any(Function),
+          close: expect.any(Function),
+        }),
+      }),
+    );
+
+    boundary.signals.get('SIGTERM')!();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(process.exitCode).toBe(0);
+  });
+
   it('passes the explicit single-hop ingress policy to the application', async () => {
     vi.stubEnv('AUTH_TRUST_PROXY', '1-hop');
 
