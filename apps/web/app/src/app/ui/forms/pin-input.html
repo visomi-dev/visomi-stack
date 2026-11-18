@@ -27,6 +27,7 @@
     [required]="required()"
     [disabled]="disabled()"
     (input)="changeValue(control.value)"
+    (paste)="paste($event)"
     (blur)="markTouched()"
   />
 </div>

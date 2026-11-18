@@ -65,12 +65,28 @@ export default [
     },
   },
   {
-    files: ['**/ui/forms/field.ts', '**/ui/layout/app-shell.ts', '**/vault/vault-panel.ts', '**/vault/vault-unlock.ts'],
+    files: [
+      '**/ui/forms/field.ts',
+      '**/ui/forms/pin-input.ts',
+      '**/ui/layout/app-shell.ts',
+      '**/vault/vault-panel.ts',
+      '**/vault/vault-unlock.ts',
+    ],
     rules: {
       // Component template APIs use kebab-case while TypeScript members remain camelCase.
       '@angular-eslint/no-input-rename': [
         'error',
-        { allowedNames: ['control-id', 'manual-error', 'content-id', 'skip-label', 'rp-id', 'allow-initialize'] },
+        {
+          allowedNames: [
+            'control-id',
+            'manual-error',
+            'accept-formatted-paste',
+            'content-id',
+            'skip-label',
+            'rp-id',
+            'allow-initialize',
+          ],
+        },
       ],
     },
   },

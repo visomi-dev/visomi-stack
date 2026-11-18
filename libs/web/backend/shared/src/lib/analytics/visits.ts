@@ -94,7 +94,7 @@ export function createVisitAnalytics(options: {
 
     try {
       const { rows } = await pool.query<{ first_day: string; days: VisitCount[] }>(
-        `SELECT (${utcDay} - $2::integer + 1)::text AS first_day,
+        `SELECT to_char(${utcDay} - $2::integer + 1, 'YYYY-MM-DD') AS first_day,
            COALESCE(json_agg(json_build_object('day', day, 'page', page, 'locale', locale, 'views', views)
              ORDER BY day DESC, page, locale), '[]') AS days
            FROM site_visit_days WHERE site = $1

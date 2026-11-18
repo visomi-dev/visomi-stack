@@ -17,7 +17,7 @@
         [invalid]="attempted() && fields.code().invalid()"
         [error]="attempted() ? (fields.code().errors()[0]?.message ?? '') : ''"
       >
-        <app-pin-input [formField]="fields.code" type="text" />
+        <app-pin-input [formField]="fields.code" type="text" accept-formatted-paste />
       </app-field>
 
       <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">

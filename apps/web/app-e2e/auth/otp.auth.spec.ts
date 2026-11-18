@@ -52,6 +52,36 @@ for (const locale of ['en', 'es']) {
       return route.fulfill({ status: 400, json: { error: 'invalid_credentials' } });
     });
 
+    await page.evaluate(() => {
+      const source = document.createElement('textarea');
+
+      source.id = 'synthetic-code-clipboard';
+      source.value = '00 12-34';
+      document.body.append(source);
+    });
+
+    const source = page.locator('#synthetic-code-clipboard');
+
+    await source.press('ControlOrMeta+a');
+
+    await source.press('ControlOrMeta+c');
+
+    await source.evaluate((element) => element.remove());
+
+    await code.fill('999999');
+
+    await code.press('ControlOrMeta+a');
+
+    await code.press('ControlOrMeta+v');
+
+    await expect(code).toHaveValue('001234');
+
+    expect(submitted).toBeUndefined();
+
+    await code.press('ControlOrMeta+a');
+
+    await code.press('Backspace');
+
     await code.pressSequentially('001234');
 
     await code.press('ControlOrMeta+a');

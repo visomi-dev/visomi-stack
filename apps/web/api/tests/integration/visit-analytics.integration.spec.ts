@@ -16,7 +16,7 @@ beforeAll(async () => {
   const started = await testPostgres();
 
   postgres = started;
-  pool = new Pool({ connectionString: postgres.url });
+  pool = new Pool({ connectionString: postgres.url, options: '-c DateStyle=German' });
 }, 60_000);
 
 afterAll(async () => {
@@ -44,8 +44,9 @@ it('records bounded anonymous page views, survives a new receiver and expires ol
     expect(config).toEqual({ enabled: true });
     expect(status.headers.get('cache-control')).toBe('no-store');
     const empty = await service.summary(7);
+    const isoDay = expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/);
 
-    expect(empty).toMatchObject({ state: 'ready', days: [] });
+    expect(empty).toMatchObject({ state: 'ready', firstDay: isoDay, days: [] });
 
     await pool!.query(`INSERT INTO site_visit_days (site, day, page, locale, views)
       VALUES ('synthetic', (now() AT TIME ZONE 'UTC')::date - 90, 'home', 'en', 90),
@@ -72,10 +73,11 @@ it('records bounded anonymous page views, survives a new receiver and expires ol
 
       expect(summary).toMatchObject({
         state: 'ready',
+        firstDay: isoDay,
         days: [
-          { page: 'docs', locale: 'es', views: 1 },
-          { page: 'home', locale: 'en', views: 2 },
-          { page: 'home', locale: 'en', views: 4 },
+          { day: isoDay, page: 'docs', locale: 'es', views: 1 },
+          { day: isoDay, page: 'home', locale: 'en', views: 2 },
+          { day: isoDay, page: 'home', locale: 'en', views: 4 },
         ],
       });
     } finally {

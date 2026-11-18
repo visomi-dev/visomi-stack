@@ -15,7 +15,7 @@
         [invalid]="attempted() && fields.code().invalid()"
         [error]="attempted() ? (fields.code().errors()[0]?.message ?? '') : ''"
       >
-        <app-pin-input [formField]="fields.code" type="text" autocomplete="one-time-code" />
+        <app-pin-input [formField]="fields.code" type="text" autocomplete="one-time-code" accept-formatted-paste />
       </app-field>
 
       <app-field control-id="recovery-factor-kind" [label]="factorLabel">
@@ -39,7 +39,7 @@
           [error]="attempted() ? (fields.factor().errors()[0]?.message ?? '') : ''"
         >
           @if (model().kind === 'totp') {
-            <app-pin-input [formField]="fields.factor" type="text" />
+            <app-pin-input [formField]="fields.factor" type="text" accept-formatted-paste />
           } @else {
             <input
               appUI
