@@ -1,5 +1,8 @@
 import { readFileSync } from 'node:fs';
+import { mkdtemp, rm } from 'node:fs/promises';
 import type { AddressInfo } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { chromium, type Browser, type Page } from '@playwright/test';
@@ -14,6 +17,7 @@ import type * as VaultStorage from '../../src/storage';
 type VaultApi = typeof VaultRuntime & typeof VaultStorage;
 
 let server: ViteDevServer;
+let cacheDir: string | undefined;
 
 export let browser: Browser;
 let origin: string;
@@ -45,8 +49,14 @@ export async function prepare(page: Page) {
 }
 
 beforeAll(async () => {
+  // Parallel fixture servers must not replace each other's optimized modules.
+  const directory = await mkdtemp(join(tmpdir(), 'visomi-sdk-browser-vite-'));
+
+  cacheDir = directory;
+
   const created = await createServer({
     root: fileURLToPath(new URL('../../../../../../', import.meta.url)),
+    cacheDir: directory,
     configFile: false,
     appType: 'custom',
     resolve: { tsconfigPaths: true },
@@ -84,7 +94,13 @@ beforeAll(async () => {
 }, 60_000);
 
 afterAll(async () => {
-  await browser?.close();
+  try {
+    await browser?.close();
+  } finally {
+    await server?.close();
 
-  await server?.close();
+    if (cacheDir) {
+      await rm(cacheDir, { recursive: true, force: true });
+    }
+  }
 }, 60_000);
