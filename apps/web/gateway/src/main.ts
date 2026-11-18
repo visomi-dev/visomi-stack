@@ -18,6 +18,7 @@ import {
 import {
   browserAssets,
   createBrowserTelemetry,
+  createVisitAnalytics,
   initializeObservability,
   proxyConfiguration,
 } from '@visomi-stack/web-backend-shared';
@@ -45,6 +46,7 @@ let realtimeTransport = createMemoryRealtimeTransport();
 const server = createServer();
 let stopping = false;
 let browserTelemetry: ReturnType<typeof createBrowserTelemetry> | undefined;
+let visits: ReturnType<typeof createVisitAnalytics> | undefined;
 
 async function stop(exitCode: number): Promise<void> {
   if (stopping) {
@@ -79,6 +81,7 @@ async function stop(exitCode: number): Promise<void> {
 
   try {
     browserTelemetry?.close();
+    visits?.close();
     mail?.close();
   } catch {
     databaseClosed = false;
@@ -186,7 +189,18 @@ async function bootstrap() {
     });
   }
 
+  if (process.env['VISOMI_VISIT_ANALYTICS'] === 'true') {
+    visits = createVisitAnalytics({
+      enabled: true,
+      pool: database?.pool,
+      site: 'visomi-stack',
+      origin: process.env['BROWSER_TELEMETRY_ORIGIN'] ?? 'https://stack.visomi.dev',
+      pages: ['home', 'architecture', 'docs', 'ui'],
+    });
+  }
+
   const application = createGatewayApp({
+    ...(visits ? { visits } : {}),
     persistence: developmentPersistencePolicy(process.env),
     api,
     site,

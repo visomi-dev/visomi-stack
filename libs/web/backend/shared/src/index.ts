@@ -18,3 +18,4 @@ export { browserAssets } from './lib/observability/browser/assets';
 export type { BrowserAssets } from './lib/observability/browser/assets';
 export { createBrowserTelemetry } from './lib/observability/browser/intake';
 export { proxyConfiguration } from './lib/http/proxy-configuration';
+export { createVisitAnalytics, type VisitAnalytics } from './lib/analytics/visits';

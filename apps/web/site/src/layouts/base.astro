@@ -42,6 +42,10 @@ const { locale, title, description, telemetry = true } = Astro.props;
     <slot name="head" />
 
     {telemetry && <SiteTelemetry />}
+
+    <script>
+      import '../visit-analytics';
+    </script>
   </head>
 
   <body class="min-h-screen bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">

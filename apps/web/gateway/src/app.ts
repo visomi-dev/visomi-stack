@@ -4,6 +4,7 @@ import {
   httpObservability,
   securityHeaders,
   type Observability,
+  VisitAnalytics,
 } from '@visomi-stack/web-backend-shared';
 import express, { Router, static as serveStatic } from 'express';
 import type { ProductPolicy } from '@visomi-stack/shared-db';
@@ -15,6 +16,7 @@ import { pageErrors } from './page-errors';
 
 export function createGatewayApp(options: {
   api: ApiModule;
+  visits?: VisitAnalytics;
   persistence?: ProductPolicy;
   site?: SiteModule;
   application?: ApplicationModule;
@@ -114,6 +116,14 @@ export function createGatewayApp(options: {
 
     next();
   });
+
+  if (options.visits) {
+    app.use('/telemetry/visits', options.visits.router);
+  }
+
+  app.get('/telemetry/visits/config', (_request, response) =>
+    response.set('cache-control', 'no-store').json({ enabled: false }),
+  );
 
   if (options.browserTelemetry) {
     app.use(options.browserTelemetry.context);
