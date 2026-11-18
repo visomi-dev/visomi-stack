@@ -80,4 +80,8 @@ export class Foundations {
   reset() {
     this.count.set(0);
   }
+
+  protected showEmailError(): void {
+    this.manualInvalid.set(true);
+  }
 }

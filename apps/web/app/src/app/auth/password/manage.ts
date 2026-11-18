@@ -141,6 +141,19 @@ export class ManagePassword {
     );
   }
 
+  protected togglePasswordVisibility(): void {
+    this.visible.update((value) => !value);
+  }
+
+  protected cancelRemoval(trigger: HTMLButtonElement): void {
+    this.confirm.set(false);
+    trigger.focus();
+  }
+
+  protected toggleRemovalConfirmation(): void {
+    this.confirm.update((value) => !value);
+  }
+
   private async persist(): Promise<void> {
     if (!this.session.full() || this.session.user()?.id !== this.owner) {
       this.cancelVerification();

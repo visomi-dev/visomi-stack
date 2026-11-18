@@ -22,7 +22,7 @@
       [loading]="action.pending() === 'confirmCode'"
     />
 
-    <button appUI variant="secondary" (click)="setup.set(null)" i18n="@@authCancel" class="w-full sm:w-fit">
+    <button appUI variant="secondary" (click)="cancelSetup()" i18n="@@authCancel" class="w-full sm:w-fit">
       Cancel
     </button>
   } @else if (enabled()) {
@@ -40,7 +40,7 @@
       [variant]="removing() ? 'secondary' : 'danger'"
       class="w-full sm:w-fit"
       [disabled]="action.busy()"
-      (click)="removing.set(!removing())"
+      (click)="toggleRemovalConfirmation()"
       i18n="@@authDisableTotp"
     >
       Disable authenticator
@@ -64,9 +64,7 @@
             Confirm
           </button>
 
-          <button appUI variant="secondary" (click)="removing.set(false); disableTotp.focus()" i18n="@@authCancel">
-            Cancel
-          </button>
+          <button appUI variant="secondary" (click)="cancelRemoval(disableTotp)" i18n="@@authCancel">Cancel</button>
         </div>
       </section>
     }

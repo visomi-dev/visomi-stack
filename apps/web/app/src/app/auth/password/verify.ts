@@ -71,4 +71,8 @@ export class PasswordVerify {
       { name: 'verify' },
     );
   }
+
+  protected switchVerificationMethod(): void {
+    this.backup.update((value) => !value);
+  }
 }

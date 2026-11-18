@@ -16,7 +16,7 @@
       [variant]="confirm() ? 'secondary' : 'primary'"
       class="w-full sm:w-fit"
       [disabled]="action.busy()"
-      (click)="confirm.set(!confirm())"
+      (click)="toggleReplacementConfirmation()"
       i18n="@@authReplaceCodes"
     >
       Replace backup codes
@@ -40,7 +40,7 @@
             Confirm
           </button>
 
-          <button appUI variant="secondary" (click)="confirm.set(false); replaceCodes.focus()" i18n="@@authCancel">
+          <button appUI variant="secondary" (click)="cancelReplacement(replaceCodes)" i18n="@@authCancel">
             Cancel
           </button>
         </div>

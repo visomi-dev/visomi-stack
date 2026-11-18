@@ -22,13 +22,7 @@
       description="6 digits"
       i18n-description="@@vaultPinLength"
     >
-      <app-pin-input
-        required
-        [digits]="6"
-        [disabled]="busy()"
-        [value]="pinDraft()"
-        (valueChange)="pinDraft.set($event)"
-      />
+      <app-pin-input required [digits]="6" [disabled]="busy()" [value]="pinDraft()" (valueChange)="changePin($event)" />
     </app-field>
 
     @if (allowInitialize()) {
@@ -42,7 +36,7 @@
           [digits]="6"
           [disabled]="busy()"
           [value]="pinConfirmation()"
-          (valueChange)="pinConfirmation.set($event)"
+          (valueChange)="changePinConfirmation($event)"
         />
       </app-field>
     }
@@ -95,7 +89,7 @@
           spellcheck="false"
           [value]="editor()"
           [disabled]="busy()"
-          (input)="editor.set(privateText.value)"
+          (input)="editPrivateText(privateText.value)"
         ></textarea>
       </app-field>
 

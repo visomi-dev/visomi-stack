@@ -100,6 +100,22 @@ export class ExampleWorkspace {
   readonly notice = this.noticeState.asReadonly();
   readonly target = this.targetState.asReadonly();
 
+  changePin(value: string): void {
+    this.pinDraft.set(value);
+  }
+
+  changePinConfirmation(value: string): void {
+    this.pinConfirmation.set(value);
+  }
+
+  editOperationalNote(value: string): void {
+    this.cloudDraft.set(value);
+  }
+
+  editPrivateText(value: string): void {
+    this.privateDraft.set(value);
+  }
+
   async createWorkspace(): Promise<void> {
     await this.run(async (signal) => {
       const parent = await this.api.request('/tenants', {}, signal);

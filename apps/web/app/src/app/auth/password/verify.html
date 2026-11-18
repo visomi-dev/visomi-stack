@@ -14,7 +14,7 @@
     @if (pending.factor === 'email') {
       <app-resend-code />
     } @else {
-      <button appUI variant="secondary" class="w-full" (click)="backup.set(!backup())">
+      <button appUI variant="secondary" class="w-full" (click)="switchVerificationMethod()">
         {{ backup() ? useAuthenticator : useBackup }}
       </button>
     }

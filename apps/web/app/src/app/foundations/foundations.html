@@ -228,9 +228,7 @@
       <div class="flex flex-wrap gap-3">
         <button appUI type="submit" i18n="@@fieldCheck">Check example</button>
 
-        <button appUI variant="secondary" (click)="manualInvalid.set(true)" i18n="@@fieldManual">
-          Show manual error
-        </button>
+        <button appUI variant="secondary" (click)="showEmailError()" i18n="@@fieldManual">Show manual error</button>
 
         <button appUI variant="secondary" (click)="resetField()" i18n="@@fieldReset">Reset example</button>
       </div>

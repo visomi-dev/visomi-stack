@@ -107,6 +107,18 @@ export class VaultPanel {
     this.invalidate(false, true);
   }
 
+  protected changePin(value: string): void {
+    this.pinDraft.set(value);
+  }
+
+  protected changePinConfirmation(value: string): void {
+    this.pinConfirmation.set(value);
+  }
+
+  protected editPrivateText(value: string): void {
+    this.editor.set(value);
+  }
+
   private requireReady(): void {
     if (!this.ready()) {
       throw new VaultError('locked');

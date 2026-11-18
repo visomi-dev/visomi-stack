@@ -45,7 +45,7 @@
             [attr.aria-describedby]="cloudField.describedBy()"
             [value]="workspace.cloudDraft()"
             [disabled]="workspace.busy()"
-            (input)="workspace.cloudDraft.set(cloudText.value)"
+            (input)="workspace.editOperationalNote(cloudText.value)"
           ></textarea>
         </app-field>
 
@@ -112,7 +112,7 @@
               [digits]="6"
               [disabled]="workspace.busy()"
               [value]="workspace.pinDraft()"
-              (valueChange)="workspace.pinDraft.set($event)"
+              (valueChange)="workspace.changePin($event)"
             />
           </app-field>
 
@@ -132,7 +132,7 @@
               [digits]="6"
               [disabled]="workspace.busy()"
               [value]="workspace.pinConfirmation()"
-              (valueChange)="workspace.pinConfirmation.set($event)"
+              (valueChange)="workspace.changePinConfirmation($event)"
             />
           </app-field>
 
@@ -171,7 +171,7 @@
               [attr.aria-describedby]="privateField.describedBy()"
               [value]="workspace.privateDraft()"
               [disabled]="workspace.busy() || workspace.privateResource.pending()"
-              (input)="workspace.privateDraft.set(privateText.value)"
+              (input)="workspace.editPrivateText(privateText.value)"
             ></textarea>
           </app-field>
 

@@ -39,7 +39,7 @@
     </button>
 
     @if (pending()?.factor === 'totp') {
-      <button appUI variant="secondary" (click)="backup.set(!backup())" i18n="@@authSwitchFactor" class="w-full">
+      <button appUI variant="secondary" (click)="switchVerificationMethod()" i18n="@@authSwitchFactor" class="w-full">
         Switch between authenticator and backup code
       </button>
     }
@@ -103,7 +103,7 @@
               aria-controls="replacement-password"
               aria-label="Show or hide password"
               i18n-aria-label="@@authTogglePassword"
-              (click)="visible.set(!visible())"
+              (click)="togglePasswordVisibility()"
             >
               {{ visible() ? hideLabel : showLabel }}
             </button>

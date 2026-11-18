@@ -25,6 +25,10 @@ export class VaultUnlock {
     }
   }
 
+  protected changePin(value: string): void {
+    this.pin.set(value);
+  }
+
   private readonly contextChanged = effect(() => {
     this.controlId();
     this.method();

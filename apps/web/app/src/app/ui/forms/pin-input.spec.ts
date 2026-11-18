@@ -7,13 +7,17 @@ import { Field, PinInput } from '../index';
   imports: [Field, PinInput],
   template: `
     <app-field control-id="approval-pin" label="Approval PIN" [manual-error]="error()">
-      <app-pin-input required [digits]="5" [value]="code()" (valueChange)="code.set($event)" />
+      <app-pin-input required [digits]="5" [value]="code()" (valueChange)="changeCode($event)" />
     </app-field>
   `,
 })
 class ApprovalForm {
   readonly code = signal('');
   readonly error = signal('');
+
+  protected changeCode(value: string): void {
+    this.code.set(value);
+  }
 }
 
 it('uses a caller-selected PIN length in a form independent of vault services', () => {

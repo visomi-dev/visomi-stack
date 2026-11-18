@@ -77,4 +77,8 @@ export class Account {
       { name: 'verify' },
     );
   }
+
+  protected cancelEmailChange(): void {
+    this.pending.set(null);
+  }
 }

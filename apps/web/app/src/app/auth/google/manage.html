@@ -35,7 +35,7 @@
         appUI
         [variant]="confirm() === provider.id ? 'secondary' : 'danger'"
         [disabled]="action.busy()"
-        (click)="confirm.set(confirm() === provider.id ? null : provider.id)"
+        (click)="toggleUnlinkConfirmation(provider.id)"
         i18n="@@authUnlinkGoogle"
       >
         Unlink Google
@@ -59,9 +59,7 @@
               Confirm removal
             </button>
 
-            <button appUI variant="secondary" (click)="confirm.set(null); unlinkGoogle.focus()" i18n="@@authCancel">
-              Cancel
-            </button>
+            <button appUI variant="secondary" (click)="cancelUnlink(unlinkGoogle)" i18n="@@authCancel">Cancel</button>
           </div>
         </div>
       }

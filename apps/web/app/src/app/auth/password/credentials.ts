@@ -95,6 +95,10 @@ export class PasswordCredentials {
     });
   }
 
+  protected togglePasswordVisibility(): void {
+    this.visible.update((value) => !value);
+  }
+
   private readonly initialize = afterNextRender(() => {
     if (!this.signup) {
       void this.passkeys

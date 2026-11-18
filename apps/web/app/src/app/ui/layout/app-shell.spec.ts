@@ -25,7 +25,7 @@ import type { ShellLayout } from '@visomi-stack/web-frontend-ui';
       <header app-topbar>
         <h1 data-slot="title">Workspace</h1>
 
-        <button appUI="nav-item" type="button" [disabled]="locked()" (click)="count.set(count() + 1)">Help</button>
+        <button appUI="nav-item" type="button" [disabled]="locked()" (click)="countHelpActivation()">Help</button>
       </header>
 
       <p>Projected page</p>
@@ -46,6 +46,10 @@ class ShellExample {
   readonly layout = signal<ShellLayout>('sidebar');
   readonly locked = signal(false);
   readonly count = signal(0);
+
+  protected countHelpActivation(): void {
+    this.count.update((count) => count + 1);
+  }
 }
 
 describe('application shell composition', () => {

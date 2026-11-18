@@ -107,6 +107,19 @@ export class ManageTotp {
     );
   }
 
+  protected cancelRemoval(trigger: HTMLButtonElement): void {
+    this.removing.set(false);
+    trigger.focus();
+  }
+
+  protected cancelSetup(): void {
+    this.setup.set(null);
+  }
+
+  protected toggleRemovalConfirmation(): void {
+    this.removing.update((value) => !value);
+  }
+
   private readonly initialize = afterNextRender(
     () =>
       void this.action.run(async () => {

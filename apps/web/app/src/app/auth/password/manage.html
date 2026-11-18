@@ -102,7 +102,7 @@
               aria-controls="manage-password"
               aria-label="Show or hide password"
               i18n-aria-label="@@authTogglePassword"
-              (click)="visible.set(!visible())"
+              (click)="togglePasswordVisibility()"
             >
               {{ visible() ? hideLabel : showLabel }}
             </button>
@@ -130,7 +130,7 @@
           [variant]="confirm() ? 'secondary' : 'danger'"
           class="w-full sm:w-fit"
           [disabled]="action.busy()"
-          (click)="confirm.set(!confirm())"
+          (click)="toggleRemovalConfirmation()"
           i18n="@@authRemovePassword"
         >
           Remove password
@@ -154,12 +154,7 @@
                 Confirm removal
               </button>
 
-              <button
-                appUI
-                variant="secondary"
-                (click)="confirm.set(false); removePassword.focus()"
-                i18n="@@authCancel"
-              >
+              <button appUI variant="secondary" (click)="cancelRemoval(removePassword)" i18n="@@authCancel">
                 Cancel
               </button>
             </div>

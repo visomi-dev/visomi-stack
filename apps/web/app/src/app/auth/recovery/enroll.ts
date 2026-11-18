@@ -145,4 +145,12 @@ export class Enroll {
   logout(): void {
     void this.signOut.run();
   }
+
+  protected togglePasswordVisibility(): void {
+    this.visible.update((value) => !value);
+  }
+
+  protected switchVerificationMethod(): void {
+    this.backup.update((value) => !value);
+  }
 }
