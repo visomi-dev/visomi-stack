@@ -1,9 +1,11 @@
 # Self-hosted visit analytics — VIS-82
 
 Review baseline: `6c7cc6104c85f1c2fb5ad405ac073fffcc26772b`. Adoption in
-visomi.dev is tracked in VIS-83. This proposal and the disposable PostgreSQL
-fixture are review material. Collection and private access still need their
-product integration and approval.
+visomi.dev is tracked in VIS-83. The parallel
+[implementation in PR #27](https://github.com/visomi-dev/visomi-stack/pull/27)
+is the integration under review (inspected at `6a0e34545f9cb65f41b40b302ca0d3e86e4aad23`).
+This companion review evaluates a storage tradeoff with a disposable fixture.
+It adds no intake, runtime integration or product setting.
 
 ## Questions and interpretation
 
@@ -14,7 +16,7 @@ product integration and approval.
 | Which localized pages are being opened? | Sum by supported page locale.                                                               | Counts for the content's locale, independent of a visitor's browser settings.                               |
 
 Each reload or separately committed navigation can count as a new pageview.
-Count a restored back/forward visit once when visible. Ignore asset/API calls,
+Decide whether a back/forward cache restoration should count as a new pageview. Ignore asset/API calls,
 server-render/preload requests, hidden prerenders, canceled transitions and private
 routes. A page never observed by a script, disabled collection and blocked
 delivery all leave gaps. Script-capable bots may still generate pageviews.
@@ -24,7 +26,16 @@ distinguish zero in an observed period, history unavailable and collection
 disabled. Display UTC days with explicit period boundaries and disclose partial
 current days.
 
-## Collection boundary
+## Replay-tolerant intake candidate
+
+The implementation in PR #27 sends page and locale, suppresses repeated
+observer hooks for the same page, and makes one network attempt. This is a
+privacy-minimizing choice with no event identifier. A second valid POST
+increments the aggregate again. The fixture below gives different semantics
+at the cost of a short-lived per-operation identifier in storage. Add it only
+if the approved metric requires idempotent retries or duplicate request
+suppression at the intake. It does not limit script-capable bots generating
+fresh events.
 
 - The product explicitly selects public pages and canonical page/locale keys.
   For Astro use committed document visibility and back/forward restoration.
@@ -68,15 +79,23 @@ runtime, access surface and retention/export review. In-memory counters lose
 history on restart. No dependency, production database or
 third-party collector is selected by this proposal.
 
-The next production slice is an opt-in ingestion/query pair with one product's
-authorization policy and a controlled public page manifest. Its E2E run needs
-real browser page transitions, a durable store and a private query, and must
-check isolation, disabled/no-data states, request deduplication, query expiry
-and accidental capture. Separate dashboard work can use those verified semantics.
-Before enabling collection Michael needs to confirm the questions above, which
-property operators can query aggregates, the retention window and the product's
-notice/consent treatment. Site source/referrer breakdown can be evaluated
-separately after those choices.
+## Acceptance for the integration under review
+
+PR #27 supplies a default-off observer and intake, 7- and 30-day UTC query
+windows, and an aggregate contract for an authorized consumer. Its 90-day
+prototype retention runs on intake, so a dormant site can retain rows.
+The query period already bounds read results independently. Review an
+operational purge policy only if the product promises a deletion deadline
+for sites that stop collecting.
+
+Use browser journeys to verify hydration or repeated hooks, fresh navigation,
+back/forward and visibility, opt-out and absence of collection when disabled.
+Check the request's field allowlist and persistence after restart. Confirm
+the decision on accepting duplicate valid requests or using the receipt
+candidate. The deployment's observed test and CI claims belong to its own
+head. VIS-83 needs to verify the private query and dashboard with its actual
+site and authorization roles. Before activation, confirm the allowed data,
+product retention and notice/consent treatment.
 
 ## Executed fixture
 
@@ -94,5 +113,5 @@ history across a PostgreSQL stop/start, and refusal of an expired replay after
 deleting its receipt. The first period for site A has one view and the next has
 two. Site B has one view in the first period. Expiring the first day preserves
 site A's later total of two. This checks persistence and aggregation mechanics.
-Browser capture, same-origin public intake, private product authorization, dashboard
-presentation and a production retention schedule remain unimplemented.
+This fixture does not exercise PR #27's browser intake, private product
+authorization, dashboard or a production retention schedule.
