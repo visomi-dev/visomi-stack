@@ -120,7 +120,13 @@ test('hybrid persistence keeps private content out of transport and reopens lock
     animations: 'disabled',
   });
 
-  await page.getByRole('button', { name: 'Desbloquear con passkey', exact: true }).focus();
+  const unlock = page.getByRole('button', { name: 'Desbloquear con passkey', exact: true });
+
+  await expect(unlock).toBeEnabled();
+
+  await unlock.focus();
+
+  await expect(unlock).toBeFocused();
 
   await page.keyboard.press('Enter');
 
