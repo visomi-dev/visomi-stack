@@ -110,7 +110,11 @@ test('sets up TOTP locally and signs in with a replacement backup code', async (
 
   await useBackup.click();
 
+  await expect(verification).not.toHaveAttribute('maxlength');
+
   await verification.fill(backup);
+
+  await expect(verification).toHaveValue(backup);
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
