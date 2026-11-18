@@ -81,7 +81,7 @@ beforeEach(() => {
   vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
   vi.stubEnv('VISOMI_BROWSER_TELEMETRY', '');
   vi.stubEnv('VISOMI_BROWSER_PERFORMANCE', '');
-  vi.stubEnv('BROWSER_TELEMETRY_ORIGIN', undefined);
+  vi.stubEnv('AUTH_ORIGIN', undefined);
   boundary.browserAssets.mockResolvedValue(new Map());
   boundary.browserTelemetry.mockReturnValue({
     context: 'synthetic-context',
@@ -137,28 +137,30 @@ async function start() {
 }
 
 describe('gateway executable ownership', () => {
-  it.each([undefined, 'https://synthetic.example.test'])('owns opt-in visit collection for %s', async (origin) => {
-    vi.stubEnv('VISOMI_VISIT_ANALYTICS', 'true');
-    vi.stubEnv('BROWSER_TELEMETRY_ORIGIN', origin);
+  it.each([undefined, 'https://synthetic.example.test'])(
+    'owns visit intake independently of technical telemetry for %s',
+    async (origin) => {
+      vi.stubEnv('AUTH_ORIGIN', origin);
 
-    await start();
+      await start();
 
-    expect(boundary.createGatewayApp).toHaveBeenCalledWith(
-      expect.objectContaining({
-        visits: expect.objectContaining({
-          router: expect.any(Function),
-          summary: expect.any(Function),
-          close: expect.any(Function),
+      expect(boundary.createGatewayApp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          visits: expect.objectContaining({
+            router: expect.any(Function),
+            summary: expect.any(Function),
+            close: expect.any(Function),
+          }),
         }),
-      }),
-    );
+      );
 
-    boundary.signals.get('SIGTERM')!();
+      boundary.signals.get('SIGTERM')!();
 
-    await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(0);
 
-    expect(process.exitCode).toBe(0);
-  });
+      expect(process.exitCode).toBe(0);
+    },
+  );
 
   it('passes the explicit single-hop ingress policy to the application', async () => {
     vi.stubEnv('AUTH_TRUST_PROXY', '1-hop');
@@ -290,7 +292,7 @@ describe('gateway executable ownership', () => {
     'owns opt-in browser telemetry using origin %s',
     async (origin) => {
       vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
-      vi.stubEnv('BROWSER_TELEMETRY_ORIGIN', origin);
+      vi.stubEnv('AUTH_ORIGIN', origin);
 
       await start();
 
@@ -440,6 +442,7 @@ describe('gateway executable ownership', () => {
       auth: undefined,
       observability: boundary.observability,
       staticDirectory: expect.stringMatching(/gateway\/src\/static\/$/),
+      visits: expect.objectContaining({ router: expect.any(Function) }),
     });
     expect(boundary.server.on).toHaveBeenCalledWith('request', 'synthetic-app');
     expect(boundary.server.listen).toHaveBeenCalledWith(3456, '127.0.0.1', expect.any(Function));
@@ -498,8 +501,12 @@ describe('gateway executable ownership', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it('rejects invalid networking configuration before importing the API', async () => {
-    vi.stubEnv('PORT', 'invalid');
+  it.each([
+    ['PORT', 'invalid'],
+    ['AUTH_ORIGIN', 'file:///synthetic'],
+    ['AUTH_ORIGIN', 'https://frontend.example.test/synthetic'],
+  ])('rejects invalid %s configuration before importing the API (%s)', async (key, value) => {
+    vi.stubEnv(key, value);
 
     await start();
 

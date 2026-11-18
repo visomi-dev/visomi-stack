@@ -252,10 +252,12 @@ and [BullMQ production guidance](https://docs.bullmq.io/guide/going-to-productio
 
 ### Browser error reporting
 
-Browser error reporting is separately opt-in. Set `VISOMI_BROWSER_TELEMETRY=true`
-to enable the intake. Without it, `/telemetry/config` returns `{ "enabled": false }`
-and browser reports are not transmitted. Set
-`BROWSER_TELEMETRY_ORIGIN` to the executable's public origin. Apply runtime
+Set `VISOMI_BROWSER_TELEMETRY=true` to make the browser error intake available.
+Without it, `/telemetry/config` returns `{ "enabled": false }`. The gateway uses
+its canonical `AUTH_ORIGIN`. For the independent Angular executable, set
+`BROWSER_TELEMETRY_ORIGIN` to its public origin. Automatic client reports require
+an active browser opt-in. The privacy dialog also allows a visitor to send one
+selected sanitized report while automatic sharing is off. Apply runtime
 configuration separately from code changes. `VISOMI_OTLP_TRACING=true` and
 private OTLP receiver credentials are required to export accepted reports.
 Platform-managed telemetry must independently satisfy the capture policy.
@@ -285,9 +287,8 @@ handler, so both use `unhandled_exception`; Astro's own listeners distinguish
 `unhandled_rejection`. Source positions come from approved asset frames in the
 error's stack, inspected locally without exporting the stack. Angular's native
 handler does not forward the original `ErrorEvent` source fields when it already
-has an error object. The functional HTTP interceptor observes same-origin `/api/`
-network failures and 5xx errors, then propagates the original error to consumers.
-It does not change request bodies, headers, or application error handling.
+has an error object. Expected and handled HTTP responses do not produce client reports. The intake
+retains validation of the existing report and signed correlation contracts.
 
 The browser POSTs individual reports to `/telemetry/errors`; it never receives
 collector credentials. `/telemetry/config` supplies a short-lived reporting permit
@@ -348,7 +349,7 @@ operators with access to the private build artifact; review source paths before
 sharing resolved locations.
 
 Verification includes portable reporter tests, Angular adapter tests, real browser
-requests accepted by each executable, denial of source-map HTTP access, intake
+requests accepted by each executable and zero automatic requests without consent, denial of source-map HTTP access, intake
 privacy/authentication/abuse tests, and the pinned Jaeger integration check. The
 latter stores and inspects an accepted browser error linked to its backend request,
 then also checks restart persistence and collector outages. Initial failures before
@@ -362,7 +363,9 @@ Set `VISOMI_BROWSER_PERFORMANCE=true` alongside `VISOMI_BROWSER_TELEMETRY=true`
 to enable OpenTelemetry performance capture for both Angular and Astro. Performance
 is disabled by default, independently of error reporting. The same gateway or
 standalone Angular executable supplies the opt-in through `/telemetry/config`.
-The performance SDK is imported only after that opt-in; SSR does not initialize it.
+The performance SDK is imported only when the current document started with
+an active browser grant and the server has enabled performance. SSR does not
+initialize it. Browser consent does not configure server diagnostics or export.
 Runtime changes and deployment remain separate from source changes.
 
 Capture uses the pinned official navigation-timing and Web Vitals instruments,

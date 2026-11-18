@@ -54,7 +54,7 @@ export function createApp(
     app.use('/telemetry', options.browserTelemetry.router);
   }
 
-  app.get('/telemetry/config', (_request, response) =>
+  app.get(['/telemetry/config', '/telemetry/visits/config'], (_request, response) =>
     response.set('cache-control', 'no-store').json({ enabled: false }),
   );
 

@@ -86,8 +86,6 @@ async function serve(): Promise<void> {
         SMTP_PASSWORD: '',
         VISOMI_BROWSER_TELEMETRY: 'true',
         VISOMI_BROWSER_PERFORMANCE: 'false',
-        VISOMI_VISIT_ANALYTICS: 'true',
-        BROWSER_TELEMETRY_ORIGIN: 'http://localhost:4204',
         VISOMI_PERSISTENCE_EXAMPLE: 'true',
         API_APP_PATH: '',
         SITE_APP_PATH: '',

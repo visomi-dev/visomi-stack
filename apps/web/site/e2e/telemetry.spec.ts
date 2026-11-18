@@ -48,7 +48,7 @@ test('measures real page performance without exporting URLs, attribution or brow
 
   expect(sizes).toHaveLength(4);
   expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(65536);
-  expect(visitsRequests).toEqual([]);
+  expect(visitsRequests).toEqual(['/telemetry/visits/config']);
 
   for (const report of reports) {
     expect(report.status).toBe(202);

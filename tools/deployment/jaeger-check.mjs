@@ -92,7 +92,7 @@ async function startGateway(endpoint) {
         VISOMI_OTLP_TRACING: 'true',
         VISOMI_BROWSER_TELEMETRY: 'true',
         VISOMI_BROWSER_PERFORMANCE: 'true',
-        BROWSER_TELEMETRY_ORIGIN: `http://127.0.0.1:${port}`,
+        AUTH_ORIGIN: `http://127.0.0.1:${port}`,
         OTEL_EXPORTER_OTLP_ENDPOINT: endpoint,
         OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
         OTEL_EXPORTER_OTLP_HEADERS: `authorization=${encodeURIComponent(authorization)}`,

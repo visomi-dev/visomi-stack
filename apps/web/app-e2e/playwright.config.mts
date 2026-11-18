@@ -37,7 +37,7 @@ const foundations = defineConfig({
         APPLICATION_APP_PATH: '',
         VISOMI_BROWSER_TELEMETRY: 'true',
         VISOMI_BROWSER_PERFORMANCE: 'true',
-        BROWSER_TELEMETRY_ORIGIN: 'http://127.0.0.1:4203',
+        AUTH_ORIGIN: 'http://127.0.0.1:4203',
       },
       reuseExistingServer: false,
     },

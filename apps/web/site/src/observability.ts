@@ -17,12 +17,9 @@ let loading: Promise<NonNullable<typeof reporter>> | undefined;
 function load() {
   loading ??= loadBrowserReporter().then(({ createBrowserReporter, trackVisits, siteVisitPage }) => {
     reporter = createBrowserReporter('web-site', window, consent, { documentPermit, pending, globalErrors: false });
-
-    if (document.querySelector('meta[name="visit-analytics"]')) {
-      trackVisits(window, consent, siteVisitPage, {
-        ignoreCurrent: !documentPermit || consent.permit() !== documentPermit,
-      });
-    }
+    trackVisits(window, consent, siteVisitPage, {
+      ignoreCurrent: !documentPermit || consent.permit() !== documentPermit,
+    });
 
     return reporter;
   });

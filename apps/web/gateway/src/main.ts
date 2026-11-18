@@ -120,6 +120,13 @@ async function bootstrap() {
     throw new Error('gateway_configuration_invalid');
   }
 
+  const publicUrl = new URL(process.env['AUTH_ORIGIN'] || 'https://stack.visomi.dev');
+  const origin = publicUrl.origin;
+
+  if (!['http:', 'https:'].includes(publicUrl.protocol) || publicUrl.href !== origin + '/') {
+    throw new Error('gateway_configuration_invalid');
+  }
+
   const entry = process.env.API_APP_PATH
     ? pathToFileURL(resolve(process.env.API_APP_PATH))
     : new URL('../api/app.js', import.meta.url);
@@ -186,23 +193,21 @@ async function bootstrap() {
     browserTelemetry = createBrowserTelemetry({
       observability,
       assets: { 'web-app': applicationAssets, ...(siteAssets ? { 'web-site': siteAssets } : {}) },
-      origin: process.env.BROWSER_TELEMETRY_ORIGIN ?? 'https://stack.visomi.dev',
+      origin,
       performance: process.env.VISOMI_BROWSER_PERFORMANCE === 'true',
     });
   }
 
-  if (process.env['VISOMI_VISIT_ANALYTICS'] === 'true') {
-    visits = createVisitAnalytics({
-      enabled: true,
-      pool: database?.pool,
-      site: 'visomi-stack',
-      origin: process.env['BROWSER_TELEMETRY_ORIGIN'] ?? 'https://stack.visomi.dev',
-      pages: stackVisitPages,
-    });
-  }
+  visits = createVisitAnalytics({
+    enabled: true,
+    pool: database?.pool,
+    site: 'visomi-stack',
+    origin,
+    pages: stackVisitPages,
+  });
 
   const application = createGatewayApp({
-    ...(visits ? { visits } : {}),
+    visits,
     persistence: developmentPersistencePolicy(process.env),
     api,
     site,

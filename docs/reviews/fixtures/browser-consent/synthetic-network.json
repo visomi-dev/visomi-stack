@@ -1,0 +1,101 @@
+{
+  "requests": [
+    {
+      "path": "/telemetry/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/errors",
+      "method": "POST",
+      "payload": {
+        "application": "web-site",
+        "code": "unhandled_exception",
+        "kind": "RangeError",
+        "screen": "home"
+      },
+      "status": 202
+    },
+    {
+      "path": "/telemetry/errors",
+      "method": "POST",
+      "payload": {
+        "application": "web-site",
+        "code": "unhandled_exception",
+        "kind": "TypeError",
+        "screen": "home"
+      },
+      "status": 202
+    },
+    {
+      "path": "/telemetry/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/visits/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/visits",
+      "method": "POST",
+      "payload": {
+        "page": "docs",
+        "locale": "en"
+      },
+      "status": 204
+    },
+    {
+      "path": "/telemetry/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/visits/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/visits",
+      "method": "POST",
+      "payload": {
+        "page": "app-dashboard",
+        "locale": "en"
+      },
+      "status": 204
+    },
+    {
+      "path": "/telemetry/visits",
+      "method": "POST",
+      "payload": {
+        "page": "app-dashboard",
+        "locale": "en"
+      },
+      "status": 204
+    },
+    {
+      "path": "/telemetry/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/errors",
+      "method": "POST",
+      "payload": {
+        "application": "web-app",
+        "code": "unhandled_exception",
+        "kind": "RangeError",
+        "screen": "dashboard"
+      },
+      "status": 202
+    }
+  ],
+  "foreignOrigin": 403
+}
