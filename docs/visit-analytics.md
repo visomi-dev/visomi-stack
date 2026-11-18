@@ -19,7 +19,8 @@ Not Track. Origin checking, a small strict input, and a global rate limit
 bound the write path without storing any client identifier.
 
 VISOMI_VISIT_ANALYTICS is a separate runtime opt-in and defaults off. The
-report compares the selected 7- or 30-day UTC window, including today,
+stack site loads the collector only when the server opts in. The report
+compares the selected 7- or 30-day UTC window, including today,
 with the preceding window of the same length. Today is partial. The report
 includes page and language totals and reported dates. Empty, disabled and
 storage unavailable have separate states.

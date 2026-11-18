@@ -1,4 +1,4 @@
-import { trackVisits } from '@visomi-stack/web-shared-observability';
+import { trackVisits } from '@visomi-stack/web-shared-observability/visits';
 
 trackVisits(window, (path) => {
   const [, locale, section] = path.split('/');
