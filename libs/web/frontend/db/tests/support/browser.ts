@@ -37,15 +37,40 @@ export type FixtureWindow = typeof globalThis & {
 };
 
 export async function prepare(page: Page) {
-  await page.goto(origin);
+  const failedModuleResponses = new Set<number>();
+  let scriptError = false;
 
-  await page.addScriptTag({
-    type: 'module',
-    content:
-      "import * as runtime from '/libs/web/frontend/db/src/index.ts'; import * as storage from '/libs/web/frontend/db/src/storage.ts'; const api = { ...runtime, ...storage }; import * as contracts from '/libs/shared/db/src/index.ts'; globalThis.fixtureModules = { api, contracts };",
+  page.on('response', (response) => {
+    if (response.request().resourceType() === 'script' && response.status() >= 400) {
+      failedModuleResponses.add(response.status());
+    }
+  });
+  page.on('pageerror', () => {
+    scriptError = true;
   });
 
-  await page.waitForFunction(() => Boolean((globalThis as FixtureWindow).fixtureModules));
+  try {
+    await page.goto(origin);
+
+    await page.addScriptTag({
+      type: 'module',
+      content:
+        "import * as runtime from '/libs/web/frontend/db/src/index.ts'; import * as storage from '/libs/web/frontend/db/src/storage.ts'; const api = { ...runtime, ...storage }; import * as contracts from '/libs/shared/db/src/index.ts'; globalThis.fixtureModules = { api, contracts };",
+    });
+
+    await page.waitForFunction(() => Boolean((globalThis as FixtureWindow).fixtureModules), undefined, {
+      polling: 100,
+    });
+  } catch (error) {
+    const statuses = [...failedModuleResponses].join(', ') || 'none';
+
+    throw new Error(
+      `Vault SDK fixture startup failed (script HTTP statuses: ${statuses}; page error: ${scriptError})`,
+      {
+        cause: error,
+      },
+    );
+  }
 }
 
 beforeAll(async () => {
@@ -60,6 +85,8 @@ beforeAll(async () => {
     configFile: false,
     appType: 'custom',
     resolve: { tsconfigPaths: true },
+    // The injected module is invisible to the HTML dependency scan.
+    optimizeDeps: { noDiscovery: true, include: ['dexie', 'hash-wasm', 'zod'] },
     server: { host: '127.0.0.1', port: 0 },
     logLevel: 'silent',
     plugins: [

@@ -44,6 +44,8 @@ export async function browserServer(observability?: Observability) {
     configFile: false,
     appType: 'custom',
     resolve: { tsconfigPaths: true },
+    // The injected module is invisible to the HTML dependency scan.
+    optimizeDeps: { noDiscovery: true, include: ['dexie', 'hash-wasm', 'zod'] },
     logLevel: 'silent',
     server: { host: '127.0.0.1', port: 0 },
     plugins: [
@@ -122,15 +124,37 @@ export async function browserServer(observability?: Observability) {
         },
       });
 
-      await page.goto(origin);
+      const failedModuleResponses = new Set<number>();
+      let scriptError = false;
 
-      await page.addScriptTag({
-        type: 'module',
-        content:
-          "import * as runtime from '/libs/web/frontend/db/src/index.ts'; import * as storage from '/libs/web/frontend/db/src/storage.ts'; const api = { ...runtime, ...storage }; import * as contracts from '/libs/shared/db/src/index.ts'; globalThis.modules = { api, contracts };",
+      page.on('response', (response) => {
+        if (response.request().resourceType() === 'script' && response.status() >= 400) {
+          failedModuleResponses.add(response.status());
+        }
+      });
+      page.on('pageerror', () => {
+        scriptError = true;
       });
 
-      await page.waitForFunction(() => Boolean((globalThis as FixtureHost).modules));
+      try {
+        await page.goto(origin);
+
+        await page.addScriptTag({
+          type: 'module',
+          content:
+            "import * as runtime from '/libs/web/frontend/db/src/index.ts'; import * as storage from '/libs/web/frontend/db/src/storage.ts'; const api = { ...runtime, ...storage }; import * as contracts from '/libs/shared/db/src/index.ts'; globalThis.modules = { api, contracts };",
+        });
+
+        await page.waitForFunction(() => Boolean((globalThis as FixtureHost).modules), undefined, { polling: 100 });
+      } catch (error) {
+        const statuses = [...failedModuleResponses].join(', ') || 'none';
+
+        const failure = new Error(
+          `Vault API fixture startup failed (script HTTP statuses: ${statuses}; page error: ${scriptError})`,
+        );
+
+        throw Object.assign(failure, { cause: error });
+      }
 
       return { context, page };
     },
