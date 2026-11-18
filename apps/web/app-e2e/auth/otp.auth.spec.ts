@@ -38,6 +38,8 @@ for (const locale of ['en', 'es']) {
 
     await expect(code).toHaveAttribute('aria-invalid', 'true');
 
+    await expect(error).toBeVisible();
+
     await expect(code).toHaveAccessibleDescription(
       spanish ? '6 dígitos Completa este campo.' : '6 digits Complete this field.',
     );
