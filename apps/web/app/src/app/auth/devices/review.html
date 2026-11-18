@@ -10,21 +10,13 @@
   @if (status() === 'pending') {
     <form novalidate class="space-y-5" [attr.data-submitted]="attempted() ? '' : null" (submit)="decide($event, true)">
       <app-field
-        #field="appField"
         control-id="device-pairing-code"
         [label]="codeLabel"
-        [error]="fields.code().errors()[0]?.message ?? ''"
+        [description]="codeLength"
+        [invalid]="fields.code().touched() && fields.code().invalid()"
+        [error]="fields.code().touched() ? (fields.code().errors()[0]?.message ?? '') : ''"
       >
-        <input
-          appUI
-          id="device-pairing-code"
-          [formField]="fields.code"
-          inputmode="numeric"
-          autocomplete="off"
-          placeholder=" "
-          [attr.aria-describedby]="field.describedBy()"
-          [attr.aria-invalid]="fields.code().touched() && fields.code().invalid()"
-        />
+        <app-pin-input [formField]="fields.code" type="text" />
       </app-field>
 
       <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">

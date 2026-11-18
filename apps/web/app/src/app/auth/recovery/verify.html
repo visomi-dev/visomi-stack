@@ -8,25 +8,17 @@
 
     <form novalidate class="space-y-5" [attr.data-submitted]="attempted() ? '' : null" (submit)="verify($event)">
       <app-field
-        #emailField="appField"
         control-id="recovery-email-code"
         [label]="emailLabel"
-        [error]="fields.code().errors()[0]?.message ?? ''"
+        [description]="codeLength"
+        [invalid]="fields.code().touched() && fields.code().invalid()"
+        [error]="fields.code().touched() ? (fields.code().errors()[0]?.message ?? '') : ''"
       >
-        <input
-          appUI
-          id="recovery-email-code"
-          [formField]="fields.code"
-          inputmode="numeric"
-          autocomplete="one-time-code"
-          placeholder=" "
-          [attr.aria-describedby]="emailField.describedBy()"
-          [attr.aria-invalid]="fields.code().touched() && fields.code().invalid()"
-        />
+        <app-pin-input [formField]="fields.code" type="text" autocomplete="one-time-code" />
       </app-field>
 
       <app-field control-id="recovery-factor-kind" [label]="factorLabel">
-        <select appUI id="recovery-factor-kind" [formField]="fields.kind">
+        <select appUI id="recovery-factor-kind" [formField]="fields.kind" (change)="changeFactor()">
           <option value="none" i18n="@@authNoExtraFactor">No additional code</option>
 
           <option value="totp" i18n="@@authAuthenticator">Authenticator app</option>
@@ -40,17 +32,23 @@
           #factorField="appField"
           control-id="recovery-factor"
           [label]="factorLabel"
-          [error]="fields.factor().errors()[0]?.message ?? ''"
+          [description]="model().kind === 'totp' ? codeLength : ''"
+          [invalid]="fields.factor().touched() && fields.factor().invalid()"
+          [error]="fields.factor().touched() ? (fields.factor().errors()[0]?.message ?? '') : ''"
         >
-          <input
-            appUI
-            id="recovery-factor"
-            [formField]="fields.factor"
-            [attr.inputmode]="model().kind === 'totp' ? 'numeric' : 'text'"
-            placeholder=" "
-            [attr.aria-describedby]="factorField.describedBy()"
-            [attr.aria-invalid]="fields.factor().touched() && fields.factor().invalid()"
-          />
+          @if (model().kind === 'totp') {
+            <app-pin-input [formField]="fields.factor" type="text" />
+          } @else {
+            <input
+              appUI
+              id="recovery-factor"
+              [formField]="fields.factor"
+              autocomplete="off"
+              placeholder=" "
+              [attr.aria-describedby]="factorField.describedBy()"
+              [attr.aria-invalid]="factorField.invalid()"
+            />
+          }
         </app-field>
       }
 

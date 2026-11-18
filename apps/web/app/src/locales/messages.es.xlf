@@ -902,6 +902,10 @@
         <source>Enter a valid email address.</source>
         <target>Introduce un correo electrónico válido.</target>
       </trans-unit>
+      <trans-unit id="authCodeLength" datatype="html">
+        <source>6 digits</source>
+        <target>6 dígitos</target>
+      </trans-unit>
       <trans-unit id="authCodeInvalid" datatype="html">
         <source>Enter the 6-digit code.</source>
         <target>Introduce el código de 6 dígitos.</target>

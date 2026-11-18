@@ -3,14 +3,14 @@ import { RouterLink } from '@angular/router';
 import { form, FormField, required, pattern, disabled, submit } from '@angular/forms/signals';
 
 import { NavigationHeading } from '../../shared/navigation-heading';
-import { Button, Heading, Text, LinkButton, Alert, Field, Input, Select } from '../../ui';
+import { Button, Heading, Text, LinkButton, Alert, Field, Input, PinInput, Select } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
 import { Journey } from '../shared/journey';
 import { ResendCode } from '../shared/resend';
 import { AuthNavigation } from '../shared/navigation';
-import { codeMessage, requiredMessage, focusInvalid } from '../shared/form-errors';
+import { codeLength, codeMessage, requiredMessage, focusInvalid } from '../shared/form-errors';
 import type { Factor } from '../session/models';
 
 import { Recovery } from './recovery';
@@ -26,6 +26,7 @@ import { Recovery } from './recovery';
     Alert,
     Field,
     Input,
+    PinInput,
     Select,
     FormField,
     RouterLink,
@@ -53,6 +54,7 @@ export class RecoveryVerify {
     disabled(path, { when: () => this.action.busy() });
   });
 
+  readonly codeLength = codeLength;
   readonly emailLabel = $localize`:@@authEmailCode:Email verification code`;
   readonly factorLabel = $localize`:@@authAdditionalCode:Additional verification`;
 
@@ -90,5 +92,9 @@ export class RecoveryVerify {
         ),
       onInvalid: focusInvalid,
     });
+  }
+
+  protected changeFactor(): void {
+    this.fields.factor().reset('');
   }
 }

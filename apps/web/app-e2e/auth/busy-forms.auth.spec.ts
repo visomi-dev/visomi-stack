@@ -246,6 +246,33 @@ for (const locale of ['en', 'es']) {
 
           await expect(input).toBeEnabled();
 
+          await expect(input).toHaveAttribute('autocomplete', 'one-time-code');
+
+          const factorKind = page.locator('select');
+          const factor = page.locator(flow === 'reset' ? '#reset-factor' : '#recovery-factor');
+
+          await factorKind.selectOption('totp');
+
+          await expect(factor).toHaveAttribute('maxlength', '6');
+
+          await expect(factor).toHaveAttribute('autocomplete', 'off');
+
+          await factor.fill('001');
+
+          await factorKind.selectOption('recovery_code');
+
+          await expect(factor).toHaveValue('');
+
+          await expect(factor).not.toHaveAttribute('maxlength');
+
+          await factor.fill('SYNTHETIC-BACKUP');
+
+          await factorKind.selectOption('totp');
+
+          await expect(factor).toHaveValue('');
+
+          await factorKind.selectOption('none');
+
           const code = await readMailCode(email);
 
           await input.fill(code);

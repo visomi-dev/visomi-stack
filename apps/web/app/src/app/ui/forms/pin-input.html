@@ -10,9 +10,12 @@
 
   <input
     #control
-    type="password"
+    [type]="type()"
+    [attr.name]="name() ?? null"
     inputmode="numeric"
-    autocomplete="off"
+    [autocomplete]="autocomplete()"
+    autocapitalize="off"
+    [spellcheck]="false"
     [minLength]="minDigits()"
     [maxLength]="digits()"
     [pattern]="pattern()"
@@ -23,6 +26,7 @@
     [attr.aria-invalid]="field.invalid() || !!field.manualError()?.trim() || null"
     [required]="required()"
     [disabled]="disabled()"
-    (input)="valueChange.emit(control.value)"
+    (input)="changeValue(control.value)"
+    (blur)="markTouched()"
   />
 </div>
