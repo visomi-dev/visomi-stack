@@ -1,8 +1,8 @@
 <div
-  class="relative w-fit rounded-lg text-zinc-950 has-focus-visible:outline-2 has-focus-visible:outline-offset-3 has-focus-visible:outline-blue-600 has-disabled:opacity-50 dark:text-zinc-50 dark:has-focus-visible:outline-blue-400"
+  class="pin relative rounded-lg text-zinc-950 has-focus-visible:outline-2 has-focus-visible:outline-offset-3 has-focus-visible:outline-blue-600 has-disabled:opacity-50 dark:text-zinc-50 dark:has-focus-visible:outline-blue-400"
   dir="ltr"
 >
-  <div aria-hidden="true" class="pointer-events-none flex gap-1">
+  <div aria-hidden="true" class="slots pointer-events-none grid">
     @for (slot of slots(); track slot) {
       <span class="slot"></span>
     }

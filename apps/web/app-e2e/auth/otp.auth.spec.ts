@@ -1,4 +1,41 @@
+import type { Locator } from '@playwright/test';
+
 import { expect, test, address, password } from './support/fixtures';
+import { expectCenteredDigits } from './support/pin-layout';
+
+async function expectPinLayout(widget: Locator): Promise<void> {
+  await widget.scrollIntoViewIfNeeded();
+
+  const layout = await widget.evaluate((element) => {
+    const { left, right, top, height } = element.getBoundingClientRect();
+    const field = element.closest('app-field')!;
+    const fieldStyle = getComputedStyle(field);
+    const availableWidth = field.clientWidth - parseFloat(fieldStyle.paddingLeft) - parseFloat(fieldStyle.paddingRight);
+    const slots = Array.from(element.querySelectorAll('.slot'), (slot) => slot.getBoundingClientRect());
+    const control = element.querySelector('input');
+
+    return {
+      widthDifference: Math.abs(parseFloat(getComputedStyle(element).width) - availableWidth),
+      slotWidthDifference: Math.max(...slots.map((slot) => slot.width)) - Math.min(...slots.map((slot) => slot.width)),
+      firstInset: Math.abs(slots[0].left - left),
+      lastInset: Math.abs(right - slots[slots.length - 1].right),
+      right,
+      viewport: window.innerWidth,
+      fieldOverflow: field.scrollWidth - field.clientWidth,
+      reachesLastSlot: document.elementFromPoint(right - 1, top + height / 2) === control,
+      hitsOutside: document.elementFromPoint(right + 1, top + height / 2) === control,
+    };
+  });
+
+  expect(layout.widthDifference).toBeLessThanOrEqual(1);
+  expect(layout.slotWidthDifference).toBeLessThanOrEqual(1);
+  expect(layout.firstInset).toBeLessThanOrEqual(1);
+  expect(layout.lastInset).toBeLessThanOrEqual(1);
+  expect(layout.right).toBeLessThanOrEqual(layout.viewport);
+  expect(layout.fieldOverflow).toBeLessThanOrEqual(1);
+  expect(layout.reachesLastSlot).toBe(true);
+  expect(layout.hitsOutside).toBe(false);
+}
 
 for (const locale of ['en', 'es']) {
   const spanish = locale === 'es';
@@ -84,6 +121,27 @@ for (const locale of ['en', 'es']) {
 
     await code.pressSequentially('001234');
 
+    await expectPinLayout(widget);
+
+    await expectCenteredDigits(widget);
+
+    const field = page.locator('app-field').filter({ has: widget });
+    const previousWidth = await field.evaluate((element: HTMLElement) => {
+      const width = element.style.inlineSize;
+
+      element.style.inlineSize = '127px';
+
+      return width;
+    });
+
+    try {
+      await expectPinLayout(widget);
+
+      await expectCenteredDigits(widget);
+    } finally {
+      await field.evaluate((element: HTMLElement, width) => (element.style.inlineSize = width), previousWidth);
+    }
+
     await code.press('ControlOrMeta+a');
 
     await code.press('ControlOrMeta+c');
@@ -120,15 +178,19 @@ for (const locale of ['en', 'es']) {
 
     await expect(code).toHaveAccessibleDescription(spanish ? '6 dígitos' : '6 digits');
 
-    const fits = await code.evaluate((control) => control.getBoundingClientRect().right <= window.innerWidth);
-
-    expect(fits).toBe(true);
-
     await verify.press('Shift+Tab');
 
     await expect(code).toBeFocused();
 
     await expect(widget).toHaveCSS('outline-style', 'solid');
+
+    await code.press('End');
+
+    await page.setViewportSize({ width: 1024, height: 700 });
+
+    await expectPinLayout(widget);
+
+    await expectCenteredDigits(widget);
 
     // 640 physical CSS pixels at 200% CSS zoom approximate a 320px layout viewport.
     await page.setViewportSize({ width: 640, height: 700 });
@@ -140,6 +202,9 @@ for (const locale of ['en', 'es']) {
       .evaluate((slot) => slot.getBoundingClientRect().right <= window.innerWidth);
 
     expect(rightmostSlotFits).toBe(true);
+
+    await expectPinLayout(widget);
+
     expect(submitted).toBeUndefined();
 
     await verify.click();
