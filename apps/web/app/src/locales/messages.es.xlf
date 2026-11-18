@@ -1283,8 +1283,8 @@
         <target>Nota sintética: el taller de jardinería empieza a las 10:00.</target>
       </trans-unit>
       <trans-unit id="vaultDemoTitle" datatype="html">
-        <source>Vault</source>
-        <target>Vault</target>
+        <source>Vault example</source>
+        <target>Ejemplo de vault</target>
       </trans-unit>
       <trans-unit id="vaultDemoDescription" datatype="html">
         <source>Try a vault with a synthetic note. The sample is encrypted on this device and stays separate from other vaults.</source>

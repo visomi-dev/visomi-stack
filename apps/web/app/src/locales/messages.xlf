@@ -2637,7 +2637,7 @@
         <source>Synthetic note: Garden workshop starts at 10:00.</source>
       </trans-unit>
       <trans-unit id="vaultDemoTitle" datatype="html">
-        <source>Vault</source>
+        <source>Vault example</source>
       </trans-unit>
       <trans-unit id="vaultDemoDescription" datatype="html">
         <source>Try a vault with a synthetic note. The sample is encrypted on this device and stays separate from other vaults.</source>

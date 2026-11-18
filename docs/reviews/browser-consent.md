@@ -31,13 +31,15 @@ and offers the same two controls for changing the saved choice.
 
 ## Reference vault
 
-The existing authenticated shell places Vault last in the desktop sidebar
-and mobile menu, ahead of the separate sign-out action. A synthetic account
+The existing authenticated shell places Vault example (Ejemplo de vault in
+Spanish) last in the desktop sidebar and mobile menu, ahead of the separate
+sign-out action. The menu link opens the localized `/app/{en,es}/vault-example`
+route. A synthetic account
 starts without a local example and sets a dedicated test PIN. The browser then
 reads the encrypted note, reloads to its locked state, supplies the PIN again
 and reads the note back. The test denies requests to the development
 persistence API and asserts that the demo makes none. The existing account guard
 redirects anonymous visitors to sign-in.
 
-- [Vault setup, 1366 × 1024, light](fixtures/vault-demo/vault-desktop-initial.png)
-- [Vault in the authenticated mobile menu, 390 × 844, dark](fixtures/vault-demo/vault-mobile-menu-dark.png)
+- [Vault example setup, 1366 × 1024, light](fixtures/vault-demo/vault-desktop-initial.png)
+- [Vault example in the authenticated mobile menu, 390 × 844, dark](fixtures/vault-demo/vault-mobile-menu-dark.png)

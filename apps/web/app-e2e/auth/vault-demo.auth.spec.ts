@@ -15,22 +15,22 @@ test('opens the last authenticated navigation item and unlocks the isolated synt
     await route.fulfill({ status: 404 });
   });
 
-  await page.goto('/app/en/vault');
+  await page.goto('/app/en/vault-example');
 
   await expect(page).toHaveURL(/\/auth\/sign-in/);
 
   await signup(page);
 
   const sidebar = page.locator('app-sidebar');
-  const desktop = sidebar.getByRole('link', { name: 'Vault', exact: true });
+  const desktop = sidebar.getByRole('link', { name: 'Vault example', exact: true });
 
-  await expect(sidebar.getByRole('link').last()).toHaveText('Vault');
+  await expect(sidebar.getByRole('link').last()).toHaveText('Vault example');
 
   await desktop.click();
 
-  await expect(page).toHaveURL(/\/vault$/);
+  await expect(page).toHaveURL(/\/vault-example$/);
 
-  await expect(page.getByRole('heading', { name: 'Vault', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Vault example', level: 1 })).toBeVisible();
 
   const setup = page.getByRole('button', { name: 'Set up the example vault' });
   const pin = page.getByLabel('Local unlock PIN', { exact: true });
@@ -76,13 +76,25 @@ test('opens the last authenticated navigation item and unlocks the isolated synt
 
   const menu = page.getByRole('dialog', { name: 'Primary navigation' });
 
-  await expect(menu.getByRole('link').last()).toHaveText('Vault');
+  await expect(menu.getByRole('link').last()).toHaveText('Vault example');
 
   await page.screenshot({ path: info.outputPath('vault-mobile-menu-dark.png'), animations: 'disabled' });
 
-  await menu.getByRole('link', { name: 'Vault' }).click();
+  await menu.getByRole('link', { name: 'Vault example' }).click();
 
   await expect(menu).toBeHidden();
+
+  await page.getByRole('link', { name: 'Español', exact: true }).click();
+
+  await expect(page).toHaveURL(/\/app\/es\/vault-example$/);
+
+  await expect(page.getByRole('heading', { name: 'Ejemplo de vault', level: 1 })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Menú', exact: true }).click();
+
+  const localized = page.getByRole('dialog', { name: 'Navegación principal' });
+
+  await expect(localized.getByRole('link').last()).toHaveText('Ejemplo de vault');
 
   expect(persistence).toEqual([]);
 });

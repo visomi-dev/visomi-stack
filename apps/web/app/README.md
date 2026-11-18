@@ -210,7 +210,8 @@ See [Web foundations](../../../docs/web-foundations.md) for the shared UI contra
 
 ## Reference vault
 
-The authenticated Vault page uses the existing local vault panel. A visitor
+The authenticated Vault example page at `/app/{en,es}/vault-example` uses the
+existing local vault panel. A visitor
 can initialize an example with a dedicated local PIN and read a fixed synthetic
 note. The account-scoped example database is separate from other vaults and
 stores the encrypted sample on this device. Reloading requires local unlock.
