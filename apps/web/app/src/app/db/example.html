@@ -107,7 +107,13 @@
             description="6 digits"
             i18n-description="@@vaultPinLength"
           >
-            <app-pin-input required [digits]="6" [disabled]="workspace.busy()" [draft]="workspace.pinDraft" />
+            <app-pin-input
+              required
+              [digits]="6"
+              [disabled]="workspace.busy()"
+              [value]="workspace.pinDraft()"
+              (valueChange)="workspace.pinDraft.set($event)"
+            />
           </app-field>
 
           <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinUnlock">
@@ -121,7 +127,13 @@
             label="Confirm PIN for initial setup"
             i18n-label="@@vaultPinConfirm"
           >
-            <app-pin-input required [digits]="6" [disabled]="workspace.busy()" [draft]="workspace.pinConfirmation" />
+            <app-pin-input
+              required
+              [digits]="6"
+              [disabled]="workspace.busy()"
+              [value]="workspace.pinConfirmation()"
+              (valueChange)="workspace.pinConfirmation.set($event)"
+            />
           </app-field>
 
           <button

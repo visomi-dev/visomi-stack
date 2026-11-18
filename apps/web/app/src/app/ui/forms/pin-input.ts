@@ -1,13 +1,13 @@
 import {
-  afterRenderEffect,
+  afterEveryRender,
   booleanAttribute,
   Component,
   computed,
   ElementRef,
   inject,
   input,
+  output,
   viewChild,
-  type WritableSignal,
 } from '@angular/core';
 
 import { Field } from './field';
@@ -32,18 +32,18 @@ export class PinInput {
 
   readonly disabled = input(false);
   readonly required = input(false, { transform: booleanAttribute });
-
-  readonly draft = input.required<WritableSignal<string>>();
+  readonly value = input.required<string>();
+  readonly valueChange = output<string>();
 
   // The browser can edit the value and the owner can clear it before Angular renders again.
   // Compare against the live control so clearing wins and ordinary edits keep native selection.
-  private readonly syncDraft = afterRenderEffect({
+  private readonly syncValue = afterEveryRender({
     write: () => {
       const control = this.control().nativeElement;
-      const draft = this.draft()();
+      const value = this.value();
 
-      if (control.value !== draft) {
-        control.value = draft;
+      if (control.value !== value) {
+        control.value = value;
       }
     },
   });

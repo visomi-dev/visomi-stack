@@ -22,7 +22,13 @@
       description="6 digits"
       i18n-description="@@vaultPinLength"
     >
-      <app-pin-input required [digits]="6" [disabled]="busy()" [draft]="pinDraft" />
+      <app-pin-input
+        required
+        [digits]="6"
+        [disabled]="busy()"
+        [value]="pinDraft()"
+        (valueChange)="pinDraft.set($event)"
+      />
     </app-field>
 
     @if (allowInitialize()) {
@@ -31,7 +37,13 @@
         label="Confirm PIN for initial setup"
         i18n-label="@@vaultPinConfirm"
       >
-        <app-pin-input required [digits]="6" [disabled]="busy()" [draft]="pinConfirmation" />
+        <app-pin-input
+          required
+          [digits]="6"
+          [disabled]="busy()"
+          [value]="pinConfirmation()"
+          (valueChange)="pinConfirmation.set($event)"
+        />
       </app-field>
     }
   }

@@ -23,6 +23,6 @@
     [attr.aria-invalid]="field.invalid() || !!field.manualError()?.trim() || null"
     [required]="required()"
     [disabled]="disabled()"
-    (input)="draft().set(control.value)"
+    (input)="valueChange.emit(control.value)"
   />
 </div>

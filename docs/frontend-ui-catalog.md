@@ -96,7 +96,8 @@ keyboard contracts beyond their CSS. They are not represented as equivalent
 widgets by a styled native select or disclosure. Their headless primitive choice
 needs its own implementation and accessibility validation.
 
-Angular's `ui/forms/PinInput` composes with `Field` and a caller-owned draft.
+Angular's `ui/forms/PinInput` composes with `Field`. The parent supplies a string
+through `[value]` and handles edits through `(valueChange)`.
 It uses masked numeric input, supports a configured digit count and accepts an
 optional shorter minimum. Its location and configurable slots follow the
 [v0 form control](https://github.com/visomi-dev/visomi-stack-v0/blob/d72af8c39f969d05076fa2f3bb05865b08f9b176/apps/web/app/src/app/shared/ui/forms/pin-input/pin-input.ts)

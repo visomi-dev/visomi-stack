@@ -7,7 +7,7 @@ import { Field, PinInput } from '../index';
   imports: [Field, PinInput],
   template: `
     <app-field control-id="approval-pin" label="Approval PIN" [manual-error]="error()">
-      <app-pin-input required [digits]="5" [draft]="code" />
+      <app-pin-input required [digits]="5" [value]="code()" (valueChange)="code.set($event)" />
     </app-field>
   `,
 })
@@ -46,4 +46,24 @@ it('uses a caller-selected PIN length in a form independent of vault services', 
   view.componentInstance.code.set('');
   view.detectChanges();
   expect(control.value).toBe('');
+});
+
+it('emits a native edit once and restores the supplied value when the owner declines it', () => {
+  const view = TestBed.createComponent(ApprovalForm);
+  const owner = view.componentInstance;
+
+  owner.code.set('00123');
+  const handleEdit = vi.spyOn(owner.code, 'set').mockImplementation(() => undefined);
+
+  view.detectChanges();
+  const control = (view.nativeElement as HTMLElement).querySelector('input')!;
+
+  expect(control.value).toBe('00123');
+  control.value = '00124';
+  control.dispatchEvent(new Event('input'));
+  view.detectChanges();
+
+  expect(handleEdit).toHaveBeenCalledExactlyOnceWith('00124');
+  expect(owner.code()).toBe('00123');
+  expect(control.value).toBe('00123');
 });

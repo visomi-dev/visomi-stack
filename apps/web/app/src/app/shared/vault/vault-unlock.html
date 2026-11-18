@@ -21,7 +21,7 @@
           description="6 digits"
           i18n-description="@@vaultPinLength"
         >
-          <app-pin-input required [digits]="6" [disabled]="busy()" [draft]="pin" />
+          <app-pin-input required [digits]="6" [disabled]="busy()" [value]="pin()" (valueChange)="pin.set($event)" />
         </app-field>
       }
 
