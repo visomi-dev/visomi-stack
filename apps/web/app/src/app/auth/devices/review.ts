@@ -4,11 +4,11 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { form, FormField, required, pattern, disabled, submit } from '@angular/forms/signals';
 
 import { NavigationHeading } from '../../shared/navigation-heading';
-import { Button, Heading, Text, Link, Field, Input } from '../../ui';
+import { Button, Heading, Text, Link, Field, PinInput } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
-import { codeMessage, requiredMessage, focusInvalid } from '../shared/form-errors';
+import { codeLength, codeMessage, requiredMessage, focusInvalid } from '../shared/form-errors';
 
 import { Devices, type DeviceStatus } from './devices';
 
@@ -18,7 +18,7 @@ function validRequestId(value: string | null): string | null {
 
 @Component({
   selector: 'app-device-review',
-  imports: [NavigationHeading, Button, Heading, Text, Link, Field, Input, FormField, RouterLink, AuthFeedback],
+  imports: [NavigationHeading, Button, Heading, Text, Link, Field, PinInput, FormField, RouterLink, AuthFeedback],
   providers: [Action, AuthHttp, Devices],
   templateUrl: './review.html',
 })
@@ -45,6 +45,7 @@ export class DeviceReview {
 
   readonly requestId = computed(() => validRequestId(this.query().get('requestId')));
 
+  readonly codeLength = codeLength;
   readonly codeLabel = $localize`:@@authPairingCode:Pairing code`;
 
   decide(event: Event, approve: boolean): void {

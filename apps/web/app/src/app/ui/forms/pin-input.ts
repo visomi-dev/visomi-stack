@@ -32,8 +32,24 @@ export class PinInput {
 
   readonly disabled = input(false);
   readonly required = input(false, { transform: booleanAttribute });
-  readonly value = input.required<string>();
+  readonly type = input<'password' | 'text'>('password');
+  readonly autocomplete = input<'off' | 'one-time-code'>('off');
+  readonly name = input<string>();
+  readonly value = input('');
+  readonly touch = output<void>();
   readonly valueChange = output<string>();
+
+  focus(options?: FocusOptions): void {
+    this.control().nativeElement.focus(options);
+  }
+
+  protected changeValue(value: string): void {
+    this.valueChange.emit(value);
+  }
+
+  protected markTouched(): void {
+    this.touch.emit();
+  }
 
   // The browser can edit the value and the owner can clear it before Angular renders again.
   // Compare against the live control so clearing wins and ordinary edits keep native selection.

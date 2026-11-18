@@ -1,17 +1,17 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, type OnChanges, type SimpleChanges } from '@angular/core';
 import { disabled, form, FormField, pattern, required, submit } from '@angular/forms/signals';
 
-import { Button, Field, Input } from '../../ui';
+import { Button, Field, Input, PinInput } from '../../ui';
 
-import { codeMessage, requiredMessage, focusInvalid } from './form-errors';
+import { codeLength, codeMessage, requiredMessage, focusInvalid } from './form-errors';
 
 @Component({
   selector: 'app-code-entry',
-  imports: [Button, Field, Input, FormField],
+  imports: [Button, Field, Input, PinInput, FormField],
   host: { class: 'block min-w-0' },
   templateUrl: './code-entry.html',
 })
-export class CodeEntry {
+export class CodeEntry implements OnChanges {
   readonly busy = input(false);
   readonly loading = input<boolean>();
   readonly backup = input(false);
@@ -26,7 +26,15 @@ export class CodeEntry {
     disabled(path, { when: () => this.busy() });
   });
 
+  readonly codeLength = codeLength;
   readonly label = $localize`:@@authVerificationCode:Verification code`;
+
+  ngOnChanges(changes: SimpleChanges<CodeEntry>): void {
+    if (changes.backup) {
+      this.fields().reset({ code: '' });
+      this.attempted.set(false);
+    }
+  }
 
   verify(event: Event): void {
     event.preventDefault();

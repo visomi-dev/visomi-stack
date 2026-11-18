@@ -3,18 +3,23 @@
     #field="appField"
     control-id="verification-code"
     [label]="label"
-    [error]="fields.code().errors()[0]?.message ?? ''"
+    [description]="backup() ? '' : codeLength"
+    [invalid]="fields.code().touched() && fields.code().invalid()"
+    [error]="fields.code().touched() ? (fields.code().errors()[0]?.message ?? '') : ''"
   >
-    <input
-      appUI
-      [formField]="fields.code"
-      [id]="field.controlId()"
-      [attr.aria-describedby]="field.describedBy()"
-      [attr.aria-invalid]="fields.code().touched() && fields.code().invalid()"
-      [attr.autocomplete]="backup() ? 'off' : 'one-time-code'"
-      [attr.inputmode]="backup() ? 'text' : 'numeric'"
-      placeholder=" "
-    />
+    @if (backup()) {
+      <input
+        appUI
+        [formField]="fields.code"
+        [id]="field.controlId()"
+        [attr.aria-describedby]="field.describedBy()"
+        [attr.aria-invalid]="field.invalid()"
+        autocomplete="off"
+        placeholder=" "
+      />
+    } @else {
+      <app-pin-input [formField]="fields.code" type="text" autocomplete="one-time-code" />
+    }
   </app-field>
 
   <button

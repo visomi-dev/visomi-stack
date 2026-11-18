@@ -1729,6 +1729,9 @@
           <context context-type="linenumber">7</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="authCodeLength" datatype="html">
+        <source>6 digits</source>
+      </trans-unit>
       <trans-unit id="authCodeInvalid" datatype="html">
         <source>Enter the 6-digit code.</source>
         <context-group purpose="location">

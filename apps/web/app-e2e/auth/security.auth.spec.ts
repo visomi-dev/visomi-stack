@@ -32,7 +32,13 @@ test('cancels reauthentication back to the exact device review', async ({ page }
 
   await expect(page).toHaveURL('/app/en' + destination);
 
-  await expect(page.getByLabel('Pairing code', { exact: true })).toBeVisible();
+  const pairing = page.getByLabel('Pairing code', { exact: true });
+
+  await expect(pairing).toBeVisible();
+
+  await expect(pairing).toHaveAttribute('maxlength', '6');
+
+  await expect(pairing).toHaveAttribute('autocomplete', 'off');
 });
 
 test('sets up TOTP locally and signs in with a replacement backup code', async ({ page, context }) => {
@@ -80,9 +86,31 @@ test('sets up TOTP locally and signs in with a replacement backup code', async (
 
   await passwordStart(page, email);
 
-  await page.getByRole('button', { name: 'Use a backup code', exact: true }).click();
+  const verification = page.getByLabel('Verification code', { exact: true });
 
-  await page.getByLabel('Verification code', { exact: true }).fill(backup);
+  await expect(verification).toHaveAttribute('maxlength', '6');
+
+  await verification.fill('001');
+
+  const useBackup = page.getByRole('button', { name: 'Use a backup code', exact: true });
+
+  await useBackup.click();
+
+  await expect(verification).toHaveValue('');
+
+  await expect(verification).not.toHaveAttribute('maxlength');
+
+  await verification.fill(backup);
+
+  await page.getByRole('button', { name: 'Use authenticator app', exact: true }).click();
+
+  await expect(verification).toHaveValue('');
+
+  await expect(verification).toHaveAttribute('maxlength', '6');
+
+  await useBackup.click();
+
+  await verification.fill(backup);
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
