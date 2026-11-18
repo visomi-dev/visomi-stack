@@ -1,0 +1,26 @@
+<section class="grid max-w-2xl gap-5">
+  <h1 appUI appNavigationHeading i18n="@@vaultDemoTitle">Vault</h1>
+
+  <p appUI tone="muted" i18n="@@vaultDemoDescription">
+    Try a vault with a synthetic note. The sample is encrypted on this device and stays separate from other vaults.
+  </p>
+
+  @if (initializing()) {
+    <p appUI i18n="@@vaultDemoStart">Choose a new local PIN and initialize the example to encrypt the sample.</p>
+  }
+
+  @if (binding(); as localBinding) {
+    <app-vault-panel
+      [binding]="localBinding"
+      [context]="context"
+      [rp-id]="hostname()"
+      [allow-initialize]="initializing()"
+      [sample]="sample"
+      (initialized)="initializing.set(false)"
+    />
+  } @else if (unavailable()) {
+    <p role="status" i18n="@@vaultDemoUnavailable">Local vault storage is unavailable on this device.</p>
+  } @else {
+    <p role="status" i18n="@@vaultDemoLoading">Checking this device for a local vault.</p>
+  }
+</section>

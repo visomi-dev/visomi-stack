@@ -3,6 +3,7 @@ export const browserConsentKey = 'visomi:browser-consent:v1';
 export function createBrowserConsent(browser: Window) {
   const listeners = new Set<() => void>();
   let rejected = false;
+  const accepted = /^accept:(\d+-){3}\d+$/;
 
   function blocked(): boolean {
     const navigator = browser.navigator as Navigator & { globalPrivacyControl?: boolean };
@@ -22,7 +23,7 @@ export function createBrowserConsent(browser: Window) {
   function permit(): string | undefined {
     const value = read();
 
-    return !rejected && !blocked() && /^accept:\d+-\d+-\d+-\d+$/.test(value ?? '') ? value! : undefined;
+    return !rejected && !blocked() && accepted.test(value ?? '') ? value! : undefined;
   }
 
   function notify(): void {
@@ -42,6 +43,11 @@ export function createBrowserConsent(browser: Window) {
   return {
     permit,
     blocked,
+    decided(): boolean {
+      const value = read();
+
+      return rejected || value === 'reject' || accepted.test(value ?? '');
+    },
     decide(accept: boolean): void {
       if (accept && blocked()) {
         return;

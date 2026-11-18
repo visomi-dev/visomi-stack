@@ -1262,6 +1262,54 @@
         </context-group>
         <target>Un vault local está cerrado. Desbloquéalo para usar sus recursos privados. Otros vaults locales pueden usar otra clave o PIN. Navegar durante esta sesión mantiene abierto un vault hasta que lo bloquees o cierres sesión.</target>
       </trans-unit>
+      <trans-unit id="vaultSeparation" datatype="html">
+        <source>Signing in does not unlock this resource. Unlock it separately on this device.</source>
+        <target>Iniciar sesión no desbloquea este recurso. Desbloquéalo por separado en este dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultInitialize" datatype="html">
+        <source>Initialize an empty local vault</source>
+        <target>Inicializar un vault local vacío</target>
+      </trans-unit>
+      <trans-unit id="vaultLocalDescription" datatype="html">
+        <source>Stored as ciphertext on this device. Keep a recovery method or an encrypted backup if your product supports one.</source>
+        <target>Se guarda cifrado en este dispositivo. Conserva un método de recuperación o una copia cifrada si tu producto lo permite.</target>
+      </trans-unit>
+      <trans-unit id="vaultRead" datatype="html">
+        <source>Read on this device</source>
+        <target>Leer en este dispositivo</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoSample" datatype="html">
+        <source>Synthetic note: Garden workshop starts at 10:00.</source>
+        <target>Nota sintética: el taller de jardinería empieza a las 10:00.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoTitle" datatype="html">
+        <source>Vault</source>
+        <target>Vault</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoDescription" datatype="html">
+        <source>Try a vault with a synthetic note. The sample is encrypted on this device and stays separate from other vaults.</source>
+        <target>Prueba un vault con una nota sintética. La muestra se cifra en este dispositivo y queda separada de otros vaults.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoStart" datatype="html">
+        <source>Choose a new local PIN and initialize the example to encrypt the sample.</source>
+        <target>Elige un PIN local nuevo e inicializa el ejemplo para cifrar la muestra.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoUnavailable" datatype="html">
+        <source>Local vault storage is unavailable on this device.</source>
+        <target>El almacenamiento local del vault no está disponible en este dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoLoading" datatype="html">
+        <source>Checking this device for a local vault.</source>
+        <target>Buscando un vault local en este dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoRead" datatype="html">
+        <source>Read encrypted sample</source>
+        <target>Leer muestra cifrada</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoCreate" datatype="html">
+        <source>Set up the example vault</source>
+        <target>Configurar el vault de ejemplo</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

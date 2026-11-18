@@ -7,8 +7,8 @@ and a local logs provider, loaded only when server configuration and an existing
 browser grant both allow it.
 
 The performance transport also lives in that deferred module. Astro's default initial theme and consent scripts have a 6,656-byte raw budget
-in two requests, including Vite's dynamic-import bootstrap. The pending store is
-available immediately. Delivery and visits load on demand, and the optional
+in two requests, including Vite's dynamic-import bootstrap. The initial listener sanitizes early exceptions immediately and retains at most
+five descriptions while the pending store loads. Delivery and visits load on demand, and the optional
 performance runtime adds at most one more request. The opted-in homepage stays
 within 64 KiB across its four initial scripts. Browser tests exercise both configurations.
 

@@ -1,18 +1,25 @@
 export const browserPrivacyCopy = {
   en: {
     title: 'Privacy settings',
+    privacy: 'Privacy',
+    reportsTitle: 'Error reports',
+    invitation: 'Allow optional analytics and browser telemetry to help improve Visomi Stack.',
+    manualHeading: 'One-off error reports',
+    manualDetail:
+      'With automatic sharing off, unexpected errors can be held briefly in memory. You can review and send one report on purpose, or discard it. This does not change your preference.',
+    settingsHeading: 'Change your preference',
     off: 'Automatic sharing is off.',
     on: 'Automatic sharing is on.',
     blocked: 'Your browser signals that it does not allow automatic sharing.',
     accept: 'Accept',
-    reject: 'Reject',
+    reject: 'Do not accept',
     purpose: 'What do we use analytics and telemetry for?',
     analytics:
       'Analytics counts visits by page category and language to show which parts of the site and app are used.',
     telemetry:
-      'Browser telemetry helps find slowdowns and unexpected failures using timings and fixed error categories. Reports exclude URLs, account and vault data, and raw error messages.',
+      'Browser telemetry helps find slowdowns and unexpected failures using timings and fixed error categories. Reports exclude URLs, personal or resource identifiers, account and vault data, and raw error messages or stacks.',
     revoke:
-      'Select Reject here to stop automatic sharing on this browser. The choice does not affect your access or server diagnostics.',
+      'Select Do not accept here to stop automatic sharing on this browser. The choice does not affect your access or server diagnostics.',
     pending: 'Error report available',
     reports: 'Pending error reports',
     manual:
@@ -36,18 +43,25 @@ export const browserPrivacyCopy = {
   },
   es: {
     title: 'Ajustes de privacidad',
+    privacy: 'Privacidad',
+    reportsTitle: 'Reportes de error',
+    invitation: 'Permite las analíticas y la telemetría opcionales del navegador para ayudar a mejorar Visomi Stack.',
+    manualHeading: 'Reportes de error individuales',
+    manualDetail:
+      'Con el envío automático desactivado, los errores inesperados pueden guardarse brevemente en memoria. Puedes revisar y enviar un solo reporte de forma explícita, o descartarlo. Tu preferencia no cambia.',
+    settingsHeading: 'Cambiar tu preferencia',
     off: 'El envío automático está desactivado.',
     on: 'El envío automático está activado.',
     blocked: 'Tu navegador indica que no permite el envío automático.',
     accept: 'Aceptar',
-    reject: 'Rechazar',
+    reject: 'No aceptar',
     purpose: '¿Para qué usamos las analíticas y la telemetría?',
     analytics:
       'Las analíticas cuentan las visitas por categoría de página e idioma para saber qué partes del sitio y de la aplicación se usan.',
     telemetry:
-      'La telemetría del navegador ayuda a detectar lentitud y fallos inesperados con tiempos de carga y categorías de error predefinidas. Los reportes excluyen URLs, datos de la cuenta y del almacén privado, y mensajes de error originales.',
+      'La telemetría del navegador ayuda a detectar lentitud y fallos inesperados con tiempos de carga y categorías de error predefinidas. Los reportes excluyen URLs, identificadores personales o de recursos, datos de la cuenta y del vault, y mensajes o trazas de error originales.',
     revoke:
-      'Selecciona Rechazar aquí para detener el envío automático en este navegador. Tu elección no afecta tu acceso ni los diagnósticos del servidor.',
+      'Selecciona No aceptar aquí para detener el envío automático en este navegador. Tu elección no afecta tu acceso ni los diagnósticos del servidor.',
     pending: 'Reporte de error disponible',
     reports: 'Reportes de error pendientes',
     manual:

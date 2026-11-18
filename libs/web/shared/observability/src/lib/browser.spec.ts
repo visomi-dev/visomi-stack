@@ -20,6 +20,7 @@ function fixture(configuration: unknown = config, automatic = true) {
     permit: () => grant,
     subscribe: () => () => undefined,
     blocked: () => false,
+    decided: () => true,
     decide: () => undefined,
     stop: () => undefined,
   } satisfies BrowserConsent;
@@ -182,6 +183,7 @@ describe('browser error capture policy', () => {
         permit: () => 'grant',
         subscribe: () => () => undefined,
         blocked: () => false,
+        decided: () => true,
         decide: () => undefined,
         stop: () => undefined,
       } satisfies BrowserConsent,

@@ -92,6 +92,7 @@ export const appRoutes: Routes = [
     canActivateChild: [fullGuard],
     loadComponent: () => import('./layouts/authenticated-layout').then((m) => m.AuthenticatedLayout),
     children: [
+      { path: 'vault', loadComponent: () => import('./vault/demo').then((m) => m.VaultDemo) },
       { path: 'home', loadComponent: () => import('./home/home').then((m) => m.Home) },
       { path: 'persistence', loadComponent: () => import('./db/example').then((m) => m.DatabaseExample) },
       {

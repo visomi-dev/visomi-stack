@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 
-import type { Page, Request, Response } from '@playwright/test';
+import type { Page, Request } from '@playwright/test';
 
 import { expect, signup, test } from './support/fixtures';
 
@@ -22,7 +22,6 @@ function requests(page: Page) {
       observed.push(record);
     }
   });
-
   page.on('response', (response) => {
     const record = records.get(response.request());
 
@@ -34,28 +33,27 @@ function requests(page: Page) {
   return observed;
 }
 
-function privacy(page: Page, locale: 'en' | 'es' = 'en') {
+function controls(page: Page, locale: 'en' | 'es' = 'en') {
   const copy = browserPrivacyCopy[locale];
-  const opener = page.getByRole('button', { name: new RegExp(copy.title) });
-  const dialog = page.getByRole('dialog', { name: copy.title });
+  const notice = page.getByRole('region', { name: copy.title });
 
   return {
     copy,
-    opener,
-    dialog,
-    accept: dialog.getByRole('button', { name: copy.accept }),
-    reject: dialog.getByRole('button', { name: copy.reject }),
+    notice,
+    opener: page.getByRole('button', { name: copy.pending }),
+    dialog: page.getByRole('dialog', { name: copy.reportsTitle }),
+    accept: notice.getByRole('button', { name: copy.accept, exact: true }),
+    reject: notice.getByRole('button', { name: copy.reject, exact: true }),
   };
 }
 
-function endpoint(page: Page, path: string): Promise<Response> {
+function endpoint(page: Page, path: string) {
   return page.waitForResponse(
     (response) => new URL(response.url()).pathname === path && response.request().method() === 'POST',
   );
 }
 
 async function throwError(page: Page, kind: 'RangeError' | 'TypeError' | 'SyntaxError') {
-  // Schedule a real uncaught exception in the document, with wholly synthetic data.
   await page.evaluate(
     ({ kind, marker }) => {
       setTimeout(() => {
@@ -66,15 +64,29 @@ async function throwError(page: Page, kind: 'RangeError' | 'TypeError' | 'Syntax
   );
 }
 
-test('shares consent across Astro and the guarded Angular dashboard, and sends only one selected exception', async ({
+async function compareChoices(page: Page, locale: 'en' | 'es' = 'en') {
+  const { accept, reject } = controls(page, locale);
+  const styles = (control: HTMLElement) => {
+    const style = getComputedStyle(control);
+
+    return [style.backgroundColor, style.color, style.borderColor, style.fontSize, style.width, style.height];
+  };
+  const yes = await accept.evaluate(styles);
+  const no = await reject.evaluate(styles);
+
+  expect(yes).toEqual(no);
+}
+
+test('keeps the notice in flow and separates manual reports from automatic consent', async ({
   page,
   request,
 }, info) => {
+  const observed = requests(page);
+  const site = controls(page);
+
   await page.setViewportSize({ width: 1366, height: 900 });
 
   await page.emulateMedia({ colorScheme: 'light' });
-
-  const observed = requests(page);
 
   await page.goto('/app/en/home');
 
@@ -82,17 +94,43 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
 
   await signup(page);
 
-  const app = privacy(page);
-
-  await expect(app.opener).toBeEnabled();
+  await expect(controls(page).notice).toBeVisible();
 
   expect(observed).toEqual([]);
 
   await page.goto('/en/');
 
-  const site = privacy(page);
+  await expect(site.notice).toBeVisible();
 
-  await expect(site.opener).toHaveAccessibleName(site.copy.title);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  await compareChoices(page);
+
+  await site.reject.focus();
+
+  await page.keyboard.press('Tab');
+
+  await expect(site.accept).toBeFocused();
+
+  await page.keyboard.press('Tab');
+
+  const purpose = site.notice.getByRole('link', { name: site.copy.purpose });
+
+  await expect(purpose).toBeFocused();
+
+  await page.screenshot({ path: info.outputPath('website-desktop-light-en.png'), animations: 'disabled' });
+
+  await page.keyboard.press('Enter');
+
+  await expect(page).toHaveURL(/\/en\/privacy\/$/);
+
+  await expect(page.getByRole('heading', { name: site.copy.manualHeading })).toBeVisible();
+
+  await expect(page.getByRole('contentinfo').getByRole('link', { name: site.copy.privacy })).toBeVisible();
+
+  expect(observed).toEqual([]);
+
+  await page.goto('/en/');
 
   const expectedFailures = await page.evaluate(async () => {
     await Promise.reject(new TypeError('synthetic handled error')).catch(() => undefined);
@@ -104,7 +142,7 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
 
   expect(expectedFailures).toBe(404);
 
-  await expect(site.opener).toHaveAccessibleName(site.copy.title);
+  await expect(site.opener).toHaveCount(0);
 
   expect(observed).toEqual([]);
 
@@ -112,31 +150,9 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
 
   await throwError(page, 'RangeError');
 
-  await expect(site.opener).toHaveAccessibleName(new RegExp(site.copy.pending));
-
   await site.opener.focus();
 
   await site.opener.press('Enter');
-
-  await expect(site.dialog).toBeVisible();
-
-  await expect(site.dialog.getByText(site.copy.off)).toBeVisible();
-
-  const styles = (control: HTMLElement) => {
-    const style = getComputedStyle(control);
-    const rect = control.getBoundingClientRect();
-
-    return [style.backgroundColor, style.color, style.borderColor, style.fontSize, rect.width, rect.height];
-  };
-
-  const acceptStyles = await site.accept.evaluate(styles);
-  const rejectStyles = await site.reject.evaluate(styles);
-
-  expect(acceptStyles).toEqual(rejectStyles);
-
-  await site.dialog.getByRole('link', { name: site.copy.purpose }).press('Enter');
-
-  await expect(site.dialog.getByRole('heading', { name: site.copy.purpose })).toBeFocused();
 
   const previews = site.dialog.getByRole('listitem');
 
@@ -145,23 +161,17 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
   await expect(site.dialog).not.toContainText(marker);
 
   expect(observed).toEqual([]);
-
-  await page.screenshot({ path: info.outputPath('website-desktop-light-en.png'), animations: 'disabled' });
-
-  await info.attach('website-desktop-light-en', { path: info.outputPath('website-desktop-light-en.png') });
-
   const report = endpoint(page, '/telemetry/errors');
 
   await previews.filter({ hasText: 'RangeError' }).getByRole('button', { name: site.copy.send }).click();
 
   const sent = await report;
-
   const reportHeaders = await sent.request().allHeaders();
 
   expect(reportHeaders['origin']).toBe(new URL(sent.url()).origin);
-  expect(sent.status()).toBe(202);
   expect(reportHeaders).not.toHaveProperty('cookie');
   expect(reportHeaders).not.toHaveProperty('referer');
+  expect(sent.status()).toBe(202);
   expect(sent.request().postDataJSON()).toEqual({
     application: 'web-site',
     code: 'unhandled_exception',
@@ -170,8 +180,6 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
   });
 
   await expect(previews).toHaveCount(1);
-
-  await expect(site.dialog.getByText(site.copy.off)).toBeVisible();
 
   await expect(site.dialog.getByText(site.copy.sent)).toBeVisible();
 
@@ -183,21 +191,21 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
 
   await expect(previews).toHaveCount(0);
 
-  await expect(site.opener).toHaveAccessibleName(site.copy.title);
+  await page.keyboard.press('Escape');
 
   await throwError(page, 'SyntaxError');
 
-  await expect(previews).toHaveCount(1);
+  await expect(site.opener).toBeVisible();
 
   await site.reject.click();
 
-  await expect(site.dialog.getByText(site.copy.off)).toBeVisible();
+  await expect(site.notice.getByText(site.copy.off)).toBeVisible();
 
   await site.accept.click();
 
-  await expect(site.dialog.getByText(site.copy.on)).toBeVisible();
+  await expect(site.notice.getByText(site.copy.on)).toBeVisible();
 
-  await expect(previews).toHaveCount(0);
+  await expect(site.opener).toHaveCount(0);
 
   expect(observed.map(({ path }) => path)).toEqual(['/telemetry/config', '/telemetry/errors']);
 
@@ -208,11 +216,6 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
   const automaticResponse = await automatic;
 
   expect(automaticResponse.status()).toBe(202);
-
-  await page.keyboard.press('Escape');
-
-  await expect(site.opener).toBeFocused();
-
   const docs = endpoint(page, '/telemetry/visits');
 
   await page.goto('/en/docs/?private=' + marker + '#' + marker);
@@ -220,20 +223,17 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
   const docsResponse = await docs;
 
   expect(docsResponse.status()).toBe(204);
-
   const dashboard = endpoint(page, '/telemetry/visits');
 
   await page.goto('/app/en/home?private=' + marker + '#' + marker);
 
   const visit = await dashboard;
+  const visitHeaders = await visit.request().allHeaders();
 
   expect(visit.status()).toBe(204);
   expect(visit.request().postDataJSON()).toEqual({ page: 'app-dashboard', locale: 'en' });
-  const visitHeaders = await visit.request().allHeaders();
-
   expect(visitHeaders).not.toHaveProperty('cookie');
   expect(visitHeaders).not.toHaveProperty('referer');
-
   const sidebar = page.locator('app-sidebar');
 
   await sidebar.getByRole('link', { name: 'Account', exact: true }).click();
@@ -247,15 +247,14 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
   const returnVisit = await returnToDashboard;
 
   expect(returnVisit.status()).toBe(204);
-  expect(returnVisit.request().postDataJSON()).toEqual({ page: 'app-dashboard', locale: 'en' });
 
-  await app.opener.click();
+  await page.getByRole('contentinfo').getByRole('link', { name: site.copy.privacy }).click();
 
-  await expect(app.dialog.getByText(app.copy.on)).toBeVisible();
+  await expect(page).toHaveURL(/\/en\/privacy\/$/);
 
-  await app.reject.click();
+  await site.reject.click();
 
-  await expect(app.dialog.getByText(app.copy.off)).toBeVisible();
+  await expect(site.notice.getByText(site.copy.off)).toBeVisible();
 
   await page.setViewportSize({ width: 390, height: 844 });
 
@@ -265,30 +264,15 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
 
   await page.goto('/app/es/home');
 
-  const localized = privacy(page, 'es');
+  const localized = controls(page, 'es');
 
-  await expect(localized.opener).toHaveAccessibleName(localized.copy.title);
+  await expect(localized.notice).toHaveCount(0);
 
   await throwError(page, 'RangeError');
 
-  await expect(localized.opener).toHaveAccessibleName(new RegExp(localized.copy.pending));
-
   await localized.opener.click();
 
-  await expect(localized.dialog.getByText(localized.copy.off)).toBeVisible();
-
-  await expect(localized.dialog.getByRole('link', { name: localized.copy.purpose })).toBeVisible();
-
-  const localizedAcceptStyles = await localized.accept.evaluate(styles);
-  const localizedRejectStyles = await localized.reject.evaluate(styles);
-
-  expect(localizedAcceptStyles).toEqual(localizedRejectStyles);
   expect(observed).toHaveLength(beforeReload);
-
-  await page.screenshot({ path: info.outputPath('app-mobile-dark-es.png'), animations: 'disabled' });
-
-  await info.attach('app-mobile-dark-es', { path: info.outputPath('app-mobile-dark-es.png') });
-
   const manualApp = endpoint(page, '/telemetry/errors');
 
   await localized.dialog.getByRole('button', { name: localized.copy.send }).click();
@@ -308,15 +292,12 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
     { page: 'app-dashboard', locale: 'en' },
   ]);
   expect(JSON.stringify(observed)).not.toContain(marker);
-
-  // The real receiver retains its canonical Origin, with privacy headers honored independently.
   const wrongOrigin = await request.post('/telemetry/visits', {
     data: { page: 'docs', locale: 'en' },
     headers: { origin: 'https://denied.example.test' },
   });
 
   expect(wrongOrigin.status()).toBe(403);
-
   const artifact = info.outputPath('synthetic-network.json');
 
   await writeFile(
@@ -325,6 +306,45 @@ test('shares consent across Astro and the guarded Angular dashboard, and sends o
   );
 
   await info.attach('synthetic-network', { path: artifact, contentType: 'application/json' });
+});
+
+test('the mobile dark app keeps privacy controls in flow and links to Spanish public settings', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await page.emulateMedia({ colorScheme: 'dark' });
+
+  const observed = requests(page);
+  const app = controls(page, 'es');
+
+  await page.goto('/app/es/foundations');
+
+  await expect(app.notice).toBeVisible();
+
+  await compareChoices(page, 'es');
+
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  await app.reject.focus();
+
+  await page.keyboard.press('Tab');
+
+  await expect(app.accept).toBeFocused();
+
+  await page.screenshot({ path: info.outputPath('app-mobile-dark-es.png'), animations: 'disabled' });
+
+  await page.keyboard.press('Tab');
+
+  const purpose = app.notice.getByRole('link', { name: app.copy.purpose });
+
+  await expect(purpose).toBeFocused();
+
+  await page.keyboard.press('Enter');
+
+  await expect(page).toHaveURL(/\/es\/privacy\/$/);
+
+  expect(observed).toEqual([]);
 });
 
 for (const signal of ['globalPrivacyControl', 'doNotTrack'] as const) {
@@ -338,23 +358,28 @@ for (const signal of ['globalPrivacyControl', 'doNotTrack'] as const) {
     );
 
     const observed = requests(page);
+    const localized = controls(page, 'es');
 
-    for (const path of ['/es/', '/app/es/foundations']) {
-      await page.goto(path);
+    await page.goto('/es/privacy/');
 
-      const controls = privacy(page, 'es');
+    await expect(localized.accept).toBeDisabled();
 
-      await controls.opener.click();
+    await expect(localized.notice.getByText(localized.copy.blocked)).toBeVisible();
 
-      await expect(controls.accept).toBeDisabled();
+    await throwError(page, 'TypeError');
 
-      await expect(controls.dialog.getByText(controls.copy.blocked)).toBeVisible();
+    await localized.opener.click();
 
-      await throwError(page, 'TypeError');
+    await expect(localized.dialog.getByRole('button', { name: localized.copy.send })).toBeVisible();
 
-      await expect(controls.dialog.getByRole('button', { name: controls.copy.send })).toBeVisible();
+    await page.goto('/app/es/foundations');
 
-      expect(observed).toEqual([]);
-    }
+    await throwError(page, 'TypeError');
+
+    await localized.opener.click();
+
+    await expect(localized.dialog.getByRole('button', { name: localized.copy.send })).toBeVisible();
+
+    expect(observed).toEqual([]);
   });
 }

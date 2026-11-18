@@ -4,12 +4,11 @@ import {
   DestroyRef,
   LOCALE_ID,
   afterNextRender,
-  computed,
   inject,
   signal,
 } from '@angular/core';
 
-import { Button, Dialog, Link } from '../ui';
+import { Button, Dialog } from '../ui';
 
 import { BROWSER_ERROR_REPORTER } from './browser-telemetry';
 
@@ -17,7 +16,7 @@ import { browserPrivacyCopy, type BrowserErrorReport } from '@visomi-stack/web-s
 
 @Component({
   selector: 'app-browser-privacy',
-  imports: [Button, Dialog, Link],
+  imports: [Button, Dialog],
   templateUrl: './browser-privacy.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -25,26 +24,12 @@ export class BrowserPrivacy {
   private readonly reporter = inject(BROWSER_ERROR_REPORTER, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly ready = signal(false);
   protected readonly automatic = signal(false);
-  protected readonly blocked = signal(false);
   protected readonly pending = signal<BrowserErrorReport[]>([]);
   protected readonly sending = signal(false);
   protected readonly feedback = signal('');
 
   protected readonly copy = browserPrivacyCopy[inject(LOCALE_ID).startsWith('es') ? 'es' : 'en'];
-  protected readonly status = computed(() =>
-    this.blocked() ? this.copy.blocked : this.automatic() ? this.copy.on : this.copy.off,
-  );
-
-  protected decide(accept: boolean): void {
-    this.reporter?.consent.decide(accept);
-  }
-
-  protected explain(event: Event, heading: HTMLElement): void {
-    event.preventDefault();
-    heading.focus();
-  }
 
   protected description(report: BrowserErrorReport): string {
     return report.code === 'unhandled_rejection'
@@ -82,13 +67,11 @@ export class BrowserPrivacy {
     }
 
     const sync = () => {
-      this.blocked.set(reporter.consent.blocked());
       this.automatic.set(!!reporter.consent.permit());
       this.pending.set(reporter.pending());
     };
 
     this.destroyRef.onDestroy(reporter.subscribePending(sync));
     sync();
-    this.ready.set(true);
   });
 }

@@ -1,48 +1,23 @@
-<button
-  appUI
-  variant="ghost"
-  size="sm"
-  [disabled]="!ready()"
-  aria-haspopup="dialog"
-  aria-controls="browser-privacy"
-  (click)="privacy.showModal()"
->
-  <span class="flex flex-col">
-    {{ copy.title }}
-
-    @if (!automatic() && pending().length) {
-      <span class="text-xs font-semibold">{{ copy.pending }}</span>
-    }
-  </span>
-</button>
+@if (!automatic() && pending().length) {
+  <button
+    appUI
+    variant="ghost"
+    size="sm"
+    aria-haspopup="dialog"
+    aria-controls="browser-privacy"
+    (click)="privacy.showModal()"
+  >
+    {{ copy.pending }}
+  </button>
+}
 
 <dialog appUI #privacy="appUIDialog" id="browser-privacy" aria-labelledby="browser-privacy-title" class="max-sm:p-4">
   <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <h2 id="browser-privacy-title" class="font-heading text-lg font-semibold">{{ copy.title }}</h2>
+      <h2 id="browser-privacy-title" class="font-heading text-lg font-semibold">{{ copy.reportsTitle }}</h2>
 
       <button appUI #close variant="secondary" size="sm" (click)="privacy.close()">{{ copy.close }}</button>
     </div>
-
-    <p role="status">{{ status() }}</p>
-
-    <div class="grid grid-cols-2 gap-3">
-      <button appUI variant="secondary" [disabled]="blocked()" (click)="decide(true)">{{ copy.accept }}</button>
-
-      <button appUI variant="secondary" (click)="decide(false)">{{ copy.reject }}</button>
-    </div>
-
-    <a appUI href="#browser-privacy-purpose" (click)="explain($event, purpose)">{{ copy.purpose }}</a>
-
-    <section class="space-y-2 text-sm" aria-labelledby="browser-privacy-purpose">
-      <h3 #purpose id="browser-privacy-purpose" tabindex="-1" class="sr-only">{{ copy.purpose }}</h3>
-
-      <p>{{ copy.analytics }}</p>
-
-      <p>{{ copy.telemetry }}</p>
-
-      <p>{{ copy.revoke }}</p>
-    </section>
 
     @if (!automatic() && pending().length) {
       <section class="space-y-3" aria-labelledby="browser-privacy-reports">

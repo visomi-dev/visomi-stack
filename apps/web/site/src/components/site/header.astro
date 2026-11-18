@@ -9,7 +9,7 @@ import Link from '../link.astro';
 import LinkButton from '../link-button.astro';
 import Icon from './icon.astro';
 import { applicationPath, siteCopy, sitePath, type SiteLocale, type SitePage } from '../../content/site';
-type Props = { locale: SiteLocale; page: SitePage };
+type Props = { locale: SiteLocale; page: SitePage | 'privacy' };
 const { locale, page } = Astro.props;
 const copy = siteCopy[locale];
 const pages = ['home', 'architecture', 'docs', 'ui'] as const;

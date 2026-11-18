@@ -207,3 +207,12 @@ above the mobile navigation. They do
 not establish screen-reader conformance or replace manual checks of real password
 managers, mobile keyboards, physical authenticators and Google provider behavior.
 See [Web foundations](../../../docs/web-foundations.md) for the shared UI contract.
+
+## Reference vault
+
+The authenticated Vault page uses the existing local vault panel. A visitor
+can initialize an example with a dedicated local PIN and read a fixed synthetic
+note. The account-scoped example database is separate from other vaults and
+stores the encrypted sample on this device. Reloading requires local unlock.
+The example does not use the development persistence route or synchronization
+API. Signing in and unlocking remain separate actions.

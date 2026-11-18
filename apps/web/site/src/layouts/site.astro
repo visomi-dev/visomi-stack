@@ -1,9 +1,11 @@
 ---
 import BaseLayout from './base.astro';
 import Header from '../components/site/header.astro';
+import ConsentNotice from '../components/site/consent-notice.astro';
+import Container from '../components/container.astro';
 import Footer from '../components/site/footer.astro';
 import { siteCopy, type SiteLocale, type SitePage } from '../content/site';
-type Props = { locale: SiteLocale; page: SitePage; title: string; description: string };
+type Props = { locale: SiteLocale; page: SitePage | 'privacy'; title: string; description: string };
 const { locale, page, title, description } = Astro.props;
 ---
 
@@ -25,6 +27,12 @@ const { locale, page, title, description } = Astro.props;
       tabindex="-1"
       class="min-w-0 scroll-mt-24 focus:outline-none [&_:focus]:scroll-mt-28 [&_:target]:scroll-mt-28"
     >
+      {page !== 'privacy' && (
+        <Container width="xl" gutter="compact">
+          <ConsentNotice locale={locale} />
+        </Container>
+      )}
+
       <slot />
     </main>
 

@@ -18,12 +18,26 @@ WebKit. GPC and DNT were simulated through browser signals.
 | Foreign origin          | The visits receiver returns 403.                                                                                                                                                             |
 
 The journey first passed in Chromium while the visit flag was present. The
-capture below comes from the regression with the flag absent. The captures use
-desktop and mobile viewport emulation and contain only synthetic information.
+capture below comes from the regression with the flag absent. The captures use desktop and mobile viewport emulation and contain only synthetic information.
 
 - [Astro, 1366 × 900, English, light](fixtures/browser-consent/website-desktop-light-en.png)
-- [Angular dashboard, 390 × 844, Spanish, dark](fixtures/browser-consent/app-mobile-dark-es.png)
+- [Angular foundations, 390 × 844, Spanish, dark](fixtures/browser-consent/app-mobile-dark-es.png)
 
-The browser test compares the Accept and Reject controls' color, background,
-border, font size and dimensions. It uses keyboard activation for the desktop
-dialog and its purpose link and verifies that Escape restores focus to the opener.
+The browser test compares the two controls' color, background, border, font
+size and dimensions. It tabs between the controls and to the public purpose
+link, then follows the link with Enter. The initial notice stays in the
+page flow and has no dialog. The public page stays available from the footer
+and offers the same two controls for changing the saved choice.
+
+## Reference vault
+
+The existing authenticated shell places Vault last in the desktop sidebar
+and mobile menu, ahead of the separate sign-out action. A synthetic account
+starts without a local example and sets a dedicated test PIN. The browser then
+reads the encrypted note, reloads to its locked state, supplies the PIN again
+and reads the note back. The test denies requests to the development
+persistence API and asserts that the demo makes none. The existing account guard
+redirects anonymous visitors to sign-in.
+
+- [Vault setup, 1366 × 1024, light](fixtures/vault-demo/vault-desktop-initial.png)
+- [Vault in the authenticated mobile menu, 390 × 844, dark](fixtures/vault-demo/vault-mobile-menu-dark.png)

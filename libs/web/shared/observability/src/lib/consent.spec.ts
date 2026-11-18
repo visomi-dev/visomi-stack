@@ -20,7 +20,9 @@ it('shares an explicit decision with new documents and invalidates the old grant
 
   consent.subscribe(changed);
   expect(consent.permit()).toBeUndefined();
+  expect(consent.decided()).toBe(false);
   consent.decide(false);
+  expect(consent.decided()).toBe(true);
   expect(consent.permit()).toBeUndefined();
   consent.decide(true);
 

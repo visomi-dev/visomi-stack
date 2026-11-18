@@ -86,6 +86,12 @@
       "status": 200
     },
     {
+      "path": "/telemetry/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
       "path": "/telemetry/errors",
       "method": "POST",
       "payload": {

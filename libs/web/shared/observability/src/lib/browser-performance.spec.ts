@@ -54,6 +54,7 @@ function fixture(enabled: boolean, application: BrowserApplication = 'web-app') 
     permit: () => (allowed ? 'grant' : undefined),
     subscribe: () => () => undefined,
     blocked: () => false,
+    decided: () => true,
     decide: () => undefined,
     stop: () => undefined,
   } satisfies BrowserConsent;

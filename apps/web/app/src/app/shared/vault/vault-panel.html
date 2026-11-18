@@ -43,24 +43,23 @@
   }
 
   <div class="flex flex-wrap gap-3">
-    <button appUI type="button" [disabled]="busy() || ready()" (click)="unlock()">
-      @if (binding().method === 'pin-argon2id') {
-        <span i18n="@@vaultPanelPinUnlock">Unlock locally with PIN</span>
-      } @else {
-        <span i18n="@@vaultUnlock">Unlock with passkey</span>
-      }
-    </button>
+    @if (!allowInitialize() || sample() === undefined) {
+      <button appUI type="button" [disabled]="busy() || ready()" (click)="unlock()">
+        @if (binding().method === 'pin-argon2id') {
+          <span i18n="@@vaultPanelPinUnlock">Unlock locally with PIN</span>
+        } @else {
+          <span i18n="@@vaultUnlock">Unlock with passkey</span>
+        }
+      </button>
+    }
 
     @if (allowInitialize()) {
-      <button
-        appUI
-        type="button"
-        variant="secondary"
-        [disabled]="busy() || ready()"
-        (click)="unlock(true)"
-        i18n="@@vaultInitialize"
-      >
-        Initialize an empty local vault
+      <button appUI type="button" variant="secondary" [disabled]="busy() || ready()" (click)="unlock(true)">
+        @if (sample() === undefined) {
+          <span i18n="@@vaultInitialize">Initialize an empty local vault</span>
+        } @else {
+          <span i18n="@@vaultDemoCreate">Set up the example vault</span>
+        }
       </button>
     }
 
@@ -68,39 +67,45 @@
   </div>
 
   @if (ready()) {
-    <form class="space-y-4" (submit)="$event.preventDefault(); save()">
-      <app-field
-        [control-id]="controlId()"
-        #field="appField"
-        label="Private text"
-        i18n-label="@@vaultPrivateText"
-        description="Stored as ciphertext on this device. Keep a recovery method or an encrypted backup if your product supports one."
-        i18n-description="@@vaultLocalDescription"
-      >
-        <textarea
-          appUI
-          [id]="controlId()"
-          [attr.aria-describedby]="field.describedBy()"
-          #privateText
-          name="private-text"
-          rows="4"
-          maxlength="8192"
-          autocomplete="off"
-          spellcheck="false"
-          [value]="editor()"
-          [disabled]="busy()"
-          (input)="editPrivateText(privateText.value)"
-        ></textarea>
-      </app-field>
+    @if (sample() !== undefined) {
+      <button appUI type="button" variant="secondary" [disabled]="busy()" (click)="read()" i18n="@@vaultDemoRead">
+        Read encrypted sample
+      </button>
+    } @else {
+      <form class="space-y-4" (submit)="$event.preventDefault(); save()">
+        <app-field
+          [control-id]="controlId()"
+          #field="appField"
+          label="Private text"
+          i18n-label="@@vaultPrivateText"
+          description="Stored as ciphertext on this device. Keep a recovery method or an encrypted backup if your product supports one."
+          i18n-description="@@vaultLocalDescription"
+        >
+          <textarea
+            appUI
+            [id]="controlId()"
+            [attr.aria-describedby]="field.describedBy()"
+            #privateText
+            name="private-text"
+            rows="4"
+            maxlength="8192"
+            autocomplete="off"
+            spellcheck="false"
+            [value]="editor()"
+            [disabled]="busy()"
+            (input)="editPrivateText(privateText.value)"
+          ></textarea>
+        </app-field>
 
-      <div class="flex flex-wrap gap-3">
-        <button appUI type="submit" [disabled]="busy()" i18n="@@vaultSave">Save encrypted change</button>
+        <div class="flex flex-wrap gap-3">
+          <button appUI type="submit" [disabled]="busy()" i18n="@@vaultSave">Save encrypted change</button>
 
-        <button appUI type="button" variant="secondary" [disabled]="busy()" (click)="read()" i18n="@@vaultRead">
-          Read on this device
-        </button>
-      </div>
-    </form>
+          <button appUI type="button" variant="secondary" [disabled]="busy()" (click)="read()" i18n="@@vaultRead">
+            Read on this device
+          </button>
+        </div>
+      </form>
+    }
 
     @if (vault.plaintext()) {
       <pre class="rounded-lg border p-4 break-words whitespace-pre-wrap">{{ vault.plaintext() }}</pre>

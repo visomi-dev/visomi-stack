@@ -1,6 +1,5 @@
 import {
   createBrowserConsent,
-  createPendingReports,
   describeBrowserError,
   loadBrowserReporter,
   type BrowserErrorReport,
@@ -9,17 +8,26 @@ import {
 
 const consent = createBrowserConsent(window);
 const documentPermit = consent.permit() ?? null;
-const pending = createPendingReports();
 let earlyReports = 0;
 let reporter: ReturnType<Awaited<ReturnType<typeof loadBrowserReporter>>['createBrowserReporter']> | undefined;
 let loading: Promise<NonNullable<typeof reporter>> | undefined;
+const controls = document.querySelector('[data-browser-privacy]');
+const open = controls?.querySelector<HTMLButtonElement>('[data-open]');
+
+function syncReports(): void {
+  if (open) {
+    open.hidden = !!consent.permit() || !reporter?.pending().length;
+  }
+}
 
 function load() {
   loading ??= loadBrowserReporter().then(({ createBrowserReporter, trackVisits, siteVisitPage }) => {
-    reporter = createBrowserReporter('web-site', window, consent, { documentPermit, pending, globalErrors: false });
+    reporter = createBrowserReporter('web-site', window, consent, { documentPermit, globalErrors: false });
     trackVisits(window, consent, siteVisitPage, {
       ignoreCurrent: !documentPermit || consent.permit() !== documentPermit,
     });
+
+    reporter.subscribePending(syncReports);
 
     return reporter;
   });
@@ -31,9 +39,19 @@ function ignoreImportFailure(): void {
   // A failed optional import must not become another pending exception.
 }
 
-function reportAfterLoad(report: BrowserErrorReport, permit: string): void {
+function reportAfterLoad(report: BrowserErrorReport, permit: string | undefined): void {
+  const capturedAt = Date.now();
+
   void load()
-    .then((ready) => ready.sendCaptured(report, permit))
+    .then((ready) => {
+      if (permit) {
+        return ready.sendCaptured(report, permit);
+      }
+
+      ready.remember(report, capturedAt);
+
+      return;
+    })
     .catch(ignoreImportFailure);
 }
 
@@ -47,12 +65,8 @@ function capture(code: UnhandledErrorCode, error: unknown, source?: ErrorEvent):
   const report = describeBrowserError('web-site', location.pathname, code, error);
   const permit = consent.permit();
 
-  if (permit) {
-    if (earlyReports++ < 5) {
-      reportAfterLoad(report, permit);
-    }
-  } else {
-    pending.add(report);
+  if (earlyReports++ < 5) {
+    reportAfterLoad(report, permit);
   }
 }
 
@@ -63,21 +77,9 @@ if (documentPermit) {
   void load().catch(ignoreImportFailure);
 }
 
-const controls = document.querySelector('[data-browser-privacy]');
-
-if (controls) {
-  const open = controls.querySelector<HTMLButtonElement>('[data-open]')!;
-  const indicator = controls.querySelector('[data-pending]')!;
+if (controls && open) {
   const dialog = controls.querySelector('dialog')!;
 
-  const update = () => {
-    indicator.classList.toggle('hidden', !!consent.permit() || !pending.items().length);
-  };
-
-  open.disabled = false;
-  pending.subscribe(update);
-  consent.subscribe(update);
-  update();
   open.addEventListener('click', () => {
     void Promise.all([load(), import('./browser-privacy')])
       .then(([ready, { connectBrowserPrivacy }]) => {
@@ -103,4 +105,25 @@ if (languageLink) {
 
   preserveFragment();
   window.addEventListener('hashchange', preserveFragment);
+}
+
+const notice = document.querySelector<HTMLElement>('[data-consent]');
+
+if (notice && (notice.dataset['consent'] === 'settings' || !consent.decided())) {
+  const accept = notice.querySelector<HTMLButtonElement>('[data-choice=accept]')!;
+  const status = notice.querySelector<HTMLElement>('[data-choice-status]')!;
+  const sync = () => {
+    accept.disabled = consent.blocked();
+    status.textContent =
+      status.dataset[accept.disabled ? 'blocked' : consent.permit() ? 'on' : consent.decided() ? 'off' : ''] ?? '';
+  };
+
+  notice.hidden = false;
+  notice.onclick = ({ target }) => {
+    if (target instanceof HTMLButtonElement && target.dataset['choice']) {
+      consent.decide(target === accept);
+    }
+  };
+  consent.subscribe(sync);
+  sync();
 }

@@ -9,8 +9,10 @@ dashboard's existing session checks govern access.
 
 ## Browser consent
 
-Automatic sharing starts off. The privacy controls in the header allow visitors
-to accept or reject sharing and explain the choice in English and Spanish. The
+Automatic sharing starts off. The in-flow notice offers equivalent buttons for
+the two choices. The public Privacy page explains the choice in English and
+Spanish and lets visitors change it. The website and app link to it from their
+footers. The
 decision is shared across Angular and Astro pages on the same origin. It survives
 reload and responds to changes in other tabs. The browser keeps the decision in
 local storage and never transmits its local grant value. Unavailable storage

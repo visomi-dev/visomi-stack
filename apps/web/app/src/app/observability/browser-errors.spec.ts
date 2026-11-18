@@ -69,6 +69,7 @@ describe('Angular browser error handler', () => {
       permit: () => 'grant',
       subscribe: () => () => undefined,
       blocked: () => false,
+      decided: () => true,
       decide: () => undefined,
       stop: () => undefined,
     } satisfies BrowserConsent;

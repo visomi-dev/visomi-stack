@@ -34,6 +34,16 @@
       >
         Security
       </a>
+
+      <a
+        appUI="nav-item"
+        routerLink="/vault"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        i18n="@@vaultDemoTitle"
+      >
+        Vault
+      </a>
     </div>
 
     <div data-slot="footer">
@@ -80,6 +90,8 @@
   </header>
 
   <div class="flex min-w-0 flex-col gap-6">
+    <app-consent-notice />
+
     <app-auth-feedback [action]="action" />
 
     @if (navigation.notificationFailed()) {
@@ -109,6 +121,8 @@
       <a appUI routerLink="/auth/sign-in" i18n="@@authBackSignIn">Back to sign in</a>
     }
   </div>
+
+  <footer data-shell-footer class="px-4 text-sm"><app-privacy-link /></footer>
 
   <nav appUI="navbar" aria-label="Primary navigation" i18n-aria-label="@@shellPrimary">
     <a appUI="nav-item" placement="navbar" routerLink="/home" routerLinkActive="active" ariaCurrentWhenActive="page">
@@ -216,6 +230,17 @@
       i18n="@@authSecurity"
     >
       Security
+    </a>
+
+    <a
+      appUI="nav-item"
+      routerLink="/vault"
+      routerLinkActive="active"
+      ariaCurrentWhenActive="page"
+      (click)="mobileMenu.close()"
+      i18n="@@vaultDemoTitle"
+    >
+      Vault
     </a>
   </nav>
 

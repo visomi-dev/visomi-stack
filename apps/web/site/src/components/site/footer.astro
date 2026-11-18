@@ -1,4 +1,5 @@
 ---
+import { browserPrivacyCopy } from '@visomi-stack/web-shared-observability';
 import Container from '../container.astro';
 import Text from '../text.astro';
 import Heading from '../heading.astro';
@@ -108,6 +109,10 @@ const copy = siteCopy[locale];
       <Text ui-size="inherit" tone="inherit">
         {copy.footer}
       </Text>
+
+      <Link href={`/${locale}/privacy/`} variant="muted" class="inline-flex min-h-11 items-center">
+        {browserPrivacyCopy[locale].privacy}
+      </Link>
 
       <Link href="#top" variant="muted" underline="none" class="inline-flex min-h-11 items-center">
         {copy.backTop}

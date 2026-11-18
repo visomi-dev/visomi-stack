@@ -24,10 +24,12 @@ export function createPendingReports() {
   }
 
   return {
-    add(report: BrowserErrorReport): void {
+    add(report: BrowserErrorReport, capturedAt = Date.now()): void {
       const now = Date.now();
+      const expires = capturedAt + lifetime;
 
       if (
+        expires <= now ||
         pending.some(
           (item) =>
             item.expires > now &&
@@ -43,7 +45,7 @@ export function createPendingReports() {
         pending.shift();
       }
 
-      pending.push({ report: Object.freeze(report), expires: now + lifetime });
+      pending.push({ report: Object.freeze(report), expires });
       refresh();
     },
     discard(report: BrowserErrorReport): void {

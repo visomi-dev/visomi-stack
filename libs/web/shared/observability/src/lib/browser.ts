@@ -61,11 +61,7 @@ export function createBrowserReporter(
   application: BrowserApplication,
   browser: Window,
   consent: BrowserConsent,
-  options: {
-    globalErrors?: boolean;
-    pending?: ReturnType<typeof createPendingReports>;
-    documentPermit?: string | null;
-  } = {},
+  options: { globalErrors?: boolean; documentPermit?: string | null } = {},
 ) {
   const transport = browser.fetch.bind(browser);
   let configuration: BrowserTelemetryConfig | undefined;
@@ -76,7 +72,7 @@ export function createBrowserReporter(
   let count = 0;
   const seen = new Set<string>();
   const captured = new WeakMap<object, Promise<void> | undefined>();
-  const pending = options.pending ?? createPendingReports();
+  const pending = createPendingReports();
   let sending = false;
   let performanceRuntime: ReturnType<(typeof import('./performance'))['createBrowserPerformance']> | undefined;
   let documentPermit = options.documentPermit === undefined ? consent.permit() : options.documentPermit;
@@ -278,6 +274,7 @@ export function createBrowserReporter(
     subscribePending: pending.subscribe,
     discard: pending.discard,
     sendCaptured,
+    remember: pending.add,
     async sendPending(report: BrowserErrorReport): Promise<boolean> {
       const allowed = () => pending.has(report);
 

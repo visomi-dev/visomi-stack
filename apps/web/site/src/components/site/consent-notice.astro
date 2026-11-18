@@ -1,0 +1,44 @@
+---
+import { browserPrivacyCopy } from '@visomi-stack/web-shared-observability';
+import Button from '../button.astro';
+import Link from '../link.astro';
+import type { SiteLocale } from '../../content/site';
+
+type Props = { locale: SiteLocale; settings?: boolean };
+const { locale, settings } = Astro.props;
+const copy = browserPrivacyCopy[locale];
+---
+
+<section
+  data-consent={settings ? 'settings' : 'notice'}
+  hidden
+  aria-label={copy.title}
+  class="my-4 grid gap-2 rounded-lg border border-zinc-300 p-3 text-sm dark:border-zinc-700 [hidden]:hidden"
+>
+  {!settings && <p>{copy.invitation}</p>}
+
+  <div class="grid w-fit grid-cols-2 gap-2">
+    <Button variant="secondary" size="sm" data-choice="reject">
+      {copy.reject}
+    </Button>
+
+    <Button variant="secondary" size="sm" data-choice="accept">
+      {copy.accept}
+    </Button>
+  </div>
+
+  {!settings && (
+    <Link class="justify-self-start" href={`/${locale}/privacy/`}>
+      {copy.purpose}
+    </Link>
+  )}
+
+  <p
+    role="status"
+    class="empty:hidden"
+    data-choice-status
+    data-on={copy.on}
+    data-off={copy.off}
+    data-blocked={copy.blocked}
+  ></p>
+</section>
