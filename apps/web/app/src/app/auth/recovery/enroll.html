@@ -39,7 +39,14 @@
     </button>
 
     @if (pending()?.factor === 'totp') {
-      <button appUI variant="secondary" (click)="switchVerificationMethod()" i18n="@@authSwitchFactor" class="w-full">
+      <button
+        appUI
+        variant="secondary"
+        [disabled]="action.busy()"
+        (click)="switchVerificationMethod()"
+        i18n="@@authSwitchFactor"
+        class="w-full"
+      >
         Switch between authenticator and backup code
       </button>
     }

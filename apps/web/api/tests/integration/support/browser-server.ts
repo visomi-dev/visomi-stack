@@ -1,8 +1,11 @@
+import { mkdtemp, rm } from 'node:fs/promises';
 import type { AddressInfo } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import express, { type Request, type Response } from 'express';
-import { chromium, type BrowserContext, type Page } from '@playwright/test';
+import { chromium, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { createServer } from 'vite';
 import type * as VaultRuntime from '@visomi-stack/web-frontend-db';
 import type * as VaultStorage from '@visomi-stack/web-frontend-db/storage';
@@ -32,11 +35,17 @@ export type FixtureHost = typeof globalThis & {
 /** Test-only same-origin module host with the real authenticated API and private PostgreSQL adapter. */
 export async function browserServer(observability?: Observability) {
   const api = express();
+  // Parallel fixture servers must not replace each other's optimized modules.
+  const cacheDir = await mkdtemp(join(tmpdir(), 'visomi-api-browser-vite-'));
+  const removeCache = () => rm(cacheDir, { recursive: true, force: true });
   const server = await createServer({
     root: fileURLToPath(new URL('../../../../../../', import.meta.url)),
+    cacheDir,
     configFile: false,
     appType: 'custom',
     resolve: { tsconfigPaths: true },
+    // The injected module is invisible to the HTML dependency scan.
+    optimizeDeps: { noDiscovery: true, include: ['dexie', 'hash-wasm', 'zod'] },
     logLevel: 'silent',
     server: { host: '127.0.0.1', port: 0 },
     plugins: [
@@ -58,19 +67,36 @@ export async function browserServer(observability?: Observability) {
         },
       },
     ],
+  }).catch(async (error: unknown) => {
+    await removeCache();
+
+    throw error;
   });
 
-  await server.listen();
+  const closeServer = () => server.close().finally(removeCache);
+  let origin: string;
+  let browser: Browser;
 
-  const origin = `http://localhost:${(server.httpServer?.address() as AddressInfo).port}`;
-  const auth = createAuthentication({
-    database: resource.db,
-    pool: resource.pool,
-    config: authConfig({ origin, rpId: 'localhost', secret: syntheticPersistenceSecret }),
-  });
+  try {
+    await server.listen();
 
-  api.use('/api', createApp({ auth, persistence: policy, observability }));
-  const browser = await chromium.launch({ headless: true });
+    origin = `http://localhost:${(server.httpServer?.address() as AddressInfo).port}`;
+    const auth = createAuthentication({
+      database: resource.db,
+      pool: resource.pool,
+      config: authConfig({ origin, rpId: 'localhost', secret: syntheticPersistenceSecret }),
+    });
+
+    api.use('/api', createApp({ auth, persistence: policy, observability }));
+
+    const launched = await chromium.launch({ headless: true });
+
+    browser = launched;
+  } catch (error) {
+    await closeServer();
+
+    throw error;
+  }
 
   return {
     origin,
@@ -98,22 +124,46 @@ export async function browserServer(observability?: Observability) {
         },
       });
 
-      await page.goto(origin);
+      const failedModuleResponses = new Set<number>();
+      let scriptError = false;
 
-      await page.addScriptTag({
-        type: 'module',
-        content:
-          "import * as runtime from '/libs/web/frontend/db/src/index.ts'; import * as storage from '/libs/web/frontend/db/src/storage.ts'; const api = { ...runtime, ...storage }; import * as contracts from '/libs/shared/db/src/index.ts'; globalThis.modules = { api, contracts };",
+      page.on('response', (response) => {
+        if (response.request().resourceType() === 'script' && response.status() >= 400) {
+          failedModuleResponses.add(response.status());
+        }
+      });
+      page.on('pageerror', () => {
+        scriptError = true;
       });
 
-      await page.waitForFunction(() => Boolean((globalThis as FixtureHost).modules));
+      try {
+        await page.goto(origin);
+
+        await page.addScriptTag({
+          type: 'module',
+          content:
+            "import * as runtime from '/libs/web/frontend/db/src/index.ts'; import * as storage from '/libs/web/frontend/db/src/storage.ts'; const api = { ...runtime, ...storage }; import * as contracts from '/libs/shared/db/src/index.ts'; globalThis.modules = { api, contracts };",
+        });
+
+        await page.waitForFunction(() => Boolean((globalThis as FixtureHost).modules), undefined, { polling: 100 });
+      } catch (error) {
+        const statuses = [...failedModuleResponses].join(', ') || 'none';
+
+        const failure = new Error(
+          `Vault API fixture startup failed (script HTTP statuses: ${statuses}; page error: ${scriptError})`,
+        );
+
+        throw Object.assign(failure, { cause: error });
+      }
 
       return { context, page };
     },
     async close() {
-      await browser.close();
-
-      await server.close();
+      try {
+        await browser.close();
+      } finally {
+        await closeServer();
+      }
     },
   };
 }

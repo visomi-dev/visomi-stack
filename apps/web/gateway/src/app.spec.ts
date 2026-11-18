@@ -43,6 +43,19 @@ function apiFixture(handler: RequestHandler = (request, response) => response.js
 }
 
 describe('gateway composition', () => {
+  it('serves disabled visitor configuration and mounts its optional gateway router', async () => {
+    const api = apiFixture();
+    const disabled = await dispatch(createGatewayApp({ api }), '/telemetry/visits/config');
+    const router = Router();
+
+    router.get('/config', (_request, response) => response.json({ enabled: true }));
+    const visits = { router, summary: vi.fn(), close: vi.fn() };
+    const enabled = await dispatch(createGatewayApp({ api, visits }), '/telemetry/visits/config');
+
+    expect(disabled.body).toEqual({ enabled: false });
+    expect(enabled.body).toEqual({ enabled: true });
+  });
+
   it('passes an explicit persistence manifest only to a compatible compiled API', () => {
     expect(() => createGatewayApp({ api: apiFixture(), persistence: syntheticHybridPolicy })).toThrow(
       'api_persistence_unavailable',

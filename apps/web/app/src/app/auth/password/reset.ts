@@ -3,13 +3,13 @@ import { RouterLink } from '@angular/router';
 import { form, FormField, required, pattern, disabled, submit } from '@angular/forms/signals';
 
 import { NavigationHeading } from '../../shared/navigation-heading';
-import { Button, Heading, Text, Link, LinkButton, Alert, Field, Input, Select } from '../../ui';
+import { Button, Heading, Text, Link, LinkButton, Alert, Field, Input, PinInput, Select } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Action } from '../shared/action';
 import { AuthFeedback } from '../shared/feedback';
 import { Journey } from '../shared/journey';
 import { ResendCode } from '../shared/resend';
-import { codeMessage, requiredMessage, focusInvalid } from '../shared/form-errors';
+import { codeLength, codeMessage, requiredMessage, focusInvalid } from '../shared/form-errors';
 import type { Factor } from '../session/models';
 
 import { passwordPolicy } from './validation';
@@ -27,6 +27,7 @@ import { Passwords } from './passwords';
     Alert,
     Field,
     Input,
+    PinInput,
     Select,
     FormField,
     RouterLink,
@@ -57,6 +58,7 @@ export class PasswordReset {
     disabled(path, { when: () => this.action.busy() });
   });
 
+  readonly codeLength = codeLength;
   readonly codeLabel = $localize`:@@authEmailCode:Email verification code`;
   readonly showLabel = $localize`:@@authShowPassword:Show`;
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
@@ -105,5 +107,9 @@ export class PasswordReset {
 
   protected togglePasswordVisibility(): void {
     this.visible.update((value) => !value);
+  }
+
+  protected changeFactor(): void {
+    this.fields.factor().reset('');
   }
 }

@@ -61,6 +61,14 @@ it('uses six decorative slots and requires exactly six ASCII digits without subm
   view.componentInstance.pin.set('');
   view.detectChanges();
   expect(input.value).toBe('');
+
+  const paste = new Event('paste', { bubbles: true, cancelable: true });
+
+  Object.defineProperty(paste, 'clipboardData', { value: { getData: () => '01 23-45' } });
+  input.dispatchEvent(paste);
+
+  expect(paste.defaultPrevented).toBe(false);
+  expect(view.componentInstance.pin()).toBe('');
 });
 
 it('isolates caller-supplied IDs and clears drafts on context changes while blocking duplicate busy submissions', () => {

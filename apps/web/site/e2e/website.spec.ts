@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { disablePerformanceCapture } from './support/performance';
+import { disablePerformanceCapture, initialScriptBudget } from './support/performance';
 import { selectTheme } from './support/theme';
 
 for (const locale of ['en', 'es']) {
@@ -68,9 +68,8 @@ for (const locale of ['en', 'es']) {
     const sizes = await Promise.all(scripts);
 
     expect(sizes).toHaveLength(3);
-    // Include theme-color coordination, fragment retention and Vite's loader, excluding the performance SDK.
     expect(Math.min(...sizes)).toBeLessThan(256);
-    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(6656);
+    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(initialScriptBudget);
     expect(errors).toEqual([]);
 
     await page.getByRole('checkbox').uncheck();

@@ -405,3 +405,70 @@ describe('actual Chromium WebCrypto and IndexedDB vault', () => {
     }
   }, 60_000);
 });
+
+it('keeps the encryption reservation after a stale IndexedDB write and browser reopen', async () => {
+  const context = await browser.newContext();
+
+  try {
+    const page = await context.newPage();
+
+    await prepare(page);
+
+    const result = await page.evaluate(
+      async ({ vector }) => {
+        const { api, contracts } = (globalThis as FixtureWindow).fixtureModules;
+        const binding = vector.wrapped.context;
+        const name = `synthetic-reservations-${crypto.randomUUID()}`;
+        const storage = await api.IndexedDbVaultStorage.open(indexedDB, name);
+        const keyId = contracts.keyDomainId(binding.ownerId, binding.key);
+        const reserve = storage.reserveEncryption.bind(storage);
+
+        // Use the real IndexedDB transaction with a small limit for the fixture.
+        storage.reserveEncryption = (id) => reserve(id, 2);
+        const unlocker = {
+          async secret() {
+            return new Uint8Array(32).fill(9);
+          },
+          cancel() {
+            return undefined;
+          },
+        };
+        const vault = new api.BrowserVault(binding.ownerId, storage, unlocker, new api.WebCryptoCipher(crypto));
+
+        await vault.initialize(binding);
+
+        const first = await vault.seal(vector.data.context, new Uint8Array([1]));
+        let stale: string | undefined;
+
+        try {
+          await vault.seal(vector.data.context, new Uint8Array([2]));
+        } catch (error) {
+          stale = (error as { code: string }).code;
+        }
+
+        vault.close();
+
+        const reopened = await api.IndexedDbVaultStorage.open(indexedDB, name);
+        let exhausted: string | undefined;
+
+        try {
+          await reopened.reserveEncryption(keyId, 2);
+        } catch (error) {
+          exhausted = (error as { code: string }).code;
+        }
+
+        const unitId = contracts.vaultUnitId(binding.ownerId, vector.data.context);
+        const unit = await reopened.getUnit(unitId);
+
+        reopened.close();
+
+        return { stale, exhausted, preserved: first.ciphertext === unit?.ciphertext };
+      },
+      { vector },
+    );
+
+    expect(result).toEqual({ stale: 'revision-conflict', exhausted: 'quota', preserved: true });
+  } finally {
+    await context.close();
+  }
+});

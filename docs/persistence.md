@@ -44,6 +44,14 @@ database/realtime resources, initialized and closed by its executable. Import th
 compiled application module when embedding it; never import its startup entrypoint.
 The default application does not mount persistence routes.
 
+For a cloud-only SaaS product, declare cloud domains with `server-authorized`
+readers and use the SaaS adapter with the existing cloud authentication session.
+The browser vault is an optional capability for client-key domains. Compose vault
+discovery, custody and unlock only in consumers that use those domains. The
+stack's reference authenticated shell includes vault discovery for its hybrid
+example. Cloud-only consumers can compose their own shell with the shared auth
+features and omit the vault components and providers.
+
 `validatePersistenceComposition` rejects unsupported adapters and capabilities.
 The current SaaS adapter implements bounded record CRUD, title search and paged
 export. Server analytics, AI and jobs are not implemented and fail composition.

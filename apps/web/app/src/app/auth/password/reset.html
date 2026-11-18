@@ -10,21 +10,14 @@
   } @else if (journey.challenge()?.purpose === 'reset') {
     <form novalidate class="space-y-5" [attr.data-submitted]="attempted() ? '' : null" (submit)="save($event)">
       <app-field
-        #codeField="appField"
         control-id="reset-code"
         [label]="codeLabel"
-        [error]="fields.code().errors()[0]?.message ?? ''"
+        [description]="codeLength"
+        data-show-error
+        [invalid]="attempted() && fields.code().invalid()"
+        [error]="attempted() ? (fields.code().errors()[0]?.message ?? '') : ''"
       >
-        <input
-          appUI
-          id="reset-code"
-          [formField]="fields.code"
-          inputmode="numeric"
-          autocomplete="one-time-code"
-          placeholder=" "
-          [attr.aria-describedby]="codeField.describedBy()"
-          [attr.aria-invalid]="fields.code().touched() && fields.code().invalid()"
-        />
+        <app-pin-input [formField]="fields.code" type="text" autocomplete="one-time-code" accept-formatted-paste />
       </app-field>
 
       <app-field
@@ -65,7 +58,7 @@
       </app-field>
 
       <app-field control-id="reset-factor-kind" [label]="factorLabel">
-        <select appUI id="reset-factor-kind" [formField]="fields.kind">
+        <select appUI id="reset-factor-kind" [formField]="fields.kind" (change)="changeFactor()">
           <option value="none" i18n="@@authNoExtraFactor">No additional code</option>
 
           <option value="totp" i18n="@@authAuthenticator">Authenticator app</option>
@@ -83,17 +76,24 @@
           #factorField="appField"
           control-id="reset-factor"
           [label]="factorLabel"
-          [error]="fields.factor().errors()[0]?.message ?? ''"
+          [description]="model().kind === 'totp' ? codeLength : ''"
+          data-show-error
+          [invalid]="attempted() && fields.factor().invalid()"
+          [error]="attempted() ? (fields.factor().errors()[0]?.message ?? '') : ''"
         >
-          <input
-            appUI
-            id="reset-factor"
-            [formField]="fields.factor"
-            placeholder=" "
-            [attr.inputmode]="model().kind === 'totp' ? 'numeric' : 'text'"
-            [attr.aria-describedby]="factorField.describedBy()"
-            [attr.aria-invalid]="fields.factor().touched() && fields.factor().invalid()"
-          />
+          @if (model().kind === 'totp') {
+            <app-pin-input [formField]="fields.factor" type="text" accept-formatted-paste />
+          } @else {
+            <input
+              appUI
+              id="reset-factor"
+              [formField]="fields.factor"
+              autocomplete="off"
+              placeholder=" "
+              [attr.aria-describedby]="factorField.describedBy()"
+              [attr.aria-invalid]="factorField.invalid()"
+            />
+          }
         </app-field>
       }
 

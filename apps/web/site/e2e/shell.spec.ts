@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { disablePerformanceCapture } from './support/performance';
+import { disablePerformanceCapture, initialScriptBudget } from './support/performance';
 
 for (const locale of ['en', 'es']) {
   test(`the ${locale} shell renders through Express with theme and error reporting`, async ({ page, request }) => {
@@ -38,8 +38,7 @@ for (const locale of ['en', 'es']) {
     const sizes = await Promise.all(scripts);
 
     expect(sizes).toHaveLength(2);
-    // Include theme-color coordination and Vite's loader, excluding the disabled performance SDK.
-    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(6656);
+    expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(initialScriptBudget);
     expect(errors).toEqual([]);
   });
 }

@@ -1,4 +1,5 @@
 import { expect, test, signup } from './support/fixtures';
+import { expectCenteredDigits } from './support/pin-layout';
 
 test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext after a wrong PIN', async ({
   page,
@@ -79,6 +80,8 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
   await expect(page.locator('app-pin-input')).toHaveCount(2);
 
   await expect(pin).toHaveJSProperty('scrollLeft', 0);
+
+  await expectCenteredDigits(page.locator('app-pin-input > div').filter({ has: pin }));
 
   await page.getByLabel('Confirm PIN for initial setup', { exact: true }).fill('048261');
 
