@@ -1,5 +1,7 @@
 import type { VisitPage } from './visits';
 
+const transport = { credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error' } as const;
+
 export function trackVisits(browser: Window, pageForPath: (path: string) => VisitPage | undefined): void {
   let previous: string | undefined;
   let configuration: Promise<boolean> | undefined;
@@ -21,8 +23,10 @@ export function trackVisits(browser: Window, pageForPath: (path: string) => Visi
       return;
     }
 
+    const body = JSON.stringify({ page: page.page, locale: page.locale });
+
     configuration ??= browser
-      .fetch('/telemetry/visits/config', { credentials: 'omit', referrerPolicy: 'no-referrer' })
+      .fetch('/telemetry/visits/config', transport)
       .then(async (response) => {
         if (!response.ok) {
           return false;
@@ -38,11 +42,10 @@ export function trackVisits(browser: Window, pageForPath: (path: string) => Visi
       if (enabled) {
         return browser
           .fetch('/telemetry/visits', {
+            ...transport,
             method: 'POST',
-            credentials: 'omit',
-            referrerPolicy: 'no-referrer',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(page),
+            body,
             keepalive: true,
           })
           .catch(() => undefined);
