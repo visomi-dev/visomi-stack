@@ -1,4 +1,7 @@
 import { DOCUMENT } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { EMPTY } from 'rxjs';
 import { ErrorHandler, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -6,7 +9,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserErrors } from './browser-errors';
 import { BROWSER_ERROR_REPORTER, BrowserTelemetry } from './browser-telemetry';
 
-import { createBrowserReporter } from '@visomi-stack/web-shared-observability';
+import { createBrowserReporter, type BrowserConsent } from '@visomi-stack/web-shared-observability';
 
 const marker = 'SYNTHETIC_PRIVATE_ANGULAR_ERROR';
 
@@ -28,6 +31,15 @@ describe('Angular browser error handler', () => {
     errors.handleError(error);
     expect(telemetry.report).toHaveBeenCalledExactlyOnceWith('unhandled_exception', error);
     expect(log).toHaveBeenCalledExactlyOnceWith(error);
+  });
+
+  it('excludes HTTP errors, including expected 404s', () => {
+    const telemetry = { report: vi.fn() };
+
+    TestBed.configureTestingModule({ providers: [BrowserErrors, { provide: BrowserTelemetry, useValue: telemetry }] });
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    TestBed.inject(BrowserErrors).handleError(new HttpErrorResponse({ status: 404 }));
+    expect(telemetry.report).not.toHaveBeenCalled();
   });
 
   it('does not print raw errors in production', () => {
@@ -53,13 +65,21 @@ describe('Angular browser error handler', () => {
     });
     const add = vi.spyOn(browser, 'addEventListener');
     const remove = vi.spyOn(browser, 'removeEventListener');
-    const reporter = createBrowserReporter('web-app', browser as unknown as Window, { globalErrors: false });
+    const consent = {
+      permit: () => 'grant',
+      subscribe: () => () => undefined,
+      blocked: () => false,
+      decide: () => undefined,
+      stop: () => undefined,
+    } satisfies BrowserConsent;
+    const reporter = createBrowserReporter('web-app', browser as unknown as Window, consent, { globalErrors: false });
     const stop = vi.spyOn(reporter, 'stop');
 
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     TestBed.configureTestingModule({
       rethrowApplicationErrors: false,
       providers: [
+        { provide: Router, useValue: { events: EMPTY } },
         BrowserErrors,
         BrowserTelemetry,
         { provide: DOCUMENT, useValue: { defaultView: browser } },

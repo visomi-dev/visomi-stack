@@ -19,6 +19,7 @@ export function createBrowserPerformance(
   screen: BrowserScreen,
   browser: Window,
   configuration: () => Promise<BrowserTelemetryConfig | undefined>,
+  allowed: () => boolean,
 ) {
   const transport = browser.fetch.bind(browser);
   let windowStart = Date.now();
@@ -33,14 +34,14 @@ export function createBrowserPerformance(
         count = 0;
       }
 
-      if (stopped || count >= 12) {
+      if (stopped || !allowed() || count >= 12) {
         return;
       }
 
       count++;
       const config = await configuration();
 
-      if (stopped || config?.performance !== true) {
+      if (stopped || !allowed() || config?.performance !== true) {
         return;
       }
 

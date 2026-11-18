@@ -21,9 +21,11 @@ import {
   Card,
   Link,
 } from '../ui';
+import { BrowserPrivacy } from '../observability/browser-privacy';
 
 @Component({
   imports: [
+    BrowserPrivacy,
     NavigationHeading,
     LanguageSwitcher,
     Button,

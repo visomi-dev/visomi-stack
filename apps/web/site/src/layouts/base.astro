@@ -12,10 +12,6 @@ type Props = {
 };
 
 const { locale, title, description, telemetry = true } = Astro.props;
-const SiteVisitAnalytics =
-  telemetry && process.env['VISOMI_VISIT_ANALYTICS'] === 'true'
-    ? (await import('../components/site/visit-analytics.astro')).default
-    : undefined;
 ---
 
 <!doctype html>
@@ -47,7 +43,7 @@ const SiteVisitAnalytics =
 
     {telemetry && <SiteTelemetry />}
 
-    {SiteVisitAnalytics && <SiteVisitAnalytics />}
+    {telemetry && process.env['VISOMI_VISIT_ANALYTICS'] === 'true' && <meta name="visit-analytics" content="enabled" />}
   </head>
 
   <body class="min-h-screen bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">

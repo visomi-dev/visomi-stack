@@ -1,0 +1,111 @@
+---
+import { browserPrivacyCopy, screens } from '@visomi-stack/web-shared-observability';
+
+import Button from '../button.astro';
+import Dialog from '../dialog.astro';
+import Link from '../link.astro';
+import type { SiteLocale } from '../../content/site';
+
+type Props = { locale: SiteLocale };
+const copy = browserPrivacyCopy[Astro.props.locale];
+---
+
+<div data-browser-privacy>
+  <Button variant="ghost" size="sm" disabled data-open aria-haspopup="dialog" aria-controls="browser-privacy">
+    {copy.title}
+
+    <span class="hidden text-xs font-semibold" data-pending>
+      {copy.pending}
+    </span>
+  </Button>
+
+  <Dialog id="browser-privacy" aria-labelledby="browser-privacy-title">
+    <div class="space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="browser-privacy-title" class="font-heading text-lg font-semibold">
+          {copy.title}
+        </h2>
+
+        <Button variant="secondary" size="sm" data-close>
+          {copy.close}
+        </Button>
+      </div>
+
+      <p role="status" data-status data-off={copy.off} data-on={copy.on} data-blocked={copy.blocked}>
+        {copy.off}
+      </p>
+
+      <div class="grid grid-cols-2 gap-3">
+        <Button variant="secondary" data-accept>
+          {copy.accept}
+        </Button>
+
+        <Button variant="secondary" data-reject>
+          {copy.reject}
+        </Button>
+      </div>
+
+      <Link href="#browser-privacy-purpose" data-purpose-link>
+        {copy.purpose}
+      </Link>
+
+      <section class="space-y-2 text-sm" aria-labelledby="browser-privacy-purpose">
+        <h3 id="browser-privacy-purpose" tabindex="-1" class="sr-only">
+          {copy.purpose}
+        </h3>
+
+        <p>{copy.analytics}</p>
+
+        <p>{copy.telemetry}</p>
+
+        <p>{copy.revoke}</p>
+      </section>
+
+      <section hidden class="space-y-3" aria-labelledby="browser-privacy-reports" data-reports>
+        <h3 id="browser-privacy-reports" class="font-heading font-semibold">
+          {copy.reports}
+        </h3>
+
+        <p class="text-sm">{copy.manual}</p>
+
+        <ul class="space-y-3"></ul>
+      </section>
+
+      <p class="empty:hidden" role="status" data-feedback data-sent={copy.sent} data-failed={copy.failed}></p>
+    </div>
+  </Dialog>
+
+  <template
+    data-unhandled_exception={copy.exception}
+    data-unhandled_rejection={copy.rejection}
+    data-startup_failed={copy.startup}
+    data-unknown-kind={copy.unknownKind}
+    {...Object.fromEntries(screens.map((screen) => ['data-' + screen, copy[screen]]))}
+  >
+    <li class="space-y-2 rounded-lg border border-zinc-300 p-3 dark:border-zinc-700">
+      <dl class="grid grid-cols-[auto_1fr] gap-x-3 text-sm">
+        <dt>{copy.type}</dt>
+
+        <dd data-type></dd>
+
+        <dt>{copy.kind}</dt>
+
+        <dd data-kind></dd>
+
+        <dt>{copy.screen}</dt>
+
+        <dd data-screen></dd>
+      </dl>
+
+      <div class="flex flex-wrap gap-2">
+        <Button variant="secondary" size="sm" data-send>
+          {copy.send}
+        </Button>
+
+        <Button variant="secondary" size="sm" data-discard>
+          {copy.discard}
+        </Button>
+      </div>
+    </li>
+  </template>
+</div>

@@ -5,9 +5,9 @@ import { config } from './app/app.config.browser';
 import { App } from './app/app';
 import { BROWSER_ERROR_REPORTER } from './app/observability/browser-telemetry';
 
-import { createBrowserReporter } from '@visomi-stack/web-shared-observability';
+import { createBrowserConsent, createBrowserReporter } from '@visomi-stack/web-shared-observability';
 
-const reporter = createBrowserReporter('web-app', window, { globalErrors: false });
+const reporter = createBrowserReporter('web-app', window, createBrowserConsent(window), { globalErrors: false });
 
 bootstrapApplication(App, {
   ...config,
@@ -17,5 +17,5 @@ bootstrapApplication(App, {
     console.error(error);
   }
 
-  void reporter.report('startup_failed', error).finally(() => reporter.stop());
+  void Promise.resolve(reporter.report('startup_failed', error)).finally(() => reporter.stop());
 });

@@ -5,6 +5,7 @@ import ThemeSelect from '../../../components/theme-select.astro';
 import Text from '../../../components/text.astro';
 import Heading from '../../../components/heading.astro';
 import BaseLayout from '../../../layouts/base.astro';
+import BrowserPrivacy from '../../../components/site/browser-privacy.astro';
 import AppShell from '../../../components/app-shell.astro';
 import Sidebar from '../../../components/sidebar.astro';
 import Topbar from '../../../components/topbar.astro';
@@ -91,6 +92,10 @@ const destinations = [
     </Topbar>
 
     <header class="mb-8 grid gap-4">
+      <div class="justify-self-end">
+        <BrowserPrivacy locale={locale} />
+      </div>
+
       <Text ui-size="xs" tone="accent" mono class="tracking-wide">
         VISOMI / APP SHELL
       </Text>

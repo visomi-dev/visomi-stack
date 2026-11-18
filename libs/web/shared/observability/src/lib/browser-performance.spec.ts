@@ -2,6 +2,7 @@ import { LoggerProvider } from '@opentelemetry/sdk-logs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createBrowserReporter } from './browser';
+import type { BrowserConsent } from './consent';
 import type { BrowserApplication } from './contract';
 
 const instrumentation = vi.hoisted(() => {
@@ -46,9 +47,23 @@ function fixture(enabled: boolean, application: BrowserApplication = 'web-app') 
     fetch: transport,
     location: new URL('https://frontend.example.test/customer/SYNTHETIC_PRIVATE_DATA'),
   });
-  const reporter = createBrowserReporter(application, browser as unknown as Window);
+  let allowed = true;
+  const consent = {
+    permit: () => (allowed ? 'grant' : undefined),
+    subscribe: () => () => undefined,
+    blocked: () => false,
+    decide: () => undefined,
+    stop: () => undefined,
+  } satisfies BrowserConsent;
+  const reporter = createBrowserReporter(application, browser as unknown as Window, consent);
 
-  return { reporter, transport };
+  return {
+    reporter,
+    transport,
+    revoke: () => {
+      allowed = false;
+    },
+  };
 }
 
 afterEach(() => {

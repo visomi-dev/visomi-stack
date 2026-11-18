@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
 
+import { browserConsentKey } from '@visomi-stack/web-shared-observability';
+
+test.beforeEach(async ({ page }) => {
+  // A saved choice exercises initial document performance without collecting before opt-in.
+  await page.addInitScript((key) => localStorage.setItem(key, 'accept:0-0-0-1'), browserConsentKey);
+});
+
 test('measures real page performance without exporting URLs, attribution or browser identifiers', async ({ page }) => {
   const reports: { payload: Record<string, unknown>; status: number; headers: Record<string, string> }[] = [];
   const scripts: Promise<number>[] = [];

@@ -33,6 +33,8 @@ import { loadSite } from './site-module';
 import { loadApplication } from './application-module';
 import { loadRealtime } from './realtime-module';
 
+import { stackVisitPages } from '@visomi-stack/web-shared-observability';
+
 const observability = initializeObservability({
   service: 'web-gateway',
   version: packageJson.version,
@@ -195,7 +197,7 @@ async function bootstrap() {
       pool: database?.pool,
       site: 'visomi-stack',
       origin: process.env['BROWSER_TELEMETRY_ORIGIN'] ?? 'https://stack.visomi.dev',
-      pages: ['home', 'architecture', 'docs', 'ui'],
+      pages: stackVisitPages,
     });
   }
 

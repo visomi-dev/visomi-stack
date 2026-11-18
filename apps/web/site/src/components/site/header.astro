@@ -4,6 +4,7 @@ import ThemeSwitcher from '../theme-switcher.astro';
 import Container from '../container.astro';
 import Text from '../text.astro';
 import Brand from './brand.astro';
+import BrowserPrivacy from './browser-privacy.astro';
 import Link from '../link.astro';
 import LinkButton from '../link-button.astro';
 import Icon from './icon.astro';
@@ -79,6 +80,8 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
           ))}
         </ul>
       </nav>
+
+      <BrowserPrivacy locale={locale} />
 
       <ThemeSwitcher label={copy.themeToggle} />
 

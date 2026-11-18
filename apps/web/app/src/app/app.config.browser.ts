@@ -14,7 +14,6 @@ import { BrowserRealtimeSession } from './auth/session/browser-realtime-session'
 import { BrowserSession } from './auth/session/browser-session';
 import { Session } from './auth/session/session';
 import { BrowserErrors } from './observability/browser-errors';
-import { browserErrorsInterceptor } from './observability/browser-errors-interceptor';
 import { BrowserRoutePerformance } from './observability/browser-route-performance';
 import { BrowserTelemetry } from './observability/browser-telemetry';
 
@@ -28,8 +27,9 @@ const browserConfig: ApplicationConfig = {
     BrowserTelemetry,
     BrowserRoutePerformance,
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withInterceptors([authInterceptor, browserErrorsInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor])),
     provideEnvironmentInitializer(() => {
+      inject(BrowserTelemetry);
       inject(BrowserRoutePerformance);
     }),
   ],

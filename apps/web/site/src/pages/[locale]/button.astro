@@ -6,6 +6,7 @@ import Card from '../../components/card.astro';
 import Text from '../../components/text.astro';
 import Heading from '../../components/heading.astro';
 import BaseLayout from '../../layouts/base.astro';
+import BrowserPrivacy from '../../components/site/browser-privacy.astro';
 
 import Button from '../../components/button.astro';
 import Link from '../../components/link.astro';
@@ -51,7 +52,11 @@ const text = spanish
   <script slot="head" is:inline type="module" src={demoScript}></script>
 
   <main class:list={[container.classes(), 'py-12']}>
-    <Link href={`/${locale}/foundations/`}>{text.home}</Link>
+    <header class="flex flex-wrap items-center justify-between gap-2">
+      <Link href={`/${locale}/foundations/`}>{text.home}</Link>
+
+      <BrowserPrivacy locale={locale} />
+    </header>
 
     <Heading as="h1" ui-size="title" class="mt-8">
       {text.title}
@@ -76,7 +81,6 @@ const text = spanish
 
       <Text ui-size="inherit" tone="inherit" class="mt-5">
         {text.count}{' '}
-
         <output aria-live="polite" data-count>
           0
         </output>
