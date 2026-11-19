@@ -21,7 +21,7 @@ test('restarts replacement-password preparation without losing recovery access',
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Set up access again', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Set up a new way to sign in', exact: true })).toBeVisible();
 
   const restricted = await context.request.get('/api/auth/session');
   const result8 = await restricted.json();
@@ -42,11 +42,11 @@ test('restarts replacement-password preparation without losing recovery access',
 
   expect(firstResponse.status()).toBe(202);
 
-  await expect(page.getByText('Confirm the replacement password', { exact: false })).toBeVisible();
+  await expect(page.getByText('Verify your new password', { exact: false })).toBeVisible();
 
   await expect(page.getByRole('button', { name: 'Send a new code', exact: false })).toHaveCount(0);
 
-  await expect(page.getByText('If the email does not arrive', { exact: false })).toBeVisible();
+  await expect(page.getByText('If the email doesn’t arrive', { exact: false })).toBeVisible();
 
   await page.getByRole('button', { name: 'Start again', exact: true }).click();
 
@@ -71,7 +71,7 @@ test('restarts replacement-password preparation without losing recovery access',
 
   expect(nextResponse.status()).toBe(202);
 
-  await expect(page.getByText('Confirm the replacement password', { exact: false })).toBeVisible();
+  await expect(page.getByText('Verify your new password', { exact: false })).toBeVisible();
 
   const factor = await readMailCode(email);
 
@@ -79,7 +79,7 @@ test('restarts replacement-password preparation without losing recovery access',
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 });
 
 test('polls a new device request after cancelling one whose status response is delayed', async ({ page }) => {
@@ -123,7 +123,7 @@ test('polls a new device request after cancelling one whose status response is d
 
     await page.getByRole('button', { name: 'Cancel request', exact: true }).click();
 
-    await expect(page.getByText('This request was cancelled.', { exact: true })).toBeVisible();
+    await expect(page.getByText('This request was canceled.', { exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: 'Start again', exact: true }).click();
 
@@ -136,7 +136,7 @@ test('polls a new device request after cancelling one whose status response is d
     expect(polled).toEqual(ids);
     releaseStatus();
 
-    await expect(page.getByText('Waiting for approval on your other device.', { exact: true })).toBeHidden();
+    await expect(page.getByText('Waiting for you to approve on your other device.', { exact: true })).toBeHidden();
   } finally {
     releaseStatus();
   }
@@ -179,7 +179,9 @@ test('approves another browser and grants enrollment rather than full access', a
 
     await requester.getByRole('button', { name: 'Continue', exact: true }).click();
 
-    await expect(requester.getByText('Waiting for approval on your other device.', { exact: true })).toBeVisible();
+    await expect(
+      requester.getByText('Waiting for you to approve on your other device.', { exact: true }),
+    ).toBeVisible();
 
     await expect.poll(() => subscribed).toBe(true);
 
@@ -195,13 +197,13 @@ test('approves another browser and grants enrollment rather than full access', a
 
     await page.getByRole('button', { name: 'Approve request', exact: true }).click();
 
-    await expect(page.getByText('This request is no longer waiting for approval.', { exact: true })).toBeVisible();
+    await expect(page.getByText('This request is no longer pending.', { exact: true })).toBeVisible();
 
     await expect.poll(() => notified).toBe(true);
 
     await requester.getByRole('button', { name: 'Continue recovery', exact: true }).click();
 
-    await expect(requester.getByRole('heading', { name: 'Set up access again', exact: true })).toBeVisible();
+    await expect(requester.getByRole('heading', { name: 'Set up a new way to sign in', exact: true })).toBeVisible();
 
     const state = await requesterContext.request.get('/api/auth/session');
     const result9 = await state.json();
@@ -224,11 +226,13 @@ test('cancels and denies device requests without granting access', async ({ page
 
     await requester.getByRole('button', { name: 'Continue', exact: true }).click();
 
-    await expect(requester.getByText('Waiting for approval on your other device.', { exact: true })).toBeVisible();
+    await expect(
+      requester.getByText('Waiting for you to approve on your other device.', { exact: true }),
+    ).toBeVisible();
 
     await requester.getByRole('button', { name: 'Cancel request', exact: true }).click();
 
-    await expect(requester.getByText('This request was cancelled.', { exact: true })).toBeVisible();
+    await expect(requester.getByText('This request was canceled.', { exact: true })).toBeVisible();
 
     await requester.getByRole('button', { name: 'Start again', exact: true }).click();
 
@@ -236,7 +240,9 @@ test('cancels and denies device requests without granting access', async ({ page
 
     await requester.getByRole('button', { name: 'Continue', exact: true }).click();
 
-    await expect(requester.getByText('Waiting for approval on your other device.', { exact: true })).toBeVisible();
+    await expect(
+      requester.getByText('Waiting for you to approve on your other device.', { exact: true }),
+    ).toBeVisible();
 
     const link = await requester.locator('a[target="_blank"]').getAttribute('href');
     const code = await requester.locator('p.font-mono').innerText();
@@ -247,7 +253,7 @@ test('cancels and denies device requests without granting access', async ({ page
 
     await page.getByRole('button', { name: 'Deny request', exact: true }).click();
 
-    await expect(requester.getByText('This request was denied.', { exact: true })).toBeVisible({ timeout: 10000 });
+    await expect(requester.getByText('This request was declined.', { exact: true })).toBeVisible({ timeout: 10000 });
 
     const state = await context.request.get('/api/auth/session');
     const snapshot = await state.json();

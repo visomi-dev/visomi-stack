@@ -64,9 +64,9 @@ export class Reauthenticate {
   readonly action = inject(Action);
 
   readonly embedded = input(false);
-  readonly heading = input($localize`:@@authReauthTitle:Confirm it is you`);
+  readonly heading = input($localize`:@@authReauthTitle:Confirm it’s you`);
   readonly description = input(
-    $localize`:@@authReauthDescription:Use an existing sign-in method before changing your account's security. You will review the change again afterwards.`,
+    $localize`:@@authReauthDescription:Use one of your sign-in methods to confirm it’s you. You can review the security change again afterward.`,
   );
   readonly completed = output<void>();
   readonly cancelled = output<void>();

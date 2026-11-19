@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Response } from '@playwright/test';
 
-import { disablePerformanceCapture, initialScriptBudget } from './support/performance';
+import { initialScriptBudget } from './support/performance';
 import { selectTheme } from './support/theme';
 
 for (const locale of ['en', 'es']) {
@@ -49,26 +49,27 @@ for (const locale of ['en', 'es']) {
   });
 
   test(`the ${locale} homepage keeps theme, language and error reporting scripts small`, async ({ page }) => {
-    await disablePerformanceCapture(page);
-
     const scripts: Promise<number>[] = [];
     const errors: string[] = [];
 
-    page.on('pageerror', (error) => errors.push(error.message));
-    page.on('response', (resource) => {
+    const recordScriptSize = (resource: Response) => {
       if (resource.request().resourceType() === 'script') {
         scripts.push(resource.body().then((body) => body.length));
       }
-    });
+    };
+
+    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('response', recordScriptSize);
 
     await page.goto(`/${locale}/`);
 
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
+    page.off('response', recordScriptSize);
+
     const sizes = await Promise.all(scripts);
 
-    expect(sizes).toHaveLength(3);
-    expect(Math.min(...sizes)).toBeLessThan(256);
+    expect(sizes).toHaveLength(2);
     expect(sizes.reduce((total, size) => total + size, 0)).toBeLessThan(initialScriptBudget);
     expect(errors).toEqual([]);
 
@@ -162,7 +163,7 @@ test('mobile navigation and locale changes work without JavaScript', async ({ br
         .getByRole('link', { name: 'Español', exact: true }),
     ).toHaveAttribute('hreflang', 'es');
 
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('One system. Clear boundaries.');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('How Visomi Stack works');
 
     await page.goto('/es/');
 

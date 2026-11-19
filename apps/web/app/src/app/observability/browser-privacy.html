@@ -1,0 +1,62 @@
+@if (!automatic() && pending().length) {
+  <button
+    appUI
+    variant="ghost"
+    size="sm"
+    aria-haspopup="dialog"
+    aria-controls="browser-privacy"
+    (click)="privacy.showModal()"
+  >
+    {{ copy.pending }}
+  </button>
+}
+
+<dialog appUI #privacy="appUIDialog" id="browser-privacy" aria-labelledby="browser-privacy-title" class="max-sm:p-4">
+  <div class="space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h2 id="browser-privacy-title" class="font-heading text-lg font-semibold">{{ copy.reportsTitle }}</h2>
+
+      <button appUI #close variant="secondary" size="sm" (click)="privacy.close()">{{ copy.close }}</button>
+    </div>
+
+    @if (!automatic() && pending().length) {
+      <section class="space-y-3" aria-labelledby="browser-privacy-reports">
+        <h3 id="browser-privacy-reports" class="font-heading font-semibold">{{ copy.reports }}</h3>
+
+        <p class="text-sm">{{ copy.manual }}</p>
+
+        <ul class="space-y-3">
+          @for (report of pending(); track report) {
+            <li class="space-y-2 rounded-lg border border-zinc-300 p-3 dark:border-zinc-700">
+              <dl class="grid grid-cols-[auto_1fr] gap-x-3 text-sm">
+                <dt>{{ copy.type }}</dt>
+
+                <dd>{{ description(report) }}</dd>
+
+                <dt>{{ copy.kind }}</dt>
+
+                <dd>{{ report.kind === 'unknown' ? copy.unknownKind : report.kind }}</dd>
+
+                <dt>{{ copy.screen }}</dt>
+
+                <dd>{{ copy[report.screen] }}</dd>
+              </dl>
+
+              <div class="flex flex-wrap gap-2">
+                <button appUI variant="secondary" size="sm" [disabled]="sending()" (click)="send(report, close)">
+                  {{ copy.send }}
+                </button>
+
+                <button appUI variant="secondary" size="sm" (click)="discard(report, close)">
+                  {{ copy.discard }}
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <p class="empty:hidden" role="status">{{ feedback() }}</p>
+  </div>
+</dialog>

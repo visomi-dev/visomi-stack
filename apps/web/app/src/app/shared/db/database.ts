@@ -1,8 +1,10 @@
 import { DOCUMENT } from '@angular/common';
-import { DestroyRef, Service, inject } from '@angular/core';
+import { DestroyRef, InjectionToken, Service, inject } from '@angular/core';
 import { VaultError } from '@visomi-stack/shared-db';
 
 import { Session } from '../../auth/session/session';
+
+export const VAULT_DATABASE_NAMESPACE = new InjectionToken<string>('VaultDatabaseNamespace');
 
 /** Lazy browser database facade. Consumers own their connections; no plaintext or raw keys enter this service. */
 @Service()
@@ -10,9 +12,12 @@ export class ClientDatabase {
   private readonly document = inject(DOCUMENT);
   private readonly session = inject(Session);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly namespace = inject(VAULT_DATABASE_NAMESPACE, { optional: true });
 
   vault(ownerId: string, signal?: AbortSignal) {
-    return this.open(ownerId, (sdk, factory) => sdk.IndexedDbVaultStorage.open(factory, ownerId), signal);
+    const name = this.namespace ? this.namespace + ':' + ownerId : ownerId;
+
+    return this.open(ownerId, (sdk, factory) => sdk.IndexedDbVaultStorage.open(factory, name), signal);
   }
 
   replica(ownerId: string, signal?: AbortSignal) {

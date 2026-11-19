@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ErrorHandler, Service, inject, isDevMode } from '@angular/core';
 
 import { BrowserTelemetry } from './browser-telemetry';
@@ -11,6 +12,8 @@ export class BrowserErrors implements ErrorHandler {
       console.error(error);
     }
 
-    this.telemetry.report('unhandled_exception', error);
+    if (!(error instanceof HttpErrorResponse)) {
+      this.telemetry.report('unhandled_exception', error);
+    }
   }
 }

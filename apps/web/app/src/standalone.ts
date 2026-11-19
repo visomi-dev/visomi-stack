@@ -44,26 +44,19 @@ async function start(): Promise<void> {
     throw new Error('app_configuration_invalid');
   }
 
-  if (process.env['VISOMI_BROWSER_TELEMETRY'] === 'true') {
-    const assets = await browserAssets(clientDirectory, '/app');
-
-    if (stopping) {
-      return;
-    }
-
-    browserTelemetry = createBrowserTelemetry({
-      observability: telemetry,
-      assets: { 'web-app': assets },
-      origin: process.env['BROWSER_TELEMETRY_ORIGIN'] ?? `http://127.0.0.1:${port}`,
-      performance: process.env['VISOMI_BROWSER_PERFORMANCE'] === 'true',
-    });
-  }
+  const assets = await browserAssets(clientDirectory, '/app');
 
   if (stopping) {
     return;
   }
 
-  server.on('request', createApp({ observability: telemetry, ...(browserTelemetry ? { browserTelemetry } : {}) }));
+  browserTelemetry = createBrowserTelemetry({
+    observability: telemetry,
+    assets: { 'web-app': assets },
+    origin: process.env['BROWSER_TELEMETRY_ORIGIN'] ?? `http://127.0.0.1:${port}`,
+  });
+
+  server.on('request', createApp({ observability: telemetry, browserTelemetry }));
   server.listen(port, process.env['HOST'] ?? '127.0.0.1');
 }
 

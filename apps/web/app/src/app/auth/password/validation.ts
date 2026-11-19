@@ -8,7 +8,7 @@ export function passwordPolicy(path: SchemaPath<string>): void {
       ? undefined
       : {
           kind: 'password_policy',
-          message: $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`,
+          message: $localize`:@@authPasswordPolicy:Use 12–128 characters. You can use spaces and phrases.`,
         };
   });
 }

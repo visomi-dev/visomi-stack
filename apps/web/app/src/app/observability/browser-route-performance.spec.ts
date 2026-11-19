@@ -14,11 +14,12 @@ const marker = 'SYNTHETIC_PRIVATE_ROUTE_DATA';
 
 function fixture(enabled = true, configured = true) {
   const routeTransition = vi.fn();
+  const performanceAllowed = vi.fn(() => enabled);
   let enterSlow!: () => void;
   const slowEntered = new Promise<void>((resolve) => {
     enterSlow = resolve;
   });
-  const reporter = { performanceReady: Promise.resolve(enabled), routeTransition };
+  const reporter = { performanceReady: Promise.resolve(enabled), performanceAllowed, routeTransition };
 
   TestBed.configureTestingModule({
     providers: [
@@ -56,7 +57,7 @@ function fixture(enabled = true, configured = true) {
     ],
   });
 
-  return { routeTransition, slowEntered };
+  return { performanceAllowed, routeTransition, slowEntered };
 }
 
 afterEach(() => {
@@ -138,5 +139,21 @@ describe('Angular route transition performance', () => {
     await first;
 
     expect(f.routeTransition.mock.calls.map(([name]) => name)).toEqual(['route_cancelled', 'route_completed']);
+  });
+
+  it('drops a pending transition and ignores subsequent navigations after revocation', async () => {
+    const f = fixture();
+    const harness = await RouterTestingHarness.create('/');
+    const navigation = harness.navigateByUrl('/slow');
+
+    await f.slowEntered;
+
+    f.performanceAllowed.mockReturnValue(false);
+
+    await TestBed.inject(Router).navigateByUrl('/customer/synthetic');
+
+    await navigation;
+
+    expect(f.routeTransition).not.toHaveBeenCalled();
   });
 });

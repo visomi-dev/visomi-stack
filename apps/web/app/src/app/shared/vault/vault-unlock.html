@@ -3,15 +3,15 @@
     <h2 appUI [id]="headingId()" i18n="@@vaultUnlockHeading">Unlock your private resources</h2>
 
     <p appUI tone="muted" i18n="@@vaultUnlockDescription">
-      A local vault is closed. Unlock it to use its private resources. Other local vaults may use a different key or
-      PIN. Navigating in this session keeps an opened vault unlocked until you lock it or sign out.
+      Unlock the vault to open its private resources. Other vaults may use a different key or PIN. An unlocked vault
+      stays open while you navigate until you lock it or sign out.
     </p>
 
     <form class="space-y-4" (submit)="$event.preventDefault(); submit()">
       @if (method() === 'pin-argon2id') {
         <p appUI tone="muted" i18n="@@vaultPanelPinWarning">
-          This resource uses a local PIN. A copy of encrypted storage permits offline PIN guessing; PIN protection is
-          weaker than a passkey.
+          This vault uses a PIN on this device. Anyone with a copy of the encrypted data can try PINs offline. A passkey
+          provides stronger protection.
         </p>
 
         <app-field
@@ -27,9 +27,9 @@
 
       <button appUI type="submit" [disabled]="busy()">
         @if (method() === 'pin-argon2id') {
-          <span i18n="@@vaultPinUnlock">Unlock locally with PIN</span>
+          <span i18n="@@vaultPinUnlock">Unlock with PIN</span>
         } @else {
-          <span i18n="@@vaultUnlock">Unlock with passkey</span>
+          <span i18n="@@vaultUnlock">Unlock with a passkey</span>
         }
       </button>
     </form>

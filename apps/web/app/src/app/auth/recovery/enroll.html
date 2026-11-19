@@ -1,17 +1,15 @@
 <section class="flex min-w-0 flex-col gap-6">
   <header class="space-y-3">
-    <h1 appUI appNavigationHeading i18n="@@authEnrollTitle">Set up access again</h1>
+    <h1 appUI appNavigationHeading i18n="@@authEnrollTitle">Set up a new way to sign in</h1>
 
     <p appUI tone="muted" i18n="@@authEnrollDescription">
-      Your recovery proof allows you to set up a replacement sign-in method. Complete its verification before entering
-      your account.
+      You’ve verified your recovery request. Set up and verify a new sign-in method to get back into your account.
     </p>
   </header>
 
   @if (pending()) {
     <p appUI tone="muted" i18n="@@authReplacementPasswordHint">
-      Confirm the replacement password with the required second factor. You can use a backup code instead of an
-      authenticator code.
+      Verify your new password with a code from your authenticator app or a backup code.
     </p>
 
     <app-code-entry
@@ -23,7 +21,7 @@
 
     @if (pending()?.factor === 'email') {
       <p appUI tone="muted" class="text-sm" i18n="@@authReplacementEmailRestart">
-        If the email does not arrive, start again and enter your replacement password to request a new code.
+        If the email doesn’t arrive, start again and enter your new password to request another code.
       </p>
     }
 
@@ -47,12 +45,12 @@
         i18n="@@authSwitchFactor"
         class="w-full"
       >
-        Switch between authenticator and backup code
+        Change verification method
       </button>
     }
   } @else if (registered()) {
     <p appUI tone="muted" i18n="@@authReplacementPasskeyHint">
-      Your replacement passkey is created. Sign in with that passkey to finish recovery.
+      Sign in with the new passkey to finish recovering your account.
     </p>
 
     <button
@@ -63,7 +61,7 @@
       i18n="@@authVerifyPasskey"
       [attr.aria-busy]="action.pending() === 'provePasskey'"
     >
-      Verify replacement passkey
+      Verify new passkey
     </button>
   } @else {
     <button
@@ -74,7 +72,7 @@
       i18n="@@authCreateReplacementPasskey"
       [attr.aria-busy]="action.pending() === 'passkey'"
     >
-      Create a replacement passkey
+      Create a new passkey
     </button>
 
     <details appUI>

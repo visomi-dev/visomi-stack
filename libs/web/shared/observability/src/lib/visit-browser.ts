@@ -1,10 +1,19 @@
+import type { BrowserConsent } from './consent';
 import type { VisitPage } from './visits';
+import { telemetryPost } from './transport';
 
 const transport = { credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error' } as const;
 
-export function trackVisits(browser: Window, pageForPath: (path: string) => VisitPage | undefined): void {
-  let previous: string | undefined;
+export function trackVisits(
+  browser: Window,
+  consent: BrowserConsent,
+  pageForPath: (path: string) => VisitPage | undefined,
+  options: { ignoreCurrent?: boolean } = {},
+) {
+  const initial = options.ignoreCurrent ? pageForPath(browser.location.pathname) : undefined;
+  let previous = initial && initial.locale + ':' + initial.page;
   let configuration: Promise<boolean> | undefined;
+  let stopped = false;
 
   const update = () => {
     const page = pageForPath(browser.location.pathname);
@@ -14,15 +23,19 @@ export function trackVisits(browser: Window, pageForPath: (path: string) => Visi
       return;
     }
 
-    previous = current;
+    const permit = consent.permit();
 
-    if (!page || browser.navigator.doNotTrack === '1' || browser.document.visibilityState !== 'visible') {
-      // A hidden document can be the initial prerender rather than a visited page.
-      previous = undefined;
+    if (!page || !permit) {
+      previous = current;
 
       return;
     }
 
+    if (browser.document.visibilityState !== 'visible') {
+      return;
+    }
+
+    previous = current;
     const body = JSON.stringify({ page: page.page, locale: page.locale });
 
     configuration ??= browser
@@ -32,21 +45,19 @@ export function trackVisits(browser: Window, pageForPath: (path: string) => Visi
           return false;
         }
 
-        const configuration = await response.json();
+        const config = await response.json();
 
-        return configuration?.enabled === true;
+        return config?.enabled === true;
       })
       .catch(() => false);
 
     void configuration.then((enabled) => {
-      if (enabled) {
+      if (!stopped && enabled && consent.permit() === permit) {
         return browser
-          .fetch('/telemetry/visits', {
-            ...transport,
-            method: 'POST',
+          .fetch(browser.location.origin + '/telemetry/visits', {
+            ...telemetryPost,
             headers: { 'content-type': 'application/json' },
             body,
-            keepalive: true,
           })
           .catch(() => undefined);
       }
@@ -60,7 +71,17 @@ export function trackVisits(browser: Window, pageForPath: (path: string) => Visi
 
   if (browser.document.readyState === 'loading') {
     browser.document.addEventListener('DOMContentLoaded', update, { once: true });
-  } else {
-    update();
   }
+
+  update();
+
+  return {
+    update,
+    stop(): void {
+      stopped = true;
+      browser.document.removeEventListener('astro:page-load', update);
+      browser.document.removeEventListener('visibilitychange', update);
+      browser.document.removeEventListener('DOMContentLoaded', update);
+    },
+  };
 }

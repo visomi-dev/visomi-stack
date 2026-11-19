@@ -27,7 +27,7 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await page.goto('/app/en/persistence');
 
-  await page.getByRole('button', { name: 'Create a synthetic workspace', exact: true }).click();
+  await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
 
   await expect(page.getByLabel('Local unlock PIN', { exact: true })).toBeEnabled();
 
@@ -53,11 +53,11 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await expect(pin).toBeFocused();
 
-  await page.getByLabel('Confirm PIN for initial setup', { exact: true }).fill('0042');
+  await page.getByLabel('Confirm your new PIN', { exact: true }).fill('0042');
 
   await page.getByRole('button', { name: 'Set up an empty private resource with PIN', exact: true }).click();
 
-  await expect(page.getByText('Enter a six-digit PIN. For initial setup, enter the same PIN twice.')).toBeVisible();
+  await expect(page.getByText('Enter a 6-digit PIN. When setting it up, enter the same PIN twice.')).toBeVisible();
 
   await expect(page.getByLabel('Private text', { exact: true })).toHaveCount(0);
 
@@ -83,7 +83,7 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await expectCenteredDigits(page.locator('app-pin-input > div').filter({ has: pin }));
 
-  await page.getByLabel('Confirm PIN for initial setup', { exact: true }).fill('048261');
+  await page.getByLabel('Confirm your new PIN', { exact: true }).fill('048261');
 
   await page.getByRole('button', { name: 'Set up an empty private resource with PIN', exact: true }).click();
 
@@ -146,7 +146,7 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await expect(page.getByLabel('Private text', { exact: true })).toBeDisabled();
 
-  await expect(page.getByText('An encrypted change is waiting for synchronization.', { exact: false })).toBeVisible();
+  await expect(page.getByText('An encrypted change is waiting to sync.', { exact: false })).toBeVisible();
 
   await page.goBack();
 
@@ -160,19 +160,19 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await page.getByLabel('Local unlock PIN', { exact: true }).fill('999999');
 
-  await page.getByRole('button', { name: 'Unlock locally with PIN', exact: true }).click();
+  await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
 
-  await expect(page.getByRole('status')).toContainText(['Integrity could not be verified']);
+  await expect(page.getByRole('status')).toContainText(['We couldn’t verify the encrypted data']);
 
   await expect(page.locator('pre')).toHaveCount(0);
 
   await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
 
-  await page.getByRole('button', { name: 'Unlock locally with PIN', exact: true }).click();
+  await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
 
   await expect(page.locator('pre')).toHaveText(marker);
 
-  await expect(page.getByText('An encrypted change is waiting for synchronization.', { exact: false })).toBeVisible();
+  await expect(page.getByText('An encrypted change is waiting to sync.', { exact: false })).toBeVisible();
 
   const serialized = await page.evaluate(async () => {
     const databases = await indexedDB.databases();
@@ -223,7 +223,7 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
 
-  await page.getByRole('button', { name: 'Unlock locally with PIN', exact: true }).click();
+  await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
 
   await expect(page.locator('pre')).toHaveText(marker);
 
@@ -237,7 +237,7 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
 
-  await page.getByRole('button', { name: 'Unlock locally with PIN', exact: true }).click();
+  await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Unlock your private resources', exact: true })).toHaveCount(0);
 

@@ -86,7 +86,7 @@ export class ManagePasskeys {
 
         await this.reload();
 
-        this.action.setNotice($localize`:@@authPasskeyAdded:Your passkey has been added.`);
+        this.action.setNotice($localize`:@@authPasskeyAdded:Passkey added.`);
       },
       { name: 'add' },
     );

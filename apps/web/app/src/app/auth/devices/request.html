@@ -1,10 +1,10 @@
 <section class="flex min-w-0 flex-col gap-6">
-  <h1 appUI appNavigationHeading i18n="@@authDeviceApprovalTitle">Use your signed-in device</h1>
+  <h1 appUI appNavigationHeading i18n="@@authDeviceApprovalTitle">Approve on your other device</h1>
 
   @if (request(); as pending) {
     <p appUI tone="muted" i18n="@@authDeviceApprovalInstructions">
-      On a device where you are already signed in, open this link and enter the pairing code shown here. Only approve a
-      request you started.
+      Open this link on a device where you’re signed in and enter the pairing code shown here. Only approve requests you
+      started.
     </p>
 
     <a
@@ -53,7 +53,7 @@
     }
   } @else {
     <p appUI tone="muted" i18n="@@authDeviceApprovalDescription">
-      Request permission to set up a new sign-in method. Approval comes from a different session where you are already
+      Ask for approval to set up a new sign-in method. Approve the request from another session where you’re already
       signed in.
     </p>
 

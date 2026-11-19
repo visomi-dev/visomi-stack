@@ -31,7 +31,7 @@ test('hybrid persistence keeps private content out of transport and reopens lock
 
   await page.goto('/app/en/persistence');
 
-  await page.getByRole('button', { name: 'Create a synthetic workspace', exact: true }).click();
+  await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Operational note · service-readable', exact: true })).toBeVisible();
 
@@ -43,9 +43,9 @@ test('hybrid persistence keeps private content out of transport and reopens lock
 
   await page.getByRole('button', { name: 'Save operational note', exact: true }).click();
 
-  await expect(page.getByRole('status')).toContainText(['Operational content was saved']);
+  await expect(page.getByRole('status')).toContainText(['Saved the note. The server can read it.']);
 
-  await page.getByRole('button', { name: 'Provision an empty private resource', exact: true }).click();
+  await page.getByRole('button', { name: 'Set up an empty private resource', exact: true }).click();
 
   await expect(page.getByLabel('Private text', { exact: true })).toBeEnabled();
 
@@ -57,7 +57,7 @@ test('hybrid persistence keeps private content out of transport and reopens lock
 
   await expect(page.locator('pre')).toHaveText(privateMarker);
 
-  await expect(page.getByText('An encrypted change is waiting for synchronization.', { exact: false })).toBeVisible();
+  await expect(page.getByText('An encrypted change is waiting to sync.', { exact: false })).toBeVisible();
 
   await context.setOffline(false);
 
@@ -76,7 +76,7 @@ test('hybrid persistence keeps private content out of transport and reopens lock
 
   await expect(page.locator('pre')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Unlock with passkey', exact: true }).click();
+  await page.getByRole('button', { name: 'Unlock with a passkey', exact: true }).click();
 
   await expect(page.locator('pre')).toHaveText(privateMarker);
 
@@ -84,7 +84,7 @@ test('hybrid persistence keeps private content out of transport and reopens lock
 
   await expect(page.locator('pre')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Unlock with passkey', exact: true }).click();
+  await page.getByRole('button', { name: 'Unlock with a passkey', exact: true }).click();
 
   await expect(page.locator('pre')).toHaveText(privateMarker);
 
@@ -120,7 +120,7 @@ test('hybrid persistence keeps private content out of transport and reopens lock
     animations: 'disabled',
   });
 
-  const unlock = page.getByRole('button', { name: 'Desbloquear con passkey', exact: true });
+  const unlock = page.getByRole('button', { name: 'Desbloquear con una clave de acceso', exact: true });
 
   await expect(unlock).toBeEnabled();
 
@@ -144,7 +144,7 @@ test('hybrid persistence keeps private content out of transport and reopens lock
 
   await page.goto(workspace);
 
-  await page.getByRole('button', { name: 'Unlock with passkey', exact: true }).click();
+  await page.getByRole('button', { name: 'Unlock with a passkey', exact: true }).click();
 
   await expect(page.locator('pre')).toHaveText(privateMarker);
 
@@ -152,7 +152,7 @@ test('hybrid persistence keeps private content out of transport and reopens lock
 
   await page.goto(workspace);
 
-  await expect(page.getByRole('heading', { name: 'Sign in to your space.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign-in options', exact: true })).toBeVisible();
 
   await expect(page.getByText(privateMarker, { exact: true })).toHaveCount(0);
 });
@@ -182,7 +182,7 @@ test('SPA resource navigation and browser history isolate views and retain only 
   async function workspace(body: string) {
     await page.goto('/app/en/persistence');
 
-    await page.getByRole('button', { name: 'Create a synthetic workspace', exact: true }).click();
+    await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
 
     await expect(page.getByLabel('Operational content', { exact: true })).toBeEnabled();
 
@@ -190,14 +190,14 @@ test('SPA resource navigation and browser history isolate views and retain only 
 
     await page.getByRole('button', { name: 'Save operational note', exact: true }).click();
 
-    await expect(page.getByRole('status')).toContainText(['Operational content was saved']);
+    await expect(page.getByRole('status')).toContainText(['Saved the note. The server can read it.']);
 
     return new URL(page.url()).pathname;
   }
 
   const a = await workspace('Synthetic cloud A');
 
-  await page.getByRole('button', { name: 'Provision an empty private resource', exact: true }).click();
+  await page.getByRole('button', { name: 'Set up an empty private resource', exact: true }).click();
 
   await expect(page.getByLabel('Private text', { exact: true })).toBeEnabled();
 
@@ -213,7 +213,7 @@ test('SPA resource navigation and browser history isolate views and retain only 
 
   const b = await workspace('Synthetic cloud B');
 
-  await page.getByRole('button', { name: 'Provision an empty private resource', exact: true }).click();
+  await page.getByRole('button', { name: 'Set up an empty private resource', exact: true }).click();
 
   await expect(page.getByLabel('Private text', { exact: true })).toBeEnabled();
 
@@ -233,7 +233,7 @@ test('SPA resource navigation and browser history isolate views and retain only 
 
   await expect(page.locator('pre')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Unlock with passkey', exact: true }).click();
+  await page.getByRole('button', { name: 'Unlock with a passkey', exact: true }).click();
 
   await expect(page.locator('pre')).toHaveText('SYNTHETIC_PRIVATE_ROUTE_A');
 
@@ -283,7 +283,7 @@ test('SPA resource navigation and browser history isolate views and retain only 
 
   await expect(page.locator('pre')).toHaveCount(0);
 
-  await expect(page.getByRole('button', { name: 'Unlock with passkey', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Unlock with a passkey', exact: true })).toHaveCount(0);
 
   await expect(page.getByLabel('Private text', { exact: true })).toHaveValue('');
 
@@ -293,7 +293,7 @@ test('SPA resource navigation and browser history isolate views and retain only 
 
   await expect(page.getByLabel('Operational content', { exact: true })).toHaveValue('Synthetic cloud A');
 
-  await expect(page.getByRole('button', { name: 'Unlock with passkey', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Unlock with a passkey', exact: true })).toHaveCount(0);
 
   await expect(page.locator('pre')).toHaveText('SYNTHETIC_PRIVATE_ROUTE_A');
 

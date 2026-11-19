@@ -36,6 +36,12 @@ export class BrowserRoutePerformance {
       let pending: { id: number; started: number } | undefined;
 
       router.events.pipe(takeUntilDestroyed(lifetime)).subscribe((event) => {
+        if (!reporter.performanceAllowed()) {
+          pending = undefined;
+
+          return;
+        }
+
         if (event instanceof NavigationStart) {
           pending = initialNavigationCompleted ? { id: event.id, started: performance.now() } : undefined;
 

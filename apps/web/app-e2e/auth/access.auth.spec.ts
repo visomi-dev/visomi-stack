@@ -24,17 +24,17 @@ test('registers with a password, protects unverified access and restores SSR ses
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
   const rendered = await context.request.get('/app/en/home');
   const result3 = await rendered.text();
 
-  expect(result3).toContain('Welcome home.');
+  expect(result3).toMatch(/<h1\b[^>]*>\s*Home\s*<\/h1>/);
   expect(rendered.headers()['cache-control']).toBe('no-store');
 
   await page.reload();
 
-  await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
   for (const width of [360, 1023, 1024, 1440]) {
     await page.setViewportSize({ width, height: 850 });
@@ -85,7 +85,7 @@ test('requires a second factor and restarts a lost challenge after reload', asyn
 
   await page.reload();
 
-  await expect(page.getByText('This step could not be restored.', { exact: false })).toBeVisible();
+  await expect(page.getByText('We couldn’t resume verification.', { exact: false })).toBeVisible();
 
   await page.getByRole('link', { name: 'Start again', exact: true }).click();
 
@@ -105,7 +105,7 @@ test('requires a second factor and restarts a lost challenge after reload', asyn
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 });
 
 test('isolates concurrent SSR identities and hydrates each browser with its own session', async ({
@@ -178,7 +178,7 @@ test('resets a password without signing in', async ({ page, context }) => {
 
   await page.getByRole('button', { name: 'Reset password', exact: true }).click();
 
-  await expect(page.getByText('Your password has been reset.', { exact: false })).toBeVisible();
+  await expect(page.getByText('Password reset.', { exact: false })).toBeVisible();
 
   const session = await context.request.get('/api/auth/session');
   const result4 = await session.json();
@@ -193,5 +193,5 @@ test('resets a password without signing in', async ({ page, context }) => {
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 });

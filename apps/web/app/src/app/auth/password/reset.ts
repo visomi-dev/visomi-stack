@@ -64,7 +64,7 @@ export class PasswordReset {
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authNewPassword:New password`;
   readonly factorLabel = $localize`:@@authAdditionalCode:Additional verification`;
-  readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
+  readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. You can use spaces and phrases.`;
 
   save(event: Event): void {
     event.preventDefault();

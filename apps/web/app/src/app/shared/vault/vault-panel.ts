@@ -35,6 +35,8 @@ export class VaultPanel {
 
   readonly allowInitialize = input(false, { alias: 'allow-initialize' });
   readonly saved = output<DataEnvelope>();
+  readonly initialized = output<void>();
+  readonly sample = input<string>();
 
   readonly busy = signal(false);
   readonly editor = signal('');
@@ -68,7 +70,20 @@ export class VaultPanel {
           : this.vault.connect(this.binding(), this.rpId(), initialize));
 
         current();
+
+        const sample = this.sample();
+
+        if (initialize && sample !== undefined) {
+          await this.vault.seal(this.context(), sample);
+
+          current();
+        }
+
         this.unlocked.set(this.selection());
+
+        if (initialize) {
+          this.initialized.emit();
+        }
       } finally {
         pin?.fill(0);
       }

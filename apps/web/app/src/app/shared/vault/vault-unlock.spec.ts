@@ -95,7 +95,7 @@ it('isolates caller-supplied IDs and clears drafts on context changes while bloc
   first.detectChanges();
   expect(first.componentInstance.pin()).toBe('');
   expect(first.nativeElement.querySelector('input')).toBeNull();
-  expect(first.nativeElement.querySelector('button').textContent).toContain('Unlock with passkey');
+  expect(first.nativeElement.querySelector('button').textContent).toContain('Unlock with a passkey');
   first.componentRef.setInput('method', undefined);
   first.detectChanges();
   expect(first.nativeElement.querySelector('form')).toBeNull();

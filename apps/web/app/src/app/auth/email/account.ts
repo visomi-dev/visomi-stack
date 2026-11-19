@@ -49,7 +49,7 @@ export class Account {
           const next = await this.email.resend(pending.flowId);
 
           this.pending.set(next);
-          this.action.setNotice($localize`:@@authCodeSent:A new code has been requested. Check your email.`);
+          this.action.setNotice($localize`:@@authCodeSent:Check your email for a new code.`);
         },
         { name: 'resend' },
       );
@@ -71,7 +71,7 @@ export class Account {
         this.action.setNotice(
           result.notificationSent === false
             ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
-            : $localize`:@@authEmailChanged:Your email has been updated.`,
+            : $localize`:@@authEmailChanged:Email updated.`,
         );
       },
       { name: 'verify' },

@@ -1,9 +1,9 @@
 <section class="flex max-w-lg min-w-0 flex-col gap-6">
   <header class="space-y-3">
-    <h1 appUI appNavigationHeading i18n="@@authReviewDeviceTitle">Approve another device</h1>
+    <h1 appUI appNavigationHeading i18n="@@authReviewDeviceTitle">Review a device request</h1>
 
     <p appUI tone="muted" i18n="@@authReviewDeviceWarning">
-      Only approve a request you started. Approval allows a replacement sign-in method to be created for your account.
+      Approve only if you started this request. Approval lets someone set up a new sign-in method for your account.
     </p>
   </header>
 
@@ -45,9 +45,9 @@
       </div>
     </form>
   } @else if (status()) {
-    <p role="status" i18n="@@authDeviceReviewComplete">This request is no longer waiting for approval.</p>
+    <p role="status" i18n="@@authDeviceReviewComplete">This request is no longer pending.</p>
   } @else if (!requestId()) {
-    <p role="status" i18n="@@authDeviceLinkInvalid">Open the review link shown on the requesting device.</p>
+    <p role="status" i18n="@@authDeviceLinkInvalid">Open the link shown on the device that requested access.</p>
   }
 
   <app-auth-feedback [action]="action" />

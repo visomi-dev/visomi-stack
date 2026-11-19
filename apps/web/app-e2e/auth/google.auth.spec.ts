@@ -103,7 +103,9 @@ test('retries Google reauthentication after another tab invalidates the attempt'
 
   await page.getByRole('button', { name: 'Synthetic Google account', exact: true }).click();
 
-  await expect(page.getByText('Verify your email to finish continuing with Google.', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('Enter the code we sent to your email to finish signing in with Google.', { exact: true }),
+  ).toBeVisible();
 
   await expect(page).toHaveURL(/auth\/reauthenticate/);
 
@@ -115,7 +117,7 @@ test('retries Google reauthentication after another tab invalidates the attempt'
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('alert')).toContainText('We could not verify these details.');
+  await expect(page.getByRole('alert')).toContainText('We couldn’t verify these details.');
 
   await expect(page).toHaveURL(/auth\/reauthenticate/);
 
@@ -293,7 +295,7 @@ for (const locale of ['en', 'es']) {
       }
 
       const retry = page.getByRole('button', {
-        name: locale === 'en' ? 'Try Google again' : 'Intentar con Google de nuevo',
+        name: locale === 'en' ? 'Try Google again' : 'Volver a intentar con Google',
       });
 
       await expect(retry).toBeEnabled();

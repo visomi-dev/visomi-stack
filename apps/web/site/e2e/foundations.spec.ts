@@ -46,7 +46,7 @@ for (const locale of ['en', 'es']) {
 
     expect(response.status()).toBe(200);
     expect(markup).toContain(`<html lang="${locale}"`);
-    expect(markup).toContain(locale === 'en' ? 'Your product.' : 'Tu producto.');
+    expect(markup).toContain(locale === 'en' ? 'TypeScript tools' : 'Herramientas TypeScript');
     const errors: string[] = [];
 
     page.on('pageerror', (error) => errors.push(error.message));
@@ -59,7 +59,7 @@ for (const locale of ['en', 'es']) {
     await page.goto(path);
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      locale === 'en' ? 'Your product. A stronger start.' : 'Tu producto. Un mejor comienzo.',
+      locale === 'en' ? 'TypeScript tools for web apps' : 'Herramientas TypeScript para apps web',
     );
 
     await page.evaluate(() => document.fonts.ready);
@@ -201,7 +201,7 @@ test('serves readable content with JavaScript disabled', async ({ browser }, inf
 
     await page.goto(route('es'));
 
-    await expect(page.getByRole('heading', { name: 'Tu producto. Un mejor comienzo.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Herramientas TypeScript para apps web' })).toBeVisible();
   } finally {
     await context.close();
   }

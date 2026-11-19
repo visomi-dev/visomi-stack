@@ -14,10 +14,15 @@ import { Vaults } from '../shared/vault/vaults';
 import { DatabaseHttp } from '../shared/db/http';
 import { Navigation } from '../shared/navigation';
 import { LanguageSwitcher } from '../i18n/language-switcher';
+import { BrowserPrivacy } from '../observability/browser-privacy';
+import { ConsentNotice, PrivacyLink } from '../observability/consent-notice';
 
 @Component({
   selector: 'app-authenticated-layout',
   imports: [
+    BrowserPrivacy,
+    ConsentNotice,
+    PrivacyLink,
     VaultUnlock,
     AppShell,
     Sidebar,

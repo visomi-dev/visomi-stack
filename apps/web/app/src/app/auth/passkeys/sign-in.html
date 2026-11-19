@@ -1,17 +1,13 @@
 <section class="flex min-w-0 flex-col gap-6">
   <header class="space-y-3">
-    <p class="text-sm font-medium text-blue-600 dark:text-blue-400" i18n="@@authWelcomeBack">WELCOME BACK</p>
+    <h1 appUI appNavigationHeading i18n="@@authSignInHeading">Sign-in options</h1>
 
-    <h1 appUI appNavigationHeading i18n="@@authSignInHeading">Sign in to your space.</h1>
-
-    <p appUI tone="muted" i18n="@@authSignInDescription">
-      Choose how you want to sign in. Your passkey can use your device's screen lock.
-    </p>
+    <p appUI tone="muted" i18n="@@authSignInDescription">A passkey can use your device’s screen lock to sign you in.</p>
   </header>
 
   @if (session.status() === 'unavailable') {
     <div appUI="alert" tone="warning" role="status" i18n="@@authUnavailable">
-      Authentication is temporarily unavailable. Please try again later.
+      Sign-in is temporarily unavailable. Try again later.
     </div>
 
     <button

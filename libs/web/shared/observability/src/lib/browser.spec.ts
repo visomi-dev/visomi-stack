@@ -1,21 +1,39 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { browserErrorKind, browserLocation, browserScreen, createBrowserReporter } from './browser';
+import type { BrowserConsent } from './consent';
+import { browserLocation, createBrowserReporter } from './browser';
+import { browserErrorKind, browserScreen } from './error-description';
 
 const marker = 'SYNTHETIC_PRIVATE_BROWSER_DATA_71d3';
 const id = 'a'.repeat(64);
 const assets = [{ path: '/_astro/synthetic.js', id }];
 const config = { token: 'synthetic-report-token', assets };
 
-function fixture(configuration: unknown = config) {
+function fixture(configuration: unknown = config, automatic = true) {
   const host = new EventTarget();
   const transport = vi.fn<typeof fetch>().mockResolvedValue(new Response(undefined, { status: 202 }));
 
   transport.mockResolvedValueOnce(Response.json(configuration));
   const browser = Object.assign(host, { fetch: transport, location: new URL('https://frontend.example.test/en/ui/') });
-  const reporter = createBrowserReporter('web-site', browser as unknown as Window);
+  let grant = automatic ? 'grant' : undefined;
+  const consent = {
+    permit: () => grant,
+    subscribe: () => () => undefined,
+    blocked: () => false,
+    decided: () => true,
+    decide: () => undefined,
+    stop: () => undefined,
+  } satisfies BrowserConsent;
+  const reporter = createBrowserReporter('web-site', browser as unknown as Window, consent);
 
-  return { browser, transport, reporter };
+  return {
+    browser,
+    transport,
+    reporter,
+    grant: (value?: string) => {
+      grant = value;
+    },
+  };
 }
 
 afterEach(() => vi.restoreAllMocks());
@@ -85,7 +103,7 @@ describe('browser error capture policy', () => {
   it('captures global errors and rejections without recording rejection objects or private data', async () => {
     const f = fixture();
 
-    await f.reporter.ready;
+    await f.reporter.performanceReady;
 
     f.browser.dispatchEvent(
       Object.assign(new Event('error'), { error: new TypeError(marker), filename: marker, lineno: 1, colno: 1 }),
@@ -104,7 +122,7 @@ describe('browser error capture policy', () => {
     expect(calls[0][1]).toMatchObject({
       credentials: 'omit',
       referrerPolicy: 'no-referrer',
-      mode: 'same-origin',
+      mode: 'cors',
       redirect: 'error',
       headers: { 'x-browser-telemetry': config.token },
     });
@@ -127,7 +145,11 @@ describe('browser error capture policy', () => {
 
     expect(f.transport).toHaveBeenCalledTimes(2);
     for (let i = 0; i < 8; i++) {
-      await f.reporter.report('request_failed', undefined, undefined, `synthetic-correlation-${i}`);
+      await f.reporter.report('unhandled_rejection', new Error(), {
+        filename: 'https://frontend.example.test/_astro/synthetic.js',
+        lineno: i + 1,
+        colno: 1,
+      });
     }
     expect(f.transport).toHaveBeenCalledTimes(5);
     clock.mockReturnValue(now + 240001);
@@ -154,7 +176,19 @@ describe('browser error capture policy', () => {
     );
     const add = vi.spyOn(browser, 'addEventListener');
     const remove = vi.spyOn(browser, 'removeEventListener');
-    const reporter = createBrowserReporter('web-app', browser as unknown as Window, { globalErrors: false });
+    const reporter = createBrowserReporter(
+      'web-app',
+      browser as unknown as Window,
+      {
+        permit: () => 'grant',
+        subscribe: () => () => undefined,
+        blocked: () => false,
+        decided: () => true,
+        decide: () => undefined,
+        stop: () => undefined,
+      } satisfies BrowserConsent,
+      { globalErrors: false },
+    );
     const error = new TypeError(marker);
     const frameworkReport = reporter.report('unhandled_exception', error);
     const startupReport = reporter.report('startup_failed', error);
@@ -165,7 +199,7 @@ describe('browser error capture policy', () => {
 
     resolveConfiguration(Response.json(config));
 
-    await startupReport.finally(() => reporter.stop());
+    await frameworkReport!.finally(() => reporter.stop());
 
     expect(browser.fetch).toHaveBeenCalledTimes(2);
     expect(JSON.parse(String(browser.fetch.mock.calls[1][1]?.body))).toEqual({
@@ -196,7 +230,7 @@ describe('browser error capture policy', () => {
   it('never lets transport errors create reporting loops', async () => {
     const f = fixture();
 
-    await f.reporter.ready;
+    await f.reporter.performanceReady;
 
     f.transport.mockRejectedValue(new Error(marker));
 
@@ -206,39 +240,90 @@ describe('browser error capture policy', () => {
     f.reporter.stop();
   });
 
-  it('observes only explicitly requested same-origin API failures and preserves responses and exceptions', async () => {
-    const f = fixture();
+  it('retains only bounded, deduplicated descriptions and expires them without a transport', () => {
+    vi.useFakeTimers();
 
-    await f.reporter.ready;
+    try {
+      const f = fixture(config, false);
+      const errors = [Error, TypeError, RangeError, ReferenceError, SyntaxError];
 
-    f.transport.mockResolvedValueOnce(
-      new Response(undefined, {
-        status: 503,
-        headers: {
-          'x-telemetry-context': 'synthetic-signed-correlation',
-        },
-      }),
-    );
-    const response = await f.reporter.fetch('/api/session');
+      for (const ErrorKind of errors) {
+        const error = new ErrorKind(marker);
 
-    expect(response.status).toBe(503);
+        f.reporter.report('unhandled_exception', error);
+        f.reporter.report('unhandled_exception', new ErrorKind(marker));
+      }
+      expect(f.reporter.pending()).toHaveLength(5);
+      f.reporter.report('unhandled_rejection', { private: marker });
+      const pending = f.reporter.pending();
 
-    await vi.waitFor(() => expect(f.transport).toHaveBeenCalledTimes(3));
+      expect(pending.map(({ kind }) => kind)).toEqual([
+        'TypeError',
+        'RangeError',
+        'ReferenceError',
+        'SyntaxError',
+        'unknown',
+      ]);
+      expect(JSON.stringify(pending)).not.toContain(marker);
+      expect(f.transport).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(300000);
+      expect(f.reporter.pending()).toEqual([]);
+      f.reporter.stop();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 
-    const payload = JSON.parse(String(f.transport.mock.calls[2][1]?.body));
+  it('sends only the selected report without changing consent or backfilling on acceptance', async () => {
+    const f = fixture(config, false);
 
-    expect(payload.correlation).toBe('synthetic-signed-correlation');
-    f.transport.mockRejectedValueOnce(new Error(marker));
+    f.reporter.report('unhandled_exception', new Error(marker));
+    f.reporter.report('unhandled_rejection', new TypeError(marker));
+    const [first, second] = f.reporter.pending();
 
-    await expect(f.reporter.fetch('/api/network')).rejects.toThrow(marker);
+    const sent = await f.reporter.sendPending(second);
 
-    await vi.waitFor(() => expect(f.transport).toHaveBeenCalledTimes(5));
+    expect(sent).toBe(true);
+    expect(f.reporter.pending()).toEqual([first]);
+    expect(f.reporter.consent.permit()).toBeUndefined();
+    expect(f.transport.mock.calls.map(([path]) => path)).toEqual([
+      '/telemetry/config',
+      'https://frontend.example.test/telemetry/errors',
+    ]);
+    expect(JSON.parse(String(f.transport.mock.calls[1][1]?.body))).toEqual(second);
+    f.grant('new');
 
-    f.transport.mockResolvedValueOnce(new Response(undefined, { status: 503 }));
+    await f.reporter.report('unhandled_exception', new RangeError(marker));
 
-    await f.reporter.fetch('https://third-party.example.test/api/');
+    expect(f.transport).toHaveBeenCalledTimes(3);
+    expect(f.reporter.pending()).toEqual([first]);
+    f.reporter.discard(first);
+    expect(f.reporter.pending()).toEqual([]);
+    const discarded = await f.reporter.sendPending(first);
 
-    expect(f.transport).toHaveBeenCalledTimes(6);
+    expect(discarded).toBe(false);
+    f.reporter.stop();
+  });
+
+  it('drops an automatic event if a new grant replaces the one used at capture', async () => {
+    const f = fixture(config, false);
+    let resolveConfiguration!: (value: Response) => void;
+    const response = new Promise<Response>((resolve) => {
+      resolveConfiguration = resolve;
+    });
+
+    f.transport.mockImplementationOnce(() => response);
+    f.grant('original');
+    const sending = f.reporter.report('unhandled_exception', new TypeError(marker));
+
+    f.grant();
+    f.grant('new');
+    resolveConfiguration(Response.json(config));
+
+    await sending;
+
+    expect(f.transport).toHaveBeenCalledExactlyOnceWith('/telemetry/config', expect.anything());
+    expect(f.reporter.pending()).toEqual([]);
     f.reporter.stop();
   });
 });

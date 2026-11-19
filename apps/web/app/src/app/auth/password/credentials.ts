@@ -54,10 +54,10 @@ export class PasswordCredentials {
     : $localize`:@@authPasswordSignInTitle:Sign in with a password`;
   readonly description = this.signup
     ? $localize`:@@authPasswordSignupDescription:Choose a password, then verify your email.`
-    : $localize`:@@authPasswordSigninDescription:After your password, we will ask for a code to confirm it is you.`;
+    : $localize`:@@authPasswordSigninDescription:Enter your password first. Then we’ll ask for a verification code.`;
   readonly emailLabel = $localize`:@@authEmail:Email address`;
   readonly passwordLabel = $localize`:@@authPassword:Password`;
-  readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
+  readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. You can use spaces and phrases.`;
   readonly showLabel = $localize`:@@authShowPassword:Show`;
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly createLabel = $localize`:@@authCreateAccount:Create an account`;

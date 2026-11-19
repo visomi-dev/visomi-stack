@@ -21,9 +21,14 @@ import {
   Card,
   Link,
 } from '../ui';
+import { BrowserPrivacy } from '../observability/browser-privacy';
+import { ConsentNotice, PrivacyLink } from '../observability/consent-notice';
 
 @Component({
   imports: [
+    BrowserPrivacy,
+    ConsentNotice,
+    PrivacyLink,
     NavigationHeading,
     LanguageSwitcher,
     Button,

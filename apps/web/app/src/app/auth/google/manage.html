@@ -3,7 +3,7 @@
     <h1 appUI appNavigationHeading i18n="@@authManageGoogle">Manage Google</h1>
 
     <p appUI tone="muted" i18n="@@authGoogleManageDescription">
-      Link Google as another sign-in method. Linking or removing it requires a recent identity check.
+      Link Google so you can use it to sign in. Confirm that it’s you before linking or unlinking it.
     </p>
   </header>
 
@@ -20,7 +20,7 @@
 
   @if (methods() && !session.providers()?.google?.enabled && !methods()?.google?.length) {
     <div appUI="alert" tone="neutral" role="status" i18n="@@authGoogleUnavailable">
-      Google sign-in is not available right now. You can manage your other sign-in methods in Security.
+      You can’t sign in with Google right now. Go to Security to manage your other sign-in methods.
     </div>
   }
 
@@ -44,7 +44,7 @@
       @if (confirm() === provider.id) {
         <div class="space-y-4" [id]="'google-confirmation-' + provider.id">
           <p role="status" i18n="@@authUnlinkGoogleConfirm">
-            Unlink Google and end sessions using it? Keep another working sign-in method.
+            Unlink Google? This ends sessions that use it. Keep another way to sign in.
           </p>
 
           <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">

@@ -3,7 +3,7 @@
     <h1 appUI appNavigationHeading i18n="@@authPasskeys">Passkeys</h1>
 
     <p appUI tone="muted" i18n="@@authPasskeysManageDescription">
-      Add a passkey or give an existing one a name you recognize. Removing a passkey ends sessions using it.
+      Add a passkey or rename one so you can recognize it. Removing a passkey ends sessions that used it.
     </p>
   </header>
 
@@ -22,7 +22,7 @@
 
   @if (!keys().length && !action.busy() && !action.error()) {
     <p appUI tone="muted" i18n="@@authNoPasskeys">
-      You have no passkeys yet. Add one to sign in with your device's screen lock.
+      You don’t have any passkeys. Add one to sign in with your device’s screen lock.
     </p>
   }
 
@@ -121,7 +121,7 @@
         @if (removing() === key.id) {
           <div class="space-y-4" [id]="'passkey-confirmation-' + key.id">
             <p role="status" i18n="@@authRemovePasskeyConfirm">
-              Remove this passkey and end sessions using it? You must keep another working sign-in method.
+              Remove this passkey? This ends sessions that used it. Keep another way to sign in.
             </p>
 
             <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">

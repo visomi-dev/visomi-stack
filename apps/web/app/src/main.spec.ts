@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 
 import { BROWSER_ERROR_REPORTER } from './app/observability/browser-telemetry';
 
-import { type createBrowserReporter } from '@visomi-stack/web-shared-observability';
+import { browserConsentKey, type createBrowserReporter } from '@visomi-stack/web-shared-observability';
 
 const { bootstrap } = vi.hoisted(() => ({ bootstrap: vi.fn() }));
 
@@ -14,6 +14,7 @@ vi.mock('@angular/platform-browser', async (original) => {
 });
 
 afterEach(() => {
+  localStorage.removeItem(browserConsentKey);
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -30,6 +31,7 @@ it('shares the startup reporter with Angular and waits for an existing report be
       }),
   );
 
+  localStorage.setItem(browserConsentKey, 'accept:0-0-0-1');
   vi.stubGlobal('fetch', fetch);
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
   const stop = vi.fn();

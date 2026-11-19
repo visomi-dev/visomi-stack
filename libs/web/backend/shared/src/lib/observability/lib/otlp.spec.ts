@@ -14,8 +14,17 @@ import type { Observability } from './observability';
 import { otlpSpanProcessors } from './otlp';
 
 const marker = 'SYNTHETIC_PRIVATE_OTLP_71d3';
+const valid = {
+  OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318',
+  OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
+  OTEL_EXPORTER_OTLP_HEADERS: 'authorization=Bearer%20synthetic-receiver-token',
+};
 const servers: Server[] = [];
 let telemetry: Observability | undefined;
+
+function encodedBasic(credentials: string): string {
+  return encodeURIComponent('Basic ' + Buffer.from(credentials).toString('base64'));
+}
 
 async function listen(server: Server): Promise<string> {
   servers.push(server);
@@ -42,44 +51,61 @@ afterEach(async () => {
 });
 
 describe('OTLP trace export', () => {
-  it.each([undefined, 'false', 'TRUE'])('requires an explicit opt-in: %s', (enabled) => {
-    expect(otlpSpanProcessors({ VISOMI_OTLP_TRACING: enabled })).toEqual([]);
+  it.each([{}, { OTEL_EXPORTER_OTLP_ENDPOINT: '', OTEL_EXPORTER_OTLP_PROTOCOL: '', OTEL_EXPORTER_OTLP_HEADERS: '' }])(
+    'returns no exporter without receiver configuration: %#',
+    (env) => {
+      expect(otlpSpanProcessors(env)).toEqual([]);
+    },
+  );
+
+  it.each([
+    { OTEL_EXPORTER_OTLP_ENDPOINT: valid.OTEL_EXPORTER_OTLP_ENDPOINT },
+    { OTEL_EXPORTER_OTLP_PROTOCOL: valid.OTEL_EXPORTER_OTLP_PROTOCOL },
+    { OTEL_EXPORTER_OTLP_HEADERS: valid.OTEL_EXPORTER_OTLP_HEADERS },
+    { OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: valid.OTEL_EXPORTER_OTLP_ENDPOINT },
+  ])('fails closed for partial receiver configuration: %#', (env) => {
+    expect(() => otlpSpanProcessors(env)).toThrow('observability_configuration_invalid');
   });
 
   it.each([
     { OTEL_EXPORTER_OTLP_ENDPOINT: undefined },
     { OTEL_EXPORTER_OTLP_ENDPOINT: marker },
     { OTEL_EXPORTER_OTLP_ENDPOINT: 'file:///synthetic' },
+    { OTEL_EXPORTER_OTLP_ENDPOINT: 'http://receiver.example.test:4318' },
+    { OTEL_EXPORTER_OTLP_ENDPOINT: 'https://public-receiver.example.test:4318' },
+    { OTEL_EXPORTER_OTLP_ENDPOINT: 'http://jaeger.railway.internal.example.test:4318' },
     { OTEL_EXPORTER_OTLP_ENDPOINT: `http://${marker}@localhost` },
     { OTEL_EXPORTER_OTLP_ENDPOINT: `http://user:${marker}@localhost` },
     { OTEL_EXPORTER_OTLP_ENDPOINT: `http://localhost/?token=${marker}` },
     { OTEL_EXPORTER_OTLP_ENDPOINT: `http://localhost/#${marker}` },
     { OTEL_EXPORTER_OTLP_PROTOCOL: 'grpc' },
     { OTEL_EXPORTER_OTLP_HEADERS: undefined },
+    { OTEL_EXPORTER_OTLP_HEADERS: `x-receiver=${marker}` },
+    { OTEL_EXPORTER_OTLP_HEADERS: 'authorization=Basic%20not-base64' },
+    { OTEL_EXPORTER_OTLP_HEADERS: `authorization=${encodedBasic('synthetic-user')}` },
+    { OTEL_EXPORTER_OTLP_HEADERS: 'authorization=Bearer%20synthetic%0D%0Aheader' },
+    { OTEL_EXPORTER_OTLP_HEADERS: 'authorization=Bearer%2' },
+    { OTEL_EXPORTER_OTLP_HEADERS: 'authorization=Bearer%20synthetic,host=unexpected' },
+    { OTEL_EXPORTER_OTLP_TRACES_HEADERS: 'authorization=Bearer%20override' },
+    { OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: 'grpc' },
   ])('rejects incomplete or unsafe transport configuration without exposing it: %#', (override) => {
-    const env = {
-      VISOMI_OTLP_TRACING: 'true',
-      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318',
-      OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
-      OTEL_EXPORTER_OTLP_HEADERS: `authorization=${marker}`,
-      ...override,
-    };
-
-    expect(() => otlpSpanProcessors(env)).toThrow('observability_configuration_invalid');
+    expect(() => otlpSpanProcessors({ ...valid, ...override })).toThrow('observability_configuration_invalid');
   });
 
-  it('accepts an HTTPS receiver without opening a connection before there are spans', async () => {
-    const processors = otlpSpanProcessors({
-      VISOMI_OTLP_TRACING: 'true',
-      OTEL_EXPORTER_OTLP_ENDPOINT: 'https://receiver.invalid/',
-      OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
-      OTEL_EXPORTER_OTLP_HEADERS: 'authorization=synthetic',
-    });
+  it.each(['http://jaeger.railway.internal:4318', 'https://jaeger.railway.internal/', 'http://[::1]:4318'])(
+    'configures the authenticated private receiver %s without connecting before there are spans',
+    async (endpoint) => {
+      const processors = otlpSpanProcessors({
+        ...valid,
+        OTEL_EXPORTER_OTLP_ENDPOINT: endpoint,
+        OTEL_EXPORTER_OTLP_HEADERS: `Authorization=${encodedBasic('synthetic-user:fixture-password')}`,
+      });
 
-    expect(processors).toHaveLength(1);
+      expect(processors).toHaveLength(1);
 
-    await processors[0].shutdown();
-  });
+      await processors[0].shutdown();
+    },
+  );
 
   it.each([200, 503])(
     'exports only approved HTTP/job spans over OTLP and isolates receiver status %s',
@@ -107,7 +133,6 @@ describe('OTLP trace export', () => {
       );
 
       for (const [key, value] of Object.entries({
-        VISOMI_OTLP_TRACING: 'true',
         OTEL_EXPORTER_OTLP_ENDPOINT: `${receiver}/`,
         OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
         OTEL_EXPORTER_OTLP_HEADERS: 'authorization=Bearer%20SYNTHETIC_RECEIVER_CREDENTIAL',

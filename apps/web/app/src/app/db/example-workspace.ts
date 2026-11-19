@@ -160,9 +160,7 @@ export class ExampleWorkspace {
       await this.loadCloud(target, signal);
 
       this.current(signal);
-      this.noticeState.set(
-        $localize`:@@persistenceCloudSaved:Operational content was saved to the server-readable domain.`,
-      );
+      this.noticeState.set($localize`:@@persistenceCloudSaved:Saved the note. The server can read it.`);
     });
   }
 

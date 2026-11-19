@@ -1,0 +1,48 @@
+---
+import { browserPrivacyCopy } from '@visomi-stack/web-shared-observability';
+import SiteLayout from '../../../layouts/site.astro';
+import ConsentNotice from '../../../components/site/consent-notice.astro';
+import Container from '../../../components/container.astro';
+import Heading from '../../../components/heading.astro';
+import Text from '../../../components/text.astro';
+import type { SiteLocale } from '../../../content/site';
+
+const locale: SiteLocale = Astro.params.locale === 'es' ? 'es' : 'en';
+const copy = browserPrivacyCopy[locale];
+---
+
+<SiteLayout locale={locale} page="privacy" title={copy.privacy} description={copy.invitation}>
+  <Container width="md" gutter="compact" class="grid gap-8 py-12">
+    <Heading as="h1" ui-size="title">
+      {copy.purpose}
+    </Heading>
+
+    <section aria-labelledby="analytics-and-telemetry" class="space-y-3">
+      <Heading as="h2" id="analytics-and-telemetry">
+        {copy.privacy}
+      </Heading>
+
+      <Text>{copy.analytics}</Text>
+
+      <Text>{copy.telemetry}</Text>
+    </section>
+
+    <section aria-labelledby="manual-reports" class="space-y-3">
+      <Heading as="h2" id="manual-reports">
+        {copy.manualHeading}
+      </Heading>
+
+      <Text>{copy.manualDetail}</Text>
+    </section>
+
+    <section aria-labelledby="analytics-preference" class="space-y-3">
+      <Heading as="h2" id="analytics-preference">
+        {copy.settingsHeading}
+      </Heading>
+
+      <Text>{copy.revoke}</Text>
+
+      <ConsentNotice locale={locale} settings />
+    </section>
+  </Container>
+</SiteLayout>

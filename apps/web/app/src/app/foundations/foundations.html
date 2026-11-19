@@ -69,7 +69,7 @@
       class="border-t border-zinc-200 pt-4 dark:border-zinc-700"
       i18n="@@shellNote"
     >
-      Native navigation. Shared visual recipes.
+      This example uses native links and shared styles.
     </p>
   </app-sidebar>
 
@@ -93,6 +93,8 @@
     </a>
 
     <div class="flex flex-wrap items-center gap-5 text-sm">
+      <app-browser-privacy />
+
       <app-language-switcher />
 
       <label appUI inline>
@@ -109,28 +111,29 @@
     </div>
   </header>
 
+  <app-consent-notice />
+
   <div class="mb-5 flex items-center gap-3 font-mono text-xs tracking-wider text-blue-700 dark:text-blue-400">
     <span aria-hidden="true" class="h-px w-8 bg-current"></span>
     01 /
     <span i18n="@@foundations">Design foundations</span>
   </div>
 
-  <h1 appUI appNavigationHeading uiSize="display" class="max-w-3xl" i18n="@@title">One visual language.</h1>
+  <h1 appUI appNavigationHeading uiSize="display" class="max-w-3xl" i18n="@@title">Type, color, and layout</h1>
 
-  <p appUI uiSize="lead" tone="muted" class="mt-6 max-w-2xl" i18n="@@intro">
-    A calm foundation for everything you build. Explore the type, surfaces and everyday details that make a workspace
-    feel consistent.
-  </p>
+  <p appUI uiSize="lead" tone="muted" class="mt-6 max-w-2xl" i18n="@@intro">The site and app use the same styles.</p>
 
   <div class="mt-14 grid gap-5 lg:grid-cols-3">
     <section appUI="card" tone="subtle" padding="lg" layout="plain">
       <h2 appUI uiSize="sm" i18n="@@type">Typography</h2>
 
-      <p appUI uiSize="sm" tone="muted" class="mt-2" i18n="@@typeNote">Clear at every scale.</p>
+      <p appUI uiSize="sm" tone="muted" class="mt-2" i18n="@@typeNote">Headings, body text, and code</p>
 
       <div class="mt-10 font-heading text-6xl font-semibold tracking-tight">Aa</div>
 
-      <p appUI uiSize="sm" leading="relaxed" class="mt-6" i18n="@@body">Body text brings clarity to everyday work.</p>
+      <p appUI uiSize="sm" leading="relaxed" class="mt-6" i18n="@@body">
+        Use body text for descriptions and instructions.
+      </p>
 
       <p
         appUI
@@ -140,14 +143,14 @@
         class="mt-6 border-t border-zinc-200 pt-4 dark:border-zinc-700"
         i18n="@@mono"
       >
-        Details, precisely.
+        Code and values
       </p>
     </section>
 
     <section appUI="card" tone="subtle" padding="lg" layout="plain">
       <h2 appUI uiSize="sm" i18n="@@surfaces">Surfaces</h2>
 
-      <p appUI uiSize="sm" tone="muted" class="mt-2" i18n="@@surfaceNote">A little depth. A clear hierarchy.</p>
+      <p appUI uiSize="sm" tone="muted" class="mt-2" i18n="@@surfaceNote">Compare the page, panel, and raised panel.</p>
 
       <div class="mt-8 grid gap-3 text-sm">
         <div appUI="card" padding="sm" layout="plain" i18n="@@canvas">Canvas</div>
@@ -161,7 +164,7 @@
     <section appUI="card" tone="subtle" padding="lg" layout="plain">
       <h2 appUI uiSize="sm" i18n="@@palette">Color &amp; feedback</h2>
 
-      <p appUI uiSize="sm" tone="muted" class="mt-2" i18n="@@paletteNote">Meaning beyond color.</p>
+      <p appUI uiSize="sm" tone="muted" class="mt-2" i18n="@@paletteNote">Status uses a label as well as color.</p>
 
       <div class="mt-8 rounded-lg bg-blue-600 p-4 text-sm font-medium text-white" i18n="@@brand">Primary action</div>
 
@@ -287,9 +290,9 @@
     data-shell-footer
     class="flex flex-wrap justify-between gap-4 border-t border-zinc-200 px-5 py-7 text-xs text-zinc-600 sm:px-8 dark:border-zinc-800 dark:text-zinc-400"
   >
-    <p appUI uiSize="xs" tone="muted" i18n="@@footer">Built with care. Made to be yours.</p>
-
     <a href="./foundations#top" appUI variant="muted" i18n="@@top">Back to top</a>
+
+    <app-privacy-link />
   </footer>
 
   <nav appUI="navbar" aria-label="Primary navigation" i18n-aria-label="@@shellPrimary">

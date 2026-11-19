@@ -2,14 +2,15 @@
 
 Portable TypeScript capture policy and browser reporter used by Angular and Astro.
 Error reporting remains custom and independent of framework SDKs. Optional browser
-performance capture uses the pinned official OpenTelemetry browser instrumentations
-and a local logs provider, loaded only after explicit server opt-in.
+performance capture uses browser observers, the pinned OpenTelemetry navigation
+instrument and a local logs provider, loaded only with a browser grant at
+document startup.
 
-The performance transport also lives in that deferred module. Astro's default
-theme/error scripts have a measured raw-size budget of 6 KiB in two requests,
-including Vite's dynamic-import bootstrap (the earlier error-only budget was
-4 KiB). With performance enabled, the three scripts together are bounded at
-64 KiB. Browser tests exercise both configurations.
+The performance transport also lives in that deferred module. Astro's default initial theme and consent scripts have a 6,656-byte raw budget
+in two requests, including Vite's dynamic-import bootstrap. The initial listener sanitizes early exceptions immediately and retains at most
+five descriptions while the pending store loads. Delivery and visits load on demand, and the optional
+performance runtime adds at most one more request. The opted-in homepage stays
+within 64 KiB across its four initial scripts. Browser tests exercise both configurations.
 
 Reports contain fixed application, error code, error kind and screen names. Code
 locations contain only the SHA-256 fingerprint of a deployed JavaScript asset and
@@ -18,11 +19,23 @@ asset and source position. Raw exception messages, stacks, URLs, request/respons
 bodies, cookies, credentials, customer identifiers and navigation history are not
 transmitted. Build asset hashes identify code, never customers.
 
-The reporter listens for `error` and `unhandledrejection`. Angular also forwards
-framework failures through `ErrorHandler` and explicitly observes same-origin API
-failures through an HTTP interceptor. Astro consumers can use
-`browserErrors.fetch` from the site's adapter for explicitly observed API calls.
-Network errors and HTTP 5xx are reportable; expected HTTP 4xx are not.
+The reporter captures uncaught errors and unhandled rejections. Angular forwards
+framework failures through its browser ErrorHandler. Handled errors and ordinary
+HTTP failure responses are excluded. Automatic reporting requires the same live
+browser grant at capture and transport, with GPC and DNT taking precedence.
+An exception that occurred while automatic sharing was off is never sent
+automatically.
+
+The header shows a pending report indicator while automatic sharing is off and
+at least one unexpected error can be reviewed. Each pending item contains only
+fixed application, code, kind and screen values. Identical descriptions are
+deduplicated. A document retains at most five in memory and drops the oldest
+when full. Items expire after five minutes, and the reporter clears them on
+teardown. The visitor can send one selected item or discard it. An explicit
+manual send also works when a privacy signal blocks automatic sharing, uses
+the same intake controls and never sets a consent grant. Manual previews and
+payloads omit script locations since no permit or asset manifest is requested
+as part of retention.
 
 Reporting uses same-origin `/telemetry/config` and `/telemetry/errors`, omits
 credentials and referrers, rejects redirects and never contacts Jaeger directly.
@@ -36,12 +49,18 @@ The server intake and deployment instructions are documented in
 
 ## Browser performance
 
-`VISOMI_BROWSER_PERFORMANCE=true` additionally enables performance capture when
-`VISOMI_BROWSER_TELEMETRY=true`. Angular and Astro share the same reporter lifecycle;
-SSR never starts browser observers. Capture uses `NavigationTimingInstrumentation`
-and `WebVitalsInstrumentation` from `@opentelemetry/browser-instrumentation` 0.9.0.
-This release uses `setLoggerProvider()` followed by `enable()`; newer upstream
-examples use a different API. Both instruments are constructed disabled before wiring.
+Angular and Astro share the same browser grant for errors and performance.
+Their Node executables mount the receiver by default. SSR never starts browser
+observers.
+Document performance is enabled only when the current grant was already present
+at startup. Accepting on an open document does not read its buffered performance
+measurements. Revocation stops the active runtime, and a new grant starts these
+measurements on a subsequent document. Both capture and transport check the
+original live grant. The pinned `NavigationTimingInstrumentation` supplies load
+timings and time to first byte. The browser performance observers supply the
+supported paint, layout-shift and input aggregates. Below the transport allowlist,
+the input observer keeps only the ten longest grouped interaction timings for the
+INP percentile. These numeric IDs are discarded when observation stops.
 
 Only CLS, FCP, INP, LCP, TTFB, DOM interactive, DOM content loaded, load completion,
 and Angular route transition durations are accepted. Timings are milliseconds (two decimals); CLS is dimensionless (four
@@ -56,10 +75,11 @@ to calculate aggregates; no target or interaction detail is retained or sent.
 Document reports describe the document and its initial fixed screen category.
 INP requires an interaction, and some final vitals are emitted
 only when the document becomes hidden. Unsupported measurements are omitted.
-Delivery after page departure remains best effort. OpenTelemetry's Web Vitals
-instrumentation stops emission on disable, but its underlying web-vitals listeners
-cannot all be removed. The reporter disables instruments and shuts down its local
-provider when its owner stops it.
+Delivery after page departure remains best effort. Revocation disconnects every
+performance observer, aborts its event listeners, stops the navigation instrument
+and drops unsent measurements. Browser support determines which measurements
+are available. Restoring a cached document does not synthesize new navigation
+or paint timings.
 
 Angular additionally subscribes to its Router only after performance opt-in. After
 the first successful navigation, it measures `NavigationStart` to `NavigationEnd`,

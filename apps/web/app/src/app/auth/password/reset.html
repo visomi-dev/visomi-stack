@@ -2,7 +2,7 @@
   <h1 appUI appNavigationHeading i18n="@@authResetTitle">Choose a new password</h1>
 
   @if (done()) {
-    <p appUI i18n="@@authResetDone">Your password has been reset. Sign in with your new password to continue.</p>
+    <p appUI i18n="@@authResetDone">Password reset. Sign in with your new password.</p>
 
     <a appUI routerLink="/auth/sign-in/password" i18n="@@authSignIn" class="inline-flex min-h-11 items-center">
       Sign in
@@ -68,7 +68,7 @@
       </app-field>
 
       <p appUI tone="muted" class="text-sm" i18n="@@authExtraFactorHint">
-        If you enabled an authenticator, include its code or a backup code. Email alone cannot replace it.
+        If you set up an authenticator app, enter its code or a backup code. The email code alone won’t work.
       </p>
 
       @if (model().kind !== 'none') {
@@ -112,7 +112,7 @@
     <app-resend-code />
   } @else {
     <div appUI="alert" tone="warning" role="status" i18n="@@authRestartChallenge">
-      This step could not be restored. Start again to request a new verification.
+      We couldn’t resume verification. Start again to request a new code.
     </div>
   }
 

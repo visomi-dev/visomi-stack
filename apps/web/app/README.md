@@ -39,9 +39,11 @@ Google accounts require separate manual validation.
 
 The browser and server entrypoints merge their own platform configuration with
 `app.config.ts`. `app.config.browser.ts` registers `BrowserErrors` as `ErrorHandler`,
-Angular's global browser error listeners, the HTTP error interceptor and router
-performance measurement. These services use explicit providers and are not created
-during SSR. The browser entrypoint owns reporter initialization and shutdown.
+Angular's global browser error listeners and router performance measurement.
+Automatic sharing follows the shared browser grant. The privacy controls expose
+one selected, sanitized exception at a time for manual reporting. These services
+use explicit browser providers. The browser entrypoint owns reporter initialization
+and shutdown.
 
 `app.config.server.ts` registers `ServerErrors` as `ErrorHandler`. It emits only the
 fixed `app.render_failed` event without inspecting or serializing exceptions, in
@@ -205,3 +207,13 @@ above the mobile navigation. They do
 not establish screen-reader conformance or replace manual checks of real password
 managers, mobile keyboards, physical authenticators and Google provider behavior.
 See [Web foundations](../../../docs/web-foundations.md) for the shared UI contract.
+
+## Reference vault
+
+The authenticated Vault example page at `/app/{en,es}/vault-example` uses the
+existing local vault panel. A visitor
+can initialize an example with a dedicated local PIN and read a fixed synthetic
+note. The account-scoped example database is separate from other vaults and
+stores the encrypted sample on this device. Reloading requires local unlock.
+The example does not use the development persistence route or synchronization
+API. Signing in and unlocking remain separate actions.

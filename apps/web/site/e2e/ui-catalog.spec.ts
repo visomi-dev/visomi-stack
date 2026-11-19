@@ -1,12 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-import { disablePerformanceCapture } from './support/performance';
 import { selectTheme } from './support/theme';
 
 for (const locale of ['en', 'es']) {
   test(`the ${locale} catalog renders all recipes through Express SSR`, async ({ page, request }) => {
-    await disablePerformanceCapture(page);
-
     const response = await request.get(`/${locale}/ui/`);
     const html = await response.text();
 
@@ -45,7 +42,7 @@ for (const locale of ['en', 'es']) {
 
     await Promise.all(scripts);
 
-    expect(scripts).toHaveLength(4);
+    expect(scripts).toHaveLength(3);
     expect(scriptBytes).toBeLessThan(9216);
     expect(errors).toEqual([]);
   });
@@ -177,7 +174,9 @@ test('local validation associates errors without sending data', async ({ page })
 
   await expect(error).toBeVisible();
 
-  await expect(page.locator('[data-ui-validation-status]')).toHaveText('Review the highlighted example field.');
+  await expect(page.locator('[data-ui-validation-status]')).toHaveText(
+    'Check the highlighted field and correct the value.',
+  );
 
   await input.fill('demo@example.test');
 

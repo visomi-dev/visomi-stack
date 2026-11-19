@@ -74,7 +74,7 @@ it('recreates private routed content only when the account identity changes', as
   expect(original.codes()).toEqual([]);
   expect(replacement.codes()).toEqual([]);
   expect(harness.routeNativeElement?.textContent).not.toContain('synthetic-account-a-backup-code');
-  expect(harness.routeNativeElement?.textContent).toContain('Existing backup codes cannot be displayed again.');
+  expect(harness.routeNativeElement?.textContent).toContain('We can’t show your old backup codes again.');
 });
 
 @Component({ selector: 'app-vault-route-fixture', template: '<h1>Fixture route</h1>' })

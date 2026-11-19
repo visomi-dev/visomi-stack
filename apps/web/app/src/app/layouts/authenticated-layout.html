@@ -34,6 +34,16 @@
       >
         Security
       </a>
+
+      <a
+        appUI="nav-item"
+        routerLink="/vault-example"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        i18n="@@vaultDemoTitle"
+      >
+        Vault example
+      </a>
     </div>
 
     <div data-slot="footer">
@@ -71,6 +81,8 @@
         </button>
       }
 
+      <app-browser-privacy />
+
       <app-language-switcher />
 
       <button app-theme-switcher aria-label="Dark theme" i18n-aria-label="@@themeToggle"></button>
@@ -78,6 +90,8 @@
   </header>
 
   <div class="flex min-w-0 flex-col gap-6">
+    <app-consent-notice />
+
     <app-auth-feedback [action]="action" />
 
     @if (navigation.notificationFailed()) {
@@ -101,12 +115,14 @@
       }
     } @else {
       <p role="status" i18n="@@authSessionUnavailable">
-        Your session changed or could not be checked. Return to sign in to continue.
+        Your session changed or we couldn’t verify it. Sign in again to continue.
       </p>
 
       <a appUI routerLink="/auth/sign-in" i18n="@@authBackSignIn">Back to sign in</a>
     }
   </div>
+
+  <footer data-shell-footer class="px-4 text-sm"><app-privacy-link /></footer>
 
   <nav appUI="navbar" aria-label="Primary navigation" i18n-aria-label="@@shellPrimary">
     <a appUI="nav-item" placement="navbar" routerLink="/home" routerLinkActive="active" ariaCurrentWhenActive="page">
@@ -214,6 +230,17 @@
       i18n="@@authSecurity"
     >
       Security
+    </a>
+
+    <a
+      appUI="nav-item"
+      routerLink="/vault-example"
+      routerLinkActive="active"
+      ariaCurrentWhenActive="page"
+      (click)="mobileMenu.close()"
+      i18n="@@vaultDemoTitle"
+    >
+      Vault example
     </a>
   </nav>
 

@@ -160,8 +160,9 @@ Email verification additionally needs the repository's SMTP configuration.
 ## Observability and future workers
 
 The owning executable initializes its allowlisted JSON logger and OpenTelemetry
-providers. A production span exporter and metric reader are not enabled by
-default. OpenTelemetry is not a database or telemetry query backend.
+providers. Span export starts when the private receiver configuration is complete.
+Metric readers require an explicit owner and are independent of span export.
+OpenTelemetry is not a database or telemetry query backend.
 
 Platform-managed logs and tracing have independent capture policies. Application
 filtering cannot sanitize separately generated platform telemetry. Do not enable
@@ -180,7 +181,6 @@ not an instantaneous disk-erasure guarantee.
 The runtime uses provider-independent OTLP settings:
 
 ```text
-VISOMI_OTLP_TRACING=true
 OTEL_EXPORTER_OTLP_ENDPOINT=<private-receiver-base-url>
 OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 OTEL_EXPORTER_OTLP_HEADERS=<receiver-authentication-header>
@@ -188,10 +188,14 @@ OTEL_METRICS_EXPORTER=none
 OTEL_LOGS_EXPORTER=none
 ```
 
-`VISOMI_OTLP_TRACING` enables only application export. The exporter has no
-hosting-provider integration, automatic resource attribution or edge-tracing dependency.
-The official exporter requires a valid endpoint, protocol and authentication
-header; invalid configuration fails with a fixed error code.
+The three receiver settings activate application trace export together. With
+all three absent or empty, the executable runs without a span exporter.
+Partial or invalid settings fail startup with `observability_configuration_invalid`.
+Use the existing private Jaeger service address under `railway.internal` or a
+loopback address for local verification. The header must supply a single
+`authorization` value using Basic or Bearer credentials, with spaces encoded
+as `%20`. Trace-specific header overrides are unsupported. This exporter
+does not enable Railway edge tracing or automatic resource attribution.
 
 The exporter retains its bounded 512-span queue, batches of at most 128,
 one-second schedule, 500 ms transport timeout and existing shutdown deadline.
@@ -236,10 +240,11 @@ logs. Do not publish collector access details, raw captures or credentials.
 
 ### Disable export and plan future workers
 
-To disable export, set `VISOMI_OTLP_TRACING=false` in the target environment,
-release the matching executable and verify the public application. Review
-infrastructure changes separately. Retain telemetry storage until its removal is
-explicitly requested; match runtime flags to the executable when rolling back.
+In an authorized operational change, remove the three receiver settings together
+to disable export, then verify application readiness. An earlier executable may
+also require its retired tracing toggle when rolling back. Review any IaC plan
+separately, including proposed variable deletions. Retain Jaeger storage for its
+configured retention interval.
 
 A future queue worker must own initialization and shutdown, drain active jobs
 before closing dependencies and telemetry, and fit within the environment's
@@ -252,16 +257,17 @@ and [BullMQ production guidance](https://docs.bullmq.io/guide/going-to-productio
 
 ### Browser error reporting
 
-Browser error reporting is separately opt-in. Set `VISOMI_BROWSER_TELEMETRY=true`
-to enable the intake. Without it, `/telemetry/config` returns `{ "enabled": false }`
-and browser reports are not transmitted. Set
-`BROWSER_TELEMETRY_ORIGIN` to the executable's public origin. Apply runtime
-configuration separately from code changes. `VISOMI_OTLP_TRACING=true` and
-private OTLP receiver credentials are required to export accepted reports.
+The gateway and standalone Angular executable mount the browser error and
+performance intake by default. The gateway uses its canonical `AUTH_ORIGIN`.
+For the independent Angular executable, set `BROWSER_TELEMETRY_ORIGIN` to its
+public origin. Automatic client capture and delivery require an active browser
+opt-in. The privacy dialog lets a visitor send one selected sanitized report
+while automatic sharing is off. Accepted reports use the same bounded server
+export to the authenticated private OTLP receiver when it is configured.
 Platform-managed telemetry must independently satisfy the capture policy.
 
-The independent Angular Node executable supports the same flags and its own
-public origin. It owns its telemetry runtime and closes it on SIGTERM/SIGINT.
+The independent Angular Node executable owns its telemetry runtime and closes
+it on SIGTERM/SIGINT.
 `APP_VERSION` optionally supplies a bounded numeric service version; otherwise the
 service version is `unknown`. Only the Node composition and executable can import backend telemetry;
 Angular browser code uses the portable TypeScript capture library.
@@ -285,9 +291,8 @@ handler, so both use `unhandled_exception`; Astro's own listeners distinguish
 `unhandled_rejection`. Source positions come from approved asset frames in the
 error's stack, inspected locally without exporting the stack. Angular's native
 handler does not forward the original `ErrorEvent` source fields when it already
-has an error object. The functional HTTP interceptor observes same-origin `/api/`
-network failures and 5xx errors, then propagates the original error to consumers.
-It does not change request bodies, headers, or application error handling.
+has an error object. Expected and handled HTTP responses do not produce client reports. The intake
+retains validation of the existing report and signed correlation contracts.
 
 The browser POSTs individual reports to `/telemetry/errors`; it never receives
 collector credentials. `/telemetry/config` supplies a short-lived reporting permit
@@ -348,7 +353,7 @@ operators with access to the private build artifact; review source paths before
 sharing resolved locations.
 
 Verification includes portable reporter tests, Angular adapter tests, real browser
-requests accepted by each executable, denial of source-map HTTP access, intake
+requests accepted by each executable and zero automatic requests without consent, denial of source-map HTTP access, intake
 privacy/authentication/abuse tests, and the pinned Jaeger integration check. The
 latter stores and inspects an accepted browser error linked to its backend request,
 then also checks restart persistence and collector outages. Initial failures before
@@ -358,15 +363,16 @@ this initial implementation.
 
 ### Browser performance reporting
 
-Set `VISOMI_BROWSER_PERFORMANCE=true` alongside `VISOMI_BROWSER_TELEMETRY=true`
-to enable OpenTelemetry performance capture for both Angular and Astro. Performance
-is disabled by default, independently of error reporting. The same gateway or
-standalone Angular executable supplies the opt-in through `/telemetry/config`.
-The performance SDK is imported only after that opt-in; SSR does not initialize it.
-Runtime changes and deployment remain separate from source changes.
+Astro and Angular share the same revocable browser choice for automatic error
+and performance reporting. GPC and DNT take precedence. The performance module
+loads only on a document that started with a valid grant, so accepting on an
+open page does not read that page's buffered measurements. Revocation disconnects
+the observers, clears their pending aggregates and prevents further sends.
+Server diagnostics and export follow their own configuration. SSR does not
+initialize browser observers.
 
-Capture uses the pinned official navigation-timing and Web Vitals instruments,
-with no browser resource detection or session management. A synchronous allowlist
+Capture uses the pinned navigation timing instrument and disconnectable browser
+performance observers. A synchronous allowlist
 copies approved numbers before creating SDK records. Only CLS, FCP, INP, LCP,
 TTFB, DOM interactive, DOM content loaded, load completion, and Angular route
 transition durations are transmitted.

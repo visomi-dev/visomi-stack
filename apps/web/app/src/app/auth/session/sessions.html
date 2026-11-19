@@ -3,7 +3,8 @@
     <h1 appUI appNavigationHeading i18n="@@authSessions">Sessions</h1>
 
     <p appUI tone="muted" i18n="@@authSessionsPrivacy">
-      Review when sessions started and how they signed in. Device details and locations are not collected.
+      See when each session started and which sign-in method it used. We don’t collect device details or locations for
+      this list.
     </p>
   </header>
 
@@ -23,7 +24,9 @@
 
   @if (confirm() === 'others') {
     <section appUI="card" tone="subtle" id="end-others-confirmation">
-      <p role="status" i18n="@@authEndOtherConfirm">End every other session? They will need to sign in again.</p>
+      <p role="status" i18n="@@authEndOtherConfirm">
+        End all other sessions? You’ll need to sign in again to use them.
+      </p>
 
       <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <button
@@ -85,7 +88,7 @@
           [id]="'session-confirmation-' + entry.id"
         >
           <p role="status" i18n="@@authEndSessionConfirm">
-            End this session? If it is your current session, you will be signed out.
+            End this session? If this is your current session, you’ll be signed out.
           </p>
 
           <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
