@@ -210,10 +210,28 @@ See [Web foundations](../../../docs/web-foundations.md) for the shared UI contra
 
 ## Reference vault
 
-The authenticated Vault example page at `/app/{en,es}/vault-example` uses the
-existing local vault panel. A visitor
-can initialize an example with a dedicated local PIN and read a fixed synthetic
-note. The account-scoped example database is separate from other vaults and
-stores the encrypted sample on this device. Reloading requires local unlock.
-The example does not use the development persistence route or synchronization
-API. Signing in and unlocking remain separate actions.
+The authenticated Vault example at `/app/{en,es}/vault-example` starts setup only
+when the visitor chooses **Set up my vault**. It asks the browser for an existing
+passkey for the current site and checks the credential's actual PRF result.
+Finishing setup verifies that same credential against the vault binding. If the
+browser needs fresh activation after the picker, **Verify passkey** continues
+setup with a new tap. Both requests are local vault ceremonies.
+
+The page offers **Use a local PIN** after a confirmed lack of PRF support.
+An interrupted request or a browser error leaves setup retryable. Browsers can
+report both dismissal and a missing credential as `NotAllowedError`, so that
+response does not establish that PRF is unavailable. Vault setup uses the
+existing credential without registering a new entry in the sign-in picker.
+
+The synthetic note is encrypted on first open and stays in the account-scoped
+example database in this browser. Reloading requires local unlock. The example
+opens existing PIN vaults with their original binding and ciphertext. Local
+storage currently holds one wrapped key per generation. Adding another unlock
+method safely requires an approved way to retain both wraps with a shared
+encryption budget and leave existing data intact.
+
+The `vault-demo.auth.spec.ts` suite covers the setup gesture, opt-in fallback,
+PIN retries and reload, and PRF unlock. Chromium uses a native virtual
+authenticator for PRF and no-PRF assertions. WebKit exercises simulated
+WebAuthn responses with browser-native Web Crypto and IndexedDB. Physical
+iPhone Safari and passkey-provider behavior still require device verification.

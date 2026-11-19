@@ -1271,20 +1271,16 @@
         <target>Ejemplo de vault</target>
       </trans-unit>
       <trans-unit id="vaultDemoDescription" datatype="html">
-        <source> Try opening an encrypted example note. The note and PIN setup stay in this browser, separate from other vaults. </source>
-        <target>Abre una nota cifrada de ejemplo. La nota y la configuración del PIN se quedan en este navegador, separadas de otros vaults.</target>
-      </trans-unit>
-      <trans-unit id="vaultDemoStart" datatype="html">
-        <source>Choose a PIN for this example. You’ll use it to unlock the note here.</source>
-        <target>Elige un PIN para este ejemplo. Lo usarás para abrir la nota en este navegador.</target>
+        <source> Try opening an encrypted example note. The vault and its note stay in this browser. </source>
+        <target>Abre una nota cifrada de ejemplo. La bóveda y la nota se quedan en este navegador.</target>
       </trans-unit>
       <trans-unit id="vaultDemoUnavailable" datatype="html">
         <source>We can’t store the example vault on this device.</source>
-        <target>No podemos guardar el vault de ejemplo en este dispositivo.</target>
+        <target>No podemos guardar la bóveda de ejemplo en este dispositivo.</target>
       </trans-unit>
       <trans-unit id="vaultDemoLoading" datatype="html">
         <source>Looking for the example vault on this device…</source>
-        <target>Buscando el vault de ejemplo en este dispositivo…</target>
+        <target>Buscando la bóveda de ejemplo en este dispositivo…</target>
       </trans-unit>
       <trans-unit id="vaultDemoRead" datatype="html">
         <source>Open the example note</source>
@@ -1292,7 +1288,7 @@
       </trans-unit>
       <trans-unit id="vaultDemoCreate" datatype="html">
         <source>Set up the example vault</source>
-        <target>Configurar el vault de ejemplo</target>
+        <target>Configurar la bóveda de ejemplo</target>
       </trans-unit>
       <trans-unit id="authVerifyingCode" datatype="html">
         <source>Verifying code…</source>
@@ -1362,9 +1358,45 @@
         <source>Account menu</source>
         <target>Menú de cuenta</target>
       </trans-unit>
+      <trans-unit id="vaultDemoWorking" datatype="html">
+        <source>Working on your vault…</source>
+        <target>Un momento…</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoPinWarning" datatype="html">
+        <source> Anyone with a copy of the encrypted data can try PINs offline. A passkey provides stronger protection. </source>
+        <target>Cualquiera que tenga una copia de los datos cifrados puede probar distintos PIN sin conexión. Una clave de acceso ofrece mayor protección.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoVerifyHint" datatype="html">
+        <source>Verify the selected passkey to finish setup.</source>
+        <target>Verifica la clave de acceso que elegiste para terminar la configuración.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoVerify" datatype="html">
+        <source>Verify passkey</source>
+        <target>Verificar clave de acceso</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoRetryPasskey" datatype="html">
+        <source>Try another passkey</source>
+        <target>Probar otra clave de acceso</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoSetup" datatype="html">
+        <source>Set up my vault</source>
+        <target>Configurar mi bóveda</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoUsePin" datatype="html">
+        <source> Use a local PIN </source>
+        <target>Usar un PIN local</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoPasskeyError" datatype="html">
+        <source>We couldn’t verify your passkey. Try again.</source>
+        <target>No pudimos verificar tu clave de acceso. Intenta de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoPinError" datatype="html">
+        <source>This PIN couldn’t unlock your vault. Check your PIN and try again.</source>
+        <target>No pudimos desbloquear tu bóveda con este PIN. Revísalo e intenta de nuevo.</target>
+      </trans-unit>
       <trans-unit id="vaultDemoNoPasskey" datatype="html">
-        <source> Passkey unlock isn’t available on this device. Set up a PIN to unlock the vault here. </source>
-        <target>Este dispositivo no permite desbloquear con una clave de acceso. Configura un PIN para abrir el vault aquí.</target>
+        <source> Passkey unlock is unavailable here. You can try another passkey or choose a local PIN. </source>
+        <target>No se puede desbloquear con esta clave de acceso. Puedes probar otra o usar un PIN local.</target>
       </trans-unit>
       <trans-unit id="exampleChartSummary" datatype="html">
         <source> <x id="INTERPOLATION" equiv-text="{{ total() | number }}"/> checks over <x id="INTERPOLATION_1" equiv-text="{{ period() }}"/> days. The busiest day had <x id="INTERPOLATION_2" equiv-text="{{ peak() }}"/> checks. </source>
