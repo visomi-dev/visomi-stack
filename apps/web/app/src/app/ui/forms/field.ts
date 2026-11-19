@@ -14,7 +14,7 @@ import { field as styles } from '@visomi-stack/web-frontend-ui';
     <label appUI [for]="controlId()">{{ label() }}</label>
     <ng-content />
     @if (description()) {
-      <p appUI="description" [id]="descriptionId()">{{ description() }}</p>
+      <p appUI="description" [id]="descriptionId()" [class.sr-only]="descriptionHidden()">{{ description() }}</p>
     }
 
     <p app-error [id]="errorId()" [hidden]="!message()">{{ message() }}</p>
@@ -41,6 +41,7 @@ export class Field {
   readonly controlId = input.required<string>({ alias: 'control-id' });
   readonly label = input.required<string>();
   readonly description = input('');
+  readonly descriptionHidden = input(false, { alias: 'description-hidden', transform: booleanAttribute });
   readonly error = input('');
   readonly invalid = input(false, { transform: booleanAttribute });
   readonly manualError = input<string | null>(null, { alias: 'manual-error' });

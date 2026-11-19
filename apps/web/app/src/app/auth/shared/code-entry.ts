@@ -1,20 +1,32 @@
-import { Component, input, output, signal, type OnChanges, type SimpleChanges } from '@angular/core';
+import {
+  Component,
+  booleanAttribute,
+  computed,
+  input,
+  output,
+  signal,
+  type OnChanges,
+  type SimpleChanges,
+} from '@angular/core';
 import { disabled, form, FormField, pattern, required, submit } from '@angular/forms/signals';
 
-import { Button, Field, Input, PinInput } from '../../ui';
+import { Button, Field, Input, Loader, PinInput } from '../../ui';
 
 import { codeLength, codeMessage, requiredMessage, focusInvalid } from './form-errors';
 
 @Component({
   selector: 'app-code-entry',
-  imports: [Button, Field, Input, PinInput, FormField],
+  imports: [Button, Field, Input, Loader, PinInput, FormField],
   host: { class: 'block min-w-0' },
   templateUrl: './code-entry.html',
 })
 export class CodeEntry implements OnChanges {
+  readonly backup = input(false);
+  readonly autoSubmit = input(false, { alias: 'auto-submit', transform: booleanAttribute });
+  protected readonly automatic = computed(() => this.autoSubmit() && !this.backup());
+
   readonly busy = input(false);
   readonly loading = input<boolean>();
-  readonly backup = input(false);
   readonly confirmed = output<string>();
 
   readonly model = signal({ code: '' });
@@ -36,8 +48,25 @@ export class CodeEntry implements OnChanges {
     }
   }
 
-  verify(event: Event): void {
+  protected verify(event: Event): void {
     event.preventDefault();
+
+    if (!this.automatic()) {
+      this.submitCode();
+    }
+  }
+
+  protected complete(): void {
+    if (this.automatic()) {
+      this.submitCode();
+    }
+  }
+
+  private submitCode(): void {
+    if (this.busy() || this.fields().submitting()) {
+      return;
+    }
+
     this.attempted.set(true);
     void submit(this.fields, {
       action: async () => {

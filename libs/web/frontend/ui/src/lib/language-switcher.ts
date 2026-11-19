@@ -1,4 +1,7 @@
 export const languageSwitcher = {
+  iconClasses(): string {
+    return 'me-2 hidden size-5 shrink-0 sm:block';
+  },
   classes(): string {
     return 'grid shrink-0 grid-cols-2 gap-0.5 rounded-lg border border-zinc-300 bg-zinc-100 p-0.5 text-sm dark:border-zinc-700 dark:bg-zinc-900';
   },

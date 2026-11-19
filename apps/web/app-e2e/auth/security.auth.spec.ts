@@ -217,8 +217,6 @@ test('changes email and revokes another session from the security pages', async 
 
     await other.getByLabel('Verification code', { exact: true }).fill(factor);
 
-    await other.getByRole('button', { name: 'Verify', exact: true }).click();
-
     await expect(other.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
     await expect.poll(() => subscribed).toBe(true);

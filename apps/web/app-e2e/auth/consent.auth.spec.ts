@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import type { Page, Request } from '@playwright/test';
 
-import { expect, signup, test } from './support/fixtures';
+import { expect, openAccount, signup, test } from './support/fixtures';
 
 import { browserConsentKey, browserPrivacyCopy } from '@visomi-stack/web-shared-observability';
 
@@ -78,7 +78,7 @@ async function compareChoices(page: Page, locale: 'en' | 'es' = 'en') {
   expect(yes).toEqual(no);
 }
 
-test('keeps the notice in flow and separates manual reports from automatic consent', async ({
+test('keeps the card non-modal and separates manual reports from automatic consent', async ({
   page,
   request,
 }, info) => {
@@ -119,7 +119,7 @@ test('keeps the notice in flow and separates manual reports from automatic conse
 
   await page.keyboard.press('Tab');
 
-  const purpose = site.notice.getByRole('link', { name: site.copy.purpose });
+  const purpose = site.notice.getByRole('link', { name: site.copy.purposeLink });
 
   await expect(purpose).toBeFocused();
 
@@ -241,7 +241,9 @@ test('keeps the notice in flow and separates manual reports from automatic conse
   expect(visitHeaders).not.toHaveProperty('referer');
   const sidebar = page.locator('app-sidebar');
 
-  await sidebar.getByRole('link', { name: 'Account', exact: true }).click();
+  const account = await openAccount(page);
+
+  await account.getByRole('link', { name: 'Account', exact: true }).click();
 
   await expect(page).toHaveURL(/\/account$/);
 
@@ -441,7 +443,7 @@ test('the mobile dark app keeps privacy controls in flow and links to Spanish pu
 
   await page.keyboard.press('Tab');
 
-  const purpose = app.notice.getByRole('link', { name: app.copy.purpose });
+  const purpose = app.notice.getByRole('link', { name: app.copy.purposeLink });
 
   await expect(purpose).toBeFocused();
 
@@ -486,5 +488,174 @@ for (const signal of ['globalPrivacyControl', 'doNotTrack'] as const) {
     await expect(localized.dialog.getByRole('button', { name: localized.copy.send })).toBeVisible();
 
     expect(observed).toEqual([]);
+  });
+}
+
+for (const [origin, destination] of [
+  ['web-site', 'web-app'],
+  ['web-app', 'web-site'],
+] as const) {
+  test(`shares one decision from ${origin} with the other surface and already-open tabs`, async ({
+    page,
+    context,
+  }, info) => {
+    const paths = { 'web-site': '/en/', 'web-app': '/app/en/foundations' };
+    const otherTab = await context.newPage();
+    const originRequests = requests(page);
+    const destinationRequests = requests(otherTab);
+    const originControls = controls(page);
+    const destinationControls = controls(otherTab);
+
+    await Promise.all([page.goto(paths[origin]), otherTab.goto(paths[destination])]);
+
+    await expect(originControls.notice).toBeVisible();
+
+    await expect(destinationControls.notice).toBeVisible();
+
+    await Promise.all([throwError(page, 'RangeError'), throwError(otherTab, 'RangeError')]);
+
+    await expect(originControls.opener).toBeVisible();
+
+    await expect(destinationControls.opener).toBeVisible();
+
+    expect(originRequests).toEqual([]);
+    expect(destinationRequests).toEqual([]);
+
+    await originControls.accept.click();
+
+    await expect(originControls.notice.getByText(originControls.copy.on)).toBeVisible();
+
+    await expect(destinationControls.notice.getByText(destinationControls.copy.on)).toBeVisible();
+
+    await expect(originControls.opener).toHaveCount(0);
+
+    await expect(destinationControls.opener).toHaveCount(0);
+
+    expect(originRequests).toEqual([]);
+    expect(destinationRequests).toEqual([]);
+
+    await destinationControls.reject.click();
+
+    await expect(originControls.notice.getByText(originControls.copy.off)).toBeVisible();
+
+    await expect(destinationControls.notice.getByText(destinationControls.copy.off)).toBeVisible();
+
+    await originControls.accept.click();
+
+    await expect(originControls.notice.getByText(originControls.copy.on)).toBeVisible();
+
+    await expect(destinationControls.notice.getByText(destinationControls.copy.on)).toBeVisible();
+
+    for (const [tab, application] of [
+      [page, origin],
+      [otherTab, destination],
+    ] as const) {
+      const nextReport = endpoint(tab, '/telemetry/errors');
+
+      await throwError(tab, 'TypeError');
+
+      const report = await nextReport;
+
+      expect(report.status()).toBe(202);
+      expect(report.request().postDataJSON()).toMatchObject({ application, kind: 'TypeError' });
+    }
+
+    // Cross the surface boundary once in each tab under the active grant.
+    for (const [tab, application, observed] of [
+      [page, destination, originRequests],
+      [otherTab, origin, destinationRequests],
+    ] as const) {
+      const timing = tab.waitForResponse((response) => {
+        const { pathname } = new URL(response.url());
+        const body = pathname === '/telemetry/performance' ? response.request().postDataJSON() : undefined;
+
+        return (
+          body?.application === application && body.measurements.some(({ name }: { name: string }) => name === 'load')
+        );
+      });
+
+      await tab.goto(paths[application]);
+
+      await expect(controls(tab).notice).toHaveCount(0);
+
+      const response = await timing;
+
+      expect(response.status()).toBe(202);
+      expect(observed.filter(({ path }) => path === '/telemetry/errors')).toHaveLength(1);
+    }
+
+    // Revocation in a third tab must take effect in both already-running documents.
+    const settings = await context.newPage();
+
+    await settings.goto('/en/privacy/');
+
+    await controls(settings).reject.click();
+
+    await expect(controls(settings).notice.getByText(controls(settings).copy.off)).toBeVisible();
+
+    const beforeRevocation = [originRequests.length, destinationRequests.length];
+    const storedChoice = (tab: Page) => tab.evaluate((key) => localStorage.getItem(key), browserConsentKey);
+
+    const choices = await Promise.all([storedChoice(page), storedChoice(otherTab)]);
+
+    expect(choices).toEqual(['reject', 'reject']);
+
+    await Promise.all([throwError(page, 'SyntaxError'), throwError(otherTab, 'SyntaxError')]);
+
+    await expect(originControls.opener).toBeVisible();
+
+    await expect(destinationControls.opener).toBeVisible();
+
+    expect(originRequests.slice(beforeRevocation[0])).toEqual([]);
+    expect(destinationRequests.slice(beforeRevocation[1])).toEqual([]);
+
+    await destinationControls.opener.click();
+
+    const manual = endpoint(otherTab, '/telemetry/errors');
+
+    await destinationControls.dialog.getByRole('button', { name: destinationControls.copy.send }).click();
+
+    const report = await manual;
+
+    expect(report.status()).toBe(202);
+    expect(report.request().postDataJSON()).toMatchObject({ application: origin, kind: 'SyntaxError' });
+    const finalChoice = await storedChoice(otherTab);
+
+    expect(finalChoice).toBe('reject');
+
+    await Promise.all([page.reload(), otherTab.reload()]);
+
+    await expect(originControls.notice).toHaveCount(0);
+
+    await expect(destinationControls.notice).toHaveCount(0);
+
+    await Promise.all([throwError(page, 'RangeError'), throwError(otherTab, 'RangeError')]);
+
+    await expect(originControls.opener).toBeVisible();
+
+    await expect(destinationControls.opener).toBeVisible();
+
+    const afterRevocation = [originRequests.slice(beforeRevocation[0]), destinationRequests.slice(beforeRevocation[1])];
+
+    expect(afterRevocation.map((observed) => observed.map(({ path }) => path))).toEqual([[], ['/telemetry/errors']]);
+
+    const evidence = info.outputPath('shared-consent-network.json');
+
+    await writeFile(
+      evidence,
+      JSON.stringify(
+        {
+          consentFrom: origin,
+          originalTab: originRequests,
+          secondTab: destinationRequests,
+          afterRevocation,
+          manualStatus: report.status(),
+        },
+        null,
+        2,
+      ) + '\n',
+    );
+
+    await info.attach('shared-consent-network', { path: evidence, contentType: 'application/json' });
   });
 }

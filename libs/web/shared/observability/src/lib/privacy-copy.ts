@@ -3,7 +3,7 @@ export const browserPrivacyCopy = {
     title: 'Privacy settings',
     privacy: 'Privacy',
     reportsTitle: 'Error reports',
-    invitation: 'You can share visit counts, performance measurements, and error reports to help improve Visomi Stack.',
+    invitation: 'You can share visit counts, performance data, and errors to improve Visomi Stack.',
     manualHeading: 'Send one error report',
     manualDetail:
       'When automatic sharing is off, this page can keep a short description of an unexpected error in memory for up to five minutes. You can review it, send it yourself, or discard it. Sending a report does not turn on automatic sharing.',
@@ -11,14 +11,15 @@ export const browserPrivacyCopy = {
     off: 'Automatic sharing is off.',
     on: 'Automatic sharing is on.',
     blocked: 'Your browser’s privacy settings block automatic sharing.',
-    accept: 'Accept',
-    reject: 'Do not accept',
+    accept: 'Share',
+    reject: 'No thanks',
+    purposeLink: 'How we use this data',
     purpose: 'How we use analytics, performance data, and error reports',
     analytics: 'We count visits by page category and language to see which parts of the site and app people use.',
     telemetry:
       'We use timings and predefined error categories to find slow pages and unexpected errors. We don’t send URLs, IDs for people or resources, account or vault data, or original error messages or stack traces.',
     revoke:
-      'Choose Do not accept here to stop automatic sharing in this browser. You can return using the Privacy link. Your choice doesn’t affect account access or server diagnostics.',
+      'Choose No thanks here to stop automatic sharing in this browser. You can return using the Privacy link. Your choice doesn’t affect account access or server diagnostics.',
     pending: 'Error report available',
     reports: 'Pending error reports',
     manual:
@@ -44,8 +45,7 @@ export const browserPrivacyCopy = {
     title: 'Configuración de privacidad',
     privacy: 'Privacidad',
     reportsTitle: 'Reportes de error',
-    invitation:
-      'Puedes compartir datos de visitas, mediciones de rendimiento y reportes de errores para mejorar Visomi Stack.',
+    invitation: 'Puedes compartir datos de visitas, rendimiento y errores para mejorar Visomi Stack.',
     manualHeading: 'Enviar un reporte de error',
     manualDetail:
       'Si el envío automático está desactivado, esta página puede guardar en memoria una descripción breve de un error inesperado por hasta cinco minutos. Puedes revisarla y decidir si quieres enviar el reporte o descartarlo. Enviarlo no activa el envío automático.',
@@ -53,14 +53,15 @@ export const browserPrivacyCopy = {
     off: 'El envío automático está desactivado.',
     on: 'El envío automático está activado.',
     blocked: 'La configuración de privacidad de tu navegador bloquea el envío automático.',
-    accept: 'Aceptar',
-    reject: 'No aceptar',
+    accept: 'Compartir',
+    reject: 'No compartir',
+    purposeLink: 'Cómo usamos estos datos',
     purpose: 'Cómo usamos los datos de visitas, rendimiento y errores',
     analytics: 'Contamos las visitas por tipo de página e idioma para saber qué partes del sitio y de la app se usan.',
     telemetry:
       'Usamos mediciones de tiempo y categorías de error predefinidas para detectar páginas lentas y errores inesperados. No enviamos direcciones web, identificadores de personas o recursos, datos de tu cuenta o del vault, ni mensajes originales o trazas de error.',
     revoke:
-      'Elige No aceptar aquí para detener el envío automático en este navegador. Puedes volver desde el enlace Privacidad. Tu decisión no afecta el acceso a tu cuenta ni los diagnósticos del servidor.',
+      'Elige No compartir aquí para detener el envío automático en este navegador. Puedes volver desde el enlace Privacidad. Tu decisión no afecta el acceso a tu cuenta ni los diagnósticos del servidor.',
     pending: 'Reporte de error disponible',
     reports: 'Reportes de error pendientes',
     manual:

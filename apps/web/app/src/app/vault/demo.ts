@@ -6,9 +6,10 @@ import { createPinMethodId } from '@visomi-stack/web-frontend-db';
 import { Session } from '../auth/session/session';
 import { ClientDatabase, VAULT_DATABASE_NAMESPACE } from '../shared/db/database';
 import { NavigationHeading } from '../shared/navigation-heading';
+import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { VaultPanel } from '../shared/vault/vault-panel';
 import { VaultSession } from '../shared/vault/vault-session';
-import { Heading, Text } from '../ui';
+import { Card, Heading, Text } from '../ui';
 
 const scope = { kind: 'tenant', tenantId: '786cc156-1520-40d6-b884-353508731b31' } as const;
 const context: DataContext = {
@@ -23,7 +24,7 @@ const context: DataContext = {
 
 @Component({
   selector: 'app-vault-demo',
-  imports: [Heading, Text, NavigationHeading, VaultPanel],
+  imports: [Card, Heading, Text, NavigationHeading, VaultPanel],
   providers: [ClientDatabase, VaultSession, { provide: VAULT_DATABASE_NAMESPACE, useValue: 'reference-demo' }],
   templateUrl: './demo.html',
 })
@@ -32,6 +33,8 @@ export class VaultDemo {
   private readonly session = inject(Session);
   private readonly vault = inject(VaultSession);
   private readonly destroyRef = inject(DestroyRef);
+
+  protected readonly capabilities = inject(UnlockCapabilities);
 
   protected readonly binding = signal<WrappingContext | undefined>(undefined);
   protected readonly initializing = signal(false);

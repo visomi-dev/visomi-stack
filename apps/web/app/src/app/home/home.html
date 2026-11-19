@@ -1,13 +1,158 @@
-<section class="max-w-2xl space-y-5 py-6">
-  <h1 appUI appNavigationHeading i18n="@@authWelcome">Home</h1>
+<section class="min-w-0 space-y-6">
+  <header class="flex flex-wrap items-start justify-between gap-4">
+    <div class="space-y-2">
+      <h1 appUI appNavigationHeading i18n="@@authWelcome">Home</h1>
 
-  <p appUI tone="muted" i18n="@@authWelcomeDescription">
-    Open Account to update your email or Security to change how you sign in.
-  </p>
+      <p appUI tone="muted" i18n="@@authWelcomeDescription">
+        Open Account to update your email or Security to change how you sign in.
+      </p>
+    </div>
 
-  <div class="flex flex-col gap-3 sm:flex-row">
-    <a appUI="button" routerLink="/account" i18n="@@authManageAccount">Manage account</a>
+    <div class="flex flex-wrap gap-2">
+      <a appUI="button" size="sm" variant="secondary" routerLink="/account" i18n="@@authManageAccount">
+        Manage account
+      </a>
 
-    <a appUI="button" variant="secondary" routerLink="/security" i18n="@@authReviewSecurity">Review security</a>
-  </div>
+      <a appUI="button" size="sm" variant="secondary" routerLink="/security" i18n="@@authReviewSecurity">
+        Review security
+      </a>
+    </div>
+  </header>
+
+  <section aria-labelledby="example-dashboard" class="grid gap-4">
+    <header class="space-y-1">
+      <h2 appUI uiSize="md" id="example-dashboard" i18n="@@exampleDashboard">Example dashboard</h2>
+
+      <p appUI tone="muted" i18n="@@exampleDashboardDescription">
+        These sample checks use fixed, synthetic data. They don’t reflect your account or site activity.
+      </p>
+    </header>
+
+    <dl class="grid gap-3 sm:grid-cols-3">
+      <div appUI="card" padding="sm" layout="plain" class="space-y-2">
+        <dt class="text-sm font-medium" i18n="@@exampleChecksRun">Checks run</dt>
+
+        <dd class="font-heading text-2xl font-semibold tabular-nums">{{ total() | number }}</dd>
+      </div>
+
+      <div appUI="card" padding="sm" layout="plain" class="space-y-2">
+        <dt class="text-sm font-medium" i18n="@@exampleChecksPassed">Passed</dt>
+
+        <dd class="font-heading text-2xl font-semibold text-green-800 tabular-nums dark:text-green-300">
+          {{ passed() | number }}
+        </dd>
+      </div>
+
+      <div appUI="card" padding="sm" layout="plain" class="space-y-2">
+        <dt class="text-sm font-medium" i18n="@@exampleChecksFailed">Failed</dt>
+
+        <dd class="font-heading text-2xl font-semibold tabular-nums">{{ failed() | number }}</dd>
+      </div>
+    </dl>
+
+    <section appUI="card" padding="sm" layout="plain" class="space-y-3" aria-labelledby="example-chart">
+      <header class="flex flex-wrap items-start justify-between gap-3">
+        <div class="space-y-1">
+          <h3 appUI uiSize="sm" id="example-chart" i18n="@@exampleChecksByDay">Checks by day</h3>
+
+          <p appUI tone="muted" uiSize="sm" id="example-chart-summary" role="status" i18n="@@exampleChartSummary">
+            {{ total() | number }} checks over {{ period() }} days. The busiest day had {{ peak() }} checks.
+          </p>
+        </div>
+
+        <div
+          class="flex flex-wrap gap-2"
+          role="group"
+          aria-label="Example date range"
+          i18n-aria-label="@@exampleDateRange"
+        >
+          <button
+            appUI
+            type="button"
+            size="sm"
+            variant="secondary"
+            [attr.aria-pressed]="period() === 7"
+            (click)="period.set(7)"
+            class="aria-pressed:border-blue-600 aria-pressed:font-semibold"
+            i18n="@@exampleSevenDays"
+          >
+            7 days
+          </button>
+
+          <button
+            appUI
+            type="button"
+            size="sm"
+            variant="secondary"
+            [attr.aria-pressed]="period() === 14"
+            (click)="period.set(14)"
+            class="aria-pressed:border-blue-600 aria-pressed:font-semibold"
+            i18n="@@exampleFourteenDays"
+          >
+            14 days
+          </button>
+        </div>
+      </header>
+
+      <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-900">
+        <svg
+          viewBox="0 0 480 120"
+          role="img"
+          aria-labelledby="example-chart"
+          aria-describedby="example-chart-summary"
+          class="h-36 w-full sm:h-44"
+          preserveAspectRatio="none"
+        >
+          <path d="M16 16h448M16 47h448M16 77h448M16 108h448" class="stroke-zinc-200 dark:stroke-zinc-700" />
+
+          <polyline
+            [attr.points]="coordinates()"
+            fill="none"
+            class="stroke-blue-700 dark:stroke-blue-400"
+            stroke-width="2"
+            stroke-linejoin="round"
+            vector-effect="non-scaling-stroke"
+          />
+
+          @for (point of points(); track $index) {
+            <circle [attr.cx]="point.x" [attr.cy]="point.y" r="2.5" class="fill-blue-700 dark:fill-blue-400" />
+          }
+        </svg>
+
+        <div aria-hidden="true" class="flex justify-between px-2 text-xs text-zinc-600 dark:text-zinc-400">
+          <span>{{ days()[0].day | date: 'MMM d' : 'UTC' }}</span>
+
+          <span>{{ days().at(-1)?.day | date: 'MMM d' : 'UTC' }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section appUI="card" padding="sm" layout="plain" class="space-y-3" aria-labelledby="example-checks-table">
+      <h3 appUI uiSize="sm" id="example-checks-table" i18n="@@exampleDailyTotals">Daily totals</h3>
+
+      <table appUI density="compact" aria-labelledby="example-checks-table">
+        <thead>
+          <tr>
+            <th scope="col" i18n="@@exampleDate">Date</th>
+
+            <th scope="col" class="text-end" i18n="@@exampleChecksPassed">Passed</th>
+
+            <th scope="col" class="text-end" i18n="@@exampleChecksFailed">Failed</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (day of days(); track day.day) {
+            <tr>
+              <th scope="row">{{ day.day | date: 'mediumDate' : 'UTC' }}</th>
+
+              <td class="text-end tabular-nums">{{ day.passed | number }}</td>
+
+              <td class="text-end tabular-nums">{{ day.failed | number }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  </section>
 </section>

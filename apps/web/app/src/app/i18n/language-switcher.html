@@ -1,6 +1,7 @@
-<nav class="inline-flex items-center gap-1.5" aria-label="Language" i18n-aria-label="@@language">
+<nav class="inline-flex items-center" aria-label="Language" i18n-aria-label="@@language">
   <svg
-    class="hidden size-4 shrink-0 sm:block"
+    [class]="styles.iconClasses()"
+    data-slot="language-icon"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"

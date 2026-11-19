@@ -39,13 +39,22 @@ export class PinInput {
   readonly value = input('');
   readonly touch = output<void>();
   readonly valueChange = output<string>();
+  readonly completed = output<void>();
 
   focus(options?: FocusOptions): void {
     this.control().nativeElement.focus(options);
   }
 
   protected changeValue(value: string): void {
+    if (this.disabled()) {
+      return;
+    }
+
     this.valueChange.emit(value);
+
+    if (value.length === this.digits() && /^[0-9]+$/.test(value)) {
+      this.completed.emit();
+    }
   }
 
   protected paste(event: ClipboardEvent): void {

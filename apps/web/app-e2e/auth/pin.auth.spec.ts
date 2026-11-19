@@ -1,4 +1,4 @@
-import { expect, test, signup } from './support/fixtures';
+import { expect, test, signup, openAccount } from './support/fixtures';
 import { expectCenteredDigits } from './support/pin-layout';
 
 test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext after a wrong PIN', async ({
@@ -112,7 +112,9 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await expect(page.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
 
-  await page.getByRole('link', { name: 'Account', exact: true }).first().click();
+  const account = await openAccount(page);
+
+  await account.getByRole('link', { name: 'Account', exact: true }).click();
 
   await expect(page).toHaveURL(/\/account$/);
 

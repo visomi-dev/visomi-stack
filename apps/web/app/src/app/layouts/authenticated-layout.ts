@@ -1,8 +1,21 @@
-import { Component, DestroyRef, computed, afterNextRender, inject, viewChild } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
+import { Component, DestroyRef, ElementRef, computed, afterNextRender, inject, signal, viewChild } from '@angular/core';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
-import { Alert, AppShell, Sidebar, Topbar, NavItem, Navbar, Button, Link, ThemeSwitcher, Dialog } from '../ui';
+import {
+  Alert,
+  AppShell,
+  Sidebar,
+  Topbar,
+  NavItem,
+  Navbar,
+  Button,
+  Link,
+  ThemeSwitcher,
+  Dialog,
+  Card,
+  Disclosure,
+} from '../ui';
 import { AuthHttp } from '../auth/shared/http';
 import { Action } from '../auth/shared/action';
 import { AuthFeedback } from '../auth/shared/feedback';
@@ -36,6 +49,9 @@ import { ConsentNotice, PrivacyLink } from '../observability/consent-notice';
     RouterLinkActive,
     RouterOutlet,
     ThemeSwitcher,
+    Card,
+    Disclosure,
+    NgTemplateOutlet,
     LanguageSwitcher,
     AuthFeedback,
     Dialog,
@@ -53,8 +69,39 @@ export class AuthenticatedLayout {
 
   private readonly mobileMenu = viewChild.required(Dialog);
 
-  readonly vaults = inject(Vaults);
+  private readonly desktopAccount = viewChild.required<ElementRef<HTMLElement>>('desktopAccount');
+
+  protected readonly sidebarCompact = signal(false);
+  protected readonly accountOpen = signal(false);
+
   readonly session = inject(Session);
+
+  protected readonly accountGlyph = computed(() => this.session.user()?.email?.charAt(0).toUpperCase() ?? '');
+  protected readonly accountRouteActive = computed(() => {
+    const path = this.router.lastSuccessfulNavigation()?.finalUrl?.root.children['primary']?.segments[0]?.path;
+
+    return path === 'account' || path === 'security';
+  });
+
+  protected readonly signOutLabel = $localize`:@@authSignOut:Sign out`;
+  protected readonly expandSidebar = $localize`:@@shellExpandSidebar:Expand sidebar`;
+  protected readonly collapseSidebar = $localize`:@@shellCollapseSidebar:Collapse sidebar`;
+  protected readonly primaryItems = [
+    { path: '/home', label: $localize`:@@authHome:Home`, icon: 'M3 10 12 3l9 7v11h-6v-7H9v7H3Z' },
+    {
+      path: '/vault-example',
+      label: $localize`:@@vaultDemoTitle:Vault example`,
+      icon: 'M4 5h16v14H4zM8 5v14m8-7h.01M12 12h.01',
+    },
+  ];
+  protected readonly securityItems = [
+    { path: '/security/passkeys', label: $localize`:@@authPasskeys:Passkeys` },
+    { path: '/security/password', label: $localize`:@@authPassword:Password` },
+    { path: '/security/sessions', label: $localize`:@@authSessions:Sessions` },
+  ];
+  protected readonly accountMenu = $localize`:@@shellAccountMenu:Account menu`;
+
+  readonly vaults = inject(Vaults);
   readonly navigation = inject(AuthNavigation);
   readonly action = inject(Action);
 
@@ -74,6 +121,22 @@ export class AuthenticatedLayout {
     });
   }
 
+  protected accountToggle(event: ToggleEvent): void {
+    this.accountOpen.set(event.newState === 'open');
+  }
+
+  protected closeAccount(desktop: boolean): void {
+    if (desktop) {
+      this.desktopAccount().nativeElement.hidePopover?.();
+    } else {
+      this.mobileMenu().close();
+    }
+  }
+
+  protected toggleSidebar(): void {
+    this.sidebarCompact.update((compact) => !compact);
+  }
+
   private readonly closeDesktopMenu = afterNextRender(() => {
     const media = this.document.defaultView?.matchMedia?.('(min-width: 1024px)');
 
@@ -84,6 +147,8 @@ export class AuthenticatedLayout {
     const close = () => {
       if (media.matches) {
         this.mobileMenu().close();
+      } else {
+        this.desktopAccount().nativeElement.hidePopover?.();
       }
     };
 

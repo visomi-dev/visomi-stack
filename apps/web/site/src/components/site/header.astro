@@ -50,8 +50,8 @@ const languagePath = Astro.url.pathname.replace(/^\/(en|es)(?=\/)/, `/${language
       </div>
 
       <div class="flex shrink-0 items-center gap-2 sm:gap-3">
-        <nav class="inline-flex items-center gap-1.5" aria-label={copy.language}>
-          <Icon name="languages" class="hidden size-4 shrink-0 sm:block" />
+        <nav class="inline-flex items-center" aria-label={copy.language}>
+          <Icon name="languages" class={languageSwitcher.iconClasses()} />
 
           <ul class={languageSwitcher.classes()}>
             {languages.map(({ code, label }) => (

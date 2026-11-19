@@ -66,9 +66,11 @@ export default [
   },
   {
     files: [
+      '**/auth/shared/code-entry.ts',
       '**/ui/forms/field.ts',
       '**/ui/forms/pin-input.ts',
       '**/ui/layout/app-shell.ts',
+      '**/ui/layout/sidebar.ts',
       '**/vault/vault-panel.ts',
       '**/vault/vault-unlock.ts',
     ],
@@ -78,11 +80,15 @@ export default [
         'error',
         {
           allowedNames: [
+            'auto-submit',
             'control-id',
+            'description-hidden',
             'manual-error',
             'accept-formatted-paste',
             'content-id',
             'skip-label',
+            'navigation-id',
+            'sidebar-compact',
             'rp-id',
             'allow-initialize',
           ],

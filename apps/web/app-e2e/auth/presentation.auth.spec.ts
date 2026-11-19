@@ -98,11 +98,14 @@ test('keeps access actions separated, password controls usable and language chan
   await expect(page.getByRole('heading', { name: 'Verify your email', exact: true })).toBeVisible();
 
   await reviewSizes(page, async () => {
-    const verify = page.getByRole('button', { name: 'Verify', exact: true });
+    const codeInput = page.locator('app-code-entry app-pin-input');
+
+    await expect(page.getByRole('button', { name: 'Verify', exact: true })).toHaveCount(0);
+
     const resend = page.getByRole('button', { name: /Send a new code/ });
     const exit = page.getByRole('button', { name: 'Sign out', exact: true });
 
-    await separated(verify, resend);
+    await separated(codeInput, resend);
 
     await separated(resend, exit);
 
@@ -116,8 +119,6 @@ test('keeps access actions separated, password controls usable and language chan
 
   await page.getByLabel('Verification code', { exact: true }).fill(incorrect);
 
-  await page.getByRole('button', { name: 'Verify', exact: true }).click();
-
   await expect(page.getByRole('alert')).toContainText('We couldn’t verify these details.');
 
   await expect(page.getByLabel('Verification code', { exact: true })).not.toHaveAttribute('aria-invalid', 'true');
@@ -125,8 +126,6 @@ test('keeps access actions separated, password controls usable and language chan
   await expect(page.getByText('Complete this field.', { exact: true })).toBeHidden();
 
   await page.getByLabel('Verification code', { exact: true }).fill(code);
-
-  await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 });

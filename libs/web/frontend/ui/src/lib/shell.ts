@@ -9,11 +9,21 @@ export const appShell = {
   },
   frameClasses({ layout = 'sidebar' }: { layout?: ShellLayout } = {}): string {
     return layout === 'sidebar'
-      ? 'min-h-0 flex-1 overflow-hidden lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]'
+      ? 'min-h-0 flex-1 overflow-hidden lg:grid lg:grid-cols-[var(--ui-shell-sidebar-width,17rem)_minmax(0,1fr)] lg:transition-[grid-template-columns] lg:duration-200 lg:motion-reduce:transition-none'
       : 'min-h-0 flex-1 overflow-hidden';
   },
   sidebarClasses({ layout = 'sidebar' }: { layout?: ShellLayout } = {}): string {
     return layout === 'sidebar' ? 'hidden min-h-0 lg:block' : 'hidden';
+  },
+  panelClasses(inset: boolean): string {
+    return [
+      'flex h-full min-h-0 min-w-0 flex-col overflow-hidden',
+      inset
+        ? 'lg:my-2 lg:me-2 lg:h-auto lg:rounded-2xl lg:border lg:border-zinc-200 lg:bg-white lg:shadow-sm lg:dark:border-zinc-800 lg:dark:bg-zinc-950'
+        : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
   },
   contentClasses(): string {
     return [

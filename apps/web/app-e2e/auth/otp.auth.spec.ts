@@ -1,6 +1,6 @@
 import type { Locator } from '@playwright/test';
 
-import { expect, test, address, password } from './support/fixtures';
+import { expect, test, address, signup } from './support/fixtures';
 import { expectCenteredDigits } from './support/pin-layout';
 
 async function expectPinLayout(widget: Locator): Promise<void> {
@@ -40,18 +40,18 @@ async function expectPinLayout(widget: Locator): Promise<void> {
 for (const locale of ['en', 'es']) {
   const spanish = locale === 'es';
 
-  test(`${locale} verification code supports native editing and explicit submission`, async ({ page }) => {
+  test(`${locale} email change code keeps native editing and explicit submission`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 700 });
 
     await page.emulateMedia({ colorScheme: spanish ? 'dark' : 'light' });
 
-    await page.goto(`/app/${locale}/auth/sign-up/password`);
+    await signup(page);
 
-    await page.locator('input[type="email"]').fill(address());
+    await page.goto(`/app/${locale}/account`);
 
-    await page.locator('#account-password').fill(password);
+    await page.locator('app-email-entry input[type="email"]').fill(address());
 
-    await page.locator('button[type="submit"]').click();
+    await page.locator('app-email-entry button[type="submit"]').click();
 
     const code = page.getByRole('textbox', { name: spanish ? 'Código de verificación' : 'Verification code' });
     const verify = page.getByRole('button', { name: spanish ? 'Verificar' : 'Verify', exact: true });
@@ -83,7 +83,7 @@ for (const locale of ['en', 'es']) {
 
     let submitted: unknown;
 
-    await page.route('**/api/auth/email/verify', (route) => {
+    await page.route('**/api/auth/email/change/verify', (route) => {
       submitted = route.request().postDataJSON().code;
 
       return route.fulfill({ status: 400, json: { error: 'invalid_credentials' } });

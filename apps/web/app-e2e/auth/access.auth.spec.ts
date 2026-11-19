@@ -1,6 +1,6 @@
 import { readMailCode } from '@visomi-stack/dev-testing';
 
-import { expect, test, address, signup, logout, passwordStart, password } from './support/fixtures';
+import { expect, test, address, signup, logout, openAccount, passwordStart, password } from './support/fixtures';
 
 test('registers with a password, protects unverified access and restores SSR sessions', async ({ page, context }) => {
   const email = address();
@@ -22,8 +22,6 @@ test('registers with a password, protects unverified access and restores SSR ses
 
   await page.getByLabel('Verification code', { exact: true }).fill(code);
 
-  await page.getByRole('button', { name: 'Verify', exact: true }).click();
-
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
   const rendered = await context.request.get('/app/en/home');
@@ -43,7 +41,7 @@ test('registers with a password, protects unverified access and restores SSR ses
 
     await expect(navigation).toHaveCount(1);
 
-    for (const name of ['Home', 'Account', 'Security']) {
+    for (const name of ['Home', 'Vault example']) {
       await expect(navigation.getByRole('link', { name, exact: true })).toBeVisible();
     }
 
@@ -52,10 +50,9 @@ test('registers with a password, protects unverified access and restores SSR ses
     expect(overflow).toBe(false);
   }
 
-  await page
-    .getByRole('navigation', { name: 'Primary navigation', exact: true })
-    .getByRole('link', { name: 'Security', exact: true })
-    .click();
+  const account = await openAccount(page);
+
+  await account.getByRole('link', { name: 'Security', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Security', exact: true })).toBeVisible();
 
@@ -99,11 +96,9 @@ test('requires a second factor and restarts a lost challenge after reload', asyn
 
   const code = await readMailCode(email);
 
-  await page.getByLabel('Verification code', { exact: true }).fill(code);
-
   await expect(page).toHaveURL(/auth\/sign-in\/verify/);
 
-  await page.getByRole('button', { name: 'Verify', exact: true }).click();
+  await page.getByLabel('Verification code', { exact: true }).fill(code);
 
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 });
@@ -190,8 +185,6 @@ test('resets a password without signing in', async ({ page, context }) => {
   const factor = await readMailCode(email);
 
   await page.getByLabel('Verification code', { exact: true }).fill(factor);
-
-  await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 });

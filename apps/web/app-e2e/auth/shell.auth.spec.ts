@@ -1,6 +1,6 @@
 import type { Page, TestInfo } from '@playwright/test';
 
-import { expect, test, signup } from './support/fixtures';
+import { expect, test, signup, openAccount } from './support/fixtures';
 
 test('animates an open mobile menu when the system theme changes', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -141,13 +141,13 @@ async function checkNavigation(page: Page, locale: string, width: number, info: 
   const dialog = page.getByRole('dialog');
 
   if (width < 1024) {
-    await expect(navbar.getByRole('link')).toHaveCount(3);
+    await expect(navbar.getByRole('link')).toHaveCount(2);
 
     await expect(navbar.getByRole('button')).toHaveText(locale === 'en' ? 'Menu' : 'Menú');
 
     await expect(navbar.locator('[aria-current="page"]')).toHaveCount(1);
 
-    await expect(navbar.locator('svg[aria-hidden="true"]')).toHaveCount(4);
+    await expect(navbar.locator('svg[aria-hidden="true"]')).toHaveCount(3);
 
     const menu = navbar.getByRole('button');
 
@@ -177,7 +177,9 @@ async function checkNavigation(page: Page, locale: string, width: number, info: 
 
     await menu.click();
 
-    await dialog.getByRole('link', { name: locale === 'en' ? 'Account' : 'Cuenta', exact: true }).click();
+    const account = await openAccount(page);
+
+    await account.getByRole('link', { name: locale === 'en' ? 'Account' : 'Cuenta', exact: true }).click();
 
     await expect(page).toHaveURL(`/app/${locale}/account`);
 
@@ -195,14 +197,15 @@ async function checkNavigation(page: Page, locale: string, width: number, info: 
 
     await menu.click();
 
-    await dialog.getByRole('button', { name: /Sign out|Cerrar sesión/ }).click();
+    const exit = await openAccount(page);
+
+    await exit.getByRole('button', { name: /Sign out|Cerrar sesión/ }).click();
   } else {
     await expect(navbar).toBeHidden();
 
-    await page
-      .locator('app-sidebar')
-      .getByRole('button', { name: /Sign out|Cerrar sesión/ })
-      .click();
+    const exit = await openAccount(page);
+
+    await exit.getByRole('button', { name: /Sign out|Cerrar sesión/ }).click();
   }
 }
 

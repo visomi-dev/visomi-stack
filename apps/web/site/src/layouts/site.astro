@@ -27,14 +27,14 @@ const { locale, page, title, description } = Astro.props;
       tabindex="-1"
       class="min-w-0 scroll-mt-24 focus:outline-none [&_:focus]:scroll-mt-28 [&_:target]:scroll-mt-28"
     >
-      {page !== 'privacy' && (
-        <Container width="xl" gutter="compact">
-          <ConsentNotice locale={locale} />
-        </Container>
-      )}
-
       <slot />
     </main>
+
+    {page !== 'privacy' && (
+      <Container width="xl" gutter="compact">
+        <ConsentNotice locale={locale} />
+      </Container>
+    )}
 
     <Footer locale={locale} />
   </div>
