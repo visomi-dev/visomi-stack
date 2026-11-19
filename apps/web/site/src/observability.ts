@@ -1,4 +1,5 @@
 import {
+  connectConsentNotice,
   createBrowserConsent,
   describeBrowserError,
   loadBrowserReporter,
@@ -109,21 +110,51 @@ if (languageLink) {
 
 const notice = document.querySelector<HTMLElement>('[data-consent]');
 
-if (notice && (notice.dataset['consent'] === 'settings' || !consent.decided())) {
+if (notice) {
+  const choices = notice.querySelector<HTMLElement>('[data-consent-choice]')!;
   const accept = notice.querySelector<HTMLButtonElement>('[data-choice=accept]')!;
   const status = notice.querySelector<HTMLElement>('[data-choice-status]')!;
-  const sync = () => {
-    accept.disabled = consent.blocked();
-    status.textContent =
-      status.dataset[accept.disabled ? 'blocked' : consent.permit() ? 'on' : consent.decided() ? 'off' : ''] ?? '';
-  };
+  let choose = consent.decide;
 
-  notice.hidden = false;
-  notice.onclick = ({ target }) => {
+  if (notice.dataset['consent'] === 'settings') {
+    const sync = () => {
+      accept.disabled = consent.blocked();
+      status.textContent =
+        status.dataset[accept.disabled ? 'blocked' : consent.permit() ? 'on' : consent.decided() ? 'off' : ''] ?? '';
+    };
+
+    choices.hidden = false;
+    consent.subscribe(sync);
+    sync();
+  } else {
+    const confirmation = notice.querySelector<HTMLElement>('[data-consent-confirmation]')!;
+    const announcement = notice.querySelector<HTMLElement>('[data-consent-announcement]')!;
+    const seconds = confirmation.querySelector<HTMLElement>('[data-consent-seconds]')!;
+    const progress = confirmation.querySelector<HTMLProgressElement>('progress')!;
+    const controller = connectConsentNotice(window, consent, (view) => {
+      choices.hidden = view.kind !== 'choice';
+      confirmation.hidden = view.kind !== 'confirmation';
+      const message = view.kind === 'confirmation' ? announcement.dataset['thanks']! : '';
+
+      if (announcement.textContent !== message) {
+        announcement.textContent = message;
+      }
+
+      if (view.kind === 'choice') {
+        accept.disabled = view.blocked;
+        status.textContent = status.dataset[view.blocked ? 'blocked' : view.decided ? 'off' : ''] ?? '';
+      } else if (view.kind === 'confirmation') {
+        progress.value = view.seconds;
+        seconds.textContent = view.seconds + ' s';
+      }
+    });
+
+    choose = controller.choose;
+  }
+
+  choices.onclick = ({ target }) => {
     if (target instanceof HTMLButtonElement && target.dataset['choice']) {
-      consent.decide(target === accept);
+      choose(target === accept);
     }
   };
-  consent.subscribe(sync);
-  sync();
 }

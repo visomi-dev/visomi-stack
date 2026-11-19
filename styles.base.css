@@ -133,6 +133,39 @@
   }
 }
 
+@utility ui-consent-progress {
+  appearance: none;
+  display: block;
+  inline-size: 100%;
+  block-size: 0.25rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-zinc-200);
+  color: var(--color-blue-600);
+
+  .dark & {
+    background: var(--color-zinc-700);
+    color: var(--color-blue-400);
+  }
+
+  &::-webkit-progress-bar {
+    background: transparent;
+  }
+
+  &::-webkit-progress-value {
+    background: currentColor;
+  }
+
+  &::-moz-progress-bar {
+    background: currentColor;
+  }
+
+  @media (forced-colors: active) {
+    appearance: auto;
+  }
+}
+
 @keyframes ui-theme-enter {
   from {
     translate: 0 4rem;

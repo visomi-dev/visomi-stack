@@ -1,0 +1,48 @@
+@let notice = view();
+
+<p role="status" class="sr-only" data-consent-announcement>
+  {{ notice.kind === 'confirmation' ? copy.thanks : '' }}
+</p>
+
+@if (notice.kind === 'choice') {
+  <section
+    appUI="card"
+    tone="raised"
+    padding="sm"
+    layout="plain"
+    [attr.aria-label]="copy.title"
+    class="ui-consent-card grid gap-2 text-sm"
+  >
+    <p>{{ copy.invitation }}</p>
+
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-2">
+      <button appUI variant="secondary" size="sm" type="button" (click)="choose(false)">{{ copy.reject }}</button>
+
+      <button appUI variant="secondary" size="sm" type="button" [disabled]="notice.blocked" (click)="choose(true)">
+        {{ copy.accept }}
+      </button>
+    </div>
+
+    <a appUI class="justify-self-start" [href]="privacyUrl">{{ copy.purposeLink }}</a>
+
+    <p role="status" class="empty:hidden">{{ notice.blocked ? copy.blocked : notice.decided ? copy.off : '' }}</p>
+  </section>
+} @else if (notice.kind === 'confirmation') {
+  <div
+    appUI="card"
+    tone="raised"
+    padding="sm"
+    layout="plain"
+    class="ui-consent-card grid gap-2 text-sm"
+    data-consent-confirmation
+    aria-hidden="true"
+  >
+    <div class="flex flex-wrap items-baseline justify-between gap-x-2">
+      <p>{{ copy.thanks }}</p>
+
+      <span class="tabular-nums" data-consent-seconds>{{ notice.seconds }} s</span>
+    </div>
+
+    <progress class="ui-consent-progress" [max]="duration" [value]="notice.seconds"></progress>
+  </div>
+}
