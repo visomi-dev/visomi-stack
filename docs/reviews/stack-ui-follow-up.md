@@ -161,3 +161,9 @@ The test checks that private record text and local unlock values stay out of
 persistence request bodies. It also verifies the localized Spanish action. The
 reference run passed all 25 targeted browser cases and all 227 Angular tests.
 Extraction and the EN and es-MX catalogs had 357 matching message IDs.
+
+The protocol fixture prebuilds its browser entry with the workspace's Vite
+version and serves the bundle over the same loopback origin as the test API.
+This removes on-demand module transformation from Chromium startup after two
+CI attempts timed out there. The existing test deadlines, assertions and
+coverage gates still apply. [Vite build API](https://vite.dev/config/build-options#build-write)
