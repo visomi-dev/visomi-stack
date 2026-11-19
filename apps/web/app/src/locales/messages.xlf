@@ -2858,6 +2858,57 @@
           <context context-type="linenumber">50,52</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="vaultDevicesTitle" datatype="html">
+        <source>Vault devices</source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesDescription" datatype="html">
+        <source> Pair devices for this synthetic private resource. Keep this page open on both signed-in devices until pairing finishes. </source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesOpen" datatype="html">
+        <source> Open test private resource </source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesApproverFingerprint" datatype="html">
+        <source>Approving device fingerprint</source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesApproveInstructions" datatype="html">
+        <source> Paste the request from the new device. Enter the fingerprint shown directly on that device. </source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesRequest" datatype="html">
+        <source>Pairing request</source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesRecipientFingerprint" datatype="html">
+        <source>New device fingerprint</source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesApprove" datatype="html">
+        <source> Approve this device </source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesUnlockFirst" datatype="html">
+        <source> Unlock the test private resource on this device before approving another device. </source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesFinishInstructions" datatype="html">
+        <source> Share the request and fingerprint with the approving device. Then enter the fingerprint you see directly on that device. </source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesFinish" datatype="html">
+        <source>Finish pairing</source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesPinDescription" datatype="html">
+        <source> Passkey unlock is unavailable. A PIN can unlock this vault on this device and is easier to guess if someone copies the encrypted storage. </source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesRequestWithPin" datatype="html">
+        <source> Request pairing with PIN </source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesRequestWithPasskey" datatype="html">
+        <source> Request pairing with a passkey </source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesApproved" datatype="html">
+        <source>Device approved. Finish on the other device.</source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesPaired" datatype="html">
+        <source>Device paired. You can open the test private resource here.</source>
+      </trans-unit>
+      <trans-unit id="vaultDevicesFingerprintMismatch" datatype="html">
+        <source>The fingerprints don’t match. Check the fingerprint on the other device.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

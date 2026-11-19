@@ -4,7 +4,7 @@ import { Service, afterNextRender, computed, DestroyRef, effect, inject, signal,
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { z } from 'zod';
-import { createOperationId, productPolicySchema, syntheticHybridPolicy, VaultError } from '@visomi-stack/shared-db';
+import { createOperationId, VaultError } from '@visomi-stack/shared-db';
 import { isVaultPin } from '@visomi-stack/web-frontend-db';
 import type { WrappingContext } from '@visomi-stack/shared-db';
 
@@ -14,20 +14,19 @@ import { DatabaseHttp } from '../shared/db/http';
 import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { vaultMessage } from '../shared/vault/vault-messages';
 
-import { ExamplePrivateResource, type ExampleTarget } from './example-private-resource';
-import { exampleLocalKey } from './example-contracts';
+import { ExamplePrivateResource } from './example-private-resource';
+import {
+  exampleLocalKey,
+  exampleTargetSchema as targetSchema,
+  readExampleProfile,
+  type ExampleTarget,
+} from './example-contracts';
 
-const targetSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid(), objectId: z.uuid() });
 const scopeSchema = targetSchema.omit({ objectId: true });
 const cloudSchema = z.object({
   items: z.array(
     z.object({ id: z.uuid(), title: z.string(), body: z.string(), revision: z.number().int().positive() }),
   ),
-});
-const profileSchema = z.strictObject({
-  policy: productPolicySchema,
-  origin: z.url(),
-  rpId: z.string().min(1).max(253),
 });
 
 /** Route-local orchestration; components only bind state and invoke domain actions. */
@@ -62,7 +61,7 @@ export class ExampleWorkspace {
 
   private navigationSignal: AbortSignal | undefined;
   private controller = new AbortController();
-  private profile: z.infer<typeof profileSchema> | undefined;
+  private profile: ReturnType<typeof readExampleProfile> | undefined;
 
   readonly capabilities = inject(UnlockCapabilities);
   readonly privateResource = inject(ExamplePrivateResource);
@@ -391,14 +390,7 @@ export class ExampleWorkspace {
         const raw = await this.api.request('/policy', undefined, signal);
 
         this.current(signal);
-        const profile = profileSchema.parse(raw);
-
-        if (
-          JSON.stringify(profile.policy) !== JSON.stringify(syntheticHybridPolicy) ||
-          profile.origin !== this.document.defaultView?.location.origin
-        ) {
-          throw new VaultError('unavailable');
-        }
+        const profile = readExampleProfile(raw, this.document.defaultView?.location.origin);
 
         const target = params.has('tenantId')
           ? targetSchema.parse({

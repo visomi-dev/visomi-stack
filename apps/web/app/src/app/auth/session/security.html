@@ -7,6 +7,12 @@
 
   <app-auth-feedback [action]="action" />
 
+  @if (pairingRelyingParty(); as rpId) {
+    @for (target of pairingTargets(); track target.tenantId + target.scopeId + target.objectId) {
+      <app-example-vault-devices [target]="target" [rpId]="rpId" />
+    }
+  }
+
   <div class="grid gap-4 sm:grid-cols-2">
     <section appUI="card">
       <h2 appUI uiSize="sm" i18n="@@authPasskeys">Passkeys</h2>

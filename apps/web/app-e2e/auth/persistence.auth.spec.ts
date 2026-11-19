@@ -1,4 +1,7 @@
-import { expect, test, signup, logout } from './support/fixtures';
+import type { Request } from '@playwright/test';
+import { readMailCode } from '@visomi-stack/dev-testing';
+
+import { expect, test, signup, logout, passwordStart } from './support/fixtures';
 
 test('hybrid persistence keeps private content out of transport and reopens locked', async ({ page, context }) => {
   const cdp = await context.newCDPSession(page);
@@ -300,4 +303,225 @@ test('SPA resource navigation and browser history isolate views and retain only 
   await page.getByRole('button', { name: 'Synchronize encrypted changes', exact: true }).click();
 
   await expect(page.getByLabel('Private text', { exact: true })).toBeEnabled();
+});
+
+function persistenceRequestBody(request: Request): string {
+  return request.url().includes('/api/persistence/') ? (request.postData() ?? '') : '';
+}
+
+test('pairs a test private resource in Security across a PIN device and a PRF device', async ({
+  page,
+  context,
+  browser,
+}) => {
+  await context.addInitScript(() => {
+    Object.defineProperty(window, 'PublicKeyCredential', { value: undefined, configurable: true });
+  });
+
+  let privateRequestCount = 0;
+  let observedLocalSecret = false;
+  const observe = (request: Request) => {
+    const payload = persistenceRequestBody(request);
+
+    privateRequestCount += Number(Boolean(payload));
+    observedLocalSecret ||= /"(?:048261|SYNTHETIC_PAIRING_[^"]*)"|"(?:pin|prf|methodId|secret)"\s*:/.test(
+      payload || '',
+    );
+  };
+
+  page.on('request', observe);
+  const email = await signup(page);
+
+  await page.goto('/app/en/persistence');
+
+  await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
+
+  const pin = page.getByLabel('Local unlock PIN', { exact: true });
+
+  await expect(pin).toBeVisible();
+
+  const workspace = page.url();
+
+  await pin.fill('048261');
+
+  await page.getByLabel('Confirm your new PIN', { exact: true }).fill('048261');
+
+  await page.getByRole('button', { name: 'Set up an empty private resource with PIN', exact: true }).click();
+
+  const first = 'SYNTHETIC_PAIRING_EXISTING_NOTE';
+  const second = 'SYNTHETIC_PAIRING_UPDATED_NOTE';
+
+  await page.getByLabel('Private text', { exact: true }).fill(first);
+
+  await page.getByRole('button', { name: 'Save encrypted change', exact: true }).click();
+
+  await expect(page.locator('pre')).toHaveText(first);
+
+  await page.getByRole('button', { name: 'Synchronize encrypted changes', exact: true }).click();
+
+  await expect(page.getByLabel('Private text', { exact: true })).toBeEnabled();
+
+  await page.getByRole('link', { name: 'Vault devices', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Vault devices', exact: true })).toBeVisible();
+
+  const signer = page.locator('[data-vault-approver]');
+
+  await expect(signer).toHaveText(/^[A-Za-z0-9_-]{43}$/);
+
+  const approverFingerprint = await signer.innerText();
+  const pairingPage = page.url();
+  const recipientContext = await browser.newContext({ baseURL: pairingPage, viewport: { width: 390, height: 844 } });
+
+  try {
+    const recipient = await recipientContext.newPage();
+
+    recipient.on('request', observe);
+    const cdp = await recipientContext.newCDPSession(recipient);
+
+    await cdp.send('WebAuthn.enable');
+
+    await cdp.send('WebAuthn.addVirtualAuthenticator', {
+      options: {
+        protocol: 'ctap2',
+        transport: 'internal',
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+        automaticPresenceSimulation: true,
+        hasPrf: true,
+      },
+    });
+
+    await passwordStart(recipient, email);
+
+    const factor = await readMailCode(email);
+
+    await recipient.getByLabel('Verification code', { exact: true }).fill(factor);
+
+    await expect(recipient.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
+
+    await recipient.route('**/api/persistence/policy', (route) => route.fulfill({ status: 404 }));
+
+    const absent = recipient.waitForResponse('**/api/persistence/policy');
+
+    await recipient.goto(pairingPage);
+
+    await absent;
+
+    await expect(recipient.getByRole('heading', { name: 'Security', exact: true })).toBeVisible();
+
+    await expect(recipient.getByRole('heading', { name: 'Vault devices', exact: true })).toHaveCount(0);
+
+    await recipient.unroute('**/api/persistence/policy');
+
+    await recipient.goto(pairingPage.replace('/app/en/', '/app/es/'));
+
+    await expect(recipient.getByRole('heading', { name: 'Dispositivos del vault', exact: true })).toBeVisible();
+
+    await recipient.goto(pairingPage);
+
+    await expect(recipient.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
+
+    const requestPasskey = recipient.getByRole('button', { name: 'Request pairing with a passkey', exact: true });
+
+    await expect(requestPasskey).toBeEnabled();
+
+    await recipient.evaluate(() => {
+      Object.defineProperty(navigator.credentials, 'create', {
+        configurable: true,
+        value: () => Promise.reject(new DOMException('Synthetic cancellation', 'NotAllowedError')),
+      });
+    });
+
+    await requestPasskey.click();
+
+    await expect(recipient.getByRole('status')).toContainText(['Unlock canceled.']);
+
+    await expect(recipient.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
+
+    await recipient.evaluate(() => Reflect.deleteProperty(navigator.credentials, 'create'));
+
+    await requestPasskey.click();
+
+    const request = recipient.getByLabel('Pairing request', { exact: true });
+    const fingerprint = recipient.locator('[data-vault-recipient]');
+
+    await expect(request).toHaveValue(/^\{/);
+
+    await expect(fingerprint).toHaveText(/^[A-Za-z0-9_-]{43}$/);
+
+    const token = await request.inputValue();
+    const recipientFingerprint = await fingerprint.innerText();
+    const fingerprintInput = page.getByLabel('New device fingerprint', { exact: true });
+    const approve = page.getByRole('button', { name: 'Approve this device', exact: true });
+
+    await page.getByLabel('Pairing request', { exact: true }).fill(token);
+
+    await fingerprintInput.fill(approverFingerprint);
+
+    await approve.click();
+
+    await expect(page.getByRole('status')).toContainText(['The fingerprints don’t match.']);
+
+    await fingerprintInput.fill(recipientFingerprint);
+
+    await approve.click();
+
+    await expect(page.getByRole('status')).toContainText(['Device approved.']);
+
+    const trust = recipient.getByLabel('Approving device fingerprint', { exact: true });
+    const finish = recipient.getByRole('button', { name: 'Finish pairing', exact: true });
+
+    await trust.fill(recipientFingerprint);
+
+    await finish.click();
+
+    await expect(recipient.getByRole('status')).toContainText(['The fingerprints don’t match.']);
+
+    await expect(recipient.getByRole('link', { name: 'Open test private resource', exact: true })).toHaveCount(0);
+
+    await trust.fill(approverFingerprint);
+
+    await finish.click();
+
+    await recipient.getByRole('link', { name: 'Open test private resource', exact: true }).click();
+
+    await recipient.getByRole('button', { name: 'Synchronize encrypted changes', exact: true }).click();
+
+    await expect(recipient.locator('pre')).toHaveText(first);
+
+    await recipient.getByLabel('Private text', { exact: true }).fill(second);
+
+    await recipient.getByRole('button', { name: 'Save encrypted change', exact: true }).click();
+
+    await expect(recipient.locator('pre')).toHaveText(second);
+
+    await recipient.getByRole('button', { name: 'Synchronize encrypted changes', exact: true }).click();
+
+    await expect(recipient.getByLabel('Private text', { exact: true })).toBeEnabled();
+
+    await recipient.getByRole('button', { name: 'Lock private resources', exact: true }).click();
+
+    await expect(recipient.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
+
+    await recipient.getByRole('button', { name: 'Unlock with a passkey', exact: true }).click();
+
+    await expect(recipient.locator('pre')).toHaveText(second);
+
+    await page.goto(workspace);
+
+    await pin.fill('048261');
+
+    await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
+
+    await page.getByRole('button', { name: 'Synchronize encrypted changes', exact: true }).click();
+
+    await expect(page.locator('pre')).toHaveText(second);
+
+    expect(privateRequestCount).toBeGreaterThan(0);
+    expect(observedLocalSecret).toBe(false);
+  } finally {
+    await recipientContext.close();
+  }
 });

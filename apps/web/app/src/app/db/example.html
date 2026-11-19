@@ -56,6 +56,8 @@
     <section class="space-y-4 rounded-xl border p-5">
       <h2 appUI i18n="@@vaultHeading">Private resource</h2>
 
+      <a appUI routerLink="/security" [queryParams]="workspace.target()" i18n="@@vaultDevicesTitle">Vault devices</a>
+
       <p role="status" aria-live="polite">{{ workspace.status() }}</p>
 
       <p appUI tone="muted" i18n="@@persistencePrivateLimits">

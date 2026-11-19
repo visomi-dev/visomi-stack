@@ -102,18 +102,18 @@ signer and signed witness and sets the replica's minimum roster epoch from that
 approval. The suite also checks scope authority, generation and roster floors,
 historical replay, rotation, retention and ciphertext-only storage. Virtual
 authenticators and viewport variation exercise the protocol. Physical iPhone
-PRF and an app-rendered pairing flow remain unverified.
+PRF remains unverified.
 
 The uncached Nx run passed 77 vault library tests, 357 API tests at the
 configured 100% coverage, 227 Angular tests, and 16 shared UI tests. The
-22 targeted Playwright cases passed across the configured Chromium, Firefox,
+22 focused Playwright cases for the capability and drawer changes passed across the configured Chromium, Firefox,
 and WebKit projects. They included both email OTP flows, Chromium's virtual
 account passkey, local PIN reopen, the isolated Vault example, and the mobile
 account disclosure. The disclosure checks covered opening, closing, full
 drawer width, keyboard focus, both themes, and the desktop popover's raised
 surface.
 
-#### Remaining Security integration
+#### Development and test Security reference
 
 The default gateway and standalone API have no product policy that mounts an
 encrypted-sync scope. Both obtain persistence solely from the existing opt-in
@@ -127,12 +127,37 @@ production-capable Vault example has its own isolated browser-local database.
 [Profile guard](../../libs/shared/db/src/lib/example.ts) ·
 [Product persistence contract](../persistence.md)
 
-The approved app surface is authenticated Security. A Vault device action there
-needs an explicit, supported encrypted-sync product scope for which the current
-device already has custody and approval authority. This checkout has no such
-scope to attach it to. The fixture establishes the mixed-capability flow with
-the existing persistence composition. The account/Sessions approval continues to
-grant restricted account enrollment. [Account approval contract](../../apps/web/api/src/auth/devices/contract.ts) ·
+Open the existing synthetic private resource, unlock it on the approving
+device, and select **Vault devices** to open the scoped **Security** action.
+Open the same Security address on the other signed-in device. It creates a
+public request for the selected scope with its own local binding. On the
+approving device, paste the request and enter the fingerprint displayed
+directly on the new device. The new device enters the fingerprint displayed
+directly on the approving device. This checks the candidate signer before the
+existing signed delivery is opened. The API receives public enrollment metadata
+and wrapped key material. Unlock secrets stay on each device. The recipient stores the verified generation and roster floor and wraps
+the received data key with its own local method.
+
+The action renders only for an explicit workspace target after the authenticated
+API confirms the exact synthetic policy for the current origin. It uses the
+existing Security route and profile guard. The development reference accepts
+the initial generation and fails closed if the scope needs historical grants or
+rotation handling. Requests are kept in the current page until pairing finishes.
+The browser-local Vault example and the Account/Sessions approval keep their
+separate roles. The default production composition has no supported scope for
+this feature. [Account approval contract](../../apps/web/api/src/auth/devices/contract.ts) ·
 [VIS-69 custody](https://linear.app/visomi/issue/VIS-69) ·
 [VIS-70 lifecycle](https://linear.app/visomi/issue/VIS-70) ·
 [VIS-72 product composition](https://linear.app/visomi/issue/VIS-72)
+
+The [rendered browser journey](../../apps/web/app-e2e/auth/persistence.auth.spec.ts)
+uses the actual authenticated app in independent Chromium profiles. It covers
+email OTP sign-in, PIN initialization on the first device, an emulated PRF
+credential and simulated cancellation on the second, rejection of each
+mismatched fingerprint, and the absence of the action when the policy endpoint
+is missing. The two profiles open and update the same pre-existing synthetic
+record, synchronize it, and reopen it with their own methods after lock.
+The test checks that private record text and local unlock values stay out of
+persistence request bodies. It also verifies the localized Spanish action. The
+reference run passed all 25 targeted browser cases and all 227 Angular tests.
+Extraction and the EN and es-MX catalogs had 357 matching message IDs.
