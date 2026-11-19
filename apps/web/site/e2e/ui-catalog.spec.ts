@@ -1,12 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-import { disablePerformanceCapture } from './support/performance';
 import { selectTheme } from './support/theme';
 
 for (const locale of ['en', 'es']) {
   test(`the ${locale} catalog renders all recipes through Express SSR`, async ({ page, request }) => {
-    await disablePerformanceCapture(page);
-
     const response = await request.get(`/${locale}/ui/`);
     const html = await response.text();
 

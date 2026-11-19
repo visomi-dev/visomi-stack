@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Response } from '@playwright/test';
 
-import { disablePerformanceCapture, initialScriptBudget } from './support/performance';
+import { initialScriptBudget } from './support/performance';
 import { selectTheme } from './support/theme';
 
 for (const locale of ['en', 'es']) {
@@ -49,21 +49,23 @@ for (const locale of ['en', 'es']) {
   });
 
   test(`the ${locale} homepage keeps theme, language and error reporting scripts small`, async ({ page }) => {
-    await disablePerformanceCapture(page);
-
     const scripts: Promise<number>[] = [];
     const errors: string[] = [];
 
-    page.on('pageerror', (error) => errors.push(error.message));
-    page.on('response', (resource) => {
+    const recordScriptSize = (resource: Response) => {
       if (resource.request().resourceType() === 'script') {
         scripts.push(resource.body().then((body) => body.length));
       }
-    });
+    };
+
+    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('response', recordScriptSize);
 
     await page.goto(`/${locale}/`);
 
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+
+    page.off('response', recordScriptSize);
 
     const sizes = await Promise.all(scripts);
 

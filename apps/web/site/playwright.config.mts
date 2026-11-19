@@ -17,8 +17,6 @@ export default defineConfig({
       API_APP_PATH: '',
       SITE_APP_PATH: '',
       APPLICATION_APP_PATH: '',
-      VISOMI_BROWSER_TELEMETRY: 'true',
-      VISOMI_BROWSER_PERFORMANCE: 'true',
       AUTH_ORIGIN: 'http://127.0.0.1:3320',
     },
     reuseExistingServer: false,

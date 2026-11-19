@@ -79,8 +79,6 @@ beforeEach(() => {
   vi.stubEnv('PORT', '3456');
   vi.stubEnv('NODE_ENV', 'test');
   vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
-  vi.stubEnv('VISOMI_BROWSER_TELEMETRY', '');
-  vi.stubEnv('VISOMI_BROWSER_PERFORMANCE', '');
   vi.stubEnv('AUTH_ORIGIN', undefined);
   boundary.browserAssets.mockResolvedValue(new Map());
   boundary.browserTelemetry.mockReturnValue({
@@ -289,9 +287,8 @@ describe('gateway executable ownership', () => {
   });
 
   it.each([undefined, 'https://frontend.example.test'])(
-    'owns opt-in browser telemetry using origin %s',
+    'mounts browser telemetry by default using origin %s',
     async (origin) => {
-      vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
       vi.stubEnv('AUTH_ORIGIN', origin);
 
       await start();
@@ -301,7 +298,6 @@ describe('gateway executable ownership', () => {
         observability: boundary.observability,
         assets: { 'web-site': new Map(), 'web-app': new Map() },
         origin: origin ?? 'https://stack.visomi.dev',
-        performance: false,
       });
       expect(boundary.createGatewayApp).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -321,7 +317,6 @@ describe('gateway executable ownership', () => {
   );
 
   it('still captures Angular errors when the website is unavailable', async () => {
-    vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
     boundary.loadSite.mockResolvedValue(undefined);
 
     await start();
@@ -330,18 +325,9 @@ describe('gateway executable ownership', () => {
       expect.objectContaining({ assets: { 'web-app': new Map() } }),
     );
   });
-  it('forwards the explicit browser performance opt-in to the shared intake', async () => {
-    vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
-    vi.stubEnv('VISOMI_BROWSER_PERFORMANCE', 'true');
-
-    await start();
-
-    expect(boundary.browserTelemetry).toHaveBeenCalledWith(expect.objectContaining({ performance: true }));
-  });
   it('does not create intake resources after shutdown while the asset allowlist is loading', async () => {
     let loaded!: (assets: Map<string, unknown>) => void;
 
-    vi.stubEnv('VISOMI_BROWSER_TELEMETRY', 'true');
     boundary.browserAssets.mockReturnValue(
       new Promise((resolve) => {
         loaded = resolve;
@@ -441,6 +427,7 @@ describe('gateway executable ownership', () => {
       application: boundary.application,
       auth: undefined,
       observability: boundary.observability,
+      browserTelemetry: boundary.browserTelemetry.mock.results[0].value,
       staticDirectory: expect.stringMatching(/gateway\/src\/static\/$/),
       visits: expect.objectContaining({ router: expect.any(Function) }),
     });

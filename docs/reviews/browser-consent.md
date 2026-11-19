@@ -3,22 +3,32 @@
 The [Chromium network capture](fixtures/browser-consent/synthetic-network.json)
 contains only telemetry paths, methods, allowlisted request payloads and status
 codes. The authentication journey uses synthetic accounts and an isolated
-PostgreSQL database. The same consent tests passed in Chromium, Firefox and
-WebKit. GPC and DNT were simulated through browser signals.
+PostgreSQL database. The consent journeys run in Chromium, Firefox and WebKit.
+GPC and DNT are simulated through browser signals. The current capture uses
+the default intake with the browser toggles absent and a synthetic authenticated
+OTLP receiver on loopback.
 
 | Scenario                | Browser assertion                                                                                                                                                                            |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Default off and sign-in | Zero telemetry requests before the privacy decision. The anonymous dashboard visit redirects to sign-in.                                                                                     |
+| Server export           | The loopback receiver accepts an authenticated `http.request` span while the browser produces zero telemetry requests.                                                                       |
 | Expected failures       | A handled rejection and an expected HTTP 404 produce no report.                                                                                                                              |
 | Manual report           | The selected `RangeError` is accepted with 202. The other pending report stays local and can be discarded. The browser preference stays unset.                                               |
 | Accept and navigate     | The next uncaught exception is accepted with 202. The docs page and dashboard visits are accepted with 204. A router transition away from the dashboard and back records only the dashboard. |
+| Performance             | Astro and Angular send allowlisted document measurements with 202 on a new opted-in document. The acceptance document has no performance backfill. Angular also sends route timings.         |
 | Redaction               | Browser requests omit cookies, referrers and the synthetic markers used as exception messages, queries and fragments. Only fixed fields are in the capture.                                  |
-| Reject and reload       | Zero new automatic requests, including after the reload into the Spanish dashboard. A manual send is still accepted with 202.                                                                |
+| Reject and reload       | Zero new automatic requests after rejecting, revoking in another tab or reloading. A manual send from the Spanish dashboard is still accepted with 202.                                      |
 | GPC and DNT             | Each signal independently suppresses automatic requests despite a saved acceptance.                                                                                                          |
 | Foreign origin          | The visits receiver returns 403.                                                                                                                                                             |
 
 The journey first passed in Chromium while the visit flag was present. The
-capture below comes from the regression with the flag absent. The captures use desktop and mobile viewport emulation and contain only synthetic information.
+current capture is from the regression with the flags absent. The screenshots
+use desktop and mobile viewport emulation and contain only synthetic information.
+
+The [Jaeger smoke test](../../tools/deployment/jaeger-check.mjs) exercises the
+pinned receiver with synthetic credentials and checks stored error, performance,
+HTTP and job spans. It exercises storage across a restart and checks the
+configured retention interval without waiting for expiry.
 
 - [Astro, 1366 × 900, English, light](fixtures/browser-consent/website-desktop-light-en.png)
 - [Angular foundations, 390 × 844, Spanish, dark](fixtures/browser-consent/app-mobile-dark-es.png)

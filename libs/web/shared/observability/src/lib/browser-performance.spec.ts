@@ -10,10 +10,14 @@ import type { BrowserApplication } from './contract';
 const instrumentation = vi.hoisted(() => {
   const constructed = vi.fn();
   const stopped = vi.fn();
+  const stopVitals = vi.fn();
+  const observeVitals = vi.fn(() => stopVitals);
 
   return {
     constructed,
     stopped,
+    stopVitals,
+    observeVitals,
     Instrument: class {
       constructor() {
         constructed();
@@ -37,25 +41,33 @@ const instrumentation = vi.hoisted(() => {
 vi.mock('@opentelemetry/browser-instrumentation/experimental/navigation-timing', () => ({
   NavigationTimingInstrumentation: instrumentation.Instrument,
 }));
-vi.mock('@opentelemetry/browser-instrumentation/experimental/web-vitals', () => ({
-  WebVitalsInstrumentation: instrumentation.Instrument,
+vi.mock('./web-vitals', () => ({
+  observeWebVitals: instrumentation.observeVitals,
 }));
 
-function fixture(enabled: boolean, application: BrowserApplication = 'web-app') {
+function fixture(allowedAtStartup = true, application: BrowserApplication = 'web-app') {
   const transport = vi.fn().mockResolvedValue(new Response(undefined, { status: 202 }));
 
-  transport.mockResolvedValueOnce(Response.json({ token: 'synthetic-permit', assets: [], performance: enabled }));
+  transport.mockResolvedValueOnce(Response.json({ token: 'synthetic-permit', assets: [] }));
   const browser = Object.assign(new EventTarget(), {
     fetch: transport,
     location: new URL('https://frontend.example.test/customer/SYNTHETIC_PRIVATE_DATA'),
   });
-  let allowed = true;
+  let grant = allowedAtStartup ? 'grant' : undefined;
+  let notify: () => void = () => undefined;
   const consent = {
-    permit: () => (allowed ? 'grant' : undefined),
-    subscribe: () => () => undefined,
+    permit: () => grant,
+    subscribe(listener) {
+      notify = listener;
+
+      return () => undefined;
+    },
     blocked: () => false,
     decided: () => true,
-    decide: () => undefined,
+    decide(accept) {
+      grant = accept ? 'new-grant' : undefined;
+      notify();
+    },
     stop: () => undefined,
   } satisfies BrowserConsent;
   const reporter = createBrowserReporter(application, browser as unknown as Window, consent);
@@ -63,9 +75,7 @@ function fixture(enabled: boolean, application: BrowserApplication = 'web-app') 
   return {
     reporter,
     transport,
-    revoke: () => {
-      allowed = false;
-    },
+    consent,
   };
 }
 
@@ -75,13 +85,16 @@ afterEach(() => {
 });
 
 describe('performance reporting lifecycle', () => {
-  it('keeps the instruments inactive unless the server explicitly enables performance capture', async () => {
+  it('keeps the instruments inactive until a new document starts with consent', async () => {
     const f = fixture(false);
     const enabled = await f.reporter.performanceReady;
 
     expect(enabled).toBe(false);
+    f.consent.decide(true);
+    f.reporter.routeTransition('route_completed', 10);
     expect(instrumentation.constructed).not.toHaveBeenCalled();
-    expect(f.transport).toHaveBeenCalledOnce();
+    expect(instrumentation.observeVitals).not.toHaveBeenCalled();
+    expect(f.transport).not.toHaveBeenCalled();
     f.reporter.stop();
   });
 
@@ -118,7 +131,7 @@ describe('performance reporting lifecycle', () => {
     expect(f.transport).toHaveBeenCalledTimes(14);
     expect(JSON.stringify(f.transport.mock.calls)).not.toContain('SYNTHETIC_PRIVATE_DATA');
     clock.mockReturnValue(now + 240001);
-    f.transport.mockResolvedValueOnce(Response.json({ token: 'refreshed', assets: [], performance: true }));
+    f.transport.mockResolvedValueOnce(Response.json({ token: 'refreshed', assets: [] }));
     f.reporter.routeTransition('route_completed', 100);
 
     await vi.waitFor(() => expect(f.transport).toHaveBeenCalledTimes(16));
@@ -126,7 +139,8 @@ describe('performance reporting lifecycle', () => {
     expect(f.transport.mock.calls[15][1].headers['x-browser-telemetry']).toBe('refreshed');
     f.reporter.stop();
     f.reporter.routeTransition('route_failed', 100);
-    expect(instrumentation.stopped).toHaveBeenCalledTimes(2);
+    expect(instrumentation.stopped).toHaveBeenCalledOnce();
+    expect(instrumentation.stopVitals).toHaveBeenCalledOnce();
     expect(f.transport).toHaveBeenCalledTimes(16);
   });
 
@@ -144,12 +158,14 @@ describe('performance reporting lifecycle', () => {
     clock.mockReturnValue(now + 240001);
     f.transport.mockReturnValueOnce(refresh);
     f.reporter.routeTransition('route_completed', 15);
-    f.revoke();
-    complete(Response.json({ token: 'refreshed', assets: [], performance: true }));
+    f.consent.decide(false);
+    f.consent.decide(true);
+    complete(Response.json({ token: 'refreshed', assets: [] }));
 
     await setImmediate();
 
     expect(f.transport.mock.calls.map(([path]) => path)).toEqual(['/telemetry/config', '/telemetry/config']);
+    expect(instrumentation.stopVitals).toHaveBeenCalledOnce();
     f.reporter.stop();
   });
 

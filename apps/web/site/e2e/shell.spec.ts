@@ -1,11 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-import { disablePerformanceCapture, initialScriptBudget } from './support/performance';
+import { initialScriptBudget } from './support/performance';
 
 for (const locale of ['en', 'es']) {
   test(`the ${locale} shell renders through Express with theme and error reporting`, async ({ page, request }) => {
-    await disablePerformanceCapture(page);
-
     const path = `/${locale}/ui/shell/`;
     const response = await request.get(path);
     const html = await response.text();

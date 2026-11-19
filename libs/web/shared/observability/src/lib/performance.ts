@@ -1,6 +1,5 @@
 import { ROOT_CONTEXT } from '@opentelemetry/api';
 import { NavigationTimingInstrumentation } from '@opentelemetry/browser-instrumentation/experimental/navigation-timing';
-import { WebVitalsInstrumentation } from '@opentelemetry/browser-instrumentation/experimental/web-vitals';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { LoggerProvider } from '@opentelemetry/sdk-logs';
 
@@ -14,6 +13,7 @@ import type {
   BrowserRouteMetric,
 } from './contract';
 import { telemetryPost } from './transport';
+import { observeWebVitals } from './web-vitals';
 
 export function createBrowserPerformance(
   application: BrowserApplication,
@@ -26,7 +26,7 @@ export function createBrowserPerformance(
   let windowStart = Date.now();
   let count = 0;
   let stopped = false;
-  const runtime = startBrowserPerformance((measurements) => void send(measurements));
+  const runtime = startBrowserPerformance((measurements) => void send(measurements), allowed);
 
   async function send(measurements: BrowserPerformanceMeasurement[]): Promise<void> {
     try {
@@ -42,7 +42,7 @@ export function createBrowserPerformance(
       count++;
       const config = await configuration();
 
-      if (stopped || !allowed() || config?.performance !== true) {
+      if (stopped || !allowed() || !config) {
         return;
       }
 
@@ -84,6 +84,7 @@ export function performanceMeasurements(record: {
               ['dom_interactive', attributes['browser.navigation_timing.dom_interactive']],
               ['dom_content_loaded', attributes['browser.navigation_timing.dom_content_loaded_event_end']],
               ['load', attributes['browser.navigation_timing.load_event_end']],
+              ['ttfb', attributes['browser.resource_timing.response_start']],
             ]
           : [];
 
@@ -100,14 +101,18 @@ export function performanceMeasurements(record: {
   });
 }
 
-export function startBrowserPerformance(send: (measurements: BrowserPerformanceMeasurement[]) => void) {
+export function startBrowserPerformance(
+  send: (measurements: BrowserPerformanceMeasurement[]) => void,
+  allowed: () => boolean,
+) {
   let stopped = false;
+  const capturing = () => !stopped && allowed();
   const provider = new LoggerProvider({
     resource: resourceFromAttributes({}),
     processors: [
       {
         onEmit(record) {
-          if (!stopped) {
+          if (capturing()) {
             send(
               browserPerformanceMetrics.flatMap((name) =>
                 typeof record.attributes[name] === 'number' ? [{ name, value: record.attributes[name] as number }] : [],
@@ -123,11 +128,15 @@ export function startBrowserPerformance(send: (measurements: BrowserPerformanceM
   const logger = provider.getLogger('visomi-stack.browser-performance');
   const filteredProvider: Parameters<NavigationTimingInstrumentation['setLoggerProvider']>[0] = {
     getLogger: () => ({
-      enabled: () => !stopped,
+      enabled: capturing,
       emit(record) {
+        if (!capturing()) {
+          return;
+        }
+
         const measurements = performanceMeasurements(record);
 
-        if (!stopped && measurements.length > 0) {
+        if (measurements.length > 0) {
           logger.emit({
             eventName: 'frontend.performance',
             context: ROOT_CONTEXT,
@@ -137,32 +146,38 @@ export function startBrowserPerformance(send: (measurements: BrowserPerformanceM
       },
     }),
   };
-  // The pinned 0.9 API must be constructed disabled and wired before enable().
-  const instruments = [
-    new NavigationTimingInstrumentation({ enabled: false }),
-    new WebVitalsInstrumentation({ enabled: false, includeRawAttribution: false, reportAllChanges: false }),
-  ];
+  // The pinned 0.9 navigation instrument must be wired before enable().
+  const navigation = new NavigationTimingInstrumentation({ enabled: false });
+  let stopVitals: (() => void) | undefined;
   const stop = () => {
     if (stopped) {
       return;
     }
 
     stopped = true;
-    for (const instrument of instruments) {
-      try {
-        instrument.disable();
-      } catch {
-        // A failing instrument must not prevent its sibling or owner from shutting down.
-      }
+    stopVitals?.();
+
+    try {
+      navigation.disable();
+    } catch {
+      // The provider must shut down even if an instrument fails to disable.
     }
     void provider.shutdown().catch(() => undefined);
   };
 
   try {
-    for (const instrument of instruments) {
-      instrument.setLoggerProvider(filteredProvider);
-      instrument.enable();
-    }
+    navigation.setLoggerProvider(filteredProvider);
+    navigation.enable();
+    const vitalLogger = filteredProvider.getLogger('visomi-stack.browser-vitals');
+
+    stopVitals = observeWebVitals(
+      (name, value) =>
+        vitalLogger.emit({
+          eventName: 'browser.web_vital',
+          attributes: { 'browser.web_vital.name': name, 'browser.web_vital.value': value },
+        }),
+      capturing,
+    );
   } catch {
     stop();
   }

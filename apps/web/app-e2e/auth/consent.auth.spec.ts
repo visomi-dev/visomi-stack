@@ -1,4 +1,5 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import type { Page, Request } from '@playwright/test';
 
@@ -95,6 +96,10 @@ test('keeps the notice in flow and separates manual reports from automatic conse
   await signup(page);
 
   await expect(controls(page).notice).toBeVisible();
+
+  await expect
+    .poll(() => readFile(join(process.env['VISOMI_E2E_TELEMETRY_DIR']!, 'otlp-http-span.txt'), 'utf8').catch(() => ''))
+    .toBe('http.request');
 
   expect(observed).toEqual([]);
 
@@ -307,6 +312,106 @@ test('keeps the notice in flow and separates manual reports from automatic conse
 
   await info.attach('synthetic-network', { path: artifact, contentType: 'application/json' });
 });
+
+for (const [application, path] of [
+  ['web-site', '/en/'],
+  ['web-app', '/app/en/foundations'],
+] as const) {
+  test(`${application} measures only a new opted-in document and stops after revocation`, async ({ page }, info) => {
+    const observed = requests(page);
+    const privacy = controls(page);
+
+    await page.goto(path);
+
+    await expect(privacy.notice).toBeVisible();
+
+    expect(observed).toEqual([]);
+
+    await privacy.reject.click();
+
+    await expect(privacy.notice.getByText(privacy.copy.off)).toBeVisible();
+
+    await throwError(page, 'RangeError');
+
+    await expect(privacy.opener).toBeVisible();
+
+    expect(observed).toEqual([]);
+
+    await privacy.accept.click();
+
+    await expect(privacy.notice.getByText(privacy.copy.on)).toBeVisible();
+
+    await expect(privacy.opener).toHaveCount(0);
+
+    const automatic = endpoint(page, '/telemetry/errors');
+
+    await throwError(page, 'TypeError');
+
+    const error = await automatic;
+
+    expect(error.status()).toBe(202);
+    expect(error.request().postDataJSON()).toEqual({
+      application,
+      code: 'unhandled_exception',
+      kind: 'TypeError',
+      screen: 'home',
+    });
+    expect(observed.map(({ path }) => path)).toEqual(['/telemetry/config', '/telemetry/errors']);
+
+    const performance = page.waitForResponse((response) => {
+      if (new URL(response.url()).pathname !== '/telemetry/performance') {
+        return false;
+      }
+
+      const measurements: { name: string }[] = response.request().postDataJSON().measurements;
+
+      return measurements.some(({ name }) => name === 'load');
+    });
+
+    await page.goto(path + '?synthetic=' + marker + '#' + marker);
+
+    const result = await performance;
+    const headers = await result.request().allHeaders();
+
+    expect(result.status()).toBe(202);
+    expect(headers['origin']).toBe(new URL(result.url()).origin);
+    expect(headers).not.toHaveProperty('cookie');
+    expect(headers).not.toHaveProperty('referer');
+    expect(result.request().postDataJSON()).toEqual({
+      application,
+      screen: 'home',
+      measurements: expect.arrayContaining([{ name: 'load', value: expect.any(Number) }]),
+    });
+
+    const settings = await page.context().newPage();
+
+    await settings.goto('/en/privacy/');
+
+    await controls(settings).reject.click();
+
+    await expect(controls(settings).notice.getByText(privacy.copy.off)).toBeVisible();
+
+    const beforeReopening = observed.length;
+
+    await throwError(page, 'SyntaxError');
+
+    await expect(privacy.opener).toBeVisible();
+
+    await page.reload();
+
+    await throwError(page, 'SyntaxError');
+
+    await expect(privacy.opener).toBeVisible();
+
+    expect(observed).toHaveLength(beforeReopening);
+    expect(JSON.stringify(observed)).not.toContain(marker);
+
+    await info.attach('synthetic-performance-network', {
+      body: JSON.stringify({ requests: observed, afterRevocation: observed.slice(beforeReopening) }, null, 2),
+      contentType: 'application/json',
+    });
+  });
+}
 
 test('the mobile dark app keeps privacy controls in flow and links to Spanish public settings', async ({
   page,

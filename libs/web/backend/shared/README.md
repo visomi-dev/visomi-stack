@@ -7,11 +7,11 @@ The owning executable explicitly initializes and shuts down telemetry. Importing
 this library does not initialize it. Applications can supply a runtime to their
 HTTP adapters or use the current runtime within the same process.
 
-The owning runtime can opt into the official OTLP/HTTP protobuf exporter with
-`VISOMI_OTLP_TRACING=true` and the `OTEL_EXPORTER_OTLP_*` receiver variables.
-The flag controls application export independently of the hosting provider.
-Export requires an authenticated private receiver. Platform-managed telemetry
-must independently satisfy the capture policy.
+The owning runtime configures the official OTLP/HTTP protobuf exporter when the
+existing endpoint, protocol and authentication variables describe a private
+receiver. An entirely absent configuration leaves export off. Partial or invalid
+receiver settings fail startup. Browser consent and platform-managed telemetry
+have independent capture policies.
 Only the facade's allowlisted spans are exported, without global instrumentation
 or resource discovery. See the
 [telemetry guide](../../../../docs/deployment.md#observability-and-future-workers)

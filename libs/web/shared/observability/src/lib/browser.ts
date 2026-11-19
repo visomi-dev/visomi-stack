@@ -97,7 +97,7 @@ export function createBrowserReporter(
 
     const config = await currentConfiguration();
 
-    if (config?.performance !== true || !performanceAllowed()) {
+    if (!config || !performanceAllowed()) {
       return false;
     }
 
@@ -270,6 +270,7 @@ export function createBrowserReporter(
     consent,
     report,
     performanceReady,
+    performanceAllowed,
     pending: pending.items,
     subscribePending: pending.subscribe,
     discard: pending.discard,

@@ -56,6 +56,7 @@ describe('OpenTelemetry performance capture policy', () => {
       loadEventEnd: 200,
       domInteractive: 100,
       domContentLoadedEventEnd: 150,
+      responseStart: 50,
       type: marker,
     };
 
@@ -78,9 +79,11 @@ describe('OpenTelemetry performance capture policy', () => {
       return logger;
     });
     const send = vi.fn();
-    const runtime = startBrowserPerformance(send);
+    let allowed = true;
+    const runtime = startBrowserPerformance(send, () => allowed);
 
     expect(send).toHaveBeenCalledExactlyOnceWith([
+      { name: 'ttfb', value: 50 },
       { name: 'dom_interactive', value: 100 },
       { name: 'dom_content_loaded', value: 150 },
       { name: 'load', value: 200 },
@@ -88,7 +91,7 @@ describe('OpenTelemetry performance capture policy', () => {
     expect(JSON.stringify(records)).not.toContain(marker);
     expect(records[0]).toMatchObject({
       eventName: 'frontend.performance',
-      attributes: { dom_interactive: 100, dom_content_loaded: 150, load: 200 },
+      attributes: { dom_interactive: 100, dom_content_loaded: 150, load: 200, ttfb: 50 },
     });
     runtime.routeTransition('route_completed', 123.456);
     expect(send).toHaveBeenLastCalledWith([{ name: 'route_completed', value: 123.46 }]);
@@ -96,6 +99,10 @@ describe('OpenTelemetry performance capture policy', () => {
       eventName: 'frontend.performance',
       attributes: { route_completed: 123.46 },
     });
+    allowed = false;
+    runtime.routeTransition('route_failed', 120);
+    expect(records).toHaveLength(2);
+    expect(send).toHaveBeenCalledTimes(2);
     runtime.stop();
     runtime.routeTransition('route_failed', 120);
     window.dispatchEvent(new Event('load'));

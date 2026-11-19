@@ -64,21 +64,22 @@ Astro runtime, browser fixtures and this contract. It was absent from Railway
 configuration and Angular. The gateway used `BROWSER_TELEMETRY_ORIGIN` for
 both receivers. Railway set it to the same value as `AUTH_ORIGIN`, and test
 fixtures and the Jaeger smoke test set their own gateway origin. Standalone
-Angular still uses its independent `BROWSER_TELEMETRY_ORIGIN` when its
-optional error receiver is active.
+Angular still uses its independent `BROWSER_TELEMETRY_ORIGIN` for the browser
+receiver. VIS-86 also retires the separate browser error and performance toggles.
+The browser choice governs both types of automatic capture and delivery.
 
-1. Validate the consent and one-off report flows with the previous visit flag
-   present. Then verify the same network behavior with the flag absent,
-   including the canonical and foreign origin cases, and check the existing
-   server telemetry suite.
+1. Validate the consent and one-off report flows with the previous flags
+   present. Then verify visits, errors and performance with those flags absent,
+   including canonical and foreign origins. Verify that an authenticated private
+   receiver can get backend traces while automatic browser sharing is off.
 2. For a future authorized release, verify that `AUTH_ORIGIN` matches the
    actual public origin and the previously intended browser intake origin.
-   Leave the retired variables in provider configuration until a separate
-   approved cleanup. The new gateway ignores them.
-3. If the collector change needs reversal, revert the VIS-86 commit while
-   retaining the consent commit. The older gateway again uses its visit flag
-   and origin setting. Match the retained variables to that previous runtime
-   during an authorized release. Both revisions use the same table and
+   Confirm the private OTLP receiver configuration is complete if server export
+   is intended. Leave retired variables in provider configuration until a
+   separate approved cleanup, and review any future IaC plan for removals.
+3. If the receiver change needs reversal, revert the relevant VIS-86 commits
+   while retaining the consent implementation. An older executable uses its
+   matching toggles and origin settings. Both revisions use the same table and
    aggregation contract, and no database reversal is required.
 
 These are source and verification steps. No provider, DNS, deployment or

@@ -180,23 +180,20 @@ async function bootstrap() {
     return;
   }
 
-  if (process.env.VISOMI_BROWSER_TELEMETRY === 'true') {
-    const [applicationAssets, siteAssets] = await Promise.all([
-      browserAssets(angular.clientDirectory, '/app'),
-      site ? browserAssets(site.clientDirectory) : Promise.resolve(undefined),
-    ]);
+  const [applicationAssets, siteAssets] = await Promise.all([
+    browserAssets(angular.clientDirectory, '/app'),
+    site ? browserAssets(site.clientDirectory) : Promise.resolve(undefined),
+  ]);
 
-    if (stopping) {
-      return;
-    }
-
-    browserTelemetry = createBrowserTelemetry({
-      observability,
-      assets: { 'web-app': applicationAssets, ...(siteAssets ? { 'web-site': siteAssets } : {}) },
-      origin,
-      performance: process.env.VISOMI_BROWSER_PERFORMANCE === 'true',
-    });
+  if (stopping) {
+    return;
   }
+
+  browserTelemetry = createBrowserTelemetry({
+    observability,
+    assets: { 'web-app': applicationAssets, ...(siteAssets ? { 'web-site': siteAssets } : {}) },
+    origin,
+  });
 
   visits = createVisitAnalytics({
     enabled: true,
@@ -217,7 +214,7 @@ async function bootstrap() {
     staticDirectory: process.env.STATIC_ASSETS_PATH
       ? resolve(process.env.STATIC_ASSETS_PATH)
       : fileURLToPath(new URL('./static/', import.meta.url)),
-    ...(browserTelemetry ? { browserTelemetry } : {}),
+    browserTelemetry,
     ...proxyConfiguration(process.env.AUTH_TRUST_PROXY),
   });
 

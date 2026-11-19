@@ -50,10 +50,94 @@
       "status": 204
     },
     {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-site",
+        "screen": "unknown",
+        "measurements": [
+          {
+            "name": "ttfb",
+            "value": 7.3
+          },
+          {
+            "name": "dom_interactive",
+            "value": 17.9
+          },
+          {
+            "name": "dom_content_loaded",
+            "value": 30.1
+          },
+          {
+            "name": "load",
+            "value": 30.7
+          }
+        ]
+      },
+      "status": 202
+    },
+    {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-site",
+        "screen": "unknown",
+        "measurements": [
+          {
+            "name": "fcp",
+            "value": 40
+          }
+        ]
+      },
+      "status": 202
+    },
+    {
       "path": "/telemetry/config",
       "method": "GET",
       "payload": null,
       "status": 200
+    },
+    {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-app",
+        "screen": "dashboard",
+        "measurements": [
+          {
+            "name": "ttfb",
+            "value": 77.1
+          },
+          {
+            "name": "dom_interactive",
+            "value": 88.3
+          },
+          {
+            "name": "dom_content_loaded",
+            "value": 117.1
+          },
+          {
+            "name": "load",
+            "value": 168.3
+          }
+        ]
+      },
+      "status": 202
+    },
+    {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-app",
+        "screen": "dashboard",
+        "measurements": [
+          {
+            "name": "fcp",
+            "value": 100
+          }
+        ]
+      },
+      "status": 202
     },
     {
       "path": "/telemetry/visits/config",
@@ -71,6 +155,21 @@
       "status": 204
     },
     {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-app",
+        "screen": "dashboard",
+        "measurements": [
+          {
+            "name": "route_completed",
+            "value": 41.2
+          }
+        ]
+      },
+      "status": 202
+    },
+    {
       "path": "/telemetry/visits",
       "method": "POST",
       "payload": {
@@ -80,10 +179,67 @@
       "status": 204
     },
     {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-app",
+        "screen": "dashboard",
+        "measurements": [
+          {
+            "name": "route_completed",
+            "value": 1.7
+          }
+        ]
+      },
+      "status": 202
+    },
+    {
       "path": "/telemetry/config",
       "method": "GET",
       "payload": null,
       "status": 200
+    },
+    {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-site",
+        "screen": "unknown",
+        "measurements": [
+          {
+            "name": "ttfb",
+            "value": 20.8
+          },
+          {
+            "name": "dom_interactive",
+            "value": 52.8
+          },
+          {
+            "name": "dom_content_loaded",
+            "value": 64.8
+          },
+          {
+            "name": "load",
+            "value": 65.4
+          }
+        ]
+      },
+      "status": 202
+    },
+    {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-site",
+        "screen": "unknown",
+        "measurements": [
+          {
+            "name": "fcp",
+            "value": 72
+          }
+        ]
+      },
+      "status": 202
     },
     {
       "path": "/telemetry/config",

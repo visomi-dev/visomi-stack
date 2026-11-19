@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { appendFile, writeFile } from 'node:fs/promises';
-import type { Server } from 'node:http';
+import { createServer, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
 
 import { workspaceRoot } from '@nx/devkit';
@@ -17,6 +18,7 @@ async function serve(): Promise<void> {
   let postgres: Awaited<ReturnType<typeof testPostgres>> | undefined;
   let child: ChildProcess | undefined;
   let smtp: SMTPServer | undefined;
+  let otlp: Server | undefined;
   let resolveStopped: () => void = () => undefined;
   const stopped = new Promise<void>((resolve) => {
     resolveStopped = resolve;
@@ -59,6 +61,35 @@ async function serve(): Promise<void> {
     await new Promise<void>((resolve) => smtp!.listen(0, '127.0.0.1', resolve));
 
     const smtpPort = ((smtp as unknown as { server: Server }).server.address() as { port: number }).port;
+    const authorization = 'Basic ' + Buffer.from('gateway:synthetic-auth-ui-receiver').toString('base64');
+    let recorded = false;
+
+    otlp = createServer(async (request, response) => {
+      if (request.url !== '/v1/traces' || request.headers.authorization !== authorization) {
+        request.resume();
+        response.writeHead(401).end();
+
+        return;
+      }
+
+      const chunks: Buffer[] = [];
+
+      for await (const chunk of request) {
+        chunks.push(chunk);
+      }
+
+      if (!recorded && Buffer.concat(chunks).includes('http.request')) {
+        await writeFile(join(directory, 'otlp-http-span.txt'), 'http.request');
+
+        recorded = true;
+      }
+
+      response.writeHead(200, { 'content-type': 'application/x-protobuf' }).end();
+    });
+
+    await new Promise<void>((resolve) => otlp!.listen(0, '127.0.0.1', resolve));
+
+    const otlpPort = (otlp.address() as AddressInfo).port;
 
     child = spawn(process.execPath, ['dist/apps/web/gateway/main.js'], {
       cwd: workspaceRoot,
@@ -84,17 +115,16 @@ async function serve(): Promise<void> {
         SMTP_SECURE: 'false',
         SMTP_USER: '',
         SMTP_PASSWORD: '',
-        VISOMI_BROWSER_TELEMETRY: 'true',
-        VISOMI_BROWSER_PERFORMANCE: 'false',
         VISOMI_PERSISTENCE_EXAMPLE: 'true',
         API_APP_PATH: '',
         SITE_APP_PATH: '',
         APPLICATION_APP_PATH: '',
-        OTEL_EXPORTER_OTLP_ENDPOINT: '',
+        OTEL_EXPORTER_OTLP_ENDPOINT: `http://127.0.0.1:${otlpPort}`,
+        OTEL_EXPORTER_OTLP_PROTOCOL: 'http/protobuf',
+        OTEL_EXPORTER_OTLP_HEADERS: `authorization=${encodeURIComponent(authorization)}`,
         OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: '',
-        OTEL_EXPORTER_OTLP_HEADERS: '',
-        VISOMI_OTLP_ENDPOINT: '',
-        VISOMI_OTLP_TRACING: 'false',
+        OTEL_EXPORTER_OTLP_TRACES_HEADERS: '',
+        OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: '',
       },
     });
     child.once('exit', () => resolveStopped());
@@ -115,6 +145,10 @@ async function serve(): Promise<void> {
 
     if (smtp) {
       await new Promise<void>((resolve) => smtp!.close(resolve));
+    }
+
+    if (otlp) {
+      await new Promise<void>((resolve) => otlp!.close(() => resolve()));
     }
 
     await postgres?.stop();
