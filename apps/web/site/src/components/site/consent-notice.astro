@@ -10,9 +10,9 @@ const { locale, settings } = Astro.props;
 const copy = browserPrivacyCopy[locale];
 ---
 
-<div data-consent={settings ? 'settings' : 'notice'}>
+<div>
   <section
-    data-consent-choice
+    data-consent={settings ? 'settings' : 'notice'}
     hidden
     aria-label={copy.title}
     class:list={[

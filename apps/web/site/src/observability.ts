@@ -1,5 +1,4 @@
 import {
-  connectConsentNotice,
   createBrowserConsent,
   describeBrowserError,
   loadBrowserReporter,
@@ -109,52 +108,49 @@ if (languageLink) {
 }
 
 const notice = document.querySelector<HTMLElement>('[data-consent]');
+const settings = notice?.dataset['consent'] === 'settings';
 
-if (notice) {
-  const choices = notice.querySelector<HTMLElement>('[data-consent-choice]')!;
+if (notice && (settings || !consent.decided())) {
   const accept = notice.querySelector<HTMLButtonElement>('[data-choice=accept]')!;
+  const reject = notice.querySelector<HTMLButtonElement>('[data-choice=reject]')!;
   const status = notice.querySelector<HTMLElement>('[data-choice-status]')!;
-  let choose = consent.decide;
+  const sync = () => {
+    const grant = consent.permit();
 
-  if (notice.dataset['consent'] === 'settings') {
-    const sync = () => {
-      accept.disabled = consent.blocked();
-      status.textContent =
-        status.dataset[accept.disabled ? 'blocked' : consent.permit() ? 'on' : consent.decided() ? 'off' : ''] ?? '';
-    };
+    if (grant && !settings) {
+      notice.hidden = true;
+    }
 
-    choices.hidden = false;
-    consent.subscribe(sync);
-    sync();
-  } else {
-    const confirmation = notice.querySelector<HTMLElement>('[data-consent-confirmation]')!;
-    const announcement = notice.querySelector<HTMLElement>('[data-consent-announcement]')!;
-    const seconds = confirmation.querySelector<HTMLElement>('[data-consent-seconds]')!;
-    const progress = confirmation.querySelector<HTMLProgressElement>('progress')!;
-    const controller = connectConsentNotice(window, consent, (view) => {
-      choices.hidden = view.kind !== 'choice';
-      confirmation.hidden = view.kind !== 'confirmation';
-      const message = view.kind === 'confirmation' ? announcement.dataset['thanks']! : '';
+    accept.disabled = consent.blocked();
+    status.textContent =
+      status.dataset[accept.disabled ? 'blocked' : grant ? 'on' : consent.decided() ? 'off' : ''] ?? '';
+  };
 
-      if (announcement.textContent !== message) {
-        announcement.textContent = message;
-      }
+  notice.hidden = false;
+  reject.onclick = () => consent.decide(false);
+  accept.onclick = () => {
+    const fresh = !settings && !consent.permit();
 
-      if (view.kind === 'choice') {
-        accept.disabled = view.blocked;
-        status.textContent = status.dataset[view.blocked ? 'blocked' : view.decided ? 'off' : ''] ?? '';
-      } else if (view.kind === 'confirmation') {
-        progress.value = view.seconds;
-        seconds.textContent = view.seconds + ' s';
-      }
-    });
+    consent.decide(true);
+    const grant = fresh && consent.permit();
 
-    choose = controller.choose;
-  }
+    if (grant) {
+      let startedAt = performance.now();
 
-  choices.onclick = ({ target }) => {
-    if (target instanceof HTMLButtonElement && target.dataset['choice']) {
-      choose(target === accept);
+      window.addEventListener(
+        'pagehide',
+        () => {
+          startedAt = -Infinity;
+        },
+        { once: true },
+      );
+      const confirmation = import('./consent-confirmation');
+
+      void confirmation
+        .then(({ confirmConsent }) => confirmConsent(notice.parentElement!, consent, grant, startedAt))
+        .catch(ignoreImportFailure);
     }
   };
+  consent.subscribe(sync);
+  sync();
 }

@@ -17,10 +17,10 @@ import { BROWSER_ERROR_REPORTER } from '../browser-telemetry';
 
 import {
   browserPrivacyCopy,
+  connectConsentNotice,
   consentConfirmationSeconds,
   type ConsentNoticeView,
 } from '@visomi-stack/web-shared-observability';
-import { connectConsentNotice } from '@visomi-stack/web-shared-observability/browser';
 
 @Component({
   selector: 'app-consent-notice',

@@ -11,9 +11,13 @@ export function connectConsentNotice(
   browser: Window,
   consent: BrowserConsent,
   render: (view: ConsentNoticeView) => void,
+  initial?: { grant: string; startedAt: number },
 ) {
   let showChoice = !consent.decided();
-  let confirmation: { grant: string; expiresAt: number } | undefined;
+  let confirmation = initial && {
+    grant: initial.grant,
+    expiresAt: initial.startedAt + consentConfirmationSeconds * 1000,
+  };
   let timer: number | undefined;
 
   function sync(): void {

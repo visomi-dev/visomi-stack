@@ -4,7 +4,7 @@ This follow-up starts at `415711d`. The continuous workspace uses the pre-#34 sh
 
 ## Consent confirmation
 
-A fresh grant from the compact notice replaces the choices with the localized thank-you and a 10-second countdown. The progress and changing number are visual. The stable status region announces the thank-you once. The timer is attached to the current grant and stops on revocation, browser privacy signals, or navigation. Dismissal leaves the choice saved. The Privacy settings page still displays the current choice and allows revocation.
+A fresh grant from the compact notice replaces the choices with the localized thank-you and a 10-second countdown. The progress and changing number are visual. The stable status region announces the thank-you once. The timer is attached to the current grant and stops on revocation, browser privacy signals, or navigation. Astro loads the countdown code on Share and uses the original grant time when the code arrives. Dismissal leaves the choice saved. The Privacy settings page still displays the current choice and allows revocation.
 
 | Surface           | Desktop, light, EN                                                                           | Mobile, dark, es-MX                                                                       |
 | ----------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |

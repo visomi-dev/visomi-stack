@@ -66,6 +66,28 @@ it('does not show feedback for a saved grant, cross-tab grant or blocked local a
   expect(vi.getTimerCount()).toBe(0);
 });
 
+it('uses the original grant time when the website loads the countdown after a click', () => {
+  const { browser, consent, notice, render } = fixture();
+
+  notice.destroy();
+  consent.decide(true);
+  const grant = consent.permit()!;
+  const startedAt = browser.performance.now();
+
+  vi.advanceTimersByTime(3_000);
+  const confirmation = connectConsentNotice(browser, consent, render, { grant, startedAt });
+
+  expect(render).toHaveBeenLastCalledWith({ kind: 'confirmation', seconds: 7 });
+  vi.advanceTimersByTime(7_000);
+  expect(render).toHaveBeenLastCalledWith({ kind: 'hidden' });
+  expect(vi.getTimerCount()).toBe(0);
+  confirmation.destroy();
+  consent.decide(false);
+  connectConsentNotice(browser, consent, render, { grant, startedAt: browser.performance.now() });
+  expect(render).toHaveBeenLastCalledWith({ kind: 'hidden' });
+  expect(vi.getTimerCount()).toBe(0);
+});
+
 it.each(['revoke', 'DNT', 'pagehide', 'navigate', 'destroy'])('clears an active timer on %s', (change) => {
   const { browser, consent, localStorage, navigator, notice, render } = fixture();
 
