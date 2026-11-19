@@ -1,6 +1,5 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { VaultError, vaultUnitId, type DataContext, type WrappingContext } from '@visomi-stack/shared-db';
 import { createPinMethodId, exportEncryptedBackup, PrfUnlock } from '@visomi-stack/web-frontend-db';
 
@@ -10,7 +9,7 @@ import { ClientDatabase, VAULT_DATABASE_NAMESPACE } from '../../shared/db/databa
 import { NavigationHeading } from '../../shared/navigation-heading';
 import { vaultMessage } from '../../shared/vault/vault-messages';
 import { VaultSession } from '../../shared/vault/vault-session';
-import { Button, Card, Field, Heading, Link, PinInput, Text } from '../../ui';
+import { Button, Card, Field, Heading, PinInput, Text } from '../../ui';
 
 const scope = { kind: 'tenant', tenantId: '786cc156-1520-40d6-b884-353508731b31' } as const;
 const context: DataContext = {
@@ -25,7 +24,7 @@ const context: DataContext = {
 
 @Component({
   selector: 'app-vault-demo',
-  imports: [Button, Card, Field, Heading, Link, NavigationHeading, PinInput, RouterLink, Text],
+  imports: [Button, Card, Field, Heading, NavigationHeading, PinInput, Text],
   providers: [ClientDatabase, VaultSession, { provide: VAULT_DATABASE_NAMESPACE, useValue: 'reference-demo' }],
   templateUrl: './demo.html',
 })

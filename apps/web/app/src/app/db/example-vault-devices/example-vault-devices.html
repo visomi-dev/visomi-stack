@@ -14,11 +14,7 @@
 
   @if (pairing.ready()) {
     @if (pairing.paired()) {
-      <a
-        appUI
-        [routerLink]="['/persistence', target().tenantId, target().scopeId, target().objectId]"
-        i18n="@@vaultDevicesOpen"
-      >
+      <a appUI [routerLink]="resourceLink()" [queryParams]="resourceParams()" i18n="@@vaultDevicesOpen">
         Open test private resource
       </a>
     } @else if (pairing.existing()) {
@@ -64,11 +60,7 @@
           Unlock the test private resource on this device before approving another device.
         </p>
 
-        <a
-          appUI
-          [routerLink]="['/persistence', target().tenantId, target().scopeId, target().objectId]"
-          i18n="@@vaultDevicesOpen"
-        >
+        <a appUI [routerLink]="resourceLink()" [queryParams]="resourceParams()" i18n="@@vaultDevicesOpen">
           Open test private resource
         </a>
       }

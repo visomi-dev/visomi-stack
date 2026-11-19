@@ -29,7 +29,8 @@ import { ClientDatabase } from '../shared/db/database';
 import { VaultSession } from '../shared/vault/vault-session';
 import { openLocalVault } from '../shared/vault/local-unlock';
 
-import { rosterSchema, validateExampleEnvelope, exampleLocalKey, type ExampleTarget } from './example-contracts';
+import { rosterSchema, validateExampleEnvelope, exampleLocalKey, examplePrivatePath } from './example-contracts';
+import type { ExampleTarget } from './example-contracts';
 
 export type { ExampleTarget } from './example-contracts';
 
@@ -64,7 +65,7 @@ export class ExamplePrivateResource {
   readonly synchronized = this.synchronizedState.asReadonly();
   readonly conflict = this.conflictState.asReadonly();
 
-  async unlock(target: ExampleTarget, rpId: string, initialize: boolean, pin?: Uint8Array): Promise<void> {
+  async unlock(target: ExampleTarget, rpId: string, initialize: boolean, pin?: Uint8Array, localOnly = false) {
     this.close();
     this.vault.release();
     const signal = this.controller.signal;
@@ -78,11 +79,11 @@ export class ExamplePrivateResource {
       throw new VaultError('unavailable');
     }
 
-    const path = this.path(target);
+    const path = examplePrivatePath(target);
     let registry: z.infer<typeof rosterSchema> | undefined;
 
-    if (pin && !initialize) {
-      await this.restoreLocal(target, rpId, pin, ownerId, signal);
+    if ((pin || localOnly) && !initialize) {
+      await this.restoreLocal(target, rpId, pin, ownerId, signal, localOnly);
 
       return;
     }
@@ -451,6 +452,7 @@ export class ExamplePrivateResource {
     pin: Uint8Array | undefined,
     ownerId: string,
     signal: AbortSignal,
+    allowPasskey = false,
   ): Promise<void> {
     const opened = await openLocalVault({
       vault: this.vault,
@@ -458,6 +460,7 @@ export class ExamplePrivateResource {
       key: exampleLocalKey(target),
       rpId,
       pin,
+      allowPasskey,
       ownerId,
       signal,
       current: () => this.current(signal),
@@ -469,7 +472,7 @@ export class ExamplePrivateResource {
     this.storage = storage;
     const id = replicaId(ownerId, local.key, local.key.scope);
 
-    const path = this.path(target);
+    const path = examplePrivatePath(target);
 
     this.replica = new SyncReplica(
       id,
@@ -640,10 +643,6 @@ export class ExamplePrivateResource {
     ) {
       throw new VaultError('stale-operation');
     }
-  }
-
-  private path(target: ExampleTarget) {
-    return `/tenants/${target.tenantId}/scopes/${target.scopeId}/domains/private-resources`;
   }
 
   private readonly accountChanged = effect(() => {

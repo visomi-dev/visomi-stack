@@ -6,6 +6,7 @@ import { ExampleVaultDevices } from '../../../db/example-vault-devices/example-v
 import { exampleTargetSchema } from '../../../db/example-contracts';
 import { DatabaseHttp } from '../../../shared/db/http';
 import { ExampleVaultProfile } from '../../../db/example-vault-profile';
+import { PersistenceDemos } from '../../../db/persistence-demos';
 import { NavigationHeading } from '../../../shared/navigation-heading';
 import { Heading, Text, Link, Card } from '../../../ui';
 import { AuthHttp } from '../../shared/http';
@@ -24,11 +25,15 @@ export class Security {
   private readonly api = inject(Methods);
   private readonly profile = inject(ExampleVaultProfile);
   private readonly route = inject(ActivatedRoute);
+  private readonly demos = inject(PersistenceDemos, { optional: true });
 
   private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
 
   protected readonly pairingRelyingParty = signal('');
 
+  protected readonly pairingBackedSample = computed(
+    () => this.demos?.enabled() === true && this.params().get('sample') === 'vault-backup',
+  );
   protected readonly pairingTargets = computed(() => {
     const params = this.params();
     const target = exampleTargetSchema.safeParse({

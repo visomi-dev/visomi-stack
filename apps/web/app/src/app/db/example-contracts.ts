@@ -13,6 +13,10 @@ import {
 export const exampleTargetSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid(), objectId: z.uuid() });
 export type ExampleTarget = z.infer<typeof exampleTargetSchema>;
 
+export function examplePrivatePath(target: ExampleTarget): string {
+  return `/tenants/${target.tenantId}/scopes/${target.scopeId}/domains/private-resources`;
+}
+
 export const exampleProfileSchema = z.strictObject({
   policy: productPolicySchema,
   origin: z.url(),

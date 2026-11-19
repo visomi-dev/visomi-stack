@@ -43,7 +43,9 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
 
   await expect(page.getByRole('heading', { name: 'Vault example', level: 1 })).toBeVisible();
 
-  await expect(page.getByRole('heading', { name: 'Encrypted backup', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Local encrypted download', exact: true })).toHaveCount(0);
+
+  await expect(page.getByRole('heading', { name: 'Back up and restore a test note', exact: true })).toHaveCount(0);
 
   await expect(primary.getByRole('link', { name: 'Cloud example', exact: true })).toHaveCount(0);
 
@@ -220,7 +222,7 @@ test('downloads the local ciphertext only from an unlocked vault and keeps a sam
 
   await page.goto('/app/en/vault-example');
 
-  await expect(page.getByRole('heading', { name: 'Encrypted backup', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Local encrypted download', exact: true })).toBeVisible();
 
   await expect(backup).toHaveCount(0);
 
@@ -303,7 +305,7 @@ test('downloads the local ciphertext only from an unlocked vault and keeps a sam
 
     await recipient.goto('/app/es/vault-example');
 
-    await expect(recipient.getByRole('heading', { name: 'Respaldo cifrado', exact: true })).toBeVisible();
+    await expect(recipient.getByRole('heading', { name: 'Descarga local cifrada', exact: true })).toBeVisible();
 
     await expect(recipient.getByRole('button', { name: 'Configurar mi bóveda', exact: true })).toBeVisible();
 

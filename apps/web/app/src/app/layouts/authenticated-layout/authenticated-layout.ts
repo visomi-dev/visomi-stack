@@ -127,10 +127,10 @@ export class AuthenticatedLayout {
   // The example route owns its contextual prompt; shared vault code has no route exclusions.
   readonly vaultMethod = computed(() => {
     this.pageNavigation.context();
+    const url = this.router.url;
+    const ownsPrompt = url.startsWith('/persistence') || (this.demos.enabled() && url.startsWith('/vault-example?'));
 
-    return this.vaults.show() && !this.router.url.startsWith('/persistence')
-      ? this.vaults.binding()?.method
-      : undefined;
+    return this.vaults.show() && !ownsPrompt ? this.vaults.binding()?.method : undefined;
   });
 
   logout(): void {

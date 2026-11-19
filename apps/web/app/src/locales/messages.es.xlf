@@ -1623,24 +1623,56 @@
         <target>No pudimos completar la acción. Inténtalo de nuevo.</target>
       </trans-unit>
       <trans-unit id="vaultExampleBackupHeading" datatype="html">
-        <source>Encrypted backup</source>
-        <target>Respaldo cifrado</target>
+        <source>Local encrypted download</source>
+        <target>Descarga local cifrada</target>
       </trans-unit>
       <trans-unit id="vaultExampleBackupExplanation" datatype="html">
         <source> Open the example note to download an encrypted copy. The file contains the encrypted note and its original device-bound key wrapper. Keep it private, especially if you use a PIN. </source>
         <target>Abre la nota de ejemplo para descargar una copia cifrada. El archivo contiene la nota cifrada y la clave protegida del dispositivo original. Guarda el archivo en un lugar privado, sobre todo si usas un PIN.</target>
       </trans-unit>
       <trans-unit id="vaultExampleBackupRestoreLimit" datatype="html">
-        <source> Signing in doesn’t unlock the vault. This file has no authorized restore path on a second browser profile. The separate device pairing example shows how an approved device retrieves a synchronized test note. </source>
-        <target>Iniciar sesión no desbloquea la bóveda. Este archivo no se puede restaurar de forma autorizada en otro perfil del navegador. El ejemplo de vinculación muestra cómo un dispositivo aprobado puede recuperar una nota de prueba sincronizada.</target>
+        <source> Signing in doesn’t unlock the vault. This file has no authorized restore path on a second browser profile. Use the backed-up sample below to try restoring a note on a paired device. </source>
+        <target>Iniciar sesión no desbloquea la bóveda. Este archivo no se puede restaurar de forma autorizada en otro perfil del navegador. Prueba el ejemplo de abajo para respaldar y restaurar una nota en un dispositivo vinculado.</target>
       </trans-unit>
       <trans-unit id="vaultExampleBackupDownload" datatype="html">
         <source> Download encrypted backup </source>
         <target>Descargar respaldo cifrado</target>
       </trans-unit>
-      <trans-unit id="vaultExampleBackupPairing" datatype="html">
-        <source> Open the device pairing example </source>
-        <target>Abrir el ejemplo de vinculación de dispositivos</target>
+      <trans-unit id="vaultBackedSampleDenied" datatype="html">
+        <source>This account doesn’t have access to the backup workspace.</source>
+        <target>Esta cuenta no tiene acceso al espacio de trabajo del respaldo.</target>
+      </trans-unit>
+      <trans-unit id="vaultBackedSampleTitle" datatype="html">
+        <source>Back up and restore a test note</source>
+        <target>Respalda y restaura una nota de prueba</target>
+      </trans-unit>
+      <trans-unit id="vaultBackedSampleExplanation" datatype="html">
+        <source> Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy, then open this workspace on an approved device to download the same note. The server stores the encrypted note and the metadata needed to deliver it. </source>
+        <target>Crea una nota de prueba. Se cifra antes de guardarse en este navegador. Sube la copia cifrada y abre este espacio de trabajo en un dispositivo aprobado para descargar la misma nota. El servidor guarda la nota cifrada y los metadatos necesarios para entregarla.</target>
+      </trans-unit>
+      <trans-unit id="vaultBackedSampleCreate" datatype="html">
+        <source>Create a backup test workspace</source>
+        <target>Crear espacio de prueba para respaldos</target>
+      </trans-unit>
+      <trans-unit id="vaultBackedSampleNote" datatype="html">
+        <source>Note in the backup workspace</source>
+        <target>Nota del espacio de trabajo del respaldo</target>
+      </trans-unit>
+      <trans-unit id="vaultBackedSampleNeedsPairing" datatype="html">
+        <source> Sign-in gives you access to the workspace. To restore the note on this browser, open Vault devices and get approval from a device that can already unlock it. </source>
+        <target>Al iniciar sesión puedes acceder al espacio de trabajo. Para restaurar la nota en este navegador, abre Dispositivos del vault y pide la aprobación de un dispositivo que ya pueda desbloquearla.</target>
+      </trans-unit>
+      <trans-unit id="vaultBackedSampleUpload" datatype="html">
+        <source>Upload encrypted note</source>
+        <target>Subir nota cifrada</target>
+      </trans-unit>
+      <trans-unit id="vaultBackedSampleRestore" datatype="html">
+        <source>Download and restore note</source>
+        <target>Descargar y restaurar nota</target>
+      </trans-unit>
+      <trans-unit id="vaultBackedSampleSynced" datatype="html">
+        <source> The encrypted note is backed up and saved on this browser. </source>
+        <target>La nota cifrada está respaldada y guardada en este navegador.</target>
       </trans-unit>
     </body>
   </file>
