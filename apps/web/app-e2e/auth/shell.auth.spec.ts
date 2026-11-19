@@ -2,6 +2,34 @@ import type { Page, TestInfo } from '@playwright/test';
 
 import { expect, test, signup, openAccount } from './support/fixtures';
 
+function sampleMenuTransition(element: Element) {
+  const animation = element
+    .getAnimations()
+    .find((value) => value instanceof CSSTransition && value.transitionProperty === 'background-color');
+
+  if (!animation?.effect) {
+    return null;
+  }
+
+  const timing = animation.effect.getTiming();
+
+  animation.pause();
+
+  const [start, middle, end] = [0, 200, 399].map((time) => {
+    animation.currentTime = time;
+
+    return getComputedStyle(element).backgroundColor;
+  });
+
+  animation.finish();
+
+  return {
+    duration: timing.duration,
+    easing: timing.easing,
+    interpolatesColor: middle !== start && middle !== end,
+  };
+}
+
 test('animates an open mobile menu when the system theme changes', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
 
@@ -21,43 +49,8 @@ test('animates an open mobile menu when the system theme changes', async ({ page
     await page.emulateMedia({ colorScheme });
 
     await expect
-      .poll(
-        () =>
-          dialog.evaluate((element) =>
-            element
-              .getAnimations()
-              .some(
-                (animation) =>
-                  animation instanceof CSSTransition && animation.transitionProperty === 'background-color',
-              ),
-          ),
-        { intervals: [0, 10, 20, 50] },
-      )
-      .toBe(true);
-
-    const motion = await dialog.evaluate((element) => {
-      const animation = element
-        .getAnimations()
-        .find((value) => value instanceof CSSTransition && value.transitionProperty === 'background-color')!;
-      const timing = animation.effect!.getTiming();
-
-      animation.pause();
-
-      const samples = [0, 200, 399].map((time) => {
-        animation.currentTime = time;
-
-        return getComputedStyle(element).backgroundColor;
-      });
-
-      animation.finish();
-
-      return { duration: timing.duration, easing: timing.easing, samples };
-    });
-
-    expect(motion.duration).toBe(400);
-    expect(motion.easing).toBe('ease-in-out');
-    expect(motion.samples[1]).not.toBe(motion.samples[0]);
-    expect(motion.samples[1]).not.toBe(motion.samples[2]);
+      .poll(() => dialog.evaluate(sampleMenuTransition), { intervals: [0, 10, 20, 50] })
+      .toEqual({ duration: 400, easing: 'ease-in-out', interpolatesColor: true });
 
     await expect(page.locator('[data-theme-transition]')).toHaveCount(0);
 
