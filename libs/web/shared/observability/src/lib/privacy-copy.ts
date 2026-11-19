@@ -56,7 +56,7 @@ export const browserPrivacyCopy = {
     blocked: 'La configuración de privacidad de tu navegador bloquea el envío automático.',
     accept: 'Compartir',
     reject: 'No compartir',
-    thanks: 'Gracias por compartir tus datos.',
+    thanks: 'Gracias',
     purposeLink: 'Cómo usamos estos datos',
     purpose: 'Cómo usamos los datos de visitas, rendimiento y errores',
     analytics: 'Contamos las visitas por tipo de página e idioma para saber qué partes del sitio y de la app se usan.',

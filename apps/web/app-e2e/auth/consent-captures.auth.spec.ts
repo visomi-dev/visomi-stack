@@ -18,6 +18,8 @@ const appearances = [
   { name: 'mobile-dark-es', locale: 'es', colorScheme: 'dark', viewport: mobile },
 ] as const;
 
+const acknowledgments = { en: 'Thanks for sharing.', es: 'Gracias' };
+
 async function capture(page: Page, info: TestInfo, name: string) {
   if (info.project.name === 'auth-chromium') {
     await page.evaluate(() => document.fonts.ready);
@@ -229,6 +231,7 @@ for (const surface of surfaces.slice(0, 2)) {
       await page.goto(surface.path(appearance.locale));
 
       const copy = browserPrivacyCopy[appearance.locale];
+      const acknowledgment = acknowledgments[appearance.locale];
       const choice = page.getByRole('region', { name: copy.title });
       const share = choice.getByRole('button', { name: copy.accept, exact: true });
       const confirmation = page.locator('[data-consent-confirmation]');
@@ -260,11 +263,11 @@ for (const surface of surfaces.slice(0, 2)) {
 
       await expect(choice).toBeHidden();
 
-      await expect(confirmation.getByText(copy.thanks)).toBeVisible();
+      await expect(confirmation.getByText(acknowledgment, { exact: true })).toBeVisible();
 
       await expect(confirmation.locator('button, a')).toHaveCount(0);
 
-      await expect(announcement).toHaveText(copy.thanks);
+      await expect(announcement).toHaveText(acknowledgment);
 
       await expect(seconds).toHaveText('10 s');
 
@@ -288,7 +291,7 @@ for (const surface of surfaces.slice(0, 2)) {
 
       await expect(confirmation.locator('progress')).toHaveJSProperty('value', 5);
 
-      await expect(announcement).toHaveText(copy.thanks);
+      await expect(announcement).toHaveText(acknowledgment);
 
       await expect(announcement).toHaveAttribute('data-announcements', '1');
 
