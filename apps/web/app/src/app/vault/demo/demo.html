@@ -23,54 +23,81 @@
             Open the example note
           </button>
 
-          <button appUI type="button" variant="secondary" [disabled]="busy()" (click)="lock()" i18n="@@vaultLock">
+          <button appUI type="button" variant="secondary" (click)="lock()" i18n="@@vaultLock">
             Lock private resources
           </button>
+
+          @if (pinOpen() && !passkeyBinding()) {
+            <button appUI type="button" variant="secondary" [disabled]="busy()" (click)="addPasskey()">
+              @if (pendingAddition()) {
+                <span i18n="@@vaultDemoVerify">Verify passkey</span>
+              } @else {
+                <span i18n="@@vaultDemoAddPasskey">Add passkey</span>
+              }
+            </button>
+          }
         </div>
 
         @if (plaintext()) {
           <pre class="rounded-lg border p-4 break-words whitespace-pre-wrap">{{ plaintext() }}</pre>
         }
-      } @else if (isPin()) {
+      } @else if (binding() || isPin()) {
         @if (binding()) {
           <p role="status">{{ status() }}</p>
         }
 
-        <p appUI tone="muted" i18n="@@vaultDemoPinWarning">
-          Anyone with a copy of the encrypted data can try PINs offline. A passkey provides stronger protection.
-        </p>
+        @if (passkeyBinding() || !isPin()) {
+          <div class="flex flex-wrap gap-3">
+            <button appUI type="button" [disabled]="busy()" (click)="unlockPasskey()" i18n="@@vaultUnlock">
+              Unlock with a passkey
+            </button>
 
-        <form class="space-y-5" (submit)="$event.preventDefault(); unlock()">
-          <app-field
-            control-id="vault-example-pin"
-            label="Local unlock PIN"
-            i18n-label="@@vaultPinLabel"
-            description="6 digits"
-            i18n-description="@@vaultPinLength"
-          >
-            <app-pin-input required [digits]="6" [disabled]="busy()" [(value)]="pinDraft" />
-          </app-field>
-
-          @if (!binding()) {
-            <app-field control-id="vault-example-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
-              <app-pin-input required [digits]="6" [disabled]="busy()" [(value)]="pinConfirmation" />
-            </app-field>
-          }
-
-          <button appUI type="submit" [disabled]="busy()">
-            @if (binding()) {
-              <span i18n="@@vaultPanelPinUnlock">Unlock with PIN</span>
-            } @else {
-              <span i18n="@@vaultDemoCreate">Set up the example vault</span>
+            @if (passkeyBinding() && !pinSelected()) {
+              <button
+                appUI
+                type="button"
+                variant="secondary"
+                [disabled]="busy()"
+                (click)="pinSelected.set(true)"
+                i18n="@@vaultDemoUsePin"
+              >
+                Use a local PIN
+              </button>
             }
-          </button>
-        </form>
-      } @else if (binding()) {
-        <p role="status">{{ status() }}</p>
+          </div>
+        }
 
-        <button appUI type="button" [disabled]="busy()" (click)="unlock()" i18n="@@vaultUnlock">
-          Unlock with a passkey
-        </button>
+        @if (isPin() && (!passkeyBinding() || pinSelected())) {
+          <p appUI tone="muted" i18n="@@vaultDemoPinWarning">
+            Anyone with a copy of the encrypted data can try PINs offline.
+          </p>
+
+          <form class="space-y-5" (submit)="$event.preventDefault(); unlock()">
+            <app-field
+              control-id="vault-example-pin"
+              label="Local unlock PIN"
+              i18n-label="@@vaultPinLabel"
+              description="6 digits"
+              i18n-description="@@vaultPinLength"
+            >
+              <app-pin-input required [digits]="6" [disabled]="busy()" [(value)]="pinDraft" />
+            </app-field>
+
+            @if (!binding()) {
+              <app-field control-id="vault-example-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
+                <app-pin-input required [digits]="6" [disabled]="busy()" [(value)]="pinConfirmation" />
+              </app-field>
+            }
+
+            <button appUI type="submit" [disabled]="busy()">
+              @if (binding()) {
+                <span i18n="@@vaultPanelPinUnlock">Unlock with PIN</span>
+              } @else {
+                <span i18n="@@vaultDemoCreate">Set up the example vault</span>
+              }
+            </button>
+          </form>
+        }
       } @else {
         @if (setup() === 'pin-option') {
           <p appUI role="status" tone="muted" i18n="@@vaultDemoNoPasskey">
@@ -106,6 +133,10 @@
         </div>
       }
     </div>
+
+    @if (confirmation()) {
+      <p role="status">{{ confirmation() }}</p>
+    }
 
     @if (notice()) {
       <p role="alert">{{ notice() }}</p>

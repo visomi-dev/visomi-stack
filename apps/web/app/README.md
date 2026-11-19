@@ -225,13 +225,33 @@ existing credential without registering a new entry in the sign-in picker.
 
 The synthetic note is encrypted on first open and stays in the account-scoped
 example database in this browser. Reloading requires local unlock. The example
-opens existing PIN vaults with their original binding and ciphertext. Local
-storage currently holds one wrapped key per generation. Adding another unlock
-method safely requires an approved way to retain both wraps with a shared
-encryption budget and leave existing data intact.
+opens existing PIN vaults with their original binding and ciphertext. After
+unlocking with the PIN, **Add passkey** runs a separate local PRF ceremony. A
+successful addition leaves the vault open and the original PIN usable. The next
+unlock offers the passkey and an explicit choice to use the PIN.
+
+The browser SDK reuses its current authenticated wrapping format. It unwraps
+the exact PIN envelope authenticated by the open session, wraps the same data
+key for the verified passkey and clears the transient bytes. Both wrappers bind
+to the same owner, device, origin, key scope and generation. The alternate entry
+is stored under a reserved ID in the example database's existing `units` store.
+The version-one `keys` row and data ciphertext retain their format and contents.
+Both methods reserve encryption from the same `keys` row. Legacy clients can
+still open the original PIN wrapper and use the same budget.
+
+An enrollment transaction checks that the original wrapper is still current and
+that the alternate entry is empty. A lock, logout or cancellation can abort
+the transaction before commit. A lock after commit clears the session while
+retaining the completed enrollment. The reserved entry stays in the isolated
+example database. Deleting the local key through the SDK removes both wrappers
+in one transaction. Account authentication and vault sync, recovery and device
+approval use their existing paths.
 
 The `vault-demo.auth.spec.ts` suite covers the setup gesture, opt-in fallback,
-PIN retries and reload, and PRF unlock. Chromium uses a native virtual
-authenticator for PRF and no-PRF assertions. WebKit exercises simulated
-WebAuthn responses with browser-native Web Crypto and IndexedDB. Physical
-iPhone Safari and passkey-provider behavior still require device verification.
+wrong PIN, local unlock by either method, and logout during enrollment. The SDK
+checks in `tests/pin.spec.ts` compare both unwrapped keys and stored ciphertext,
+track the shared budget and exercise rollback and concurrent enrollment.
+Chromium uses a native virtual authenticator for PRF and no-PRF assertions.
+WebKit exercises simulated WebAuthn responses with browser-native Web Crypto and
+IndexedDB. Physical iPhone Safari and passkey-provider behavior still require
+device verification.

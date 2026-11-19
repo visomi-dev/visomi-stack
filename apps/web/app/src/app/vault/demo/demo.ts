@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
 import { VaultError, vaultUnitId, type DataContext, type WrappingContext } from '@visomi-stack/shared-db';
 import { createPinMethodId, PrfUnlock } from '@visomi-stack/web-frontend-db';
 
@@ -34,23 +34,38 @@ export class VaultDemo {
   private readonly database = inject(ClientDatabase);
 
   private readonly lifetime = new AbortController();
-
   private readonly cleanup = inject(DestroyRef).onDestroy(() => this.lifetime.abort());
 
+  private additionCancellation = new AbortController();
+
   protected readonly binding = signal<WrappingContext | undefined>(undefined);
+  protected readonly passkeyBinding = signal<WrappingContext | undefined>(undefined);
   protected readonly setup = signal<'loading' | 'passkey' | 'pin-option' | 'pin' | 'unavailable'>('loading');
   protected readonly pendingPasskey = signal<WrappingContext | undefined>(undefined);
+  protected readonly pendingAddition = signal<string | undefined>(undefined);
+  protected readonly pinSelected = signal(false);
   protected readonly pinDraft = signal('');
   protected readonly pinConfirmation = signal('');
   protected readonly busy = signal(false);
   protected readonly notice = signal('');
+  protected readonly confirmation = signal('');
 
   protected readonly ready = computed(() => {
     const binding = this.binding();
+    const passkey = this.passkeyBinding();
 
-    return binding !== undefined && this.vault.isOpen(binding);
+    return Boolean((binding && this.vault.isOpen(binding)) || (passkey && this.vault.isOpen(passkey)));
   });
-  protected readonly isPin = computed(() => this.binding()?.method === 'pin-argon2id' || this.setup() === 'pin');
+  protected readonly isPin = computed(() => {
+    const binding = this.binding();
+
+    return binding ? binding.method === 'pin-argon2id' : this.setup() === 'pin';
+  });
+  protected readonly pinOpen = computed(() => {
+    const binding = this.binding();
+
+    return binding?.method === 'pin-argon2id' && this.vault.isOpen(binding);
+  });
   protected readonly status = computed(() => vaultMessage(this.ready() ? 'ready' : 'locked'));
 
   protected readonly plaintext = this.vault.plaintext;
@@ -70,13 +85,7 @@ export class VaultDemo {
           let binding = this.pendingPasskey();
 
           if (!binding) {
-            const prf = new PrfUnlock({
-              origin: view.location.origin,
-              rpId: view.location.hostname,
-              credentials: view.navigator.credentials,
-              crypto: view.crypto,
-            });
-            const methodId = await prf.discover(signal);
+            const methodId = await this.discoverPasskey(signal);
 
             signal.throwIfAborted();
             binding = this.newBinding('passkey-prf', methodId);
@@ -110,6 +119,96 @@ export class VaultDemo {
     if (!this.busy() && this.setup() === 'pin-option') {
       this.setup.set('pin');
     }
+  }
+
+  protected async addPasskey(): Promise<void> {
+    const pin = this.binding();
+
+    if (!pin || !this.pinOpen() || this.passkeyBinding()) {
+      return;
+    }
+
+    await this.run(
+      async (signal) => {
+        const cancellation = AbortSignal.any([signal, this.additionCancellation.signal]);
+        const view = this.document.defaultView!;
+
+        try {
+          let methodId = this.pendingAddition();
+
+          if (!methodId) {
+            const discovered = await this.discoverPasskey(cancellation);
+
+            methodId = discovered;
+            cancellation.throwIfAborted();
+
+            if (!this.pinOpen()) {
+              throw new VaultError('locked');
+            }
+
+            this.pendingAddition.set(methodId);
+
+            if (view.navigator.userActivation?.isActive === false) {
+              return;
+            }
+          }
+
+          const passkey = await this.vault.addLocalPasskey(pin, view.location.hostname, methodId, cancellation);
+
+          cancellation.throwIfAborted();
+          this.passkeyBinding.set(passkey);
+          this.pendingAddition.set(undefined);
+          this.confirmation.set($localize`:@@vaultDemoPasskeyAdded:Passkey added. You can still unlock with your PIN.`);
+        } catch (error) {
+          if (cancellation.aborted) {
+            return;
+          }
+
+          if (error instanceof VaultError && error.code === 'cancelled') {
+            this.notice.set($localize`:@@vaultDemoAddCancelled:Passkey addition canceled. You can try again.`);
+
+            return;
+          }
+
+          if (error instanceof VaultError && error.code === 'unsupported-prf') {
+            this.pendingAddition.set(undefined);
+            this.notice.set(
+              $localize`:@@vaultDemoAddUnsupported:This passkey can’t unlock your vault. Try another passkey.`,
+            );
+
+            return;
+          }
+
+          if (error instanceof VaultError && error.code === 'revision-conflict') {
+            this.pendingAddition.set(undefined);
+            this.notice.set(
+              $localize`:@@vaultDemoAddConflict:The vault changed in another tab. Reload to see its current unlock methods.`,
+            );
+
+            return;
+          }
+
+          throw error;
+        }
+      },
+      $localize`:@@vaultDemoAddError:We couldn’t add the passkey. Try again.`,
+    );
+  }
+
+  protected async unlockPasskey(): Promise<void> {
+    const passkey = this.passkeyBinding();
+
+    if (!passkey) {
+      return this.unlock();
+    }
+
+    await this.run(async () => {
+      this.pinDraft.set('');
+      this.pinConfirmation.set('');
+      this.pinSelected.set(false);
+
+      await this.vault.connectLocalPasskey(passkey, this.document.defaultView!.location.hostname);
+    });
   }
 
   protected async unlock(): Promise<void> {
@@ -188,8 +287,31 @@ export class VaultDemo {
   }
 
   protected lock(): void {
+    this.cancelAddition();
     this.vault.lock();
+    this.pinDraft.set('');
+    this.pinConfirmation.set('');
+    this.pinSelected.set(false);
     this.notice.set('');
+    this.confirmation.set('');
+  }
+
+  private discoverPasskey(signal: AbortSignal): Promise<string> {
+    const view = this.document.defaultView!;
+    const prf = new PrfUnlock({
+      origin: view.location.origin,
+      rpId: view.location.hostname,
+      credentials: view.navigator.credentials,
+      crypto: view.crypto,
+    });
+
+    return prf.discover(signal);
+  }
+
+  private cancelAddition(): void {
+    this.additionCancellation.abort();
+    this.additionCancellation = new AbortController();
+    this.pendingAddition.set(undefined);
   }
 
   private newBinding(method: WrappingContext['method'], methodId: string): WrappingContext {
@@ -239,6 +361,7 @@ export class VaultDemo {
 
     this.busy.set(true);
     this.notice.set('');
+    this.confirmation.set('');
 
     try {
       await work(signal);
@@ -267,15 +390,27 @@ export class VaultDemo {
 
     try {
       const existing = await this.vault.localBinding(context.key);
+      const passkey =
+        existing?.method === 'pin-argon2id'
+          ? this.vault.localBinding(context.key, true).catch(() => undefined)
+          : undefined;
+      const alternate = await passkey;
 
       if (!signal.aborted) {
         this.binding.set(existing);
+        this.passkeyBinding.set(alternate);
         this.setup.set('passkey');
       }
     } catch {
       if (!signal.aborted) {
         this.setup.set('unavailable');
       }
+    }
+  });
+
+  private readonly clearLockedAddition = effect(() => {
+    if (!this.pinOpen()) {
+      untracked(() => this.cancelAddition());
     }
   });
 }

@@ -1363,8 +1363,8 @@
         <target>Un momento…</target>
       </trans-unit>
       <trans-unit id="vaultDemoPinWarning" datatype="html">
-        <source> Anyone with a copy of the encrypted data can try PINs offline. A passkey provides stronger protection. </source>
-        <target>Cualquiera que tenga una copia de los datos cifrados puede probar distintos PIN sin conexión. Una clave de acceso ofrece mayor protección.</target>
+        <source> Anyone with a copy of the encrypted data can try PINs offline. </source>
+        <target>Cualquiera que tenga una copia de los datos cifrados puede probar distintos PIN sin conexión.</target>
       </trans-unit>
       <trans-unit id="vaultDemoVerifyHint" datatype="html">
         <source>Verify the selected passkey to finish setup.</source>
@@ -1393,6 +1393,30 @@
       <trans-unit id="vaultDemoPinError" datatype="html">
         <source>This PIN couldn’t unlock your vault. Check your PIN and try again.</source>
         <target>No pudimos desbloquear tu bóveda con este PIN. Revísalo e intenta de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoAddPasskey" datatype="html">
+        <source>Add passkey</source>
+        <target>Añadir passkey</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoPasskeyAdded" datatype="html">
+        <source>Passkey added. You can still unlock with your PIN.</source>
+        <target>Agregaste una clave de acceso. También puedes seguir usando tu PIN.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoAddUnsupported" datatype="html">
+        <source>This passkey can’t unlock your vault. Try another passkey.</source>
+        <target>Esta clave de acceso no puede desbloquear tu bóveda. Prueba con otra.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoAddConflict" datatype="html">
+        <source>The vault changed in another tab. Reload to see its current unlock methods.</source>
+        <target>La bóveda cambió en otra pestaña. Recarga la página para ver cómo puedes desbloquearla.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoAddError" datatype="html">
+        <source>We couldn’t add the passkey. Try again.</source>
+        <target>No pudimos añadir la clave de acceso. Intenta de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoAddCancelled" datatype="html">
+        <source>Passkey addition canceled. You can try again.</source>
+        <target>Se canceló el proceso para añadir la clave de acceso. Puedes intentar de nuevo.</target>
       </trans-unit>
       <trans-unit id="vaultDemoNoPasskey" datatype="html">
         <source> Passkey unlock is unavailable here. You can try another passkey or choose a local PIN. </source>

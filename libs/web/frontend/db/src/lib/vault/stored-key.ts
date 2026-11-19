@@ -5,6 +5,7 @@ import {
   type KeyDomain,
   type VaultStorage,
   type VaultUnlock,
+  type WrappedKey,
   type WrappingContext,
 } from '@visomi-stack/shared-db';
 
@@ -34,18 +35,29 @@ export async function withStoredKey<T>(
   current: () => void,
   work: (raw: Uint8Array) => Promise<T>,
 ): Promise<T> {
+  const envelope = await storage.getKey(keyDomainId(binding.ownerId, binding.key));
+
+  current();
+
+  if (!envelope) {
+    throw new VaultError('recovery-required');
+  }
+
+  return withUnwrappedKey(unlock, crypto, binding, envelope, current, work);
+}
+
+export async function withUnwrappedKey<T>(
+  unlock: VaultUnlock,
+  crypto: WebCryptoCipher,
+  binding: WrappingContext,
+  envelope: WrappedKey,
+  current: () => void,
+  work: (raw: Uint8Array) => Promise<T>,
+): Promise<T> {
   let secret: Uint8Array | undefined;
   let raw: Uint8Array | undefined;
 
   try {
-    const envelope = await storage.getKey(keyDomainId(binding.ownerId, binding.key));
-
-    current();
-
-    if (!envelope) {
-      throw new VaultError('recovery-required');
-    }
-
     const unlocked = await unlock.secret(binding);
 
     secret = unlocked;

@@ -1,6 +1,7 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+import { readMailCode } from '@visomi-stack/dev-testing';
 
-import { expect, signup, test } from './support/fixtures';
+import { expect, logout, passwordStart, signup, test } from './support/fixtures';
 
 test('opens the last primary navigation item and unlocks the isolated synthetic sample', async ({ page }, info) => {
   const persistence: string[] = [];
@@ -182,6 +183,16 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
     '/es/privacy/',
   );
 
+  await localizedPrimary.getByRole('link', { name: 'Ejemplo de vault' }).click();
+
+  await expect(localized).toBeHidden();
+
+  await page.getByLabel('PIN de desbloqueo local').fill('048261');
+
+  await page.getByRole('button', { name: 'Desbloquear con PIN' }).click();
+
+  await expect(page.getByRole('button', { name: 'Añadir passkey' })).toBeVisible();
+
   expect(persistence).toEqual([]);
 });
 
@@ -204,6 +215,42 @@ test.describe('Chromium virtual authenticator', () => {
     expect(writes).toEqual([]);
   });
 
+  test('adds native PRF to a PIN vault and reopens the same note with either method', async ({ page }) => {
+    await signup(page);
+
+    await seedPinVault(page);
+
+    await registerVirtualPasskey(page, true);
+
+    const writes = watchApiWrites(page);
+
+    await page.getByRole('button', { name: 'Add passkey' }).click();
+
+    await verifyIfNeeded(page, page.getByText('Passkey added. You can still unlock with your PIN.'));
+
+    await provePasskeyUnlock(page);
+
+    await page.getByRole('button', { name: 'Lock private resources' }).click();
+
+    const pin = page.getByLabel('Local unlock PIN', { exact: true });
+
+    await expect(pin).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Use a local PIN' }).click();
+
+    await pin.fill('048260');
+
+    await page.getByRole('button', { name: 'Unlock with PIN' }).click();
+
+    await expect(page.getByRole('alert')).toHaveText(/This PIN couldn’t unlock your vault/);
+
+    await expect(page.getByText('Sample note: Garden workshop at 10:00.')).toHaveCount(0);
+
+    await unlockOriginalPin(page);
+
+    expect(writes).toEqual([]);
+  });
+
   test('offers an explicit PIN choice after a valid assertion has no PRF output', async ({ page }) => {
     const writes = await beginVirtualPasskeySetup(page, false);
     const fallback = page.getByRole('button', { name: 'Use a local PIN' });
@@ -222,14 +269,123 @@ test.describe('Chromium virtual authenticator', () => {
 });
 
 test('simulates cancellation, unexpected failure, fresh activation and a retryable PRF assertion', async ({ page }) => {
-  await page.addInitScript(() => {
+  await simulatePrf(page, 'setup');
+
+  await signup(page);
+
+  await page.goto('/app/es/vault-example');
+
+  const start = page.getByRole('button', { name: 'Configurar mi bóveda' });
+  const verify = page.getByRole('button', { name: 'Verificar clave de acceso' });
+  const fallback = page.getByRole('button', { name: 'Usar un PIN local' });
+  const alert = page.getByRole('alert');
+
+  await expect(page.locator('app-vault-demo app-pin-input')).toHaveCount(0);
+
+  await start.click();
+
+  await expect(alert).toContainText(/canceló/i);
+
+  await expect(fallback).toHaveCount(0);
+
+  await start.click();
+
+  await expect(alert).toHaveText('No pudimos verificar tu clave de acceso. Intenta de nuevo.');
+
+  await expect(fallback).toHaveCount(0);
+
+  await start.click();
+
+  await expect(verify).toBeVisible();
+
+  await verify.click();
+
+  await expect(alert).toContainText(/canceló/i);
+
+  await expect(fallback).toHaveCount(0);
+
+  await verify.click();
+
+  await page.getByRole('button', { name: 'Abrir la nota de ejemplo' }).click();
+
+  await expect(page.getByText('Nota de ejemplo: taller de jardinería a las 10:00.')).toBeVisible();
+
+  await expect(page.locator('app-vault-demo app-pin-input')).toHaveCount(0);
+});
+
+test('simulates failed and cancelled PIN vault enrollment, logout, and successful retry', async ({ page }) => {
+  const email = await signup(page);
+
+  await seedPinVault(page);
+
+  await simulatePrf(page, 'add');
+
+  await page.reload();
+
+  await unlockOriginalPin(page);
+
+  const add = page.getByRole('button', { name: 'Add passkey' });
+  const verify = page.getByRole('button', { name: 'Verify passkey' });
+  const alert = page.getByRole('alert');
+
+  await add.click();
+
+  await expect(alert).toHaveText('Passkey addition canceled. You can try again.');
+
+  await expect(page.getByText('Sample note: Garden workshop at 10:00.')).toBeVisible();
+
+  await add.click();
+
+  await expect(alert).toHaveText('This passkey can’t unlock your vault. Try another passkey.');
+
+  await add.click();
+
+  await verify.click();
+
+  await expect(alert).toHaveText('We couldn’t add the passkey. Try again.');
+
+  await expect(page.getByText('Sample note: Garden workshop at 10:00.')).toBeVisible();
+
+  await verify.click();
+
+  await expect(page.locator('html')).toHaveAttribute('data-synthetic-prf', 'pending');
+
+  await logout(page);
+
+  await passwordStart(page, email);
+
+  const code = await readMailCode(email);
+
+  await page.getByLabel('Verification code', { exact: true }).fill(code);
+
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
+
+  await page.goto('/app/en/vault-example');
+
+  await expect(page.getByRole('button', { name: 'Unlock with a passkey' })).toHaveCount(0);
+
+  await unlockOriginalPin(page);
+
+  await page.evaluate(() => sessionStorage.setItem('synthetic-prf-success', 'true'));
+
+  await add.click();
+
+  await verify.click();
+
+  await expect(page.getByText('Passkey added. You can still unlock with your PIN.')).toBeVisible();
+
+  await provePasskeyUnlock(page);
+});
+
+async function simulatePrf(page: Page, scenario: 'setup' | 'add'): Promise<void> {
+  await page.addInitScript((scenario) => {
     let discovery = 0;
     let verification = 0;
 
     Object.defineProperty(navigator, 'userActivation', { value: { isActive: false } });
     Object.defineProperty(navigator, 'credentials', {
       value: {
-        async get({ publicKey }: CredentialRequestOptions) {
+        async get({ publicKey, signal }: CredentialRequestOptions) {
           if (!publicKey) {
             throw new Error('The test expects a public key request');
           }
@@ -237,12 +393,25 @@ test('simulates cancellation, unexpected failure, fresh activation and a retryab
           const discovering = !publicKey.allowCredentials?.length;
           const attempt = discovering ? ++discovery : ++verification;
 
-          if (attempt === 1) {
+          const successful = sessionStorage.getItem('synthetic-prf-success') === 'true';
+          const adding = scenario === 'add';
+
+          if (!successful && attempt === 1 && (discovering || !adding)) {
             throw new DOMException('Synthetic cancellation', 'NotAllowedError');
           }
 
-          if (discovering && attempt === 2) {
+          if (!successful && ((!adding && discovering && attempt === 2) || (adding && !discovering && attempt === 1))) {
             throw new DOMException('Synthetic transport failure', 'UnknownError');
+          }
+
+          if (!successful && adding && !discovering && attempt === 2) {
+            document.documentElement.dataset['syntheticPrf'] = 'pending';
+
+            signal?.throwIfAborted();
+
+            await new Promise<never>((_resolve, reject) => {
+              signal?.addEventListener('abort', () => reject(signal.reason), { once: true });
+            });
           }
 
           const input = publicKey.extensions?.prf?.eval?.first;
@@ -290,58 +459,80 @@ test('simulates cancellation, unexpected failure, fresh activation and a retryab
             id: 'Hw',
             rawId,
             response: { authenticatorData: authenticatorData.buffer, clientDataJSON },
-            getClientExtensionResults: () => ({ prf: { results: { first } } }),
+            getClientExtensionResults: () =>
+              !successful && adding && discovering && attempt === 2 ? {} : { prf: { results: { first } } },
           };
         },
       },
     });
-  });
+  }, scenario);
+}
 
-  await signup(page);
+async function seedPinVault(page: Page): Promise<void> {
+  await page.goto('/app/en/vault-example');
 
-  await page.goto('/app/es/vault-example');
+  const setup = page.getByRole('button', { name: 'Set up my vault' });
 
-  const start = page.getByRole('button', { name: 'Configurar mi bóveda' });
-  const verify = page.getByRole('button', { name: 'Verificar clave de acceso' });
-  const fallback = page.getByRole('button', { name: 'Usar un PIN local' });
-  const alert = page.getByRole('alert');
+  await expect(setup).toBeVisible();
 
-  await expect(page.locator('app-vault-demo app-pin-input')).toHaveCount(0);
+  await page.evaluate(() => Object.defineProperty(navigator, 'credentials', { value: undefined, configurable: true }));
 
-  await start.click();
+  await setup.click();
 
-  await expect(alert).toContainText(/canceló/i);
+  await page.getByRole('button', { name: 'Use a local PIN' }).click();
 
-  await expect(fallback).toHaveCount(0);
+  await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
 
-  await start.click();
+  await page.getByLabel('Confirm your new PIN').fill('048261');
 
-  await expect(alert).toHaveText('No pudimos verificar tu clave de acceso. Intenta de nuevo.');
+  await page.getByRole('button', { name: 'Set up the example vault' }).click();
 
-  await expect(fallback).toHaveCount(0);
+  await page.getByRole('button', { name: 'Open the example note' }).click();
 
-  await start.click();
+  await expect(page.getByText('Sample note: Garden workshop at 10:00.')).toBeVisible();
 
-  await expect(verify).toBeVisible();
+  await page.evaluate(() => Reflect.deleteProperty(navigator, 'credentials'));
+}
 
-  await verify.click();
+async function unlockOriginalPin(page: Page): Promise<void> {
+  await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
 
-  await expect(alert).toContainText(/canceló/i);
+  await page.getByRole('button', { name: 'Unlock with PIN' }).click();
 
-  await expect(fallback).toHaveCount(0);
+  await page.getByRole('button', { name: 'Open the example note' }).click();
 
-  await verify.click();
-
-  await page.getByRole('button', { name: 'Abrir la nota de ejemplo' }).click();
-
-  await expect(page.getByText('Nota de ejemplo: taller de jardinería a las 10:00.')).toBeVisible();
-
-  await expect(page.locator('app-vault-demo app-pin-input')).toHaveCount(0);
-});
+  await expect(page.getByText('Sample note: Garden workshop at 10:00.')).toBeVisible();
+}
 
 async function beginVirtualPasskeySetup(page: Page, hasPrf: boolean): Promise<string[]> {
   await signup(page);
 
+  await registerVirtualPasskey(page, hasPrf);
+
+  const writes = watchApiWrites(page);
+
+  await page.goto('/app/en/vault-example');
+
+  await page.getByRole('button', { name: 'Set up my vault' }).click();
+
+  return writes;
+}
+
+function watchApiWrites(page: Page): string[] {
+  const writes: string[] = [];
+
+  page.on('request', (request) => {
+    const path = new URL(request.url()).pathname;
+
+    if (path.startsWith('/api/') && request.method() !== 'GET') {
+      writes.push(path);
+    }
+  });
+
+  return writes;
+}
+
+async function registerVirtualPasskey(page: Page, hasPrf: boolean): Promise<void> {
   const cdp = await page.context().newCDPSession(page);
 
   await cdp.send('WebAuthn.enable');
@@ -371,29 +562,16 @@ async function beginVirtualPasskeySetup(page: Page, hasPrf: boolean): Promise<st
       },
     });
   });
-
-  const writes: string[] = [];
-
-  page.on('request', (request) => {
-    const path = new URL(request.url()).pathname;
-
-    if (path.startsWith('/api/') && request.method() !== 'GET') {
-      writes.push(path);
-    }
-  });
-
-  await page.goto('/app/en/vault-example');
-
-  await page.getByRole('button', { name: 'Set up my vault' }).click();
-
-  return writes;
 }
 
 async function finishPasskeySetup(page: Page): Promise<void> {
-  const verify = page.getByRole('button', { name: 'Verify passkey', disabled: false });
-  const read = page.getByRole('button', { name: 'Open the example note' });
+  await verifyIfNeeded(page, page.getByRole('button', { name: 'Open the example note' }));
+}
 
-  await expect(verify.or(read)).toBeVisible();
+async function verifyIfNeeded(page: Page, settled: Locator): Promise<void> {
+  const verify = page.getByRole('button', { name: 'Verify passkey', disabled: false });
+
+  await expect(verify.or(settled)).toBeVisible();
 
   const needsVerification = await verify.isVisible();
 
@@ -401,7 +579,7 @@ async function finishPasskeySetup(page: Page): Promise<void> {
     await verify.click();
   }
 
-  await expect(read).toBeVisible();
+  await expect(settled).toBeVisible();
 }
 
 async function provePasskeyUnlock(page: Page): Promise<void> {
