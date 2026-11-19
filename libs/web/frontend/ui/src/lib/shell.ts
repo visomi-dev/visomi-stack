@@ -31,11 +31,11 @@ export const appShell = {
       .filter(Boolean)
       .join(' ');
   },
+  scrollClasses(): string {
+    return 'relative min-h-0 w-full flex-1 overflow-y-auto overscroll-y-contain focus:outline-none [&_:focus]:scroll-my-4 [&_:target]:scroll-mt-4';
+  },
   contentClasses(): string {
-    return [
-      container.classes({ width: 'xl', gutter: 'compact' }),
-      'min-h-0 flex-1 overflow-y-auto overscroll-y-contain py-8 focus:outline-none sm:py-12 [&_:focus]:scroll-my-4 [&_:target]:scroll-mt-4',
-    ].join(' ');
+    return [container.classes({ width: 'xl', gutter: 'compact' }), 'py-8 sm:py-12'].join(' ');
   },
   headerClasses(): string {
     return 'z-30 shrink-0';

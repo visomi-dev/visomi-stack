@@ -9,8 +9,8 @@
     scrollbar-gutter: stable;
   }
 
-  /* Full-screen navigation also covers the space reserved for document scrollbars. */
-  html:has(#mobile-navigation:modal) {
+  /* Shells scroll their own content, so the document does not need a scrollbar gutter. */
+  html:has(app-shell, #mobile-navigation:modal) {
     scrollbar-gutter: auto;
   }
 
