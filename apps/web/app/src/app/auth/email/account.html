@@ -3,14 +3,14 @@
     <h1 appUI appNavigationHeading i18n="@@authAccount">Account</h1>
 
     <p appUI tone="muted" i18n="@@authAccountEmailDescription">
-      Your verified email helps you recover access. Changing it requires a recent identity check.
+      Use your verified email to recover access. To change it, confirm that it’s you.
     </p>
   </header>
 
   <p class="font-medium break-all">{{ session.user()?.email }}</p>
 
   @if (pending()) {
-    <p appUI tone="muted" i18n="@@authNewEmailCode">Enter the code sent to your new email address.</p>
+    <p appUI tone="muted" i18n="@@authNewEmailCode">Enter the code we sent to your new email address.</p>
 
     <app-code-entry [busy]="action.busy()" (confirmed)="verify($event)" [loading]="action.pending() === 'verify'" />
 

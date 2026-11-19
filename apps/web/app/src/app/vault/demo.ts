@@ -39,7 +39,7 @@ export class VaultDemo {
   protected readonly hostname = signal('');
 
   protected readonly context = context;
-  protected readonly sample = $localize`:@@vaultDemoSample:Synthetic note: Garden workshop starts at 10:00.`;
+  protected readonly sample = $localize`:@@vaultDemoSample:Sample note: Garden workshop at 10:00.`;
 
   private readonly prepare = afterNextRender(async () => {
     const view = this.document.defaultView;

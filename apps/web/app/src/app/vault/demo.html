@@ -2,11 +2,11 @@
   <h1 appUI appNavigationHeading i18n="@@vaultDemoTitle">Vault example</h1>
 
   <p appUI tone="muted" i18n="@@vaultDemoDescription">
-    Try a vault with a synthetic note. The sample is encrypted on this device and stays separate from other vaults.
+    Try opening an example note. It’s encrypted on this device and kept separate from other vaults.
   </p>
 
   @if (initializing()) {
-    <p appUI i18n="@@vaultDemoStart">Choose a new local PIN and initialize the example to encrypt the sample.</p>
+    <p appUI i18n="@@vaultDemoStart">Choose a new PIN to set up the vault and encrypt the note.</p>
   }
 
   @if (binding(); as localBinding) {
@@ -19,8 +19,8 @@
       (initialized)="initializing.set(false)"
     />
   } @else if (unavailable()) {
-    <p role="status" i18n="@@vaultDemoUnavailable">Local vault storage is unavailable on this device.</p>
+    <p role="status" i18n="@@vaultDemoUnavailable">We can’t store the example vault on this device.</p>
   } @else {
-    <p role="status" i18n="@@vaultDemoLoading">Checking this device for a local vault.</p>
+    <p role="status" i18n="@@vaultDemoLoading">Looking for the example vault on this device…</p>
   }
 </section>

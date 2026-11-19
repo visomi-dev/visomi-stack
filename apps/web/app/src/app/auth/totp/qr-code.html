@@ -4,12 +4,12 @@
     width="240"
     height="240"
     role="img"
-    aria-label="Scan this QR code with your authenticator app, or enter the manual key below."
+    aria-label="Scan this QR code with your authenticator app or enter the key below."
     i18n-aria-label="@@authQrLabel"
     class="max-w-full"
   ></canvas>
 </div>
 
 @if (failed()) {
-  <p role="status" i18n="@@authQrFailed">The QR code could not be displayed. Use the manual key below.</p>
+  <p role="status" i18n="@@authQrFailed">We couldn’t display the QR code. Enter the key below instead.</p>
 }

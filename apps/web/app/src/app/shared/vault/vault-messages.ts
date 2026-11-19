@@ -1,7 +1,7 @@
 export function vaultMessage(state: string): string {
   switch (state) {
     case 'pin-invalid':
-      return $localize`:@@vaultPinInvalid:Enter a six-digit PIN. For initial setup, enter the same PIN twice.`;
+      return $localize`:@@vaultPinInvalid:Enter a 6-digit PIN. When setting it up, enter the same PIN twice.`;
     case 'sync_history_expired':
       return $localize`:@@vaultHistoryExpired:This device is older than the retained synchronization history. Keep its encrypted copy and pending changes. Recovery requires trusted client state; synchronization will not reset its checkpoint.`;
     case 'operation_expired':
@@ -14,24 +14,24 @@ export function vaultMessage(state: string): string {
     case 'corrupt':
     case 'integrity-failure':
     case 'context-mismatch':
-      return $localize`:@@vaultCorrupt:Integrity could not be verified. Keep the encrypted copy and restore from a trusted backup.`;
+      return $localize`:@@vaultCorrupt:We couldn’t verify the encrypted data. Keep the encrypted copy and restore from a trusted backup.`;
     case 'quota':
-      return $localize`:@@vaultQuota:Storage or encryption limits were reached. Export an encrypted backup before changing storage.`;
+      return $localize`:@@vaultQuota:You’ve reached a storage or encryption limit. Export an encrypted backup before you change the storage settings.`;
     case 'recovery-required':
-      return $localize`:@@vaultRecovery:This device has no usable wrapped key. Use your product's explicit recovery or device approval flow. Resetting a password does not recover private data.`;
+      return $localize`:@@vaultRecovery:This device doesn’t have a usable key. Use the product’s recovery or device approval process. Resetting a password won’t recover private data.`;
     case 'unsupported-prf':
-      return $localize`:@@vaultNoPrf:This credential or browser does not support the required private unlock. Use a supported device. The server cannot unlock this resource.`;
+      return $localize`:@@vaultNoPrf:This credential or browser can’t unlock private resources. Use a compatible device. The server can’t unlock this resource.`;
     case 'cancelled':
-      return $localize`:@@vaultCancelled:Unlock was cancelled. Your private resources remain locked.`;
+      return $localize`:@@vaultCancelled:Unlock canceled. Your private resources are still locked.`;
     case 'origin-mismatch':
-      return $localize`:@@vaultOrigin:This unlock credential belongs to a different site. Return to the original site.`;
+      return $localize`:@@vaultOrigin:This credential belongs to a different site. Go back to the site where you set it up.`;
     case 'revision-conflict':
     case 'sync_conflict':
     case 'revision_conflict':
     case 'idempotency_conflict':
     case 'device_state_conflict':
-      return $localize`:@@vaultConflict:A newer encrypted change exists. Synchronize and resolve the conflict before trying again.`;
+      return $localize`:@@vaultConflict:There’s a newer encrypted change. Sync and resolve the conflict before trying again.`;
     default:
-      return $localize`:@@vaultUnavailable:Private storage is unavailable on this device. No server-readable fallback was enabled.`;
+      return $localize`:@@vaultUnavailable:Private storage is unavailable on this device. The server can’t read your private data.`;
   }
 }

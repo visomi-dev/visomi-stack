@@ -85,7 +85,7 @@ export async function signup(page: Page, email = address()): Promise<string> {
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
   return email;
 }
@@ -102,7 +102,7 @@ export async function logout(page: Page): Promise<void> {
     await page.getByRole('dialog').getByRole('button', { name: 'Sign out', exact: true }).click();
   }
 
-  await expect(page.getByRole('heading', { name: 'Sign in to your space.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign-in options', exact: true })).toBeVisible();
 }
 
 export async function passwordStart(page: Page, email: string, value = password): Promise<void> {

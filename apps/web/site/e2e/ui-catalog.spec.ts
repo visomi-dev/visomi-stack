@@ -174,7 +174,9 @@ test('local validation associates errors without sending data', async ({ page })
 
   await expect(error).toBeVisible();
 
-  await expect(page.locator('[data-ui-validation-status]')).toHaveText('Review the highlighted example field.');
+  await expect(page.locator('[data-ui-validation-status]')).toHaveText(
+    'Check the highlighted field and correct the value.',
+  );
 
   await input.fill('demo@example.test');
 

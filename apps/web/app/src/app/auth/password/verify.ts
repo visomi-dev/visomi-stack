@@ -45,8 +45,8 @@ export class PasswordVerify {
     return challenge?.purpose === 'password' ? challenge : null;
   });
 
-  readonly emailHint = $localize`:@@authEmailFactorHint:Enter the code sent to your email.`;
-  readonly totpHint = $localize`:@@authTotpFactorHint:Enter a code from your authenticator app, or use a backup code.`;
+  readonly emailHint = $localize`:@@authEmailFactorHint:Enter the code we sent to your email.`;
+  readonly totpHint = $localize`:@@authTotpFactorHint:Enter a code from your authenticator app or a backup code.`;
   readonly useAuthenticator = $localize`:@@authUseAuthenticator:Use authenticator app`;
   readonly useBackup = $localize`:@@authUseBackup:Use a backup code`;
 

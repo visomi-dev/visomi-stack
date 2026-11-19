@@ -76,7 +76,7 @@ for (const width of [360, 1023, 1024, 1440]) {
 
       await expect(page.getByRole('main')).toBeFocused();
 
-      await navigation.getByRole('link', { name: 'Ajustes', exact: true }).click();
+      await navigation.getByRole('link', { name: 'Configuración', exact: true }).click();
 
       await expect(page).toHaveURL(/#shell-settings$/);
 

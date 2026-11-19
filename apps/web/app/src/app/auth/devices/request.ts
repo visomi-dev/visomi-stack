@@ -64,13 +64,13 @@ export class DeviceApproval {
   statusText(): string {
     switch (this.status()) {
       case 'pending':
-        return $localize`:@@authDevicePending:Waiting for approval on your other device.`;
+        return $localize`:@@authDevicePending:Waiting for you to approve on your other device.`;
       case 'approved':
-        return $localize`:@@authDeviceApproved:Approved. Continue to set up a replacement sign-in method.`;
+        return $localize`:@@authDeviceApproved:Request approved. Continue to set up a new sign-in method.`;
       case 'denied':
-        return $localize`:@@authDeviceDenied:This request was denied.`;
+        return $localize`:@@authDeviceDenied:This request was declined.`;
       case 'cancelled':
-        return $localize`:@@authDeviceCancelled:This request was cancelled.`;
+        return $localize`:@@authDeviceCancelled:This request was canceled.`;
       case 'consumed':
         return $localize`:@@authDeviceConsumed:This request has already been used.`;
       default:

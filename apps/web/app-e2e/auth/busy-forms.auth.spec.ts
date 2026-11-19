@@ -176,7 +176,9 @@ for (const locale of ['en', 'es']) {
 
         const button = page.locator('button[type="submit"]');
 
-        await expect(button).toHaveText(locale === 'es' ? 'Crear cuenta' : 'Create account with a passkey');
+        await expect(button).toHaveText(
+          locale === 'es' ? 'Crear cuenta con una clave de acceso' : 'Create account with a passkey',
+        );
 
         const before = await button.boundingBox();
 

@@ -82,7 +82,7 @@ export class Action {
         case 'reauthentication_required': {
           if (!this.session.full()) {
             this.errorState.set(
-              $localize`:@@authRestrictedExpired:This verification can no longer continue. Sign out and start recovery again.`,
+              $localize`:@@authRestrictedExpired:This verification can’t continue. Sign out and start recovery again.`,
             );
 
             this.errorFocusState.update((value) => value + 1);
@@ -121,45 +121,45 @@ export class Action {
 
 export function errorMessage(error: unknown): string {
   if (error instanceof Error && error.message === 'authentication_unavailable') {
-    return $localize`:@@authUnavailable:Authentication is temporarily unavailable. Please try again later.`;
+    return $localize`:@@authUnavailable:Sign-in is temporarily unavailable. Try again later.`;
   }
 
   if (error instanceof Error && ['NotAllowedError', 'AbortError'].includes(error.name)) {
-    return $localize`:@@authCancelled:The request was cancelled or no credential was selected. Try again or choose another method.`;
+    return $localize`:@@authCancelled:The request was canceled or you didn’t select a credential. Try again or choose another way to sign in.`;
   }
 
   if (
     error instanceof Error &&
     (error.message === 'passkey_unavailable' || ['NotSupportedError', 'SecurityError'].includes(error.name))
   ) {
-    return $localize`:@@authPasskeyUnavailable:Passkeys are not available in this browser or at this address. Choose another sign-in method.`;
+    return $localize`:@@authPasskeyUnavailable:You can’t use a passkey in this browser or at this address. Choose another way to sign in.`;
   }
 
   if (error instanceof HttpErrorResponse) {
     const code: unknown = error.error?.error;
 
     if (error.status === 0) {
-      return $localize`:@@authNetworkError:We could not reach authentication. Check your connection and try again.`;
+      return $localize`:@@authNetworkError:We couldn’t connect to the sign-in service. Check your connection and try again.`;
     }
 
     if (error.status >= 500) {
-      return $localize`:@@authUnavailable:Authentication is temporarily unavailable. Please try again later.`;
+      return $localize`:@@authUnavailable:Sign-in is temporarily unavailable. Try again later.`;
     }
 
     if (error.status === 429) {
-      return $localize`:@@authRateLimited:Too many attempts. Wait a moment before trying again.`;
+      return $localize`:@@authRateLimited:Too many attempts. Wait a moment and try again.`;
     }
 
     if (code === 'csrf_invalid') {
-      return $localize`:@@authCsrf:Your session changed. Try the action again.`;
+      return $localize`:@@authCsrf:Your session changed. Try again.`;
     }
 
     if (error.status === 409) {
-      return $localize`:@@authConflict:This change is not available. Keep at least one working sign-in method and refresh your account before trying again.`;
+      return $localize`:@@authConflict:We couldn’t make this change. Keep a working sign-in method, refresh the page, and try again.`;
     }
 
-    return $localize`:@@authProofInvalid:We could not verify these details. Check them and try again. If the request expired, start again.`;
+    return $localize`:@@authProofInvalid:We couldn’t verify these details. Check them and try again. If the request expired, start again.`;
   }
 
-  return $localize`:@@authOperationFailed:We could not complete this action. Try again or choose another method.`;
+  return $localize`:@@authOperationFailed:We couldn’t complete this action. Try again or choose another method.`;
 }

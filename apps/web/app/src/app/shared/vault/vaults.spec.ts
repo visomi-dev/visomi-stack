@@ -127,7 +127,7 @@ it('rejects a retained generation rollback before requesting a PIN secret or tou
   expect(f.vault.connect).not.toHaveBeenCalled();
   expect(f.vault.device).not.toHaveBeenCalled();
   expect(f.storage.close).toHaveBeenCalledOnce();
-  expect(f.access.notice()).toContain('Integrity could not be verified');
+  expect(f.access.notice()).toContain('We couldn’t verify the encrypted data');
 });
 
 it('cancels synchronously on navigation and never restores identity from a late unlock result', async () => {

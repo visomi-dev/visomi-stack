@@ -3,7 +3,7 @@
 
   @if (journey.challenge()?.purpose === 'recovery') {
     <p appUI tone="muted" i18n="@@authRecoveryProofHint">
-      Enter your email code. If you enabled an authenticator, also include an authenticator or backup code.
+      Enter the code from your email. If you set up an authenticator app, enter its code or a backup code too.
     </p>
 
     <form novalidate class="space-y-5" [attr.data-submitted]="attempted() ? '' : null" (submit)="verify($event)">
@@ -69,7 +69,7 @@
     <app-resend-code />
   } @else {
     <div appUI="alert" tone="warning" role="status" i18n="@@authRestartChallenge">
-      This step could not be restored. Start again to request a new verification.
+      We couldn’t resume verification. Start again to request a new code.
     </div>
   }
 

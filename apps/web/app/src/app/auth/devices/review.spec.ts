@@ -121,5 +121,5 @@ it('rejects an invalid request ID without reviewing or submitting', async () => 
   page.decide(new Event('submit'), true);
   expect(review).not.toHaveBeenCalled();
   expect(decide).not.toHaveBeenCalled();
-  expect(harness.routeNativeElement?.textContent).toContain('Open the review link');
+  expect(harness.routeNativeElement?.textContent).toContain('Open the link shown on the device that requested access.');
 });

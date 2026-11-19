@@ -21,9 +21,9 @@ test('presents direct actions in both languages, mobile and dark mode', async ({
 
   await page.goto('/app/es/auth/sign-in');
 
-  await expect(page.getByRole('heading', { name: 'Entra a tu espacio.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Opciones para iniciar sesión', exact: true })).toBeVisible();
 
-  await expect(page.getByRole('button', { name: 'Entrar con una clave de acceso', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Iniciar sesión con una clave de acceso', exact: true })).toBeVisible();
 
   await expect(page.getByRole('link', { name: 'Usar contraseña', exact: true })).toBeVisible();
 
@@ -72,7 +72,7 @@ test('presents direct actions in both languages, mobile and dark mode', async ({
 
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
-  await expect(page.getByRole('alert')).toContainText('We could not verify these details.');
+  await expect(page.getByRole('alert')).toContainText('We couldn’t verify these details.');
 
   await expect(page.getByRole('alert')).toBeFocused();
 

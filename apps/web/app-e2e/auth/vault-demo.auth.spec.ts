@@ -41,12 +41,12 @@ test('opens the last authenticated navigation item and unlocks the isolated synt
 
   await pin.fill('048261');
 
-  await page.getByLabel('Confirm PIN for initial setup').fill('048261');
+  await page.getByLabel('Confirm your new PIN').fill('048261');
 
   await setup.click();
 
-  const read = page.getByRole('button', { name: 'Read encrypted sample' });
-  const sample = page.getByText('Synthetic note: Garden workshop starts at 10:00.');
+  const read = page.getByRole('button', { name: 'Open the example note' });
+  const sample = page.getByText('Sample note: Garden workshop at 10:00.');
 
   await read.click();
 
@@ -62,7 +62,7 @@ test('opens the last authenticated navigation item and unlocks the isolated synt
 
   await pin.fill('048261');
 
-  await page.getByRole('button', { name: 'Unlock locally with PIN' }).click();
+  await page.getByRole('button', { name: 'Unlock with PIN' }).click();
 
   await read.click();
 

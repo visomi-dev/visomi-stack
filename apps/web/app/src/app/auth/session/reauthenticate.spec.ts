@@ -71,7 +71,7 @@ it('confirms in place only after a successful assertion, allowing a cancelled pr
 
   expect(completed).not.toHaveBeenCalled();
   expect(complete).not.toHaveBeenCalled();
-  expect(page.action.error()).toContain('cancelled');
+  expect(page.action.error()).toContain('The request was canceled');
   page.passkey();
 
   await fixture.whenStable();
@@ -112,7 +112,10 @@ it('keeps a Google email challenge and verifies it before completing reauthentic
   expect(page.pending()).toEqual({ ...pending, method: 'google' });
   expect(journey.challenge()).toMatchObject({ ...pending, purpose: 'google' });
   expect(fixture.nativeElement.querySelector('app-code-entry')).not.toBeNull();
-  expect(fixture.nativeElement.textContent).toContain('Verify your email to finish continuing with Google.');
+  expect(fixture.nativeElement.textContent).toContain(
+    'Enter the code we sent to your email to finish signing in with Google.',
+  );
+
   expect(complete).not.toHaveBeenCalled();
   page.verify('001234');
 
@@ -138,7 +141,7 @@ it('keeps failed Google verification available for correction without granting r
 
   expect(complete).not.toHaveBeenCalled();
   expect(page.pending()).toMatchObject({ flowId: pending.flowId, method: 'google' });
-  expect(page.action.error()).toContain('We could not verify these details.');
+  expect(page.action.error()).toContain('We couldn’t verify these details.');
   page.verify('005678');
 
   await fixture.whenStable();

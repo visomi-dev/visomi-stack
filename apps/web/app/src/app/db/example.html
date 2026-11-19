@@ -3,15 +3,13 @@
     <h1 appUI appNavigationHeading i18n="@@persistenceExampleHeading">Hybrid persistence example</h1>
 
     <p appUI tone="muted" i18n="@@persistenceExampleDescription">
-      This development example uses synthetic workspaces. Account identity and operational notes are readable by the
-      service. Private resources require a separate local unlock.
+      This development example uses test workspaces. The service can read account identity and operational notes. Unlock
+      private resources separately on this device.
     </p>
   </header>
 
   @if (!workspace.available()) {
-    <p role="status" i18n="@@persistenceExampleUnavailable">
-      This example is available only when its development profile is configured.
-    </p>
+    <p role="status" i18n="@@persistenceExampleUnavailable">Set up the development profile to use this example.</p>
   } @else if (!workspace.target()) {
     <button
       appUI
@@ -20,7 +18,7 @@
       (click)="workspace.createWorkspace()"
       i18n="@@persistenceCreateWorkspace"
     >
-      Create a synthetic workspace
+      Create a test workspace
     </button>
   } @else {
     <section class="space-y-4 rounded-xl border p-5">
@@ -31,7 +29,7 @@
           control-id="operations-note"
           label="Operational content"
           i18n-label="@@persistenceCloudLabel"
-          description="Authorized services can read and process this domain."
+          description="Authorized services can read and process the contents of this note."
           i18n-description="@@persistenceCloudDescription"
           #cloudField="appField"
         >
@@ -74,7 +72,7 @@
             (click)="workspace.unlock()"
             i18n="@@vaultUnlock"
           >
-            Unlock with passkey
+            Unlock with a passkey
           </button>
 
           @if (workspace.canInitialize()) {
@@ -86,7 +84,7 @@
               (click)="workspace.unlock(true)"
               i18n="@@persistenceInitializePrivate"
             >
-              Provision an empty private resource
+              Set up an empty private resource
             </button>
           }
         </div>
@@ -95,9 +93,9 @@
       @if (workspace.showPin() && !workspace.vault.ready()) {
         <form class="space-y-4" (submit)="$event.preventDefault(); workspace.unlockWithPin()">
           <p appUI tone="muted" i18n="@@vaultPinWarning">
-            Without passkey support, you can choose a six-digit PIN. Someone with a copy of your encrypted storage can
-            try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local
-            unlock works offline in an already signed-in session.
+            If passkeys aren’t supported, you can use a 6-digit PIN. Anyone with a copy of your encrypted data can try
+            every PIN offline, so a PIN offers less protection. Setup requires a connection. After setup, you can unlock
+            offline if you’re already signed in.
           </p>
 
           <app-field
@@ -116,17 +114,11 @@
             />
           </app-field>
 
-          <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinUnlock">
-            Unlock locally with PIN
-          </button>
+          <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinUnlock">Unlock with PIN</button>
         </form>
 
         @if (workspace.canInitialize()) {
-          <app-field
-            control-id="vault-pin-confirm"
-            label="Confirm PIN for initial setup"
-            i18n-label="@@vaultPinConfirm"
-          >
+          <app-field control-id="vault-pin-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
             <app-pin-input
               required
               [digits]="6"
@@ -200,7 +192,7 @@
 
         @if (workspace.privateResource.pending()) {
           <p role="status" i18n="@@persistencePending">
-            An encrypted change is waiting for synchronization. Keep this device's storage until it succeeds.
+            An encrypted change is waiting to sync. Keep the data on this device until it syncs.
           </p>
         }
 

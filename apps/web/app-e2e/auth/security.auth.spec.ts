@@ -118,7 +118,7 @@ test('sets up TOTP locally and signs in with a replacement backup code', async (
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 });
 
 test('confirms a pending password change and saves it without another entry or submit', async ({ page }) => {
@@ -192,7 +192,7 @@ test('changes email and revokes another session from the security pages', async 
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByText('Your email has been updated.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Email updated.', { exact: true })).toBeVisible();
 
   const otherContext = await browser.newContext({ baseURL: 'http://localhost:4204' });
   const other = await otherContext.newPage();
@@ -219,7 +219,7 @@ test('changes email and revokes another session from the security pages', async 
 
     await other.getByRole('button', { name: 'Verify', exact: true }).click();
 
-    await expect(other.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
+    await expect(other.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
     await expect.poll(() => subscribed).toBe(true);
 
@@ -237,7 +237,7 @@ test('changes email and revokes another session from the security pages', async 
 
     await other.reload();
 
-    await expect(other.getByRole('heading', { name: 'Sign in to your space.', exact: true })).toBeVisible();
+    await expect(other.getByRole('heading', { name: 'Sign-in options', exact: true })).toBeVisible();
   } finally {
     await otherContext.close();
   }

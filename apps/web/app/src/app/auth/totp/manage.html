@@ -3,7 +3,8 @@
     <h1 appUI appNavigationHeading i18n="@@authAuthenticator">Authenticator app</h1>
 
     <p appUI tone="muted" i18n="@@authTotpDescription">
-      An authenticator adds a code to password sign-in. Keep your backup codes safe in case you lose access to the app.
+      The app gives you a code when you sign in with a password. Save your backup codes in case you lose access to the
+      app.
     </p>
   </header>
 
@@ -12,7 +13,7 @@
   } @else if (setup(); as pending) {
     <app-totp-qr [uri]="pending.uri" />
 
-    <p class="text-sm" i18n="@@authManualKey">Or enter this manual key in your authenticator:</p>
+    <p class="text-sm" i18n="@@authManualKey">Or enter this key in your authenticator app:</p>
 
     <code appUI block class="break-all whitespace-normal">{{ pending.secret }}</code>
 
@@ -26,7 +27,7 @@
       Cancel
     </button>
   } @else if (enabled()) {
-    <p appUI i18n="@@authTotpEnabled">Your authenticator is enabled.</p>
+    <p appUI i18n="@@authTotpEnabled">Authenticator app enabled.</p>
 
     <a appUI routerLink="/security/recovery-codes" i18n="@@authBackupCodes" class="inline-flex min-h-11 items-center">
       Backup codes
@@ -49,7 +50,8 @@
     @if (removing()) {
       <section appUI="card" tone="subtle" id="disable-totp-confirmation">
         <p role="status" i18n="@@authDisableTotpConfirm">
-          Disable your authenticator and invalidate its backup codes? Password sign-in will use email verification.
+          Disable your authenticator app? Its backup codes will stop working. We’ll send a code by email when you sign
+          in with a password.
         </p>
 
         <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">

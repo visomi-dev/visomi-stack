@@ -11,12 +11,12 @@
         <target>Idioma</target>
       </trans-unit>
       <trans-unit id="title" datatype="html">
-        <source>One visual language.</source>
-        <target>Un mismo lenguaje visual.</target>
+        <source>Type, color, and layout</source>
+        <target>Tipografía, color y diseño</target>
       </trans-unit>
       <trans-unit id="intro" datatype="html">
-        <source>A calm foundation for everything you build. Explore the type, surfaces and everyday details that make a workspace feel consistent.</source>
-        <target>Una base serena para todo lo que construyas. Explora la tipografía, las superficies y los detalles que dan coherencia a tu espacio de trabajo.</target>
+        <source>The site and app use the same styles.</source>
+        <target>El sitio y la app usan los mismos estilos.</target>
       </trans-unit>
       <trans-unit id="foundations" datatype="html">
         <source>Design foundations</source>
@@ -47,24 +47,24 @@
         <target>Tipografía</target>
       </trans-unit>
       <trans-unit id="typeNote" datatype="html">
-        <source>Clear at every scale.</source>
-        <target>Claridad a cualquier escala.</target>
+        <source>Headings, body text, and code</source>
+        <target>Encabezados, texto y código</target>
       </trans-unit>
       <trans-unit id="body" datatype="html">
-        <source>Body text brings clarity to everyday work.</source>
-        <target>El texto aporta claridad al trabajo de cada día.</target>
+        <source>Use body text for descriptions and instructions.</source>
+        <target>Usa este estilo para descripciones e instrucciones.</target>
       </trans-unit>
       <trans-unit id="mono" datatype="html">
-        <source>Details, precisely.</source>
-        <target>Detalles, con precisión.</target>
+        <source>Code and values</source>
+        <target>Código y valores</target>
       </trans-unit>
       <trans-unit id="surfaces" datatype="html">
         <source>Surfaces</source>
         <target>Superficies</target>
       </trans-unit>
       <trans-unit id="surfaceNote" datatype="html">
-        <source>A little depth. A clear hierarchy.</source>
-        <target>Un poco de profundidad. Una jerarquía clara.</target>
+        <source>Compare the page, panel, and raised panel.</source>
+        <target>Compara el fondo, el panel y el panel elevado.</target>
       </trans-unit>
       <trans-unit id="canvas" datatype="html">
         <source>Canvas</source>
@@ -83,8 +83,8 @@
         <target>Color y estados</target>
       </trans-unit>
       <trans-unit id="paletteNote" datatype="html">
-        <source>Meaning beyond color.</source>
-        <target>El significado va más allá del color.</target>
+        <source>Status uses a label as well as color.</source>
+        <target>Cada estado se distingue por su texto y su color.</target>
       </trans-unit>
       <trans-unit id="brand" datatype="html">
         <source>Primary action</source>
@@ -101,10 +101,6 @@
       <trans-unit id="danger" datatype="html">
         <source>× Something went wrong</source>
         <target>× Algo salió mal</target>
-      </trans-unit>
-      <trans-unit id="footer" datatype="html">
-        <source>Built with care. Made to be yours.</source>
-        <target>Hecho con cuidado. Para hacerlo tuyo.</target>
       </trans-unit>
       <trans-unit id="top" datatype="html">
         <source>Back to top</source>
@@ -199,8 +195,8 @@
         <target>Navegación principal</target>
       </trans-unit>
       <trans-unit id="shellNote" datatype="html">
-        <source> Native navigation. Shared visual recipes. </source>
-        <target>Navegación nativa. Estilos compartidos.</target>
+        <source>This example uses native links and shared styles.</source>
+        <target>Este ejemplo usa enlaces nativos y estilos compartidos.</target>
       </trans-unit>
       <trans-unit id="shellHome" datatype="html">
         <source>Home</source>
@@ -215,12 +211,12 @@
         <target>Tabla</target>
       </trans-unit>
       <trans-unit id="authDeviceApprovalTitle" datatype="html">
-        <source>Use your signed-in device</source>
-        <target>Usa el dispositivo donde tienes sesión abierta</target>
+        <source>Approve on your other device</source>
+        <target>Aprueba la solicitud en tu otro dispositivo</target>
       </trans-unit>
       <trans-unit id="authDeviceApprovalInstructions" datatype="html">
-        <source>On a device where you are already signed in, open this link and enter the pairing code shown here. Only approve a request you started.</source>
-        <target>En un dispositivo donde ya iniciaste sesión, abre este enlace e introduce el código que aparece aquí. Aprueba solo solicitudes que tú hayas iniciado.</target>
+        <source>Open this link on a device where you’re signed in and enter the pairing code shown here. Only approve requests you started.</source>
+        <target>Abre este enlace en un dispositivo donde ya tengas una sesión abierta. Escribe el código que ves aquí. Aprueba solo las solicitudes que hayas iniciado.</target>
       </trans-unit>
       <trans-unit id="authPairingCode" datatype="html">
         <source>Pairing code</source>
@@ -228,7 +224,7 @@
       </trans-unit>
       <trans-unit id="authContinueRecovery" datatype="html">
         <source>Continue recovery</source>
-        <target>Continuar recuperación</target>
+        <target>Continuar con la recuperación</target>
       </trans-unit>
       <trans-unit id="authCancelRequest" datatype="html">
         <source>Cancel request</source>
@@ -239,44 +235,44 @@
         <target>Empezar de nuevo</target>
       </trans-unit>
       <trans-unit id="authDeviceApprovalDescription" datatype="html">
-        <source>Request permission to set up a new sign-in method. Approval comes from a different session where you are already signed in.</source>
-        <target>Solicita permiso para configurar un nuevo método de acceso. La aprobación se realiza desde otra sesión que tengas abierta.</target>
+        <source>Ask for approval to set up a new sign-in method. Approve the request from another session where you’re already signed in.</source>
+        <target>Solicita permiso para configurar otra forma de iniciar sesión. Aprueba la solicitud desde otra sesión que ya tengas abierta.</target>
       </trans-unit>
       <trans-unit id="authBackRecovery" datatype="html">
         <source>Back to recovery</source>
-        <target>Volver a recuperación</target>
+        <target>Volver a la recuperación</target>
       </trans-unit>
       <trans-unit id="authDevicePending" datatype="html">
-        <source>Waiting for approval on your other device.</source>
-        <target>Esperando la aprobación en tu otro dispositivo.</target>
+        <source>Waiting for you to approve on your other device.</source>
+        <target>Falta que apruebes la solicitud en tu otro dispositivo.</target>
       </trans-unit>
       <trans-unit id="authDeviceApproved" datatype="html">
-        <source>Approved. Continue to set up a replacement sign-in method.</source>
-        <target>Solicitud aprobada. Continúa para configurar un método de acceso de reemplazo.</target>
+        <source>Request approved. Continue to set up a new sign-in method.</source>
+        <target>Solicitud aprobada. Continúa para configurar otra forma de iniciar sesión.</target>
       </trans-unit>
       <trans-unit id="authDeviceDenied" datatype="html">
-        <source>This request was denied.</source>
-        <target>La solicitud fue rechazada.</target>
+        <source>This request was declined.</source>
+        <target>La solicitud se rechazó.</target>
       </trans-unit>
       <trans-unit id="authDeviceCancelled" datatype="html">
-        <source>This request was cancelled.</source>
-        <target>La solicitud fue cancelada.</target>
+        <source>This request was canceled.</source>
+        <target>La solicitud se canceló.</target>
       </trans-unit>
       <trans-unit id="authDeviceConsumed" datatype="html">
         <source>This request has already been used.</source>
-        <target>La solicitud ya fue utilizada.</target>
+        <target>Esta solicitud ya se usó.</target>
       </trans-unit>
       <trans-unit id="authDeviceExpired" datatype="html">
         <source>This request expired. Start again.</source>
         <target>La solicitud caducó. Empieza de nuevo.</target>
       </trans-unit>
       <trans-unit id="authReviewDeviceTitle" datatype="html">
-        <source>Approve another device</source>
-        <target>Aprobar otro dispositivo</target>
+        <source>Review a device request</source>
+        <target>Revisar solicitud de un dispositivo</target>
       </trans-unit>
       <trans-unit id="authReviewDeviceWarning" datatype="html">
-        <source>Only approve a request you started. Approval allows a replacement sign-in method to be created for your account.</source>
-        <target>Aprueba solo una solicitud que tú hayas iniciado. La aprobación permite crear un método de acceso de reemplazo para tu cuenta.</target>
+        <source>Approve only if you started this request. Approval lets someone set up a new sign-in method for your account.</source>
+        <target>Aprueba solo si tú iniciaste la solicitud. Al aprobarla, permites que se configure otra forma de iniciar sesión en tu cuenta.</target>
       </trans-unit>
       <trans-unit id="authApproveDevice" datatype="html">
         <source>Approve request</source>
@@ -287,12 +283,12 @@
         <target>Rechazar solicitud</target>
       </trans-unit>
       <trans-unit id="authDeviceReviewComplete" datatype="html">
-        <source>This request is no longer waiting for approval.</source>
-        <target>Esta solicitud ya no está esperando aprobación.</target>
+        <source>This request is no longer pending.</source>
+        <target>Esta solicitud ya no está pendiente.</target>
       </trans-unit>
       <trans-unit id="authDeviceLinkInvalid" datatype="html">
-        <source>Open the review link shown on the requesting device.</source>
-        <target>Abre el enlace que aparece en el dispositivo que solicita acceso.</target>
+        <source>Open the link shown on the device that requested access.</source>
+        <target>Abre el enlace que aparece en el dispositivo desde el que pediste acceso.</target>
       </trans-unit>
       <trans-unit id="authBackSecurity" datatype="html">
         <source>Back to security</source>
@@ -303,16 +299,16 @@
         <target>Cuenta</target>
       </trans-unit>
       <trans-unit id="authAccountEmailDescription" datatype="html">
-        <source>Your verified email helps you recover access. Changing it requires a recent identity check.</source>
-        <target>Tu correo verificado te ayuda a recuperar el acceso. Para cambiarlo debes haber confirmado tu identidad recientemente.</target>
+        <source>Use your verified email to recover access. To change it, confirm that it’s you.</source>
+        <target>Tu correo verificado te ayuda a recuperar el acceso. Para cambiarlo, confirma que eres tú.</target>
       </trans-unit>
       <trans-unit id="authNewEmailCode" datatype="html">
-        <source>Enter the code sent to your new email address.</source>
-        <target>Introduce el código enviado a tu nuevo correo.</target>
+        <source>Enter the code we sent to your new email address.</source>
+        <target>Escribe el código que enviamos a tu nuevo correo.</target>
       </trans-unit>
       <trans-unit id="authResend" datatype="html">
         <source>Send a new code</source>
-        <target>Enviar un nuevo código</target>
+        <target>Enviar otro código</target>
       </trans-unit>
       <trans-unit id="authCancel" datatype="html">
         <source>Cancel</source>
@@ -323,32 +319,32 @@
         <target>Cambiar correo</target>
       </trans-unit>
       <trans-unit id="authCodeSent" datatype="html">
-        <source>A new code has been requested. Check your email.</source>
-        <target>Se solicitó un nuevo código. Revisa tu correo.</target>
+        <source>Check your email for a new code.</source>
+        <target>Revisa tu correo para ver el nuevo código.</target>
       </trans-unit>
       <trans-unit id="authNotificationFailed" datatype="html">
         <source>The change was saved, but the notification could not be sent.</source>
         <target>El cambio se guardó, pero no se pudo enviar la notificación.</target>
       </trans-unit>
       <trans-unit id="authEmailChanged" datatype="html">
-        <source>Your email has been updated.</source>
-        <target>Tu correo se actualizó.</target>
+        <source>Email updated.</source>
+        <target>Correo actualizado.</target>
       </trans-unit>
       <trans-unit id="authVerifyEmailTitle" datatype="html">
         <source>Verify your email</source>
         <target>Verifica tu correo</target>
       </trans-unit>
       <trans-unit id="authVerifyEmailDescription" datatype="html">
-        <source>Your account is created. Verify your email to finish signing in.</source>
-        <target>Tu cuenta está creada. Verifica tu correo para terminar de iniciar sesión.</target>
+        <source>We created your account. Verify your email to finish signing in.</source>
+        <target>Tu cuenta ya está creada. Verifica tu correo para terminar de iniciar sesión.</target>
       </trans-unit>
       <trans-unit id="authEmailRestart" datatype="html">
-        <source>Request a new code to continue verifying this email.</source>
-        <target>Solicita un nuevo código para continuar verificando este correo.</target>
+        <source>Request a new code to verify your email.</source>
+        <target>Pide otro código para verificar tu correo.</target>
       </trans-unit>
       <trans-unit id="authRequestCode" datatype="html">
         <source>Request a code</source>
-        <target>Solicitar código</target>
+        <target>Pedir un código</target>
       </trans-unit>
       <trans-unit id="authSignOut" datatype="html">
         <source>Sign out</source>
@@ -356,15 +352,15 @@
       </trans-unit>
       <trans-unit id="authGoogleRetry" datatype="html">
         <source>Try Google again</source>
-        <target>Intentar con Google de nuevo</target>
+        <target>Volver a intentar con Google</target>
       </trans-unit>
       <trans-unit id="authManageGoogle" datatype="html">
         <source>Manage Google</source>
-        <target>Gestionar Google</target>
+        <target>Administrar Google</target>
       </trans-unit>
       <trans-unit id="authGoogleManageDescription" datatype="html">
-        <source>Link Google as another sign-in method. Linking or removing it requires a recent identity check.</source>
-        <target>Vincula Google como otro método de acceso. Para vincularlo o eliminarlo debes haber confirmado tu identidad recientemente.</target>
+        <source>Link Google so you can use it to sign in. Confirm that it’s you before linking or unlinking it.</source>
+        <target>Vincula tu cuenta de Google para iniciar sesión con ella. Para vincularla o desvincularla, confirma que eres tú.</target>
       </trans-unit>
       <trans-unit id="authGoogleLinked" datatype="html">
         <source>Google is linked to your account.</source>
@@ -375,32 +371,28 @@
         <target>Desvincular Google</target>
       </trans-unit>
       <trans-unit id="authUnlinkGoogleConfirm" datatype="html">
-        <source>Unlink Google and end sessions using it? Keep another working sign-in method.</source>
-        <target>¿Desvincular Google y cerrar las sesiones que lo utilizan? Conserva otro método de acceso que funcione.</target>
+        <source>Unlink Google? This ends sessions that use it. Keep another way to sign in.</source>
+        <target>¿Quieres desvincular Google? Se cerrarán las sesiones que usan Google. Conserva otra forma de iniciar sesión.</target>
       </trans-unit>
       <trans-unit id="authConfirmRemove" datatype="html">
         <source>Confirm removal</source>
-        <target>Confirmar eliminación</target>
+        <target>Confirmar</target>
       </trans-unit>
       <trans-unit id="authGoogleVerifyTitle" datatype="html">
-        <source>One more step</source>
-        <target>Un paso más</target>
+        <source>Verify your email for Google sign-in</source>
+        <target>Verifica tu correo para iniciar sesión con Google</target>
       </trans-unit>
       <trans-unit id="authGoogleVerifyDescription" datatype="html">
-        <source>Verify your email to finish continuing with Google.</source>
-        <target>Verifica tu correo para terminar de continuar con Google.</target>
+        <source>Enter the code we sent to your email to finish signing in with Google.</source>
+        <target>Escribe el código que enviamos a tu correo para terminar de iniciar sesión con Google.</target>
       </trans-unit>
       <trans-unit id="authRestartChallenge" datatype="html">
-        <source>This step could not be restored. Start again to request a new verification.</source>
-        <target>No se pudo restaurar este paso. Empieza de nuevo para solicitar otra verificación.</target>
+        <source>We couldn’t resume verification. Start again to request a new code.</source>
+        <target>No pudimos continuar la verificación. Empieza de nuevo para pedir otro código.</target>
       </trans-unit>
       <trans-unit id="authBackSignIn" datatype="html">
         <source>Back to sign in</source>
         <target>Volver a iniciar sesión</target>
-      </trans-unit>
-      <trans-unit id="authFooter" datatype="html">
-        <source>Your account. Your choice of how to sign in.</source>
-        <target>Tu cuenta. Tú eliges cómo entrar.</target>
       </trans-unit>
       <trans-unit id="authHome" datatype="html">
         <source>Home</source>
@@ -411,24 +403,20 @@
         <target>Seguridad</target>
       </trans-unit>
       <trans-unit id="authSessionUnavailable" datatype="html">
-        <source>Your session changed or could not be checked. Return to sign in to continue.</source>
-        <target>Tu sesión cambió o no se pudo comprobar. Vuelve a iniciar sesión para continuar.</target>
-      </trans-unit>
-      <trans-unit id="authWelcomeEyebrow" datatype="html">
-        <source>YOUR SPACE</source>
-        <target>TU ESPACIO</target>
+        <source>Your session changed or we couldn’t verify it. Sign in again to continue.</source>
+        <target>Tu sesión cambió o no pudimos verificarla. Vuelve a iniciar sesión para continuar.</target>
       </trans-unit>
       <trans-unit id="authWelcome" datatype="html">
-        <source>Welcome home.</source>
-        <target>Bienvenido a casa.</target>
+        <source>Home</source>
+        <target>Inicio</target>
       </trans-unit>
       <trans-unit id="authWelcomeDescription" datatype="html">
-        <source>You are signed in. Manage your account and choose how you access it.</source>
-        <target>Has iniciado sesión. Gestiona tu cuenta y elige cómo acceder a ella.</target>
+        <source>Open Account to update your email or Security to change how you sign in.</source>
+        <target>Ve a Cuenta para actualizar tu correo o a Seguridad para cambiar cómo inicias sesión.</target>
       </trans-unit>
       <trans-unit id="authManageAccount" datatype="html">
         <source>Manage account</source>
-        <target>Gestionar cuenta</target>
+        <target>Administrar cuenta</target>
       </trans-unit>
       <trans-unit id="authReviewSecurity" datatype="html">
         <source>Review security</source>
@@ -439,8 +427,8 @@
         <target>Página no encontrada</target>
       </trans-unit>
       <trans-unit id="authNotFoundDescription" datatype="html">
-        <source>This page is not available. You can return to your account or sign in.</source>
-        <target>Esta página no está disponible. Puedes volver a tu cuenta o iniciar sesión.</target>
+        <source>Check the address, go to your account, or sign in.</source>
+        <target>Revisa la dirección, ve a tu cuenta o inicia sesión.</target>
       </trans-unit>
       <trans-unit id="authContinue" datatype="html">
         <source>Continue</source>
@@ -451,12 +439,12 @@
         <target>Claves de acceso</target>
       </trans-unit>
       <trans-unit id="authPasskeysManageDescription" datatype="html">
-        <source>Add a passkey or give an existing one a name you recognize. Removing a passkey ends sessions using it.</source>
-        <target>Añade una clave de acceso o dale un nombre reconocible a una que ya tengas. Al eliminarla se cierran las sesiones que la utilizan.</target>
+        <source>Add a passkey or rename one so you can recognize it. Removing a passkey ends sessions that used it.</source>
+        <target>Agrega una clave de acceso o cámbiale el nombre para reconocerla. Si la eliminas, se cierran las sesiones que la usaron.</target>
       </trans-unit>
       <trans-unit id="authAddPasskey" datatype="html">
         <source>Add a passkey</source>
-        <target>Añadir clave de acceso</target>
+        <target>Agregar clave de acceso</target>
       </trans-unit>
       <trans-unit id="authSave" datatype="html">
         <source>Save</source>
@@ -471,36 +459,32 @@
         <target>Eliminar</target>
       </trans-unit>
       <trans-unit id="authRemovePasskeyConfirm" datatype="html">
-        <source>Remove this passkey and end sessions using it? You must keep another working sign-in method.</source>
-        <target>¿Eliminar esta clave de acceso y cerrar las sesiones que la utilizan? Debes conservar otro método de acceso que funcione.</target>
+        <source>Remove this passkey? This ends sessions that used it. Keep another way to sign in.</source>
+        <target>¿Quieres eliminar esta clave de acceso? Se cerrarán las sesiones que la usaron. Conserva otra forma de iniciar sesión.</target>
       </trans-unit>
       <trans-unit id="authPasskeyName" datatype="html">
         <source>Passkey name</source>
         <target>Nombre de la clave de acceso</target>
       </trans-unit>
       <trans-unit id="authPasskeyAdded" datatype="html">
-        <source>Your passkey has been added.</source>
-        <target>Se añadió tu clave de acceso.</target>
-      </trans-unit>
-      <trans-unit id="authWelcomeBack" datatype="html">
-        <source>WELCOME BACK</source>
-        <target>QUÉ BUENO VERTE</target>
+        <source>Passkey added.</source>
+        <target>Clave de acceso agregada.</target>
       </trans-unit>
       <trans-unit id="authSignInHeading" datatype="html">
-        <source>Sign in to your space.</source>
-        <target>Entra a tu espacio.</target>
+        <source>Sign-in options</source>
+        <target>Opciones para iniciar sesión</target>
       </trans-unit>
       <trans-unit id="authSignInDescription" datatype="html">
-        <source>Choose how you want to sign in. Your passkey can use your device's screen lock.</source>
-        <target>Elige cómo iniciar sesión. Tu clave de acceso puede usar el desbloqueo de tu dispositivo.</target>
+        <source>A passkey can use your device’s screen lock to sign you in.</source>
+        <target>Con una clave de acceso puedes iniciar sesión usando el bloqueo de pantalla de tu dispositivo.</target>
       </trans-unit>
       <trans-unit id="authUnavailable" datatype="html">
-        <source>Authentication is temporarily unavailable. Please try again later.</source>
-        <target>El servicio de autenticación no está disponible temporalmente. Inténtalo más tarde.</target>
+        <source>Sign-in is temporarily unavailable. Try again later.</source>
+        <target>Por ahora no puedes iniciar sesión. Intenta más tarde.</target>
       </trans-unit>
       <trans-unit id="authNetworkError" datatype="html">
-        <source>We could not reach authentication. Check your connection and try again.</source>
-        <target>No pudimos conectar con el servicio de autenticación. Comprueba tu conexión e inténtalo de nuevo.</target>
+        <source>We couldn’t connect to the sign-in service. Check your connection and try again.</source>
+        <target>No pudimos conectar con el servicio de inicio de sesión. Revisa tu conexión e intenta de nuevo.</target>
       </trans-unit>
       <trans-unit id="authRetry" datatype="html">
         <source>Try again</source>
@@ -508,7 +492,7 @@
       </trans-unit>
       <trans-unit id="authSignInPasskey" datatype="html">
         <source>Sign in with a passkey</source>
-        <target>Entrar con una clave de acceso</target>
+        <target>Iniciar sesión con una clave de acceso</target>
       </trans-unit>
       <trans-unit id="authUsePassword" datatype="html">
         <source>Use a password</source>
@@ -516,7 +500,7 @@
       </trans-unit>
       <trans-unit id="authNewHere" datatype="html">
         <source>New here?</source>
-        <target>¿Primera vez aquí?</target>
+        <target>¿Todavía no tienes cuenta?</target>
       </trans-unit>
       <trans-unit id="authCreateAccount" datatype="html">
         <source>Create an account</source>
@@ -524,15 +508,15 @@
       </trans-unit>
       <trans-unit id="authCannotAccess" datatype="html">
         <source>Can't access your account?</source>
-        <target>¿No puedes acceder a tu cuenta?</target>
+        <target>¿No puedes entrar a tu cuenta?</target>
       </trans-unit>
       <trans-unit id="authSignUpHeading" datatype="html">
-        <source>Make yourself at home.</source>
-        <target>Siéntete como en casa.</target>
+        <source>Create an account</source>
+        <target>Crea una cuenta</target>
       </trans-unit>
       <trans-unit id="authSignUpDescription" datatype="html">
-        <source>Create a passkey, then verify your email. No password to remember.</source>
-        <target>Crea una clave de acceso y verifica tu correo. Sin contraseñas que recordar.</target>
+        <source>Set up a passkey and verify your email.</source>
+        <target>Configura una clave de acceso y verifica tu correo.</target>
       </trans-unit>
       <trans-unit id="authSignUpPassword" datatype="html">
         <source>Create an account with a password</source>
@@ -548,7 +532,7 @@
       </trans-unit>
       <trans-unit id="authCreatePasskeyAccount" datatype="html">
         <source>Create account with a passkey</source>
-        <target>Crear cuenta</target>
+        <target>Crear cuenta con una clave de acceso</target>
       </trans-unit>
       <trans-unit id="authForgotPassword" datatype="html">
         <source>Forgot your password?</source>
@@ -571,8 +555,8 @@
         <target>Elige una contraseña y verifica tu correo.</target>
       </trans-unit>
       <trans-unit id="authPasswordSigninDescription" datatype="html">
-        <source>After your password, we will ask for a code to confirm it is you.</source>
-        <target>Después de tu contraseña, te pediremos un código para confirmar que eres tú.</target>
+        <source>Enter your password first. Then we’ll ask for a verification code.</source>
+        <target>Escribe tu contraseña. Después te pediremos un código de verificación.</target>
       </trans-unit>
       <trans-unit id="authEmail" datatype="html">
         <source>Email address</source>
@@ -583,8 +567,8 @@
         <target>Contraseña</target>
       </trans-unit>
       <trans-unit id="authPasswordPolicy" datatype="html">
-        <source>Use 12–128 characters. Spaces and passphrases are welcome.</source>
-        <target>Usa entre 12 y 128 caracteres. Puedes usar espacios y frases de contraseña.</target>
+        <source>Use 12–128 characters. You can use spaces and phrases.</source>
+        <target>Usa entre 12 y 128 caracteres. Puedes incluir espacios y frases.</target>
       </trans-unit>
       <trans-unit id="authShowPassword" datatype="html">
         <source>Show</source>
@@ -596,11 +580,11 @@
       </trans-unit>
       <trans-unit id="authManagePassword" datatype="html">
         <source>Manage password</source>
-        <target>Gestionar contraseña</target>
+        <target>Administrar contraseña</target>
       </trans-unit>
       <trans-unit id="authPasswordManageDescription" datatype="html">
-        <source>Adding or changing a password requires a recent identity check. Password sign-in always includes a second step.</source>
-        <target>Para añadir o cambiar una contraseña debes haber confirmado tu identidad recientemente. El acceso con contraseña siempre incluye un segundo paso.</target>
+        <source>Confirm that it’s you before adding or changing a password. Signing in with a password always requires a second step.</source>
+        <target>Confirma que eres tú antes de agregar o cambiar una contraseña. Si inicias sesión con contraseña, siempre hay un segundo paso.</target>
       </trans-unit>
       <trans-unit id="authTogglePassword" datatype="html">
         <source>Show or hide password</source>
@@ -615,8 +599,8 @@
         <target>Eliminar contraseña</target>
       </trans-unit>
       <trans-unit id="authRemovePasswordConfirm" datatype="html">
-        <source>Remove your password? Sessions using it will end. Keep another working sign-in method.</source>
-        <target>¿Eliminar tu contraseña? Se cerrarán las sesiones que la utilizan. Conserva otro método de acceso que funcione.</target>
+        <source>Remove your password? This ends sessions that used it. Keep another way to sign in.</source>
+        <target>¿Quieres eliminar tu contraseña? Se cerrarán las sesiones que la usaron. Conserva otra forma de iniciar sesión.</target>
       </trans-unit>
       <trans-unit id="authNewPassword" datatype="html">
         <source>New password</source>
@@ -627,8 +611,8 @@
         <target>Confirma tu identidad</target>
       </trans-unit>
       <trans-unit id="authPasswordConfirmDescription" datatype="html">
-        <source>Confirm it&apos;s you to save your new password automatically.</source>
-        <target>Confirma que eres tú para guardar automáticamente tu nueva contraseña.</target>
+        <source>We’ll save your new password as soon as you confirm it’s you.</source>
+        <target>Guardaremos tu nueva contraseña en cuanto confirmes que eres tú.</target>
       </trans-unit>
       <trans-unit id="authConfirmPasskey" datatype="html">
         <source>Confirm with a passkey</source>
@@ -643,24 +627,24 @@
         <target>Contraseña guardada</target>
       </trans-unit>
       <trans-unit id="authPasswordRemoved" datatype="html">
-        <source>Your password has been removed.</source>
-        <target>Tu contraseña se eliminó.</target>
+        <source>Password removed.</source>
+        <target>Contraseña eliminada.</target>
       </trans-unit>
       <trans-unit id="authResetRequestTitle" datatype="html">
         <source>Reset your password</source>
         <target>Restablece tu contraseña</target>
       </trans-unit>
       <trans-unit id="authRecoveryUniform" datatype="html">
-        <source>If this email can be used for recovery, we will send a code. Additional verification may be required.</source>
-        <target>Si este correo permite recuperar el acceso, enviaremos un código. Puede ser necesaria una verificación adicional.</target>
+        <source>If you can use this email to recover your account, we’ll send a code. We may ask for another verification step.</source>
+        <target>Si puedes recuperar tu cuenta con este correo, te enviaremos un código. Es posible que te pidamos otro paso de verificación.</target>
       </trans-unit>
       <trans-unit id="authResetTitle" datatype="html">
         <source>Choose a new password</source>
         <target>Elige una nueva contraseña</target>
       </trans-unit>
       <trans-unit id="authResetDone" datatype="html">
-        <source>Your password has been reset. Sign in with your new password to continue.</source>
-        <target>Tu contraseña se restableció. Inicia sesión con tu nueva contraseña para continuar.</target>
+        <source>Password reset. Sign in with your new password.</source>
+        <target>Se restableció tu contraseña. Inicia sesión con la nueva.</target>
       </trans-unit>
       <trans-unit id="authNoExtraFactor" datatype="html">
         <source>No additional code</source>
@@ -675,8 +659,8 @@
         <target>Código de respaldo</target>
       </trans-unit>
       <trans-unit id="authExtraFactorHint" datatype="html">
-        <source>If you enabled an authenticator, include its code or a backup code. Email alone cannot replace it.</source>
-        <target>Si activaste una app autenticadora, incluye su código o uno de respaldo. El correo por sí solo no puede sustituirla.</target>
+        <source>If you set up an authenticator app, enter its code or a backup code. The email code alone won’t work.</source>
+        <target>Si configuraste una app autenticadora, escribe su código o un código de respaldo. El código del correo por sí solo no basta.</target>
       </trans-unit>
       <trans-unit id="authResetPassword" datatype="html">
         <source>Reset password</source>
@@ -695,48 +679,48 @@
         <target>Confirma tu inicio de sesión</target>
       </trans-unit>
       <trans-unit id="authEmailFactorHint" datatype="html">
-        <source>Enter the code sent to your email.</source>
-        <target>Introduce el código enviado a tu correo.</target>
+        <source>Enter the code we sent to your email.</source>
+        <target>Escribe el código que enviamos a tu correo.</target>
       </trans-unit>
       <trans-unit id="authTotpFactorHint" datatype="html">
-        <source>Enter a code from your authenticator app, or use a backup code.</source>
-        <target>Introduce un código de tu app autenticadora o usa uno de respaldo.</target>
+        <source>Enter a code from your authenticator app or a backup code.</source>
+        <target>Escribe un código de tu app autenticadora o un código de respaldo.</target>
       </trans-unit>
       <trans-unit id="authUseAuthenticator" datatype="html">
         <source>Use authenticator app</source>
-        <target>Usar app autenticadora</target>
+        <target>Usar la app autenticadora</target>
       </trans-unit>
       <trans-unit id="authUseBackup" datatype="html">
         <source>Use a backup code</source>
         <target>Usar código de respaldo</target>
       </trans-unit>
       <trans-unit id="authEnrollTitle" datatype="html">
-        <source>Set up access again</source>
-        <target>Configura tu acceso de nuevo</target>
+        <source>Set up a new way to sign in</source>
+        <target>Configura otra forma de iniciar sesión</target>
       </trans-unit>
       <trans-unit id="authEnrollDescription" datatype="html">
-        <source>Your recovery proof allows you to set up a replacement sign-in method. Complete its verification before entering your account.</source>
-        <target>Tu prueba de recuperación permite configurar un método de acceso de reemplazo. Completa su verificación antes de entrar a tu cuenta.</target>
+        <source>You’ve verified your recovery request. Set up and verify a new sign-in method to get back into your account.</source>
+        <target>Ya verificaste tu solicitud de recuperación. Configura y verifica otra forma de iniciar sesión para volver a entrar a tu cuenta.</target>
       </trans-unit>
       <trans-unit id="authReplacementPasswordHint" datatype="html">
-        <source>Confirm the replacement password with the required second factor. You can use a backup code instead of an authenticator code.</source>
-        <target>Confirma la contraseña de reemplazo con el segundo factor requerido. Puedes usar un código de respaldo en lugar del código de la app autenticadora.</target>
+        <source>Verify your new password with a code from your authenticator app or a backup code.</source>
+        <target>Para verificar tu nueva contraseña, usa un código de tu app autenticadora o un código de respaldo.</target>
       </trans-unit>
       <trans-unit id="authSwitchFactor" datatype="html">
-        <source>Switch between authenticator and backup code</source>
-        <target>Cambiar entre app autenticadora y código de respaldo</target>
+        <source>Change verification method</source>
+        <target>Cambiar método de verificación</target>
       </trans-unit>
       <trans-unit id="authReplacementPasskeyHint" datatype="html">
-        <source>Your replacement passkey is created. Sign in with that passkey to finish recovery.</source>
-        <target>Tu clave de acceso de reemplazo está creada. Inicia sesión con ella para terminar la recuperación.</target>
+        <source>Sign in with the new passkey to finish recovering your account.</source>
+        <target>Inicia sesión con tu nueva clave de acceso para terminar de recuperar tu cuenta.</target>
       </trans-unit>
       <trans-unit id="authVerifyPasskey" datatype="html">
-        <source>Verify replacement passkey</source>
-        <target>Verificar clave de acceso de reemplazo</target>
+        <source>Verify new passkey</source>
+        <target>Verificar la nueva clave de acceso</target>
       </trans-unit>
       <trans-unit id="authCreateReplacementPasskey" datatype="html">
-        <source>Create a replacement passkey</source>
-        <target>Crear clave de acceso de reemplazo</target>
+        <source>Create a new passkey</source>
+        <target>Crear una clave de acceso nueva</target>
       </trans-unit>
       <trans-unit id="authRecoverTitle" datatype="html">
         <source>Recover your account</source>
@@ -744,7 +728,7 @@
       </trans-unit>
       <trans-unit id="authUseOpenDevice" datatype="html">
         <source>Use a device where you are signed in</source>
-        <target>Usar un dispositivo donde ya iniciaste sesión</target>
+        <target>Usar un dispositivo donde tienes una sesión abierta</target>
       </trans-unit>
       <trans-unit id="authOnlyResetPassword" datatype="html">
         <source>Only need to reset your password?</source>
@@ -755,36 +739,36 @@
         <target>Verifica la recuperación</target>
       </trans-unit>
       <trans-unit id="authRecoveryProofHint" datatype="html">
-        <source>Enter your email code. If you enabled an authenticator, also include an authenticator or backup code.</source>
-        <target>Introduce el código de tu correo. Si activaste una app autenticadora, incluye también un código de la app o de respaldo.</target>
+        <source>Enter the code from your email. If you set up an authenticator app, enter its code or a backup code too.</source>
+        <target>Escribe el código de tu correo. Si configuraste una app autenticadora, escribe también el código de la app o uno de respaldo.</target>
       </trans-unit>
       <trans-unit id="authVerify" datatype="html">
         <source>Verify</source>
         <target>Verificar</target>
       </trans-unit>
       <trans-unit id="authReauthTitle" datatype="html">
-        <source>Confirm it is you</source>
+        <source>Confirm it’s you</source>
         <target>Confirma que eres tú</target>
       </trans-unit>
       <trans-unit id="authReauthDescription" datatype="html">
-        <source>Use an existing sign-in method before changing your account's security. You will review the change again afterwards.</source>
-        <target>Usa un método de acceso existente antes de cambiar la seguridad de tu cuenta. Después revisarás el cambio de nuevo.</target>
+        <source>Use one of your sign-in methods to confirm it’s you. You can review the security change again afterward.</source>
+        <target>Usa una de tus formas de iniciar sesión para confirmar que eres tú. Después podrás revisar el cambio de seguridad.</target>
       </trans-unit>
       <trans-unit id="authSecurityDescription" datatype="html">
-        <source>Choose how you sign in and manage access to your account.</source>
-        <target>Elige cómo iniciar sesión y gestiona el acceso a tu cuenta.</target>
+        <source>Manage sign-in methods, verification, and open sessions.</source>
+        <target>Administra tus formas de iniciar sesión, la verificación y las sesiones abiertas.</target>
       </trans-unit>
       <trans-unit id="authPasskeysDescription" datatype="html">
-        <source>Use your device's screen lock or a security key.</source>
-        <target>Usa el desbloqueo de tu dispositivo o una llave de seguridad.</target>
+        <source>Sign in using your screen lock or a security key.</source>
+        <target>Inicia sesión con el bloqueo de pantalla de tu dispositivo o con una llave de seguridad.</target>
       </trans-unit>
       <trans-unit id="authManagePasskeys" datatype="html">
         <source>Manage passkeys</source>
-        <target>Gestionar claves de acceso</target>
+        <target>Administrar claves de acceso</target>
       </trans-unit>
       <trans-unit id="authManageAuthenticator" datatype="html">
         <source>Manage authenticator</source>
-        <target>Gestionar app autenticadora</target>
+        <target>Administrar app autenticadora</target>
       </trans-unit>
       <trans-unit id="authBackupCodes" datatype="html">
         <source>Backup codes</source>
@@ -795,12 +779,12 @@
         <target>Sesiones</target>
       </trans-unit>
       <trans-unit id="authSessionsDescription" datatype="html">
-        <source>Review and end access from your signed-in sessions.</source>
-        <target>Revisa y cierra tus sesiones abiertas.</target>
+        <source>See your active sessions and close any you no longer need.</source>
+        <target>Revisa tus sesiones abiertas y cierra las que ya no necesites.</target>
       </trans-unit>
       <trans-unit id="authManageSessions" datatype="html">
         <source>Manage sessions</source>
-        <target>Gestionar sesiones</target>
+        <target>Administrar sesiones</target>
       </trans-unit>
       <trans-unit id="authEmailSecurityDescription" datatype="html">
         <source>Keep your recovery email up to date.</source>
@@ -815,16 +799,16 @@
         <target>Sin activar</target>
       </trans-unit>
       <trans-unit id="authSessionsPrivacy" datatype="html">
-        <source>Review when sessions started and how they signed in. Device details and locations are not collected.</source>
-        <target>Revisa cuándo comenzaron las sesiones y cómo accedieron. No recopilamos detalles de dispositivos ni ubicaciones.</target>
+        <source>See when each session started and which sign-in method it used. We don’t collect device details or locations for this list.</source>
+        <target>Consulta cuándo empezó cada sesión y cómo se inició. Para esta lista no recopilamos información de tus dispositivos ni ubicaciones.</target>
       </trans-unit>
       <trans-unit id="authEndOtherSessions" datatype="html">
         <source>End other sessions</source>
         <target>Cerrar las demás sesiones</target>
       </trans-unit>
       <trans-unit id="authEndOtherConfirm" datatype="html">
-        <source>End every other session? They will need to sign in again.</source>
-        <target>¿Cerrar todas las demás sesiones? Tendrán que iniciar sesión de nuevo.</target>
+        <source>End all other sessions? You’ll need to sign in again to use them.</source>
+        <target>¿Quieres cerrar las demás sesiones? Tendrás que volver a iniciar sesión para usarlas.</target>
       </trans-unit>
       <trans-unit id="authConfirm" datatype="html">
         <source>Confirm</source>
@@ -847,8 +831,8 @@
         <target>Cerrar sesión</target>
       </trans-unit>
       <trans-unit id="authEndSessionConfirm" datatype="html">
-        <source>End this session? If it is your current session, you will be signed out.</source>
-        <target>¿Cerrar esta sesión? Si es tu sesión actual, saldrás de tu cuenta.</target>
+        <source>End this session? If this is your current session, you’ll be signed out.</source>
+        <target>¿Quieres cerrar esta sesión? Si es la que estás usando, saldrás de tu cuenta.</target>
       </trans-unit>
       <trans-unit id="authCurrentSession" datatype="html">
         <source>Current session</source>
@@ -863,28 +847,28 @@
         <target>No disponible</target>
       </trans-unit>
       <trans-unit id="authCancelled" datatype="html">
-        <source>The request was cancelled or no credential was selected. Try again or choose another method.</source>
-        <target>Se canceló la solicitud o no se seleccionó una credencial. Inténtalo de nuevo o elige otro método.</target>
+        <source>The request was canceled or you didn’t select a credential. Try again or choose another way to sign in.</source>
+        <target>Se canceló la solicitud o no elegiste una credencial. Intenta de nuevo o elige otra forma de iniciar sesión.</target>
       </trans-unit>
       <trans-unit id="authRateLimited" datatype="html">
-        <source>Too many attempts. Wait a moment before trying again.</source>
-        <target>Demasiados intentos. Espera un momento antes de volver a intentarlo.</target>
+        <source>Too many attempts. Wait a moment and try again.</source>
+        <target>Hiciste demasiados intentos. Espera un momento e intenta de nuevo.</target>
       </trans-unit>
       <trans-unit id="authCsrf" datatype="html">
-        <source>Your session changed. Try the action again.</source>
-        <target>Tu sesión cambió. Intenta realizar la acción de nuevo.</target>
+        <source>Your session changed. Try again.</source>
+        <target>Tu sesión cambió. Intenta de nuevo.</target>
       </trans-unit>
       <trans-unit id="authConflict" datatype="html">
-        <source>This change is not available. Keep at least one working sign-in method and refresh your account before trying again.</source>
-        <target>Este cambio no está disponible. Conserva al menos un método de acceso que funcione y actualiza tu cuenta antes de volver a intentarlo.</target>
+        <source>We couldn’t make this change. Keep a working sign-in method, refresh the page, and try again.</source>
+        <target>No pudimos hacer el cambio. Conserva una forma de iniciar sesión que funcione, actualiza la página e intenta de nuevo.</target>
       </trans-unit>
       <trans-unit id="authProofInvalid" datatype="html">
-        <source>We could not verify these details. Check them and try again. If the request expired, start again.</source>
-        <target>No pudimos verificar estos datos. Revísalos e inténtalo de nuevo. Si la solicitud caducó, empieza de nuevo.</target>
+        <source>We couldn’t verify these details. Check them and try again. If the request expired, start again.</source>
+        <target>No pudimos verificar los datos. Revísalos e intenta de nuevo. Si la solicitud venció, vuelve a empezar.</target>
       </trans-unit>
       <trans-unit id="authOperationFailed" datatype="html">
-        <source>We could not complete this action. Try again or choose another method.</source>
-        <target>No pudimos completar esta acción. Inténtalo de nuevo o elige otro método.</target>
+        <source>We couldn’t complete this action. Try again or choose another method.</source>
+        <target>No pudimos completar la acción. Intenta de nuevo o elige otro método.</target>
       </trans-unit>
       <trans-unit id="authVerificationCode" datatype="html">
         <source>Verification code</source>
@@ -900,7 +884,7 @@
       </trans-unit>
       <trans-unit id="authEmailInvalid" datatype="html">
         <source>Enter a valid email address.</source>
-        <target>Introduce un correo electrónico válido.</target>
+        <target>Escribe un correo electrónico válido.</target>
       </trans-unit>
       <trans-unit id="authCodeLength" datatype="html">
         <source>6 digits</source>
@@ -908,23 +892,23 @@
       </trans-unit>
       <trans-unit id="authCodeInvalid" datatype="html">
         <source>Enter the 6-digit code.</source>
-        <target>Introduce el código de 6 dígitos.</target>
+        <target>Escribe el código de 6 dígitos.</target>
       </trans-unit>
       <trans-unit id="authBackupCannotRestore" datatype="html">
-        <source>Existing backup codes cannot be displayed again. You can create a replacement set after confirming your identity.</source>
-        <target>Los códigos de respaldo existentes no se pueden volver a mostrar. Puedes crear otro conjunto después de confirmar tu identidad.</target>
+        <source>We can’t show your old backup codes again. Confirm that it’s you to create new ones.</source>
+        <target>No podemos volver a mostrar tus códigos de respaldo. Confirma que eres tú para crear otros.</target>
       </trans-unit>
       <trans-unit id="authReplaceCodes" datatype="html">
         <source>Replace backup codes</source>
         <target>Reemplazar códigos de respaldo</target>
       </trans-unit>
       <trans-unit id="authReplaceCodesConfirm" datatype="html">
-        <source>Replace all existing codes? The old set will stop working immediately.</source>
-        <target>¿Reemplazar todos los códigos existentes? El conjunto anterior dejará de funcionar de inmediato.</target>
+        <source>Replace all backup codes? Your old codes will stop working now.</source>
+        <target>¿Quieres reemplazar todos tus códigos de respaldo? Los anteriores dejarán de funcionar de inmediato.</target>
       </trans-unit>
       <trans-unit id="authBackupSave" datatype="html">
-        <source>Save these codes somewhere safe. Each works once, and this set will not be shown again. Creating another set invalidates these codes.</source>
-        <target>Guarda estos códigos en un lugar seguro. Cada uno funciona una sola vez y este conjunto no se volverá a mostrar. Crear otro conjunto invalida estos códigos.</target>
+        <source>Save these codes somewhere safe. We’ll only show them once and each works once. If you create new codes, these stop working.</source>
+        <target>Guarda estos códigos en un lugar seguro. Solo los mostraremos una vez y cada uno sirve una sola vez. Si creas otros códigos, estos dejarán de funcionar.</target>
       </trans-unit>
       <trans-unit id="authCopyCodes" datatype="html">
         <source>Copy codes</source>
@@ -939,24 +923,24 @@
         <target>Copiado.</target>
       </trans-unit>
       <trans-unit id="authTotpDescription" datatype="html">
-        <source>An authenticator adds a code to password sign-in. Keep your backup codes safe in case you lose access to the app.</source>
-        <target>Una app autenticadora añade un código al acceso con contraseña. Guarda tus códigos de respaldo por si pierdes acceso a la app.</target>
+        <source>The app gives you a code when you sign in with a password. Save your backup codes in case you lose access to the app.</source>
+        <target>Al iniciar sesión con contraseña, la app te da un código. Guarda los códigos de respaldo por si pierdes acceso a la app.</target>
       </trans-unit>
       <trans-unit id="authManualKey" datatype="html">
-        <source>Or enter this manual key in your authenticator:</source>
-        <target>O introduce esta clave manual en tu app autenticadora:</target>
+        <source>Or enter this key in your authenticator app:</source>
+        <target>También puedes escribir esta clave en tu app autenticadora:</target>
       </trans-unit>
       <trans-unit id="authTotpEnabled" datatype="html">
-        <source>Your authenticator is enabled.</source>
-        <target>Tu app autenticadora está activada.</target>
+        <source>Authenticator app enabled.</source>
+        <target>App autenticadora activada.</target>
       </trans-unit>
       <trans-unit id="authDisableTotp" datatype="html">
         <source>Disable authenticator</source>
         <target>Desactivar app autenticadora</target>
       </trans-unit>
       <trans-unit id="authDisableTotpConfirm" datatype="html">
-        <source>Disable your authenticator and invalidate its backup codes? Password sign-in will use email verification.</source>
-        <target>¿Desactivar tu app autenticadora e invalidar sus códigos de respaldo? El acceso con contraseña usará la verificación por correo.</target>
+        <source>Disable your authenticator app? Its backup codes will stop working. We’ll send a code by email when you sign in with a password.</source>
+        <target>¿Quieres desactivar la app autenticadora? Sus códigos de respaldo dejarán de funcionar. Cuando inicies sesión con contraseña, te enviaremos un código por correo.</target>
       </trans-unit>
       <trans-unit id="authEnableTotp" datatype="html">
         <source>Set up authenticator</source>
@@ -967,20 +951,20 @@
         <target>La configuración de la app autenticadora no está disponible en este momento.</target>
       </trans-unit>
       <trans-unit id="authQrLabel" datatype="html">
-        <source>Scan this QR code with your authenticator app, or enter the manual key below.</source>
-        <target>Escanea este código QR con tu app autenticadora o introduce la clave manual que aparece abajo.</target>
+        <source>Scan this QR code with your authenticator app or enter the key below.</source>
+        <target>Escanea este código QR con tu app autenticadora o escribe la clave que aparece abajo.</target>
       </trans-unit>
       <trans-unit id="authQrFailed" datatype="html">
-        <source>The QR code could not be displayed. Use the manual key below.</source>
-        <target>No se pudo mostrar el código QR. Usa la clave manual que aparece abajo.</target>
+        <source>We couldn’t display the QR code. Enter the key below instead.</source>
+        <target>No pudimos mostrar el código QR. Escribe la clave que aparece abajo.</target>
       </trans-unit>
       <trans-unit id="authRestrictedExpired" datatype="html">
-        <source>This verification can no longer continue. Sign out and start recovery again.</source>
-        <target>Esta verificación ya no puede continuar. Cierra sesión y empieza la recuperación de nuevo.</target>
+        <source>This verification can’t continue. Sign out and start recovery again.</source>
+        <target>Ya no puedes continuar con esta verificación. Cierra sesión y vuelve a iniciar la recuperación.</target>
       </trans-unit>
       <trans-unit id="authPasskeyUnavailable" datatype="html">
-        <source>Passkeys are not available in this browser or at this address. Choose another sign-in method.</source>
-        <target>Las claves de acceso no están disponibles en este navegador o en esta dirección. Elige otro método de acceso.</target>
+        <source>You can’t use a passkey in this browser or at this address. Choose another way to sign in.</source>
+        <target>No puedes usar una clave de acceso en este navegador o en esta dirección. Elige otra forma de iniciar sesión.</target>
       </trans-unit>
       <trans-unit id="authMethodPasskey" datatype="html">
         <source>Passkey</source>
@@ -999,16 +983,16 @@
         <target>Tema oscuro</target>
       </trans-unit>
       <trans-unit id="authGoogleUnavailable" datatype="html">
-        <source>Google sign-in is not available right now. You can manage your other sign-in methods in Security.</source>
-        <target>El acceso con Google no está disponible por ahora. Puedes gestionar tus otros métodos de acceso en Seguridad.</target>
+        <source>You can’t sign in with Google right now. Go to Security to manage your other sign-in methods.</source>
+        <target>Por ahora no puedes iniciar sesión con Google. Ve a Seguridad para administrar tus otras formas de iniciar sesión.</target>
       </trans-unit>
       <trans-unit id="authNoPasskeys" datatype="html">
-        <source>You have no passkeys yet. Add one to sign in with your device's screen lock.</source>
-        <target>Todavía no tienes claves de acceso. Añade una para entrar con el bloqueo de pantalla de tu dispositivo.</target>
+        <source>You don’t have any passkeys. Add one to sign in with your device’s screen lock.</source>
+        <target>Todavía no tienes claves de acceso. Agrega una para iniciar sesión con el bloqueo de pantalla de tu dispositivo.</target>
       </trans-unit>
       <trans-unit id="authReplacementEmailRestart" datatype="html">
-        <source>If the email does not arrive, start again and enter your replacement password to request a new code.</source>
-        <target>Si el correo no llega, vuelve a empezar e introduce tu contraseña de reemplazo para solicitar un código nuevo.</target>
+        <source>If the email doesn’t arrive, start again and enter your new password to request another code.</source>
+        <target>Si no llega el correo, vuelve a empezar y escribe tu nueva contraseña para pedir otro código.</target>
       </trans-unit>
       <trans-unit id="shellMenu" datatype="html">
         <source>Menu</source>
@@ -1055,8 +1039,8 @@
         <target>Guardando tu contraseña</target>
       </trans-unit>
       <trans-unit id="authPasswordSavedDescription" datatype="html">
-        <source>Your new password is ready to use. Password sign-in still has a second verification step.</source>
-        <target>Tu nueva contraseña ya está lista. Al iniciar sesión seguirás completando un segundo paso de verificación.</target>
+        <source>Use your new password the next time you sign in. You’ll still need a verification code.</source>
+        <target>Usa tu nueva contraseña la próxima vez que inicies sesión. Todavía necesitarás un código de verificación.</target>
       </trans-unit>
       <trans-unit id="authPasswordChangeAgain" datatype="html">
         <source>Change password again</source>
@@ -1075,16 +1059,16 @@
         <target>Ejemplo de persistencia híbrida</target>
       </trans-unit>
       <trans-unit id="persistenceExampleDescription" datatype="html">
-        <source> This development example uses synthetic workspaces. Account identity and operational notes are readable by the service. Private resources require a separate local unlock. </source>
-        <target>Este ejemplo de desarrollo usa espacios sintéticos. El servicio puede leer la identidad de la cuenta y las notas operativas. Los recursos privados requieren un desbloqueo local independiente.</target>
+        <source>This development example uses test workspaces. The service can read account identity and operational notes. Unlock private resources separately on this device.</source>
+        <target>Este ejemplo de desarrollo usa espacios de prueba. El servicio puede leer la identidad de la cuenta y las notas operativas. Para abrir recursos privados, desbloquéalos en este dispositivo.</target>
       </trans-unit>
       <trans-unit id="persistenceExampleUnavailable" datatype="html">
-        <source> This example is available only when its development profile is configured. </source>
-        <target>Este ejemplo solo está disponible cuando se configura su perfil de desarrollo.</target>
+        <source>Set up the development profile to use this example.</source>
+        <target>Configura el perfil de desarrollo para usar este ejemplo.</target>
       </trans-unit>
       <trans-unit id="persistenceCreateWorkspace" datatype="html">
-        <source> Create a synthetic workspace </source>
-        <target>Crear un espacio sintético</target>
+        <source>Create a test workspace</source>
+        <target>Crear un espacio de prueba</target>
       </trans-unit>
       <trans-unit id="persistenceCloudHeading" datatype="html">
         <source>Operational note · service-readable</source>
@@ -1095,8 +1079,8 @@
         <target>Contenido operativo</target>
       </trans-unit>
       <trans-unit id="persistenceCloudDescription" datatype="html">
-        <source>Authorized services can read and process this domain.</source>
-        <target>Los servicios autorizados pueden leer y procesar este dominio.</target>
+        <source>Authorized services can read and process the contents of this note.</source>
+        <target>Los servicios autorizados pueden leer y procesar el contenido de esta nota.</target>
       </trans-unit>
       <trans-unit id="persistenceSaveCloud" datatype="html">
         <source>Save operational note</source>
@@ -1111,12 +1095,12 @@
         <target>El contenido privado se cifra antes de sincronizarse. Este perfil sintético no tiene recuperación: perder todas las claves utilizables puede impedir el acceso de forma permanente. Restablecer la contraseña no recupera el contenido privado.</target>
       </trans-unit>
       <trans-unit id="vaultUnlock" datatype="html">
-        <source> Unlock with passkey </source>
-        <target>Desbloquear con passkey</target>
+        <source>Unlock with a passkey</source>
+        <target>Desbloquear con una clave de acceso</target>
       </trans-unit>
       <trans-unit id="persistenceInitializePrivate" datatype="html">
-        <source> Provision an empty private resource </source>
-        <target>Preparar un recurso privado vacío</target>
+        <source>Set up an empty private resource</source>
+        <target>Configurar un recurso privado vacío</target>
       </trans-unit>
       <trans-unit id="vaultLock" datatype="html">
         <source> Lock private resources </source>
@@ -1139,12 +1123,12 @@
         <target>Sincronizar cambios cifrados</target>
       </trans-unit>
       <trans-unit id="persistencePending" datatype="html">
-        <source> An encrypted change is waiting for synchronization. Keep this device&#x27;s storage until it succeeds. </source>
-        <target>Hay un cambio cifrado pendiente de sincronización. Conserva el almacenamiento de este dispositivo hasta que se complete.</target>
+        <source>An encrypted change is waiting to sync. Keep the data on this device until it syncs.</source>
+        <target>Hay un cambio cifrado pendiente. Conserva los datos en este dispositivo hasta que se sincronicen.</target>
       </trans-unit>
       <trans-unit id="persistenceCloudSaved" datatype="html">
-        <source>Operational content was saved to the server-readable domain.</source>
-        <target>El contenido operativo se guardó en el dominio legible por el servidor.</target>
+        <source>Saved the note. The server can read it.</source>
+        <target>Se guardó la nota. El servidor puede leerla.</target>
       </trans-unit>
       <trans-unit id="vaultSaved" datatype="html">
         <source>The encrypted change is stored on this device. Synchronization is a separate operation.</source>
@@ -1159,36 +1143,36 @@
         <target>Desbloqueado en este dispositivo.</target>
       </trans-unit>
       <trans-unit id="vaultCorrupt" datatype="html">
-        <source>Integrity could not be verified. Keep the encrypted copy and restore from a trusted backup.</source>
-        <target>No se pudo verificar la integridad. Conserva la copia cifrada y restaura desde un respaldo de confianza.</target>
+        <source>We couldn’t verify the encrypted data. Keep the encrypted copy and restore from a trusted backup.</source>
+        <target>No pudimos verificar los datos cifrados. Conserva la copia cifrada y restaura un respaldo de confianza.</target>
       </trans-unit>
       <trans-unit id="vaultQuota" datatype="html">
-        <source>Storage or encryption limits were reached. Export an encrypted backup before changing storage.</source>
-        <target>Se alcanzó el límite de almacenamiento o cifrado. Exporta un respaldo cifrado antes de cambiar el almacenamiento.</target>
+        <source>You’ve reached a storage or encryption limit. Export an encrypted backup before you change the storage settings.</source>
+        <target>Alcanzaste un límite de almacenamiento o cifrado. Exporta un respaldo cifrado antes de cambiar la configuración de almacenamiento.</target>
       </trans-unit>
       <trans-unit id="vaultRecovery" datatype="html">
-        <source>This device has no usable wrapped key. Use your product&#x27;s explicit recovery or device approval flow. Resetting a password does not recover private data.</source>
-        <target>Este dispositivo no tiene una clave envuelta utilizable. Usa el flujo explícito de recuperación o aprobación de dispositivos de tu producto. Restablecer una contraseña no recupera los datos privados.</target>
+        <source>This device doesn’t have a usable key. Use the product’s recovery or device approval process. Resetting a password won’t recover private data.</source>
+        <target>Este dispositivo no tiene una clave que pueda usar. Sigue el proceso de recuperación o aprobación de dispositivos. Restablecer la contraseña no recupera los datos privados.</target>
       </trans-unit>
       <trans-unit id="vaultNoPrf" datatype="html">
-        <source>This credential or browser does not support the required private unlock. Use a supported device. The server cannot unlock this resource.</source>
-        <target>Esta credencial o navegador no admite el desbloqueo privado requerido. Usa un dispositivo compatible. El servidor no puede desbloquear este recurso.</target>
+        <source>This credential or browser can’t unlock private resources. Use a compatible device. The server can’t unlock this resource.</source>
+        <target>Esta credencial o este navegador no puede desbloquear recursos privados. Usa un dispositivo compatible. El servidor no puede desbloquear este recurso.</target>
       </trans-unit>
       <trans-unit id="vaultCancelled" datatype="html">
-        <source>Unlock was cancelled. Your private resources remain locked.</source>
+        <source>Unlock canceled. Your private resources are still locked.</source>
         <target>Se canceló el desbloqueo. Tus recursos privados siguen bloqueados.</target>
       </trans-unit>
       <trans-unit id="vaultOrigin" datatype="html">
-        <source>This unlock credential belongs to a different site. Return to the original site.</source>
-        <target>Esta credencial de desbloqueo pertenece a otro sitio. Regresa al sitio original.</target>
+        <source>This credential belongs to a different site. Go back to the site where you set it up.</source>
+        <target>Esta credencial pertenece a otro sitio. Vuelve al sitio donde la configuraste.</target>
       </trans-unit>
       <trans-unit id="vaultConflict" datatype="html">
-        <source>A newer encrypted change exists. Synchronize and resolve the conflict before trying again.</source>
-        <target>Existe un cambio cifrado más reciente. Sincroniza y resuelve el conflicto antes de intentarlo de nuevo.</target>
+        <source>There’s a newer encrypted change. Sync and resolve the conflict before trying again.</source>
+        <target>Hay un cambio cifrado más reciente. Sincroniza y resuelve el conflicto antes de intentar de nuevo.</target>
       </trans-unit>
       <trans-unit id="vaultUnavailable" datatype="html">
-        <source>Private storage is unavailable on this device. No server-readable fallback was enabled.</source>
-        <target>El almacenamiento privado no está disponible en este dispositivo. No se habilitó ninguna alternativa legible por el servidor.</target>
+        <source>Private storage is unavailable on this device. The server can’t read your private data.</source>
+        <target>El almacenamiento privado no está disponible en este dispositivo. El servidor no puede leer tus datos privados.</target>
       </trans-unit>
       <trans-unit id="persistenceConflictChoice" datatype="html">
         <source> Choose which version to keep. Keeping your pending version replaces the synchronized content after checking for new changes. Discarding removes your pending copy from this device. </source>
@@ -1211,8 +1195,8 @@
         <target>Venció el plazo de reintento de este cambio pendiente. Conserva la copia cifrada, sincroniza y resuelve el cambio explícitamente antes de crear una nueva operación.</target>
       </trans-unit>
       <trans-unit id="vaultPinWarning" datatype="html">
-        <source> Without passkey support, you can choose a six-digit PIN. Someone with a copy of your encrypted storage can try every PIN offline. This protects less than a passkey. Initial setup needs a connection; later local unlock works offline in an already signed-in session. </source>
-        <target>Si tu dispositivo no admite passkeys, puedes elegir un PIN de 6 dígitos. Quien obtenga una copia del almacenamiento cifrado puede probar todos los PIN sin conexión. Ofrece menos protección que una passkey. La configuración inicial requiere conexión; después puedes desbloquear localmente sin conexión dentro de una sesión ya iniciada.</target>
+        <source>If passkeys aren’t supported, you can use a 6-digit PIN. Anyone with a copy of your encrypted data can try every PIN offline, so a PIN offers less protection. Setup requires a connection. After setup, you can unlock offline if you’re already signed in.</source>
+        <target>Si tu dispositivo no admite claves de acceso, puedes usar un PIN de 6 dígitos. Quien tenga una copia de tus datos cifrados puede probar todos los PIN sin conexión. Por eso, un PIN protege menos que una clave de acceso. Para configurarlo necesitas conexión. Después puedes desbloquear sin conexión si ya iniciaste sesión.</target>
       </trans-unit>
       <trans-unit id="vaultPinLength" datatype="html">
         <source>6 digits</source>
@@ -1223,28 +1207,28 @@
         <target>PIN de desbloqueo local</target>
       </trans-unit>
       <trans-unit id="vaultPinUnlock" datatype="html">
-        <source> Unlock locally with PIN </source>
-        <target>Desbloquear localmente con PIN</target>
+        <source>Unlock with PIN</source>
+        <target>Desbloquear con PIN</target>
       </trans-unit>
       <trans-unit id="vaultPinConfirm" datatype="html">
-        <source>Confirm PIN for initial setup</source>
-        <target>Confirma el PIN para la configuración inicial</target>
+        <source>Confirm your new PIN</source>
+        <target>Confirma tu nuevo PIN</target>
       </trans-unit>
       <trans-unit id="vaultPinInitialize" datatype="html">
         <source> Set up an empty private resource with PIN </source>
         <target>Configurar un recurso privado vacío con PIN</target>
       </trans-unit>
       <trans-unit id="vaultPinInvalid" datatype="html">
-        <source>Enter a six-digit PIN. For initial setup, enter the same PIN twice.</source>
-        <target>Introduce un PIN de 6 dígitos. Para la configuración inicial, introduce el mismo PIN dos veces.</target>
+        <source>Enter a 6-digit PIN. When setting it up, enter the same PIN twice.</source>
+        <target>Escribe un PIN de 6 dígitos. Al configurarlo, escribe el mismo PIN dos veces.</target>
       </trans-unit>
       <trans-unit id="vaultPanelPinWarning" datatype="html">
-        <source>This resource uses a local PIN. A copy of encrypted storage permits offline PIN guessing; PIN protection is weaker than a passkey.</source>
-        <target>Este recurso usa un PIN local. Una copia del almacenamiento cifrado permite probar los PIN sin conexión; el PIN ofrece menos protección que una passkey.</target>
+        <source>This vault uses a PIN on this device. Anyone with a copy of the encrypted data can try PINs offline. A passkey provides stronger protection.</source>
+        <target>Este vault usa un PIN en este dispositivo. Si alguien consigue una copia de los datos cifrados, puede probar los PIN sin conexión. Una clave de acceso ofrece mayor protección.</target>
       </trans-unit>
       <trans-unit id="vaultPanelPinUnlock" datatype="html">
-        <source>Unlock locally with PIN</source>
-        <target>Desbloquear localmente con PIN</target>
+        <source>Unlock with PIN</source>
+        <target>Desbloquear con PIN</target>
       </trans-unit>
       <trans-unit id="vaultUnlockHeading" datatype="html">
         <source>Unlock your private resources</source>
@@ -1255,56 +1239,56 @@
         <target>Desbloquea tus recursos privados</target>
       </trans-unit>
       <trans-unit id="vaultUnlockDescription" datatype="html">
-        <source> A local vault is closed. Unlock it to use its private resources. Other local vaults may use a different key or PIN. Navigating in this session keeps an opened vault unlocked until you lock it or sign out. </source>
+        <source>Unlock the vault to open its private resources. Other vaults may use a different key or PIN. An unlocked vault stays open while you navigate until you lock it or sign out.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock.html</context>
           <context context-type="linenumber">10,14</context>
         </context-group>
-        <target>Un vault local está cerrado. Desbloquéalo para usar sus recursos privados. Otros vaults locales pueden usar otra clave o PIN. Navegar durante esta sesión mantiene abierto un vault hasta que lo bloquees o cierres sesión.</target>
+        <target>Desbloquea el vault para abrir sus recursos privados. Otros vaults pueden usar otra clave o PIN. Puedes seguir navegando con un vault abierto hasta que lo bloquees o cierres sesión.</target>
       </trans-unit>
       <trans-unit id="vaultSeparation" datatype="html">
-        <source>Signing in does not unlock this resource. Unlock it separately on this device.</source>
-        <target>Iniciar sesión no desbloquea este recurso. Desbloquéalo por separado en este dispositivo.</target>
+        <source>You’re signed in. Unlock this resource separately on this device.</source>
+        <target>Ya iniciaste sesión. Para abrir este recurso, desbloquéalo en este dispositivo.</target>
       </trans-unit>
       <trans-unit id="vaultInitialize" datatype="html">
-        <source>Initialize an empty local vault</source>
-        <target>Inicializar un vault local vacío</target>
+        <source>Set up an empty vault on this device</source>
+        <target>Configurar un vault vacío en este dispositivo</target>
       </trans-unit>
       <trans-unit id="vaultLocalDescription" datatype="html">
-        <source>Stored as ciphertext on this device. Keep a recovery method or an encrypted backup if your product supports one.</source>
-        <target>Se guarda cifrado en este dispositivo. Conserva un método de recuperación o una copia cifrada si tu producto lo permite.</target>
+        <source>This content is stored encrypted on this device. Keep a recovery method or an encrypted backup if your product supports one.</source>
+        <target>Este contenido se guarda cifrado en el dispositivo. Conserva un método de recuperación o un respaldo cifrado si tu producto lo permite.</target>
       </trans-unit>
       <trans-unit id="vaultRead" datatype="html">
         <source>Read on this device</source>
         <target>Leer en este dispositivo</target>
       </trans-unit>
       <trans-unit id="vaultDemoSample" datatype="html">
-        <source>Synthetic note: Garden workshop starts at 10:00.</source>
-        <target>Nota sintética: el taller de jardinería empieza a las 10:00.</target>
+        <source>Sample note: Garden workshop at 10:00.</source>
+        <target>Nota de ejemplo: taller de jardinería a las 10:00.</target>
       </trans-unit>
       <trans-unit id="vaultDemoTitle" datatype="html">
         <source>Vault example</source>
         <target>Ejemplo de vault</target>
       </trans-unit>
       <trans-unit id="vaultDemoDescription" datatype="html">
-        <source>Try a vault with a synthetic note. The sample is encrypted on this device and stays separate from other vaults.</source>
-        <target>Prueba un vault con una nota sintética. La muestra se cifra en este dispositivo y queda separada de otros vaults.</target>
+        <source>Try opening an example note. It’s encrypted on this device and kept separate from other vaults.</source>
+        <target>Abre una nota de ejemplo. Se cifra en este dispositivo y se guarda aparte de otros vaults.</target>
       </trans-unit>
       <trans-unit id="vaultDemoStart" datatype="html">
-        <source>Choose a new local PIN and initialize the example to encrypt the sample.</source>
-        <target>Elige un PIN local nuevo e inicializa el ejemplo para cifrar la muestra.</target>
+        <source>Choose a new PIN to set up the vault and encrypt the note.</source>
+        <target>Elige un PIN nuevo para configurar el vault y cifrar la nota.</target>
       </trans-unit>
       <trans-unit id="vaultDemoUnavailable" datatype="html">
-        <source>Local vault storage is unavailable on this device.</source>
-        <target>El almacenamiento local del vault no está disponible en este dispositivo.</target>
+        <source>We can’t store the example vault on this device.</source>
+        <target>No podemos guardar el vault de ejemplo en este dispositivo.</target>
       </trans-unit>
       <trans-unit id="vaultDemoLoading" datatype="html">
-        <source>Checking this device for a local vault.</source>
-        <target>Buscando un vault local en este dispositivo.</target>
+        <source>Looking for the example vault on this device…</source>
+        <target>Buscando el vault de ejemplo en este dispositivo…</target>
       </trans-unit>
       <trans-unit id="vaultDemoRead" datatype="html">
-        <source>Read encrypted sample</source>
-        <target>Leer muestra cifrada</target>
+        <source>Open the example note</source>
+        <target>Abrir la nota de ejemplo</target>
       </trans-unit>
       <trans-unit id="vaultDemoCreate" datatype="html">
         <source>Set up the example vault</source>

@@ -60,13 +60,13 @@ test('registers and authenticates a real virtual passkey through the browser', a
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
   await logout(page);
 
   await page.getByRole('button', { name: 'Sign in with a passkey', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
   await page.goto('/app/en/security/passkeys');
 
@@ -98,7 +98,7 @@ test('registers and authenticates a real virtual passkey through the browser', a
 
   await page.getByRole('button', { name: 'Confirm removal', exact: true }).click();
 
-  await expect(page.getByRole('alert')).toContainText('Keep at least one working sign-in method');
+  await expect(page.getByRole('alert')).toContainText('Keep a working sign-in method');
 
   await expireAuthentication(email);
 
@@ -124,7 +124,7 @@ test('registers and authenticates a real virtual passkey through the browser', a
 
   await page.getByRole('button', { name: 'Confirm removal', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Sign in to your space.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign-in options', exact: true })).toBeVisible();
 
   await cdp.detach();
 });

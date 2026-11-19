@@ -2,17 +2,15 @@
   <header class="space-y-2">
     <h2 appUI i18n="@@vaultHeading">Private resource</h2>
 
-    <p appUI tone="muted" i18n="@@vaultSeparation">
-      Signing in does not unlock this resource. Unlock it separately on this device.
-    </p>
+    <p appUI tone="muted" i18n="@@vaultSeparation">You’re signed in. Unlock this resource separately on this device.</p>
   </header>
 
   <p role="status" aria-live="polite">{{ status() }}</p>
 
   @if (binding().method === 'pin-argon2id' && !ready()) {
     <p appUI tone="muted" i18n="@@vaultPanelPinWarning">
-      This resource uses a local PIN. A copy of encrypted storage permits offline PIN guessing; PIN protection is weaker
-      than a passkey.
+      This vault uses a PIN on this device. Anyone with a copy of the encrypted data can try PINs offline. A passkey
+      provides stronger protection.
     </p>
 
     <app-field
@@ -26,11 +24,7 @@
     </app-field>
 
     @if (allowInitialize()) {
-      <app-field
-        [control-id]="controlId() + '-confirm'"
-        label="Confirm PIN for initial setup"
-        i18n-label="@@vaultPinConfirm"
-      >
+      <app-field [control-id]="controlId() + '-confirm'" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
         <app-pin-input
           required
           [digits]="6"
@@ -46,9 +40,9 @@
     @if (!allowInitialize() || sample() === undefined) {
       <button appUI type="button" [disabled]="busy() || ready()" (click)="unlock()">
         @if (binding().method === 'pin-argon2id') {
-          <span i18n="@@vaultPanelPinUnlock">Unlock locally with PIN</span>
+          <span i18n="@@vaultPanelPinUnlock">Unlock with PIN</span>
         } @else {
-          <span i18n="@@vaultUnlock">Unlock with passkey</span>
+          <span i18n="@@vaultUnlock">Unlock with a passkey</span>
         }
       </button>
     }
@@ -56,7 +50,7 @@
     @if (allowInitialize()) {
       <button appUI type="button" variant="secondary" [disabled]="busy() || ready()" (click)="unlock(true)">
         @if (sample() === undefined) {
-          <span i18n="@@vaultInitialize">Initialize an empty local vault</span>
+          <span i18n="@@vaultInitialize">Set up an empty vault on this device</span>
         } @else {
           <span i18n="@@vaultDemoCreate">Set up the example vault</span>
         }
@@ -69,7 +63,7 @@
   @if (ready()) {
     @if (sample() !== undefined) {
       <button appUI type="button" variant="secondary" [disabled]="busy()" (click)="read()" i18n="@@vaultDemoRead">
-        Read encrypted sample
+        Open the example note
       </button>
     } @else {
       <form class="space-y-4" (submit)="$event.preventDefault(); save()">
@@ -78,7 +72,7 @@
           #field="appField"
           label="Private text"
           i18n-label="@@vaultPrivateText"
-          description="Stored as ciphertext on this device. Keep a recovery method or an encrypted backup if your product supports one."
+          description="This content is stored encrypted on this device. Keep a recovery method or an encrypted backup if your product supports one."
           i18n-description="@@vaultLocalDescription"
         >
           <textarea

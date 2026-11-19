@@ -480,7 +480,7 @@ describe('gateway composition', () => {
         ['/app/en/418', 418, 'Could not open this page'],
         ['/app/es/422', 422, 'No pudimos procesar la solicitud'],
         ['/app/es/500', 500, 'Algo salió mal'],
-        ['/app/es/502', 502, 'No pudimos conectar con el servicio'],
+        ['/app/es/502', 502, 'No pudimos conectarnos con el servicio'],
         ['/app/es/599', 599, 'No pudimos cargar esta página'],
         ['/es/system-errors/422/index.html', 404, 'Página no encontrada'],
         ['/es//system-errors/422/index.html', 404, 'Página no encontrada'],

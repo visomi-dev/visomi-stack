@@ -207,7 +207,7 @@ for (const locale of ['en', 'es']) {
     await expect(newPassword).toHaveValue('');
 
     await expect(
-      page.getByRole('heading', { name: spanish ? 'Gestionar contraseña' : 'Manage password', exact: true }),
+      page.getByRole('heading', { name: spanish ? 'Administrar contraseña' : 'Manage password', exact: true }),
     ).toBeFocused();
 
     expect(changes).toBe(2);

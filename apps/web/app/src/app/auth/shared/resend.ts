@@ -51,7 +51,7 @@ export class ResendCode {
 
           this.journey.start(current.purpose, { ...pending, factor: current.factor });
           this.sent.emit();
-          this.action.setNotice($localize`:@@authCodeSent:A new code has been requested. Check your email.`);
+          this.action.setNotice($localize`:@@authCodeSent:Check your email for a new code.`);
         } catch (error) {
           if (error instanceof HttpErrorResponse) {
             this.retryAt.set(Date.now() + (retryDelay(error.headers) ?? 60) * 1000);

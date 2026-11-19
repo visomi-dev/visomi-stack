@@ -22,16 +22,16 @@ it('distinguishes network failures from server unavailability without exposing i
   const internal = { error: 'synthetic_internal_error', message: 'synthetic private detail' };
   const network = errorMessage(new HttpErrorResponse({ status: 0, error: internal }));
 
-  expect(network).toBe('We could not reach authentication. Check your connection and try again.');
+  expect(network).toBe('We couldn’t connect to the sign-in service. Check your connection and try again.');
 
   for (const status of [500, 502, 503, 504]) {
     expect(errorMessage(new HttpErrorResponse({ status, error: internal }))).toBe(
-      'Authentication is temporarily unavailable. Please try again later.',
+      'Sign-in is temporarily unavailable. Try again later.',
     );
   }
 
   expect(errorMessage(new Error('authentication_unavailable'))).toBe(
-    'Authentication is temporarily unavailable. Please try again later.',
+    'Sign-in is temporarily unavailable. Try again later.',
   );
 });
 

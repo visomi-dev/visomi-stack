@@ -75,8 +75,8 @@ test('keeps access actions separated, password controls usable and language chan
 
   await page.goto('/app/en/auth/reset-password');
 
-  await expect(page.getByRole('status').filter({ hasText: 'This step could not be restored.' })).toContainText(
-    'This step could not be restored.',
+  await expect(page.getByRole('status').filter({ hasText: 'We couldn’t resume verification.' })).toContainText(
+    'We couldn’t resume verification.',
   );
 
   await reviewSizes(page, async () => {
@@ -118,7 +118,7 @@ test('keeps access actions separated, password controls usable and language chan
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('alert')).toContainText('We could not verify these details.');
+  await expect(page.getByRole('alert')).toContainText('We couldn’t verify these details.');
 
   await expect(page.getByLabel('Verification code', { exact: true })).not.toHaveAttribute('aria-invalid', 'true');
 
@@ -128,7 +128,7 @@ test('keeps access actions separated, password controls usable and language chan
 
   await page.getByRole('button', { name: 'Verify', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Welcome home.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 });
 
 test('keeps security navigation apart from actions and groups destructive confirmations', async ({ page }) => {
@@ -168,9 +168,9 @@ test('keeps security navigation apart from actions and groups destructive confir
 
   await page.goto('/app/en/security/google');
 
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Google sign-in is not available right now.' }),
-  ).toContainText('Google sign-in is not available right now.');
+  await expect(page.getByRole('status').filter({ hasText: 'You can’t sign in with Google right now.' })).toContainText(
+    'You can’t sign in with Google right now.',
+  );
 
   await page.goto('/app/en/security/recovery-codes');
 

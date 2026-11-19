@@ -163,7 +163,7 @@ test('mobile navigation and locale changes work without JavaScript', async ({ br
         .getByRole('link', { name: 'Español', exact: true }),
     ).toHaveAttribute('hreflang', 'es');
 
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('One system. Clear boundaries.');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('How Visomi Stack works');
 
     await page.goto('/es/');
 

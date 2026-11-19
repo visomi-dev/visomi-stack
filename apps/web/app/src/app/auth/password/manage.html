@@ -37,7 +37,7 @@
         <h1 appUI appNavigationHeading [appHeadingFocus]="true" i18n="@@authPasswordSaved">Password saved</h1>
 
         <p appUI tone="muted" i18n="@@authPasswordSavedDescription">
-          Your new password is ready to use. Password sign-in still has a second verification step.
+          Use your new password the next time you sign in. You’ll still need a verification code.
         </p>
       </header>
 
@@ -67,8 +67,8 @@
         </h1>
 
         <p appUI tone="muted" i18n="@@authPasswordManageDescription">
-          Adding or changing a password requires a recent identity check. Password sign-in always includes a second
-          step.
+          Confirm that it’s you before adding or changing a password. Signing in with a password always requires a
+          second step.
         </p>
       </header>
 
@@ -139,7 +139,7 @@
         @if (confirm()) {
           <section appUI="card" tone="subtle" id="remove-password-confirmation">
             <p role="status" i18n="@@authRemovePasswordConfirm">
-              Remove your password? Sessions using it will end. Keep another working sign-in method.
+              Remove your password? This ends sessions that used it. Keep another way to sign in.
             </p>
 
             <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">

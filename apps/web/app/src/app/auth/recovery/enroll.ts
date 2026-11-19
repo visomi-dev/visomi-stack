@@ -56,7 +56,7 @@ export class Enroll {
   readonly showLabel = $localize`:@@authShowPassword:Show`;
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authNewPassword:New password`;
-  readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
+  readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. You can use spaces and phrases.`;
 
   passkey(): void {
     void this.action.run(

@@ -69,9 +69,9 @@ export class ManagePassword {
   readonly showLabel = $localize`:@@authShowPassword:Show`;
   readonly hideLabel = $localize`:@@authHidePassword:Hide`;
   readonly passwordLabel = $localize`:@@authNewPassword:New password`;
-  readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. Spaces and passphrases are welcome.`;
+  readonly policy = $localize`:@@authPasswordPolicy:Use 12–128 characters. You can use spaces and phrases.`;
   readonly confirmationTitle = $localize`:@@authPasswordConfirmTitle:Confirm your identity`;
-  readonly confirmationDescription = $localize`:@@authPasswordConfirmDescription:Confirm it's you to save your new password automatically.`;
+  readonly confirmationDescription = $localize`:@@authPasswordConfirmDescription:We’ll save your new password as soon as you confirm it’s you.`;
 
   save(event: Event): void {
     event.preventDefault();
@@ -134,7 +134,7 @@ export class ManagePassword {
         this.action.setNotice(
           result?.notificationSent === false
             ? $localize`:@@authNotificationFailed:The change was saved, but the notification could not be sent.`
-            : $localize`:@@authPasswordRemoved:Your password has been removed.`,
+            : $localize`:@@authPasswordRemoved:Password removed.`,
         );
       },
       { name: 'remove' },

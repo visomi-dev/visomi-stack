@@ -10,7 +10,7 @@ for (const locale of ['en', 'es']) {
       method === 'passkey'
         ? locale === 'en'
           ? 'Sign in with a passkey'
-          : 'Entrar con una clave de acceso'
+          : 'Iniciar sesión con una clave de acceso'
         : locale === 'en'
           ? 'Sign in'
           : 'Iniciar sesión';
