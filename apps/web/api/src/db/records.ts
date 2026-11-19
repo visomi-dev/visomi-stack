@@ -48,7 +48,10 @@ const publicRecord = {
 
 /** Server-readable adapter. It never accepts ciphertext-only domain policies. */
 export class SaasRecords {
-  constructor(private readonly access: Access) {}
+  constructor(
+    private readonly access: Access,
+    private readonly useRecordRole?: (context: ScopeAccess) => Promise<void>,
+  ) {}
 
   async list(actor: SessionActor, target: unknown, domain: string, rawPage: unknown) {
     const page = input(pageSchema, rawPage);
@@ -60,6 +63,9 @@ export class SaasRecords {
 
     return this.access.withScope(actor, target, 'read', async (context) => {
       this.scope(context, policy);
+
+      await this.useRecordRole?.(context);
+
       const search = page.search?.replace(/[\\%_]/g, '\\$&');
       const items = await context.tx
         .select(publicRecord)
@@ -77,7 +83,11 @@ export class SaasRecords {
         .limit(page.limit + 1);
       const more = items.length > page.limit;
 
-      return { items: items.slice(0, page.limit), next: more ? items[page.limit - 1].id : null };
+      return {
+        items: items.slice(0, page.limit),
+        next: more ? items[page.limit - 1].id : null,
+        ...(this.useRecordRole ? { canWrite: context.membership.owner } : {}),
+      };
     });
   }
 
@@ -87,6 +97,9 @@ export class SaasRecords {
 
     return this.access.withScope(actor, target, 'read', async (context) => {
       this.scope(context, policy);
+
+      await this.useRecordRole?.(context);
+
       const [record] = await context.tx
         .select(publicRecord)
         .from(records)
@@ -113,6 +126,9 @@ export class SaasRecords {
 
     return this.access.withScope(actor, target, value.kind === 'delete' ? 'delete' : 'write', async (context) => {
       this.scope(context, policy);
+
+      await this.useRecordRole?.(context);
+
       const { tx } = context;
 
       requireCurrentOperation(value.operationId, policy);

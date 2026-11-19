@@ -142,4 +142,38 @@
       <p role="alert">{{ notice() }}</p>
     }
   }
+
+  @if (demos?.enabled()) {
+    <section class="grid gap-3 border-t pt-5">
+      <h2 appUI i18n="@@vaultExampleBackupHeading">Encrypted backup</h2>
+
+      <p appUI tone="muted" i18n="@@vaultExampleBackupExplanation">
+        Open the example note to download an encrypted copy. The file contains the encrypted note and its original
+        device-bound key wrapper. Keep it private, especially if you use a PIN.
+      </p>
+
+      <p appUI tone="muted" i18n="@@vaultExampleBackupRestoreLimit">
+        Signing in doesn’t unlock the vault. This file has no authorized restore path on a second browser profile. The
+        separate device pairing example shows how an approved device retrieves a synchronized test note.
+      </p>
+
+      @if (ready() && plaintext()) {
+        <button
+          appUI
+          type="button"
+          class="justify-self-start"
+          variant="secondary"
+          [disabled]="busy()"
+          (click)="downloadBackup()"
+          i18n="@@vaultExampleBackupDownload"
+        >
+          Download encrypted backup
+        </button>
+      }
+
+      <a appUI class="justify-self-start" routerLink="/persistence" i18n="@@vaultExampleBackupPairing">
+        Open the device pairing example
+      </a>
+    </section>
+  }
 </section>

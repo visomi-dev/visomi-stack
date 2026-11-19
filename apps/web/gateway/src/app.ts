@@ -18,6 +18,7 @@ export function createGatewayApp(options: {
   api: ApiModule;
   visits?: VisitAnalytics;
   persistence?: ProductPolicy;
+  persistenceDemos?: boolean;
   site?: SiteModule;
   application?: ApplicationModule;
   auth?: EmbeddedAuthentication;
@@ -159,6 +160,7 @@ export function createGatewayApp(options: {
       auth: options.auth,
       observability: options.observability,
       ...(options.persistence ? { persistence: options.persistence } : {}),
+      ...(options.persistenceDemos ? { persistenceDemos: true } : {}),
     }),
   );
 

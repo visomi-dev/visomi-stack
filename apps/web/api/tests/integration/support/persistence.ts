@@ -14,6 +14,11 @@ import { principal } from '../../../src/auth/shared/identity';
 export let postgres: Awaited<ReturnType<typeof testPostgres>>;
 export let resource: ReturnType<typeof createDatabase>;
 let server: Server;
+let persistenceDemos = false;
+
+export function enablePersistenceDemos(): void {
+  persistenceDemos = true;
+}
 
 export let origin: string;
 export const syntheticPersistenceSecret = 'synthetic-persistence-session-secret-32-bytes';
@@ -52,7 +57,7 @@ beforeAll(async () => {
   const config = authConfig({ origin, rpId: '127.0.0.1', secret });
   const auth = createAuthentication({ database: resource.db, pool: resource.pool, config });
 
-  server.on('request', createApp({ auth, persistence: policy }));
+  server.on('request', createApp({ auth, persistence: policy, persistenceDemos }));
 }, 120_000);
 
 afterAll(async () => {

@@ -14,6 +14,7 @@ import { authErrorHandler, createAuthRouter } from './auth/router';
 import type { AuthRuntime } from './auth/runtime';
 import { createOpenApiDocument, documentationContract, homeContract } from './openapi';
 import { createPersistenceRouter } from './db/router';
+import { cloudExamplePolicy } from './db/cloud-example';
 
 export { createAuthentication } from './auth/runtime';
 export { anonymous } from './auth/shared/authorization';
@@ -30,6 +31,7 @@ export type AppOptions = {
   trustProxy?: string[] | 1;
   basePath?: string;
   persistence?: ProductPolicy;
+  persistenceDemos?: boolean;
 };
 
 export function createApp(options: AppOptions = {}) {
@@ -59,6 +61,10 @@ export function createApp(options: AppOptions = {}) {
     app.use('/auth', createAuthRouter(options.auth), authErrorHandler);
   } else {
     app.use('/auth', (_request, _response, next) => next(new HttpError(503, 'authentication_unavailable')));
+  }
+
+  if (options.persistence && options.persistenceDemos && options.auth) {
+    app.use('/persistence/cloud-example', createPersistenceRouter(options.auth, cloudExamplePolicy));
   }
 
   if (options.persistence) {

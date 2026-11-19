@@ -11,6 +11,7 @@
         "default",
         "^production",
         "{workspaceRoot}/libs/web/frontend/db/tests/support/protocol-client.ts",
+        "{workspaceRoot}/libs/backend/db/tools/cloud-example-rls.sql",
         {
           "fileset": "{projectRoot}/tsconfig.spec.json",
           "dependencies": true

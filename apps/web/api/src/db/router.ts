@@ -13,11 +13,13 @@ import { SaasRecords } from './records';
 import { registerVaultRoutes } from './vault-router';
 import { validatePersistenceComposition } from './composition';
 import { PersistenceMaintenance } from './maintenance';
+import { cloudExamplePolicy, useCloudRecordRole } from './cloud-example';
 
 export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy) {
   const router = Router();
   const access = new Access(auth.database, validatePersistenceComposition(policy));
-  const records = new SaasRecords(access);
+  const cloud = policy.product === cloudExamplePolicy.product;
+  const records = new SaasRecords(access, cloud ? useCloudRecordRole : undefined);
   const maintenance = new PersistenceMaintenance(access);
   const actor = (request: Request) => ({ sessionId: request.sessionID, principal: requireFull(request.user) });
   const target = (params: { tenantId: string; scopeId: string }) => ({
@@ -47,6 +49,10 @@ export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy
     {
       contract: contracts.maintenance,
       handler: async (req, res, value) => {
+        if (cloud) {
+          throw new HttpError(409, 'capability_unavailable');
+        }
+
         const result = await maintenance.run(actor(req), target(value.params), value.params.domain, value.body);
 
         return res.json(result);
@@ -68,6 +74,10 @@ export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy
     {
       contract: contracts.createScope,
       handler: async (req, res, value) => {
+        if (cloud && (value.body.kind !== 'resource' || value.params.scopeId !== value.params.tenantId)) {
+          throw new HttpError(403, 'scope_access_denied');
+        }
+
         const result = await access.createScope(actor(req), value.params, value.body);
 
         return res.json(result);
@@ -84,6 +94,13 @@ export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy
     {
       contract: contracts.grant,
       handler: async (req, res, value) => {
+        if (
+          cloud &&
+          (value.params.scopeId === value.params.tenantId || !['viewer', 'blocked'].includes(value.body.role))
+        ) {
+          throw new HttpError(403, 'scope_access_denied');
+        }
+
         const result = await access.setGrant(actor(req), value.params, value.body);
 
         return res.json(result);
@@ -122,7 +139,11 @@ export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy
       },
     },
   ]);
-  registerVaultRoutes(router, access);
+
+  if (!cloud) {
+    registerVaultRoutes(router, access);
+  }
+
   const errors: ErrorRequestHandler = (error, _request, _response, next) => {
     const type = (error as { type?: string })?.type;
 

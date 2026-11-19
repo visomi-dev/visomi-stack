@@ -332,7 +332,9 @@ test('pairs a test private resource in Security across a PIN device and a PRF de
   page.on('request', observe);
   const email = await signup(page);
 
-  await page.goto('/app/en/persistence');
+  await page.goto('/app/en/vault-example');
+
+  await page.getByRole('link', { name: 'Open the device pairing example', exact: true }).click();
 
   await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
 
@@ -400,6 +402,12 @@ test('pairs a test private resource in Security across a PIN device and a PRF de
     await recipient.getByLabel('Verification code', { exact: true }).fill(factor);
 
     await expect(recipient.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
+
+    await recipient.goto(workspace);
+
+    await expect(recipient.locator('pre')).toHaveCount(0);
+
+    await expect(recipient.getByText(first, { exact: true })).toHaveCount(0);
 
     await recipient.route('**/api/persistence/policy', (route) => route.fulfill({ status: 404 }));
 

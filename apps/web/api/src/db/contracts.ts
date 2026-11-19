@@ -21,6 +21,11 @@ const record = z.strictObject({
   audience: z.enum(['owner', 'scope']),
   revision: z.number().int().positive(),
 });
+const recordPage = z.strictObject({
+  items: z.array(record),
+  next: z.uuid().nullable(),
+  canWrite: z.boolean().optional(),
+});
 const changed = z.strictObject({ changed: z.literal(true) });
 const response = (schema: z.ZodType) => ({
   ...commonErrors,
@@ -110,7 +115,7 @@ export const persistenceContracts = {
     operationId: 'persistence_records',
     summary: 'List or search authorized SaaS records',
     request: z.object({ params, query }),
-    responses: response(z.strictObject({ items: z.array(record), next: z.uuid().nullable() })),
+    responses: response(recordPage),
   }),
   export: defineRoute({
     ...base,
@@ -120,7 +125,7 @@ export const persistenceContracts = {
     operationId: 'persistence_export',
     summary: 'Export a page of authorized SaaS records',
     request: z.object({ params, query }),
-    responses: response(z.strictObject({ items: z.array(record), next: z.uuid().nullable() })),
+    responses: response(recordPage),
   }),
   read: defineRoute({
     ...base,

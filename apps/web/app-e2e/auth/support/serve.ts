@@ -1,11 +1,12 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { appendFile, writeFile } from 'node:fs/promises';
+import { appendFile, readFile, writeFile } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
 
 import { workspaceRoot } from '@nx/devkit';
 import { SMTPServer } from 'smtp-server';
+import { Pool } from 'pg';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 
 async function serve(): Promise<void> {
@@ -35,6 +36,16 @@ async function serve(): Promise<void> {
     const result1 = await testPostgres(join(directory, 'postgres.json'), 'web-gateway');
 
     postgres = result1;
+
+    const pool = new Pool({ connectionString: postgres.url });
+
+    try {
+      const rls = await readFile(join(workspaceRoot, 'libs/backend/db/tools/cloud-example-rls.sql'), 'utf8');
+
+      await pool.query(rls);
+    } finally {
+      await pool.end();
+    }
 
     await writeFile(join(directory, 'database.json'), JSON.stringify({ url: postgres.url }));
 
@@ -116,6 +127,7 @@ async function serve(): Promise<void> {
         SMTP_USER: '',
         SMTP_PASSWORD: '',
         VISOMI_PERSISTENCE_EXAMPLE: 'true',
+        VISOMI_PERSISTENCE_DEMOS: 'true',
         API_APP_PATH: '',
         SITE_APP_PATH: '',
         APPLICATION_APP_PATH: '',

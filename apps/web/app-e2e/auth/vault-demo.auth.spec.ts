@@ -1,5 +1,8 @@
+import { readFile, rm } from 'node:fs/promises';
+
 import type { Locator, Page } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
+import { vaultBackupSchema } from '@visomi-stack/shared-db';
 
 import { expect, logout, passwordStart, signup, test } from './support/fixtures';
 
@@ -13,7 +16,9 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
   await page.emulateMedia({ colorScheme: 'light' });
 
   await page.route('**/api/persistence/**', async (route) => {
-    persistence.push('technical persistence request');
+    if (new URL(route.request().url()).pathname !== '/api/persistence/cloud-example/policy') {
+      persistence.push('technical persistence request');
+    }
 
     await route.fulfill({ status: 404 });
   });
@@ -37,6 +42,10 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
   await expect(page).toHaveURL(/\/vault-example$/);
 
   await expect(page.getByRole('heading', { name: 'Vault example', level: 1 })).toBeVisible();
+
+  await expect(page.getByRole('heading', { name: 'Encrypted backup', exact: true })).toHaveCount(0);
+
+  await expect(primary.getByRole('link', { name: 'Cloud example', exact: true })).toHaveCount(0);
 
   const setup = page.getByRole('button', { name: 'Set up my vault' });
   const create = page.getByRole('button', { name: 'Set up the example vault' });
@@ -194,6 +203,126 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
   await expect(page.getByRole('button', { name: 'Añadir passkey' })).toBeVisible();
 
   expect(persistence).toEqual([]);
+});
+
+test('downloads the local ciphertext only from an unlocked vault and keeps a same-account second profile isolated', async ({
+  page,
+  browser,
+}, info) => {
+  const backup = page.getByRole('button', { name: 'Download encrypted backup', exact: true });
+  const sample = 'Sample note: Garden workshop at 10:00.';
+  const pin = '048261';
+  const requests: string[] = [];
+
+  await page.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
+
+  const email = await signup(page);
+
+  await page.goto('/app/en/vault-example');
+
+  await expect(page.getByRole('heading', { name: 'Encrypted backup', exact: true })).toBeVisible();
+
+  await expect(backup).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
+
+  await page.getByRole('button', { name: 'Use a local PIN', exact: true }).click();
+
+  await page.getByLabel('Local unlock PIN', { exact: true }).fill(pin);
+
+  await page.getByLabel('Confirm your new PIN', { exact: true }).fill(pin);
+
+  await page.getByRole('button', { name: 'Set up the example vault', exact: true }).click();
+
+  await page.getByRole('button', { name: 'Open the example note', exact: true }).click();
+
+  await expect(page.getByText(sample, { exact: true })).toBeVisible();
+
+  page.on('request', (request) => {
+    if (request.method() !== 'GET' && request.url().includes('/api/persistence/')) {
+      requests.push('unexpected persistence write');
+    }
+  });
+
+  const [download] = await Promise.all([page.waitForEvent('download'), backup.click()]);
+  const path = info.outputPath('synthetic-vault-backup.json');
+
+  expect(download.suggestedFilename()).toBe('visomi-vault-example.backup.json');
+
+  await download.saveAs(path);
+
+  try {
+    const serialized = await readFile(path, 'utf8');
+    const artifact = vaultBackupSchema.parse(JSON.parse(serialized));
+
+    expect(serialized).not.toContain(sample);
+    expect(artifact.units).toHaveLength(1);
+    const localCiphertext = await page.evaluate(async (owner) => {
+      const storage = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open(`visomi-vault:reference-demo:${owner}`);
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      try {
+        const envelopes = await new Promise<unknown>((resolve, reject) => {
+          const request = storage.transaction('units').objectStore('units').getAll();
+
+          request.onsuccess = () => resolve(request.result.map(({ envelope }) => envelope));
+          request.onerror = () => reject(request.error);
+        });
+
+        return envelopes;
+      } finally {
+        storage.close();
+      }
+    }, artifact.key.context.ownerId);
+
+    expect(localCiphertext).toEqual(artifact.units);
+  } finally {
+    await rm(path, { force: true });
+  }
+
+  await page.getByRole('button', { name: 'Lock private resources', exact: true }).click();
+
+  await expect(backup).toHaveCount(0);
+
+  const second = await browser.newContext({ baseURL: info.project.use.baseURL });
+
+  try {
+    const recipient = await second.newPage();
+
+    await passwordStart(recipient, email);
+
+    const code = await readMailCode(email);
+
+    await recipient.getByLabel('Verification code', { exact: true }).fill(code);
+
+    await expect(recipient.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
+
+    await recipient.goto('/app/es/vault-example');
+
+    await expect(recipient.getByRole('heading', { name: 'Respaldo cifrado', exact: true })).toBeVisible();
+
+    await expect(recipient.getByRole('button', { name: 'Configurar mi bóveda', exact: true })).toBeVisible();
+
+    await expect(recipient.getByRole('button', { name: 'Descargar respaldo cifrado', exact: true })).toHaveCount(0);
+
+    await expect(recipient.locator('pre')).toHaveCount(0);
+  } finally {
+    await second.close();
+  }
+
+  await page.getByLabel('Local unlock PIN', { exact: true }).fill(pin);
+
+  await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
+
+  await page.getByRole('button', { name: 'Open the example note', exact: true }).click();
+
+  await expect(page.getByText(sample, { exact: true })).toBeVisible();
+
+  expect(requests).toEqual([]);
 });
 
 test.describe('Chromium virtual authenticator', () => {

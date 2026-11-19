@@ -58,6 +58,8 @@ beforeEach(() => {
   vi.stubEnv('DATABASE_URL', '');
   vi.stubEnv('REALTIME_REDIS_URL', '');
   vi.stubEnv('AUTH_TRUST_PROXY', '');
+  vi.stubEnv('VISOMI_PERSISTENCE_EXAMPLE', undefined);
+  vi.stubEnv('VISOMI_PERSISTENCE_DEMOS', undefined);
   boundary.createDatabase.mockReturnValue(boundary.database);
   boundary.smtpConfig.mockReturnValue(undefined);
   boundary.createSmtp.mockReturnValue(boundary.smtp);
@@ -93,6 +95,20 @@ afterEach(() => {
 });
 
 describe('API executable lifecycle', () => {
+  it('passes both explicit demo opt-ins to the application in a test profile', async () => {
+    vi.stubEnv('VISOMI_PERSISTENCE_EXAMPLE', 'true');
+    vi.stubEnv('VISOMI_PERSISTENCE_DEMOS', 'true');
+
+    await import('./main');
+
+    expect(boundary.createApp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        persistence: expect.objectContaining({ product: 'synthetic-example' }),
+        persistenceDemos: true,
+      }),
+    );
+  });
+
   it('passes the explicit single-hop ingress policy to the application', async () => {
     vi.stubEnv('AUTH_TRUST_PROXY', '1-hop');
 

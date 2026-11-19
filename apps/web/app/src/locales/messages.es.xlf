@@ -1494,6 +1494,154 @@
         <source>The fingerprints don’t match. Check the fingerprint on the other device.</source>
         <target>Las huellas no coinciden. Revisa la huella en el otro dispositivo.</target>
       </trans-unit>
+      <trans-unit id="cloudExampleTitle" datatype="html">
+        <source>Cloud example</source>
+        <target>Ejemplo en la nube</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleDescription" datatype="html">
+        <source> Use test data to try a service-readable workspace. Notes are stored in PostgreSQL. Database row security and the app’s permission checks protect access. The server can read the notes, so this is regular cloud storage. </source>
+        <target>Usa datos de prueba para explorar un espacio de trabajo cuyas notas puede leer el servicio. Las notas se guardan en PostgreSQL. La seguridad por fila de la base de datos y las comprobaciones de permisos de la aplicación controlan el acceso. El servidor puede leer las notas: es almacenamiento en la nube convencional.</target>
+      </trans-unit>
+      <trans-unit id="cloudExamplePermissions" datatype="html">
+        <source> The workspace owner writes notes and chooses which to share. A test account with read access can see only shared notes. Choose Vault for data that requires a separate device unlock. </source>
+        <target>La persona dueña del espacio de trabajo escribe las notas y elige cuáles compartir. Una cuenta de prueba con permiso de lectura solo puede ver las notas compartidas. Elige la bóveda si necesitas desbloquear los datos por separado en el dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleChecking" datatype="html">
+        <source>Checking the test profile…</source>
+        <target>Comprobando el perfil de prueba…</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleUnavailable" datatype="html">
+        <source>This example is available only in the opted-in test profile.</source>
+        <target>Este ejemplo solo está disponible si activas el perfil de prueba.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleMemberId" datatype="html">
+        <source>Your test account ID is <x id="INTERPOLATION" equiv-text="{{ id }}"/>.</source>
+        <target>El ID de tu cuenta de prueba es <x id="INTERPOLATION" equiv-text="{{ id }}"/>.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleInvalidLink" datatype="html">
+        <source>This test workspace link is invalid.</source>
+        <target>Este enlace al espacio de trabajo de prueba no es válido.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleRefresh" datatype="html">
+        <source> Refresh notes </source>
+        <target>Actualizar notas</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleEmpty" datatype="html">
+        <source>There are no visible notes in this workspace.</source>
+        <target>No hay notas visibles en este espacio de trabajo.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleScopeAudience" datatype="html">
+        <source>Shared with permitted readers</source>
+        <target>Compartida con cuentas autorizadas</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleOwnerAudience" datatype="html">
+        <source>Owner only</source>
+        <target>Solo para la persona dueña</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleEdit" datatype="html">
+        <source> Edit note </source>
+        <target>Editar nota</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleDelete" datatype="html">
+        <source> Delete note </source>
+        <target>Eliminar nota</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleEditing" datatype="html">
+        <source>Edit test note</source>
+        <target>Editar nota de prueba</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleNew" datatype="html">
+        <source>New test note</source>
+        <target>Nueva nota de prueba</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleNoteTitle" datatype="html">
+        <source>Note title</source>
+        <target>Título de la nota</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleNoteBody" datatype="html">
+        <source>Synthetic note text</source>
+        <target>Texto de prueba de la nota</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleAudience" datatype="html">
+        <source>Who can read this note?</source>
+        <target>¿Quién puede leer esta nota?</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleSave" datatype="html">
+        <source>Save note</source>
+        <target>Guardar nota</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleCancelEdit" datatype="html">
+        <source> Cancel edit </source>
+        <target>Cancelar edición</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleShareTitle" datatype="html">
+        <source>Workspace access</source>
+        <target>Acceso al espacio de trabajo</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleShareHelp" datatype="html">
+        <source> Ask a verified test account for its ID. After granting access, send the workspace’s address to that account. Anyone who opens the address still needs permission. </source>
+        <target>Pídele su ID a quien tenga una cuenta de prueba verificada. Después de darle acceso, envíale la dirección del espacio de trabajo. Quien abra el enlace seguirá necesitando permiso.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleShareId" datatype="html">
+        <source>Test account ID</source>
+        <target>ID de la cuenta de prueba</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleGrant" datatype="html">
+        <source> Grant read access </source>
+        <target>Dar acceso de lectura</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleRevoke" datatype="html">
+        <source> Remove access </source>
+        <target>Quitar acceso</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleSaved" datatype="html">
+        <source>Note saved.</source>
+        <target>Se guardó la nota.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleDeleted" datatype="html">
+        <source>Note deleted.</source>
+        <target>Se eliminó la nota.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleMemberError" datatype="html">
+        <source>Enter the ID of another test account.</source>
+        <target>Escribe el ID de otra cuenta de prueba.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleShared" datatype="html">
+        <source>Read access granted.</source>
+        <target>Se concedió el acceso de lectura.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleRevoked" datatype="html">
+        <source>Access removed.</source>
+        <target>Se quitó el acceso.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleDenied" datatype="html">
+        <source>This account doesn’t have access to the test workspace.</source>
+        <target>Esta cuenta no tiene acceso al espacio de trabajo de prueba.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleError" datatype="html">
+        <source>We couldn’t complete that action. Try again.</source>
+        <target>No pudimos completar la acción. Inténtalo de nuevo.</target>
+      </trans-unit>
+      <trans-unit id="vaultExampleBackupHeading" datatype="html">
+        <source>Encrypted backup</source>
+        <target>Respaldo cifrado</target>
+      </trans-unit>
+      <trans-unit id="vaultExampleBackupExplanation" datatype="html">
+        <source> Open the example note to download an encrypted copy. The file contains the encrypted note and its original device-bound key wrapper. Keep it private, especially if you use a PIN. </source>
+        <target>Abre la nota de ejemplo para descargar una copia cifrada. El archivo contiene la nota cifrada y la clave protegida del dispositivo original. Guarda el archivo en un lugar privado, sobre todo si usas un PIN.</target>
+      </trans-unit>
+      <trans-unit id="vaultExampleBackupRestoreLimit" datatype="html">
+        <source> Signing in doesn’t unlock the vault. This file has no authorized restore path on a second browser profile. The separate device pairing example shows how an approved device retrieves a synchronized test note. </source>
+        <target>Iniciar sesión no desbloquea la bóveda. Este archivo no se puede restaurar de forma autorizada en otro perfil del navegador. El ejemplo de vinculación muestra cómo un dispositivo aprobado puede recuperar una nota de prueba sincronizada.</target>
+      </trans-unit>
+      <trans-unit id="vaultExampleBackupDownload" datatype="html">
+        <source> Download encrypted backup </source>
+        <target>Descargar respaldo cifrado</target>
+      </trans-unit>
+      <trans-unit id="vaultExampleBackupPairing" datatype="html">
+        <source> Open the device pairing example </source>
+        <target>Abrir el ejemplo de vinculación de dispositivos</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

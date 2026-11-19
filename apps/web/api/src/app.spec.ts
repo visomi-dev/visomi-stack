@@ -66,6 +66,16 @@ describe('API composition', () => {
     expect(response.status).toBe(503);
     expect(response.body).toEqual({ error: 'authentication_unavailable' });
   });
+  it('does not mount Cloud routes without the base profile and authenticated runtime', async () => {
+    const standalone = await dispatch(createApp({ persistenceDemos: true }), '/persistence/cloud-example/policy');
+    const noAuth = await dispatch(
+      createApp({ persistence: syntheticHybridPolicy, persistenceDemos: true }),
+      '/persistence/cloud-example/policy',
+    );
+
+    expect(standalone.status).toBe(404);
+    expect(noAuth.status).toBe(503);
+  });
   it.each([
     ['/', 200, { message: 'Hello API' }],
     ['/missing', 404, { error: 'not_found' }],

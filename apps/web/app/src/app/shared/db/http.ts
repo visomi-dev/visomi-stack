@@ -14,7 +14,12 @@ export class DatabaseHttp {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
-  async request(path: string, body?: unknown, signal?: AbortSignal): Promise<unknown> {
+  async request(
+    path: string,
+    body?: unknown,
+    signal?: AbortSignal,
+    method = body === undefined ? 'GET' : 'POST',
+  ): Promise<unknown> {
     if (
       !this.document.defaultView ||
       !this.session.full() ||
@@ -41,10 +46,7 @@ export class DatabaseHttp {
 
     try {
       const url = `/api/persistence${path}`;
-      const request =
-        body === undefined
-          ? this.http.get<unknown>(url, { transferCache: false })
-          : this.http.post<unknown>(url, body, { transferCache: false });
+      const request = this.http.request<unknown>(method, url, { body, transferCache: false });
       const result = await firstValueFrom(request.pipe(takeUntil(fromEvent(controller.signal, 'abort'))));
 
       if (

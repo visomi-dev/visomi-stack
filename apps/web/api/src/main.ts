@@ -12,6 +12,7 @@ import {
   type RealtimeTransport,
 } from '@visomi-stack/backend-shared';
 import { initializeObservability, proxyConfiguration } from '@visomi-stack/web-backend-shared';
+import { developmentPersistenceDemos } from '@visomi-stack/shared-db';
 
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -61,9 +62,13 @@ try {
     });
   }
 
+  const persistence = persistenceExample(process.env);
+  const persistenceDemos = developmentPersistenceDemos(process.env);
+
   application = createApp({
-    persistence: persistenceExample(process.env),
     observability,
+    ...(persistence ? { persistence } : {}),
+    ...(persistenceDemos ? { persistenceDemos } : {}),
     ...(auth ? { auth } : {}),
     ...proxyConfiguration(process.env.AUTH_TRUST_PROXY),
   });

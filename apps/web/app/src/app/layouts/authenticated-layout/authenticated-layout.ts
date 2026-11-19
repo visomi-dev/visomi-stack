@@ -31,6 +31,7 @@ import { LanguageSwitcher } from '../../i18n/language-switcher/language-switcher
 import { BrowserPrivacy } from '../../observability/browser-privacy/browser-privacy';
 import { ConsentNotice } from '../../observability/consent-notice/consent-notice';
 import { PrivacyLink } from '../../observability/privacy-link/privacy-link';
+import { PersistenceDemos } from '../../db/persistence-demos';
 
 @Component({
   selector: 'app-authenticated-layout',
@@ -59,7 +60,7 @@ import { PrivacyLink } from '../../observability/privacy-link/privacy-link';
     AuthFeedback,
     Dialog,
   ],
-  providers: [Action, AuthHttp, Logout, Vaults, DatabaseHttp],
+  providers: [Action, AuthHttp, Logout, Vaults, DatabaseHttp, PersistenceDemos],
   templateUrl: './authenticated-layout.html',
   styleUrl: './authenticated-layout.css',
 })
@@ -69,6 +70,7 @@ export class AuthenticatedLayout {
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly pageNavigation = inject(Navigation);
+  private readonly demos = inject(PersistenceDemos);
 
   private readonly mobileMenu = viewChild.required(Dialog);
 
@@ -86,17 +88,31 @@ export class AuthenticatedLayout {
     return path === 'account' || path === 'security';
   });
 
-  protected readonly signOutLabel = $localize`:@@authSignOut:Sign out`;
-  protected readonly expandSidebar = $localize`:@@shellExpandSidebar:Expand sidebar`;
-  protected readonly collapseSidebar = $localize`:@@shellCollapseSidebar:Collapse sidebar`;
-  protected readonly primaryItems = [
+  protected readonly navbarItems = [
     { path: '/home', label: $localize`:@@authHome:Home`, icon: 'M3 10 12 3l9 7v11h-6v-7H9v7H3Z' },
     {
       path: '/vault-example',
       label: $localize`:@@vaultDemoTitle:Vault example`,
       icon: 'M4 5h16v14H4zM8 5v14m8-7h.01M12 12h.01',
     },
-  ];
+  ] as const;
+  protected readonly primaryItems = computed(() => [
+    this.navbarItems[0],
+    ...(this.demos.enabled()
+      ? [
+          {
+            path: '/cloud-example',
+            label: $localize`:@@cloudExampleTitle:Cloud example`,
+            icon: 'M6 18a4 4 0 0 1-.5-8 6.5 6.5 0 0 1 12.5 2.5 2.8 2.8 0 1 1 0 5.5Z',
+          },
+        ]
+      : []),
+    this.navbarItems[1],
+  ]);
+
+  protected readonly signOutLabel = $localize`:@@authSignOut:Sign out`;
+  protected readonly expandSidebar = $localize`:@@shellExpandSidebar:Expand sidebar`;
+  protected readonly collapseSidebar = $localize`:@@shellCollapseSidebar:Collapse sidebar`;
   protected readonly securityItems = [
     { path: '/security/passkeys', label: $localize`:@@authPasskeys:Passkeys` },
     { path: '/security/password', label: $localize`:@@authPassword:Password` },

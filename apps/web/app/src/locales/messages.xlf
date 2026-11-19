@@ -3047,6 +3047,277 @@
       <trans-unit id="vaultDevicesFingerprintMismatch" datatype="html">
         <source>The fingerprints don’t match. Check the fingerprint on the other device.</source>
       </trans-unit>
+      <trans-unit id="cloudExampleTitle" datatype="html">
+        <source>Cloud example</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">3,4</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.ts</context>
+          <context context-type="linenumber">108</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleDescription" datatype="html">
+        <source> Use test data to try a service-readable workspace. Notes are stored in PostgreSQL. Database row security and the app’s permission checks protect access. The server can read the notes, so this is regular cloud storage. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">5,8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExamplePermissions" datatype="html">
+        <source> The workspace owner writes notes and chooses which to share. A test account with read access can see only shared notes. Choose Vault for data that requires a separate device unlock. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">9,14</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleChecking" datatype="html">
+        <source>Checking the test profile…</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">15,16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleUnavailable" datatype="html">
+        <source>This example is available only in the opted-in test profile.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">17,19</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleMemberId" datatype="html">
+        <source>Your test account ID is <x id="INTERPOLATION" equiv-text="{{ id }}"/>.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">20,23</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleInvalidLink" datatype="html">
+        <source>This test workspace link is invalid.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">35,37</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleRefresh" datatype="html">
+        <source> Refresh notes </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">46,48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleEmpty" datatype="html">
+        <source>There are no visible notes in this workspace.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">51,54</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleScopeAudience" datatype="html">
+        <source>Shared with permitted readers</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">59,61</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">143,145</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleOwnerAudience" datatype="html">
+        <source>Owner only</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">61,63</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">133,135</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleEdit" datatype="html">
+        <source> Edit note </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">73,74</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleDelete" datatype="html">
+        <source> Delete note </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">83,84</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleEditing" datatype="html">
+        <source>Edit test note</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">93,95</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleNew" datatype="html">
+        <source>New test note</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">95,98</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleNoteTitle" datatype="html">
+        <source>Note title</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">98</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleNoteBody" datatype="html">
+        <source>Synthetic note text</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">111</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleAudience" datatype="html">
+        <source>Who can read this note?</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">124,125</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleSave" datatype="html">
+        <source>Save note</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">147,148</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleCancelEdit" datatype="html">
+        <source> Cancel edit </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">157,158</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleShareTitle" datatype="html">
+        <source>Workspace access</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">164,165</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleShareHelp" datatype="html">
+        <source> Ask a verified test account for its ID. After granting access, send the workspace’s address to that account. Anyone who opens the address still needs permission. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">166,168</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleShareId" datatype="html">
+        <source>Test account ID</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">169</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleGrant" datatype="html">
+        <source> Grant read access </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">189,190</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleRevoke" datatype="html">
+        <source> Remove access </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">199,200</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleSaved" datatype="html">
+        <source>Note saved.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="linenumber">111</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleDeleted" datatype="html">
+        <source>Note deleted.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="linenumber">139</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleMemberError" datatype="html">
+        <source>Enter the ID of another test account.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="linenumber">152</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleShared" datatype="html">
+        <source>Read access granted.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="linenumber">169</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleRevoked" datatype="html">
+        <source>Access removed.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="linenumber">170</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleDenied" datatype="html">
+        <source>This account doesn’t have access to the test workspace.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="linenumber">214</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleError" datatype="html">
+        <source>We couldn’t complete that action. Try again.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="linenumber">215</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultExampleBackupHeading" datatype="html">
+        <source>Encrypted backup</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
+          <context context-type="linenumber">148,149</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultExampleBackupExplanation" datatype="html">
+        <source> Open the example note to download an encrypted copy. The file contains the encrypted note and its original device-bound key wrapper. Keep it private, especially if you use a PIN. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
+          <context context-type="linenumber">150,153</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultExampleBackupRestoreLimit" datatype="html">
+        <source> Signing in doesn’t unlock the vault. This file has no authorized restore path on a second browser profile. The separate device pairing example shows how an approved device retrieves a synchronized test note. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
+          <context context-type="linenumber">154,157</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultExampleBackupDownload" datatype="html">
+        <source> Download encrypted backup </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
+          <context context-type="linenumber">167,170</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultExampleBackupPairing" datatype="html">
+        <source> Open the device pairing example </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
+          <context context-type="linenumber">171,175</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

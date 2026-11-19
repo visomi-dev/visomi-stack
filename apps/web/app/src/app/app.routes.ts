@@ -97,6 +97,14 @@ export const appRoutes: Routes = [
       import('./layouts/authenticated-layout/authenticated-layout').then((m) => m.AuthenticatedLayout),
     children: [
       { path: 'vault-example', loadComponent: () => import('./vault/demo/demo').then((m) => m.VaultDemo) },
+      {
+        path: 'cloud-example',
+        loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
+      },
+      {
+        path: 'cloud-example/:tenantId/:scopeId',
+        loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
+      },
       { path: 'home', loadComponent: () => import('./home/home').then((m) => m.Home) },
       { path: 'persistence', loadComponent: () => import('./db/example/example').then((m) => m.DatabaseExample) },
       {

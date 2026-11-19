@@ -8,6 +8,8 @@ a production enablement checklist that has already been completed. Start with th
 [device/sync contract](architecture/contracts/persistence-keys-sync.md), and
 [current test evidence](reviews/persistence-milestone.md).
 
+See [Vault and Cloud examples](persistence-examples.md) for the opt-in browser flows, database role setup, and restore boundaries.
+
 ## Choose domains before composing a product
 
 Use the strict `ProductPolicy` contract in `@visomi-stack/shared-db`.

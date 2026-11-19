@@ -1,14 +1,16 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { VaultError, vaultUnitId, type DataContext, type WrappingContext } from '@visomi-stack/shared-db';
-import { createPinMethodId, PrfUnlock } from '@visomi-stack/web-frontend-db';
+import { createPinMethodId, exportEncryptedBackup, PrfUnlock } from '@visomi-stack/web-frontend-db';
 
 import { Session } from '../../auth/session/session';
+import { PersistenceDemos } from '../../db/persistence-demos';
 import { ClientDatabase, VAULT_DATABASE_NAMESPACE } from '../../shared/db/database';
 import { NavigationHeading } from '../../shared/navigation-heading';
 import { vaultMessage } from '../../shared/vault/vault-messages';
 import { VaultSession } from '../../shared/vault/vault-session';
-import { Button, Card, Field, Heading, PinInput, Text } from '../../ui';
+import { Button, Card, Field, Heading, Link, PinInput, Text } from '../../ui';
 
 const scope = { kind: 'tenant', tenantId: '786cc156-1520-40d6-b884-353508731b31' } as const;
 const context: DataContext = {
@@ -23,7 +25,7 @@ const context: DataContext = {
 
 @Component({
   selector: 'app-vault-demo',
-  imports: [Button, Card, Field, Heading, NavigationHeading, PinInput, Text],
+  imports: [Button, Card, Field, Heading, Link, NavigationHeading, PinInput, RouterLink, Text],
   providers: [ClientDatabase, VaultSession, { provide: VAULT_DATABASE_NAMESPACE, useValue: 'reference-demo' }],
   templateUrl: './demo.html',
 })
@@ -37,6 +39,8 @@ export class VaultDemo {
   private readonly cleanup = inject(DestroyRef).onDestroy(() => this.lifetime.abort());
 
   private additionCancellation = new AbortController();
+
+  protected readonly demos = inject(PersistenceDemos, { optional: true });
 
   protected readonly binding = signal<WrappingContext | undefined>(undefined);
   protected readonly passkeyBinding = signal<WrappingContext | undefined>(undefined);
@@ -280,6 +284,43 @@ export class VaultDemo {
         signal.throwIfAborted();
 
         await this.vault.read(context);
+      } finally {
+        storage.close();
+      }
+    });
+  }
+
+  protected async downloadBackup(): Promise<void> {
+    const binding = this.binding();
+    const view = this.document.defaultView;
+
+    if (!binding || !view || !this.ready() || !this.plaintext() || !this.demos?.enabled()) {
+      return;
+    }
+
+    await this.run(async (signal) => {
+      const storage = await this.database.vault(binding.ownerId, signal);
+
+      try {
+        const serialized = await exportEncryptedBackup(storage, binding, [context]);
+
+        signal.throwIfAborted();
+
+        if (!this.ready() || !this.demos?.enabled()) {
+          return;
+        }
+
+        const file = new Blob([serialized], { type: 'application/json' });
+        const url = URL.createObjectURL(file);
+        const link = this.document.createElement('a');
+
+        try {
+          link.href = url;
+          link.download = 'visomi-vault-example.backup.json';
+          link.click();
+        } finally {
+          view.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+        }
       } finally {
         storage.close();
       }

@@ -29,6 +29,7 @@ export type ApiModule = {
     errorMode: 'inherited';
     helmetMode: 'inherited';
     persistence?: ProductPolicy;
+    persistenceDemos?: boolean;
   }): RequestHandler;
   authConfig(input: {
     origin: string;

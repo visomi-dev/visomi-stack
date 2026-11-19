@@ -71,6 +71,20 @@ export const syntheticHybridPolicy = parseProductPolicy({
   ],
 });
 
+export function developmentPersistenceDemos(environment: Record<string, string | undefined>): boolean {
+  const profile = environment['VISOMI_PERSISTENCE_DEMOS'];
+
+  if (profile === undefined || profile === 'false') {
+    return false;
+  }
+
+  if (profile !== 'true' || !developmentPersistencePolicy(environment)) {
+    throw new Error('persistence_demos_unavailable');
+  }
+
+  return true;
+}
+
 /** Explicit synthetic development/test composition; never a real product's recovery decision. */
 export function developmentPersistencePolicy(
   environment: Record<string, string | undefined>,
