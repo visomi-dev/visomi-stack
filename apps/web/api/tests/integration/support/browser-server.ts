@@ -27,6 +27,7 @@ export type FixtureHost = typeof globalThis & {
     challenge: Contracts.DeviceProof;
     storage: VaultStorage.IndexedDbReplicaStorage;
     replica?: InstanceType<VaultApi['SyncReplica']>;
+    enterPin?: (correct: boolean) => void;
     csrf: string;
     path: string;
   };
@@ -100,8 +101,8 @@ export async function browserServer(observability?: Observability) {
 
   return {
     origin,
-    async client(cookie: string) {
-      const context = await browser.newContext();
+    async client(cookie: string, { prf = true, mobileViewport = false } = {}) {
+      const context = await browser.newContext({ viewport: mobileViewport ? { width: 390, height: 844 } : undefined });
 
       await context.addCookies([
         { name: 'visomi.sid', value: cookie, url: origin, httpOnly: true, sameSite: 'Strict' },
@@ -120,7 +121,7 @@ export async function browserServer(observability?: Observability) {
           hasUserVerification: true,
           isUserVerified: true,
           automaticPresenceSimulation: true,
-          hasPrf: true,
+          hasPrf: prf,
         },
       });
 

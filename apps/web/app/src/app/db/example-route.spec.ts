@@ -414,12 +414,17 @@ it.each(['available', 'unknown', 'unavailable'])(
   },
 );
 
-it('offers PIN after an actual unsupported PRF response, but never after a user cancellation', async () => {
+it('offers PIN after confirmed PRF unavailability and leaves PIN setup hidden after cancellation or failure', async () => {
   const f = fixture(undefined, undefined, 'available');
   const harness = await RouterTestingHarness.create();
   const page = await navigate(harness, a);
 
   f.privateResource.unlock.mockRejectedValueOnce(new VaultError('cancelled'));
+
+  await page.unlock(true);
+
+  expect(page.showPin()).toBe(false);
+  f.privateResource.unlock.mockRejectedValueOnce(new VaultError('unavailable'));
 
   await page.unlock(true);
 
