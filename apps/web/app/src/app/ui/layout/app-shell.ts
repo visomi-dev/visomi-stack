@@ -54,13 +54,7 @@ export class AppShell {
 
   readonly sidebarCompact = input(false, { alias: 'sidebar-compact', transform: booleanAttribute });
   protected readonly classes = computed(() =>
-    [
-      appShell.classes(),
-      this.inset() ? 'lg:bg-zinc-50 lg:dark:bg-zinc-900' : '',
-      this.sidebarCompact() ? '[--ui-shell-sidebar-width:4.5rem]' : '',
-    ]
-      .filter(Boolean)
-      .join(' '),
+    appShell.classes({ inset: this.inset(), compact: this.sidebarCompact() }),
   );
 
   protected readonly skipClasses = appShell.skipClasses();

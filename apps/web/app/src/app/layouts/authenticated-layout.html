@@ -9,7 +9,7 @@
     label="Primary navigation"
     i18n-label="@@shellPrimary"
     navigation-id="workspace-sidebar-navigation"
-    class="lg:gap-4 lg:border-r-0 lg:p-3"
+    inset
   >
     <a
       data-slot="brand"
@@ -119,7 +119,7 @@
     </div>
   </app-sidebar>
 
-  <header app-topbar class="lg:min-h-14 lg:gap-2 lg:px-4 lg:py-2">
+  <header app-topbar compact>
     <button
       appUI
       data-slot="title"
@@ -332,22 +332,19 @@
     [routerLink]="item.path"
     routerLinkActive="active"
     ariaCurrentWhenActive="page"
-    [class.justify-center]="compact"
+    [compact]="compact"
     [attr.title]="compact ? item.label : null"
   >
     <svg data-slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
       <path [attr.d]="item.icon" />
     </svg>
 
-    <span class="min-w-0 truncate" [class.sr-only]="compact">{{ item.label }}</span>
+    <span data-slot="label" class="min-w-0 truncate">{{ item.label }}</span>
   </a>
 </ng-template>
 
 <ng-template #accountAvatar>
-  <span
-    class="grid size-8 shrink-0 place-items-center rounded-lg bg-zinc-200 text-sm font-semibold text-zinc-800 dark:bg-zinc-700 dark:text-zinc-50"
-    aria-hidden="true"
-  >
+  <span appUI="avatar" uiSize="sm" shape="rounded" aria-hidden="true">
     @if (accountGlyph()) {
       {{ accountGlyph() }}
     } @else {

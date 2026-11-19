@@ -13,6 +13,7 @@ import {
   Link,
   ThemeSwitcher,
   Dialog,
+  Avatar,
   Card,
   Disclosure,
 } from '../ui';
@@ -49,6 +50,7 @@ import { ConsentNotice, PrivacyLink } from '../observability/consent-notice';
     RouterLinkActive,
     RouterOutlet,
     ThemeSwitcher,
+    Avatar,
     Card,
     Disclosure,
     NgTemplateOutlet,

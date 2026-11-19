@@ -1,4 +1,4 @@
-import { Directive, computed, input } from '@angular/core';
+import { Directive, booleanAttribute, computed, input } from '@angular/core';
 
 import { navItem, type NavigationPlacement } from '@visomi-stack/web-frontend-ui';
 
@@ -8,6 +8,9 @@ import { navItem, type NavigationPlacement } from '@visomi-stack/web-frontend-ui
 })
 export class NavItem {
   readonly placement = input<NavigationPlacement>('sidebar');
+  readonly compact = input(false, { transform: booleanAttribute });
 
-  protected readonly classes = computed(() => navItem.classes({ placement: this.placement() }));
+  protected readonly classes = computed(() =>
+    navItem.classes({ placement: this.placement(), compact: this.compact() }),
+  );
 }

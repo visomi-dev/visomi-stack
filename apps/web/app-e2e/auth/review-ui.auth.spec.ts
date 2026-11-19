@@ -61,7 +61,7 @@ test('keeps the inset shell, compact navigation and nested account destinations 
 
   await expect(vault).toHaveAttribute('title', 'Vault example');
 
-  await expect(vault.getByText('Vault example')).toHaveClass(/sr-only/);
+  await expect(vault.getByText('Vault example')).toHaveCSS('position', 'absolute');
 
   await expect(vault.locator('svg')).toBeVisible();
 
@@ -165,15 +165,29 @@ test('changes the synthetic Home chart and its accessible table in each locale',
 
   await expect(table.getByRole('row')).toHaveCount(15);
 
-  const full = await chart.locator('polyline').getAttribute('points');
+  const series = chart.locator('polyline');
+  const full = await series.getAttribute('points');
+  const lightStroke = await series.evaluate((element) => getComputedStyle(element).stroke);
 
-  await seven.press('Enter');
+  await page.getByRole('link', { name: 'Review security' }).focus();
+
+  await page.keyboard.press('Tab');
+
+  await expect(seven).toBeFocused();
+
+  await page.keyboard.press('Enter');
 
   await expect(seven).toHaveAttribute('aria-pressed', 'true');
 
+  await expect(seven).toBeFocused();
+
+  const visibleFocus = await seven.evaluate((element) => element.matches(':focus-visible'));
+
+  expect(visibleFocus).toBe(true);
+
   await expect(table.getByRole('row')).toHaveCount(8);
 
-  await expect(chart.locator('polyline')).not.toHaveAttribute('points', full!);
+  await expect(series).not.toHaveAttribute('points', full!);
 
   await expect(page.getByRole('status').filter({ hasText: /checks over 7 days/ })).toBeVisible();
 
@@ -189,9 +203,24 @@ test('changes the synthetic Home chart and its accessible table in each locale',
 
   await expect(page.getByRole('heading', { name: 'Tablero de ejemplo' })).toBeVisible();
 
-  await expect(page.getByRole('img', { name: 'Pruebas por día' })).toBeVisible();
+  const localizedChart = page.getByRole('img', { name: 'Pruebas por día' });
 
-  await expect(page.getByRole('table', { name: 'Totales por día' }).getByRole('row')).toHaveCount(15);
+  await expect(localizedChart).toBeVisible();
+
+  await expect(localizedChart.locator('polyline')).not.toHaveCSS('stroke', lightStroke);
+
+  const localizedTable = page.getByRole('table', { name: 'Totales por día' });
+
+  await expect(localizedTable.getByRole('row')).toHaveCount(15);
+
+  const fitsCard = await localizedTable.evaluate((element) => {
+    const card = element.parentElement!;
+    const rightEdge = card.getBoundingClientRect().right - parseFloat(getComputedStyle(card).paddingRight);
+
+    return element.getBoundingClientRect().right <= rightEdge;
+  });
+
+  expect(fitsCard).toBe(true);
 
   const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
 

@@ -4,8 +4,14 @@ export type ShellLayout = 'sidebar' | 'stacked';
 export type NavigationPlacement = 'sidebar' | 'navbar';
 
 export const appShell = {
-  classes(): string {
-    return 'flex h-dvh min-h-0 flex-col overflow-hidden bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50';
+  classes({ inset = false, compact = false } = {}): string {
+    return [
+      'flex h-dvh min-h-0 flex-col overflow-hidden bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50',
+      inset ? 'lg:bg-zinc-50 lg:dark:bg-zinc-900' : '',
+      compact ? '[--ui-shell-sidebar-width:4.5rem]' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
   },
   frameClasses({ layout = 'sidebar' }: { layout?: ShellLayout } = {}): string {
     return layout === 'sidebar'
@@ -43,8 +49,13 @@ export const appShell = {
 } as const;
 
 export const sidebar = {
-  classes(): string {
-    return 'flex h-full min-h-0 flex-col gap-6 border-r border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900';
+  classes({ inset = false } = {}): string {
+    return [
+      'flex h-full min-h-0 flex-col gap-6 border-r border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900',
+      inset ? 'lg:gap-4 lg:border-r-0 lg:p-3' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
   },
   navigationClasses(): string {
     return 'min-h-0 flex-1 space-y-6 overflow-y-auto p-1 -m-1';
@@ -52,8 +63,13 @@ export const sidebar = {
 } as const;
 
 export const topbar = {
-  classes(): string {
-    return 'flex min-h-18 flex-wrap items-center justify-between gap-3 border-b border-zinc-200 bg-white px-5 py-3 sm:px-8 dark:border-zinc-800 dark:bg-zinc-950';
+  classes({ compact = false } = {}): string {
+    return [
+      'flex min-h-18 flex-wrap items-center justify-between gap-3 border-b border-zinc-200 bg-white px-5 py-3 sm:px-8 dark:border-zinc-800 dark:bg-zinc-950',
+      compact ? 'lg:min-h-14 lg:gap-2 lg:px-4 lg:py-2' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
   },
   titleClasses(): string {
     return 'flex min-w-0 items-center gap-3 font-heading font-semibold';
@@ -70,12 +86,18 @@ export const navbar = {
 } as const;
 
 export const navItem = {
-  classes({ placement = 'sidebar' }: { placement?: NavigationPlacement } = {}): string {
+  classes({
+    placement = 'sidebar',
+    compact = false,
+  }: { placement?: NavigationPlacement; compact?: boolean } = {}): string {
     return [
       'ui-focus-ring relative flex min-h-11 min-w-11 cursor-pointer items-center rounded-lg text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-200/60 hover:text-zinc-950 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700 aria-[current=page]:ring-1 aria-[current=page]:ring-inset aria-[current=page]:ring-blue-600/30 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent motion-reduce:transition-none dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 dark:aria-[current=page]:bg-blue-950 dark:aria-[current=page]:text-blue-300 dark:aria-[current=page]:ring-blue-400/40 [&_[data-slot=icon]]:size-5 [&_[data-slot=icon]]:shrink-0',
       placement === 'navbar'
         ? 'min-w-0 flex-1 flex-col justify-center gap-1 px-1 py-2 text-center text-xs'
         : 'w-full gap-3 px-3 py-2',
-    ].join(' ');
+      compact ? 'justify-center [&_[data-slot=label]]:sr-only' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
   },
 } as const;

@@ -30,21 +30,19 @@
 
     <dl class="grid gap-3 sm:grid-cols-3">
       <div appUI="card" padding="sm" layout="plain" class="space-y-2">
-        <dt class="text-sm font-medium" i18n="@@exampleChecksRun">Checks run</dt>
+        <dt><span appUI="badge" i18n="@@exampleChecksRun">Checks run</span></dt>
 
         <dd class="font-heading text-2xl font-semibold tabular-nums">{{ total() | number }}</dd>
       </div>
 
       <div appUI="card" padding="sm" layout="plain" class="space-y-2">
-        <dt class="text-sm font-medium" i18n="@@exampleChecksPassed">Passed</dt>
+        <dt><span appUI="badge" tone="success" i18n="@@exampleChecksPassed">Passed</span></dt>
 
-        <dd class="font-heading text-2xl font-semibold text-green-800 tabular-nums dark:text-green-300">
-          {{ passed() | number }}
-        </dd>
+        <dd class="font-heading text-2xl font-semibold tabular-nums">{{ passed() | number }}</dd>
       </div>
 
       <div appUI="card" padding="sm" layout="plain" class="space-y-2">
-        <dt class="text-sm font-medium" i18n="@@exampleChecksFailed">Failed</dt>
+        <dt><span appUI="badge" i18n="@@exampleChecksFailed">Failed</span></dt>
 
         <dd class="font-heading text-2xl font-semibold tabular-nums">{{ failed() | number }}</dd>
       </div>
@@ -73,7 +71,6 @@
             variant="secondary"
             [attr.aria-pressed]="period() === 7"
             (click)="period.set(7)"
-            class="aria-pressed:border-blue-600 aria-pressed:font-semibold"
             i18n="@@exampleSevenDays"
           >
             7 days
@@ -86,7 +83,6 @@
             variant="secondary"
             [attr.aria-pressed]="period() === 14"
             (click)="period.set(14)"
-            class="aria-pressed:border-blue-600 aria-pressed:font-semibold"
             i18n="@@exampleFourteenDays"
           >
             14 days
@@ -94,37 +90,13 @@
         </div>
       </header>
 
-      <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-900">
-        <svg
-          viewBox="0 0 480 120"
-          role="img"
-          aria-labelledby="example-chart"
-          aria-describedby="example-chart-summary"
-          class="h-36 w-full sm:h-44"
-          preserveAspectRatio="none"
-        >
-          <path d="M16 16h448M16 47h448M16 77h448M16 108h448" class="stroke-zinc-200 dark:stroke-zinc-700" />
-
-          <polyline
-            [attr.points]="coordinates()"
-            fill="none"
-            class="stroke-blue-700 dark:stroke-blue-400"
-            stroke-width="2"
-            stroke-linejoin="round"
-            vector-effect="non-scaling-stroke"
-          />
-
-          @for (point of points(); track $index) {
-            <circle [attr.cx]="point.x" [attr.cy]="point.y" r="2.5" class="fill-blue-700 dark:fill-blue-400" />
-          }
-        </svg>
-
-        <div aria-hidden="true" class="flex justify-between px-2 text-xs text-zinc-600 dark:text-zinc-400">
-          <span>{{ days()[0].day | date: 'MMM d' : 'UTC' }}</span>
-
-          <span>{{ days().at(-1)?.day | date: 'MMM d' : 'UTC' }}</span>
-        </div>
-      </div>
+      <app-line-chart
+        [values]="series()"
+        labelled-by="example-chart"
+        described-by="example-chart-summary"
+        [start-label]="days()[0].day | date: 'MMM d' : 'UTC'"
+        [end-label]="days().at(-1)?.day | date: 'MMM d' : 'UTC'"
+      />
     </section>
 
     <section appUI="card" padding="sm" layout="plain" class="space-y-3" aria-labelledby="example-checks-table">

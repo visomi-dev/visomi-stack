@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, booleanAttribute, computed, input } from '@angular/core';
 
 import { topbar } from '@visomi-stack/web-frontend-ui';
 
@@ -9,10 +9,12 @@ import { topbar } from '@visomi-stack/web-frontend-ui';
 
     <div [class]="actionsClasses"><ng-content /></div>
   `,
-  host: { '[class]': 'classes' },
+  host: { '[class]': 'classes()' },
 })
 export class Topbar {
-  protected readonly classes = topbar.classes();
+  readonly compact = input(false, { transform: booleanAttribute });
+  protected readonly classes = computed(() => topbar.classes({ compact: this.compact() }));
+
   protected readonly titleClasses = topbar.titleClasses();
   protected readonly actionsClasses = topbar.actionsClasses();
 }

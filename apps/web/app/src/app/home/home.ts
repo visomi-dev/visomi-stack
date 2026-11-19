@@ -3,7 +3,7 @@ import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { NavigationHeading } from '../shared/navigation-heading';
-import { Button, Card, Heading, LinkButton, Table, Text } from '../ui';
+import { Badge, Button, Card, Heading, LineChart, LinkButton, Table, Text } from '../ui';
 
 // A fixed example series. This page never reads the private visits report.
 const dailyChecks = [
@@ -30,7 +30,20 @@ const dailyChecks = [
 
 @Component({
   selector: 'app-private-home',
-  imports: [NavigationHeading, Button, Card, Heading, LinkButton, Table, Text, RouterLink, DatePipe, DecimalPipe],
+  imports: [
+    NavigationHeading,
+    Badge,
+    Button,
+    Card,
+    Heading,
+    LineChart,
+    LinkButton,
+    Table,
+    Text,
+    RouterLink,
+    DatePipe,
+    DecimalPipe,
+  ],
   templateUrl: './home.html',
 })
 export class Home {
@@ -41,15 +54,5 @@ export class Home {
   protected readonly passed = computed(() => this.days().reduce((sum, day) => sum + day.passed, 0));
   protected readonly failed = computed(() => this.total() - this.passed());
   protected readonly peak = computed(() => Math.max(...this.days().map(({ total }) => total)));
-  protected readonly points = computed(() =>
-    this.days().map(({ total }, index) => ({
-      x: 16 + (index * 448) / (this.days().length - 1),
-      y: 108 - (total * 92) / 50,
-    })),
-  );
-  protected readonly coordinates = computed(() =>
-    this.points()
-      .map(({ x, y }) => x + ',' + y)
-      .join(' '),
-  );
+  protected readonly series = computed(() => this.days().map(({ total }) => total));
 }

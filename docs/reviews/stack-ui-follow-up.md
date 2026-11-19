@@ -27,7 +27,7 @@ The account-email and new-device email-code forms submit when the native six-dig
 
 [Mobile account-code status, es-MX](fixtures/stack-ui-follow-up/otp-mobile.webp) · [Desktop new-device status, EN](fixtures/stack-ui-follow-up/otp-desktop.webp)
 
-## VIS-30 Authenticated shell and example dashboard
+## VIS-30 Authenticated shell and VIS-92 example dashboard
 
 The inset panel keeps the toolbar and footer outside the content scroll area. Workspace can expand and collapse in the desktop sidebar. Compact mode keeps route icons, accessible names, and active styling. The account trigger opens a native popover with identity, Account, Security, an expandable group of existing security destinations, and the separated Sign out action. The mobile drawer has the same account destinations. One brand link leads Home in each visible navigation surface.
 
@@ -40,6 +40,19 @@ The Home example uses fixed synthetic check counts. The 7- and 14-day controls u
 - [Mobile example dashboard](fixtures/stack-ui-follow-up/dashboard-mobile.webp)
 
 Composition follows [sidebar-08](https://ui.shadcn.com/view/new-york-v4/sidebar-08). Interaction references were [sidebar-07](https://ui.shadcn.com/view/new-york-v4/sidebar-07), [sidebar-05 and sidebar-06](https://ui.shadcn.com/blocks/sidebar#sidebar-05), and [dashboard-01](https://ui.shadcn.com/view/new-york-v4/dashboard-01). The available `.legacy/nive-archive-v6` sources included `apps/web/app/src/app/shared/layout/layout.html`, `apps/web/app/src/app/shared/layout/sidebar-menu/sidebar-menu.html`, and `apps/web/app/src/app/shared/layout/sidebar-menu/sidebar-menu.ts`. The same sidebar menu paths were present under `.legacy/visomi-stack-v0`. They provided a reference for the compact-width transition, preserved labels, and separate mobile drawer interaction.
+
+### Stack design-system mapping
+
+[VIS-92](https://linear.app/visomi/issue/VIS-92) uses shadcn’s dashboard hierarchy as a composition reference. The visual recipes come from Stack.
+
+| Area               | Shared path                                                                                                                                                                                                                                                                                                                                      | Local composition                                                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Summary and status | `Card` supplies surfaces. `Badge` supplies the existing success and neutral tones. `Heading`, `Text`, and `Table` cover the surrounding content and daily totals. Compact tables tighten cell spacing on narrow screens.                                                                                                                         | Home owns the grid, numeric hierarchy, synthetic values, headings, and table columns.                                                    |
+| Range controls     | The existing secondary `Button` recipe styles native `aria-pressed` in both themes and keeps the shared focus ring and target size.                                                                                                                                                                                                              | Home owns the labels, selected period, and updates to its cards, summary, series, and table.                                             |
+| Chart              | The framework-independent `lineChart` recipe owns plot bounds, grid, scale, and light/dark strokes. The Angular `LineChart` composes the existing subtle `Card` and muted `Text` for the date ticks.                                                                                                                                             | The caller supplies numeric values, tick labels, and IDs for the accessible name and summary. Home supplies the accompanying data table. |
+| Shell              | `AppShell`, `Sidebar`, `Topbar`, and `NavItem` own the inset panel, compact sizing, reduced motion, focus, and visually hidden compact labels. The real route links use the existing `aria-current` styling. `Avatar`, `Button`, `Card`, and the existing `Disclosure` and `Dialog` primitives handle account presentation and mobile dismissal. | The authenticated layout owns route groups, profile actions, icons, and native submenu and popover placement.                            |
+
+The chart and shell screenshots exercise the shared recipes in light and dark themes. Browser checks cover keyboard focus, pressed range controls, the changing series and accessible summary, table rows, compact labels, and native menu dismissal.
 
 ## VIS-87 Vault example and second-device enrollment
 
