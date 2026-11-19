@@ -21,6 +21,7 @@ export abstract class Session {
   abstract readonly full: Signal<boolean>;
   abstract readonly user: Signal<SessionSnapshot['user']>;
   abstract readonly providers: Signal<Providers | null>;
+  abstract readonly providersLoading: Signal<boolean>;
   abstract readonly cancellation: Signal<AbortSignal>;
   abstract readonly operationVersion: Signal<number>;
 

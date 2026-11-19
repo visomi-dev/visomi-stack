@@ -45,12 +45,15 @@ export class Google {
 
   private readonly width = signal(0);
   private readonly focused = signal(false);
+  private readonly renderingState = signal(false);
 
   private readonly renderer = signal<((width: number, dark: boolean) => void) | null>(null);
   private readonly language = this.locale.startsWith('es') ? 'es' : 'en';
 
   private buttonLifetime: AbortController | undefined;
   private readonly cleanup = this.destroyRef.onDestroy(() => this.buttonLifetime?.abort());
+
+  readonly rendering = this.renderingState.asReadonly();
 
   async button(
     element: HTMLElement,
@@ -61,6 +64,7 @@ export class Google {
     processing: (active: boolean) => void = () => undefined,
   ): Promise<void> {
     this.buttonLifetime?.abort();
+    this.renderingState.set(false);
     const controller = new AbortController();
     const lifetime = controller.signal;
     const cancellation = this.session.cancellation();
@@ -87,6 +91,7 @@ export class Google {
       () => {
         controller.abort();
         element.replaceChildren();
+        this.renderingState.set(false);
 
         if (active) {
           processing(false);
@@ -136,6 +141,7 @@ export class Google {
     let renderedWidth = 0;
     let renderedDark: boolean | undefined;
 
+    this.renderingState.set(true);
     this.renderer.set((width, dark) => {
       const buttonWidth = Math.min(400, Math.floor(width));
 
@@ -165,6 +171,8 @@ export class Google {
         renderedDark = dark;
       } catch (error) {
         failed(error);
+      } finally {
+        this.renderingState.set(false);
       }
     });
 

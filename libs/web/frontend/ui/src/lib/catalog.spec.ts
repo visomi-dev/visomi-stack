@@ -1,8 +1,8 @@
 import * as ui from '../index';
 
 describe('portable UI recipes', () => {
-  it('exports 40 recipes without requiring a browser or framework', () => {
-    expect(Object.keys(ui)).toHaveLength(40);
+  it('exports 41 recipes without requiring a browser or framework', () => {
+    expect(Object.keys(ui)).toHaveLength(41);
 
     for (const recipe of Object.values(ui)) {
       const classes = recipe.classes().split(' ');
@@ -114,6 +114,8 @@ describe('portable UI recipes', () => {
 
     expect(ui.loader.classes().split(' ')).toContain('ui-loader');
     expect(ui.loader.classes().split(' ')).not.toContain('animate-spin');
+    expect(ui.skeleton.classes()).toContain('pointer-events-none');
+    expect(ui.skeleton.classes()).not.toContain('animate-');
     expect(ui.disclosure.classes()).toContain('summary:focus-visible');
     expect(ui.disclosure.classes().split(' ')).toContain('border');
 

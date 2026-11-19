@@ -35,7 +35,7 @@ export {
   radioCard,
 } from './lib/forms';
 export type { ControlSize } from './lib/forms';
-export { alert, loader } from './lib/feedback';
+export { alert, loader, skeleton } from './lib/feedback';
 export { appShell, sidebar, topbar, navbar, navItem } from './lib/shell';
 export type { ShellLayout, NavigationPlacement } from './lib/shell';
 export { lineChart } from './lib/line-chart';
