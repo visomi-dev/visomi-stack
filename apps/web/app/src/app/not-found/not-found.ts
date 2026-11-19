@@ -5,7 +5,7 @@ import { NavigationHeading } from '../shared/navigation-heading';
 import { Session } from '../auth/session/session';
 import { destination } from '../auth/session/navigation';
 import { Heading, Text, LinkButton } from '../ui';
-import { NotFoundLayout } from '../layouts/not-found-layout';
+import { NotFoundLayout } from '../layouts/not-found-layout/not-found-layout';
 
 @Component({
   selector: 'app-not-found',

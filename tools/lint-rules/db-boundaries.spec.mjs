@@ -81,7 +81,7 @@ for (const mode of ['root', 'project']) {
     for (const transport of ['HttpClient', 'DatabaseHttp', 'AuthHttp']) {
       const result = await messages(
         mode === 'root' ? '.' : 'apps/web/app',
-        'apps/web/app/src/app/db/example.ts',
+        'apps/web/app/src/app/db/example/example.ts',
         `@Component({}) class Example { private readonly transport = inject(${transport}); }`,
         'no-restricted-syntax',
       );
@@ -92,7 +92,7 @@ for (const mode of ['root', 'project']) {
 
     const result = await messages(
       mode === 'root' ? '.' : 'apps/web/app',
-      'apps/web/app/src/app/db/example.ts',
+      'apps/web/app/src/app/db/example/example.ts',
       '@Component({}) class Example { readonly workspace = inject(ExampleWorkspace); }',
       'no-restricted-syntax',
     );

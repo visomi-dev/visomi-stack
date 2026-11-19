@@ -14,7 +14,7 @@ import { Navigation } from '../shared/navigation';
 import { DatabaseHttp } from '../shared/db/http';
 import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 
-import { DatabaseExample } from './example';
+import { DatabaseExample } from './example/example';
 import { ExampleWorkspace } from './example-workspace';
 import { ExamplePrivateResource, type ExampleTarget } from './example-private-resource';
 

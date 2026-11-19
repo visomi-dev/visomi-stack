@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { Navigation } from './shared/navigation';
-import { PageLoader } from './ui/layout/page-loader';
+import { PageLoader } from './ui/layout/page-loader/page-loader';
 import { ThemeHost } from './ui/theme/theme-host';
 
 @Component({

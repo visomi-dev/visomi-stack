@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { EnvironmentInjector, TransferState, createEnvironmentInjector } from '@angular/core';
 
-import { CodeEntry } from '../shared/code-entry';
+import { CodeEntry } from '../shared/code-entry/code-entry';
 
 import { Session, initialSessionState } from './session';
 import { BrowserRealtimeSession } from './browser-realtime-session';
