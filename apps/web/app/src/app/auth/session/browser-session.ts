@@ -20,6 +20,7 @@ export class BrowserSession implements Session {
   private readonly value = signal<SessionSnapshot>(anonymousSession);
   private readonly state = signal<SessionStatus>('loading');
   private readonly capabilities = signal<Providers | null>(null);
+  private readonly providerLoading = signal(true);
   private readonly cancellationScope = signal(new AbortController());
   private readonly transition = signal(0);
   private readonly realtimeGeneration = signal(0);
@@ -42,6 +43,7 @@ export class BrowserSession implements Session {
 
   readonly user = computed(() => this.value().user);
   readonly cancellation = computed(() => this.cancellationScope().signal);
+  readonly providersLoading = computed(() => this.available && this.providerLoading());
 
   readonly snapshot = this.value.asReadonly();
   readonly status = this.state.asReadonly();
@@ -101,6 +103,7 @@ export class BrowserSession implements Session {
       return this.providerRequest;
     }
 
+    this.providerLoading.set(true);
     this.providerRequest = firstValueFrom(
       this.http
         .get<Providers>('/api/auth/providers', { transferCache: false })
@@ -114,6 +117,7 @@ export class BrowserSession implements Session {
       .catch(() => undefined)
       .finally(() => {
         this.providerRequest = null;
+        this.providerLoading.set(false);
       });
 
     return this.providerRequest;

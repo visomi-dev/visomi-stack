@@ -52,6 +52,15 @@ async function captureAfterScroll(page: Page, card: Locator, info: TestInfo, nam
   }
 }
 
+async function verifyFooterClearance(page: Page, card: Locator, desktopWorkspace: boolean) {
+  if (desktopWorkspace) {
+    const cardBounds = await card.boundingBox();
+    const trigger = await page.locator('app-sidebar button[popovertarget]').boundingBox();
+
+    expect(cardBounds!.y + cardBounds!.height).toBeLessThanOrEqual(trigger!.y);
+  }
+}
+
 for (const surface of surfaces) {
   test('places the localized consent card on ' + surface.name, async ({ page }, info) => {
     await surface.prepare?.(page);
@@ -82,6 +91,8 @@ for (const surface of surfaces) {
       await expect(purpose).toHaveAttribute('href', '/' + appearance.locale + '/privacy/');
 
       await verifyPlacement(card, appearance.viewport);
+
+      await verifyFooterClearance(page, card, surface.name === 'app' && appearance.viewport === desktop);
 
       await capture(page, info, captureName);
 
@@ -191,4 +202,154 @@ test('lets desktop keyboard focus reach the page behind the card', async ({ page
   await card.getByRole('button', { name: copy.reject, exact: true }).focus();
 
   await expect(card).toHaveCSS('opacity', '1');
+});
+
+async function openPrivacySettings(page: Page, locale: 'en' | 'es', drawer: boolean) {
+  if (drawer) {
+    await page
+      .locator('nav[appUI="navbar"]')
+      .getByRole('button', { name: locale === 'en' ? 'Menu' : 'Menú', exact: true })
+      .click();
+  }
+
+  await page.getByRole('link', { name: browserPrivacyCopy[locale].privacy, exact: true }).click();
+}
+
+for (const surface of surfaces.slice(0, 2)) {
+  for (const appearance of appearances) {
+    test(`confirms a fresh share for ten seconds on ${surface.name} ${appearance.name}`, async ({ page }, info) => {
+      await surface.prepare?.(page);
+
+      await page.setViewportSize(appearance.viewport);
+
+      await page.emulateMedia({ colorScheme: appearance.colorScheme, reducedMotion: 'reduce' });
+
+      await page.clock.install();
+
+      await page.goto(surface.path(appearance.locale));
+
+      const copy = browserPrivacyCopy[appearance.locale];
+      const choice = page.getByRole('region', { name: copy.title });
+      const share = choice.getByRole('button', { name: copy.accept, exact: true });
+      const confirmation = page.locator('[data-consent-confirmation]');
+      const seconds = confirmation.locator('[data-consent-seconds]');
+      const announcement = page.locator('[data-consent-announcement]');
+
+      await expect(share).toBeEnabled();
+
+      await announcement.evaluate((element: HTMLElement) => {
+        let updates = 0;
+        const observer = new MutationObserver(() => {
+          if (element.textContent?.trim()) {
+            element.dataset['announcements'] = String(++updates);
+          }
+        });
+
+        observer.observe(element, { childList: true, characterData: true, subtree: true });
+      });
+
+      await page.evaluate(() => document.fonts.ready);
+
+      const now = await page.evaluate(() => Date.now());
+
+      await page.clock.pauseAt(new Date(now + 1_000));
+
+      await share.press('Enter');
+
+      await page.clock.runFor(32);
+
+      await expect(choice).toBeHidden();
+
+      await expect(confirmation.getByText(copy.thanks)).toBeVisible();
+
+      await expect(confirmation.locator('button, a')).toHaveCount(0);
+
+      await expect(announcement).toHaveText(copy.thanks);
+
+      await expect(seconds).toHaveText('10 s');
+
+      await expect(confirmation.locator('progress')).toHaveJSProperty('value', 10);
+
+      await expect(page.getByRole('progressbar')).toHaveCount(0);
+
+      await expect(confirmation.locator(':focus')).toHaveCount(0);
+
+      await verifyPlacement(confirmation, appearance.viewport);
+
+      const name = `consent-confirmation-${surface.name}-${appearance.name}`;
+
+      await confirmation.scrollIntoViewIfNeeded();
+
+      await capture(page, info, name);
+
+      await page.clock.runFor(5_000);
+
+      await expect(seconds).toHaveText('5 s');
+
+      await expect(confirmation.locator('progress')).toHaveJSProperty('value', 5);
+
+      await expect(announcement).toHaveText(copy.thanks);
+
+      await expect(announcement).toHaveAttribute('data-announcements', '1');
+
+      await page.clock.runFor(4_967);
+
+      await expect(confirmation).toBeVisible();
+
+      await expect(seconds).toHaveText('1 s');
+
+      await page.clock.runFor(33);
+
+      await expect(confirmation).toBeHidden();
+
+      await expect(announcement).toBeEmpty();
+
+      await expect(choice).toBeHidden();
+
+      await page.clock.resume();
+
+      await page.reload();
+
+      await expect(confirmation).toBeHidden();
+
+      await expect(choice).toBeHidden();
+
+      await openPrivacySettings(page, appearance.locale, surface.name === 'app' && appearance.viewport === mobile);
+
+      await expect(page).toHaveURL(`/${appearance.locale}/privacy/`);
+
+      await expect(choice.getByText(copy.on)).toBeVisible();
+
+      await choice.getByRole('button', { name: copy.reject, exact: true }).click();
+
+      await expect(choice.getByText(copy.off)).toBeVisible();
+
+      await expect(confirmation).toBeHidden();
+    });
+  }
+}
+
+test('dismisses the confirmation immediately on navigation within the Angular auth layout', async ({ page }) => {
+  const copy = browserPrivacyCopy.en;
+  const confirmation = page.locator('[data-consent-confirmation]');
+
+  await page.goto('/app/en/auth/sign-in');
+
+  await page.getByRole('region', { name: copy.title }).getByRole('button', { name: copy.accept, exact: true }).click();
+
+  await expect(confirmation.getByText(copy.thanks)).toBeVisible();
+
+  await page.getByRole('link', { name: 'Use a password', exact: true }).click();
+
+  await expect(page).toHaveURL('/app/en/auth/sign-in/password');
+
+  await expect(confirmation).toBeHidden();
+
+  await page.goBack();
+
+  await expect(page).toHaveURL('/app/en/auth/sign-in');
+
+  await expect(confirmation).toBeHidden();
+
+  await expect(page.getByRole('region', { name: copy.title })).toBeHidden();
 });

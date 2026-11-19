@@ -24,6 +24,9 @@
       "@visomi-stack/web-frontend-ui": ["./libs/web/frontend/ui/src/index.ts"],
       "@visomi-stack/web-shared-observability": ["./libs/web/shared/observability/src/index.ts"],
       "@visomi-stack/web-shared-observability/browser": ["./libs/web/shared/observability/src/lib/browser-loader.ts"],
+      "@visomi-stack/web-shared-observability/consent-notice": [
+        "./libs/web/shared/observability/src/lib/consent-notice.ts"
+      ],
       "@visomi-stack/web-shared-observability/visits": ["./libs/web/shared/observability/src/lib/visit-browser.ts"],
       "@visomi-stack/web-frontend-db": ["./libs/web/frontend/db/src/index.ts"],
       "@visomi-stack/shared-db": ["./libs/shared/db/src/index.ts"],

@@ -26,8 +26,10 @@ const {
         <slot name="header" />
       </div>
 
-      <main data-slot="page-scroll" id={contentId} tabindex="-1" class={appShell.contentClasses()}>
-        <slot />
+      <main data-slot="page-scroll" id={contentId} tabindex="-1" class={appShell.scrollClasses()}>
+        <div data-slot="page-content" class={appShell.contentClasses()}>
+          <slot />
+        </div>
       </main>
 
       <slot name="footer" />

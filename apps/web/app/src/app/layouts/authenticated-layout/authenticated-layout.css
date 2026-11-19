@@ -20,9 +20,9 @@
 }
 
 :host .sidebar-account-popover {
-  inset: auto auto 1rem calc(var(--ui-shell-sidebar-width, 17rem) + 0.25rem);
+  inset: auto auto 4rem calc(var(--ui-shell-sidebar-width, 17rem) + 0.25rem);
   margin: 0;
   width: min(18rem, calc(100vw - var(--ui-shell-sidebar-width, 17rem) - 1rem));
-  max-height: calc(100dvh - 2rem);
+  max-height: calc(100dvh - 5rem);
   overflow-y: auto;
 }

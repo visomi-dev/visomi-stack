@@ -10,3 +10,9 @@ export const loader = {
     return 'ui-loader inline-block size-5 shrink-0 text-blue-600 dark:text-blue-400';
   },
 } as const;
+
+export const skeleton = {
+  classes(): string {
+    return ['pointer-events-none rounded-md border', toneClasses.neutral].join(' ');
+  },
+} as const;

@@ -108,20 +108,47 @@ if (languageLink) {
 }
 
 const notice = document.querySelector<HTMLElement>('[data-consent]');
+const settings = notice?.dataset['consent'] === 'settings';
 
-if (notice && (notice.dataset['consent'] === 'settings' || !consent.decided())) {
+if (notice && (settings || !consent.decided())) {
   const accept = notice.querySelector<HTMLButtonElement>('[data-choice=accept]')!;
+  const reject = notice.querySelector<HTMLButtonElement>('[data-choice=reject]')!;
   const status = notice.querySelector<HTMLElement>('[data-choice-status]')!;
   const sync = () => {
+    const grant = consent.permit();
+
+    if (grant && !settings) {
+      notice.hidden = true;
+    }
+
     accept.disabled = consent.blocked();
     status.textContent =
-      status.dataset[accept.disabled ? 'blocked' : consent.permit() ? 'on' : consent.decided() ? 'off' : ''] ?? '';
+      status.dataset[accept.disabled ? 'blocked' : grant ? 'on' : consent.decided() ? 'off' : ''] ?? '';
   };
 
   notice.hidden = false;
-  notice.onclick = ({ target }) => {
-    if (target instanceof HTMLButtonElement && target.dataset['choice']) {
-      consent.decide(target === accept);
+  reject.onclick = () => consent.decide(false);
+  accept.onclick = () => {
+    const fresh = !settings && !consent.permit();
+
+    consent.decide(true);
+    const grant = fresh && consent.permit();
+
+    if (grant) {
+      let startedAt = performance.now();
+
+      window.addEventListener(
+        'pagehide',
+        () => {
+          startedAt = -Infinity;
+        },
+        { once: true },
+      );
+      const confirmation = import('./consent-confirmation');
+
+      void confirmation
+        .then(({ confirmConsent }) => confirmConsent(notice.parentElement!, consent, grant, startedAt))
+        .catch(ignoreImportFailure);
     }
   };
   consent.subscribe(sync);

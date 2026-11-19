@@ -14,8 +14,9 @@
 
   <app-auth-feedback [action]="action" />
 
-  @if (session.providers()?.google?.enabled) {
+  @if (session.providers()?.google?.enabled || session.providersLoading()) {
     <app-google-button
+      [checking]="!session.providers()?.google?.enabled"
       [disabled]="action.busy()"
       (processing)="action.setProcessing($event)"
       (completed)="google($event)"

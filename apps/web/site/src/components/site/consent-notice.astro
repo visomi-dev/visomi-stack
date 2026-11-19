@@ -1,6 +1,6 @@
 ---
 import { card } from '@visomi-stack/web-frontend-ui';
-import { browserPrivacyCopy } from '@visomi-stack/web-shared-observability';
+import { browserPrivacyCopy, consentConfirmationSeconds } from '@visomi-stack/web-shared-observability';
 import Button from '../button.astro';
 import Link from '../link.astro';
 import type { SiteLocale } from '../../content/site';
@@ -10,45 +10,77 @@ const { locale, settings } = Astro.props;
 const copy = browserPrivacyCopy[locale];
 ---
 
-<section
-  data-consent={settings ? 'settings' : 'notice'}
-  hidden
-  aria-label={copy.title}
-  class:list={[
-    'grid gap-2 text-sm [hidden]:hidden',
-    settings
-      ? 'my-4 rounded-lg border border-zinc-300 p-3 dark:border-zinc-700'
-      : ['ui-consent-card', card.classes({ tone: 'raised', padding: 'sm', layout: 'plain' })],
-  ]}
->
-  {!settings && <p>{copy.invitation}</p>}
-
-  <div
-    class={
-      settings ? 'grid w-fit grid-cols-2 gap-2' : 'grid grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-2'
-    }
+<div>
+  <section
+    data-consent={settings ? 'settings' : 'notice'}
+    hidden
+    aria-label={copy.title}
+    class:list={[
+      'grid gap-2 text-sm [hidden]:hidden',
+      settings
+        ? 'my-4 rounded-lg border border-zinc-300 p-3 dark:border-zinc-700'
+        : ['ui-consent-card', card.classes({ tone: 'raised', padding: 'sm', layout: 'plain' })],
+    ]}
   >
-    <Button variant="secondary" size="sm" data-choice="reject">
-      {copy.reject}
-    </Button>
+    {!settings && <p>{copy.invitation}</p>}
 
-    <Button variant="secondary" size="sm" data-choice="accept">
-      {copy.accept}
-    </Button>
-  </div>
+    <div
+      class={
+        settings ? 'grid w-fit grid-cols-2 gap-2' : 'grid grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-2'
+      }
+    >
+      <Button variant="secondary" size="sm" data-choice="reject">
+        {copy.reject}
+      </Button>
+
+      <Button variant="secondary" size="sm" data-choice="accept">
+        {copy.accept}
+      </Button>
+    </div>
+
+    {!settings && (
+      <Link class="justify-self-start" href={`/${locale}/privacy/`}>
+        {copy.purposeLink}
+      </Link>
+    )}
+
+    <p
+      role="status"
+      class="empty:hidden"
+      data-choice-status
+      data-on={settings ? copy.on : undefined}
+      data-off={copy.off}
+      data-blocked={copy.blocked}
+    ></p>
+  </section>
 
   {!settings && (
-    <Link class="justify-self-start" href={`/${locale}/privacy/`}>
-      {copy.purposeLink}
-    </Link>
-  )}
+    <>
+      <p role="status" class="sr-only" data-consent-announcement data-thanks={copy.thanks}></p>
 
-  <p
-    role="status"
-    class="empty:hidden"
-    data-choice-status
-    data-on={copy.on}
-    data-off={copy.off}
-    data-blocked={copy.blocked}
-  ></p>
-</section>
+      <div
+        data-consent-confirmation
+        hidden
+        aria-hidden="true"
+        class:list={[
+          'ui-consent-card grid gap-2 text-sm [hidden]:hidden',
+          card.classes({ tone: 'raised', padding: 'sm', layout: 'plain' }),
+        ]}
+      >
+        <div class="flex flex-wrap items-baseline justify-between gap-x-2">
+          <p>{copy.thanks}</p>
+
+          <span class="tabular-nums" data-consent-seconds>
+            {consentConfirmationSeconds} s
+          </span>
+        </div>
+
+        <progress
+          class="ui-consent-progress"
+          max={consentConfirmationSeconds}
+          value={consentConfirmationSeconds}
+        ></progress>
+      </div>
+    </>
+  )}
+</div>

@@ -1,6 +1,17 @@
 <div class="flex w-full min-w-0 flex-col gap-3" [attr.inert]="disabled() ? '' : null">
-  <!-- GIS owns its colors; matching its light color scheme keeps the iframe canvas transparent in dark mode. -->
-  <div #button class="grid min-h-11 w-full min-w-0 items-center scheme-light" [attr.aria-busy]="pending()"></div>
+  <div class="grid min-h-11 w-full min-w-0 items-center" [class.h-11]="intent() === 'login'">
+    <!-- GIS owns its colors; matching its light color scheme keeps the iframe canvas transparent in dark mode. -->
+    <div
+      #button
+      class="col-start-1 row-start-1 grid min-h-11 w-full min-w-0 items-center scheme-light"
+      [class.invisible]="loading()"
+      [attr.aria-busy]="pending() || loading()"
+    ></div>
+
+    @if (loading()) {
+      <span [class]="skeleton + ' col-start-1 row-start-1 h-10 w-full'" aria-hidden="true" data-google-skeleton></span>
+    }
+  </div>
 
   <app-auth-feedback [action]="action" [indicator]="false" />
 

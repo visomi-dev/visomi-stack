@@ -1,3 +1,5 @@
+import type { Page, TestInfo } from '@playwright/test';
+
 import { expect, test, signup } from './support/fixtures';
 
 test('retries Google reauthentication after another tab invalidates the attempt', async ({ page, context }) => {
@@ -312,3 +314,208 @@ for (const locale of ['en', 'es']) {
     });
   });
 }
+
+function gate() {
+  let release!: () => void;
+  const promise = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  return { promise, release };
+}
+
+async function captureGoogle(page: Page, info: TestInfo, filename: string) {
+  if (info.project.name === 'auth-chromium') {
+    await page.screenshot({ path: info.outputPath(filename), animations: 'disabled' });
+  }
+}
+
+const enabledGoogle = {
+  passkey: true,
+  password: true,
+  totp: false,
+  google: { enabled: true, clientId: 'synthetic-client' },
+};
+const googleFlow = {
+  flowId: '22222222-2222-4222-8222-222222222222',
+  expiresAt: '2099-01-01T00:00:00Z',
+  nonce: 'synthetic-nonce',
+  clientId: 'synthetic-client',
+};
+
+for (const surface of [
+  { path: 'sign-in', locale: 'en', viewport: { width: 1280, height: 900 }, colorScheme: 'light' },
+  { path: 'sign-up', locale: 'es', viewport: { width: 390, height: 844 }, colorScheme: 'dark' },
+] as const) {
+  test(`reserves the Google button slot through provider lookup and script load on ${surface.path}`, async ({
+    page,
+  }, info) => {
+    const providers = gate();
+    const script = gate();
+    let starts = 0;
+
+    await page.route('**/api/auth/providers', async (route) => {
+      await providers.promise;
+
+      await route.fulfill({ json: enabledGoogle });
+    });
+
+    await page.route('**/api/auth/google/start', async (route) => {
+      starts++;
+
+      expect(route.request().postDataJSON()).toEqual({ intent: 'login' });
+
+      await route.fulfill({ status: 201, json: googleFlow });
+    });
+
+    const installGoogle = () => {
+      Object.defineProperty(window, 'google', {
+        value: {
+          accounts: {
+            id: {
+              initialize: () => undefined,
+              cancel: () => undefined,
+              renderButton: (mount: HTMLElement, options: { width: string }) => {
+                const button = document.createElement('button');
+
+                button.textContent = 'Synthetic Google button';
+                button.style.width = options.width + 'px';
+                button.style.height = '40px';
+                mount.replaceChildren(button);
+              },
+            },
+          },
+        },
+      });
+    };
+
+    await page.route('https://accounts.google.com/gsi/client?**', async (route) => {
+      await script.promise;
+
+      await route.fulfill({ contentType: 'application/javascript', body: `(${installGoogle.toString()})();` });
+    });
+
+    await page.setViewportSize(surface.viewport);
+
+    await page.emulateMedia({ colorScheme: surface.colorScheme, reducedMotion: 'reduce' });
+
+    const google = page.locator('app-google-button');
+    const skeleton = google.locator('[data-google-skeleton]');
+    const button = google.getByRole('button', { name: 'Synthetic Google button' });
+    const nextLink = page.locator(`app-${surface.path} a[href$="/${surface.path}/password"]`);
+    const main = page.getByRole('main');
+    const heading = main.getByRole('heading', { level: 1 });
+
+    try {
+      await page.goto(`/app/${surface.locale}/auth/${surface.path}`, { waitUntil: 'domcontentloaded' });
+
+      await expect(skeleton).toBeVisible();
+
+      await expect(skeleton).toHaveAttribute('aria-hidden', 'true');
+
+      await expect(skeleton).toHaveCSS('animation-name', 'none');
+
+      await expect(google.getByRole('button')).toHaveCount(0);
+
+      await page.evaluate(() => document.fonts.ready);
+
+      const initial = await Promise.all([skeleton.boundingBox(), heading.boundingBox(), nextLink.boundingBox()]);
+      const scriptRequest = page.waitForRequest('https://accounts.google.com/gsi/client?**');
+
+      expect(initial[0]?.width).toBeGreaterThan(0);
+      expect(initial[0]?.height).toBe(40);
+      expect(initial[1]).not.toBeNull();
+      expect(initial[2]).not.toBeNull();
+      expect(starts).toBe(0);
+      providers.release();
+
+      await scriptRequest;
+
+      await expect(skeleton).toBeVisible();
+
+      const during = await Promise.all([skeleton.boundingBox(), heading.boundingBox(), nextLink.boundingBox()]);
+
+      expect(during).toEqual(initial);
+
+      await captureGoogle(page, info, `google-loading-${surface.path}.png`);
+
+      script.release();
+
+      await expect(button).toBeVisible();
+
+      await expect(skeleton).toHaveCount(0);
+
+      const rendered = await button.boundingBox();
+
+      expect(rendered?.height).toBe(initial[0]?.height);
+      expect(rendered?.x).toBe(initial[0]?.x);
+      expect(rendered?.y).toBe(initial[0]?.y);
+      expect(Math.abs(rendered!.width - initial[0]!.width)).toBeLessThanOrEqual(1);
+      const settled = await Promise.all([heading.boundingBox(), nextLink.boundingBox()]);
+
+      expect(settled).toEqual(initial.slice(1));
+      expect(starts).toBe(1);
+
+      await captureGoogle(page, info, `google-ready-${surface.path}.png`);
+    } finally {
+      providers.release();
+      script.release();
+    }
+  });
+}
+
+for (const [state, response] of [
+  ['disabled', { json: { ...enabledGoogle, google: { enabled: false, clientId: null } } }],
+  ['unavailable', { status: 503, json: { error: 'synthetic_unavailable' } }],
+] as const) {
+  test(`removes the placeholder after ${state} provider discovery`, async ({ page }) => {
+    const initial = gate();
+    let starts = 0;
+
+    await page.route('**/api/auth/providers', async (route) => {
+      await initial.promise;
+
+      await route.fulfill(response);
+    });
+
+    await page.route('**/api/auth/google/start', (route) => {
+      starts++;
+
+      return route.abort();
+    });
+
+    try {
+      await page.goto('/app/en/auth/sign-up', { waitUntil: 'domcontentloaded' });
+
+      await expect(page.locator('[data-google-skeleton]')).toBeVisible();
+
+      initial.release();
+
+      await expect(page.locator('app-google-button')).toHaveCount(0);
+
+      await expect(page.getByRole('link', { name: 'Create an account with a password', exact: true })).toBeVisible();
+
+      expect(starts).toBe(0);
+    } finally {
+      initial.release();
+    }
+  });
+}
+
+test('removes the placeholder after a blocked Google script and keeps the retry action', async ({ page }) => {
+  await page.route('**/api/auth/providers', (route) => route.fulfill({ json: enabledGoogle }));
+
+  await page.route('**/api/auth/google/start', (route) => route.fulfill({ status: 201, json: googleFlow }));
+
+  await page.route('https://accounts.google.com/gsi/client?**', (route) => route.abort());
+
+  await page.goto('/app/en/auth/sign-up');
+
+  await expect(page.getByRole('button', { name: 'Try Google again', exact: true })).toBeEnabled();
+
+  await expect(page.getByRole('alert')).toContainText('We couldn’t complete this action.');
+
+  await expect(page.locator('[data-google-skeleton]')).toHaveCount(0);
+
+  await expect(page.getByRole('link', { name: 'Create an account with a password', exact: true })).toBeVisible();
+});

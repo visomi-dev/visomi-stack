@@ -41,6 +41,7 @@ function controls(page: Page, locale: 'en' | 'es' = 'en') {
   return {
     copy,
     notice,
+    confirmation: page.locator('[data-consent-confirmation]'),
     opener: page.getByRole('button', { name: copy.pending }),
     dialog: page.getByRole('dialog', { name: copy.reportsTitle }),
     accept: notice.getByRole('button', { name: copy.accept, exact: true }),
@@ -208,7 +209,7 @@ test('keeps the card non-modal and separates manual reports from automatic conse
 
   await site.accept.click();
 
-  await expect(site.notice.getByText(site.copy.on)).toBeVisible();
+  await expect(site.confirmation.getByText(site.copy.thanks)).toBeVisible();
 
   await expect(site.opener).toHaveCount(0);
 
@@ -341,7 +342,7 @@ for (const [application, path] of [
 
     await privacy.accept.click();
 
-    await expect(privacy.notice.getByText(privacy.copy.on)).toBeVisible();
+    await expect(privacy.confirmation.getByText(privacy.copy.thanks)).toBeVisible();
 
     await expect(privacy.opener).toHaveCount(0);
 
@@ -521,11 +522,20 @@ for (const [origin, destination] of [
     expect(originRequests).toEqual([]);
     expect(destinationRequests).toEqual([]);
 
+    const settings = await context.newPage();
+    const settingsControls = controls(settings);
+
+    await settings.goto('/en/privacy/');
+
     await originControls.accept.click();
 
-    await expect(originControls.notice.getByText(originControls.copy.on)).toBeVisible();
+    await expect(originControls.confirmation.getByText(originControls.copy.thanks)).toBeVisible();
 
-    await expect(destinationControls.notice.getByText(destinationControls.copy.on)).toBeVisible();
+    await expect(destinationControls.notice).toBeHidden();
+
+    await expect(destinationControls.confirmation).toBeHidden();
+
+    await expect(settingsControls.notice.getByText(settingsControls.copy.on)).toBeVisible();
 
     await expect(originControls.opener).toHaveCount(0);
 
@@ -534,17 +544,23 @@ for (const [origin, destination] of [
     expect(originRequests).toEqual([]);
     expect(destinationRequests).toEqual([]);
 
-    await destinationControls.reject.click();
+    await settingsControls.reject.click();
 
-    await expect(originControls.notice.getByText(originControls.copy.off)).toBeVisible();
+    await expect(settingsControls.notice.getByText(settingsControls.copy.off)).toBeVisible();
 
-    await expect(destinationControls.notice.getByText(destinationControls.copy.off)).toBeVisible();
+    await expect(originControls.confirmation).toBeHidden();
 
-    await originControls.accept.click();
+    await expect(originControls.opener).toBeVisible();
 
-    await expect(originControls.notice.getByText(originControls.copy.on)).toBeVisible();
+    await expect(destinationControls.opener).toBeVisible();
 
-    await expect(destinationControls.notice.getByText(destinationControls.copy.on)).toBeVisible();
+    await settingsControls.accept.click();
+
+    await expect(settingsControls.notice.getByText(settingsControls.copy.on)).toBeVisible();
+
+    await expect(originControls.confirmation).toBeHidden();
+
+    await expect(destinationControls.confirmation).toBeHidden();
 
     for (const [tab, application] of [
       [page, origin],
@@ -585,13 +601,9 @@ for (const [origin, destination] of [
     }
 
     // Revocation in a third tab must take effect in both already-running documents.
-    const settings = await context.newPage();
+    await settingsControls.reject.click();
 
-    await settings.goto('/en/privacy/');
-
-    await controls(settings).reject.click();
-
-    await expect(controls(settings).notice.getByText(controls(settings).copy.off)).toBeVisible();
+    await expect(settingsControls.notice.getByText(settingsControls.copy.off)).toBeVisible();
 
     const beforeRevocation = [originRequests.length, destinationRequests.length];
     const storedChoice = (tab: Page) => tab.evaluate((key) => localStorage.getItem(key), browserConsentKey);

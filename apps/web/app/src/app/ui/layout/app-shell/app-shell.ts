@@ -16,7 +16,9 @@ import { appShell, type ShellLayout } from '@visomi-stack/web-frontend-ui';
       <div [class]="panelClasses()" data-slot="shell-panel">
         <div [class]="headerClasses"><ng-content select="[app-topbar],[data-shell-header]" /></div>
 
-        <main data-slot="page-scroll" [id]="contentId()" tabindex="-1" [class]="contentClasses"><ng-content /></main>
+        <main data-slot="page-scroll" [id]="contentId()" tabindex="-1" [class]="scrollClasses">
+          <div data-slot="page-content" [class]="contentClasses"><ng-content /></div>
+        </main>
 
         <ng-content select="[data-shell-footer]" />
       </div>
@@ -58,6 +60,7 @@ export class AppShell {
   );
 
   protected readonly skipClasses = appShell.skipClasses();
+  protected readonly scrollClasses = appShell.scrollClasses();
   protected readonly contentClasses = appShell.contentClasses();
   protected readonly headerClasses = appShell.headerClasses();
   protected readonly mobileClasses = appShell.mobileClasses();

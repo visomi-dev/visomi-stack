@@ -2,14 +2,13 @@
   content-id="workspace-main"
   skip-label="Skip to content"
   i18n-skip-label="@@skip"
-  inset
   [sidebar-compact]="sidebarCompact()"
 >
   <app-sidebar
     label="Primary navigation"
     i18n-label="@@shellPrimary"
     navigation-id="workspace-sidebar-navigation"
-    inset
+    class="lg:gap-4 lg:p-3"
   >
     <a
       data-slot="brand"
@@ -61,7 +60,7 @@
       </details>
     }
 
-    <div data-slot="footer" class="border-t border-zinc-200 pt-3 dark:border-zinc-800">
+    <footer data-slot="footer" class="grid gap-1 border-t border-zinc-200 pt-3 dark:border-zinc-800">
       <button
         appUI
         type="button"
@@ -70,15 +69,21 @@
         popovertarget="workspace-account-popover"
         [attr.aria-expanded]="accountOpen()"
         [attr.aria-label]="accountMenu"
+        [attr.aria-describedby]="session.user()?.email ? 'workspace-account-identity' : null"
         [attr.title]="sidebarCompact() ? accountMenu : null"
         [class.bg-zinc-200]="accountRouteActive()"
         [class.dark:bg-zinc-800]="accountRouteActive()"
         [class.w-full]="!sidebarCompact()"
+        [class.justify-self-center]="sidebarCompact()"
         class="gap-2"
       >
         <ng-container [ngTemplateOutlet]="accountAvatar" />
 
-        <span class="min-w-0 flex-1 truncate text-left" [class.sr-only]="sidebarCompact()">
+        <span
+          id="workspace-account-identity"
+          class="min-w-0 flex-1 truncate text-left"
+          [class.sr-only]="sidebarCompact()"
+        >
           {{ session.user()?.email || accountMenu }}
         </span>
 
@@ -108,15 +113,11 @@
         (toggle)="accountToggle($event)"
         class="sidebar-account-popover"
       >
-        <div class="mb-2 flex items-center gap-2 border-b border-zinc-200 px-2 pb-2 dark:border-zinc-700">
-          <ng-container [ngTemplateOutlet]="accountAvatar" />
-
-          <span class="min-w-0 text-sm font-semibold break-all">{{ session.user()?.email || accountMenu }}</span>
-        </div>
-
         <ng-container [ngTemplateOutlet]="accountLinks" [ngTemplateOutletContext]="{ desktop: true }" />
       </section>
-    </div>
+
+      <app-privacy-link placement="sidebar" [compact]="sidebarCompact()" />
+    </footer>
   </app-sidebar>
 
   <header app-topbar compact>
@@ -202,9 +203,7 @@
     }
   </div>
 
-  <app-consent-notice class="block [--ui-consent-bottom:4rem]" />
-
-  <footer data-shell-footer class="px-4 text-sm"><app-privacy-link /></footer>
+  <app-consent-notice class="block [--ui-consent-bottom:7rem]" />
 
   <nav appUI="navbar" aria-label="Primary navigation" i18n-aria-label="@@shellPrimary">
     @for (item of primaryItems; track item.path) {
@@ -311,18 +310,35 @@
     }
   </nav>
 
-  <footer class="mt-auto border-t border-zinc-200 pt-4 dark:border-zinc-700">
-    <details appUI appearance="subtle">
-      <summary [attr.aria-label]="accountMenu">
-        <span class="inline-flex max-w-[calc(100%-1.5rem)] items-center gap-2 align-middle">
+  <footer class="mt-auto space-y-1 border-t border-zinc-200 pt-4 dark:border-zinc-700">
+    <details appUI appearance="subtle" class="group/account">
+      <summary
+        [attr.aria-label]="accountMenu"
+        [attr.aria-describedby]="session.user()?.email ? 'mobile-account-identity' : null"
+        class="flex list-none items-center gap-3 [&::-webkit-details-marker]:hidden"
+      >
+        <span class="flex min-w-0 flex-1 items-center gap-2">
           <ng-container [ngTemplateOutlet]="accountAvatar" />
 
-          <span class="truncate">{{ session.user()?.email || accountMenu }}</span>
+          <span id="mobile-account-identity" class="truncate">{{ session.user()?.email || accountMenu }}</span>
         </span>
+
+        <svg
+          class="size-4 shrink-0 group-open/account:rotate-180"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
       </summary>
 
       <ng-container [ngTemplateOutlet]="accountLinks" [ngTemplateOutletContext]="{ desktop: false }" />
     </details>
+
+    <app-privacy-link class="block" placement="sidebar" />
   </footer>
 </dialog>
 
@@ -363,9 +379,12 @@
       routerLinkActive="active"
       ariaCurrentWhenActive="page"
       (click)="closeAccount(desktop)"
-      i18n="@@authAccount"
     >
-      Account
+      <svg data-slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path d="M20 21v-2a7 7 0 0 0-14 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />
+      </svg>
+
+      <span i18n="@@authAccount">Account</span>
     </a>
 
     <a
@@ -375,17 +394,42 @@
       routerLinkActive="active"
       ariaCurrentWhenActive="page"
       (click)="closeAccount(desktop)"
-      i18n="@@authSecurity"
     >
-      Security
+      <svg data-slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path d="m12 3 8 3v6c0 4-4 7-8 9-4-2-8-5-8-9V6l8-3Z" />
+      </svg>
+
+      <span i18n="@@authSecurity">Security</span>
     </a>
 
-    <details class="space-y-1" routerLinkActive="font-semibold text-blue-700 dark:text-blue-300">
-      <summary
-        class="min-h-11 cursor-pointer rounded-lg px-3 py-2.5 text-sm ui-focus-ring"
-        i18n="@@shellSecuritySettings"
-      >
-        Security settings
+    <details
+      class="group/security space-y-1"
+      routerLinkActive="[&>summary]:font-semibold [&>summary]:text-blue-700 dark:[&>summary]:text-blue-300"
+    >
+      <summary appUI="nav-item" class="list-none [&::-webkit-details-marker]:hidden">
+        <svg
+          data-slot="icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path d="M4 5h16M4 12h16M4 19h16M8 3v4M16 10v4M10 17v4" />
+        </svg>
+
+        <span class="min-w-0 flex-1" i18n="@@shellSecuritySettings">Security settings</span>
+
+        <svg
+          class="size-4 shrink-0 group-open/security:rotate-180"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
       </summary>
 
       <div class="ms-3 border-s border-zinc-200 ps-2 dark:border-zinc-700">
@@ -410,12 +454,24 @@
       type="button"
       size="sm"
       variant="ghost"
-      class="w-full justify-start"
+      class="w-full justify-start gap-3"
       [disabled]="action.busy()"
       [attr.aria-busy]="action.pending() === 'logout'"
       (click)="closeAccount(desktop); logout()"
     >
-      {{ signOutLabel }}
+      <svg
+        data-slot="icon"
+        class="size-5 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        aria-hidden="true"
+      >
+        <path d="M10 4H4v16h6m-1-8h11m-4-4 4 4-4 4" />
+      </svg>
+
+      <span>{{ signOutLabel }}</span>
     </button>
   </div>
 </ng-template>

@@ -14,6 +14,7 @@ export class ServerSession implements Session {
   readonly snapshot = signal(this.initial.session ?? anonymousSession).asReadonly();
   readonly status = signal<SessionStatus>(this.initial.available ? 'ready' : 'unavailable').asReadonly();
   readonly providers = signal<Providers | null>(null).asReadonly();
+  readonly providersLoading = signal(this.initial.available).asReadonly();
   readonly cancellation = signal(new AbortController().signal).asReadonly();
   readonly operationVersion = signal(0).asReadonly();
 

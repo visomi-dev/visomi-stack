@@ -1,8 +1,6 @@
 import { expect, signup, test } from './support/fixtures';
 
-test('opens the last authenticated navigation item and unlocks the isolated synthetic sample', async ({
-  page,
-}, info) => {
+test('opens the last primary navigation item and unlocks the isolated synthetic sample', async ({ page }, info) => {
   const persistence: string[] = [];
 
   await page.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
@@ -24,9 +22,12 @@ test('opens the last authenticated navigation item and unlocks the isolated synt
   await signup(page);
 
   const sidebar = page.locator('app-sidebar');
-  const desktop = sidebar.getByRole('link', { name: 'Vault example', exact: true });
+  const primary = sidebar.getByRole('navigation', { name: 'Primary navigation' });
+  const desktop = primary.getByRole('link', { name: 'Vault example', exact: true });
 
-  await expect(sidebar.getByRole('link').last()).toHaveText('Vault example');
+  await expect(primary.getByRole('link').last()).toHaveText('Vault example');
+
+  await expect(sidebar.getByRole('link', { name: 'Privacy', exact: true })).toHaveAttribute('href', '/en/privacy/');
 
   await desktop.click();
 
@@ -44,13 +45,13 @@ test('opens the last authenticated navigation item and unlocks the isolated synt
   const card = page.locator('app-vault-demo > section');
   const visibleWidth = await card.evaluate((section) => {
     const box = section.getBoundingClientRect();
-    const main = section.closest('main')!.getBoundingClientRect();
+    const content = section.closest('[data-slot="page-content"]')!.getBoundingClientRect();
     const input = section.querySelector('app-pin-input')!.getBoundingClientRect();
     const innerWidth = section.querySelector('app-vault-panel section')!.getBoundingClientRect().width;
 
     return {
       width: box.width,
-      centerDifference: Math.abs((box.left + box.right - main.left - main.right) / 2),
+      centerDifference: Math.abs((box.left + box.right - content.left - content.right) / 2),
       input: input.width,
       innerWidth,
     };
@@ -100,8 +101,11 @@ test('opens the last authenticated navigation item and unlocks the isolated synt
   await page.getByRole('button', { name: 'Menu', exact: true }).click();
 
   const menu = page.getByRole('dialog', { name: 'Primary navigation' });
+  const mobile = menu.getByRole('navigation', { name: 'Primary navigation' });
 
-  await expect(menu.getByRole('link').last()).toHaveText('Vault example');
+  await expect(mobile.getByRole('link').last()).toHaveText('Vault example');
+
+  await expect(menu.getByRole('link', { name: 'Privacy', exact: true })).toHaveAttribute('href', '/en/privacy/');
 
   await page.screenshot({ path: info.outputPath('vault-mobile-menu-dark.png'), animations: 'disabled' });
 
@@ -132,8 +136,14 @@ test('opens the last authenticated navigation item and unlocks the isolated synt
   await page.getByRole('button', { name: 'Menú', exact: true }).click();
 
   const localized = page.getByRole('dialog', { name: 'Navegación principal' });
+  const localizedPrimary = localized.getByRole('navigation', { name: 'Navegación principal' });
 
-  await expect(localized.getByRole('link').last()).toHaveText('Ejemplo de vault');
+  await expect(localizedPrimary.getByRole('link').last()).toHaveText('Ejemplo de vault');
+
+  await expect(localized.getByRole('link', { name: 'Privacidad', exact: true })).toHaveAttribute(
+    'href',
+    '/es/privacy/',
+  );
 
   expect(persistence).toEqual([]);
 });
