@@ -1,0 +1,50 @@
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+
+import { NavigationHeading } from '../../../shared/navigation-heading';
+import { Button, Heading, Text, Link, Card } from '../../../ui';
+import { AuthHttp } from '../../shared/http';
+import { Action } from '../../shared/action';
+import { AuthFeedback } from '../../shared/feedback/feedback';
+import { BackupDisplay } from '../backup-display/backup-display';
+import { Totp } from '../totp';
+
+@Component({
+  selector: 'app-backup-codes',
+  imports: [NavigationHeading, Button, Heading, Text, Link, RouterLink, AuthFeedback, BackupDisplay, Card],
+  providers: [Action, AuthHttp, Totp],
+  templateUrl: './backup-codes.html',
+})
+export class BackupCodes {
+  private readonly api = inject(Totp);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly codes = signal<string[]>([]);
+
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.codes.set([]));
+
+  readonly action = inject(Action);
+
+  readonly confirm = signal(false);
+
+  regenerate(): void {
+    void this.action.run(
+      async () => {
+        const result = await this.api.regenerate();
+
+        this.codes.set(result.recoveryCodes);
+        this.confirm.set(false);
+      },
+      { name: 'regenerate' },
+    );
+  }
+
+  protected cancelReplacement(trigger: HTMLButtonElement): void {
+    this.confirm.set(false);
+    trigger.focus();
+  }
+
+  protected toggleReplacementConfirmation(): void {
+    this.confirm.update((value) => !value);
+  }
+}

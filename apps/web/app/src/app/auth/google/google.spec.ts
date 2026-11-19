@@ -8,7 +8,7 @@ import { AuthHttp } from '../shared/http';
 import { Session } from '../session/session';
 
 import { Google } from './google';
-import { GoogleButton } from './google-button';
+import { GoogleButton } from './google-button/google-button';
 
 const session = {
   authenticated: true,

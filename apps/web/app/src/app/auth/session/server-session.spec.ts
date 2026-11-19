@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { CodeEntry } from '../shared/code-entry';
+import { CodeEntry } from '../shared/code-entry/code-entry';
 
 import type { AuthRenderContext, SessionSnapshot, SessionView } from './models';
 import { Session, initialSessionState } from './session';

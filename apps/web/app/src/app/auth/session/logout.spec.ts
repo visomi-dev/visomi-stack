@@ -5,9 +5,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
-import { AuthenticatedLayout } from '../../layouts/authenticated-layout';
-import { EmailVerify } from '../email/verify';
-import { Enroll } from '../recovery/enroll';
+import { AuthenticatedLayout } from '../../layouts/authenticated-layout/authenticated-layout';
+import { EmailVerify } from '../email/verify/verify';
+import { Enroll } from '../recovery/enroll/enroll';
 import { Journey } from '../shared/journey';
 import { AuthNavigation } from '../shared/navigation';
 

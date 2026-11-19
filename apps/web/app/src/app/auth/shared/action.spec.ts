@@ -5,7 +5,7 @@ import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 
 import { Session } from '../session/session';
-import { BackupDisplay } from '../totp/backup-display';
+import { BackupDisplay } from '../totp/backup-display/backup-display';
 
 import { Action, errorMessage } from './action';
 

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { email, form, FormField, required } from '@angular/forms/signals';
 
 import { NavigationHeading } from '../shared/navigation-heading';
-import { LanguageSwitcher } from '../i18n/language-switcher';
+import { LanguageSwitcher } from '../i18n/language-switcher/language-switcher';
 import {
   Button,
   Field,
@@ -21,8 +21,9 @@ import {
   Card,
   Link,
 } from '../ui';
-import { BrowserPrivacy } from '../observability/browser-privacy';
-import { ConsentNotice, PrivacyLink } from '../observability/consent-notice';
+import { BrowserPrivacy } from '../observability/browser-privacy/browser-privacy';
+import { ConsentNotice } from '../observability/consent-notice/consent-notice';
+import { PrivacyLink } from '../observability/privacy-link/privacy-link';
 
 @Component({
   imports: [

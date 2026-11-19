@@ -66,14 +66,14 @@ export default [
   },
   {
     files: [
-      '**/auth/shared/code-entry.ts',
-      '**/ui/data/line-chart.ts',
-      '**/ui/forms/field.ts',
-      '**/ui/forms/pin-input.ts',
-      '**/ui/layout/app-shell.ts',
-      '**/ui/layout/sidebar.ts',
-      '**/vault/vault-panel.ts',
-      '**/vault/vault-unlock.ts',
+      '**/auth/shared/code-entry/code-entry.ts',
+      '**/ui/data/line-chart/line-chart.ts',
+      '**/ui/forms/field/field.ts',
+      '**/ui/forms/pin-input/pin-input.ts',
+      '**/ui/layout/app-shell/app-shell.ts',
+      '**/ui/layout/sidebar/sidebar.ts',
+      '**/vault/vault-panel/vault-panel.ts',
+      '**/vault/vault-unlock/vault-unlock.ts',
     ],
     rules: {
       // Component template APIs use kebab-case while TypeScript members remain camelCase.

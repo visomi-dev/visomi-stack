@@ -5,546 +5,546 @@
       <trans-unit id="pageLoading" datatype="html">
         <source>Loading page…</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/ui/layout/page-loader.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/ui/layout/page-loader/page-loader.html</context>
           <context context-type="linenumber">3</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceApprovalTitle" datatype="html">
         <source>Approve on your other device</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.html</context>
           <context context-type="linenumber">2,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceApprovalInstructions" datatype="html">
         <source> Open this link on a device where you’re signed in and enter the pairing code shown here. Only approve requests you started. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.html</context>
           <context context-type="linenumber">6,12</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPairingCode" datatype="html">
         <source>Pairing code</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.html</context>
           <context context-type="linenumber">17,18</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review/review.ts</context>
           <context context-type="linenumber">42</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authContinueRecovery" datatype="html">
         <source> Continue recovery </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.html</context>
           <context context-type="linenumber">22,25</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCancelRequest" datatype="html">
         <source> Cancel request </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.html</context>
           <context context-type="linenumber">34,36</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authStartAgain" datatype="html">
         <source>Start again</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.html</context>
           <context context-type="linenumber">37,40</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.html</context>
           <context context-type="linenumber">108,111</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify/verify.html</context>
           <context context-type="linenumber">27,30</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">28,30</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify/verify.html</context>
           <context context-type="linenumber">66,69</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceApprovalDescription" datatype="html">
         <source> Ask for approval to set up a new sign-in method. Approve the request from another session where you’re already signed in. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.html</context>
           <context context-type="linenumber">56,60</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authBackRecovery" datatype="html">
         <source> Back to recovery </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.html</context>
           <context context-type="linenumber">48,51</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDevicePending" datatype="html">
         <source>Waiting for you to approve on your other device.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.ts</context>
           <context context-type="linenumber">67</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceApproved" datatype="html">
         <source>Request approved. Continue to set up a new sign-in method.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.ts</context>
           <context context-type="linenumber">69</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceDenied" datatype="html">
         <source>This request was declined.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.ts</context>
           <context context-type="linenumber">71</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceCancelled" datatype="html">
         <source>This request was canceled.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.ts</context>
           <context context-type="linenumber">73</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceConsumed" datatype="html">
         <source>This request has already been used.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.ts</context>
           <context context-type="linenumber">81</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceExpired" datatype="html">
         <source>This request expired. Start again.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/request/request.ts</context>
           <context context-type="linenumber">83</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReviewDeviceTitle" datatype="html">
         <source>Review a device request</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review/review.html</context>
           <context context-type="linenumber">3,5</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReviewDeviceWarning" datatype="html">
         <source> Approve only if you started this request. Approval lets someone set up a new sign-in method for your account. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review/review.html</context>
           <context context-type="linenumber">6,10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authApproveDevice" datatype="html">
         <source> Approve request </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review/review.html</context>
           <context context-type="linenumber">31,34</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDenyDevice" datatype="html">
         <source> Deny request </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review/review.html</context>
           <context context-type="linenumber">37,39</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceReviewComplete" datatype="html">
         <source>This request is no longer pending.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review/review.html</context>
           <context context-type="linenumber">48,50</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDeviceLinkInvalid" datatype="html">
         <source>Open the link shown on the device that requested access.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review/review.html</context>
           <context context-type="linenumber">50,53</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authBackSecurity" datatype="html">
         <source> Back to security </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/devices/review/review.html</context>
           <context context-type="linenumber">48,51</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account/account.html</context>
           <context context-type="linenumber">30,33</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage/manage.html</context>
           <context context-type="linenumber">63,66</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">91,94</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">85,88</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">83,86</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes/backup-codes.html</context>
           <context context-type="linenumber">40,43</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">60,63</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authAccount" datatype="html">
         <source>Account</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account/account.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">18,20</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">76,79</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">83,84</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authAccountEmailDescription" datatype="html">
         <source> Use your verified email to recover access. To change it, confirm that it’s you. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account/account.html</context>
           <context context-type="linenumber">6,10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authNewEmailCode" datatype="html">
         <source>Enter the code we sent to your new email address.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account/account.html</context>
           <context context-type="linenumber">13,15</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authResend" datatype="html">
         <source> Send a new code </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account/account.html</context>
           <context context-type="linenumber">20,22</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/resend.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/resend/resend.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCancel" datatype="html">
         <source> Cancel </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account/account.html</context>
           <context context-type="linenumber">23,25</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage/manage.html</context>
           <context context-type="linenumber">54,55</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">44,45</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">82,83</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">77,78</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.html</context>
           <context context-type="linenumber">83,86</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">29,30</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">75,76</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes/backup-codes.html</context>
           <context context-type="linenumber">32,33</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">16,18</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">46,47</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authChangeEmail" datatype="html">
         <source>Change email</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account/account.ts</context>
           <context context-type="linenumber">28</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCodeSent" datatype="html">
         <source>Check your email for a new code.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account/account.ts</context>
           <context context-type="linenumber">52</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/resend.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/resend/resend.ts</context>
           <context context-type="linenumber">54</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authNotificationFailed" datatype="html">
         <source>The change was saved, but the notification could not be sent.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account/account.ts</context>
           <context context-type="linenumber">64</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage/manage.ts</context>
           <context context-type="linenumber">82</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/auth-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/auth-layout/auth-layout.html</context>
           <context context-type="linenumber">18,21</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">45,48</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.ts</context>
           <context context-type="linenumber">72</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.ts</context>
           <context context-type="linenumber">101</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.ts</context>
           <context context-type="linenumber">87</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.ts</context>
           <context context-type="linenumber">76</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.ts</context>
           <context context-type="linenumber">92</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEmailChanged" datatype="html">
         <source>Email updated.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/account/account.ts</context>
           <context context-type="linenumber">74</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authVerifyEmailTitle" datatype="html">
         <source>Verify your email</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/verify/verify.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authVerifyEmailDescription" datatype="html">
         <source> We created your account. Verify your email to finish signing in. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/verify/verify.html</context>
           <context context-type="linenumber">6,10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEmailRestart" datatype="html">
         <source>Request a new code to verify your email.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/verify/verify.html</context>
           <context context-type="linenumber">20,23</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRequestCode" datatype="html">
         <source> Request a code </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/verify/verify.html</context>
           <context context-type="linenumber">18,21</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSignOut" datatype="html">
         <source> Sign out </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/email/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/email/verify/verify.html</context>
           <context context-type="linenumber">24,26</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">31,33</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">96,98</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">91,93</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authGoogleRetry" datatype="html">
         <source> Try Google again </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/google-button.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/google-button/google-button.html</context>
           <context context-type="linenumber">6,9</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authManageGoogle" datatype="html">
         <source>Manage Google</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage/manage.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">42,44</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authGoogleManageDescription" datatype="html">
         <source> Link Google so you can use it to sign in. Confirm that it’s you before linking or unlinking it. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage/manage.html</context>
           <context context-type="linenumber">6,10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authGoogleUnavailable" datatype="html">
         <source> You can’t sign in with Google right now. Go to Security to manage your other sign-in methods. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage/manage.html</context>
           <context context-type="linenumber">23,27</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authGoogleLinked" datatype="html">
         <source>Google is linked to your account.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage/manage.html</context>
           <context context-type="linenumber">25,27</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authUnlinkGoogle" datatype="html">
         <source> Unlink Google </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage/manage.html</context>
           <context context-type="linenumber">36,38</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authUnlinkGoogleConfirm" datatype="html">
         <source> Unlink Google? This ends sessions that use it. Keep another way to sign in. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage/manage.html</context>
           <context context-type="linenumber">47,50</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authConfirmRemove" datatype="html">
         <source> Confirm removal </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/manage/manage.html</context>
           <context context-type="linenumber">51,52</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">79,80</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">74,76</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authGoogleVerifyTitle" datatype="html">
         <source>Verify your email for Google sign-in</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/verify/verify.html</context>
           <context context-type="linenumber">2,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authGoogleVerifyDescription" datatype="html">
         <source> Enter the code we sent to your email to finish signing in with Google. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/verify/verify.html</context>
           <context context-type="linenumber">6,9</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.html</context>
           <context context-type="linenumber">11,15</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRestartChallenge" datatype="html">
         <source> We couldn’t resume verification. Start again to request a new code. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/verify/verify.html</context>
           <context context-type="linenumber">14,18</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.html</context>
           <context context-type="linenumber">115,119</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify/verify.html</context>
           <context context-type="linenumber">23,27</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify/verify.html</context>
           <context context-type="linenumber">72,76</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authBackSignIn" datatype="html">
         <source> Back to sign in </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/google/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/google/verify/verify.html</context>
           <context context-type="linenumber">20,23</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">54,57</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset-request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset-request/reset-request.html</context>
           <context context-type="linenumber">11,14</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/request/request.html</context>
           <context context-type="linenumber">17,20</context>
         </context-group>
       </trans-unit>
       <trans-unit id="themeToggle" datatype="html">
         <source>Dark theme</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/auth-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/auth-layout/auth-layout.html</context>
           <context context-type="linenumber">11</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">45</context>
         </context-group>
       </trans-unit>
       <trans-unit id="skip" datatype="html">
         <source>Skip to content</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">1</context>
         </context-group>
         <context-group purpose="location">
@@ -555,11 +555,11 @@
       <trans-unit id="shellPrimary" datatype="html">
         <source>Primary navigation</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">2</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">57</context>
         </context-group>
         <context-group purpose="location">
@@ -574,37 +574,37 @@
       <trans-unit id="authHome" datatype="html">
         <source> Home </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">9,11</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">66,69</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSecurity" datatype="html">
         <source>Security</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">3,5</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">35,38</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">155,158</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">232,236</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSessionUnavailable" datatype="html">
         <source> Your session changed or we couldn’t verify it. Sign in again to continue. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">118,121</context>
         </context-group>
       </trans-unit>
@@ -625,7 +625,7 @@
       <trans-unit id="authManageAccount" datatype="html">
         <source> Manage account </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">114,116</context>
         </context-group>
         <context-group purpose="location">
@@ -636,14 +636,14 @@
       <trans-unit id="authReviewSecurity" datatype="html">
         <source>Review security</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/home.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
           <context context-type="linenumber">9,12</context>
         </context-group>
       </trans-unit>
       <trans-unit id="language" datatype="html">
         <source>Language</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/language.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/i18n/language-switcher/language-switcher.html</context>
           <context context-type="linenumber">1</context>
         </context-group>
         <context-group purpose="location">
@@ -654,7 +654,7 @@
       <trans-unit id="authNotFound" datatype="html">
         <source>Page not found</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/not-found.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/not-found/not-found.html</context>
           <context context-type="linenumber">4,5</context>
         </context-group>
       </trans-unit>
@@ -668,103 +668,103 @@
       <trans-unit id="authContinue" datatype="html">
         <source>Continue</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/layouts/not-found.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/not-found/not-found.html</context>
           <context context-type="linenumber">9,11</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in/sign-in.html</context>
           <context context-type="linenumber">15,17</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/email-entry.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/email-entry/email-entry.ts</context>
           <context context-type="linenumber">16</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeys" datatype="html">
         <source>Passkeys</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">9,10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeysManageDescription" datatype="html">
         <source> Add a passkey or rename one so you can recognize it. Removing a passkey ends sessions that used it. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">6,11</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authAddPasskey" datatype="html">
         <source> Add a passkey </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">9,11</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authNoPasskeys" datatype="html">
         <source> You don’t have any passkeys. Add one to sign in with your device’s screen lock. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">25,29</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSave" datatype="html">
         <source> Save </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">95,96</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRename" datatype="html">
         <source> Rename </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">51,52</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRemove" datatype="html">
         <source> Remove </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">63,64</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRemovePasskeyConfirm" datatype="html">
         <source> Remove this passkey? This ends sessions that used it. Keep another way to sign in. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">124,127</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeyName" datatype="html">
         <source>Passkey name</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.ts</context>
           <context context-type="linenumber">39</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeyAdded" datatype="html">
         <source>Passkey added.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.ts</context>
           <context context-type="linenumber">89</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSignInHeading" datatype="html">
         <source>Sign-in options</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in/sign-in.html</context>
           <context context-type="linenumber">3,5</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSignInDescription" datatype="html">
         <source>A passkey can use your device’s screen lock to sign you in.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in/sign-in.html</context>
           <context context-type="linenumber">5,8</context>
         </context-group>
       </trans-unit>
@@ -778,7 +778,7 @@
       <trans-unit id="authUnavailable" datatype="html">
         <source> Sign-in is temporarily unavailable. Try again later. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in/sign-in.html</context>
           <context context-type="linenumber">10,14</context>
         </context-group>
         <context-group purpose="location">
@@ -793,218 +793,218 @@
       <trans-unit id="authRetry" datatype="html">
         <source> Try again </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in/sign-in.html</context>
           <context context-type="linenumber">21,23</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSignInPasskey" datatype="html">
         <source> Sign in with a passkey </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in/sign-in.html</context>
           <context context-type="linenumber">18,20</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.html</context>
           <context context-type="linenumber">24,27</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authUsePassword" datatype="html">
         <source> Use a password </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in/sign-in.html</context>
           <context context-type="linenumber">34,37</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">47,48</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.html</context>
           <context context-type="linenumber">71,73</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authNewHere" datatype="html">
         <source>New here?</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in/sign-in.html</context>
           <context context-type="linenumber">40,41</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCreateAccount" datatype="html">
         <source> Create an account </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in/sign-in.html</context>
           <context context-type="linenumber">42,45</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.ts</context>
           <context context-type="linenumber">60</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCannotAccess" datatype="html">
         <source> Can&apos;t access your account? </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-in/sign-in.html</context>
           <context context-type="linenumber">82,85</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSignUpHeading" datatype="html">
         <source>Create an account</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up/sign-up.html</context>
           <context context-type="linenumber">3,5</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSignUpDescription" datatype="html">
         <source>Set up a passkey and verify your email.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up/sign-up.html</context>
           <context context-type="linenumber">5,8</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSignUpPassword" datatype="html">
         <source> Create an account with a password </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up/sign-up.html</context>
           <context context-type="linenumber">20,23</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authAlreadyAccount" datatype="html">
         <source>Already have an account?</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up/sign-up.html</context>
           <context context-type="linenumber">25,26</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSignIn" datatype="html">
         <source> Sign in </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up/sign-up.html</context>
           <context context-type="linenumber">48,50</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.ts</context>
           <context context-type="linenumber">64</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.html</context>
           <context context-type="linenumber">8,10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCreatePasskeyAccount" datatype="html">
         <source>Create account with a passkey</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/sign-up/sign-up.ts</context>
           <context context-type="linenumber">31</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authTogglePassword" datatype="html">
         <source>Show or hide password</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.html</context>
           <context context-type="linenumber">50,51</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">35,36</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.html</context>
           <context context-type="linenumber">54,55</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">75,76</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.html</context>
           <context context-type="linenumber">62,63</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authForgotPassword" datatype="html">
         <source> Forgot your password? </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.html</context>
           <context context-type="linenumber">71,75</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authOtherMethod" datatype="html">
         <source> Choose another method </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.html</context>
           <context context-type="linenumber">81,84</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordSignUpTitle" datatype="html">
         <source>Create your account</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.ts</context>
           <context context-type="linenumber">50</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordSignInTitle" datatype="html">
         <source>Sign in with a password</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.ts</context>
           <context context-type="linenumber">51</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordSignupDescription" datatype="html">
         <source>Choose a password, then verify your email.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.ts</context>
           <context context-type="linenumber">53</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordSigninDescription" datatype="html">
         <source>Enter your password first. Then we’ll ask for a verification code.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.ts</context>
           <context context-type="linenumber">57</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEmail" datatype="html">
         <source>Email address</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.ts</context>
           <context context-type="linenumber">55</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/email-entry.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/email-entry/email-entry.ts</context>
           <context context-type="linenumber">28</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPassword" datatype="html">
         <source>Password</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.ts</context>
           <context context-type="linenumber">56</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.ts</context>
           <context context-type="linenumber">68</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">21,22</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.ts</context>
           <context context-type="linenumber">42</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordPolicy" datatype="html">
         <source>Use 12–128 characters. You can use spaces and phrases.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.ts</context>
           <context context-type="linenumber">60</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.ts</context>
           <context context-type="linenumber">72</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.ts</context>
           <context context-type="linenumber">67</context>
         </context-group>
         <context-group purpose="location">
@@ -1012,623 +1012,623 @@
           <context context-type="linenumber">11</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.ts</context>
           <context context-type="linenumber">59</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authShowPassword" datatype="html">
         <source>Show</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.ts</context>
           <context context-type="linenumber">58</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.ts</context>
           <context context-type="linenumber">43</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.ts</context>
           <context context-type="linenumber">58</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.ts</context>
           <context context-type="linenumber">48</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.ts</context>
           <context context-type="linenumber">66</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authHidePassword" datatype="html">
         <source>Hide</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/credentials/credentials.ts</context>
           <context context-type="linenumber">59</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.ts</context>
           <context context-type="linenumber">44</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.ts</context>
           <context context-type="linenumber">59</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.ts</context>
           <context context-type="linenumber">49</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.ts</context>
           <context context-type="linenumber">67</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authManagePassword" datatype="html">
         <source> Manage password </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">66,69</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">37,39</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordManageDescription" datatype="html">
         <source> Confirm that it’s you before adding or changing a password. Signing in with a password always requires a second step. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">70,73</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSavePassword" datatype="html">
         <source> Save password </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">50,53</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">84,86</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRemovePassword" datatype="html">
         <source> Remove password </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">65,67</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRemovePasswordConfirm" datatype="html">
         <source> Remove your password? This ends sessions that used it. Keep another way to sign in. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">142,145</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authNewPassword" datatype="html">
         <source>New password</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.ts</context>
           <context context-type="linenumber">45</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.ts</context>
           <context context-type="linenumber">60</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.ts</context>
           <context context-type="linenumber">50</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordConfirmTitle" datatype="html">
         <source>Confirm your identity</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.ts</context>
           <context context-type="linenumber">67</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordConfirmDescription" datatype="html">
         <source>We’ll save your new password as soon as you confirm it’s you.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.ts</context>
           <context context-type="linenumber">74</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authConfirmPasskey" datatype="html">
         <source> Confirm with a passkey </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.html</context>
           <context context-type="linenumber">37,41</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authConfirmPassword" datatype="html">
         <source> Continue </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.html</context>
           <context context-type="linenumber">99,101</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordSaved" datatype="html">
         <source>Password saved</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">33,35</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordRemoved" datatype="html">
         <source>Password removed.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.ts</context>
           <context context-type="linenumber">137</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authResetRequestTitle" datatype="html">
         <source>Reset your password</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset-request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset-request/reset-request.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRecoveryUniform" datatype="html">
         <source> If you can use this email to recover your account, we’ll send a code. We may ask for another verification step. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset-request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset-request/reset-request.html</context>
           <context context-type="linenumber">6,10</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/request/request.html</context>
           <context context-type="linenumber">6,10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authResetTitle" datatype="html">
         <source>Choose a new password</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.html</context>
           <context context-type="linenumber">2,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authResetDone" datatype="html">
         <source>Password reset. Sign in with your new password.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.html</context>
           <context context-type="linenumber">5,7</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authNoExtraFactor" datatype="html">
         <source>No additional code</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.html</context>
           <context context-type="linenumber">64,65</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify/verify.html</context>
           <context context-type="linenumber">27,28</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authAuthenticator" datatype="html">
         <source>Authenticator app</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.html</context>
           <context context-type="linenumber">65,66</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify/verify.html</context>
           <context context-type="linenumber">28,29</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">48,49</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authBackupCode" datatype="html">
         <source>Backup code</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.html</context>
           <context context-type="linenumber">66,68</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify/verify.html</context>
           <context context-type="linenumber">29,31</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authExtraFactorHint" datatype="html">
         <source> If you set up an authenticator app, enter its code or a backup code. The email code alone won’t work. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.html</context>
           <context context-type="linenumber">71,74</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authResetPassword" datatype="html">
         <source> Reset password </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.html</context>
           <context context-type="linenumber">91,93</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEmailCode" datatype="html">
         <source>Email verification code</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.ts</context>
           <context context-type="linenumber">57</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify/verify.ts</context>
           <context context-type="linenumber">53</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authAdditionalCode" datatype="html">
         <source>Additional verification</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/reset/reset.ts</context>
           <context context-type="linenumber">61</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify/verify.ts</context>
           <context context-type="linenumber">54</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authConfirmSignIn" datatype="html">
         <source>Confirm your sign-in</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify/verify.html</context>
           <context context-type="linenumber">2,3</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEmailFactorHint" datatype="html">
         <source>Enter the code we sent to your email.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify/verify.ts</context>
           <context context-type="linenumber">48</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authTotpFactorHint" datatype="html">
         <source>Enter a code from your authenticator app or a backup code.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify/verify.ts</context>
           <context context-type="linenumber">49</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authUseAuthenticator" datatype="html">
         <source>Use authenticator app</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify/verify.ts</context>
           <context context-type="linenumber">37</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authUseBackup" datatype="html">
         <source>Use a backup code</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/verify/verify.ts</context>
           <context context-type="linenumber">38</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEnrollTitle" datatype="html">
         <source>Set up a new way to sign in</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">3,5</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEnrollDescription" datatype="html">
         <source> You’ve verified your recovery request. Set up and verify a new sign-in method to get back into your account. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">6,10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReplacementPasswordHint" datatype="html">
         <source> Verify your new password with a code from your authenticator app or a backup code. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">12,16</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReplacementEmailRestart" datatype="html">
         <source> If the email doesn’t arrive, start again and enter your new password to request another code. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">24,29</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSwitchFactor" datatype="html">
         <source> Change verification method </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">48,51</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.html</context>
           <context context-type="linenumber">33,36</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReplacementPasskeyHint" datatype="html">
         <source> Sign in with the new passkey to finish recovering your account. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">53,58</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authVerifyPasskey" datatype="html">
         <source> Verify new passkey </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">64,67</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCreateReplacementPasskey" datatype="html">
         <source> Create a new passkey </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/enroll/enroll.html</context>
           <context context-type="linenumber">75,79</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRecoverTitle" datatype="html">
         <source>Recover your account</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/request/request.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authUseOpenDevice" datatype="html">
         <source> Use a device where you are signed in </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/request/request.html</context>
           <context context-type="linenumber">12,14</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authOnlyResetPassword" datatype="html">
         <source> Only need to reset your password? </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/request.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/request/request.html</context>
           <context context-type="linenumber">15,17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRecoveryVerifyTitle" datatype="html">
         <source>Verify recovery</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify/verify.html</context>
           <context context-type="linenumber">2,3</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authRecoveryProofHint" datatype="html">
         <source> Enter the code from your email. If you set up an authenticator app, enter its code or a backup code too. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify/verify.html</context>
           <context context-type="linenumber">6,9</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authVerify" datatype="html">
         <source> Verify </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/recovery/verify/verify.html</context>
           <context context-type="linenumber">65,67</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/code-entry.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/code-entry/code-entry.html</context>
           <context context-type="linenumber">34,37</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReauthTitle" datatype="html">
         <source>Confirm it’s you</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.ts</context>
           <context context-type="linenumber">67</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReauthDescription" datatype="html">
         <source>Use one of your sign-in methods to confirm it’s you. You can review the security change again afterward.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.ts</context>
           <context context-type="linenumber">69</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSecurityDescription" datatype="html">
         <source>Manage sign-in methods, verification, and open sessions.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">5,8</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeysDescription" datatype="html">
         <source>Sign in using your screen lock or a security key.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">14,18</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authManagePasskeys" datatype="html">
         <source> Manage passkeys </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">17,19</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authManageAuthenticator" datatype="html">
         <source> Manage authenticator </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">56,58</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authBackupCodes" datatype="html">
         <source> Backup codes </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">65,67</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes/backup-codes.html</context>
           <context context-type="linenumber">2,3</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">21,24</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSessions" datatype="html">
         <source>Sessions</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">71,72</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSessionsDescription" datatype="html">
         <source> See your active sessions and close any you no longer need. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">90,94</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authManageSessions" datatype="html">
         <source> Manage sessions </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">79,81</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEmailSecurityDescription" datatype="html">
         <source>Keep your recovery email up to date.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
           <context context-type="linenumber">84,87</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEnabled" datatype="html">
         <source>Enabled</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.ts</context>
           <context context-type="linenumber">25</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authNotEnabled" datatype="html">
         <source>Not enabled</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.ts</context>
           <context context-type="linenumber">26</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authSessionsPrivacy" datatype="html">
         <source> See when each session started and which sign-in method it used. We don’t collect device details or locations for this list. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">6,11</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEndOtherSessions" datatype="html">
         <source> End other sessions </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">19,21</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEndOtherConfirm" datatype="html">
         <source> End all other sessions? You’ll need to sign in again to use them. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">28,31</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authConfirm" datatype="html">
         <source> Confirm </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">26,27</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">72,73</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes/backup-codes.html</context>
           <context context-type="linenumber">29,30</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">43,44</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authMethod" datatype="html">
         <source>Method</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">39,40</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authStarted" datatype="html">
         <source>Started</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">41,42</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authExpires" datatype="html">
         <source>Expires</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">45,46</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEndSession" datatype="html">
         <source> End session </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">60,62</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEndSessionConfirm" datatype="html">
         <source> End this session? If this is your current session, you’ll be signed out. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.html</context>
           <context context-type="linenumber">91,94</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCurrentSession" datatype="html">
         <source>Current session</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.ts</context>
           <context context-type="linenumber">29</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authOtherSession" datatype="html">
         <source>Other session</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.ts</context>
           <context context-type="linenumber">30</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authUnknownMethod" datatype="html">
         <source>Not available</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.ts</context>
           <context context-type="linenumber">31</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authMethodPasskey" datatype="html">
         <source>Passkey</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.ts</context>
           <context context-type="linenumber">40</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authMethodRecovery" datatype="html">
         <source>Recovery</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.ts</context>
           <context context-type="linenumber">46</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authMethodDevice" datatype="html">
         <source>Device approval</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/sessions/sessions.ts</context>
           <context context-type="linenumber">48</context>
         </context-group>
       </trans-unit>
@@ -1691,14 +1691,14 @@
       <trans-unit id="authVerificationCode" datatype="html">
         <source>Verification code</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/code-entry.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/code-entry/code-entry.ts</context>
           <context context-type="linenumber">28</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authWorking" datatype="html">
         <source>Working…</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/feedback.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/feedback/feedback.html</context>
           <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
@@ -1729,112 +1729,112 @@
       <trans-unit id="authBackupCannotRestore" datatype="html">
         <source> We can’t show your old backup codes again. Confirm that it’s you to create new ones. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes/backup-codes.html</context>
           <context context-type="linenumber">8,12</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReplaceCodes" datatype="html">
         <source> Replace backup codes </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes/backup-codes.html</context>
           <context context-type="linenumber">20,22</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReplaceCodesConfirm" datatype="html">
         <source> Replace all backup codes? Your old codes will stop working now. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-codes/backup-codes.html</context>
           <context context-type="linenumber">28,31</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authBackupSave" datatype="html">
         <source> Save these codes somewhere safe. We’ll only show them once and each works once. If you create new codes, these stop working. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-display.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-display/backup-display.html</context>
           <context context-type="linenumber">3,7</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCopyCodes" datatype="html">
         <source> Copy codes </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-display.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-display/backup-display.html</context>
           <context context-type="linenumber">21,25</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDownloadCodes" datatype="html">
         <source> Download codes </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-display.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-display/backup-display.html</context>
           <context context-type="linenumber">33,37</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCopied" datatype="html">
         <source>Copied.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-display.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/backup-display/backup-display.ts</context>
           <context context-type="linenumber">24</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authTotpDescription" datatype="html">
         <source> The app gives you a code when you sign in with a password. Save your backup codes in case you lose access to the app. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">6,11</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authManualKey" datatype="html">
         <source>Or enter this key in your authenticator app:</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">16,18</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authTotpEnabled" datatype="html">
         <source>Authenticator app enabled.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">30,32</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDisableTotp" datatype="html">
         <source> Disable authenticator </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">34,36</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authDisableTotpConfirm" datatype="html">
         <source> Disable your authenticator app? Its backup codes will stop working. We’ll send a code by email when you sign in with a password. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">53,57</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authEnableTotp" datatype="html">
         <source> Set up authenticator </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">53,55</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authTotpUnavailable" datatype="html">
         <source>Authenticator setup is not available right now.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/manage/manage.html</context>
           <context context-type="linenumber">56,58</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authQrLabel" datatype="html">
         <source>Scan this QR code with your authenticator app or enter the key below.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/qr-code.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/qr-code/qr-code.html</context>
           <context context-type="linenumber">7,8</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authQrFailed" datatype="html">
         <source>We couldn’t display the QR code. Enter the key below instead.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/qr-code.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/totp/qr-code/qr-code.html</context>
           <context context-type="linenumber">14,16</context>
         </context-group>
       </trans-unit>
@@ -2211,225 +2211,225 @@
       <trans-unit id="authPasskeyCreatedWith" datatype="html">
         <source>Created with</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">35,37</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeyType" datatype="html">
         <source>Type</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">40,42</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeyCreated" datatype="html">
         <source>Created</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">44,46</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeyLastUsed" datatype="html">
         <source>Last used</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">50,52</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeyNotUsed" datatype="html">
         <source>Not used yet</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.html</context>
           <context context-type="linenumber">56,58</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeySynced" datatype="html">
         <source>Synced passkey</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.ts</context>
           <context context-type="linenumber">42</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeySyncable" datatype="html">
         <source>Syncable passkey</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.ts</context>
           <context context-type="linenumber">43</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasskeyDeviceBound" datatype="html">
         <source>Device-bound passkey</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/passkeys/manage/manage.ts</context>
           <context context-type="linenumber">44</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordSaving" datatype="html">
         <source>Saving your password</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">11,13</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordSavedDescription" datatype="html">
         <source> Use your new password the next time you sign in. You’ll still need a verification code. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">40,44</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authPasswordChangeAgain" datatype="html">
         <source> Change password again </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/password/manage/manage.html</context>
           <context context-type="linenumber">51,55</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authCurrentPassword" datatype="html">
         <source>Current password</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.ts</context>
           <context context-type="linenumber">85</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authUseCurrentPassword" datatype="html">
         <source>Use your current password</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/session/reauthenticate/reauthenticate.html</context>
           <context context-type="linenumber">52,54</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceExampleHeading" datatype="html">
         <source>Hybrid persistence example</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceExampleDescription" datatype="html">
         <source> This development example uses test workspaces. The service can read account identity and operational notes. Unlock private resources separately on this device. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">6,11</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceExampleUnavailable" datatype="html">
         <source>Set up the development profile to use this example.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">12,14</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceCreateWorkspace" datatype="html">
         <source> Create a test workspace </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">21,24</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceCloudHeading" datatype="html">
         <source>Operational note · service-readable</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">19,20</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceCloudLabel" datatype="html">
         <source>Operational content</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">23,24</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceCloudDescription" datatype="html">
         <source>Authorized services can read and process the contents of this note.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">32,33</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceSaveCloud" datatype="html">
         <source> Save operational note </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">51,53</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultHeading" datatype="html">
         <source>Private resource</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">46,47</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistencePrivateLimits" datatype="html">
         <source> Private content is encrypted before synchronization. This synthetic profile has no recovery: losing all usable keys can permanently lose access. Password reset does not recover private content. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">49,52</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultUnlock" datatype="html">
         <source> Unlock with a passkey </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">75,76</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">45,47</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
           <context context-type="linenumber">32,34</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceInitializePrivate" datatype="html">
         <source> Set up an empty private resource </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">87,89</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultLock" datatype="html">
         <source> Lock private resources </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">67,68</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultPrivateText" datatype="html">
         <source>Private text</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">74,75</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistencePrivateDescription" datatype="html">
         <source>Only ciphertext is stored locally and synchronized. An encrypted pending change stays on this device until synchronization succeeds.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">76,77</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultSave" datatype="html">
         <source> Save encrypted change </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">97,98</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceSynchronize" datatype="html">
         <source> Synchronize encrypted changes </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">107,109</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistencePending" datatype="html">
         <source> An encrypted change is waiting to sync. Keep the data on this device until it syncs. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">195,197</context>
         </context-group>
       </trans-unit>
@@ -2520,21 +2520,21 @@
       <trans-unit id="persistenceConflictChoice" datatype="html">
         <source> Choose which version to keep. Keeping your pending version replaces the synchronized content after checking for new changes. Discarding removes your pending copy from this device. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">137,141</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceKeepPending" datatype="html">
         <source> Keep my pending version and synchronize </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">143,146</context>
         </context-group>
       </trans-unit>
       <trans-unit id="persistenceDiscardPending" datatype="html">
         <source> Discard my pending change and use the synchronized version </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">154,156</context>
         </context-group>
       </trans-unit>
@@ -2547,7 +2547,7 @@
       <trans-unit id="vaultPinWarning" datatype="html">
         <source> If passkeys aren’t supported, you can use a 6-digit PIN. Anyone with a copy of your encrypted data can try every PIN offline, so a PIN offers less protection. Setup requires a connection. After setup, you can unlock offline if you’re already signed in. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">96,98</context>
         </context-group>
       </trans-unit>
@@ -2557,36 +2557,36 @@
       <trans-unit id="vaultPinLabel" datatype="html">
         <source>Local unlock PIN</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">103</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultPinUnlock" datatype="html">
         <source>Unlock with PIN</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">117,120</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
           <context context-type="linenumber">30,32</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultPinConfirm" datatype="html">
         <source>Confirm your new PIN</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">121</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">27</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultPinInitialize" datatype="html">
         <source> Set up an empty private resource with PIN </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">154,156</context>
         </context-group>
       </trans-unit>
@@ -2600,117 +2600,117 @@
       <trans-unit id="vaultPanelPinWarning" datatype="html">
         <source> This vault uses a PIN on this device. Anyone with a copy of the encrypted data can try PINs offline. A passkey provides stronger protection. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">12,16</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
           <context context-type="linenumber">13,17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultPanelPinUnlock" datatype="html">
         <source>Unlock with PIN</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">43,45</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultUnlockHeading" datatype="html">
         <source>Unlock your private resources</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
           <context context-type="linenumber">7,9</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultUnlockDescription" datatype="html">
         <source> Unlock the vault to open its private resources. Other vaults may use a different key or PIN. An unlocked vault stays open while you navigate until you lock it or sign out. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
           <context context-type="linenumber">6,10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultSeparation" datatype="html">
         <source>You’re signed in. Unlock this resource separately on this device.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">5,8</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultInitialize" datatype="html">
         <source>Set up an empty vault on this device</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">53,55</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultLocalDescription" datatype="html">
         <source>This content is stored encrypted on this device. Keep a recovery method or an encrypted backup if your product supports one.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">75,76</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultRead" datatype="html">
         <source> Read on this device </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">98,99</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDemoSample" datatype="html">
         <source>Sample note: Garden workshop at 10:00.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.ts</context>
           <context context-type="linenumber">42</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDemoTitle" datatype="html">
         <source> Vault example </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">45,47</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">243,247</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
           <context context-type="linenumber">2,4</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDemoDescription" datatype="html">
         <source> Try opening an encrypted example note. The note and PIN setup stay in this browser, separate from other vaults. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
           <context context-type="linenumber">5,8</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDemoStart" datatype="html">
         <source>Choose a PIN for this example. You’ll use it to unlock the note here.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
           <context context-type="linenumber">14,18</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDemoUnavailable" datatype="html">
         <source>We can’t store the example vault on this device.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
           <context context-type="linenumber">22,24</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDemoLoading" datatype="html">
         <source>Looking for the example vault on this device…</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
           <context context-type="linenumber">24,27</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDemoRead" datatype="html">
         <source> Open the example note </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">66,68</context>
         </context-group>
       </trans-unit>
@@ -2720,7 +2720,7 @@
       <trans-unit id="authVerifyingCode" datatype="html">
         <source>Verifying code…</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/code-entry.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/auth/shared/code-entry/code-entry.html</context>
           <context context-type="linenumber">57,61</context>
         </context-group>
       </trans-unit>
@@ -2812,42 +2812,42 @@
       <trans-unit id="shellWorkspace" datatype="html">
         <source>Workspace</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">44,46</context>
         </context-group>
       </trans-unit>
       <trans-unit id="shellSecuritySettings" datatype="html">
         <source> Security settings </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
           <context context-type="linenumber">381,383</context>
         </context-group>
       </trans-unit>
       <trans-unit id="shellExpandSidebar" datatype="html">
         <source>Expand sidebar</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.ts</context>
           <context context-type="linenumber">79</context>
         </context-group>
       </trans-unit>
       <trans-unit id="shellCollapseSidebar" datatype="html">
         <source>Collapse sidebar</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.ts</context>
           <context context-type="linenumber">80</context>
         </context-group>
       </trans-unit>
       <trans-unit id="shellAccountMenu" datatype="html">
         <source>Account menu</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.ts</context>
           <context context-type="linenumber">95</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDemoNoPasskey" datatype="html">
         <source> Passkey unlock isn’t available on this device. Set up a PIN to unlock the vault here. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
           <context context-type="linenumber">11,14</context>
         </context-group>
       </trans-unit>

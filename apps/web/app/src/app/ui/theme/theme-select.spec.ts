@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { ThemeSelect } from './theme-select';
 import { Theme } from './theme';
 import { ThemeHost } from './theme-host';
-import { ThemeSwitcher } from './theme-switcher';
+import { ThemeSwitcher } from './theme-switcher/theme-switcher';
 
 @Component({
   imports: [ThemeSelect, ThemeSwitcher],
