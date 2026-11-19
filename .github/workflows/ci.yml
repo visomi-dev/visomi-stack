@@ -92,16 +92,34 @@ jobs:
       - name: Install Chromium
         if: matrix.project == 'web-site'
         run: pnpm exec playwright install --with-deps chromium
-      - name: Install authentication browsers
+      - name: Start the app browser server
+        id: app-browsers
         if: matrix.project == 'web-app-e2e'
-        run: pnpm exec playwright install --with-deps chromium firefox webkit
+        # Match the frozen Playwright version. Host networking keeps the runner's loopback fixtures reachable.
+        run: |
+          version=$(node -p "require('@playwright/test/package.json').version")
+          container=$(docker run --detach --init --network host --ipc host --user pwuser \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/node_modules,target=/work/node_modules,readonly" \
+            "mcr.microsoft.com/playwright:v$version-noble" \
+            node /work/node_modules/@playwright/test/cli.js run-server --host 127.0.0.1 --port 9300)
+          echo "container=$container" >> "$GITHUB_OUTPUT"
+          curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 1 --max-time 2 \
+            http://127.0.0.1:9300/ > /dev/null
       - name: Run end-to-end tests
         env:
           E2E_PROJECT: ${{ matrix.project }}
+          PW_TEST_CONNECT_WS_ENDPOINT: ${{ matrix.project == 'web-app-e2e' && 'ws://127.0.0.1:9300/' || '' }}
         run: pnpm nx run "$E2E_PROJECT:e2e"
       - name: Run authentication end-to-end tests
         if: matrix.project == 'web-app-e2e'
+        env:
+          PW_TEST_CONNECT_WS_ENDPOINT: ws://127.0.0.1:9300/
         run: pnpm nx run web-app-e2e:e2e --configuration=auth --args='--fail-on-flaky-tests'
+      - name: Stop the app browser server
+        if: always() && steps.app-browsers.outputs.container != ''
+        env:
+          BROWSER_CONTAINER: ${{ steps.app-browsers.outputs.container }}
+        run: docker rm --force "$BROWSER_CONTAINER"
 
   container:
     needs: verify
