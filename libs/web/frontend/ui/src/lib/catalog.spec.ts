@@ -115,6 +115,14 @@ describe('portable UI recipes', () => {
     expect(ui.loader.classes().split(' ')).toContain('ui-loader');
     expect(ui.loader.classes().split(' ')).not.toContain('animate-spin');
     expect(ui.disclosure.classes()).toContain('summary:focus-visible');
+    expect(ui.disclosure.classes().split(' ')).toContain('border');
+
+    const subtleDisclosure = ui.disclosure.classes({ appearance: 'subtle' });
+
+    expect(subtleDisclosure).toContain('summary:focus-visible');
+    expect(subtleDisclosure).toContain('dark:bg-zinc-800/60');
+    expect(subtleDisclosure.split(' ')).not.toContain('border');
+    expect(subtleDisclosure).not.toContain('shadow');
   });
 
   it('varies presentation without mixing incompatible class choices', () => {

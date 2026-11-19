@@ -1,9 +1,16 @@
+export type DisclosureAppearance = 'default' | 'subtle';
 export type DialogSize = 'sm' | 'md' | 'lg';
 const dialogSizes = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' } as const;
 
 export const disclosure = {
-  classes(): string {
-    return 'rounded-xl border border-zinc-200 bg-white text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 [&_summary]:min-h-11 [&_summary]:cursor-pointer [&_summary]:rounded-lg [&_summary]:px-4 [&_summary]:py-3 [&_summary]:font-medium [&_summary]:outline-offset-2 [&_summary:focus-visible]:outline-2 [&_summary:focus-visible]:outline-blue-600 dark:[&_summary:focus-visible]:outline-blue-400 [&>:not(summary)]:px-4 [&>:not(summary)]:pb-4';
+  classes({ appearance = 'default' }: { appearance?: DisclosureAppearance } = {}): string {
+    return [
+      'rounded-xl text-zinc-950 dark:text-zinc-50',
+      appearance === 'subtle'
+        ? 'bg-zinc-100 dark:bg-zinc-800/60'
+        : 'border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900',
+      '[&_summary]:min-h-11 [&_summary]:cursor-pointer [&_summary]:rounded-lg [&_summary]:px-4 [&_summary]:py-3 [&_summary]:font-medium [&_summary]:outline-offset-2 [&_summary:focus-visible]:outline-2 [&_summary:focus-visible]:outline-blue-600 dark:[&_summary:focus-visible]:outline-blue-400 [&>:not(summary)]:px-4 [&>:not(summary)]:pb-4',
+    ].join(' ');
   },
 } as const;
 export const dialog = {

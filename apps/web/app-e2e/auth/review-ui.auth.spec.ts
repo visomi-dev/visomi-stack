@@ -74,6 +74,10 @@ test('keeps the inset shell, compact navigation and nested account destinations 
 
   await expect(account).toBeVisible();
 
+  await expect(account).toHaveCSS('border-top-width', '1px');
+
+  await expect(account).not.toHaveCSS('box-shadow', 'none');
+
   await expect(accountTrigger).toHaveAttribute('aria-expanded', 'true');
 
   await expect(account.getByText(/@example\.test/)).toBeVisible();
@@ -133,13 +137,66 @@ test('keeps the inset shell, compact navigation and nested account destinations 
 
   await expect(brand).toHaveCount(1);
 
-  await openAccount(page);
+  await expect(drawer).toHaveCSS('width', '390px');
 
-  await drawer.getByText('Configuración de seguridad', { exact: true }).click();
+  const disclosure = drawer.locator('footer > details');
+  const summary = disclosure.locator(':scope > summary');
+  const accountLink = disclosure.getByRole('link', { name: 'Cuenta', exact: true });
+  const backgrounds = new Set<string>();
 
-  await expect(drawer.getByRole('link', { name: 'Sesiones' })).toHaveAttribute('aria-current', 'page');
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme });
 
-  await capture(page, info, 'shell-mobile-account-es.png');
+    await expect(accountLink).toBeHidden();
+
+    await expect(disclosure).toHaveCSS('border-top-width', '0px');
+
+    await expect(disclosure).toHaveCSS('box-shadow', 'none');
+
+    const background = await drawer.evaluate((element) => getComputedStyle(element).backgroundColor);
+
+    await expect(disclosure).not.toHaveCSS('background-color', background);
+
+    const disclosureBackground = await disclosure.evaluate((element) => getComputedStyle(element).backgroundColor);
+
+    backgrounds.add(disclosureBackground);
+
+    await drawer.getByRole('link', { name: 'Ejemplo de vault' }).focus();
+
+    await page.keyboard.press('Tab');
+
+    await expect(summary).toBeFocused();
+
+    await expect(summary).toHaveCSS('outline-width', '2px');
+
+    await capture(page, info, `shell-mobile-account-${colorScheme}-closed-es.png`);
+
+    await page.keyboard.press('Enter');
+
+    await expect(accountLink).toBeVisible();
+
+    await expect(disclosure).toHaveCSS('border-top-width', '0px');
+
+    await expect(disclosure).toHaveCSS('box-shadow', 'none');
+
+    const securitySettings = drawer.getByText('Configuración de seguridad', { exact: true });
+
+    await securitySettings.click();
+
+    await expect(drawer.getByRole('link', { name: 'Sesiones' })).toHaveAttribute('aria-current', 'page');
+
+    await capture(page, info, `shell-mobile-account-${colorScheme}-open-es.png`);
+
+    await securitySettings.click();
+
+    await summary.focus();
+
+    await page.keyboard.press('Enter');
+
+    await expect(accountLink).toBeHidden();
+  }
+
+  expect(backgrounds.size).toBe(2);
 
   await page.keyboard.press('Escape');
 

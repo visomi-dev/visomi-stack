@@ -1,11 +1,13 @@
-import { Directive } from '@angular/core';
+import { Directive, computed, input } from '@angular/core';
 
-import { disclosure as styles } from '@visomi-stack/web-frontend-ui';
+import { disclosure as styles, type DisclosureAppearance } from '@visomi-stack/web-frontend-ui';
 
 @Directive({
   selector: 'details[appUI]',
-  host: { '[class]': 'classes' },
+  host: { '[class]': 'classes()' },
 })
 export class Disclosure {
-  protected readonly classes = styles.classes();
+  readonly appearance = input<DisclosureAppearance>('default');
+
+  protected readonly classes = computed(() => styles.classes({ appearance: this.appearance() }));
 }
