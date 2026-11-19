@@ -1,4 +1,6 @@
-/* eslint playwright/expect-expect: ["warn", { "assertFunctionNames": ["expect", "checkBusy"] }] */
+/* eslint playwright/expect-expect: ["warn", {
+  "assertFunctionNames": ["expect", "checkBusy", "checkAutomaticBusy"]
+}] */
 import type { Locator, Page } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
 
@@ -120,6 +122,61 @@ async function checkBusy(page: Page, button: Locator, endpoint: string, screensh
   await expect(page.locator('[data-action-error]')).toBeFocused();
 }
 
+async function checkAutomaticBusy(page: Page, code: string, endpoint: string, screenshot: string): Promise<void> {
+  const form = page.locator('app-code-entry form');
+  const input = form.locator('#verification-code');
+  const status = page.getByRole('status').filter({ hasText: /Verifying code|Verificando el código/ });
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let requests = 0;
+
+  await expect(input).toBeEnabled();
+
+  await expect(form.getByRole('button')).toHaveCount(0);
+
+  await page.route(`**/api/auth/${endpoint}`, async (route) => {
+    requests++;
+
+    await gate;
+
+    await route.fulfill({ status: 400, json: { error: 'invalid_credentials' } });
+  });
+
+  try {
+    await input.fill(code);
+
+    await expect(form).toHaveAttribute('aria-busy', 'true');
+
+    await expect(input).toBeDisabled();
+
+    await expect(status).toBeVisible();
+
+    await expect(status.locator('[appUI="loader"]')).toBeVisible();
+
+    await expect(page.locator('button[aria-busy="true"]')).toHaveCount(0);
+
+    await expect.poll(() => requests).toBe(1);
+
+    await input.dispatchEvent('input');
+
+    expect(requests).toBe(1);
+
+    await page.screenshot({ path: test.info().outputPath(screenshot), animations: 'disabled' });
+  } finally {
+    release();
+  }
+
+  await expect(form).toHaveAttribute('aria-busy', 'false');
+
+  await expect(status).toHaveCount(0);
+
+  await expect(input).toBeEnabled();
+
+  await expect(page.locator('[data-action-error]')).toBeFocused();
+}
+
 for (const locale of ['en', 'es']) {
   for (const theme of ['light', 'dark'] as const) {
     test.describe(`${locale} ${theme} form progress`, () => {
@@ -217,9 +274,7 @@ for (const locale of ['en', 'es']) {
       test('email verification does not mark sign-out busy', async ({ page }) => {
         await pendingAccount(page, locale);
 
-        await page.locator('#verification-code').fill('001234');
-
-        await checkBusy(page, page.locator('app-code-entry button'), 'email/verify', 'verify-email-busy.png');
+        await checkAutomaticBusy(page, '001234', 'email/verify', 'verify-email-busy.png');
       });
 
       test('resend keeps its own progress and accessible announcement', async ({ page }) => {
@@ -320,7 +375,7 @@ for (const locale of ['en', 'es']) {
         await checkBusy(page, page.locator('app-email-entry button'), 'email/change/request', 'change-email-busy.png');
       });
 
-      test('password factor verification uses the code button', async ({ page }) => {
+      test('new-device email verification announces progress without a submit button', async ({ page }) => {
         const email = await signup(page);
 
         await logout(page);
@@ -331,9 +386,7 @@ for (const locale of ['en', 'es']) {
 
         const code = await readMailCode(email);
 
-        await page.locator('#verification-code').fill(code);
-
-        await checkBusy(page, page.locator('app-code-entry button'), 'password/verify', 'password-verify-busy.png');
+        await checkAutomaticBusy(page, code, 'password/verify', 'password-verify-busy.png');
       });
     });
   }

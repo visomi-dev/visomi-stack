@@ -1,0 +1,163 @@
+<section appUI="card" class="space-y-3" aria-labelledby="vault-devices-title" [attr.aria-busy]="pairing.busy()">
+  <header class="space-y-2">
+    <h2 appUI uiSize="sm" id="vault-devices-title" i18n="@@vaultDevicesTitle">Vault devices</h2>
+
+    <p appUI tone="muted" i18n="@@vaultDevicesDescription">
+      Pair devices for this synthetic private resource. Keep this page open on both signed-in devices until pairing
+      finishes.
+    </p>
+  </header>
+
+  @if (pairing.message()) {
+    <p role="status">{{ pairing.message() }}</p>
+  }
+
+  @if (pairing.ready()) {
+    @if (pairing.paired()) {
+      <a
+        appUI
+        [routerLink]="['/persistence', target().tenantId, target().scopeId, target().objectId]"
+        i18n="@@vaultDevicesOpen"
+      >
+        Open test private resource
+      </a>
+    } @else if (pairing.existing()) {
+      @if (pairing.approverFingerprint()) {
+        <p appUI i18n="@@vaultDevicesApproverFingerprint">Approving device fingerprint</p>
+
+        <code class="block break-all" data-vault-approver>{{ pairing.approverFingerprint() }}</code>
+
+        <form
+          class="space-y-3"
+          (submit)="$event.preventDefault(); pairing.approve(proof.value, recipientFingerprint.value)"
+        >
+          <p appUI tone="muted" i18n="@@vaultDevicesApproveInstructions">
+            Paste the request from the new device. Enter the fingerprint shown directly on that device.
+          </p>
+
+          <app-field control-id="vault-recipient-request" label="Pairing request" i18n-label="@@vaultDevicesRequest">
+            <textarea appUI id="vault-recipient-request" #proof maxlength="4096" rows="3" required></textarea>
+          </app-field>
+
+          <app-field
+            control-id="vault-recipient-fingerprint"
+            label="New device fingerprint"
+            i18n-label="@@vaultDevicesRecipientFingerprint"
+          >
+            <input
+              appUI
+              id="vault-recipient-fingerprint"
+              #recipientFingerprint
+              maxlength="48"
+              required
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </app-field>
+
+          <button appUI type="submit" [disabled]="pairing.busy()" i18n="@@vaultDevicesApprove">
+            Approve this device
+          </button>
+        </form>
+      } @else {
+        <p appUI i18n="@@vaultDevicesUnlockFirst">
+          Unlock the test private resource on this device before approving another device.
+        </p>
+
+        <a
+          appUI
+          [routerLink]="['/persistence', target().tenantId, target().scopeId, target().objectId]"
+          i18n="@@vaultDevicesOpen"
+        >
+          Open test private resource
+        </a>
+      }
+    } @else if (pairing.pending(); as request) {
+      <app-field control-id="vault-pairing-request" label="Pairing request" i18n-label="@@vaultDevicesRequest">
+        <textarea appUI id="vault-pairing-request" rows="3" readonly [value]="request.token"></textarea>
+      </app-field>
+
+      <p appUI i18n="@@vaultDevicesRecipientFingerprint">New device fingerprint</p>
+
+      <code class="block break-all" data-vault-recipient>{{ request.fingerprint }}</code>
+
+      <p appUI tone="muted" i18n="@@vaultDevicesFinishInstructions">
+        Share the request and fingerprint with the approving device. Then enter the fingerprint you see directly on that
+        device.
+      </p>
+
+      <form class="space-y-3" (submit)="$event.preventDefault(); pairing.finish(approver.value)">
+        <app-field
+          control-id="vault-approver-fingerprint"
+          label="Approving device fingerprint"
+          i18n-label="@@vaultDevicesApproverFingerprint"
+        >
+          <input
+            appUI
+            id="vault-approver-fingerprint"
+            #approver
+            maxlength="48"
+            required
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </app-field>
+
+        @if (request.context.method === 'pin-argon2id') {
+          <app-field control-id="vault-pairing-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel">
+            <app-pin-input
+              required
+              [digits]="6"
+              [disabled]="pairing.busy()"
+              [value]="pairing.pin()"
+              (valueChange)="pairing.pin.set($event)"
+            />
+          </app-field>
+        }
+
+        <button appUI type="submit" [disabled]="pairing.busy()" i18n="@@vaultDevicesFinish">Finish pairing</button>
+      </form>
+    } @else if (pairing.capabilities.prf() === 'unavailable') {
+      <form class="space-y-3" (submit)="$event.preventDefault(); pairing.request(true)">
+        <p appUI tone="muted" i18n="@@vaultDevicesPinDescription">
+          Passkey unlock is unavailable. A PIN can unlock this vault on this device and is easier to guess if someone
+          copies the encrypted storage.
+        </p>
+
+        <app-field control-id="vault-pairing-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel">
+          <app-pin-input
+            required
+            [digits]="6"
+            [disabled]="pairing.busy()"
+            [value]="pairing.pin()"
+            (valueChange)="pairing.pin.set($event)"
+          />
+        </app-field>
+
+        <app-field control-id="vault-pairing-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
+          <app-pin-input
+            required
+            [digits]="6"
+            [disabled]="pairing.busy()"
+            [value]="pairing.confirmPin()"
+            (valueChange)="pairing.confirmPin.set($event)"
+          />
+        </app-field>
+
+        <button appUI type="submit" [disabled]="pairing.busy()" i18n="@@vaultDevicesRequestWithPin">
+          Request pairing with PIN
+        </button>
+      </form>
+    } @else {
+      <button
+        appUI
+        type="button"
+        [disabled]="pairing.busy() || pairing.capabilities.prf() === 'checking'"
+        (click)="pairing.request()"
+        i18n="@@vaultDevicesRequestWithPasskey"
+      >
+        Request pairing with a passkey
+      </button>
+    }
+  }
+</section>

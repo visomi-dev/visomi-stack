@@ -50,8 +50,13 @@ export const button = {
       base,
       variants[variant],
       sizes[size],
+      variant === 'secondary'
+        ? 'aria-pressed:border-blue-600 aria-pressed:font-semibold dark:aria-pressed:border-blue-400'
+        : '',
       // Binding aria-busy reserves the trailing slot before loading can wrap the label.
       "aria-busy:cursor-wait [&[aria-busy]]:after:content-[''] [&[aria-busy]]:after:size-4 [&[aria-busy]]:after:shrink-0 aria-[busy=false]:after:invisible aria-busy:after:ui-loader",
-    ].join(' ');
+    ]
+      .filter(Boolean)
+      .join(' ');
   },
 } as const;

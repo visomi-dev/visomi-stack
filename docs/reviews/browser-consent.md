@@ -35,8 +35,9 @@ configured retention interval without waiting for expiry.
 
 The browser test compares the two controls' color, background, border, font
 size and dimensions. It tabs between the controls and to the public purpose
-link, then follows the link with Enter. The initial notice stays in the
-page flow and has no dialog. The public page stays available from the footer
+link, then follows the link with Enter. These screenshots show the original
+inline notice. See the [UI follow-up](stack-ui-follow-up.md) for the current card
+and two-way consent captures. The public page stays available from the footer
 and offers the same two controls for changing the saved choice.
 
 ## Reference vault

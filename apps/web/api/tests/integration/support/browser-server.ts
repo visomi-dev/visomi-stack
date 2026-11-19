@@ -1,12 +1,10 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import express, { type Request, type Response } from 'express';
+import express from 'express';
 import { chromium, type Browser, type BrowserContext, type Page } from '@playwright/test';
-import { createServer } from 'vite';
+import { build } from 'vite';
 import type * as VaultRuntime from '@visomi-stack/web-frontend-db';
 import type * as VaultStorage from '@visomi-stack/web-frontend-db/storage';
 import type * as Contracts from '@visomi-stack/shared-db';
@@ -27,60 +25,76 @@ export type FixtureHost = typeof globalThis & {
     challenge: Contracts.DeviceProof;
     storage: VaultStorage.IndexedDbReplicaStorage;
     replica?: InstanceType<VaultApi['SyncReplica']>;
+    enterPin?: (correct: boolean) => void;
     csrf: string;
     path: string;
   };
 };
 
-/** Test-only same-origin module host with the real authenticated API and private PostgreSQL adapter. */
-export async function browserServer(observability?: Observability) {
-  const api = express();
-  // Parallel fixture servers must not replace each other's optimized modules.
-  const cacheDir = await mkdtemp(join(tmpdir(), 'visomi-api-browser-vite-'));
-  const removeCache = () => rm(cacheDir, { recursive: true, force: true });
-  const server = await createServer({
+let bundle: Promise<string> | undefined;
+
+async function compileBrowserClient(): Promise<string> {
+  const result = await build({
     root: fileURLToPath(new URL('../../../../../../', import.meta.url)),
-    cacheDir,
     configFile: false,
-    appType: 'custom',
+    envFile: false,
     resolve: { tsconfigPaths: true },
-    // The injected module is invisible to the HTML dependency scan.
-    optimizeDeps: { noDiscovery: true, include: ['dexie', 'hash-wasm', 'zod'] },
     logLevel: 'silent',
-    server: { host: '127.0.0.1', port: 0 },
-    plugins: [
-      {
-        name: 'synthetic-protocol-client',
-        configureServer(vite) {
-          vite.middlewares.use((request, response, next) => {
-            if (request.url === '/') {
-              response.setHeader('content-type', 'text/html');
-              response.end(
-                '<!doctype html><html lang="en"><title>Synthetic protocol client</title><body>Protocol fixture</body></html>',
-              );
-
-              return;
-            }
-
-            api(request as Request, response as Response, next);
-          });
-        },
+    build: {
+      lib: {
+        entry: fileURLToPath(
+          new URL('../../../../../../libs/web/frontend/db/tests/support/protocol-client.ts', import.meta.url),
+        ),
+        formats: ['es'],
       },
-    ],
-  }).catch(async (error: unknown) => {
-    await removeCache();
-
-    throw error;
+      write: false,
+    },
   });
+  const [generated] = Array.isArray(result) ? result : [result];
 
-  const closeServer = () => server.close().finally(removeCache);
+  if (!generated || !('output' in generated)) {
+    throw new Error('synthetic_browser_bundle_missing');
+  }
+
+  const [chunk] = generated.output;
+
+  if (generated.output.length !== 1 || chunk?.type !== 'chunk') {
+    throw new Error('synthetic_browser_bundle_invalid');
+  }
+
+  return chunk.code;
+}
+
+/** Test-only same-origin host with the real authenticated API and private PostgreSQL adapter. */
+export async function browserServer(observability?: Observability) {
+  const code = await (bundle ??= compileBrowserClient());
+  const api = express();
+  const server = createServer(api);
+  const closeServer = () => new Promise<void>((resolve) => server.close(() => resolve()));
+
+  api.get('/', (_request, response) =>
+    response
+      .type('html')
+      .send(
+        '<!doctype html><html lang="en"><title>Synthetic protocol client</title>' +
+          '<script type="module" src="/browser-client.mjs"></script><body>Protocol fixture</body></html>',
+      ),
+  );
+  api.get('/browser-client.mjs', (_request, response) => response.type('text/javascript').send(code));
+
   let origin: string;
   let browser: Browser;
 
   try {
-    await server.listen();
+    await new Promise<void>((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', () => {
+        server.off('error', reject);
+        resolve();
+      });
+    });
 
-    origin = `http://localhost:${(server.httpServer?.address() as AddressInfo).port}`;
+    origin = `http://localhost:${(server.address() as AddressInfo).port}`;
     const auth = createAuthentication({
       database: resource.db,
       pool: resource.pool,
@@ -100,8 +114,8 @@ export async function browserServer(observability?: Observability) {
 
   return {
     origin,
-    async client(cookie: string) {
-      const context = await browser.newContext();
+    async client(cookie: string, { prf = true, mobileViewport = false } = {}) {
+      const context = await browser.newContext({ viewport: mobileViewport ? { width: 390, height: 844 } : undefined });
 
       await context.addCookies([
         { name: 'visomi.sid', value: cookie, url: origin, httpOnly: true, sameSite: 'Strict' },
@@ -120,7 +134,7 @@ export async function browserServer(observability?: Observability) {
           hasUserVerification: true,
           isUserVerified: true,
           automaticPresenceSimulation: true,
-          hasPrf: true,
+          hasPrf: prf,
         },
       });
 
@@ -138,12 +152,6 @@ export async function browserServer(observability?: Observability) {
 
       try {
         await page.goto(origin);
-
-        await page.addScriptTag({
-          type: 'module',
-          content:
-            "import * as runtime from '/libs/web/frontend/db/src/index.ts'; import * as storage from '/libs/web/frontend/db/src/storage.ts'; const api = { ...runtime, ...storage }; import * as contracts from '/libs/shared/db/src/index.ts'; globalThis.modules = { api, contracts };",
-        });
 
         await page.waitForFunction(() => Boolean((globalThis as FixtureHost).modules), undefined, { polling: 100 });
       } catch (error) {

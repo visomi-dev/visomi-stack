@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 
-import { Button, Link } from '../ui';
+import { Button, Card, Link } from '../ui';
 
 import { BROWSER_ERROR_REPORTER } from './browser-telemetry';
 
@@ -16,24 +16,28 @@ import { browserPrivacyCopy } from '@visomi-stack/web-shared-observability';
 
 @Component({
   selector: 'app-consent-notice',
-  imports: [Button, Link],
+  imports: [Button, Card, Link],
   template: `
     @if (visible()) {
       <section
+        appUI="card"
+        tone="raised"
+        padding="sm"
+        layout="plain"
         [attr.aria-label]="copy.title"
-        class="mb-4 grid gap-2 rounded-lg border border-zinc-300 p-3 text-sm dark:border-zinc-700"
+        class="ui-consent-card grid gap-2 text-sm"
       >
         <p>{{ copy.invitation }}</p>
 
-        <div class="grid w-fit grid-cols-2 gap-2">
-          <button appUI variant="secondary" size="sm" (click)="choose(false)">{{ copy.reject }}</button>
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-2">
+          <button appUI variant="secondary" size="sm" type="button" (click)="choose(false)">{{ copy.reject }}</button>
 
-          <button appUI variant="secondary" size="sm" [disabled]="blocked()" (click)="choose(true)">
+          <button appUI variant="secondary" size="sm" type="button" [disabled]="blocked()" (click)="choose(true)">
             {{ copy.accept }}
           </button>
         </div>
 
-        <a appUI class="justify-self-start" [href]="privacyUrl">{{ copy.purpose }}</a>
+        <a appUI class="justify-self-start" [href]="privacyUrl">{{ copy.purposeLink }}</a>
 
         <p role="status" class="empty:hidden">{{ feedback() }}</p>
       </section>
@@ -55,7 +59,6 @@ export class ConsentNotice {
 
   protected choose(accepted: boolean): void {
     this.consent?.decide(accepted);
-    this.feedback.set(this.consent?.permit() ? this.copy.on : this.copy.off);
   }
 
   private readonly initialize = afterNextRender(() => {
@@ -63,11 +66,12 @@ export class ConsentNotice {
 
     if (consent) {
       const sync = () => {
-        this.blocked.set(consent.blocked());
+        const blocked = consent.blocked();
 
-        if (consent.blocked()) {
-          this.feedback.set(this.copy.blocked);
-        }
+        this.blocked.set(blocked);
+        this.feedback.set(
+          blocked ? this.copy.blocked : consent.permit() ? this.copy.on : consent.decided() ? this.copy.off : '',
+        );
       };
 
       this.visible.set(!consent.decided());

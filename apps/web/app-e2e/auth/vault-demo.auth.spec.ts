@@ -5,6 +5,8 @@ test('opens the last authenticated navigation item and unlocks the isolated synt
 }, info) => {
   const persistence: string[] = [];
 
+  await page.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
+
   await page.setViewportSize({ width: 1366, height: 1024 });
 
   await page.emulateMedia({ colorScheme: 'light' });
@@ -36,6 +38,29 @@ test('opens the last authenticated navigation item and unlocks the isolated synt
   const pin = page.getByLabel('Local unlock PIN', { exact: true });
 
   await expect(setup).toBeVisible();
+
+  await expect(page.getByText('Passkey unlock isn’t available on this device.', { exact: false })).toBeVisible();
+
+  const card = page.locator('app-vault-demo > section');
+  const visibleWidth = await card.evaluate((section) => {
+    const box = section.getBoundingClientRect();
+    const main = section.closest('main')!.getBoundingClientRect();
+    const input = section.querySelector('app-pin-input')!.getBoundingClientRect();
+    const innerWidth = section.querySelector('app-vault-panel section')!.getBoundingClientRect().width;
+
+    return {
+      width: box.width,
+      centerDifference: Math.abs((box.left + box.right - main.left - main.right) / 2),
+      input: input.width,
+      innerWidth,
+    };
+  });
+
+  expect(visibleWidth.width).toBeLessThanOrEqual(576);
+  expect(visibleWidth.centerDifference).toBeLessThanOrEqual(2);
+  expect(visibleWidth.input).toBe(visibleWidth.innerWidth);
+
+  await expect(card.locator('app-pin-input').first().locator('.slot')).toHaveCount(6);
 
   await page.screenshot({ path: info.outputPath('vault-desktop-initial.png'), animations: 'disabled' });
 
@@ -89,6 +114,20 @@ test('opens the last authenticated navigation item and unlocks the isolated synt
   await expect(page).toHaveURL(/\/app\/es\/vault-example$/);
 
   await expect(page.getByRole('heading', { name: 'Ejemplo de vault', level: 1 })).toBeVisible();
+
+  await expect(page.locator('app-vault-demo app-pin-input')).toBeVisible();
+
+  await expect(page.getByText(/se quedan en este navegador/)).toBeVisible();
+
+  await expect(page.getByText(/no permite desbloquear con una clave de acceso/)).toHaveCount(0);
+
+  const mobilePin = page.locator('app-vault-demo app-pin-input');
+
+  await mobilePin.scrollIntoViewIfNeeded();
+
+  await expect(mobilePin).toBeInViewport({ ratio: 1 });
+
+  await page.screenshot({ path: info.outputPath('vault-mobile-dark-es.png'), animations: 'disabled' });
 
   await page.getByRole('button', { name: 'Menú', exact: true }).click();
 

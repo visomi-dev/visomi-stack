@@ -17,6 +17,7 @@ export { Code } from './typography/code';
 export { Badge } from './data/badge';
 export { Avatar } from './data/avatar';
 export { Table } from './data/table';
+export { LineChart } from './data/line-chart';
 export { DescriptionList } from './data/description-list';
 export { Pagination } from './data/pagination';
 export { Container } from './layout/container';

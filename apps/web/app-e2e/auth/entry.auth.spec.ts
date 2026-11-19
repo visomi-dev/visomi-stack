@@ -152,7 +152,5 @@ test('requests and verifies a fresh email challenge after the displayed challeng
 
   await page.getByLabel('Verification code', { exact: true }).fill(code);
 
-  await page.getByRole('button', { name: 'Verify', exact: true }).click();
-
   await expect(page).toHaveURL('/app/en/home');
 });

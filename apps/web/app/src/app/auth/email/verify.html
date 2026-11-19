@@ -13,7 +13,12 @@
     <p class="text-sm font-medium break-all">{{ session.user()?.email }}</p>
 
     @if (pending()) {
-      <app-code-entry [busy]="action.busy()" (confirmed)="verify($event)" [loading]="action.pending() === 'verify'" />
+      <app-code-entry
+        auto-submit
+        [busy]="action.busy()"
+        (confirmed)="verify($event)"
+        [loading]="action.pending() === 'verify'"
+      />
 
       <app-resend-code />
     } @else {

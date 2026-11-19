@@ -65,13 +65,7 @@ afterAll(async () => {
   await postgres?.stop();
 }, 120_000);
 
-export async function client(): Promise<Client> {
-  const id = randomUUID();
-  const [user] = await resource.db
-    .insert(authSchema.users)
-    .values({ id, email: `${id}@example.test`, emailVerifiedAt: new Date(), passwordHash: 'synthetic-password-hash' })
-    .returning();
-  const current = principal(user, 'password');
+export async function browserSession(current: SessionActor['principal']) {
   const sid = randomUUID();
   const csrf = randomUUID();
   const expires = new Date(Date.now() + 3_600_000);
@@ -93,15 +87,29 @@ export async function client(): Promise<Client> {
   });
 
   const signature = createHmac('sha256', secret).update(sid).digest('base64').replace(/=+$/, '');
-  const cookie = `visomi.sid=${encodeURIComponent(`s:${sid}.${signature}`)}`;
+  const cookie = encodeURIComponent(`s:${sid}.${signature}`);
+
+  return { sid, cookie, csrf };
+}
+
+export async function client(): Promise<Client> {
+  const id = randomUUID();
+  const [user] = await resource.db
+    .insert(authSchema.users)
+    .values({ id, email: `${id}@example.test`, emailVerifiedAt: new Date(), passwordHash: 'synthetic-password-hash' })
+    .returning();
+  const current = principal(user, 'password');
+  const session = await browserSession(current);
+  const { sid, cookie, csrf } = session;
+  const sessionHeader = `visomi.sid=${cookie}`;
 
   return {
     actor: { sessionId: sid, principal: current },
-    browserAuth: { cookie: cookie.slice('visomi.sid='.length), csrf },
+    browserAuth: { cookie, csrf },
     async sendRaw(path, body) {
       const response = await fetch(`${origin}${path}`, {
         method: 'POST',
-        headers: { cookie, origin, 'x-csrf-token': csrf, 'content-type': 'application/json' },
+        headers: { cookie: sessionHeader, origin, 'x-csrf-token': csrf, 'content-type': 'application/json' },
         body,
       });
       const parsed: unknown = await response.json();
@@ -112,7 +120,7 @@ export async function client(): Promise<Client> {
       const response = await fetch(`${origin}${path}`, {
         method,
         headers: {
-          cookie,
+          cookie: sessionHeader,
           origin,
           'x-csrf-token': csrf,
           ...(body === undefined ? {} : { 'content-type': 'application/json' }),

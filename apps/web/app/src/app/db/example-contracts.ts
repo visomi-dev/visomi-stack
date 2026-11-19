@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   keyDomainSchema,
+  productPolicySchema,
   dataAad,
   VaultError,
   syntheticHybridPolicy,
@@ -8,6 +9,25 @@ import {
   type WrappingContext,
   type DataEnvelope,
 } from '@visomi-stack/shared-db';
+
+export const exampleTargetSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid(), objectId: z.uuid() });
+export type ExampleTarget = z.infer<typeof exampleTargetSchema>;
+
+export const exampleProfileSchema = z.strictObject({
+  policy: productPolicySchema,
+  origin: z.url(),
+  rpId: z.string().min(1).max(253),
+});
+
+export function readExampleProfile(raw: unknown, origin: string | undefined) {
+  const profile = exampleProfileSchema.parse(raw);
+
+  if (JSON.stringify(profile.policy) !== JSON.stringify(syntheticHybridPolicy) || profile.origin !== origin) {
+    throw new VaultError('unavailable');
+  }
+
+  return profile;
+}
 
 export const rosterSchema = z.object({
   key: keyDomainSchema,

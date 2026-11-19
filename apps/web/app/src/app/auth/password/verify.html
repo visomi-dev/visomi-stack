@@ -5,6 +5,7 @@
     <p appUI tone="muted">{{ pending.factor === 'email' ? emailHint : totpHint }}</p>
 
     <app-code-entry
+      [auto-submit]="pending.factor === 'email'"
       [busy]="action.busy()"
       [backup]="backup()"
       (confirmed)="verify($event)"
@@ -27,8 +28,7 @@
   <app-auth-feedback [action]="action" />
 
   <a
-    appUI="button"
-    [variant]="pending() ? 'secondary' : 'primary'"
+    appUI
     routerLink="/auth/sign-in/password"
     [queryParams]="navigation.returnQuery()"
     class="inline-flex min-h-11 items-center justify-center text-center text-sm"

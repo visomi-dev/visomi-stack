@@ -84,21 +84,20 @@ export class PrfUnlock implements VaultUnlock {
       }
 
       if (!credential || credential.type !== 'public-key') {
-        throw new VaultError('unsupported-prf');
+        throw new VaultError('unavailable');
       }
 
       const assertion = credential as PublicKeyCredential;
       const response = assertion.response as AuthenticatorAssertionResponse;
       const first = assertion.getClientExtensionResults().prf?.results?.first;
 
-      if (!first || first.byteLength !== 32) {
-        throw new VaultError('unsupported-prf');
+      if (first) {
+        prf =
+          first instanceof ArrayBuffer
+            ? new Uint8Array(first)
+            : new Uint8Array(first.buffer, first.byteOffset, first.byteLength);
       }
 
-      prf =
-        first instanceof ArrayBuffer
-          ? new Uint8Array(first)
-          : new Uint8Array(first.buffer, first.byteOffset, first.byteLength);
       const schema = z.object({
         type: z.literal('webauthn.get'),
         challenge: z.literal(encodeBytes(challenge)),
@@ -124,6 +123,14 @@ export class PrfUnlock implements VaultUnlock {
         throw new VaultError('cancelled');
       }
 
+      if (!prf) {
+        throw new VaultError('unsupported-prf');
+      }
+
+      if (prf.byteLength !== 32) {
+        throw new VaultError('unavailable');
+      }
+
       return Uint8Array.from(prf);
     } catch (error) {
       if (error instanceof VaultError) {
@@ -131,9 +138,10 @@ export class PrfUnlock implements VaultUnlock {
       }
 
       throw new VaultError(
-        error instanceof DOMException && ['AbortError', 'NotAllowedError'].includes(error.name)
+        controller.signal.aborted ||
+          (error instanceof DOMException && ['AbortError', 'NotAllowedError'].includes(error.name))
           ? 'cancelled'
-          : 'unsupported-prf',
+          : 'unavailable',
       );
     } finally {
       prf?.fill(0);

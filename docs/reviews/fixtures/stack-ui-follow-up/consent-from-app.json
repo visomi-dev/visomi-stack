@@ -1,0 +1,195 @@
+{
+  "consentFrom": "web-app",
+  "originalTab": [
+    {
+      "path": "/telemetry/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/errors",
+      "method": "POST",
+      "payload": {
+        "application": "web-app",
+        "code": "unhandled_exception",
+        "kind": "TypeError",
+        "screen": "home"
+      },
+      "status": 202
+    },
+    {
+      "path": "/telemetry/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/visits/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/visits",
+      "method": "POST",
+      "payload": {
+        "page": "home",
+        "locale": "en"
+      },
+      "status": 204
+    },
+    {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-site",
+        "screen": "home",
+        "measurements": [
+          {
+            "name": "ttfb",
+            "value": 4.9
+          },
+          {
+            "name": "dom_interactive",
+            "value": 15.5
+          },
+          {
+            "name": "dom_content_loaded",
+            "value": 16.4
+          },
+          {
+            "name": "load",
+            "value": 43.6
+          }
+        ]
+      },
+      "status": 202
+    },
+    {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-site",
+        "screen": "home",
+        "measurements": [
+          {
+            "name": "fcp",
+            "value": 44
+          }
+        ]
+      },
+      "status": 202
+    }
+  ],
+  "secondTab": [
+    {
+      "path": "/telemetry/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/errors",
+      "method": "POST",
+      "payload": {
+        "application": "web-site",
+        "code": "unhandled_exception",
+        "kind": "TypeError",
+        "screen": "home"
+      },
+      "status": 202
+    },
+    {
+      "path": "/telemetry/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/visits/config",
+      "method": "GET",
+      "payload": null,
+      "status": 200
+    },
+    {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-app",
+        "screen": "home",
+        "measurements": [
+          {
+            "name": "ttfb",
+            "value": 16.5
+          },
+          {
+            "name": "dom_interactive",
+            "value": 40.2
+          },
+          {
+            "name": "dom_content_loaded",
+            "value": 103
+          },
+          {
+            "name": "load",
+            "value": 106.2
+          }
+        ]
+      },
+      "status": 202
+    },
+    {
+      "path": "/telemetry/visits",
+      "method": "POST",
+      "payload": {
+        "page": "app-foundations",
+        "locale": "en"
+      },
+      "status": 204
+    },
+    {
+      "path": "/telemetry/performance",
+      "method": "POST",
+      "payload": {
+        "application": "web-app",
+        "screen": "home",
+        "measurements": [
+          {
+            "name": "fcp",
+            "value": 56
+          }
+        ]
+      },
+      "status": 202
+    },
+    {
+      "path": "/telemetry/errors",
+      "method": "POST",
+      "payload": {
+        "application": "web-app",
+        "code": "unhandled_exception",
+        "kind": "SyntaxError",
+        "screen": "home"
+      },
+      "status": 202
+    }
+  ],
+  "afterRevocation": [
+    [],
+    [
+      {
+        "path": "/telemetry/errors",
+        "method": "POST",
+        "payload": {
+          "application": "web-app",
+          "code": "unhandled_exception",
+          "kind": "SyntaxError",
+          "screen": "home"
+        },
+        "status": 202
+      }
+    ]
+  ],
+  "manualStatus": 202
+}

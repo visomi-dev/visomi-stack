@@ -1,4 +1,5 @@
 ---
+import { card } from '@visomi-stack/web-frontend-ui';
 import { browserPrivacyCopy } from '@visomi-stack/web-shared-observability';
 import Button from '../button.astro';
 import Link from '../link.astro';
@@ -13,11 +14,20 @@ const copy = browserPrivacyCopy[locale];
   data-consent={settings ? 'settings' : 'notice'}
   hidden
   aria-label={copy.title}
-  class="my-4 grid gap-2 rounded-lg border border-zinc-300 p-3 text-sm dark:border-zinc-700 [hidden]:hidden"
+  class:list={[
+    'grid gap-2 text-sm [hidden]:hidden',
+    settings
+      ? 'my-4 rounded-lg border border-zinc-300 p-3 dark:border-zinc-700'
+      : ['ui-consent-card', card.classes({ tone: 'raised', padding: 'sm', layout: 'plain' })],
+  ]}
 >
   {!settings && <p>{copy.invitation}</p>}
 
-  <div class="grid w-fit grid-cols-2 gap-2">
+  <div
+    class={
+      settings ? 'grid w-fit grid-cols-2 gap-2' : 'grid grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-2'
+    }
+  >
     <Button variant="secondary" size="sm" data-choice="reject">
       {copy.reject}
     </Button>
@@ -29,7 +39,7 @@ const copy = browserPrivacyCopy[locale];
 
   {!settings && (
     <Link class="justify-self-start" href={`/${locale}/privacy/`}>
-      {copy.purpose}
+      {copy.purposeLink}
     </Link>
   )}
 

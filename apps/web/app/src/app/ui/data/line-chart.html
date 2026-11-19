@@ -1,0 +1,35 @@
+@if (points().length) {
+  <div appUI="card" tone="subtle" padding="none" layout="plain" class="p-2">
+    <svg
+      [attr.viewBox]="styles.viewBox"
+      role="img"
+      [attr.aria-labelledby]="labelledBy()"
+      [attr.aria-describedby]="describedBy()"
+      [class]="styles.classes()"
+      preserveAspectRatio="none"
+    >
+      <path [attr.d]="styles.gridPath" [class]="styles.gridClasses" />
+
+      <polyline
+        [attr.points]="coordinates()"
+        fill="none"
+        [class]="styles.seriesClasses"
+        stroke-width="2"
+        stroke-linejoin="round"
+        vector-effect="non-scaling-stroke"
+      />
+
+      @for (point of points(); track $index) {
+        <circle [attr.cx]="point.x" [attr.cy]="point.y" r="2.5" [class]="styles.pointClasses" />
+      }
+    </svg>
+
+    @if (startLabel() || endLabel()) {
+      <div aria-hidden="true" class="flex justify-between gap-2 px-2">
+        <span appUI="text" uiSize="xs" tone="muted">{{ startLabel() }}</span>
+
+        <span appUI="text" uiSize="xs" tone="muted">{{ endLabel() }}</span>
+      </div>
+    }
+  </div>
+}

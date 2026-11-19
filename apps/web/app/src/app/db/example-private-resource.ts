@@ -29,9 +29,9 @@ import { ClientDatabase } from '../shared/db/database';
 import { VaultSession } from '../shared/vault/vault-session';
 import { openLocalVault } from '../shared/vault/local-unlock';
 
-import { rosterSchema, validateExampleEnvelope, exampleLocalKey } from './example-contracts';
+import { rosterSchema, validateExampleEnvelope, exampleLocalKey, type ExampleTarget } from './example-contracts';
 
-export type ExampleTarget = { tenantId: string; scopeId: string; objectId: string };
+export type { ExampleTarget } from './example-contracts';
 
 /** Synthetic consumer of the common protocol. Its manifest is fixed in code, independent of a cloud response. */
 @Service({ autoProvided: false })

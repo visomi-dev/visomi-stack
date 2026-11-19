@@ -1,8 +1,8 @@
 import * as ui from '../index';
 
 describe('portable UI recipes', () => {
-  it('exports 39 recipes without requiring a browser or framework', () => {
-    expect(Object.keys(ui)).toHaveLength(39);
+  it('exports 40 recipes without requiring a browser or framework', () => {
+    expect(Object.keys(ui)).toHaveLength(40);
 
     for (const recipe of Object.values(ui)) {
       const classes = recipe.classes().split(' ');
@@ -15,6 +15,8 @@ describe('portable UI recipes', () => {
 
   it('keeps button and link interaction semantics distinct', () => {
     expect(ui.button.classes()).toContain('enabled:hover:');
+    expect(ui.button.classes({ variant: 'secondary' })).toContain('dark:aria-pressed:border-blue-400');
+    expect(ui.linkButton.classes({ variant: 'secondary' })).not.toContain('aria-pressed:');
     expect(ui.linkButton.classes()).toContain(' hover:');
     expect(ui.linkButton.classes()).not.toContain('enabled:hover:');
     expect(ui.linkButton.classes()).toContain('aria-[current=page]:');
@@ -113,6 +115,14 @@ describe('portable UI recipes', () => {
     expect(ui.loader.classes().split(' ')).toContain('ui-loader');
     expect(ui.loader.classes().split(' ')).not.toContain('animate-spin');
     expect(ui.disclosure.classes()).toContain('summary:focus-visible');
+    expect(ui.disclosure.classes().split(' ')).toContain('border');
+
+    const subtleDisclosure = ui.disclosure.classes({ appearance: 'subtle' });
+
+    expect(subtleDisclosure).toContain('summary:focus-visible');
+    expect(subtleDisclosure).toContain('dark:bg-zinc-800/60');
+    expect(subtleDisclosure.split(' ')).not.toContain('border');
+    expect(subtleDisclosure).not.toContain('shadow');
   });
 
   it('varies presentation without mixing incompatible class choices', () => {

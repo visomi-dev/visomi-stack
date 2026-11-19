@@ -1,12 +1,18 @@
-<section class="grid max-w-2xl gap-5">
+<section appUI="card" layout="plain" padding="lg" class="mx-auto grid w-full max-w-xl gap-5">
   <h1 appUI appNavigationHeading i18n="@@vaultDemoTitle">Vault example</h1>
 
   <p appUI tone="muted" i18n="@@vaultDemoDescription">
-    Try opening an example note. It’s encrypted on this device and kept separate from other vaults.
+    Try opening an encrypted example note. The note and PIN setup stay in this browser, separate from other vaults.
   </p>
 
   @if (initializing()) {
-    <p appUI i18n="@@vaultDemoStart">Choose a new PIN to set up the vault and encrypt the note.</p>
+    @if (capabilities.prf() === 'unavailable') {
+      <p appUI i18n="@@vaultDemoNoPasskey">
+        Passkey unlock isn’t available on this device. Set up a PIN to unlock the vault here.
+      </p>
+    } @else {
+      <p appUI i18n="@@vaultDemoStart">Choose a PIN for this example. You’ll use it to unlock the note here.</p>
+    }
   }
 
   @if (binding(); as localBinding) {

@@ -111,6 +111,28 @@
   }
 }
 
+@utility ui-consent-card {
+  inline-size: calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  max-inline-size: 20rem;
+  margin-block: 1rem max(1rem, env(safe-area-inset-bottom, 0px));
+  margin-inline-start: env(safe-area-inset-left, 0px);
+
+  /* Keep the card in flow on touch devices and in short viewports. */
+  @media (min-width: 64rem) and (min-height: 46rem) and (hover: hover) and (pointer: fine) {
+    position: fixed;
+    z-index: 20;
+    inset-inline-start: max(1rem, env(safe-area-inset-left, 0px));
+    inset-block-end: max(var(--ui-consent-bottom, 1rem), env(safe-area-inset-bottom, 0px));
+    margin: 0;
+
+    /* Yield to keyboard focus outside the card without shifting the page or changing the tab order. */
+    body:has(:focus-visible:not(.ui-consent-card *, [tabindex='-1'])) & {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+}
+
 @keyframes ui-theme-enter {
   from {
     translate: 0 4rem;

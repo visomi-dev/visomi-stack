@@ -1,9 +1,16 @@
-<form novalidate [attr.data-submitted]="attempted() ? '' : null" (submit)="verify($event)" class="space-y-5">
+<form
+  novalidate
+  [attr.aria-busy]="automatic() ? (loading() ?? busy()) : null"
+  [attr.data-submitted]="attempted() ? '' : null"
+  (submit)="verify($event)"
+  class="space-y-5"
+>
   <app-field
     #field="appField"
     control-id="verification-code"
     [label]="label"
     [description]="backup() ? '' : codeLength"
+    description-hidden
     data-show-error
     [invalid]="attempted() && fields.code().invalid()"
     [error]="attempted() ? (fields.code().errors()[0]?.message ?? '') : ''"
@@ -19,18 +26,36 @@
         placeholder=" "
       />
     } @else {
-      <app-pin-input [formField]="fields.code" type="text" autocomplete="one-time-code" accept-formatted-paste />
+      <app-pin-input
+        [formField]="fields.code"
+        type="text"
+        autocomplete="one-time-code"
+        accept-formatted-paste
+        (completed)="complete()"
+      />
     }
   </app-field>
 
-  <button
-    appUI
-    type="submit"
-    class="w-full"
-    [disabled]="busy()"
-    [attr.aria-busy]="loading() ?? busy()"
-    i18n="@@authVerify"
-  >
-    Verify
-  </button>
+  @if (!automatic()) {
+    <button
+      appUI
+      type="submit"
+      class="w-full"
+      [disabled]="busy()"
+      [attr.aria-busy]="loading() ?? busy()"
+      i18n="@@authVerify"
+    >
+      Verify
+    </button>
+  }
 </form>
+
+@if (automatic()) {
+  <p role="status" class="mt-3 flex items-center gap-2 text-sm empty:hidden">
+    @if (loading() ?? busy()) {
+      <span appUI="loader" aria-hidden="true"></span>
+
+      <span i18n="@@authVerifyingCode">Verifying code…</span>
+    }
+  </p>
+}

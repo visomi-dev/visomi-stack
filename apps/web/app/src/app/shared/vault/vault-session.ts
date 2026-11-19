@@ -7,6 +7,7 @@ import {
   PinUnlock,
   PrfUnlock,
   WebCryptoCipher,
+  WebCryptoDevices,
 } from '@visomi-stack/web-frontend-db';
 import {
   VaultError,
@@ -14,6 +15,7 @@ import {
   wrappingAad,
   type DataContext,
   type DataEnvelope,
+  type DeliveryBinding,
   type VaultState,
   type WrappingContext,
   type KeyDomain,
@@ -149,103 +151,30 @@ export class VaultSession {
     }
   }
 
-  async connect(context: WrappingContext, rpId: string, initialize = false, pin?: Uint8Array): Promise<void> {
-    const session = this.identity(context.ownerId);
-    const epoch = this.epoch;
-    const view = this.document.defaultView;
+  connect(context: WrappingContext, rpId: string, initialize = false, pin?: Uint8Array): Promise<void> {
+    return this.openBinding(context, rpId, initialize, pin, (vault) =>
+      initialize ? vault.initialize(context) : vault.unlock(context),
+    );
+  }
 
-    if (
-      !view ||
-      !['passkey-prf', 'pin-argon2id'].includes(context.method) ||
-      context.origin !== view.location.origin ||
-      !view.isSecureContext
-    ) {
-      throw new VaultError('unavailable');
+  async deliver(context: WrappingContext, recipient: DeliveryBinding) {
+    if (!this.isSelected(context) || !this.canResume(context)) {
+      throw new VaultError('locked');
     }
 
-    if (!initialize && this.resume(context)) {
-      return;
-    }
-
-    this.bindCancellation(session.signal);
-    const id = keyDomainId(context.ownerId, context.key);
-
-    if (context.method === 'pin-argon2id') {
-      if (!pin || !isVaultPin(pin)) {
-        throw new VaultError('pin-invalid');
-      }
-
-      this.scopes.get(id)?.close(false);
-      this.scopes.delete(id);
-    }
-
-    let vault = this.scopes.get(id);
-
-    if (!vault) {
-      const storage = await this.database.vault(context.ownerId, session.signal);
-
-      if (!this.current(epoch, session)) {
-        storage.close();
-
-        throw new VaultError('stale-operation');
-      }
-
-      let channel: BroadcastChannel | undefined;
-
-      try {
-        channel = new BroadcastChannel(`visomi-vault-lock:${context.ownerId}`);
-        channel.addEventListener('message', this.lockNotice);
-      } catch {
-        /* Explicit lock still works if cross-tab channels are unavailable. */
-      }
-      const created = new BrowserVault(
-        context.ownerId,
-        storage,
-        context.method === 'pin-argon2id'
-          ? new PinUnlock(async () => Uint8Array.from(pin!))
-          : new PrfUnlock({
-              origin: view.location.origin,
-              rpId,
-              credentials: view.navigator.credentials,
-              crypto: view.crypto,
-            }),
-        new WebCryptoCipher(view.crypto),
-        (state) => {
-          if (this.scopes.get(id) !== created) {
-            return;
-          }
-
-          this.cleartext.set('');
-
-          if (this.selected()?.id === id) {
-            this.phase.set(state);
-          }
-
-          this.revision.update((value) => value + 1);
-        },
-        channel,
-      );
-
-      vault = created;
-      this.scopes.set(id, vault);
-    }
-
-    this.bindings.set(id, context);
-    this.selected.set({ id, version: session.version, ownerId: context.ownerId });
-    this.cleartext.set('');
-
-    if (initialize) {
-      await vault.initialize(context);
-    } else {
-      await vault.unlock(context);
-    }
+    const { vault, session, epoch } = this.active();
+    const delivery = await vault.deliver(recipient, new WebCryptoDevices(this.document.defaultView!.crypto));
 
     if (!this.current(epoch, session)) {
-      // lock/dispose already invalidated the SDK operation. Do not lock a newer unlock of this cached instance.
       throw new VaultError('stale-operation');
     }
 
-    this.remember([context]);
+    return delivery;
+  }
+
+  /** Caller has verified the signed delivery with the independently trusted signer. */
+  install(context: WrappingContext, rpId: string, raw: Uint8Array, pin?: Uint8Array): Promise<void> {
+    return this.openBinding(context, rpId, true, pin, (vault) => vault.install(context, raw));
   }
 
   async seal(context: DataContext, value: string): Promise<DataEnvelope> {
@@ -482,6 +411,107 @@ export class VaultSession {
 
       return [...latest.values()];
     });
+  }
+
+  private async openBinding(
+    context: WrappingContext,
+    rpId: string,
+    initialize: boolean,
+    pin: Uint8Array | undefined,
+    open: (vault: BrowserVault) => Promise<void>,
+  ): Promise<void> {
+    const session = this.identity(context.ownerId);
+    const epoch = this.epoch;
+    const view = this.document.defaultView;
+
+    if (
+      !view ||
+      !['passkey-prf', 'pin-argon2id'].includes(context.method) ||
+      context.origin !== view.location.origin ||
+      !view.isSecureContext
+    ) {
+      throw new VaultError('unavailable');
+    }
+
+    if (!initialize && this.resume(context)) {
+      return;
+    }
+
+    this.bindCancellation(session.signal);
+    const id = keyDomainId(context.ownerId, context.key);
+
+    if (context.method === 'pin-argon2id') {
+      if (!pin || !isVaultPin(pin)) {
+        throw new VaultError('pin-invalid');
+      }
+
+      this.scopes.get(id)?.close(false);
+      this.scopes.delete(id);
+    }
+
+    let vault = this.scopes.get(id);
+
+    if (!vault) {
+      const storage = await this.database.vault(context.ownerId, session.signal);
+
+      if (!this.current(epoch, session)) {
+        storage.close();
+
+        throw new VaultError('stale-operation');
+      }
+
+      let channel: BroadcastChannel | undefined;
+
+      try {
+        channel = new BroadcastChannel(`visomi-vault-lock:${context.ownerId}`);
+        channel.addEventListener('message', this.lockNotice);
+      } catch {
+        /* Explicit lock still works if cross-tab channels are unavailable. */
+      }
+      const created = new BrowserVault(
+        context.ownerId,
+        storage,
+        context.method === 'pin-argon2id'
+          ? new PinUnlock(async () => Uint8Array.from(pin!))
+          : new PrfUnlock({
+              origin: view.location.origin,
+              rpId,
+              credentials: view.navigator.credentials,
+              crypto: view.crypto,
+            }),
+        new WebCryptoCipher(view.crypto),
+        (state) => {
+          if (this.scopes.get(id) !== created) {
+            return;
+          }
+
+          this.cleartext.set('');
+
+          if (this.selected()?.id === id) {
+            this.phase.set(state);
+          }
+
+          this.revision.update((value) => value + 1);
+        },
+        channel,
+      );
+
+      vault = created;
+      this.scopes.set(id, vault);
+    }
+
+    this.bindings.set(id, context);
+    this.selected.set({ id, version: session.version, ownerId: context.ownerId });
+    this.cleartext.set('');
+
+    await open(vault);
+
+    if (!this.current(epoch, session)) {
+      // lock/dispose already invalidated the SDK operation. Do not lock a newer unlock of this cached instance.
+      throw new VaultError('stale-operation');
+    }
+
+    this.remember([context]);
   }
 
   private deviceId(binding: WrappingContext): string {

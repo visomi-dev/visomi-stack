@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { expect, test as base, type Page } from '@playwright/test';
+import { expect, test as base, type Locator, type Page } from '@playwright/test';
 import { Pool } from 'pg';
 import { readMailCode } from '@visomi-stack/dev-testing';
 
@@ -83,24 +83,44 @@ export async function signup(page: Page, email = address()): Promise<string> {
 
   await page.getByLabel('Verification code', { exact: true }).fill(code);
 
-  await page.getByRole('button', { name: 'Verify', exact: true }).click();
-
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
   return email;
 }
 
-export async function logout(page: Page): Promise<void> {
-  const sidebar = page.locator('app-sidebar');
-  const desktop = await sidebar.isVisible();
+export async function openAccount(page: Page): Promise<Locator> {
+  const desktop = await page.locator('app-sidebar').isVisible();
 
   if (desktop) {
-    await sidebar.getByRole('button', { name: 'Sign out', exact: true }).click();
-  } else {
-    await page.locator('nav[appUI="navbar"]').getByRole('button', { name: 'Menu', exact: true }).click();
+    await page.getByRole('button', { name: /^(Account menu|Menú de cuenta)$/ }).click();
 
-    await page.getByRole('dialog').getByRole('button', { name: 'Sign out', exact: true }).click();
+    return page.locator('#workspace-account-popover');
   }
+
+  const drawer = page.locator('#mobile-navigation');
+  const drawerOpen = await drawer.isVisible();
+
+  if (!drawerOpen) {
+    await page
+      .locator('nav[appUI="navbar"]')
+      .getByRole('button', { name: /^(Menu|Menú)$/ })
+      .click();
+  }
+
+  const details = drawer.locator('footer > details');
+  const open = await details.getAttribute('open');
+
+  if (open === null) {
+    await details.locator(':scope > summary').click();
+  }
+
+  return details;
+}
+
+export async function logout(page: Page): Promise<void> {
+  const account = await openAccount(page);
+
+  await account.getByRole('button', { name: 'Sign out', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Sign-in options', exact: true })).toBeVisible();
 }

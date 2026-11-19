@@ -10,19 +10,43 @@ import {
 import { initializeObservability } from '@visomi-stack/web-backend-shared';
 import { createDatabase } from '@visomi-stack/backend-db';
 import { runTestCompose } from '@visomi-stack/dev-testing/postgres';
-import type { ApprovedDelivery, DeviceProof, KeyDomain, SigningPin } from '@visomi-stack/shared-db';
+import type { KeyDomain } from '@visomi-stack/shared-db';
 
 import { Access } from '../../src/access/service';
 import { OpaqueSync } from '../../src/db/opaque';
 
-import { fixture, grant, resource, postgres, policy } from './support/persistence';
+import { browserSession, fixture, grant, resource, postgres, policy } from './support/persistence';
 import { browserServer, type FixtureHost, type ProtocolBrowser } from './support/browser-server';
+import {
+  approveBrowserRecipient,
+  connectBrowserReplica,
+  initializeBrowserVault,
+  installBrowserDelivery,
+} from './support/browser-vault';
 
-describe('two real web clients over authenticated opaque PostgreSQL transport', () => {
+const scenarios = [
+  { label: 'different accounts with desktop PRF', sameAccount: false, pinMobile: false, database: 'prf' },
+  {
+    label: 'one account with desktop PIN and mobile PRF',
+    sameAccount: true,
+    pinMobile: false,
+    database: 'pin_desktop',
+  },
+  { label: 'one account with mobile PIN and desktop PRF', sameAccount: true, pinMobile: true, database: 'pin_mobile' },
+];
+
+describe.each(scenarios)('two browser clients over PostgreSQL ($label)', (scenario) => {
+  const { sameAccount, pinMobile, database } = scenario;
+
   it('enrolls an approved recipient, synchronizes encrypted changes in both directions and audits persisted content', async () => {
     const f = await fixture();
 
-    await grant(f, 'manager');
+    if (!sameAccount) {
+      await grant(f, 'manager');
+    }
+
+    const recipientPrincipal = (sameAccount ? f.owner : f.member).actor.principal;
+    const recipientSession = await (sameAccount ? browserSession(recipientPrincipal) : f.member.browserAuth);
 
     const lines: unknown[] = [];
     const spans = new InMemorySpanExporter();
@@ -39,8 +63,10 @@ describe('two real web clients over authenticated opaque PostgreSQL transport', 
     const server = await browserServer(telemetry);
 
     try {
-      const owner = await server.client(f.owner.browserAuth.cookie);
-      const member = await server.client(f.member.browserAuth.cookie);
+      const owner = await server.client(f.owner.browserAuth.cookie, { prf: !sameAccount, mobileViewport: pinMobile });
+      const member = await server.client(recipientSession.cookie, { mobileViewport: sameAccount && !pinMobile });
+
+      expect(recipientSession.cookie).not.toBe(f.owner.browserAuth.cookie);
       const key: KeyDomain = {
         product: 'synthetic-example',
         domain: 'private-resources',
@@ -53,197 +79,27 @@ describe('two real web clients over authenticated opaque PostgreSQL transport', 
         generation: 1,
       };
       const path = `/api/persistence/tenants/${f.target.tenantId}/scopes/${f.target.scopeId}/domains/private-resources`;
-      const initialize = async (client: ProtocolBrowser, ownerId: string, csrf: string, bootstrap: boolean) => {
-        const proof = await client.page.evaluate(
-          async ({ key, ownerId, csrf, path, bootstrap }) => {
-            const host = globalThis as FixtureHost;
-            const { api, contracts } = host.modules;
-            const environment = {
-              origin: location.origin,
-              rpId: location.hostname,
-              credentials: navigator.credentials,
-              crypto,
-            };
-            const methodId = await api.createPrfCredential(environment, new AbortController().signal);
-            const binding = {
-              key,
-              ownerId,
-              deviceId: crypto.randomUUID(),
-              method: 'passkey-prf' as const,
-              methodId,
-              origin: location.origin,
-            };
-            const storage = await api.IndexedDbVaultStorage.open(indexedDB, ownerId);
-            const vault = new api.BrowserVault(
-              ownerId,
-              storage,
-              new api.PrfUnlock(environment),
-              new api.WebCryptoCipher(crypto),
-            );
+      const laptop = await initializeBrowserVault(owner, {
+        key,
+        ownerId: f.owner.actor.principal.id,
+        csrf: f.owner.browserAuth.csrf,
+        path,
+        bootstrap: true,
+        usePin: sameAccount,
+      });
+      const recipient = await initializeBrowserVault(member, {
+        key,
+        ownerId: recipientPrincipal.id,
+        csrf: recipientSession.csrf,
+        path,
+        bootstrap: false,
+        usePin: false,
+      });
+      const { proof } = recipient;
 
-            if (bootstrap) {
-              await vault.initialize(binding);
-            }
+      expect(laptop.method).toBe(sameAccount ? 'pin-argon2id' : 'passkey-prf');
+      expect(recipient.method).toBe('passkey-prf');
 
-            const custodyStorage = await api.IndexedDbVaultStorage.open(indexedDB, ownerId);
-            const custody = new api.DeviceCustody(custodyStorage, binding, new api.PrfUnlock(environment), crypto);
-
-            await custody.unlock(true);
-
-            const keys = await custody.publicKeys();
-            const request = await fetch(`${path}/devices/request`, {
-              method: 'POST',
-              headers: { 'content-type': 'application/json', 'x-csrf-token': csrf },
-              body: JSON.stringify({ deviceId: binding.deviceId, keys }),
-            });
-
-            if (!request.ok) {
-              throw new Error('synthetic_device_request_failed');
-            }
-
-            const raw = await request.json();
-            const challenge = await custody.prove(contracts.deviceChallengeSchema.parse(raw));
-
-            if (bootstrap) {
-              const registered = await fetch(`${path}/devices/bootstrap`, {
-                method: 'POST',
-                headers: { 'content-type': 'application/json', 'x-csrf-token': csrf },
-                body: JSON.stringify(challenge),
-              });
-
-              if (!registered.ok) {
-                throw new Error('synthetic_bootstrap_failed');
-              }
-            }
-
-            const replicaStorage = await api.IndexedDbReplicaStorage.open(indexedDB, ownerId);
-
-            host.client = { binding, vault, custody, challenge, storage: replicaStorage, path, csrf };
-
-            return challenge;
-          },
-          { key, ownerId, csrf, path, bootstrap },
-        );
-
-        return proof;
-      };
-
-      await initialize(owner, f.owner.actor.principal.id, f.owner.browserAuth.csrf, true);
-
-      const proof = await initialize(member, f.member.actor.principal.id, f.member.browserAuth.csrf, false);
-      const pin = await owner.page.evaluate(async (proof: DeviceProof) => {
-        const host = globalThis as FixtureHost;
-        const { api, contracts } = host.modules;
-        const client = host.client;
-        const devices = new api.WebCryptoDevices(crypto);
-        const fingerprint = await devices.fingerprint(proof);
-        const binding = {
-          key: proof.key,
-          ownerId: proof.ownerId,
-          deviceId: proof.deviceId,
-          requestId: proof.requestId,
-          challenge: proof.challenge,
-          fingerprint,
-          encryption: proof.keys.encryption,
-        };
-        const delivery = await client.vault.deliver(binding, devices);
-        const body = { proof: contracts.deviceProofSchema.parse(proof), delivery };
-        const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(body)));
-        const authorization = await client.custody.sign({
-          key: proof.key,
-          deviceId: client.binding.deviceId,
-          operationId: crypto.randomUUID(),
-          epoch: 1,
-          action: 'approve',
-          bodyHash: api.encodeBytes(new Uint8Array(digest)),
-        });
-        const approved = await fetch(`${client.path}/devices/approve`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', 'x-csrf-token': client.csrf },
-          body: JSON.stringify({ ...body, authorization }),
-        });
-
-        if (!approved.ok) {
-          throw new Error('synthetic_approval_failed');
-        }
-
-        const keys = await client.custody.publicKeys();
-
-        return { deviceId: client.binding.deviceId, signing: keys.signing };
-      }, proof);
-
-      await member.page.evaluate(async (pin: SigningPin) => {
-        const { client, modules } = globalThis as FixtureHost;
-        const response = await fetch(`${client.path}/devices/${client.binding.deviceId}/delivery`);
-
-        if (!response.ok) {
-          throw new Error('synthetic_delivery_failed');
-        }
-
-        const raw: ApprovedDelivery = await response.json();
-        const challenge = client.challenge;
-        const fingerprint = await new modules.api.WebCryptoDevices(crypto).fingerprint(challenge);
-        const expected = {
-          key: challenge.key,
-          ownerId: challenge.ownerId,
-          deviceId: challenge.deviceId,
-          requestId: challenge.requestId,
-          challenge: challenge.challenge,
-          fingerprint,
-          encryption: challenge.keys.encryption,
-        };
-        const key = await client.custody.open(expected, raw, pin);
-
-        try {
-          await client.vault.install(client.binding, key);
-        } finally {
-          key.fill(0);
-        }
-      }, pin);
-
-      for (const client of [owner, member]) {
-        await client.page.evaluate(() => {
-          const host = globalThis as FixtureHost;
-          const {
-            client,
-            modules: { api },
-          } = host;
-          const id = api.replicaId(client.binding.ownerId, client.binding.key, client.binding.key.scope);
-          const transport = async (path: string, body: unknown, signal: AbortSignal) => {
-            const response = await fetch(`${client.path}/sync/${path}`, {
-              method: 'POST',
-              signal,
-              headers: { 'content-type': 'application/json', 'x-csrf-token': client.csrf },
-              body: JSON.stringify(body),
-            });
-
-            if (!response.ok) {
-              throw new Error('synthetic_sync_rejected');
-            }
-
-            const result = await response.json();
-
-            return result;
-          };
-
-          client.replica = new api.SyncReplica(
-            id,
-            client.binding.key,
-            client.binding.key.scope,
-            client.storage,
-            {
-              pull: (head, signal) => transport('pull', { protocol: 1, head }, signal),
-              push: (value, signal) => transport('push', value, signal),
-            },
-            crypto,
-            async (envelope) => {
-              const clear = await client.vault.decrypt(envelope.context, envelope);
-
-              clear.fill(0);
-            },
-          );
-        });
-      }
       const objectId = randomUUID();
       const write = async (browser: ProtocolBrowser, text: string) => {
         await browser.page.evaluate(
@@ -293,77 +149,8 @@ describe('two real web clients over authenticated opaque PostgreSQL transport', 
         );
       };
 
-      for (const client of [owner, member]) {
-        await client.page.evaluate(async () => {
-          await (globalThis as FixtureHost).client.replica!.pull();
-        });
-      }
-
-      await write(owner, 'SYNTHETIC_WEB_PRIVATE_ONE');
-
-      const backup = '/tmp/synthetic-ciphertext-backup.sql';
-
-      await runTestCompose(postgres.compose, [
-        'exec',
-        '-T',
-        'postgres',
-        'pg_dump',
-        '--username',
-        'visomi_test',
-        '--dbname',
-        'visomi_auth_test',
-        '--no-owner',
-        '--no-privileges',
-        '--file',
-        backup,
-      ]);
-
-      await expect(write(member, 'SYNTHETIC_WEB_PRIVATE_STALE')).rejects.toThrow('synthetic_sync_rejected');
-
-      const pendingCipher = await member.page.evaluate(async () => {
-        const {
-          client,
-          modules: { api },
-        } = globalThis as FixtureHost;
-        const pending = await client.storage.pending(
-          api.replicaId(client.binding.ownerId, client.binding.key, client.binding.key.scope),
-        );
-
-        if (!pending) {
-          throw new Error('synthetic_pending_lost');
-        }
-
-        return { nonce: pending.envelope.nonce, ciphertext: pending.envelope.ciphertext };
-      });
-
-      await member.page.evaluate(async () => {
-        await (globalThis as FixtureHost).client.replica!.pull();
-      });
-
-      await member.page.evaluate(async () => {
-        const {
-          client,
-          modules: { api },
-        } = globalThis as FixtureHost;
-        const pending = await client.storage.pending(
-          api.replicaId(client.binding.ownerId, client.binding.key, client.binding.key.scope),
-        );
-
-        if (!pending) {
-          throw new Error('synthetic_pending_lost');
-        }
-
-        await client.replica!.resolve(pending.operationId, null);
-      });
-
-      await write(member, 'SYNTHETIC_WEB_PRIVATE_TWO');
-
-      await owner.page.evaluate(async () => {
-        await (globalThis as FixtureHost).client.replica!.pull();
-      });
-
-      for (const browser of [owner, member]) {
-        const text = await browser.page.evaluate(async (objectId) => {
+      const read = (browser: ProtocolBrowser) =>
+        browser.page.evaluate(async (objectId) => {
           const {
             client,
             modules: { api },
@@ -384,7 +171,172 @@ describe('two real web clients over authenticated opaque PostgreSQL transport', 
           }
         }, objectId);
 
-        expect(text).toBe('SYNTHETIC_WEB_PRIVATE_TWO');
+      const pull = (browser: ProtocolBrowser) =>
+        browser.page.evaluate(() => (globalThis as FixtureHost).client.replica!.pull());
+
+      await connectBrowserReplica(owner, 1);
+
+      if (sameAccount) {
+        await pull(owner);
+
+        await write(owner, 'SYNTHETIC_WEB_PRIVATE_ONE');
+      }
+
+      if (sameAccount) {
+        await expect(approveBrowserRecipient(owner, proof, laptop.fingerprint)).rejects.toThrow(
+          'synthetic_recipient_fingerprint_mismatch',
+        );
+
+        const response = await member.page.request.get(`${server.origin}${path}/devices/${proof.deviceId}/delivery`);
+
+        expect(response.status()).toBe(404);
+        const error = await response.json();
+
+        expect(error).toEqual({ error: 'device_delivery_unavailable' });
+      }
+
+      // The runner conveys the two fingerprints obtained from the respective local profiles.
+      const approver = await approveBrowserRecipient(owner, proof, recipient.fingerprint);
+      const { pin } = approver;
+
+      if (sameAccount) {
+        await expect(installBrowserDelivery(member, recipient.fingerprint)).rejects.toThrow(
+          'synthetic_approver_fingerprint_mismatch',
+        );
+
+        await expect(
+          member.page.evaluate(() => {
+            const { client } = globalThis as FixtureHost;
+
+            return client.vault.unlock(client.binding);
+          }),
+        ).rejects.toThrow('recovery-required');
+      }
+
+      const minimumEpoch = await installBrowserDelivery(member, approver.fingerprint);
+
+      await connectBrowserReplica(member, minimumEpoch);
+
+      for (const browser of [owner, member]) {
+        await pull(browser);
+      }
+
+      if (!sameAccount) {
+        await write(owner, 'SYNTHETIC_WEB_PRIVATE_ONE');
+
+        await expect(write(member, 'SYNTHETIC_WEB_PRIVATE_STALE')).rejects.toThrow('synthetic_sync_rejected');
+      }
+
+      const backup = '/tmp/synthetic-ciphertext-backup.sql';
+
+      await runTestCompose(postgres.compose, [
+        'exec',
+        '-T',
+        'postgres',
+        'pg_dump',
+        '--username',
+        'visomi_test',
+        '--dbname',
+        'visomi_auth_test',
+        '--no-owner',
+        '--no-privileges',
+        '--file',
+        backup,
+      ]);
+
+      const observedCipher = await member.page.evaluate(
+        async ({ objectId, sameAccount }) => {
+          const {
+            client,
+            modules: { api },
+          } = globalThis as FixtureHost;
+          const id = api.replicaId(client.binding.ownerId, client.binding.key, client.binding.key.scope);
+          const envelope = await (sameAccount
+            ? client.storage.unit(id, objectId)
+            : client.storage.pending(id).then((pending) => pending?.envelope));
+
+          if (!envelope) {
+            throw new Error('synthetic_ciphertext_missing');
+          }
+
+          return { nonce: envelope.nonce, ciphertext: envelope.ciphertext };
+        },
+        { objectId, sameAccount },
+      );
+
+      if (sameAccount) {
+        const received = await read(member);
+
+        expect(received).toBe('SYNTHETIC_WEB_PRIVATE_ONE');
+      } else {
+        await pull(member);
+
+        await member.page.evaluate(async () => {
+          const {
+            client,
+            modules: { api },
+          } = globalThis as FixtureHost;
+          const pending = await client.storage.pending(
+            api.replicaId(client.binding.ownerId, client.binding.key, client.binding.key.scope),
+          );
+
+          if (!pending) {
+            throw new Error('synthetic_pending_lost');
+          }
+
+          await client.replica!.resolve(pending.operationId, null);
+        });
+      }
+
+      await write(member, 'SYNTHETIC_WEB_PRIVATE_TWO');
+
+      await pull(owner);
+
+      if (sameAccount) {
+        for (const browser of [owner, member]) {
+          await browser.page.evaluate(() => {
+            const { client } = globalThis as FixtureHost;
+
+            client.vault.lock();
+            client.custody.lock();
+          });
+
+          await expect(read(browser)).rejects.toThrow('locked');
+        }
+
+        await expect(
+          owner.page.evaluate(async () => {
+            const { client } = globalThis as FixtureHost;
+
+            client.enterPin?.(false);
+
+            try {
+              await client.vault.unlock(client.binding);
+            } finally {
+              client.enterPin?.(true);
+            }
+          }),
+        ).rejects.toThrow('corrupt');
+
+        for (const browser of [owner, member]) {
+          await browser.page.evaluate(async () => {
+            const { client } = globalThis as FixtureHost;
+
+            await client.vault.unlock(client.binding);
+
+            await client.custody.unlock();
+          });
+        }
+
+        const usesPin = await member.page.evaluate(() => Boolean((globalThis as FixtureHost).client.enterPin));
+
+        expect(usesPin).toBe(false);
+      }
+
+      for (const browser of [owner, member]) {
+        const received = await read(browser);
+
+        expect(received).toBe('SYNTHETIC_WEB_PRIVATE_TWO');
       }
       const stored = await resource.pool.query(
         'SELECT row_to_json(t)::text AS value FROM vault_opaque_events t WHERE tenant_id = $1',
@@ -441,8 +393,8 @@ describe('two real web clients over authenticated opaque PostgreSQL transport', 
         pin.signing,
         proof.keys.encryption,
         proof.requestId,
-        pendingCipher.nonce,
-        pendingCipher.ciphertext,
+        observedCipher.nonce,
+        observedCipher.ciphertext,
       ]) {
         expect(observed).not.toContain(forbidden);
       }
@@ -450,7 +402,9 @@ describe('two real web clients over authenticated opaque PostgreSQL transport', 
 
       expect(dump.stdout).not.toContain('SYNTHETIC_WEB_PRIVATE_');
 
-      await resource.pool.query('CREATE DATABASE visomi_cipher_restore_test');
+      const restoreDatabase = `visomi_cipher_restore_${database}`;
+
+      await resource.pool.query(`CREATE DATABASE ${restoreDatabase}`);
 
       await runTestCompose(postgres.compose, [
         'exec',
@@ -460,7 +414,7 @@ describe('two real web clients over authenticated opaque PostgreSQL transport', 
         '--username',
         'visomi_test',
         '--dbname',
-        'visomi_cipher_restore_test',
+        restoreDatabase,
         '--set',
         'ON_ERROR_STOP=1',
         '--file',
@@ -469,7 +423,7 @@ describe('two real web clients over authenticated opaque PostgreSQL transport', 
 
       const restoredUrl = new URL(postgres.url);
 
-      restoredUrl.pathname = '/visomi_cipher_restore_test';
+      restoredUrl.pathname = `/${restoreDatabase}`;
       const restored = createDatabase(restoredUrl.toString());
 
       try {

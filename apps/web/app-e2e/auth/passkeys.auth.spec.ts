@@ -58,8 +58,6 @@ test('registers and authenticates a real virtual passkey through the browser', a
 
   await page.getByLabel('Verification code', { exact: true }).fill(code);
 
-  await page.getByRole('button', { name: 'Verify', exact: true }).click();
-
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
   await logout(page);

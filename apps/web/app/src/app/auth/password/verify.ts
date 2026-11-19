@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { NavigationHeading } from '../../shared/navigation-heading';
-import { Heading, Text, LinkButton, Alert, Button } from '../../ui';
+import { Heading, Text, Link, Alert, Button } from '../../ui';
 import { AuthHttp } from '../shared/http';
 import { Journey } from '../shared/journey';
 import { AuthNavigation } from '../shared/navigation';
@@ -15,18 +15,7 @@ import { Passwords } from './passwords';
 
 @Component({
   selector: 'app-password-verify',
-  imports: [
-    NavigationHeading,
-    Heading,
-    Text,
-    LinkButton,
-    Alert,
-    Button,
-    RouterLink,
-    AuthFeedback,
-    CodeEntry,
-    ResendCode,
-  ],
+  imports: [NavigationHeading, Heading, Text, Link, Alert, Button, RouterLink, AuthFeedback, CodeEntry, ResendCode],
   providers: [Action, AuthHttp, Passwords],
   templateUrl: './verify.html',
 })

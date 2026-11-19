@@ -39,7 +39,11 @@ export async function createPrfCredential(
       throw new VaultError('cancelled');
     }
 
-    if (!(credential instanceof PublicKeyCredential) || credential.getClientExtensionResults().prf?.enabled !== true) {
+    if (!(credential instanceof PublicKeyCredential)) {
+      throw new VaultError('unavailable');
+    }
+
+    if (credential.getClientExtensionResults().prf?.enabled !== true) {
       throw new VaultError('unsupported-prf');
     }
 
@@ -52,7 +56,7 @@ export async function createPrfCredential(
     throw new VaultError(
       signal.aborted || (error instanceof DOMException && ['NotAllowedError', 'AbortError'].includes(error.name))
         ? 'cancelled'
-        : 'unsupported-prf',
+        : 'unavailable',
     );
   }
 }

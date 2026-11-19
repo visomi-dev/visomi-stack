@@ -147,3 +147,54 @@ it('marks an edit as touched on blur and presents errors after submission', asyn
   expect(input.getAttribute('aria-invalid')).toBe('true');
   expect(fixture.nativeElement.querySelector('#verification-code-error').textContent).toBe('Enter the 6-digit code.');
 });
+
+it('submits complete numeric input once when opted in and allows a deliberate retry', async () => {
+  const fixture = TestBed.createComponent(CodeEntry);
+  const received = vi.fn();
+
+  fixture.componentRef.setInput('auto-submit', true);
+  fixture.componentInstance.confirmed.subscribe(received);
+
+  await fixture.whenStable();
+
+  const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+  const help = fixture.nativeElement.querySelector('#verification-code-help') as HTMLElement;
+
+  const enter = (value: string) => {
+    input.value = value;
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+  };
+
+  expect(help.classList.contains('sr-only')).toBe(true);
+  expect(input.getAttribute('aria-describedby')).toBe(help.id);
+  expect(fixture.nativeElement.querySelector('button[type=submit]')).toBeNull();
+
+  enter('00123');
+  expect(received).not.toHaveBeenCalled();
+
+  enter('001234');
+  enter('001234');
+
+  await fixture.whenStable();
+
+  expect(received).toHaveBeenCalledExactlyOnceWith('001234');
+
+  fixture.componentRef.setInput('busy', true);
+
+  await fixture.whenStable();
+
+  enter('123456');
+  expect(received).toHaveBeenCalledTimes(1);
+
+  fixture.componentRef.setInput('busy', false);
+
+  await fixture.whenStable();
+
+  expect(received).toHaveBeenCalledTimes(1);
+
+  enter('123456');
+
+  await fixture.whenStable();
+
+  expect(received.mock.calls).toEqual([['001234'], ['123456']]);
+});

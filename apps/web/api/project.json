@@ -10,6 +10,7 @@
       "inputs": [
         "default",
         "^production",
+        "{workspaceRoot}/libs/web/frontend/db/tests/support/protocol-client.ts",
         {
           "fileset": "{projectRoot}/tsconfig.spec.json",
           "dependencies": true

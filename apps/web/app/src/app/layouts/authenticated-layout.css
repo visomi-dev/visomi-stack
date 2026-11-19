@@ -1,3 +1,7 @@
+:host:has(.mobile-navigation:modal) .mobile-brand {
+  visibility: hidden;
+}
+
 :host .mobile-navigation {
   margin: 0;
   height: 100dvh;
@@ -13,4 +17,12 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+:host .sidebar-account-popover {
+  inset: auto auto 1rem calc(var(--ui-shell-sidebar-width, 17rem) + 0.25rem);
+  margin: 0;
+  width: min(18rem, calc(100vw - var(--ui-shell-sidebar-width, 17rem) - 1rem));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
 }

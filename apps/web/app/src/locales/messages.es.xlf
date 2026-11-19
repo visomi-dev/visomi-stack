@@ -1271,12 +1271,12 @@
         <target>Ejemplo de vault</target>
       </trans-unit>
       <trans-unit id="vaultDemoDescription" datatype="html">
-        <source>Try opening an example note. It’s encrypted on this device and kept separate from other vaults.</source>
-        <target>Abre una nota de ejemplo. Se cifra en este dispositivo y se guarda aparte de otros vaults.</target>
+        <source> Try opening an encrypted example note. The note and PIN setup stay in this browser, separate from other vaults. </source>
+        <target>Abre una nota cifrada de ejemplo. La nota y la configuración del PIN se quedan en este navegador, separadas de otros vaults.</target>
       </trans-unit>
       <trans-unit id="vaultDemoStart" datatype="html">
-        <source>Choose a new PIN to set up the vault and encrypt the note.</source>
-        <target>Elige un PIN nuevo para configurar el vault y cifrar la nota.</target>
+        <source>Choose a PIN for this example. You’ll use it to unlock the note here.</source>
+        <target>Elige un PIN para este ejemplo. Lo usarás para abrir la nota en este navegador.</target>
       </trans-unit>
       <trans-unit id="vaultDemoUnavailable" datatype="html">
         <source>We can’t store the example vault on this device.</source>
@@ -1293,6 +1293,150 @@
       <trans-unit id="vaultDemoCreate" datatype="html">
         <source>Set up the example vault</source>
         <target>Configurar el vault de ejemplo</target>
+      </trans-unit>
+      <trans-unit id="authVerifyingCode" datatype="html">
+        <source>Verifying code…</source>
+        <target>Verificando el código…</target>
+      </trans-unit>
+      <trans-unit id="exampleDashboard" datatype="html">
+        <source>Example dashboard</source>
+        <target>Tablero de ejemplo</target>
+      </trans-unit>
+      <trans-unit id="exampleDashboardDescription" datatype="html">
+        <source> These sample checks use fixed, synthetic data. They don’t reflect your account or site activity. </source>
+        <target>Estos datos de prueba son sintéticos y fijos. No reflejan la actividad de tu cuenta ni del sitio.</target>
+      </trans-unit>
+      <trans-unit id="exampleChecksRun" datatype="html">
+        <source>Checks run</source>
+        <target>Pruebas ejecutadas</target>
+      </trans-unit>
+      <trans-unit id="exampleChecksPassed" datatype="html">
+        <source>Passed</source>
+        <target>Aprobadas</target>
+      </trans-unit>
+      <trans-unit id="exampleChecksFailed" datatype="html">
+        <source>Failed</source>
+        <target>Fallidas</target>
+      </trans-unit>
+      <trans-unit id="exampleChecksByDay" datatype="html">
+        <source>Checks by day</source>
+        <target>Pruebas por día</target>
+      </trans-unit>
+      <trans-unit id="exampleDateRange" datatype="html">
+        <source>Example date range</source>
+        <target>Periodo de ejemplo</target>
+      </trans-unit>
+      <trans-unit id="exampleSevenDays" datatype="html">
+        <source> 7 days </source>
+        <target>7 días</target>
+      </trans-unit>
+      <trans-unit id="exampleFourteenDays" datatype="html">
+        <source> 14 days </source>
+        <target>14 días</target>
+      </trans-unit>
+      <trans-unit id="exampleDailyTotals" datatype="html">
+        <source>Daily totals</source>
+        <target>Totales por día</target>
+      </trans-unit>
+      <trans-unit id="exampleDate" datatype="html">
+        <source>Date</source>
+        <target>Fecha</target>
+      </trans-unit>
+      <trans-unit id="shellWorkspace" datatype="html">
+        <source>Workspace</source>
+        <target>Espacio de trabajo</target>
+      </trans-unit>
+      <trans-unit id="shellSecuritySettings" datatype="html">
+        <source> Security settings </source>
+        <target>Configuración de seguridad</target>
+      </trans-unit>
+      <trans-unit id="shellExpandSidebar" datatype="html">
+        <source>Expand sidebar</source>
+        <target>Expandir menú lateral</target>
+      </trans-unit>
+      <trans-unit id="shellCollapseSidebar" datatype="html">
+        <source>Collapse sidebar</source>
+        <target>Contraer menú lateral</target>
+      </trans-unit>
+      <trans-unit id="shellAccountMenu" datatype="html">
+        <source>Account menu</source>
+        <target>Menú de cuenta</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoNoPasskey" datatype="html">
+        <source> Passkey unlock isn’t available on this device. Set up a PIN to unlock the vault here. </source>
+        <target>Este dispositivo no permite desbloquear con una clave de acceso. Configura un PIN para abrir el vault aquí.</target>
+      </trans-unit>
+      <trans-unit id="exampleChartSummary" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ total() | number }}"/> checks over <x id="INTERPOLATION_1" equiv-text="{{ period() }}"/> days. The busiest day had <x id="INTERPOLATION_2" equiv-text="{{ peak() }}"/> checks. </source>
+        <target><x id="INTERPOLATION" equiv-text="{{ total() | number }}"/> pruebas en <x id="INTERPOLATION_1" equiv-text="{{ period() }}"/> días. El día con más actividad tuvo <x id="INTERPOLATION_2" equiv-text="{{ peak() }}"/> pruebas.</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesTitle" datatype="html">
+        <source>Vault devices</source>
+        <target>Dispositivos del vault</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesDescription" datatype="html">
+        <source> Pair devices for this synthetic private resource. Keep this page open on both signed-in devices until pairing finishes. </source>
+        <target>Vincula dispositivos para este recurso privado de prueba. Mantén esta página abierta en ambos dispositivos con la sesión iniciada hasta terminar.</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesOpen" datatype="html">
+        <source> Open test private resource </source>
+        <target>Abrir el recurso privado de prueba</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesApproverFingerprint" datatype="html">
+        <source>Approving device fingerprint</source>
+        <target>Huella del dispositivo que aprueba</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesApproveInstructions" datatype="html">
+        <source> Paste the request from the new device. Enter the fingerprint shown directly on that device. </source>
+        <target>Pega la solicitud del dispositivo nuevo. Escribe la huella que aparece en ese dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesRequest" datatype="html">
+        <source>Pairing request</source>
+        <target>Solicitud para vincular</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesRecipientFingerprint" datatype="html">
+        <source>New device fingerprint</source>
+        <target>Huella del dispositivo nuevo</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesApprove" datatype="html">
+        <source> Approve this device </source>
+        <target>Aprobar este dispositivo</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesUnlockFirst" datatype="html">
+        <source> Unlock the test private resource on this device before approving another device. </source>
+        <target>Abre y desbloquea el recurso privado de prueba en este dispositivo para aprobar otro.</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesFinishInstructions" datatype="html">
+        <source> Share the request and fingerprint with the approving device. Then enter the fingerprint you see directly on that device. </source>
+        <target>Comparte la solicitud y la huella con el dispositivo que va a aprobar. Después escribe la huella que aparece en ese dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesFinish" datatype="html">
+        <source>Finish pairing</source>
+        <target>Terminar de vincular</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesPinDescription" datatype="html">
+        <source> Passkey unlock is unavailable. A PIN can unlock this vault on this device and is easier to guess if someone copies the encrypted storage. </source>
+        <target>No se puede desbloquear con una clave de acceso. Puedes usar un PIN en este dispositivo. Si alguien copia los datos cifrados, el PIN es más fácil de adivinar.</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesRequestWithPin" datatype="html">
+        <source> Request pairing with PIN </source>
+        <target>Solicitar vinculación con PIN</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesRequestWithPasskey" datatype="html">
+        <source> Request pairing with a passkey </source>
+        <target>Solicitar vinculación con clave de acceso</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesApproved" datatype="html">
+        <source>Device approved. Finish on the other device.</source>
+        <target>Dispositivo aprobado. Termina en el otro dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesPaired" datatype="html">
+        <source>Device paired. You can open the test private resource here.</source>
+        <target>Dispositivo vinculado. Ya puedes abrir el recurso privado de prueba aquí.</target>
+      </trans-unit>
+      <trans-unit id="vaultDevicesFingerprintMismatch" datatype="html">
+        <source>The fingerprints don’t match. Check the fingerprint on the other device.</source>
+        <target>Las huellas no coinciden. Revisa la huella en el otro dispositivo.</target>
       </trans-unit>
     </body>
   </file>
