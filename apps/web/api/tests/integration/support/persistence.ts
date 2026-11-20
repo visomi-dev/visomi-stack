@@ -2,22 +2,33 @@ import { createHmac, randomUUID } from 'node:crypto';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import { authSchema, createDatabase } from '@visomi-stack/backend-db';
+import { authSchema, createDatabase, type BackupObjects } from '@visomi-stack/backend-db';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
+import { testBackupS3 } from '@visomi-stack/dev-testing/s3';
 import { createOperationId, syntheticHybridPolicy } from '@visomi-stack/shared-db';
 import { afterAll, beforeAll, beforeEach, expect } from 'vitest';
 
 import type { SessionActor } from '../../../src/access/service';
 import { authConfig, createApp, createAuthentication } from '../../../src/app';
 import { principal } from '../../../src/auth/shared/identity';
+import { createBackupObjects } from '../../../src/db/s3-backup';
 
 export let postgres: Awaited<ReturnType<typeof testPostgres>>;
 export let resource: ReturnType<typeof createDatabase>;
 let server: Server;
 let persistenceDemos = false;
+let decorateBackup: ((objects: BackupObjects) => BackupObjects) | undefined;
+let backupObjects: BackupObjects | undefined;
+
+export let s3Endpoint: string;
 
 export function enablePersistenceDemos(): void {
   persistenceDemos = true;
+}
+
+export function enableBackupObjects(decorate: (objects: BackupObjects) => BackupObjects): void {
+  persistenceDemos = true;
+  decorateBackup = decorate;
 }
 
 export let origin: string;
@@ -49,6 +60,21 @@ beforeAll(async () => {
 
   postgres = response1;
   resource = createDatabase(postgres.url);
+
+  if (decorateBackup) {
+    const s3 = await testBackupS3(postgres.compose);
+
+    s3Endpoint = s3.endpoint;
+    backupObjects = decorateBackup(
+      createBackupObjects({
+        NODE_ENV: 'test',
+        VISOMI_PERSISTENCE_EXAMPLE: 'true',
+        VISOMI_PERSISTENCE_DEMOS: 'true',
+        ...s3.environment,
+      })!,
+    );
+  }
+
   server = createServer();
 
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -57,7 +83,7 @@ beforeAll(async () => {
   const config = authConfig({ origin, rpId: '127.0.0.1', secret });
   const auth = createAuthentication({ database: resource.db, pool: resource.pool, config });
 
-  server.on('request', createApp({ auth, persistence: policy, persistenceDemos }));
+  server.on('request', createApp({ auth, persistence: policy, persistenceDemos, backupObjects }));
 }, 120_000);
 
 afterAll(async () => {
@@ -66,6 +92,8 @@ afterAll(async () => {
   }
 
   await resource?.close();
+
+  backupObjects?.close();
 
   await postgres?.stop();
 }, 120_000);

@@ -51,6 +51,7 @@ export class ExampleWorkspace {
   private readonly targetState = signal<ExampleTarget | null>(null);
 
   readonly backedSample = this.route.snapshot.data['backedSample'] === true;
+
   private readonly params = this.backedSample
     ? toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap })
     : toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
@@ -59,6 +60,7 @@ export class ExampleWorkspace {
   private readonly cloud = signal<z.infer<typeof cloudSchema>['items'][number] | null>(null);
 
   private removeNavigationCancel: (() => void) | undefined;
+
   private readonly cleanup = this.destroyRef.onDestroy(() => {
     this.removeNavigationCancel?.();
     this.reset();
@@ -71,6 +73,7 @@ export class ExampleWorkspace {
   readonly capabilities = inject(UnlockCapabilities);
   readonly privateResource = inject(ExamplePrivateResource);
 
+  readonly objectBackups = signal(false);
   readonly cloudDraft = signal('');
   readonly privateDraft = signal('');
   readonly pinDraft = signal('');
@@ -130,6 +133,10 @@ export class ExampleWorkspace {
   }
 
   async createWorkspace(): Promise<void> {
+    if (this.backedSample && !this.objectBackups()) {
+      return;
+    }
+
     await this.run(async (signal) => {
       const parent = await this.api.request('/tenants', {}, signal);
 
@@ -137,7 +144,7 @@ export class ExampleWorkspace {
       const tenant = scopeSchema.parse(parent);
       const created = await this.api.request(
         `/tenants/${tenant.tenantId}/scopes/${tenant.scopeId}/children`,
-        { kind: 'resource' },
+        this.backedSample ? { kind: 'resource', objectBackup: true } : { kind: 'resource' },
         signal,
       );
 
@@ -348,6 +355,7 @@ export class ExampleWorkspace {
     this.methodLoaded.set(false);
     this.backedScope.set('unknown');
     this.configured.set(false);
+    this.objectBackups.set(false);
     this.profile = undefined;
     this.targetState.set(null);
     this.cloud.set(null);
@@ -442,6 +450,7 @@ export class ExampleWorkspace {
           : null;
 
         this.profile = profile;
+        this.objectBackups.set(profile.objectBackups === true);
         this.targetState.set(target);
         this.configured.set(true);
 

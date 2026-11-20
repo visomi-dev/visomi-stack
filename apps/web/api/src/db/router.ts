@@ -1,4 +1,5 @@
-import type { ProductPolicy } from '@visomi-stack/shared-db';
+import { syntheticHybridPolicy, type ProductPolicy } from '@visomi-stack/shared-db';
+import type { BackupObjects } from '@visomi-stack/backend-db';
 import { HttpError, routes } from '@visomi-stack/web-backend-shared';
 import type { ErrorRequestHandler, Request } from 'express';
 import { Router, json } from 'express';
@@ -15,7 +16,7 @@ import { validatePersistenceComposition } from './composition';
 import { PersistenceMaintenance } from './maintenance';
 import { cloudExamplePolicy, useCloudRecordRole } from './cloud-example';
 
-export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy) {
+export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy, objects?: BackupObjects) {
   const router = Router();
   const access = new Access(auth.database, validatePersistenceComposition(policy));
   const cloud = policy.product === cloudExamplePolicy.product;
@@ -61,7 +62,12 @@ export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy
     {
       contract: contracts.policy,
       handler: (_request, response) =>
-        response.json({ policy: access.policy, origin: auth.config.origin, rpId: auth.config.rpId }),
+        response.json({
+          policy: access.policy,
+          origin: auth.config.origin,
+          rpId: auth.config.rpId,
+          ...(objects ? { objectBackups: true } : {}),
+        }),
     },
     {
       contract: contracts.createTenant,
@@ -74,11 +80,25 @@ export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy
     {
       contract: contracts.createScope,
       handler: async (req, res, value) => {
+        if (value.body.objectBackup) {
+          if (
+            policy.product !== syntheticHybridPolicy.product ||
+            value.body.kind !== 'resource' ||
+            value.params.scopeId !== value.params.tenantId
+          ) {
+            throw new HttpError(403, 'scope_access_denied');
+          }
+
+          if (!objects) {
+            throw new HttpError(503, 'vault_backup_unavailable');
+          }
+        }
+
         if (cloud && (value.body.kind !== 'resource' || value.params.scopeId !== value.params.tenantId)) {
           throw new HttpError(403, 'scope_access_denied');
         }
 
-        const result = await access.createScope(actor(req), value.params, value.body);
+        const result = await access.createScope(actor(req), value.params, value.body, value.body.objectBackup ?? false);
 
         return res.json(result);
       },
@@ -141,7 +161,7 @@ export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy
   ]);
 
   if (!cloud) {
-    registerVaultRoutes(router, access);
+    registerVaultRoutes(router, access, objects);
   }
 
   const errors: ErrorRequestHandler = (error, _request, _response, next) => {

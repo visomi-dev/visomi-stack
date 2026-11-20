@@ -1647,8 +1647,8 @@
         <target>Respalda y restaura una nota de prueba</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleExplanation" datatype="html">
-        <source> Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy, then open this workspace on an approved device to download the same note. The server stores the encrypted note and the metadata needed to deliver it. </source>
-        <target>Crea una nota de prueba. Se cifra antes de guardarse en este navegador. Sube la copia cifrada y abre este espacio de trabajo en un dispositivo aprobado para descargar la misma nota. El servidor guarda la nota cifrada y los metadatos necesarios para entregarla.</target>
+        <source> Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy, then open this workspace on an approved device to download the same note. New workspaces keep the encrypted copy in private object storage. Earlier workspaces keep their existing storage. </source>
+        <target>Crea una nota de prueba. Se cifra antes de guardarse en este navegador. Sube la copia cifrada y abre este espacio de trabajo en un dispositivo aprobado para descargar la misma nota. Los nuevos espacios de trabajo guardan la copia cifrada en un almacén privado de objetos. Los espacios anteriores conservan su almacenamiento.</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleCreate" datatype="html">
         <source>Create a backup test workspace</source>
@@ -1673,6 +1673,14 @@
       <trans-unit id="vaultBackedSampleSynced" datatype="html">
         <source> The encrypted note is backed up and saved on this browser. </source>
         <target>La nota cifrada está respaldada y guardada en este navegador.</target>
+      </trans-unit>
+      <trans-unit id="vaultBackupStorageDisabled" datatype="html">
+        <source>Enable private object storage in the test profile to create a backup workspace.</source>
+        <target>Activa el almacenamiento privado de objetos en el perfil de prueba para crear un espacio de respaldo.</target>
+      </trans-unit>
+      <trans-unit id="vaultBackupStorageRetry" datatype="html">
+        <source>We couldn’t verify the encrypted backup. Your local data is unchanged. Try again later.</source>
+        <target>No pudimos verificar el respaldo cifrado. Tus datos locales siguen intactos. Inténtalo más tarde.</target>
       </trans-unit>
     </body>
   </file>

@@ -1,3 +1,4 @@
+import type { BackupObjects } from '@visomi-stack/backend-db';
 import { routes } from '@visomi-stack/web-backend-shared';
 import type { Router, Request } from 'express';
 
@@ -8,9 +9,9 @@ import { KeyDevices } from './devices';
 import { OpaqueSync } from './opaque';
 import { vaultContracts as contracts } from './vault-contracts';
 
-export function registerVaultRoutes(router: Router, access: Access) {
+export function registerVaultRoutes(router: Router, access: Access, objects?: BackupObjects) {
   const devices = new KeyDevices(access);
-  const sync = new OpaqueSync(access);
+  const sync = new OpaqueSync(access, objects);
   const actor = (req: Request) => ({ sessionId: req.sessionID, principal: requireFull(req.user) });
 
   routes.register(router, [
@@ -112,6 +113,7 @@ export function registerVaultRoutes(router: Router, access: Access) {
           { tenantId: value.params.tenantId, scopeId: value.params.scopeId },
           value.params.domain,
           value.body,
+          req.session.csrf,
         );
 
         return res.json(result);

@@ -1,3 +1,4 @@
+import type { BackupObjects } from '@visomi-stack/backend-db';
 import {
   HttpError,
   type createBrowserTelemetry,
@@ -19,6 +20,7 @@ export function createGatewayApp(options: {
   visits?: VisitAnalytics;
   persistence?: ProductPolicy;
   persistenceDemos?: boolean;
+  backupObjects?: BackupObjects;
   site?: SiteModule;
   application?: ApplicationModule;
   auth?: EmbeddedAuthentication;
@@ -161,6 +163,7 @@ export function createGatewayApp(options: {
       observability: options.observability,
       ...(options.persistence ? { persistence: options.persistence } : {}),
       ...(options.persistenceDemos ? { persistenceDemos: true } : {}),
+      ...(options.backupObjects ? { backupObjects: options.backupObjects } : {}),
     }),
   );
 

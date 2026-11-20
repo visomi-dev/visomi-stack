@@ -69,7 +69,14 @@ export const persistenceContracts = {
     operationId: 'persistence_policy',
     summary: 'Read the configured product manifest without unlocking private content',
     request: z.object({}),
-    responses: response(z.strictObject({ policy: productPolicySchema, origin: z.url(), rpId: z.string() })),
+    responses: response(
+      z.strictObject({
+        policy: productPolicySchema,
+        origin: z.url(),
+        rpId: z.string(),
+        objectBackups: z.literal(true).optional(),
+      }),
+    ),
   }),
   createTenant: defineRoute({
     ...base,

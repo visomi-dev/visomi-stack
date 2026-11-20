@@ -3326,7 +3326,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="vaultBackedSampleExplanation" datatype="html">
-        <source> Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy, then open this workspace on an approved device to download the same note. The server stores the encrypted note and the metadata needed to deliver it. </source>
+        <source> Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy, then open this workspace on an approved device to download the same note. New workspaces keep the encrypted copy in private object storage. Earlier workspaces keep their existing storage. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">13,17</context>
@@ -3372,6 +3372,20 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">252,254</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultBackupStorageDisabled" datatype="html">
+        <source>Enable private object storage in the test profile to create a backup workspace.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">30,31</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultBackupStorageRetry" datatype="html">
+        <source>We couldn’t verify the encrypted backup. Your local data is unchanged. Try again later.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
+          <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
     </body>

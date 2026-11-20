@@ -1,4 +1,4 @@
-import type { Database } from '@visomi-stack/backend-db';
+import type { BackupObjects, Database } from '@visomi-stack/backend-db';
 import type { MailTransport, RealtimePublisher } from '@visomi-stack/backend-shared';
 import type { Observability } from '@visomi-stack/web-backend-shared';
 import type { Request, RequestHandler } from 'express';
@@ -21,6 +21,7 @@ export type EmbeddedAuthentication = {
 };
 export type ApiModule = {
   persistenceVersion?: 1;
+  createBackupObjects?(environment: NodeJS.ProcessEnv): BackupObjects | undefined;
   createApp(options: {
     observability?: Observability;
     basePath?: string;
@@ -30,6 +31,7 @@ export type ApiModule = {
     helmetMode: 'inherited';
     persistence?: ProductPolicy;
     persistenceDemos?: boolean;
+    backupObjects?: BackupObjects;
   }): RequestHandler;
   authConfig(input: {
     origin: string;

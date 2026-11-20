@@ -11,8 +11,8 @@
 
       <p appUI tone="muted" i18n="@@vaultBackedSampleExplanation">
         Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy,
-        then open this workspace on an approved device to download the same note. The server stores the encrypted note
-        and the metadata needed to deliver it.
+        then open this workspace on an approved device to download the same note. New workspaces keep the encrypted copy
+        in private object storage. Earlier workspaces keep their existing storage.
       </p>
     } @else {
       <h1 appUI appNavigationHeading i18n="@@persistenceExampleHeading">Hybrid persistence example</h1>
@@ -26,6 +26,10 @@
 
   @if (!workspace.available()) {
     <p role="status" i18n="@@persistenceExampleUnavailable">Set up the development profile to use this example.</p>
+  } @else if (workspace.backedSample && !workspace.target() && !workspace.objectBackups()) {
+    <p role="status" i18n="@@vaultBackupStorageDisabled">
+      Enable private object storage in the test profile to create a backup workspace.
+    </p>
   } @else if (!workspace.target()) {
     <button appUI type="button" [disabled]="workspace.busy()" (click)="workspace.createWorkspace()">
       @if (workspace.backedSample) {

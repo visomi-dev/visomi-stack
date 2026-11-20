@@ -2,6 +2,7 @@ import {
   CryptoContractError,
   dataAad,
   scopeTuple,
+  serializeDataEnvelope,
   syncCheckpointMessage,
   syncPageSchema,
   syncWriteSchema,
@@ -49,12 +50,138 @@ export class SyncReplica {
     private readonly minimumEpoch = 1,
   ) {}
 
-  async pull(): Promise<SyncPage> {
+  async pull(complete = false): Promise<SyncPage> {
     const epoch = this.epoch;
+    const signal = this.controller.signal;
     const pin = await this.store.pin(this.id);
+    let next = pin;
+    let first: SyncPage | undefined;
+    let page: SyncPage;
+    let bytes = 0;
+    const events: SyncEvent[] = [];
+
+    do {
+      const verified = await this.verifyPage(next, epoch, signal);
+
+      page = verified.page;
+      next = verified.next;
+
+      if (
+        first &&
+        (first.generation !== page.generation ||
+          first.epoch !== page.epoch ||
+          first.phase !== page.phase ||
+          first.head.cursor !== page.head.cursor ||
+          first.head.checkpoint !== page.head.checkpoint)
+      ) {
+        throw new CryptoContractError('context-mismatch');
+      }
+
+      first ??= page;
+      for (const event of page.events) {
+        if (complete) {
+          bytes += serializeDataEnvelope(event.envelope).length;
+
+          if (bytes > 67_108_864) {
+            throw new CryptoContractError('quota-exceeded');
+          }
+        }
+
+        events.push(event);
+      }
+    } while (complete && page.more);
 
     this.current(epoch);
-    const raw = await this.transport.pull({ cursor: pin.cursor, checkpoint: pin.checkpoint }, this.controller.signal);
+
+    await this.store.commit(this.id, pin, next, events);
+
+    this.current(epoch);
+
+    return page;
+  }
+
+  async enqueue(input: PendingWrite): Promise<void> {
+    const value = syncWriteSchema.safeParse(input);
+
+    if (!value.success) {
+      throw new CryptoContractError('malformed');
+    }
+
+    const expected = {
+      ...value.data.envelope.context,
+      key: { ...this.key, generation: value.data.envelope.context.key.generation },
+      target: this.target,
+    };
+
+    if (dataAad(expected) !== dataAad(value.data.envelope.context)) {
+      throw new CryptoContractError('context-mismatch');
+    }
+
+    await this.store.enqueue(this.id, value.data);
+  }
+
+  async flush(complete = false): Promise<void> {
+    const epoch = this.epoch;
+    const pending = await this.store.pending(this.id);
+
+    this.current(epoch);
+
+    if (!pending) {
+      return;
+    }
+
+    // Ack loss retries identical bytes. Conflicts/offline/rotation leave the outbox intact for explicit client rebase.
+    await this.transport.push(pending, this.controller.signal);
+
+    this.current(epoch);
+    // Pull and authenticate committed history before dropping the only pending copy.
+    let page: SyncPage;
+
+    do {
+      const result = await this.pull(complete);
+
+      page = result;
+    } while (page.more);
+    this.current(epoch);
+
+    await this.store.acknowledged(this.id, pending.operationId);
+
+    this.current(epoch);
+  }
+
+  async resolve(operationId: string, replacement: PendingWrite | null): Promise<void> {
+    if (replacement) {
+      const value = syncWriteSchema.safeParse(replacement);
+
+      if (!value.success) {
+        throw new CryptoContractError('malformed');
+      }
+
+      const expected = {
+        ...value.data.envelope.context,
+        key: { ...this.key, generation: value.data.envelope.context.key.generation },
+        target: this.target,
+      };
+
+      if (dataAad(expected) !== dataAad(value.data.envelope.context)) {
+        throw new CryptoContractError('context-mismatch');
+      }
+
+      await this.store.resolve(this.id, operationId, value.data);
+    } else {
+      await this.store.resolve(this.id, operationId, null);
+    }
+  }
+
+  stop(): void {
+    this.epoch++;
+    this.controller.abort();
+    this.controller = new AbortController();
+  }
+
+  private async verifyPage(pin: ReplicaPin, epoch: number, signal: AbortSignal) {
+    this.current(epoch);
+    const raw = await this.transport.pull({ cursor: pin.cursor, checkpoint: pin.checkpoint }, signal);
 
     this.current(epoch);
     const result = syncPageSchema.safeParse(raw);
@@ -122,95 +249,7 @@ export class SyncReplica {
       throw new CryptoContractError('context-mismatch');
     }
 
-    await this.store.commit(
-      this.id,
-      pin,
-      { cursor, checkpoint, generation: page.generation, epoch: page.epoch },
-      page.events,
-    );
-
-    this.current(epoch);
-
-    return page;
-  }
-
-  async enqueue(input: PendingWrite): Promise<void> {
-    const value = syncWriteSchema.safeParse(input);
-
-    if (!value.success) {
-      throw new CryptoContractError('malformed');
-    }
-
-    const expected = {
-      ...value.data.envelope.context,
-      key: { ...this.key, generation: value.data.envelope.context.key.generation },
-      target: this.target,
-    };
-
-    if (dataAad(expected) !== dataAad(value.data.envelope.context)) {
-      throw new CryptoContractError('context-mismatch');
-    }
-
-    await this.store.enqueue(this.id, value.data);
-  }
-
-  async flush(): Promise<void> {
-    const epoch = this.epoch;
-    const pending = await this.store.pending(this.id);
-
-    this.current(epoch);
-
-    if (!pending) {
-      return;
-    }
-
-    // Ack loss retries identical bytes. Conflicts/offline/rotation leave the outbox intact for explicit client rebase.
-    await this.transport.push(pending, this.controller.signal);
-
-    this.current(epoch);
-    // Pull and authenticate committed history before dropping the only pending copy.
-    let page: SyncPage;
-
-    do {
-      const result = await this.pull();
-
-      page = result;
-    } while (page.more);
-    this.current(epoch);
-
-    await this.store.acknowledged(this.id, pending.operationId);
-
-    this.current(epoch);
-  }
-
-  async resolve(operationId: string, replacement: PendingWrite | null): Promise<void> {
-    if (replacement) {
-      const value = syncWriteSchema.safeParse(replacement);
-
-      if (!value.success) {
-        throw new CryptoContractError('malformed');
-      }
-
-      const expected = {
-        ...value.data.envelope.context,
-        key: { ...this.key, generation: value.data.envelope.context.key.generation },
-        target: this.target,
-      };
-
-      if (dataAad(expected) !== dataAad(value.data.envelope.context)) {
-        throw new CryptoContractError('context-mismatch');
-      }
-
-      await this.store.resolve(this.id, operationId, value.data);
-    } else {
-      await this.store.resolve(this.id, operationId, null);
-    }
-  }
-
-  stop(): void {
-    this.epoch++;
-    this.controller.abort();
-    this.controller = new AbortController();
+    return { page, next: { cursor, checkpoint, generation: page.generation, epoch: page.epoch } };
   }
 
   private current(epoch: number) {

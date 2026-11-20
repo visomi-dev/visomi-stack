@@ -235,7 +235,13 @@ export class KeyDevices {
         .from(keyDevices)
         .where(this.deviceScope(context, domain));
 
-      return { key, epoch: registry.epoch, phase: registry.phase, devices };
+      return {
+        key,
+        epoch: registry.epoch,
+        phase: registry.phase,
+        devices,
+        ...(context.scope.objectBackup ? { objectBackup: true } : {}),
+      };
     });
   }
 

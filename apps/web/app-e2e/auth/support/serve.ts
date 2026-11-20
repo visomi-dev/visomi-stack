@@ -8,6 +8,7 @@ import { workspaceRoot } from '@nx/devkit';
 import { SMTPServer } from 'smtp-server';
 import { Pool } from 'pg';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
+import { testBackupS3 } from '@visomi-stack/dev-testing/s3';
 
 async function serve(): Promise<void> {
   const directory = process.env['VISOMI_E2E_TELEMETRY_DIR'];
@@ -36,6 +37,9 @@ async function serve(): Promise<void> {
     const result1 = await testPostgres(join(directory, 'postgres.json'), 'web-gateway');
 
     postgres = result1;
+    const s3 = await testBackupS3(postgres.compose);
+
+    await writeFile(join(directory, 's3.json'), JSON.stringify({ endpoint: s3.endpoint }));
 
     const pool = new Pool({ connectionString: postgres.url });
 
@@ -128,6 +132,7 @@ async function serve(): Promise<void> {
         SMTP_PASSWORD: '',
         VISOMI_PERSISTENCE_EXAMPLE: 'true',
         VISOMI_PERSISTENCE_DEMOS: 'true',
+        ...s3.environment,
         API_APP_PATH: '',
         SITE_APP_PATH: '',
         APPLICATION_APP_PATH: '',

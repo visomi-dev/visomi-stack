@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { createDatabase, type DatabaseResource } from '@visomi-stack/backend-db';
+import { createDatabase, type BackupObjects, type DatabaseResource } from '@visomi-stack/backend-db';
 import {
   createMemoryRealtimeTransport,
   createRealtimePublisher,
@@ -41,6 +41,7 @@ const observability = initializeObservability({
   environment: process.env.NODE_ENV,
 });
 let database: DatabaseResource | undefined;
+let backupObjects: BackupObjects | undefined;
 let mail: MailTransport | undefined;
 let auth: EmbeddedAuthentication | undefined;
 let realtime: RealtimeRuntime | undefined;
@@ -85,6 +86,7 @@ async function stop(exitCode: number): Promise<void> {
     browserTelemetry?.close();
     visits?.close();
     mail?.close();
+    backupObjects?.close();
   } catch {
     databaseClosed = false;
   }
@@ -205,10 +207,14 @@ async function bootstrap() {
 
   const persistence = developmentPersistencePolicy(process.env);
   const persistenceDemos = developmentPersistenceDemos(process.env);
+
+  backupObjects = api.createBackupObjects?.(process.env);
+
   const application = createGatewayApp({
     visits,
     ...(persistence ? { persistence } : {}),
     ...(persistenceDemos ? { persistenceDemos } : {}),
+    ...(backupObjects ? { backupObjects } : {}),
     api,
     site,
     application: angular,

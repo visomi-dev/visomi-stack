@@ -16,6 +16,15 @@ import type { DataEnvelope, DeviceChallenge, ApprovedDelivery } from '@visomi-st
 
 import { memberships, scopes } from './schema-persistence';
 
+export type VaultObjectReference = {
+  format: 'vault-object';
+  version: 1;
+  id: string;
+  digest: string;
+  generation: number;
+};
+type StoredEnvelope = DataEnvelope | VaultObjectReference;
+
 export const keyScopes = pgTable(
   'vault_key_scopes',
   {
@@ -119,7 +128,7 @@ export const opaqueUnits = pgTable(
     generation: integer('generation').notNull(),
     cursor: integer('cursor').notNull(),
     checkpoint: text('checkpoint').notNull(),
-    envelope: jsonb('envelope').$type<DataEnvelope>(),
+    envelope: jsonb('envelope').$type<StoredEnvelope>(),
     tombstone: boolean('tombstone').notNull().default(false),
     bytes: integer('bytes').notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -147,7 +156,7 @@ export const opaqueEvents = pgTable(
     cursor: integer('cursor').notNull(),
     checkpoint: text('checkpoint').notNull(),
     previousCheckpoint: text('previous_checkpoint'),
-    envelope: jsonb('envelope').$type<DataEnvelope>().notNull(),
+    envelope: jsonb('envelope').$type<StoredEnvelope>().notNull(),
     bytes: integer('bytes').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

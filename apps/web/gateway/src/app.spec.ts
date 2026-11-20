@@ -62,9 +62,11 @@ describe('gateway composition', () => {
     );
     const api = { ...apiFixture(), persistenceVersion: 1 as const };
 
-    createGatewayApp({ api, persistence: syntheticHybridPolicy, persistenceDemos: true });
+    const backupObjects = { get: vi.fn(), put: vi.fn(), close: vi.fn() };
+
+    createGatewayApp({ api, persistence: syntheticHybridPolicy, persistenceDemos: true, backupObjects });
     expect(api.createApp).toHaveBeenCalledWith(
-      expect.objectContaining({ persistence: syntheticHybridPolicy, persistenceDemos: true }),
+      expect.objectContaining({ persistence: syntheticHybridPolicy, persistenceDemos: true, backupObjects }),
     );
   });
   it('serves packaged public branding without authentication, cookies or website fallbacks', async () => {

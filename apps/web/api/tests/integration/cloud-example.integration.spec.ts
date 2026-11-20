@@ -44,6 +44,10 @@ it('enforces Cloud owner/shared CRUD, explicit read access, and revocation at th
 
   expect(root.status).toBe(200);
 
+  await expect(
+    owner.call(`${base(root.body)}/children`, 'POST', { kind: 'resource', objectBackup: true }),
+  ).resolves.toMatchObject({ status: 403 });
+
   const workspace = await owner.call(`${base(root.body)}/children`, 'POST', { kind: 'resource' });
 
   expect(workspace.status).toBe(200);

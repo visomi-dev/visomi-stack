@@ -9,6 +9,7 @@ import {
 } from '@visomi-stack/web-backend-shared';
 import express from 'express';
 import type { ProductPolicy } from '@visomi-stack/shared-db';
+import type { BackupObjects } from '@visomi-stack/backend-db';
 
 import { authErrorHandler, createAuthRouter } from './auth/router';
 import type { AuthRuntime } from './auth/runtime';
@@ -20,6 +21,7 @@ export { createAuthentication } from './auth/runtime';
 export { anonymous } from './auth/shared/authorization';
 export type { AuthorizationContext, AuthorizationPolicy, AuthorizationRequirement } from './auth/shared/authorization';
 export { authConfig } from './auth/shared/config';
+export { createBackupObjects } from './db/s3-backup';
 export const persistenceVersion = 1;
 
 export type AppOptions = {
@@ -32,6 +34,7 @@ export type AppOptions = {
   basePath?: string;
   persistence?: ProductPolicy;
   persistenceDemos?: boolean;
+  backupObjects?: BackupObjects;
 };
 
 export function createApp(options: AppOptions = {}) {
@@ -71,7 +74,11 @@ export function createApp(options: AppOptions = {}) {
     app.use(
       '/persistence',
       options.auth
-        ? createPersistenceRouter(options.auth, options.persistence)
+        ? createPersistenceRouter(
+            options.auth,
+            options.persistence,
+            options.persistenceDemos ? options.backupObjects : undefined,
+          )
         : (_request, _response, next) => next(new HttpError(503, 'authentication_unavailable')),
     );
   }

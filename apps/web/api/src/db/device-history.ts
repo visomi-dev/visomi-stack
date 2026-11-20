@@ -47,7 +47,9 @@ export async function requireHistory(
 
   const events = vaultSchema.opaqueEvents;
   const required = await context.tx
-    .selectDistinct({ generation: sql<number>`(${events.envelope}->'context'->'key'->>'generation')::integer` })
+    .selectDistinct({
+      generation: sql<number>`coalesce(${events.envelope}->>'generation', ${events.envelope}->'context'->'key'->>'generation')::integer`,
+    })
     .from(events)
     .where(
       and(

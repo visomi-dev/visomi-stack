@@ -137,18 +137,21 @@ async function start() {
 }
 
 describe('gateway executable ownership', () => {
-  it('passes both explicit synthetic persistence opt-ins to the gateway application', async () => {
+  it('starts and closes the compiled test backup transport with the profile', async () => {
     vi.stubEnv('VISOMI_PERSISTENCE_EXAMPLE', 'true');
     vi.stubEnv('VISOMI_PERSISTENCE_DEMOS', 'true');
+    const backupObjects = { close: vi.fn() };
+
+    boundary.loadApi.mockResolvedValueOnce({ ...boundary.api, createBackupObjects: () => backupObjects });
 
     await start();
 
-    expect(boundary.createGatewayApp).toHaveBeenCalledWith(
-      expect.objectContaining({
-        persistence: expect.objectContaining({ product: 'synthetic-example' }),
-        persistenceDemos: true,
-      }),
-    );
+    expect(boundary.createGatewayApp.mock.calls[0][0]).toMatchObject({ backupObjects, persistenceDemos: true });
+    boundary.signals.get('SIGTERM')!();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(backupObjects.close).toHaveBeenCalledOnce();
   });
 
   it.each([undefined, 'https://synthetic.example.test'])(

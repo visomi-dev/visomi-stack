@@ -53,7 +53,14 @@ describe('API process and compiled boundaries', () => {
         connections: 0,
         providers: 0,
         intervals: 0,
-        exports: ['anonymous', 'authConfig', 'createApp', 'createAuthentication', 'persistenceVersion'],
+        exports: [
+          'anonymous',
+          'authConfig',
+          'createApp',
+          'createAuthentication',
+          'createBackupObjects',
+          'persistenceVersion',
+        ],
       });
       const metadataText = await readFile(join(directory, 'api/package.json'), 'utf8');
       const metadata = JSON.parse(metadataText);
@@ -68,6 +75,7 @@ describe('API process and compiled boundaries', () => {
       expect(metadata.dependencies['zod-openapi']).toBe('6.0.2');
       expect(metadata.dependencies.pg).toBe('8.23.1');
       expect(metadata.dependencies['@simplewebauthn/server']).toBe('14.0.3');
+      expect(metadata.dependencies['@aws-sdk/client-s3']).toBe('3.1172.0');
       expect(metadata.dependencies.pino).toBeDefined();
       expect(metadata.dependencies['@opentelemetry/sdk-trace']).toBeDefined();
     } finally {

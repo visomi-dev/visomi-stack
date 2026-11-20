@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { vaultSchema } from '@visomi-stack/backend-db';
-import { deviceProofSchema, syncHeadSchema } from '@visomi-stack/shared-db';
+import { dataEnvelopeSchema, deviceProofSchema, syncHeadSchema } from '@visomi-stack/shared-db';
 import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 
@@ -11,6 +11,11 @@ import { authorize, boot, deliver, identity, push, request, vaultBase } from './
 describe('opaque persistence and key lifecycle over authenticated HTTP and PostgreSQL', () => {
   it('requires a scope role and possession proof; bootstrap is single-use and cannot replace initialized keys', async () => {
     const f = await fixture();
+
+    await expect(
+      f.owner.call(`${base(f.tenant)}/children`, 'POST', { kind: 'resource', objectBackup: true }),
+    ).resolves.toMatchObject({ status: 503 });
+
     const device = identity();
     const denied = await f.member.call(`${vaultBase(f.target)}/devices/request`, 'POST', {
       deviceId: device.id,
@@ -171,7 +176,7 @@ describe('opaque persistence and key lifecycle over authenticated HTTP and Postg
       .where(eq(vaultSchema.opaqueUnits.id, value.envelope.context.objectId));
 
     expect(JSON.stringify(stored)).not.toContain('Synthetic secret payload');
-    expect(stored.envelope.context.kind).toBe('tombstone');
+    expect(dataEnvelopeSchema.parse(stored.envelope).context.kind).toBe('tombstone');
   });
 
   it('blocks old generations throughout an interrupted rotation and commits all deliveries atomically', async () => {

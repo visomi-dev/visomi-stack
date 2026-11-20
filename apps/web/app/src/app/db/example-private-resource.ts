@@ -1,5 +1,6 @@
 import type { IndexedDbReplicaStorage } from '@visomi-stack/web-frontend-db/storage';
 import { DOCUMENT } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DestroyRef, Service, effect, inject, signal } from '@angular/core';
 import type { z } from 'zod';
@@ -8,7 +9,7 @@ import {
   createPinMethodId,
   deviceCustodyContext,
   encodeBytes,
-  SyncReplica,
+  type SyncReplica,
   replicaId,
   type DeviceCustody,
 } from '@visomi-stack/web-frontend-db';
@@ -31,6 +32,7 @@ import { openLocalVault } from '../shared/vault/local-unlock';
 
 import { rosterSchema, validateExampleEnvelope, exampleLocalKey, examplePrivatePath } from './example-contracts';
 import type { ExampleTarget } from './example-contracts';
+import { exampleReplica } from './example-transport';
 
 export type { ExampleTarget } from './example-contracts';
 
@@ -42,6 +44,7 @@ export class ExamplePrivateResource {
   private readonly session = inject(Session);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly backupPage = inject(ActivatedRoute, { optional: true })?.snapshot.data['backedSample'] === true;
 
   private readonly pendingState = signal(false);
   private readonly synchronizedState = signal(false);
@@ -229,26 +232,19 @@ export class ExamplePrivateResource {
     await storage.advanceControl(id, { epoch: registry.epoch, generation: key.generation });
 
     this.current(signal);
-    const replica = new SyncReplica(
-      id,
-      key,
-      key.scope,
+    this.replica = exampleReplica({
+      api: this.api,
+      session: this.session,
+      path,
+      crypto: view.crypto,
+      custody,
+      binding,
       storage,
-      {
-        pull: (head, signal) => this.api.request(`${path}/sync/pull`, { protocol: 1, head }, signal),
-        push: (value, signal) => this.api.request(`${path}/sync/push`, value, signal),
-      },
-      view.crypto,
-      (envelope) => {
-        this.current(signal);
-        validateExampleEnvelope(this.binding, envelope);
-
-        return this.vault.readEnvelope(envelope, false);
-      },
-      registry.epoch,
-    );
-
-    this.replica = replica;
+      vault: this.vault,
+      checkDevice: this.backupPage || registry.objectBackup === true,
+      minimumEpoch: registry.epoch,
+      current: () => this.current(signal),
+    });
 
     await this.synchronize(target, false);
   }
@@ -368,7 +364,7 @@ export class ExamplePrivateResource {
 
     try {
       if (pending) {
-        await replica.flush();
+        await replica.flush(this.backupPage);
 
         this.current(signal);
       } else {
@@ -474,24 +470,19 @@ export class ExamplePrivateResource {
 
     const path = examplePrivatePath(target);
 
-    this.replica = new SyncReplica(
-      id,
-      local.key,
-      local.key.scope,
+    this.replica = exampleReplica({
+      api: this.api,
+      session: this.session,
+      path,
+      crypto: this.document.defaultView!.crypto,
+      custody,
+      binding: local,
+      checkDevice: this.backupPage,
       storage,
-      {
-        pull: (head, signal) => this.api.request(`${path}/sync/pull`, { protocol: 1, head }, signal),
-        push: (value, signal) => this.api.request(`${path}/sync/push`, value, signal),
-      },
-      this.document.defaultView!.crypto,
-      (envelope) => {
-        this.current(signal);
-        validateExampleEnvelope(this.binding, envelope);
-
-        return this.vault.readEnvelope(envelope, false);
-      },
-      pinned.epoch,
-    );
+      vault: this.vault,
+      minimumEpoch: pinned.epoch,
+      current: () => this.current(signal),
+    });
 
     const pending = await storage.pending(id);
 
@@ -570,7 +561,7 @@ export class ExamplePrivateResource {
     let more: boolean;
 
     do {
-      const page = await replica.pull();
+      const page = await replica.pull(this.backupPage);
 
       this.current(signal);
 

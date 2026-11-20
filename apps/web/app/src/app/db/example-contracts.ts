@@ -21,6 +21,7 @@ export const exampleProfileSchema = z.strictObject({
   policy: productPolicySchema,
   origin: z.url(),
   rpId: z.string().min(1).max(253),
+  objectBackups: z.literal(true).optional(),
 });
 
 export function readExampleProfile(raw: unknown, origin: string | undefined) {
@@ -37,6 +38,7 @@ export const rosterSchema = z.object({
   key: keyDomainSchema,
   epoch: z.number().int().positive(),
   phase: z.enum(['ready', 'rotating']),
+  objectBackup: z.literal(true).optional(),
   devices: z.array(
     z.object({
       id: z.uuid(),
