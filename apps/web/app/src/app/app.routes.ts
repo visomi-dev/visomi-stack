@@ -11,6 +11,10 @@ export const appRoutes: Routes = [
   },
   { path: 'foundations', loadComponent: () => import('./foundations/foundations').then((m) => m.Foundations) },
   {
+    path: 'example/cloud/join',
+    loadComponent: () => import('./db/cloud-example/cloud-join/cloud-join').then((m) => m.CloudJoin),
+  },
+  {
     path: 'auth',
     loadComponent: () => import('./auth/layouts/auth-layout/auth-layout').then((m) => m.AuthLayout),
     children: [

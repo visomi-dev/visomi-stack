@@ -4,6 +4,7 @@ export type RealtimePublisher = {
   notifyDeviceApproval(requestId: string): Promise<void>;
   notifySession(sessionId: string): Promise<void>;
   notifyUser(userId: string): Promise<void>;
+  notifyCloud?(userId: string): Promise<void>;
   notifyVault?(scopeId: string, cursor: number): Promise<void>;
 };
 
@@ -15,6 +16,7 @@ const notificationMethods = {
   device: 'notifyDeviceApproval',
   session: 'notifySession',
   user: 'notifyUser',
+  cloud: 'notifyCloud',
 } as const;
 
 export type RealtimeEvent =
@@ -32,6 +34,7 @@ export function createRealtimePublisher(transport: RealtimeTransport) {
     notifyDeviceApproval: (id) => transport.publish({ kind: 'device', id }),
     notifySession: (id) => transport.publish({ kind: 'session', id }),
     notifyUser: (id) => transport.publish({ kind: 'user', id }),
+    notifyCloud: (id) => transport.publish({ kind: 'cloud', id }),
     notifyVault: (id, cursor) => transport.publish({ kind: 'vault', id, cursor }),
   } satisfies RealtimePublisher;
 }
@@ -41,7 +44,7 @@ export function subscribeRealtime(transport: RealtimeTransport, sink: RealtimePu
     if (event.kind === 'vault') {
       await sink.notifyVault?.(event.id, event.cursor);
     } else {
-      await sink[notificationMethods[event.kind]](event.id);
+      await sink[notificationMethods[event.kind]]?.(event.id);
     }
   });
 }

@@ -18,7 +18,7 @@ export function vaultMessage(state: string): string {
     case 'context-mismatch':
       return $localize`:@@vaultCorrupt:We couldn’t verify the encrypted data. Keep the encrypted copy and restore from a trusted backup.`;
     case 'quota':
-      return $localize`:@@vaultQuota:You’ve reached a storage or encryption limit. Export an encrypted backup before you change the storage settings.`;
+      return $localize`:@@vaultQuota:You’ve reached a storage or encryption limit.`;
     case 'recovery-required':
       return $localize`:@@vaultRecovery:This device doesn’t have a usable key. Use the product’s recovery or device approval process. Resetting a password won’t recover private data.`;
     case 'unsupported-prf':

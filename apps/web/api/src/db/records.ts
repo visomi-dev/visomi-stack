@@ -46,11 +46,17 @@ const publicRecord = {
   revision: records.revision,
 };
 
+type RecordNotifications = {
+  recipients(context: ScopeAccess, visibleToReaders: boolean): Promise<string[]>;
+  publish(userId: string): Promise<void>;
+};
+
 /** Server-readable adapter. It never accepts ciphertext-only domain policies. */
 export class SaasRecords {
   constructor(
     private readonly access: Access,
     private readonly useRecordRole?: (context: ScopeAccess) => Promise<void>,
+    private readonly notifications?: RecordNotifications,
   ) {}
 
   async list(actor: SessionActor, target: unknown, domain: string, rawPage: unknown) {
@@ -124,7 +130,9 @@ export class SaasRecords {
       throw new HttpError(413, 'quota_exceeded');
     }
 
-    return this.access.withScope(actor, target, value.kind === 'delete' ? 'delete' : 'write', async (context) => {
+    const action = value.kind === 'delete' ? 'delete' : 'write';
+    let recipients: string[] = [];
+    const committed = await this.access.withScope(actor, target, action, async (context) => {
       this.scope(context, policy);
 
       await this.useRecordRole?.(context);
@@ -161,6 +169,7 @@ export class SaasRecords {
       }
 
       let result: { id: string; revision: number; deleted: boolean };
+      let visibleToReaders = value.kind !== 'delete' && value.audience === 'scope';
 
       if (value.kind === 'create') {
         this.sharing(context, value.audience === 'scope');
@@ -169,10 +178,13 @@ export class SaasRecords {
         const active = this.retention(policy, now.getTime());
 
         if (active && this.useRecordRole) {
-          await tx
+          const expired = await tx
             .update(records)
             .set({ title: '', body: '', deletedAt: now, updatedAt: now })
-            .where(and(this.predicate(context, policy), isNull(records.deletedAt), not(active)));
+            .where(and(this.predicate(context, policy), isNull(records.deletedAt), not(active)))
+            .returning({ audience: records.audience });
+
+          visibleToReaders ||= expired.some((note) => note.audience === 'scope');
         }
 
         await this.quota(context, policy, value.title, value.body);
@@ -211,6 +223,8 @@ export class SaasRecords {
           throw new HttpError(409, 'revision_conflict');
         }
 
+        visibleToReaders ||= current.audience === 'scope';
+
         if (value.kind === 'update') {
           this.sharing(context, current.audience !== value.audience);
 
@@ -248,8 +262,19 @@ export class SaasRecords {
         result,
       });
 
+      const affected = await this.notifications?.recipients(context, visibleToReaders);
+
+      recipients = affected ?? [];
+
       return result;
     });
+
+    // A failed hint does not change the outcome of the already committed write.
+    for (const userId of recipients) {
+      void this.notifications?.publish(userId).catch(() => undefined);
+    }
+
+    return committed;
   }
 
   private domain(name: string): DomainPolicy {

@@ -6,15 +6,23 @@ type ApprovalEvent = 'connected' | 'disconnected' | 'changed';
 @Service({ autoProvided: false })
 export class BrowserRealtimeSession {
   private readonly online = signal(false);
+  private readonly cloudRevision = signal(0);
 
   private session: Socket | undefined;
 
   readonly connected = this.online.asReadonly();
+  readonly cloudChanges = this.cloudRevision.asReadonly();
 
   connectSession(refresh: () => void): () => void {
+    const invalidateCloud = () => this.cloudRevision.update((revision) => revision + 1);
     const close = this.open('/session', (socket) => {
       this.session = socket;
-      socket.on('connect', () => this.online.set(true));
+      socket.on('connect', () => {
+        this.online.set(true);
+
+        invalidateCloud();
+      });
+
       socket.on('disconnect', (reason) => {
         this.online.set(false);
 
@@ -25,6 +33,7 @@ export class BrowserRealtimeSession {
 
       socket.on('connect_error', () => this.online.set(false));
       socket.on('session:changed', refresh);
+      socket.on('cloud:changed', invalidateCloud);
     });
 
     return () => {

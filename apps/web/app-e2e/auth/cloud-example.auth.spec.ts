@@ -1,25 +1,44 @@
 import type { Page } from '@playwright/test';
+import { readMailCode } from '@visomi-stack/dev-testing';
 
-import { expect, signup, test } from './support/fixtures';
+import { expect, password, signup, test } from './support/fixtures';
 
 async function saveNote(page: Page, title: string, body: string, shared = false) {
-  await page.getByLabel('Note title', { exact: true }).fill(title);
+  const titleField = page.getByLabel('Note title', { exact: true });
+  const currentTitle = await titleField.inputValue();
+
+  if (currentTitle !== title) {
+    await titleField.fill(title);
+  }
+
+  await expect(titleField).toHaveValue(title);
 
   await page.getByLabel('Synthetic note text', { exact: true }).fill(body);
 
-  if (shared) {
-    await page.getByRole('radio', { name: 'Shared with permitted readers' }).check();
-  }
+  await page.getByRole('radio', { name: shared ? 'Shared with permitted readers' : 'Owner only' }).check();
 
   await page.getByRole('button', { name: 'Save note', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'New test note', exact: true })).toBeVisible();
 
   await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
 }
 
-test('Cloud shares only the selected synthetic notes with an explicitly permitted account', async ({
-  page,
-  browser,
-}) => {
+function watchCloudHints(page: Page) {
+  const hints: string[] = [];
+
+  page.on('websocket', (socket) => {
+    socket.on('framereceived', ({ payload }) => {
+      if (typeof payload === 'string' && payload.startsWith('42/session,["cloud:changed"')) {
+        hints.push(payload);
+      }
+    });
+  });
+
+  return hints;
+}
+
+test('Cloud updates permitted readers in realtime and clears notes after revocation', async ({ page, browser }) => {
   const baseURL = test.info().project.use.baseURL;
   const readerContext = await browser.newContext({ baseURL, extraHTTPHeaders: { 'x-forwarded-for': '198.19.0.1' } });
   const outsiderContext = await browser.newContext({ baseURL, extraHTTPHeaders: { 'x-forwarded-for': '198.19.0.2' } });
@@ -27,10 +46,12 @@ test('Cloud shares only the selected synthetic notes with an explicitly permitte
   try {
     const reader = await readerContext.newPage();
     const outsider = await outsiderContext.newPage();
+    const readerHints = watchCloudHints(reader);
+    const outsiderHints = watchCloudHints(outsider);
 
     await signup(page);
 
-    await signup(reader);
+    const readerEmail = await signup(reader);
 
     await signup(outsider);
 
@@ -45,6 +66,8 @@ test('Cloud shares only the selected synthetic notes with an explicitly permitte
     await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
 
     await expect(page.getByRole('heading', { name: 'New test note', exact: true })).toBeVisible();
+
+    await expect(page.getByRole('button', { name: 'Refresh notes', exact: true })).toHaveCount(0);
 
     const workspace = page.url();
 
@@ -62,20 +85,13 @@ test('Cloud shares only the selected synthetic notes with an explicitly permitte
 
     await expect(outsider.getByRole('alert').filter({ hasText: 'This account doesn’t have access' })).toBeVisible();
 
-    const memberLabel = reader.getByText(/^Your test account ID is [\da-f-]{36}\.$/);
+    await page.getByRole('button', { name: 'Share by email', exact: true }).click();
 
-    await expect(memberLabel).toBeVisible();
+    await page.getByLabel('Email address', { exact: true }).fill(readerEmail);
 
-    const memberText = await memberLabel.innerText();
-    const readerId = memberText.match(/[\da-f-]{36}/)![0];
+    await page.getByRole('button', { name: 'Send email', exact: true }).click();
 
-    await page.getByLabel('Test account ID', { exact: true }).fill(readerId);
-
-    await page.getByRole('button', { name: 'Grant read access', exact: true }).click();
-
-    await expect(page.getByRole('status').filter({ hasText: 'Read access granted.' })).toBeVisible();
-
-    await reader.getByRole('button', { name: 'Refresh notes', exact: true }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Email sent.' })).toBeVisible();
 
     await expect(reader.getByText('Team fixture', { exact: true })).toBeVisible();
 
@@ -99,17 +115,64 @@ test('Cloud shares only the selected synthetic notes with an explicitly permitte
 
     await saveNote(page, 'Synthetic updated note', 'Updated team fixture', true);
 
+    await expect(reader.getByText('Updated team fixture', { exact: true })).toBeVisible();
+
+    await expect(reader.getByText('Team fixture', { exact: true })).toHaveCount(0);
+
+    await expect(reader).toHaveURL(workspace);
+
+    expect(readerHints.length).toBeGreaterThan(0);
+    expect(new Set(readerHints)).toEqual(new Set(['42/session,["cloud:changed"]']));
+    expect(outsiderHints).toEqual([]);
+
+    const updatedNote = page.getByRole('article').filter({ hasText: 'Synthetic updated note' });
+    const editUpdatedNote = updatedNote.getByRole('button', { name: 'Edit note' });
+    const editorTitle = page.getByLabel('Note title', { exact: true });
+
+    await editUpdatedNote.click();
+
+    await expect(editorTitle).toHaveValue('Synthetic updated note');
+
+    await saveNote(page, 'Synthetic updated note', 'Now private');
+
+    await expect(reader.getByText('Updated team fixture', { exact: true })).toHaveCount(0);
+
+    const hintCount = readerHints.length;
+
+    await editUpdatedNote.click();
+
+    await expect(editorTitle).toHaveValue('Synthetic updated note');
+
+    await saveNote(page, 'Synthetic updated note', 'Private edit');
+
+    await editUpdatedNote.click();
+
+    await expect(editorTitle).toHaveValue('Synthetic updated note');
+
+    await saveNote(page, 'Synthetic updated note', 'Updated team fixture', true);
+
+    await expect(reader.getByText('Updated team fixture', { exact: true })).toBeVisible();
+
+    expect(readerHints.slice(hintCount)).toEqual(['42/session,["cloud:changed"]']);
+    expect(outsiderHints).toEqual([]);
+
     await reader.goto(workspace.replace('/app/en/', '/app/es/'));
 
     await expect(reader.getByRole('heading', { name: 'Ejemplo en la nube', exact: true })).toBeVisible();
 
     await expect(reader.getByText('Updated team fixture', { exact: true })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Remove access', exact: true }).click();
+    await expect(reader.getByRole('button', { name: 'Actualizar notas', exact: true })).toHaveCount(0);
+
+    await page.getByText('People with access', { exact: true }).click();
+
+    await page
+      .getByRole('listitem')
+      .filter({ hasText: readerEmail })
+      .getByRole('button', { name: 'Remove access', exact: true })
+      .click();
 
     await expect(page.getByRole('status').filter({ hasText: 'Access removed.' })).toBeVisible();
-
-    await reader.getByRole('button', { name: 'Actualizar notas', exact: true }).click();
 
     await expect(reader.getByRole('alert').filter({ hasText: 'Esta cuenta no tiene acceso' })).toBeVisible();
 
@@ -130,5 +193,97 @@ test('Cloud shares only the selected synthetic notes with an explicitly permitte
     await expect(page.getByText('Updated team fixture', { exact: true })).toHaveCount(0);
   } finally {
     await Promise.all([readerContext.close(), outsiderContext.close()]);
+  }
+});
+
+test('opens a sharing link after sign-in and grants only read access to shared notes', async ({ page, browser }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await signup(page);
+
+  await page.goto('/app/en/example/cloud');
+
+  await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
+
+  await saveNote(page, 'Link owner note', 'Owner-only link fixture');
+
+  await saveNote(page, 'Link shared note', 'Shared link fixture', true);
+
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    extraHTTPHeaders: { 'x-forwarded-for': '198.19.0.4' },
+  });
+  const recipient = await context.newPage();
+
+  try {
+    const email = await signup(recipient);
+    const anonymous = await browser.newContext({
+      baseURL: test.info().project.use.baseURL,
+      extraHTTPHeaders: { 'x-forwarded-for': '198.19.0.5' },
+    });
+
+    try {
+      const linked = await anonymous.newPage();
+
+      await page.getByRole('button', { name: 'Share by link', exact: true }).click();
+
+      await page.getByRole('button', { name: 'Create link', exact: true }).click();
+
+      const address = await page.getByLabel('Sharing link', { exact: true }).inputValue();
+
+      await page.getByRole('button', { name: 'Copy link', exact: true }).click();
+
+      await expect(page.getByRole('status').filter({ hasText: /Link copied|Copy the selected link/ })).toBeVisible();
+
+      const horizontalOverflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+
+      expect(horizontalOverflow).toBe(false);
+
+      await linked.goto(address);
+
+      await expect(linked.getByRole('heading', { name: 'Join a Cloud workspace', exact: true })).toBeVisible();
+
+      await expect(linked.getByRole('button', { name: 'Open workspace', exact: true })).toHaveCount(0);
+
+      await linked.getByRole('button', { name: 'Sign in', exact: true }).click();
+
+      await linked.getByRole('link', { name: 'Use a password', exact: true }).click();
+
+      await linked.getByLabel('Email address', { exact: true }).fill(email);
+
+      await linked.getByLabel('Password', { exact: true }).fill(password);
+
+      await linked.getByRole('button', { name: 'Sign in', exact: true }).click();
+
+      await expect(linked.getByRole('heading', { name: 'Confirm your sign-in', exact: true })).toBeVisible();
+
+      const code = await readMailCode(email);
+
+      await linked.getByLabel('Verification code', { exact: true }).fill(code);
+
+      await linked.getByRole('button', { name: 'Open workspace', exact: true }).click();
+
+      await expect(linked.getByText('Shared link fixture', { exact: true })).toBeVisible();
+
+      await expect(linked.getByText('Owner-only link fixture', { exact: true })).toHaveCount(0);
+
+      await expect(linked.getByRole('button', { name: 'Edit note', exact: true })).toHaveCount(0);
+
+      await expect(linked).toHaveURL(page.url());
+
+      await page.getByRole('button', { name: 'Disable link', exact: true }).click();
+
+      await recipient.goto(address);
+
+      await recipient.getByRole('button', { name: 'Open workspace', exact: true }).click();
+
+      await expect(recipient.getByRole('alert').filter({ hasText: 'This link is unavailable' })).toBeVisible();
+    } finally {
+      await anonymous.close();
+    }
+  } finally {
+    await context.close();
   }
 });

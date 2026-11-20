@@ -18,10 +18,6 @@
   } @else if (!workspace.examples.enabled()) {
     <p role="status" i18n="@@cloudExampleUnavailable">The Cloud example is unavailable right now.</p>
   } @else {
-    @if (workspace.memberId(); as id) {
-      <p class="wrap-break-word" i18n="@@cloudExampleMemberId">Your test account ID is {{ id }}.</p>
-    }
-
     @if (!workspace.hasTarget()) {
       <button
         appUI
@@ -36,19 +32,6 @@
     } @else if (!workspace.target()) {
       <p role="alert" i18n="@@cloudExampleInvalidLink">This test workspace link is invalid.</p>
     } @else {
-      <div class="flex flex-wrap gap-3">
-        <button
-          appUI
-          type="button"
-          variant="secondary"
-          [disabled]="workspace.busy()"
-          (click)="workspace.refresh()"
-          i18n="@@cloudExampleRefresh"
-        >
-          Refresh notes
-        </button>
-      </div>
-
       @if (workspace.loaded() && !workspace.notes().length) {
         <p appUI tone="muted" i18n="@@cloudExampleEmpty">There are no visible notes in this workspace.</p>
       }
@@ -175,48 +158,146 @@
         </form>
 
         <section appUI="card" padding="lg" class="grid gap-4">
-          <h2 appUI i18n="@@cloudExampleShareTitle">Workspace access</h2>
+          <h2 appUI i18n="@@cloudExampleShareTitle">Share workspace</h2>
 
-          <p appUI tone="muted" i18n="@@cloudExampleShareHelp">
-            Ask a verified test account for its ID. After granting access, send the workspace’s address to that account.
-            Anyone who opens the address still needs permission.
-          </p>
-
-          <app-field control-id="cloud-member" label="Test account ID" i18n-label="@@cloudExampleShareId">
-            <input
-              appUI
-              id="cloud-member"
-              type="text"
-              maxlength="36"
-              autocomplete="off"
-              spellcheck="false"
-              #member
-              [disabled]="workspace.busy()"
-            />
-          </app-field>
-
-          <div class="flex flex-wrap gap-3">
+          <div class="grid grid-cols-2 gap-2">
             <button
               appUI
               type="button"
+              [variant]="workspace.shareMode() === 'link' ? 'primary' : 'secondary'"
+              [attr.aria-pressed]="workspace.shareMode() === 'link'"
               [disabled]="workspace.busy()"
-              (click)="workspace.setAccess(member.value, true)"
-              i18n="@@cloudExampleGrant"
+              (click)="workspace.openSharing('link')"
+              i18n="@@cloudShareLink"
             >
-              Grant read access
+              Share by link
             </button>
 
             <button
               appUI
               type="button"
-              variant="secondary"
+              [variant]="workspace.shareMode() === 'email' ? 'primary' : 'secondary'"
+              [attr.aria-pressed]="workspace.shareMode() === 'email'"
               [disabled]="workspace.busy()"
-              (click)="workspace.setAccess(member.value, false)"
-              i18n="@@cloudExampleRevoke"
+              (click)="workspace.openSharing('email')"
+              i18n="@@cloudShareEmail"
             >
-              Remove access
+              Share by email
             </button>
           </div>
+
+          @if (workspace.shareMode() === 'link') {
+            <p appUI tone="muted" i18n="@@cloudShareLinkHelp">
+              Anyone with this link and a verified Stack account can read shared notes. The link expires after seven
+              days. People who have already joined keep access until you remove them.
+            </p>
+
+            @if (workspace.shareLink()) {
+              <app-field control-id="cloud-share-link" label="Sharing link" i18n-label="@@cloudShareLinkLabel">
+                <input appUI id="cloud-share-link" type="text" readonly [value]="workspace.shareLink()" #shareLink />
+              </app-field>
+
+              <button
+                appUI
+                type="button"
+                class="justify-self-start"
+                (click)="workspace.copyLink(shareLink)"
+                i18n="@@cloudShareCopy"
+              >
+                Copy link
+              </button>
+            }
+
+            <div class="flex flex-wrap gap-2">
+              <button
+                appUI
+                type="button"
+                [variant]="workspace.shareLink() ? 'secondary' : 'primary'"
+                [disabled]="workspace.busy()"
+                (click)="workspace.createLink()"
+              >
+                @if (workspace.sharing()?.linkExpiresAt) {
+                  <span i18n="@@cloudShareReplaceLink">Replace link</span>
+                } @else {
+                  <span i18n="@@cloudShareCreateLink">Create link</span>
+                }
+              </button>
+
+              @if (workspace.sharing()?.linkExpiresAt) {
+                <button
+                  appUI
+                  type="button"
+                  variant="secondary"
+                  [disabled]="workspace.busy()"
+                  (click)="workspace.disableLink()"
+                  i18n="@@cloudShareDisableLink"
+                >
+                  Disable link
+                </button>
+              }
+            </div>
+          }
+
+          @if (workspace.shareMode() === 'email') {
+            <form class="grid gap-3" (submit)="$event.preventDefault(); workspace.sendEmail()">
+              <app-field
+                control-id="cloud-share-email"
+                label="Email address"
+                i18n-label="@@cloudShareEmailLabel"
+                description="Use the email address of an existing verified Stack account."
+                i18n-description="@@cloudShareEmailHelp"
+              >
+                <input
+                  appUI
+                  id="cloud-share-email"
+                  type="email"
+                  maxlength="254"
+                  autocomplete="email"
+                  required
+                  #shareEmail
+                  [value]="workspace.shareEmail()"
+                  [disabled]="workspace.busy()"
+                  (input)="workspace.shareEmail.set(shareEmail.value)"
+                />
+              </app-field>
+
+              <button
+                appUI
+                type="submit"
+                class="justify-self-start"
+                [disabled]="workspace.busy()"
+                i18n="@@cloudShareSend"
+              >
+                Send email
+              </button>
+            </form>
+          }
+
+          @if (workspace.sharing()?.readers?.length) {
+            <details>
+              <summary class="cursor-pointer" i18n="@@cloudShareReaders">People with access</summary>
+
+              <ul class="grid gap-3 pt-3">
+                @for (reader of workspace.sharing()?.readers; track reader.id) {
+                  <li class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="wrap-break-word" [id]="'cloud-reader-' + reader.id">{{ reader.email }}</span>
+
+                    <button
+                      appUI
+                      type="button"
+                      variant="secondary"
+                      [disabled]="workspace.busy()"
+                      [attr.aria-describedby]="'cloud-reader-' + reader.id"
+                      (click)="workspace.removeReader(reader.id)"
+                      i18n="@@cloudShareRemove"
+                    >
+                      Remove access
+                    </button>
+                  </li>
+                }
+              </ul>
+            </details>
+          }
         </section>
       }
     }

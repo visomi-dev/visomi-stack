@@ -82,19 +82,7 @@ export class Access {
   ) {
     const target = input(targetSchema, rawTarget);
 
-    return this.database.transaction(async (tx) => {
-      await this.identity(tx, actor);
-
-      const [tenant] = await tx.select().from(tenants).where(eq(tenants.id, target.tenantId)).for('update');
-
-      if (!tenant || tenant.product !== this.policy.product) {
-        throw new HttpError(403, 'scope_access_denied');
-      }
-
-      if (tenant.policyHash !== this.policyHash) {
-        throw new HttpError(409, 'policy_migration_required');
-      }
-
+    return this.withTenant(actor, target.tenantId, async (tx, tenant) => {
       const [membership] = await tx
         .select()
         .from(memberships)
@@ -166,6 +154,29 @@ export class Access {
       }
 
       return work({ tx, actor, target, tenant, scope, ancestry, membership, actions: allowedActions });
+    });
+  }
+
+  /** Serializes changes to an authenticated tenant. Callers must establish scope authority before granting access. */
+  async withTenant<T>(
+    actor: SessionActor,
+    tenantId: string,
+    work: (tx: Transaction, tenant: typeof tenants.$inferSelect) => Promise<T>,
+  ): Promise<T> {
+    return this.database.transaction(async (tx) => {
+      await this.identity(tx, actor);
+
+      const [tenant] = await tx.select().from(tenants).where(eq(tenants.id, tenantId)).for('update');
+
+      if (!tenant || tenant.product !== this.policy.product) {
+        throw new HttpError(403, 'scope_access_denied');
+      }
+
+      if (tenant.policyHash !== this.policyHash) {
+        throw new HttpError(409, 'policy_migration_required');
+      }
+
+      return work(tx, tenant);
     });
   }
 

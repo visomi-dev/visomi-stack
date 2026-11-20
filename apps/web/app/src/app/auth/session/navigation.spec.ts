@@ -45,6 +45,9 @@ it.each([
   '/app/es/home',
   '/home#synthetic',
   '/home\\evil',
+  '/example/cloud/join#synthetic-link',
+  '/example/cloud/join?token=synthetic',
+  '/example/cloud/not-a-tenant/not-a-workspace',
 ])('rejects unsafe return targets %s', (value) => {
   expect(safeReturnTo(value, '/app/en/')).toBe(value === '/home#synthetic' ? '/home' : null);
 });
@@ -61,6 +64,13 @@ it('preserves only the allowed device review handle', () => {
   ).toBeNull();
 
   expect(safeReturnTo(target + '&requestId=synthetic-proof', '/app/es/')).toBeNull();
+});
+
+it('preserves the Cloud return path without putting its link secret in auth URLs', () => {
+  const workspace = '/example/cloud/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222';
+
+  expect(safeReturnTo('/app/es' + workspace, '/app/es/')).toBe(workspace);
+  expect(safeReturnTo('/example/cloud/join', '/app/es/')).toBe('/example/cloud/join');
 });
 
 it('guards share loaded state and distinguish identity from full access', async () => {

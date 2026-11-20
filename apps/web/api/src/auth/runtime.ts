@@ -165,6 +165,7 @@ export function createAuthentication(options: {
       passkeys: injector.get<PasskeysController>(PasskeysController),
     },
     database,
+    mail: options.mail,
     realtimePublisher: options.realtimePublisher,
     config,
     middleware,

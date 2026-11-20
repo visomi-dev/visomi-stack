@@ -8,6 +8,8 @@ import { persistenceContracts, persistenceRecordContracts } from '../db/contract
 import { createPersistenceRouter } from '../db/router';
 import { vaultContracts } from '../db/vault-contracts';
 
+import { cloudSharingContracts } from './cloud-sharing-contracts';
+
 export const examplePath = '/example';
 
 export function createExampleRouter(auth: AuthRuntime, harness?: boolean, objects?: BackupObjects) {
@@ -23,10 +25,13 @@ export function createExampleRouter(auth: AuthRuntime, harness?: boolean, object
     {
       path: '/cloud',
       router: createPersistenceRouter(auth, cloudExamplePolicy),
-      contracts: [...shared, ...records].map((contract) => ({
-        ...contract,
-        operationId: `cloud_example_${contract.operationId}`,
-      })),
+      contracts: [
+        ...[...shared, ...records].map((contract) => ({
+          ...contract,
+          operationId: `cloud_example_${contract.operationId}`,
+        })),
+        ...Object.values(cloudSharingContracts),
+      ],
     },
   ];
 

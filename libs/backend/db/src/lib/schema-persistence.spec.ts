@@ -1,7 +1,7 @@
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 
-import { commands, grants, memberships, records, scopes, tenants } from './schema-persistence';
+import { cloudShareLinks, commands, grants, memberships, records, scopes, tenants } from './schema-persistence';
 import {
   backupStaging,
   keyChallenges,
@@ -20,6 +20,7 @@ describe('persistence database security boundaries', () => {
       scopes,
       memberships,
       grants,
+      cloudShareLinks,
       records,
       commands,
       keyChallenges,
@@ -41,7 +42,7 @@ describe('persistence database security boundaries', () => {
       }
     }
 
-    for (const table of [grants, records, commands]) {
+    for (const table of [grants, records, commands, cloudShareLinks]) {
       const scoped = getTableConfig(table).foreignKeys.find(
         (foreignKey) => foreignKey.reference().foreignTable === scopes,
       );

@@ -3,6 +3,7 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
 import { authSchema, createDatabase, type BackupObjects } from '@visomi-stack/backend-db';
+import type { MailTransport } from '@visomi-stack/backend-shared';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 import { testBackupS3 } from '@visomi-stack/dev-testing/s3';
 import { createOperationId, syntheticHybridPolicy } from '@visomi-stack/shared-db';
@@ -15,11 +16,14 @@ import { createBackupObjects } from '../../../src/db/s3-backup';
 
 export let postgres: Awaited<ReturnType<typeof testPostgres>>;
 export let resource: ReturnType<typeof createDatabase>;
+export let authRuntime: ReturnType<typeof createAuthentication>;
 let server: Server;
 let decorateBackup: ((objects: BackupObjects) => BackupObjects) | undefined;
 
 export let backupObjects: BackupObjects | undefined;
 export const vaultNotice = vi.fn<(scopeId: string, cursor: number) => Promise<void>>();
+export const cloudNotice = vi.fn<(userId: string) => Promise<void>>();
+export const cloudMail = vi.fn<MailTransport['send']>();
 
 export let s3Endpoint: string;
 
@@ -35,6 +39,8 @@ export const policy = structuredClone(syntheticHybridPolicy);
 
 beforeEach(async () => {
   vaultNotice.mockReset().mockResolvedValue(undefined);
+  cloudNotice.mockReset().mockResolvedValue(undefined);
+  cloudMail.mockReset().mockResolvedValue(undefined);
 
   await resource.db.delete(authSchema.rateLimits);
 });
@@ -79,7 +85,8 @@ beforeAll(async () => {
 
   origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   const config = authConfig({ origin, rpId: '127.0.0.1', secret });
-  const auth = createAuthentication({
+
+  authRuntime = createAuthentication({
     database: resource.db,
     pool: resource.pool,
     config,
@@ -87,11 +94,12 @@ beforeAll(async () => {
       notifyDeviceApproval: async () => undefined,
       notifySession: async () => undefined,
       notifyUser: async () => undefined,
+      notifyCloud: cloudNotice,
       notifyVault: vaultNotice,
     },
   });
 
-  server.on('request', createApp({ auth, exampleHarness: true, backupObjects }));
+  server.on('request', createApp({ auth: authRuntime, exampleHarness: true, backupObjects }));
 }, 120_000);
 
 afterAll(async () => {
@@ -133,11 +141,16 @@ export async function browserSession(current: SessionActor['principal']) {
   return { sid, cookie, csrf };
 }
 
-export async function client(): Promise<Client> {
+export async function client(verified = true): Promise<Client> {
   const id = randomUUID();
   const [user] = await resource.db
     .insert(authSchema.users)
-    .values({ id, email: `${id}@example.test`, emailVerifiedAt: new Date(), passwordHash: 'synthetic-password-hash' })
+    .values({
+      id,
+      email: `${id}@example.test`,
+      emailVerifiedAt: verified ? new Date() : null,
+      passwordHash: 'synthetic-password-hash',
+    })
     .returning();
   const current = principal(user, 'password');
   const session = await browserSession(current);

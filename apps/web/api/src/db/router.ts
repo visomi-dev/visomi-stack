@@ -5,6 +5,7 @@ import type { ErrorRequestHandler, Request } from 'express';
 import { Router, json } from 'express';
 
 import { Access } from '../access/service';
+import { registerCloudSharing } from '../example/cloud-sharing';
 import type { AuthRuntime } from '../auth/runtime';
 import { requireFull } from '../auth/shared/identity';
 import { csrf, rateLimit } from '../auth/shared/security';
@@ -14,7 +15,7 @@ import { SaasRecords } from './records';
 import { registerVaultRoutes } from './vault-router';
 import { validatePersistenceComposition } from './composition';
 import { PersistenceMaintenance } from './maintenance';
-import { cloudExamplePolicy, useCloudRecordRole } from './cloud-example';
+import { cloudChangeRecipients, cloudExamplePolicy, useCloudRecordRole } from './cloud-example';
 
 export function createPersistenceRouter(
   auth: AuthRuntime,
@@ -24,7 +25,12 @@ export function createPersistenceRouter(
   const router = Router();
   const access = new Access(auth.database, validatePersistenceComposition(policy));
   const cloud = policy.product === cloudExamplePolicy.product;
-  const records = new SaasRecords(access, cloud ? useCloudRecordRole : undefined);
+  const publishCloudChange = cloud ? auth.realtimePublisher?.notifyCloud : undefined;
+  const records = new SaasRecords(
+    access,
+    cloud ? useCloudRecordRole : undefined,
+    publishCloudChange && { recipients: cloudChangeRecipients, publish: publishCloudChange },
+  );
   const maintenance = new PersistenceMaintenance(access, objects);
   const actor = (request: Request) => ({ sessionId: request.sessionID, principal: requireFull(request.user) });
   const target = (params: { tenantId: string; scopeId: string }) => ({
@@ -116,6 +122,8 @@ export function createPersistenceRouter(
       handler: async (req, res, value) => {
         const result = await access.setMember(actor(req), value.params, value.body);
 
+        void publishCloudChange?.(value.body.userId).catch(() => undefined);
+
         return res.json(result);
       },
     },
@@ -130,6 +138,8 @@ export function createPersistenceRouter(
         }
 
         const result = await access.setGrant(actor(req), value.params, value.body);
+
+        void publishCloudChange?.(value.body.userId).catch(() => undefined);
 
         return res.json(result);
       },
@@ -173,7 +183,9 @@ export function createPersistenceRouter(
     ]);
   }
 
-  if (!cloud) {
+  if (cloud) {
+    registerCloudSharing(router, access, auth);
+  } else {
     registerVaultRoutes(router, access, objects, auth.realtimePublisher?.notifyVault);
   }
 
