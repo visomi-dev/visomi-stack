@@ -2,11 +2,12 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import type { Page, Request } from '@playwright/test';
+import type { BrowserContext, Page, Request } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
 import { backupS3Client } from '@visomi-stack/dev-testing/s3';
 import { serializeDataEnvelope, syncWriteSchema, type DataEnvelope } from '@visomi-stack/shared-db';
 import { Pool } from 'pg';
+import { io } from 'socket.io-client';
 
 import { expect, test, signup, passwordStart } from './support/fixtures';
 
@@ -102,6 +103,45 @@ async function objectFor(scopeId: string, objectId: string, envelope: DataEnvelo
   }
 }
 
+async function rejectLoginOnlyWatch(context: BrowserContext, origin: string) {
+  const cookies = await context.cookies(origin);
+  const socket = io(`${origin}/vault`, {
+    autoConnect: false,
+    reconnection: false,
+    transports: ['websocket'],
+    extraHeaders: { origin, cookie: cookies.map(({ name, value }) => `${name}=${value}`).join('; ') },
+  });
+
+  try {
+    const result = await new Promise<string>((resolve) => {
+      socket.once('connect_error', (error) => resolve(error.message));
+      socket.once('connect', () => resolve('connected'));
+      socket.connect();
+    });
+
+    expect(result).toBe('subscription_unavailable');
+  } finally {
+    socket.disconnect();
+  }
+}
+
+async function publishNote(page: Page, note: string) {
+  const panel = page.locator('app-database-example');
+
+  await panel.getByLabel('Private text', { exact: true }).fill(note);
+
+  await panel.getByRole('button', { name: 'Save encrypted change' }).click();
+
+  const [response] = await Promise.all([
+    page.waitForResponse((candidate) => candidate.url().endsWith('/sync/push')),
+    panel.getByRole('button', { name: 'Upload encrypted note' }).click(),
+  ]);
+
+  expect(response.ok()).toBe(true);
+
+  await expect(panel.getByRole('status').filter({ hasText: 'The encrypted note is backed up' })).toBeVisible();
+}
+
 test('backs up the Vault Example note to private object storage and restores it only after recipient pairing', async ({
   page,
   context,
@@ -112,6 +152,8 @@ test('backs up the Vault Example note to private object storage and restores it 
   });
 
   const note = 'SYNTHETIC_VAULT_BACKUP_SAME_NOTE';
+  const nextNote = `${note}_SECOND`;
+  const offlineNote = `${note}_WHILE_LOCKED`;
   const pin = '048261';
   let exposedSecret = false;
   let uploads = 0;
@@ -189,6 +231,20 @@ test('backs up the Vault Example note to private object storage and restores it 
   try {
     const recipient = await recipientContext.newPage();
     const outsider = await outsiderContext.newPage();
+    const hints: unknown[] = [];
+    let vaultConnections = 0;
+
+    recipient.on('websocket', (socket) => {
+      socket.on('framereceived', ({ payload }) => {
+        if (typeof payload === 'string' && payload.startsWith('40/vault,')) {
+          vaultConnections++;
+        }
+
+        if (typeof payload === 'string' && payload.startsWith('42/vault,')) {
+          hints.push(JSON.parse(payload.slice('42/vault,'.length)));
+        }
+      });
+    });
 
     recipient.on('request', observe);
     const cdp = await recipientContext.newCDPSession(recipient);
@@ -256,6 +312,8 @@ test('backs up the Vault Example note to private object storage and restores it 
     }, pullPath);
 
     expect(loginOnlyStatus).toBe(403);
+
+    await rejectLoginOnlyWatch(recipientContext, workspace.origin);
 
     await recipient.getByRole('link', { name: 'Vault devices' }).click();
 
@@ -329,9 +387,13 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await replace(object.wire);
 
+    const retry = recipient.getByRole('button', { name: 'Retry Vault sync' });
+
+    await expect(retry).toBeVisible();
+
     const [download] = await Promise.all([
       recipient.waitForResponse((response) => response.url().endsWith('/sync/pull')),
-      restore.click(),
+      retry.click(),
     ]);
 
     expect(download.ok()).toBe(true);
@@ -342,6 +404,93 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     expect(restored.stored).toEqual(uploaded.envelope);
     expect(restored.pending).toBeUndefined();
+
+    await expect.poll(() => vaultConnections).toBeGreaterThan(0);
+
+    await page.goto(workspace.href);
+
+    await panel.getByLabel('Local unlock PIN', { exact: true }).fill(pin);
+
+    await panel.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
+
+    await expect(panel.locator('pre')).toHaveText(note);
+
+    await recipient.setViewportSize({ width: 390, height: 844 });
+
+    const indicator = recipient.locator('app-vault-sync-indicator');
+    const indicatorStatus = indicator.getByRole('status');
+    const peerPanel = recipient.locator('app-database-example');
+    const draft = peerPanel.getByLabel('Private text', { exact: true });
+
+    await expect(indicatorStatus).toHaveText('Vault synced');
+
+    await draft.fill('SYNTHETIC_UNSAVED_LOCAL_DRAFT');
+
+    await publishNote(page, nextNote);
+
+    await expect.poll(() => hints).toEqual([['vault:changed', 2]]);
+
+    await expect(peerPanel.locator('pre')).toHaveText(note);
+
+    await expect(draft).toHaveValue('SYNTHETIC_UNSAVED_LOCAL_DRAFT');
+
+    await expect(replicaNote(recipient, objectId)).resolves.toEqual(restored);
+
+    const originalBox = await indicator.boundingBox();
+    let releasePull!: () => void;
+    const paused = new Promise<void>((resolve) => {
+      releasePull = resolve;
+    });
+
+    await recipient.route('**/sync/pull', async (route) => {
+      await paused;
+
+      await route.continue();
+    });
+
+    try {
+      await draft.fill('');
+
+      await expect(indicatorStatus).toHaveText('Syncing Vault…');
+
+      await expect(indicator.boundingBox()).resolves.toEqual(originalBox);
+    } finally {
+      releasePull();
+    }
+
+    await expect(peerPanel.locator('pre')).toHaveText(nextNote);
+
+    await expect(indicatorStatus).toHaveText('Vault synced');
+
+    await expect(indicator.boundingBox()).resolves.toEqual(originalBox);
+
+    await expect(recipient).toHaveURL(workspace.href);
+
+    await recipient.unroute('**/sync/pull');
+
+    const prior = await replicaNote(recipient, objectId);
+
+    expect(prior.stored?.context.revision).toBe(2);
+
+    await recipient.getByRole('button', { name: 'Lock private resources' }).click();
+
+    await expect(peerPanel.getByRole('button', { name: 'Unlock with a passkey' })).toBeVisible();
+
+    await publishNote(page, offlineNote);
+
+    await expect(peerPanel.locator('pre')).toHaveCount(0);
+
+    await expect(replicaNote(recipient, objectId)).resolves.toEqual(prior);
+
+    expect(hints).toEqual([['vault:changed', 2]]);
+
+    await peerPanel.getByRole('button', { name: 'Unlock with a passkey' }).click();
+
+    await expect(peerPanel.locator('pre')).toHaveText(offlineNote);
+
+    await expect.poll(() => vaultConnections).toBeGreaterThan(1);
+
+    await expect(indicatorStatus).toHaveText('Vault synced');
 
     await recipient.route('**/sync/pull', (route) => route.abort());
 
@@ -355,9 +504,9 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await restoredPanel.getByRole('button', { name: 'Desbloquear con una clave de acceso' }).click();
 
-    await expect(restoredPanel.locator('pre')).toHaveText(note);
+    await expect(restoredPanel.locator('pre')).toHaveText(offlineNote);
 
-    expect(uploads).toBe(1);
+    expect(uploads).toBe(3);
     expect(exposedSecret).toBe(false);
   } finally {
     await Promise.all([recipientContext.close(), outsiderContext.close()]);

@@ -11,8 +11,9 @@
 
       <p appUI tone="muted" i18n="@@vaultBackedSampleExplanation">
         Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy,
-        then open this workspace on an approved device to download the same note. New workspaces keep the encrypted copy
-        in private object storage. Earlier workspaces keep their existing storage.
+        then open this workspace on an approved device to download the same note. In workspaces with private object
+        storage, this screen checks for updates while the vault is unlocked. Earlier workspaces keep their existing
+        storage.
       </p>
     } @else {
       <h1 appUI appNavigationHeading i18n="@@persistenceExampleHeading">Hybrid persistence example</h1>

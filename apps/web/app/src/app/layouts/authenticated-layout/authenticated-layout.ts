@@ -24,6 +24,7 @@ import { Session } from '../../auth/session/session';
 import { Logout } from '../../auth/session/logout';
 import { AuthNavigation } from '../../auth/shared/navigation';
 import { VaultUnlock } from '../../shared/vault/vault-unlock/vault-unlock';
+import { VaultSyncIndicator } from '../../shared/vault/vault-sync-indicator/vault-sync-indicator';
 import { Vaults } from '../../shared/vault/vaults';
 import { DatabaseHttp } from '../../shared/db/http';
 import { Navigation } from '../../shared/navigation';
@@ -40,6 +41,7 @@ import { ExampleAvailability } from '../../db/example-availability';
     ConsentNotice,
     PrivacyLink,
     VaultUnlock,
+    VaultSyncIndicator,
     AppShell,
     Sidebar,
     Topbar,

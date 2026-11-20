@@ -1,4 +1,5 @@
 import type { BackupObjects } from '@visomi-stack/backend-db';
+import type { RealtimePublisher } from '@visomi-stack/backend-shared';
 import { routes } from '@visomi-stack/web-backend-shared';
 import type { Router, Request } from 'express';
 
@@ -9,9 +10,14 @@ import { KeyDevices } from './devices';
 import { OpaqueSync } from './opaque';
 import { vaultContracts as contracts } from './vault-contracts';
 
-export function registerVaultRoutes(router: Router, access: Access, objects?: BackupObjects) {
+export function registerVaultRoutes(
+  router: Router,
+  access: Access,
+  objects?: BackupObjects,
+  notifyVault?: RealtimePublisher['notifyVault'],
+) {
   const devices = new KeyDevices(access);
-  const sync = new OpaqueSync(access, objects);
+  const sync = new OpaqueSync(access, objects, notifyVault);
   const actor = (req: Request) => ({ sessionId: req.sessionID, principal: requireFull(req.user) });
 
   routes.register(router, [

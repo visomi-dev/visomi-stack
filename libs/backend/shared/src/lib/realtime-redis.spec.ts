@@ -35,6 +35,7 @@ it('accepts Redis URLs, validates messages and separates subscriber from publish
   const onError = vi.fn();
   const transport = createRedisRealtimeTransport('rediss://synthetic', onError);
   const event = { kind: 'session', id: 'synthetic-session' } as const;
+  const vault = { kind: 'vault', id: '70faeda9-6ad6-4510-829e-dbfbb22346d0', cursor: 5 } as const;
   const receive = vi.fn().mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('synthetic'));
 
   await transport.subscribe(receive);
@@ -43,26 +44,29 @@ it('accepts Redis URLs, validates messages and separates subscriber from publish
 
   await transport.publish(event);
 
-  await transport.publish(event);
+  await transport.publish(vault);
 
   const [publisher, subscriber] = clients.all;
 
   expect(publisher.connect).toHaveBeenCalledOnce();
   expect(publisher.publish).toHaveBeenCalledWith('visomi-stack:realtime:v1', JSON.stringify(event));
+  expect(publisher.publish).toHaveBeenCalledWith('visomi-stack:realtime:v1', JSON.stringify(vault));
   expect(subscriber.subscribe).toHaveBeenCalledWith('visomi-stack:realtime:v1');
   for (const data of [
     'x'.repeat(513),
     'invalid-json',
     '{"kind":"unknown"}',
+    JSON.stringify({ ...vault, cursor: 0 }),
+    JSON.stringify({ ...vault, extra: 'rejected' }),
     JSON.stringify(event),
-    JSON.stringify(event),
+    JSON.stringify(vault),
   ]) {
     subscriber.emit('message', 'visomi-stack:realtime:v1', data);
   }
 
   await Promise.resolve();
 
-  expect(receive.mock.calls).toEqual([[event], [event]]);
+  expect(receive.mock.calls).toEqual([[event], [vault]]);
   expect(onError).toHaveBeenCalledOnce();
   transport.close();
   expect(publisher.disconnect).toHaveBeenCalledOnce();

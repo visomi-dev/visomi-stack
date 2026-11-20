@@ -9,10 +9,12 @@ import { isVaultPin } from '@visomi-stack/web-frontend-db';
 import type { WrappingContext } from '@visomi-stack/shared-db';
 
 import { Session } from '../auth/session/session';
+import { BrowserRealtimeSession } from '../auth/session/browser-realtime-session';
 import { Navigation } from '../shared/navigation';
 import { DatabaseHttp } from '../shared/db/http';
 import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { vaultMessage } from '../shared/vault/vault-messages';
+import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
 
 import { ExamplePrivateResource } from './example-private-resource';
 import {
@@ -40,6 +42,8 @@ export class ExampleWorkspace {
   private readonly navigation = inject(Navigation);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly realtime = inject(BrowserRealtimeSession, { optional: true });
+  private readonly syncStatus = inject(VaultSyncStatus);
 
   private readonly rendered = signal(false);
   private readonly configured = signal(false);
@@ -49,9 +53,13 @@ export class ExampleWorkspace {
   private readonly methodLoaded = signal(false);
   private readonly backedScope = signal<'unknown' | 'empty' | 'enrolled'>('unknown');
   private readonly targetState = signal<ExampleTarget | null>(null);
+  private readonly watchCursor = signal<number | null>(null);
+
+  readonly privateResource = inject(ExamplePrivateResource);
+
+  private readonly hasVerifiedHistory = computed(() => this.privateResource.verifiedCursor() !== null);
 
   readonly backedSample = this.route.snapshot.data['backedSample'] === true;
-
   private readonly params = this.backedSample
     ? toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap })
     : toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
@@ -60,7 +68,6 @@ export class ExampleWorkspace {
   private readonly cloud = signal<z.infer<typeof cloudSchema>['items'][number] | null>(null);
 
   private removeNavigationCancel: (() => void) | undefined;
-
   private readonly cleanup = this.destroyRef.onDestroy(() => {
     this.removeNavigationCancel?.();
     this.reset();
@@ -71,7 +78,6 @@ export class ExampleWorkspace {
   private profile: ReturnType<typeof readExampleProfile> | undefined;
 
   readonly capabilities = inject(UnlockCapabilities);
-  readonly privateResource = inject(ExamplePrivateResource);
 
   readonly objectBackups = signal(false);
   readonly cloudDraft = signal('');
@@ -258,6 +264,11 @@ export class ExampleWorkspace {
       await this.privateResource.save(this.requiredTarget(), this.privateDraft());
 
       this.current(signal);
+
+      if (this.backedSample) {
+        this.syncStatus.show('idle');
+      }
+
       this.privateDraft.set('');
       this.noticeState.set(
         $localize`:@@vaultSaved:The encrypted change is stored on this device. Synchronization is a separate operation.`,
@@ -266,7 +277,7 @@ export class ExampleWorkspace {
   }
 
   async synchronize(): Promise<void> {
-    await this.run(() => this.privateResource.synchronize(this.requiredTarget()));
+    await this.synchronizeWithStatus(true);
   }
 
   async keepPending(): Promise<void> {
@@ -283,6 +294,41 @@ export class ExampleWorkspace {
     this.pinConfirmation.set('');
     this.vault.lock();
     this.privateResource.close();
+  }
+
+  private async synchronizeWithStatus(flush: boolean): Promise<void> {
+    await this.run(async (signal) => {
+      const target = this.requiredTarget();
+
+      if (!this.backedSample) {
+        await this.privateResource.synchronize(target, flush);
+
+        return;
+      }
+
+      this.syncStatus.show('syncing');
+
+      try {
+        await this.privateResource.synchronize(target, flush);
+
+        this.current(signal);
+        this.syncStatus.show(this.privateResource.synchronized() ? 'synced' : 'idle');
+      } catch (error) {
+        this.current(signal);
+
+        if (this.vault.ready()) {
+          this.syncStatus.show('retry', () => {
+            if (flush) {
+              void this.synchronize();
+            } else {
+              this.watchCursor.set(0);
+            }
+          });
+        }
+
+        throw error;
+      }
+    });
   }
 
   private records(target: ExampleTarget) {
@@ -365,6 +411,11 @@ export class ExampleWorkspace {
     this.pinConfirmation.set('');
     this.noticeState.set('');
     this.busyState.set(false);
+
+    if (this.backedSample) {
+      this.watchCursor.set(null);
+      this.syncStatus.show('idle');
+    }
   }
 
   private async run(work: (signal: AbortSignal) => Promise<void>): Promise<void> {
@@ -405,6 +456,10 @@ export class ExampleWorkspace {
 
     if (!this.vault.ready()) {
       this.privateDraft.set('');
+
+      if (this.backedSample) {
+        this.syncStatus.show('idle');
+      }
     }
 
     if (
@@ -413,6 +468,48 @@ export class ExampleWorkspace {
       this.session.user()?.id !== this.ownerId
     ) {
       untracked(() => this.reset());
+    }
+  });
+
+  private readonly watchBackedVault = effect((onCleanup) => {
+    const target = this.target();
+    const verified = this.hasVerifiedHistory();
+
+    if (!this.backedSample || !target || !this.available() || !verified || !this.vault.ready()) {
+      return;
+    }
+
+    const close = this.realtime?.watchVault(
+      () => this.privateResource.watchProof(target),
+      (cursor) => this.watchCursor.update((pending) => Math.max(pending ?? 0, cursor)),
+    );
+
+    onCleanup(() => {
+      close?.();
+      this.watchCursor.set(null);
+    });
+  });
+
+  private readonly syncOnVaultHint = effect(() => {
+    const hint = this.watchCursor();
+    const cursor = this.privateResource.verifiedCursor();
+
+    if (
+      hint !== null &&
+      cursor !== null &&
+      this.available() &&
+      this.vault.ready() &&
+      !this.busy() &&
+      !this.privateResource.pending() &&
+      !this.privateDraft()
+    ) {
+      untracked(() => {
+        this.watchCursor.set(null);
+
+        if (hint === 0 || hint > cursor) {
+          void this.synchronizeWithStatus(false);
+        }
+      });
     }
   });
 

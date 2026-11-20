@@ -16,6 +16,7 @@ export type EmbeddedAuthentication = {
     readSession: RequestHandler;
     readUser(serialized: unknown): Promise<string | null>;
     watchExpiration(sessionId: string, requestId: string): Promise<number>;
+    watchVault?(session: { id: string; user: unknown; csrf?: string }, proof: unknown): Promise<string>;
   };
 };
 export type ApiModule = {

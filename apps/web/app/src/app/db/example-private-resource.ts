@@ -32,7 +32,7 @@ import { openLocalVault } from '../shared/vault/local-unlock';
 
 import { rosterSchema, validateExampleEnvelope, exampleLocalKey, examplePrivatePath } from './example-contracts';
 import type { ExampleTarget } from './example-contracts';
-import { exampleReplica } from './example-transport';
+import { exampleReplica, watchBackup } from './example-transport';
 
 export type { ExampleTarget } from './example-contracts';
 
@@ -49,6 +49,7 @@ export class ExamplePrivateResource {
   private readonly pendingState = signal(false);
   private readonly synchronizedState = signal(false);
   private readonly conflictState = signal(false);
+  private readonly verifiedCursorState = signal<number | null>(null);
 
   readonly vault = inject(VaultSession);
   private readonly cleanup = this.destroyRef.onDestroy(() => {
@@ -67,6 +68,11 @@ export class ExamplePrivateResource {
   readonly pending = this.pendingState.asReadonly();
   readonly synchronized = this.synchronizedState.asReadonly();
   readonly conflict = this.conflictState.asReadonly();
+  readonly verifiedCursor = this.verifiedCursorState.asReadonly();
+
+  async watchProof(target: ExampleTarget) {
+    return watchBackup(this.api, this.session, target, this.active(target));
+  }
 
   async unlock(target: ExampleTarget, rpId: string, initialize: boolean, pin?: Uint8Array, localOnly = false) {
     this.close();
@@ -365,13 +371,11 @@ export class ExamplePrivateResource {
     try {
       if (pending) {
         await replica.flush(this.backupPage);
-
-        this.current(signal);
       } else {
         await this.pullAll(target);
-
-        this.current(signal);
       }
+
+      this.current(signal);
     } catch (error) {
       this.current(signal);
       const code = error instanceof HttpErrorResponse ? error.error?.error : (error as { code?: unknown })?.code;
@@ -391,9 +395,10 @@ export class ExamplePrivateResource {
 
       throw error;
     }
-    const value = await storage.unit(id, target.objectId);
+    const [value, pin] = await Promise.all([storage.unit(id, target.objectId), this.backupPage && storage.pin(id)]);
 
     this.current(signal);
+    this.verifiedCursorState.set(pin ? pin.cursor : null);
 
     if (value && value.context.kind !== 'tombstone') {
       await this.show(value, target);
@@ -420,6 +425,7 @@ export class ExamplePrivateResource {
     this.target = undefined;
     this.pendingState.set(false);
     this.synchronizedState.set(false);
+    this.verifiedCursorState.set(null);
   }
 
   async resume(target: ExampleTarget, rpId: string): Promise<void> {
@@ -499,6 +505,8 @@ export class ExamplePrivateResource {
 
     this.current(signal);
     this.pendingState.set(Boolean(pending));
+
+    this.verifiedCursorState.set(this.backupPage && pinned.cursor > 0 ? pinned.cursor : null);
   }
 
   private async prepare(target: ExampleTarget, value: string) {

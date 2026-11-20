@@ -19,6 +19,11 @@ export const syncReadSchema = z.strictObject({
 export function syncReadBody(input: { protocol: 1; head: SyncHead; limit: number }, csrf: string) {
   return ['pull', input.protocol, input.head.cursor, input.head.checkpoint, input.limit, csrf];
 }
+
+/** Bind a notification subscription to its session using the existing signed sync action. */
+export function syncWatchBody(csrf: string) {
+  return ['watch', 1, csrf];
+}
 export const syncWriteSchema = z.strictObject({
   protocol: z.literal(1),
   operationId: operationIdSchema,

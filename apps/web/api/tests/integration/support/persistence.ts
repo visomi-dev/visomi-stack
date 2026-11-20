@@ -6,7 +6,7 @@ import { authSchema, createDatabase, type BackupObjects } from '@visomi-stack/ba
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
 import { testBackupS3 } from '@visomi-stack/dev-testing/s3';
 import { createOperationId, syntheticHybridPolicy } from '@visomi-stack/shared-db';
-import { afterAll, beforeAll, beforeEach, expect } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, vi } from 'vitest';
 
 import type { SessionActor } from '../../../src/access/service';
 import { authConfig, createApp, createAuthentication } from '../../../src/app';
@@ -19,6 +19,7 @@ let server: Server;
 let decorateBackup: ((objects: BackupObjects) => BackupObjects) | undefined;
 
 export let backupObjects: BackupObjects | undefined;
+export const vaultNotice = vi.fn<(scopeId: string, cursor: number) => Promise<void>>();
 
 export let s3Endpoint: string;
 
@@ -33,6 +34,8 @@ const secret = syntheticPersistenceSecret;
 export const policy = structuredClone(syntheticHybridPolicy);
 
 beforeEach(async () => {
+  vaultNotice.mockReset().mockResolvedValue(undefined);
+
   await resource.db.delete(authSchema.rateLimits);
 });
 
@@ -76,7 +79,17 @@ beforeAll(async () => {
 
   origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   const config = authConfig({ origin, rpId: '127.0.0.1', secret });
-  const auth = createAuthentication({ database: resource.db, pool: resource.pool, config });
+  const auth = createAuthentication({
+    database: resource.db,
+    pool: resource.pool,
+    config,
+    realtimePublisher: {
+      notifyDeviceApproval: async () => undefined,
+      notifySession: async () => undefined,
+      notifyUser: async () => undefined,
+      notifyVault: vaultNotice,
+    },
+  });
 
   server.on('request', createApp({ auth, exampleHarness: true, backupObjects }));
 }, 120_000);

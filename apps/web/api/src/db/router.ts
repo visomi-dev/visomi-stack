@@ -174,7 +174,7 @@ export function createPersistenceRouter(
   }
 
   if (!cloud) {
-    registerVaultRoutes(router, access, objects);
+    registerVaultRoutes(router, access, objects, auth.realtimePublisher?.notifyVault);
   }
 
   const errors: ErrorRequestHandler = (error, _request, _response, next) => {

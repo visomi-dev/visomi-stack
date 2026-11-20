@@ -1651,8 +1651,24 @@
         <target>Respalda y restaura una nota de prueba</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleExplanation" datatype="html">
-        <source> Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy, then open this workspace on an approved device to download the same note. New workspaces keep the encrypted copy in private object storage. Earlier workspaces keep their existing storage. </source>
-        <target>Crea una nota de prueba. Se cifra antes de guardarse en este navegador. Sube la copia cifrada y abre este espacio de trabajo en un dispositivo aprobado para descargar la misma nota. Los nuevos espacios de trabajo guardan la copia cifrada en un almacén privado de objetos. Los espacios anteriores conservan su almacenamiento.</target>
+        <source> Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy, then open this workspace on an approved device to download the same note. In workspaces with private object storage, this screen checks for updates while the vault is unlocked. Earlier workspaces keep their existing storage. </source>
+        <target>Crea una nota de prueba. Se cifra antes de guardarse en este navegador. Sube la copia cifrada y abre este espacio de trabajo en un dispositivo aprobado para descargar la misma nota. En los espacios con almacenamiento privado de objetos, esta pantalla busca actualizaciones mientras la bóveda está desbloqueada. Los espacios anteriores conservan su almacenamiento.</target>
+      </trans-unit>
+      <trans-unit id="vaultSyncInProgress" datatype="html">
+        <source>Syncing Vault…</source>
+        <target>Sincronizando bóveda…</target>
+      </trans-unit>
+      <trans-unit id="vaultSyncComplete" datatype="html">
+        <source>Vault synced</source>
+        <target>Bóveda sincronizada</target>
+      </trans-unit>
+      <trans-unit id="vaultSyncFailed" datatype="html">
+        <source>Vault sync failed</source>
+        <target>No se pudo sincronizar la bóveda</target>
+      </trans-unit>
+      <trans-unit id="vaultSyncRetry" datatype="html">
+        <source>Retry Vault sync</source>
+        <target>Reintentar sincronización de la bóveda</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleCreate" datatype="html">
         <source>Create a backup test workspace</source>

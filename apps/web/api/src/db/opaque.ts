@@ -1,4 +1,5 @@
 import { vaultSchema, type BackupObjects } from '@visomi-stack/backend-db';
+import type { RealtimePublisher } from '@visomi-stack/backend-shared';
 import {
   dataAad,
   serializeDataEnvelope,
@@ -30,6 +31,7 @@ export class OpaqueSync {
   constructor(
     private readonly access: Access,
     objects?: BackupObjects,
+    private readonly notifyVault?: RealtimePublisher['notifyVault'],
   ) {
     this.vault = new VaultAccess(access);
     this.payloads = new BackupPayloads(objects);
@@ -273,7 +275,7 @@ export class OpaqueSync {
           await this.payloads.clear(context, reservation.id);
         }
 
-        return { cursor, checkpoint };
+        return { cursor, checkpoint, backupScope: reservation ? context.scope.id : undefined };
       });
 
     // Record the slot before anything can reach S3. Publication then rechecks authority and head under the tenant lock.
@@ -282,10 +284,14 @@ export class OpaqueSync {
     if (result.reservation) {
       const published = await write(result.reservation);
 
+      if (published.backupScope) {
+        void this.notifyVault?.(published.backupScope, published.cursor).catch(() => undefined);
+      }
+
       return { cursor: published.cursor, checkpoint: published.checkpoint };
     }
 
-    return result;
+    return { cursor: result.cursor, checkpoint: result.checkpoint };
   }
 
   private scope(context: ScopeAccess, kind: string) {

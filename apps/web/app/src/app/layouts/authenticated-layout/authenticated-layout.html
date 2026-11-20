@@ -158,6 +158,8 @@
     </a>
 
     <div data-slot="actions" class="flex flex-wrap items-center gap-2 sm:gap-4">
+      <app-vault-sync-indicator />
+
       @if (vaults.vault.knownBindings().length) {
         <button appUI type="button" variant="secondary" (click)="vaults.lock()" i18n="@@vaultLock">
           Lock private resources

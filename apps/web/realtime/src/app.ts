@@ -6,11 +6,13 @@ import { Server } from 'socket.io';
 
 import { attachDeviceApprovals, type DeviceApprovalAccess } from './devices/approval';
 import { attachSessionChannel, type ReadSessionUser } from './session/channel';
+import { attachVaultWatch, type VaultWatch } from './vault/watch';
 
 export type RealtimeAccess = DeviceApprovalAccess & {
   origin: string;
   readSession: RequestHandler;
   readUser: ReadSessionUser;
+  watchVault?: VaultWatch;
 };
 
 export function attachRealtimeServer(server: HttpServer, access: RealtimeAccess): RealtimeRuntime {
@@ -34,6 +36,7 @@ export function attachRealtimeServer(server: HttpServer, access: RealtimeAccess)
   return {
     ...session,
     notifyDeviceApproval,
+    notifyVault: access.watchVault && attachVaultWatch(io, access.watchVault),
     async close(): Promise<void> {
       await io.close();
     },

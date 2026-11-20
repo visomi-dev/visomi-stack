@@ -3333,10 +3333,38 @@
         </context-group>
       </trans-unit>
       <trans-unit id="vaultBackedSampleExplanation" datatype="html">
-        <source> Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy, then open this workspace on an approved device to download the same note. New workspaces keep the encrypted copy in private object storage. Earlier workspaces keep their existing storage. </source>
+        <source> Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy, then open this workspace on an approved device to download the same note. In workspaces with private object storage, this screen checks for updates while the vault is unlocked. Earlier workspaces keep their existing storage. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">13,17</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultSyncInProgress" datatype="html">
+        <source>Syncing Vault…</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-sync-indicator/vault-sync-indicator.ts</context>
+          <context context-type="linenumber">19</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultSyncComplete" datatype="html">
+        <source>Vault synced</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-sync-indicator/vault-sync-indicator.ts</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultSyncFailed" datatype="html">
+        <source>Vault sync failed</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-sync-indicator/vault-sync-indicator.ts</context>
+          <context context-type="linenumber">23</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultSyncRetry" datatype="html">
+        <source>Retry Vault sync</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-sync-indicator/vault-sync-indicator.html</context>
+          <context context-type="linenumber">10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultBackedSampleCreate" datatype="html">

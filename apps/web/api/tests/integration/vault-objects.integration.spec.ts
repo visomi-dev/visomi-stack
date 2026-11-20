@@ -6,6 +6,7 @@ import {
   syncHeadSchema,
   syncReadBody,
   syncPageSchema,
+  syncWatchBody,
 } from '@visomi-stack/shared-db';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
@@ -14,6 +15,7 @@ import { Access } from '../../src/access/service';
 import { BackupPayloads } from '../../src/db/backup-payload';
 import { PersistenceMaintenance } from '../../src/db/maintenance';
 import { OpaqueSync } from '../../src/db/opaque';
+import { createVaultWatch } from '../../src/db/vault-watch';
 
 import {
   base,
@@ -24,6 +26,7 @@ import {
   policy,
   resource,
   s3Endpoint,
+  vaultNotice,
 } from './support/persistence';
 import { authorize, boot, digest, identity, push, vaultBase } from './support/vault';
 
@@ -92,6 +95,50 @@ it('stores ciphertext privately and publishes only verified references for the c
     authorization: authorize(signer, proof.key, 1, 'sync', syncReadBody(read, f.owner.browserAuth.csrf), op),
   });
   const good = signRead();
+
+  const watch = createVaultWatch(resource.db);
+  const session = { id: f.owner.actor.sessionId, user: f.owner.actor.principal, csrf: f.owner.browserAuth.csrf };
+  const signWatch = (key = proof.key, op = createOperationId(globalThis.crypto)) =>
+    authorize(device, key, 1, 'sync', syncWatchBody(session.csrf), op);
+
+  await expect(watch(session, signWatch())).resolves.toBe(scoped.target.scopeId);
+
+  await expect(watch(session, undefined)).rejects.toMatchObject({ status: 400 });
+
+  await expect(watch({ ...session, csrf: undefined }, signWatch())).rejects.toMatchObject({ status: 403 });
+
+  await expect(watch({ ...session, csrf: 'different-session-token' }, signWatch())).rejects.toMatchObject({
+    status: 400,
+  });
+
+  await expect(watch({ ...session, user: undefined }, signWatch())).rejects.toMatchObject({ status: 401 });
+
+  const illegalScope = { kind: 'tenant' as const, tenantId: scoped.target.tenantId };
+
+  await expect(watch(session, signWatch({ ...proof.key, scope: illegalScope }))).rejects.toMatchObject({ status: 403 });
+
+  const inlineScope = { ...proof.key.scope, resourceId: f.target.scopeId };
+
+  await expect(watch(session, signWatch({ ...proof.key, scope: inlineScope }))).rejects.toMatchObject({ status: 403 });
+
+  const { keyDevices, keyScopes } = vaultSchema;
+  const scopeRegistry = eq(keyScopes.scopeId, scoped.target.scopeId);
+
+  await resource.db.update(keyScopes).set({ phase: 'rotating' }).where(scopeRegistry);
+
+  await expect(watch(session, signWatch())).rejects.toMatchObject({ status: 409, code: 'rotation_required' });
+
+  await resource.db.update(keyScopes).set({ phase: 'ready' }).where(scopeRegistry);
+
+  const enrolled = eq(keyDevices.scopeId, scoped.target.scopeId);
+
+  await resource.db.update(keyDevices).set({ revokedAt: new Date() }).where(enrolled);
+
+  await expect(watch(session, signWatch())).rejects.toMatchObject({ status: 403, code: 'device_approval_required' });
+
+  await resource.db.update(keyDevices).set({ revokedAt: null }).where(enrolled);
+
+  vaultNotice.mockResolvedValue(undefined);
 
   const s3 = backupS3Client(s3Endpoint);
 
@@ -277,9 +324,18 @@ it('stores ciphertext privately and publishes only verified references for the c
 
     await expect(f.owner.call(`${path}/pull`, 'POST', good)).resolves.toMatchObject({ status: 200 });
 
-    const completed = await f.owner.call(`${path}/push`, 'POST', next);
+    vaultNotice.mockRejectedValueOnce(new Error('synthetic pubsub outage'));
+    const [completed, repeated] = await Promise.all([
+      f.owner.call(`${path}/push`, 'POST', next),
+      f.owner.call(`${path}/push`, 'POST', next),
+    ]);
 
     expect(completed.status).toBe(200);
+    expect(repeated).toEqual(completed);
+    expect(vaultNotice.mock.calls).toEqual([
+      [scoped.target.scopeId, 1],
+      [scoped.target.scopeId, 2],
+    ]);
 
     await expect(stages()).resolves.toEqual([]);
 
@@ -302,6 +358,8 @@ it('stores ciphertext privately and publishes only verified references for the c
     }
 
     const [abandoned] = await stages();
+
+    expect(vaultNotice).toHaveBeenCalledTimes(2);
     const abandonedKey = `vault-backups/${scoped.target.scopeId}/${abandoned.id}`;
     const orphan = await s3('GET', abandonedKey);
 
@@ -357,6 +415,12 @@ it('stores ciphertext privately and publishes only verified references for the c
     await expect(
       new PersistenceMaintenance(access).run(f.owner.actor, f.target, 'private-resources', { limit: 1 }, true),
     ).rejects.toMatchObject({ status: 409, code: 'capability_unavailable' });
+
+    await expect(
+      new OpaqueSync(access, backupObjects).write(f.owner.actor, scoped.target, 'private-resources', interrupted),
+    ).resolves.toMatchObject({ cursor: 3 });
+
+    expect(vaultNotice).toHaveBeenCalledTimes(2);
   } finally {
     fault = undefined;
   }

@@ -1,5 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { createOperationId, syncReadBody, VaultError, type WrappingContext } from '@visomi-stack/shared-db';
+import {
+  createOperationId,
+  syncReadBody,
+  syncWatchBody,
+  VaultError,
+  type WrappingContext,
+} from '@visomi-stack/shared-db';
 import {
   encodeBytes,
   replicaId,
@@ -14,7 +20,7 @@ import type { Session } from '../auth/session/session';
 import type { DatabaseHttp } from '../shared/db/http';
 import type { VaultSession } from '../shared/vault/vault-session';
 
-import { rosterSchema, validateExampleEnvelope } from './example-contracts';
+import { examplePrivatePath, rosterSchema, validateExampleEnvelope, type ExampleTarget } from './example-contracts';
 
 type TransportOptions = {
   api: DatabaseHttp;
@@ -25,6 +31,22 @@ type TransportOptions = {
   binding: WrappingContext;
   checkDevice: boolean;
 };
+
+export async function watchBackup(
+  api: DatabaseHttp,
+  session: Session,
+  target: ExampleTarget,
+  { binding, custody, view, signal }: Pick<SyncSigner, 'binding' | 'custody'> & { view: Window; signal: AbortSignal },
+) {
+  const document = await api.vault(`${examplePrivatePath(target)}/devices`, undefined, signal);
+  const registry = rosterSchema.parse(document);
+
+  if (registry.objectBackup && registry.phase === 'ready') {
+    return signedSyncAction({ session, binding, custody, crypto: view.crypto }, registry, syncWatchBody, signal);
+  }
+
+  return undefined;
+}
 
 export function exampleReplica(
   options: TransportOptions & {
@@ -55,7 +77,7 @@ export function exampleReplica(
 }
 
 function exampleTransport(options: TransportOptions): ReplicaTransport {
-  const { api, session, path, crypto, custody, binding, checkDevice } = options;
+  const { api, path, checkDevice } = options;
 
   return {
     async pull(head, signal) {
@@ -72,31 +94,43 @@ function exampleTransport(options: TransportOptions): ReplicaTransport {
         return retryRestore(() => api.vault(`${path}/sync/pull`, body, signal), signal);
       }
 
-      if (!custody.ready || registry.key.generation !== binding.key.generation) {
-        throw new VaultError('recovery-required');
-      }
-
-      const csrf = await session.token();
-      const digest = await crypto.subtle.digest(
-        'SHA-256',
-        new TextEncoder().encode(JSON.stringify(syncReadBody(body, csrf))),
-      );
-
-      signal.throwIfAborted();
-
-      const authorization = await custody.sign({
-        key: binding.key,
-        deviceId: binding.deviceId,
-        epoch: registry.epoch,
-        operationId: createOperationId(crypto),
-        action: 'sync',
-        bodyHash: encodeBytes(new Uint8Array(digest)),
-      });
+      const authorization = await signedSyncAction(options, registry, (csrf) => syncReadBody(body, csrf), signal);
 
       return retryRestore(() => api.vault(`${path}/sync/pull`, { ...body, authorization }, signal), signal);
     },
     push: (value, signal) => api.vault(`${path}/sync/push`, value, signal),
   };
+}
+
+type SyncSigner = Pick<TransportOptions, 'session' | 'crypto' | 'custody' | 'binding'>;
+
+async function signedSyncAction(
+  { session, crypto, custody, binding }: SyncSigner,
+  registry: { key: WrappingContext['key']; epoch: number },
+  body: (csrf: string) => unknown,
+  signal: AbortSignal,
+) {
+  if (!custody.ready || registry.key.generation !== binding.key.generation) {
+    throw new VaultError('recovery-required');
+  }
+
+  const csrf = await session.token();
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(body(csrf))));
+
+  signal.throwIfAborted();
+
+  const proof = await custody.sign({
+    key: binding.key,
+    deviceId: binding.deviceId,
+    epoch: registry.epoch,
+    operationId: createOperationId(crypto),
+    action: 'sync',
+    bodyHash: encodeBytes(new Uint8Array(digest)),
+  });
+
+  signal.throwIfAborted();
+
+  return proof;
 }
 
 async function retryRestore(request: () => Promise<unknown>, signal: AbortSignal): Promise<unknown> {

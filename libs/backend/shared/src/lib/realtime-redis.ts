@@ -4,10 +4,10 @@ import { z } from 'zod';
 import type { RealtimeTransport } from './realtime';
 
 const channel = 'visomi-stack:realtime:v1';
-const envelope = z.strictObject({
-  kind: z.enum(['device', 'session', 'user']),
-  id: z.string().regex(/^[\w-]{1,128}$/),
-});
+const envelope = z.discriminatedUnion('kind', [
+  z.strictObject({ kind: z.enum(['device', 'session', 'user']), id: z.string().regex(/^[\w-]{1,128}$/) }),
+  z.strictObject({ kind: z.literal('vault'), id: z.uuid(), cursor: z.number().int().positive().max(2_147_483_647) }),
+]);
 
 export function createRedisRealtimeTransport(url: string, onError: () => void): RealtimeTransport {
   const endpoint = new URL(url);
