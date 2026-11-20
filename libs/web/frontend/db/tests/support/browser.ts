@@ -1,12 +1,10 @@
 import { readFileSync } from 'node:fs';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { chromium, type Browser, type Page } from '@playwright/test';
-import { createServer, type ViteDevServer } from 'vite';
+import { build } from 'vite';
 import { afterAll, beforeAll } from 'vitest';
 import type { DataContext, WrappingContext } from '@visomi-stack/shared-db';
 import type * as VaultContracts from '@visomi-stack/shared-db';
@@ -16,8 +14,7 @@ import type * as VaultStorage from '../../src/storage';
 
 type VaultApi = typeof VaultRuntime & typeof VaultStorage;
 
-let server: ViteDevServer;
-let cacheDir: string | undefined;
+let server: Server | undefined;
 
 export let browser: Browser;
 let origin: string;
@@ -52,11 +49,10 @@ export async function prepare(page: Page) {
   try {
     await page.goto(origin);
 
-    const ready = await page.evaluate(() => Boolean((globalThis as FixtureWindow).fixtureModules));
-
-    if (!ready) {
-      throw new Error('Fixture module did not load with the document');
-    }
+    await page.waitForFunction(() => Boolean((globalThis as FixtureWindow).fixtureModules), undefined, {
+      polling: 100,
+      timeout: 5000,
+    });
   } catch (error) {
     const statuses = [...failedModuleResponses].join(', ') || 'none';
 
@@ -70,52 +66,50 @@ export async function prepare(page: Page) {
 }
 
 beforeAll(async () => {
-  // Parallel fixture servers must not replace each other's optimized modules.
-  const directory = await mkdtemp(join(tmpdir(), 'visomi-sdk-browser-vite-'));
-
-  cacheDir = directory;
-
-  const created = await createServer({
+  // Compile the fixture before listening so Chromium always receives the complete module.
+  const result = await build({
     root: fileURLToPath(new URL('../../../../../../', import.meta.url)),
-    cacheDir: directory,
     configFile: false,
-    appType: 'custom',
+    envFile: false,
     resolve: { tsconfigPaths: true },
-    // The test-only HTML is served by middleware, outside the dependency scan.
-    optimizeDeps: { noDiscovery: true, include: ['dexie', 'hash-wasm', 'zod'] },
-    server: { host: '127.0.0.1', port: 0 },
     logLevel: 'silent',
-    plugins: [
-      {
-        name: 'synthetic-vault-fixture',
-        configureServer(vite) {
-          vite.middlewares.use((request, response, next) => {
-            if (request.url !== '/') {
-              next();
+    build: {
+      lib: { entry: fileURLToPath(new URL('browser-entry.ts', import.meta.url)), formats: ['es'] },
+      write: false,
+    },
+  });
+  const [bundle] = Array.isArray(result) ? result : [result];
 
-              return;
-            }
+  if (!bundle || !('output' in bundle) || bundle.output.length !== 1 || bundle.output[0].type !== 'chunk') {
+    throw new Error('synthetic_vault_bundle_invalid');
+  }
 
-            response.setHeader('content-type', 'text/html');
-            response.end(`<!doctype html>
-              <html lang="en">
-                <head>
-                  <title>Synthetic vault fixture</title>
-                  <script type="module" src="/libs/web/frontend/db/tests/support/browser-entry.ts"></script>
-                </head>
-                <body>Vault storage test</body>
-              </html>`);
-          });
-        },
-      },
-    ],
+  const code = bundle.output[0].code;
+  const created = createServer((request, response) => {
+    if (request.url === '/') {
+      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      response.end(
+        '<!doctype html><html lang="en"><title>Synthetic vault fixture</title>' +
+          '<script type="module" src="/fixture.mjs"></script><body>Vault storage test</body></html>',
+      );
+    } else if (request.url === '/fixture.mjs') {
+      response.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' }).end(code);
+    } else {
+      response.writeHead(404).end();
+    }
   });
 
   server = created;
 
-  await server.listen();
+  await new Promise<void>((resolve, reject) => {
+    created.once('error', reject);
+    created.listen(0, '127.0.0.1', () => {
+      created.off('error', reject);
+      resolve();
+    });
+  });
 
-  origin = `http://localhost:${(server.httpServer?.address() as AddressInfo).port}`;
+  origin = `http://localhost:${(created.address() as AddressInfo).port}`;
   const launched = await chromium.launch({ headless: true });
 
   browser = launched;
@@ -125,10 +119,6 @@ afterAll(async () => {
   try {
     await browser?.close();
   } finally {
-    await server?.close();
-
-    if (cacheDir) {
-      await rm(cacheDir, { recursive: true, force: true });
-    }
+    await new Promise<void>((resolve) => (server ? server.close(() => resolve()) : resolve()));
   }
 }, 60_000);
