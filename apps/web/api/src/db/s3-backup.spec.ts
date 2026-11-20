@@ -8,10 +8,10 @@ import { createBackupObjects } from './s3-backup';
 
 const env = {
   NODE_ENV: 'test',
-  VISOMI_VAULT_BACKUP_S3_ENDPOINT: 'http://127.0.0.1:8333',
-  VISOMI_VAULT_BACKUP_S3_ACCESS_KEY: 'synthetic',
-  VISOMI_VAULT_BACKUP_S3_SECRET_KEY: 'synthetic',
-  VISOMI_VAULT_BACKUP_S3_BUCKET: 'synthetic-bucket',
+  PRIVATE_S3_ENDPOINT: 'http://127.0.0.1:8333',
+  PRIVATE_S3_ACCESS_KEY: 'synthetic',
+  PRIVATE_S3_SECRET_KEY: 'synthetic',
+  PRIVATE_S3_BUCKET: 'synthetic-bucket',
 };
 
 afterEach(() => {
@@ -20,18 +20,18 @@ afterEach(() => {
 });
 
 it.each([
-  { VISOMI_VAULT_BACKUP_S3_ENDPOINT: undefined },
-  { VISOMI_VAULT_BACKUP_S3_ENDPOINT: 'not an origin' },
+  { PRIVATE_S3_ENDPOINT: undefined },
+  { PRIVATE_S3_ENDPOINT: 'not an origin' },
   { NODE_ENV: 'production' },
   { NODE_ENV: undefined },
-  { VISOMI_VAULT_BACKUP_S3_ENDPOINT: 'ftp://127.0.0.1/' },
-  { VISOMI_VAULT_BACKUP_S3_ENDPOINT: 'http://example.test/' },
-  { VISOMI_VAULT_BACKUP_S3_ENDPOINT: 'http://127.0.0.1/bucket' },
-  { VISOMI_VAULT_BACKUP_S3_ENDPOINT: 'https://example.test/?secret=synthetic' },
-  { VISOMI_VAULT_BACKUP_S3_ACCESS_KEY: '' },
-  { VISOMI_VAULT_BACKUP_S3_SECRET_KEY: '' },
-  { VISOMI_VAULT_BACKUP_S3_BUCKET: '' },
-  { VISOMI_VAULT_BACKUP_S3_BUCKET: 'not/a-bucket' },
+  { PRIVATE_S3_ENDPOINT: 'ftp://127.0.0.1/' },
+  { PRIVATE_S3_ENDPOINT: 'http://example.test/' },
+  { PRIVATE_S3_ENDPOINT: 'http://127.0.0.1/bucket' },
+  { PRIVATE_S3_ENDPOINT: 'https://example.test/?secret=synthetic' },
+  { PRIVATE_S3_ACCESS_KEY: '' },
+  { PRIVATE_S3_SECRET_KEY: '' },
+  { PRIVATE_S3_BUCKET: '' },
+  { PRIVATE_S3_BUCKET: 'not/a-bucket' },
 ])('leaves missing or unsafe object storage unavailable', (override) => {
   expect(createBackupObjects({ ...env, ...override })).toBeUndefined();
 });
@@ -45,7 +45,7 @@ it('signs conditional writes on the configured HTTPS origin in production', asyn
   const storage = createBackupObjects({
     ...env,
     NODE_ENV: 'production',
-    VISOMI_VAULT_BACKUP_S3_ENDPOINT: 'https://objects.example.test',
+    PRIVATE_S3_ENDPOINT: 'https://objects.example.test',
   })!;
 
   await storage.put('vault-backups/scope/object', 'encrypted');
@@ -168,7 +168,7 @@ it('rejects redirects and aborts an in-progress download on the transport deadli
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
 
   const address = server.address() as AddressInfo;
-  const storage = createBackupObjects({ ...env, VISOMI_VAULT_BACKUP_S3_ENDPOINT: `http://127.0.0.1:${address.port}` })!;
+  const storage = createBackupObjects({ ...env, PRIVATE_S3_ENDPOINT: `http://127.0.0.1:${address.port}` })!;
 
   try {
     await expect(storage.put('redirect', 'ciphertext')).rejects.toThrow();

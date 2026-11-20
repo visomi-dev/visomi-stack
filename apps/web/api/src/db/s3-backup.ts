@@ -3,10 +3,10 @@ import type { BackupObjects } from '@visomi-stack/backend-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 
 export function createBackupObjects(environment: NodeJS.ProcessEnv): BackupObjects | undefined {
-  const endpoint = environment['VISOMI_VAULT_BACKUP_S3_ENDPOINT'];
-  const accessKey = environment['VISOMI_VAULT_BACKUP_S3_ACCESS_KEY'];
-  const secretKey = environment['VISOMI_VAULT_BACKUP_S3_SECRET_KEY'];
-  const bucket = environment['VISOMI_VAULT_BACKUP_S3_BUCKET'];
+  const endpoint = environment['PRIVATE_S3_ENDPOINT'];
+  const accessKey = environment['PRIVATE_S3_ACCESS_KEY'];
+  const secretKey = environment['PRIVATE_S3_SECRET_KEY'];
+  const bucket = environment['PRIVATE_S3_BUCKET'];
 
   if (
     !endpoint ||

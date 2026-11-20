@@ -74,10 +74,10 @@ export async function testBackupS3(compose: TestCompose) {
   return {
     endpoint,
     environment: {
-      VISOMI_VAULT_BACKUP_S3_ENDPOINT: endpoint,
-      VISOMI_VAULT_BACKUP_S3_ACCESS_KEY: accessKey,
-      VISOMI_VAULT_BACKUP_S3_SECRET_KEY: secretKey,
-      VISOMI_VAULT_BACKUP_S3_BUCKET: backupBucket,
+      PRIVATE_S3_ENDPOINT: endpoint,
+      PRIVATE_S3_ACCESS_KEY: accessKey,
+      PRIVATE_S3_SECRET_KEY: secretKey,
+      PRIVATE_S3_BUCKET: backupBucket,
     },
   };
 }
