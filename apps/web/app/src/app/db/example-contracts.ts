@@ -22,6 +22,7 @@ export const exampleProfileSchema = z.strictObject({
   origin: z.url(),
   rpId: z.string().min(1).max(253),
   objectBackups: z.literal(true).optional(),
+  hybridHarness: z.literal(true).optional(),
 });
 
 export function readExampleProfile(raw: unknown, origin: string | undefined) {

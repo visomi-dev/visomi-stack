@@ -6,11 +6,9 @@ import { beforeAll, expect, it } from 'vitest';
 
 import type { Transaction } from '../../src/auth/shared/identity';
 
-import { client, enablePersistenceDemos, mutation, resource } from './support/persistence';
+import { client, mutation, resource } from './support/persistence';
 
-enablePersistenceDemos();
-
-const prefix = '/persistence/cloud-example/tenants';
+const prefix = '/example/cloud/tenants';
 
 type Target = { tenantId: string; scopeId: string };
 const base = ({ tenantId, scopeId }: Target) => `${prefix}/${tenantId}/scopes/${scopeId}`;
@@ -72,7 +70,7 @@ it('enforces Cloud owner/shared CRUD, explicit read access, and revocation at th
     status: 400,
   });
 
-  await expect(owner.call(records.replace('/cloud-example', ''))).resolves.toMatchObject({ status: 409 });
+  await expect(owner.call(records.replace('/example/cloud', '/example/vault'))).resolves.toMatchObject({ status: 409 });
 
   await expect(
     owner.call(`${base(target)}/domains/cloud-notes/maintenance`, 'POST', { limit: 1 }),

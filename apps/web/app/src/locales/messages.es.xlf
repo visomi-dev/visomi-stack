@@ -1507,12 +1507,12 @@
         <target>La persona dueña del espacio de trabajo escribe las notas y elige cuáles compartir. Una cuenta de prueba con permiso de lectura solo puede ver las notas compartidas. Elige la bóveda si necesitas desbloquear los datos por separado en el dispositivo.</target>
       </trans-unit>
       <trans-unit id="cloudExampleChecking" datatype="html">
-        <source>Checking the test profile…</source>
-        <target>Comprobando el perfil de prueba…</target>
+        <source>Checking Cloud availability…</source>
+        <target>Comprobando si la nube está disponible…</target>
       </trans-unit>
       <trans-unit id="cloudExampleUnavailable" datatype="html">
-        <source>This example is available only in the opted-in test profile.</source>
-        <target>Este ejemplo solo está disponible si activas el perfil de prueba.</target>
+        <source>The Cloud example is unavailable right now.</source>
+        <target>El ejemplo de nube no está disponible en este momento.</target>
       </trans-unit>
       <trans-unit id="cloudExampleMemberId" datatype="html">
         <source>Your test account ID is <x id="INTERPOLATION" equiv-text="{{ id }}"/>.</source>
@@ -1675,12 +1675,20 @@
         <target>La nota cifrada está respaldada y guardada en este navegador.</target>
       </trans-unit>
       <trans-unit id="vaultBackupStorageDisabled" datatype="html">
-        <source>Enable private object storage in the test profile to create a backup workspace.</source>
-        <target>Activa el almacenamiento privado de objetos en el perfil de prueba para crear un espacio de respaldo.</target>
+        <source>Private backup storage is unavailable right now. You can still use the local vault.</source>
+        <target>El almacenamiento privado de respaldos no está disponible. Puedes seguir usando la bóveda local.</target>
       </trans-unit>
       <trans-unit id="vaultBackupStorageRetry" datatype="html">
         <source>We couldn’t verify the encrypted backup. Your local data is unchanged. Try again later.</source>
         <target>No pudimos verificar el respaldo cifrado. Tus datos locales siguen intactos. Inténtalo más tarde.</target>
+      </trans-unit>
+      <trans-unit id="vaultBackupUnavailable" datatype="html">
+        <source>The Vault backup service is unavailable right now.</source>
+        <target>El servicio de respaldo de la bóveda no está disponible en este momento.</target>
+      </trans-unit>
+      <trans-unit id="cloudExampleStorageUnavailable" datatype="html">
+        <source>Cloud storage is unavailable right now. Try again later.</source>
+        <target>El almacenamiento en la nube no está disponible en este momento. Inténtalo más tarde.</target>
       </trans-unit>
     </body>
   </file>

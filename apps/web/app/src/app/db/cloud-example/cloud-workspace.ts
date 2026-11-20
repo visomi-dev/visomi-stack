@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 import { Session } from '../../auth/session/session';
 import { DatabaseHttp } from '../../shared/db/http';
-import { PersistenceDemos } from '../persistence-demos';
+import { ExampleAvailability } from '../example-availability';
 
 const workspaceSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid() });
 const noteSchema = z.strictObject({
@@ -23,7 +23,7 @@ const pageSchema = z.strictObject({ items: z.array(noteSchema), next: z.null(), 
 type Workspace = z.infer<typeof workspaceSchema>;
 type Note = z.infer<typeof noteSchema>;
 
-const prefix = '/cloud-example/tenants';
+const prefix = '/tenants';
 const scopePath = ({ tenantId, scopeId }: Workspace) => `${prefix}/${tenantId}/scopes/${scopeId}`;
 const notesPath = (target: Workspace) => `${scopePath(target)}/domains/cloud-notes/records`;
 
@@ -41,7 +41,7 @@ export class CloudWorkspace {
 
   private controller?: AbortController;
 
-  readonly demos = inject(PersistenceDemos);
+  readonly examples = inject(ExampleAvailability);
 
   readonly busy = signal(false);
   readonly status = signal('');
@@ -65,14 +65,14 @@ export class CloudWorkspace {
 
   async createWorkspace(): Promise<void> {
     await this.run(async (signal) => {
-      const rawRoot = await this.api.request(prefix, {}, signal);
+      const rawRoot = await this.api.cloud(prefix, {}, signal);
       const root = workspaceSchema.parse(rawRoot);
-      const rawWorkspace = await this.api.request(`${scopePath(root)}/children`, { kind: 'resource' }, signal);
+      const rawWorkspace = await this.api.cloud(`${scopePath(root)}/children`, { kind: 'resource' }, signal);
       const workspace = workspaceSchema.parse(rawWorkspace);
 
       signal.throwIfAborted();
 
-      await this.router.navigate(['/cloud-example', workspace.tenantId, workspace.scopeId]);
+      await this.router.navigate(['/example/cloud', workspace.tenantId, workspace.scopeId]);
     });
   }
 
@@ -99,7 +99,7 @@ export class CloudWorkspace {
         audience: this.audience(),
       };
 
-      await this.api.request(
+      await this.api.cloud(
         notesPath(target),
         current
           ? { ...payload, kind: 'update', id: current.id, expectedRevision: current.revision }
@@ -122,7 +122,7 @@ export class CloudWorkspace {
     }
 
     await this.run(async (signal) => {
-      await this.api.request(
+      await this.api.cloud(
         notesPath(target),
         {
           kind: 'delete',
@@ -161,10 +161,10 @@ export class CloudWorkspace {
       const userId = user.data;
       const root = scopePath({ tenantId: target.tenantId, scopeId: target.tenantId });
 
-      await this.api.request(`${root}/members`, { userId, active }, signal, 'PUT');
+      await this.api.cloud(`${root}/members`, { userId, active }, signal, 'PUT');
 
       if (active) {
-        await this.api.request(`${scopePath(target)}/grants`, { userId, role: 'viewer' }, signal, 'PUT');
+        await this.api.cloud(`${scopePath(target)}/grants`, { userId, role: 'viewer' }, signal, 'PUT');
       }
 
       this.status.set(
@@ -184,7 +184,7 @@ export class CloudWorkspace {
   }
 
   private async load(target: Workspace, signal: AbortSignal): Promise<void> {
-    const raw = await this.api.request(`${notesPath(target)}?limit=20`, undefined, signal);
+    const raw = await this.api.cloud(`${notesPath(target)}?limit=20`, undefined, signal);
     const page = pageSchema.parse(raw);
 
     signal.throwIfAborted();
@@ -194,7 +194,7 @@ export class CloudWorkspace {
   private async run(work: (signal: AbortSignal) => Promise<void>): Promise<void> {
     const signal = this.controller?.signal;
 
-    if (!this.demos.enabled() || !signal || signal.aborted || this.busy()) {
+    if (!this.examples.enabled() || !signal || signal.aborted || this.busy()) {
       return;
     }
 
@@ -206,7 +206,8 @@ export class CloudWorkspace {
       await work(signal);
     } catch (error) {
       if (!signal.aborted) {
-        const denied = error instanceof HttpErrorResponse && error.status === 403;
+        const status = error instanceof HttpErrorResponse ? error.status : undefined;
+        const denied = status === 403;
 
         if (denied) {
           this.page.set(null);
@@ -216,7 +217,9 @@ export class CloudWorkspace {
         this.error.set(
           denied
             ? $localize`:@@cloudExampleDenied:This account doesn’t have access to the test workspace.`
-            : $localize`:@@cloudExampleError:We couldn’t complete that action. Try again.`,
+            : status === 503
+              ? $localize`:@@cloudExampleStorageUnavailable:Cloud storage is unavailable right now. Try again later.`
+              : $localize`:@@cloudExampleError:We couldn’t complete that action. Try again.`,
         );
       }
     } finally {
@@ -227,7 +230,7 @@ export class CloudWorkspace {
   }
 
   private readonly loadWorkspace = effect((cleanup) => {
-    const enabled = this.demos.enabled();
+    const enabled = this.examples.enabled();
     const target = this.target();
 
     untracked(() => {

@@ -4,7 +4,7 @@ import { VaultError, vaultUnitId, type DataContext, type WrappingContext } from 
 import { createPinMethodId, exportEncryptedBackup, PrfUnlock } from '@visomi-stack/web-frontend-db';
 
 import { Session } from '../../auth/session/session';
-import { PersistenceDemos } from '../../db/persistence-demos';
+import { ExampleAvailability } from '../../db/example-availability';
 import { ClientDatabase, VAULT_DATABASE_NAMESPACE } from '../../shared/db/database';
 import { NavigationHeading } from '../../shared/navigation-heading';
 import { vaultMessage } from '../../shared/vault/vault-messages';
@@ -39,7 +39,7 @@ export class VaultDemo {
 
   private additionCancellation = new AbortController();
 
-  protected readonly demos = inject(PersistenceDemos, { optional: true });
+  protected readonly examples = inject(ExampleAvailability, { optional: true });
 
   protected readonly binding = signal<WrappingContext | undefined>(undefined);
   protected readonly passkeyBinding = signal<WrappingContext | undefined>(undefined);
@@ -293,7 +293,7 @@ export class VaultDemo {
     const binding = this.binding();
     const view = this.document.defaultView;
 
-    if (!binding || !view || !this.ready() || !this.plaintext() || !this.demos?.enabled()) {
+    if (!binding || !view || !this.ready() || !this.plaintext() || !this.examples?.enabled()) {
       return;
     }
 
@@ -305,7 +305,7 @@ export class VaultDemo {
 
         signal.throwIfAborted();
 
-        if (!this.ready() || !this.demos?.enabled()) {
+        if (!this.ready() || !this.examples?.enabled()) {
           return;
         }
 

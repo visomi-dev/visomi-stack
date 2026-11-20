@@ -1,7 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
 import { Socket } from 'node:net';
 
-import { syntheticHybridPolicy } from '@visomi-stack/shared-db';
 import type { Observability } from '@visomi-stack/web-backend-shared';
 import { currentObservability, HttpError, httpErrorHandler, httpObservability } from '@visomi-stack/web-backend-shared';
 import type { Request, Response } from 'express';
@@ -60,22 +59,14 @@ beforeEach(() => {
 });
 
 describe('API composition', () => {
-  it('fails closed when persistence is composed without an authentication runtime', async () => {
-    const response = await dispatch(createApp({ persistence: syntheticHybridPolicy }), '/persistence/tenants');
+  it.each(['/example/vault/policy', '/example/cloud/policy'])(
+    'leaves %s absent when authentication is unconfigured',
+    async (path) => {
+      const response = await dispatch(createApp({ exampleHarness: true }), path);
 
-    expect(response.status).toBe(503);
-    expect(response.body).toEqual({ error: 'authentication_unavailable' });
-  });
-  it('does not mount Cloud routes without the base profile and authenticated runtime', async () => {
-    const standalone = await dispatch(createApp({ persistenceDemos: true }), '/persistence/cloud-example/policy');
-    const noAuth = await dispatch(
-      createApp({ persistence: syntheticHybridPolicy, persistenceDemos: true }),
-      '/persistence/cloud-example/policy',
-    );
-
-    expect(standalone.status).toBe(404);
-    expect(noAuth.status).toBe(503);
-  });
+      expect(response).toEqual({ status: 404, body: { error: 'not_found' }, poweredBy: undefined });
+    },
+  );
   it.each([
     ['/', 200, { message: 'Hello API' }],
     ['/missing', 404, { error: 'not_found' }],
@@ -111,6 +102,7 @@ describe('API composition', () => {
       const auth = {
         middleware: [installed],
         requireInitialized,
+        requireVerifiedSession: requireInitialized,
         config: {},
         passkeys: {},
         database: {},

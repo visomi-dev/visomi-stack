@@ -13,10 +13,10 @@
     </p>
   </header>
 
-  @if (!workspace.demos.checked()) {
-    <p role="status" i18n="@@cloudExampleChecking">Checking the test profile…</p>
-  } @else if (!workspace.demos.enabled()) {
-    <p role="status" i18n="@@cloudExampleUnavailable">This example is available only in the opted-in test profile.</p>
+  @if (!workspace.examples.checked()) {
+    <p role="status" i18n="@@cloudExampleChecking">Checking Cloud availability…</p>
+  } @else if (!workspace.examples.enabled()) {
+    <p role="status" i18n="@@cloudExampleUnavailable">The Cloud example is unavailable right now.</p>
   } @else {
     @if (workspace.memberId(); as id) {
       <p class="wrap-break-word" i18n="@@cloudExampleMemberId">Your test account ID is {{ id }}.</p>

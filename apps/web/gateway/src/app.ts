@@ -8,7 +8,6 @@ import {
   VisitAnalytics,
 } from '@visomi-stack/web-backend-shared';
 import express, { Router, static as serveStatic } from 'express';
-import type { ProductPolicy } from '@visomi-stack/shared-db';
 
 import type { ApiModule, EmbeddedAuthentication } from './api-module';
 import type { SiteModule } from './site-module';
@@ -18,8 +17,7 @@ import { pageErrors } from './page-errors';
 export function createGatewayApp(options: {
   api: ApiModule;
   visits?: VisitAnalytics;
-  persistence?: ProductPolicy;
-  persistenceDemos?: boolean;
+  exampleHarness?: boolean;
   backupObjects?: BackupObjects;
   site?: SiteModule;
   application?: ApplicationModule;
@@ -31,8 +29,8 @@ export function createGatewayApp(options: {
   errorMode?: 'managed' | 'inherited';
   staticDirectory?: string;
 }) {
-  if (options.persistence && options.api.persistenceVersion !== 1) {
-    throw new Error('api_persistence_unavailable');
+  if (options.auth && options.api.exampleApiVersion !== 1) {
+    throw new Error('api_examples_unavailable');
   }
 
   const app = express();
@@ -161,8 +159,7 @@ export function createGatewayApp(options: {
       helmetMode: 'inherited',
       auth: options.auth,
       observability: options.observability,
-      ...(options.persistence ? { persistence: options.persistence } : {}),
-      ...(options.persistenceDemos ? { persistenceDemos: true } : {}),
+      ...(options.exampleHarness ? { exampleHarness: true } : {}),
       ...(options.backupObjects ? { backupObjects: options.backupObjects } : {}),
     }),
   );

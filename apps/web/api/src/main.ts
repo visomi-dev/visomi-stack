@@ -18,7 +18,6 @@ import packageJson from '../package.json' with { type: 'json' };
 
 import { authConfig, createApp, createAuthentication } from './app';
 import type { AuthRuntime } from './auth/runtime';
-import { persistenceExample } from './db/composition';
 import { createBackupObjects } from './db/s3-backup';
 
 const observability = initializeObservability({
@@ -64,15 +63,13 @@ try {
     });
   }
 
-  const persistence = persistenceExample(process.env);
-  const persistenceDemos = developmentPersistenceDemos(process.env);
+  const exampleHarness = developmentPersistenceDemos(process.env);
 
   backupObjects = createBackupObjects(process.env);
 
   application = createApp({
     observability,
-    ...(persistence ? { persistence } : {}),
-    ...(persistenceDemos ? { persistenceDemos } : {}),
+    ...(exampleHarness ? { exampleHarness } : {}),
     ...(backupObjects ? { backupObjects } : {}),
     ...(auth ? { auth } : {}),
     ...proxyConfiguration(process.env.AUTH_TRUST_PROXY),

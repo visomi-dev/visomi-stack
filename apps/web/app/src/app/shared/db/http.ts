@@ -14,7 +14,16 @@ export class DatabaseHttp {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
-  async request(
+  vault(path: string, body?: unknown, signal?: AbortSignal, method?: string): Promise<unknown> {
+    return this.request('vault', path, body, signal, method);
+  }
+
+  cloud(path: string, body?: unknown, signal?: AbortSignal, method?: string): Promise<unknown> {
+    return this.request('cloud', path, body, signal, method);
+  }
+
+  private async request(
+    example: 'vault' | 'cloud',
     path: string,
     body?: unknown,
     signal?: AbortSignal,
@@ -45,7 +54,7 @@ export class DatabaseHttp {
     const timeout = setTimeout(cancel, 15_000);
 
     try {
-      const url = `/api/persistence${path}`;
+      const url = `/api/example/${example}${path}`;
       const request = this.http.request<unknown>(method, url, { body, transferCache: false });
       const result = await firstValueFrom(request.pipe(takeUntil(fromEvent(controller.signal, 'abort'))));
 

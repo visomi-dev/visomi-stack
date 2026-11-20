@@ -7,7 +7,8 @@ operational configuration and permission.
 
 ## Explicit bounded execution
 
-`POST /persistence/tenants/:tenantId/scopes/:scopeId/domains/:domain/maintenance`
+The technical development/test harness uses
+`POST /example/vault/tenants/:tenantId/scopes/:scopeId/domains/:domain/maintenance`
 accepts only `{ "limit": 1..100 }`. It uses the configured manifest and server
 clock; caller dates, retention overrides and unknown fields are rejected. Each
 phase handles at most that many rows. The caller must have a current verified

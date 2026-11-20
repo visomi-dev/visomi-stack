@@ -15,15 +15,15 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
 
   await page.emulateMedia({ colorScheme: 'light' });
 
-  await page.route('**/api/persistence/**', async (route) => {
-    if (new URL(route.request().url()).pathname !== '/api/persistence/cloud-example/policy') {
+  await page.route('**/api/example/{vault,cloud}/**', async (route) => {
+    if (new URL(route.request().url()).pathname !== '/api/example/cloud/policy') {
       persistence.push('technical persistence request');
     }
 
     await route.fulfill({ status: 404 });
   });
 
-  await page.goto('/app/en/vault-example');
+  await page.goto('/app/en/example/vault');
 
   await expect(page).toHaveURL(/\/auth\/sign-in/);
 
@@ -39,7 +39,7 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
 
   await desktop.click();
 
-  await expect(page).toHaveURL(/\/vault-example$/);
+  await expect(page).toHaveURL(/\/example\/vault$/);
 
   await expect(page.getByRole('heading', { name: 'Vault example', level: 1 })).toBeVisible();
 
@@ -164,7 +164,7 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
 
   await page.getByRole('link', { name: 'Español', exact: true }).click();
 
-  await expect(page).toHaveURL(/\/app\/es\/vault-example$/);
+  await expect(page).toHaveURL(/\/app\/es\/example\/vault$/);
 
   await expect(page.getByRole('heading', { name: 'Ejemplo de vault', level: 1 })).toBeVisible();
 
@@ -220,7 +220,7 @@ test('downloads the local ciphertext only from an unlocked vault and keeps a sam
 
   const email = await signup(page);
 
-  await page.goto('/app/en/vault-example');
+  await page.goto('/app/en/example/vault');
 
   await expect(page.getByRole('heading', { name: 'Local encrypted download', exact: true })).toBeVisible();
 
@@ -241,7 +241,7 @@ test('downloads the local ciphertext only from an unlocked vault and keeps a sam
   await expect(page.getByText(sample, { exact: true })).toBeVisible();
 
   page.on('request', (request) => {
-    if (request.method() !== 'GET' && request.url().includes('/api/persistence/')) {
+    if (request.method() !== 'GET' && request.url().includes('/api/example/vault/')) {
       requests.push('unexpected persistence write');
     }
   });
@@ -303,7 +303,7 @@ test('downloads the local ciphertext only from an unlocked vault and keeps a sam
 
     await expect(recipient.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
-    await recipient.goto('/app/es/vault-example');
+    await recipient.goto('/app/es/example/vault');
 
     await expect(recipient.getByRole('heading', { name: 'Descarga local cifrada', exact: true })).toBeVisible();
 
@@ -404,7 +404,7 @@ test('simulates cancellation, unexpected failure, fresh activation and a retryab
 
   await signup(page);
 
-  await page.goto('/app/es/vault-example');
+  await page.goto('/app/es/example/vault');
 
   const start = page.getByRole('button', { name: 'Configurar mi bóveda' });
   const verify = page.getByRole('button', { name: 'Verificar clave de acceso' });
@@ -491,7 +491,7 @@ test('simulates failed and cancelled PIN vault enrollment, logout, and successfu
 
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
-  await page.goto('/app/en/vault-example');
+  await page.goto('/app/en/example/vault');
 
   await expect(page.getByRole('button', { name: 'Unlock with a passkey' })).toHaveCount(0);
 
@@ -600,7 +600,7 @@ async function simulatePrf(page: Page, scenario: 'setup' | 'add'): Promise<void>
 }
 
 async function seedPinVault(page: Page): Promise<void> {
-  await page.goto('/app/en/vault-example');
+  await page.goto('/app/en/example/vault');
 
   const setup = page.getByRole('button', { name: 'Set up my vault' });
 
@@ -642,7 +642,7 @@ async function beginVirtualPasskeySetup(page: Page, hasPrf: boolean): Promise<st
 
   const writes = watchApiWrites(page);
 
-  await page.goto('/app/en/vault-example');
+  await page.goto('/app/en/example/vault');
 
   await page.getByRole('button', { name: 'Set up my vault' }).click();
 

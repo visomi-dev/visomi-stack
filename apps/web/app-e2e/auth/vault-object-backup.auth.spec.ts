@@ -2,10 +2,9 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import type { Page, Request } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
-import { backupBucket, backupS3Client } from '@visomi-stack/dev-testing/s3';
+import { backupS3Client } from '@visomi-stack/dev-testing/s3';
 import { serializeDataEnvelope, syncWriteSchema, type DataEnvelope } from '@visomi-stack/shared-db';
 import { Pool } from 'pg';
 
@@ -16,7 +15,7 @@ import { expect, test, signup, passwordStart } from './support/fixtures';
 test.skip(({ browserName }) => browserName !== 'chromium', 'Requires Chromium CDP');
 
 function persistenceRequestBody(request: Request): string {
-  return request.url().includes('/api/persistence/') ? (request.postData() ?? '') : '';
+  return request.url().includes('/api/example/vault/') ? (request.postData() ?? '') : '';
 }
 
 async function replicaNote(page: Page, objectId: string): Promise<{ pending?: DataEnvelope; stored?: DataEnvelope }> {
@@ -92,16 +91,14 @@ async function objectFor(scopeId: string, objectId: string, envelope: DataEnvelo
       Array.from({ length: 2 }, () => ({ envelope: reference, bytes: Buffer.byteLength(wire) })),
     );
     const key = `vault-backups/${scopeId}/${reference.id}`;
-    const result = await s3.send(new GetObjectCommand({ Bucket: backupBucket, Key: key }));
-    const stored = await result.Body?.transformToString();
+    const result = await s3('GET', key);
+    const stored = await result.text();
 
     expect(stored).toBe(wire);
 
     return { key, wire, endpoint };
   } finally {
     await pool.end();
-
-    s3.destroy();
   }
 }
 
@@ -128,7 +125,7 @@ test('backs up the Vault Example note to private object storage and restores it 
   page.on('request', observe);
   const email = await signup(page);
 
-  await page.goto('/app/en/vault-example');
+  await page.goto('/app/en/example/vault');
 
   const panel = page.locator('app-database-example');
 
@@ -309,8 +306,11 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await expect(replicaNote(recipient, objectId)).resolves.toEqual({});
 
-    const replace = (body: string) =>
-      s3.send(new PutObjectCommand({ Bucket: backupBucket, Key: object.key, Body: body }));
+    const replace = async (body: string) => {
+      const result = await s3('PUT', object.key, body);
+
+      await result.body?.cancel();
+    };
 
     await replace(object.wire.slice(1));
 
@@ -360,8 +360,6 @@ test('backs up the Vault Example note to private object storage and restores it 
     expect(uploads).toBe(1);
     expect(exposedSecret).toBe(false);
   } finally {
-    s3.destroy();
-
     await Promise.all([recipientContext.close(), outsiderContext.close()]);
   }
 });

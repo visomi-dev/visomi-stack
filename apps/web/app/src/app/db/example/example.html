@@ -25,10 +25,14 @@
   </header>
 
   @if (!workspace.available()) {
-    <p role="status" i18n="@@persistenceExampleUnavailable">Set up the development profile to use this example.</p>
+    @if (workspace.backedSample) {
+      <p role="status" i18n="@@vaultBackupUnavailable">The Vault backup service is unavailable right now.</p>
+    } @else {
+      <p role="status" i18n="@@persistenceExampleUnavailable">Set up the development profile to use this example.</p>
+    }
   } @else if (workspace.backedSample && !workspace.target() && !workspace.objectBackups()) {
     <p role="status" i18n="@@vaultBackupStorageDisabled">
-      Enable private object storage in the test profile to create a backup workspace.
+      Private backup storage is unavailable right now. You can still use the local vault.
     </p>
   } @else if (!workspace.target()) {
     <button appUI type="button" [disabled]="workspace.busy()" (click)="workspace.createWorkspace()">

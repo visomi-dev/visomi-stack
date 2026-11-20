@@ -92,7 +92,7 @@ export class ExamplePrivateResource {
     }
 
     try {
-      const raw = await this.api.request(`${path}/devices`, undefined, signal);
+      const raw = await this.api.vault(`${path}/devices`, undefined, signal);
 
       this.current(signal);
       registry = rosterSchema.parse(raw);
@@ -186,7 +186,7 @@ export class ExamplePrivateResource {
 
       this.current(signal);
 
-      const requested = await this.api.request(`${path}/devices/request`, { deviceId: binding.deviceId, keys }, signal);
+      const requested = await this.api.vault(`${path}/devices/request`, { deviceId: binding.deviceId, keys }, signal);
 
       this.current(signal);
 
@@ -194,11 +194,11 @@ export class ExamplePrivateResource {
 
       this.current(signal);
 
-      await this.api.request(`${path}/devices/bootstrap`, proof, signal);
+      await this.api.vault(`${path}/devices/bootstrap`, proof, signal);
 
       this.current(signal);
 
-      const roster = await this.api.request(`${path}/devices`, undefined, signal);
+      const roster = await this.api.vault(`${path}/devices`, undefined, signal);
 
       this.current(signal);
       registry = rosterSchema.parse(roster);

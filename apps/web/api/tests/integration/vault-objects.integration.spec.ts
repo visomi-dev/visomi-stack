@@ -1,4 +1,3 @@
-import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { vaultSchema } from '@visomi-stack/backend-db';
 import { backupBucket, backupS3Client } from '@visomi-stack/dev-testing/s3';
 import {
@@ -9,13 +8,14 @@ import {
   syncPageSchema,
 } from '@visomi-stack/shared-db';
 import { eq } from 'drizzle-orm';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 
 import { Access } from '../../src/access/service';
 import { OpaqueSync } from '../../src/db/opaque';
 
 import {
   base,
+  backupObjects,
   browserSession,
   enableBackupObjects,
   fixture,
@@ -47,7 +47,7 @@ it('stores ciphertext privately and publishes only verified references for the c
   const f = await fixture();
   const childPath = `${base(f.tenant)}/children`;
 
-  await expect(f.owner.call('/persistence/policy')).resolves.toMatchObject({
+  await expect(f.owner.call('/example/vault/policy')).resolves.toMatchObject({
     status: 200,
     body: { objectBackups: true },
   });
@@ -147,10 +147,27 @@ it('stores ciphertext privately and publishes only verified references for the c
     expect(event.bytes).toBe(Buffer.byteLength(wire));
     expect(JSON.stringify([unit, event])).not.toContain(value.envelope.ciphertext);
     const key = `vault-backups/${scoped.target.scopeId}/${(unit.envelope as { id: string }).id}`;
-    const get = await s3.send(new GetObjectCommand({ Bucket: backupBucket, Key: key }));
-    const bytes = await get.Body?.transformToString();
+    const get = await s3('GET', key);
+    const bytes = await get.text();
 
     expect(bytes).toBe(wire);
+
+    const network = vi.spyOn(globalThis, 'fetch');
+
+    try {
+      await expect(backupObjects!.put(key, 'synthetic replacement ciphertext')).rejects.toMatchObject({ status: 503 });
+
+      expect(network).toHaveBeenCalledOnce();
+      expect(network.mock.calls[0][1]?.headers).toMatchObject({ 'if-none-match': '*' });
+      const duplicate = await network.mock.results[0].value;
+
+      expect(duplicate.status).toBe(412);
+    } finally {
+      network.mockRestore();
+    }
+
+    await expect(backupObjects!.get(key, Buffer.byteLength(wire))).resolves.toBe(wire);
+
     const publicObject = await fetch(`${s3Endpoint}/${backupBucket}/${key}`);
 
     expect(publicObject.status).toBe(403);
@@ -174,8 +191,11 @@ it('stores ciphertext privately and publishes only verified references for the c
     }
 
     fault = undefined;
-    const replaceBytes = (body: string) =>
-      s3.send(new PutObjectCommand({ Bucket: backupBucket, Key: key, Body: body }));
+    const replaceBytes = async (body: string) => {
+      const result = await s3('PUT', key, body);
+
+      await result.body?.cancel();
+    };
 
     await replaceBytes(wire.slice(1));
 
@@ -221,6 +241,5 @@ it('stores ciphertext privately and publishes only verified references for the c
     await expect(f.owner.call(`${path}/push`, 'POST', next)).resolves.toMatchObject({ status: 200 });
   } finally {
     fault = undefined;
-    s3.destroy();
   }
 }, 30_000);

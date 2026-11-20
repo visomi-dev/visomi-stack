@@ -73,7 +73,7 @@ function fixture(
   };
   const requests: { path: string; body: unknown; signal?: AbortSignal }[] = [];
   const api = {
-    request: vi.fn(async (path: string, body?: unknown, signal?: AbortSignal) => {
+    vault: vi.fn(async (path: string, body?: unknown, signal?: AbortSignal) => {
       requests.push({ path, body, signal });
       const delayed = intercept?.(path, body, signal);
 
@@ -82,7 +82,12 @@ function fixture(
       }
 
       if (path === '/policy') {
-        return { policy: syntheticHybridPolicy, origin: document.location.origin, rpId: document.location.hostname };
+        return {
+          hybridHarness: true,
+          policy: syntheticHybridPolicy,
+          origin: document.location.origin,
+          rpId: document.location.hostname,
+        };
       }
 
       if (body !== undefined) {

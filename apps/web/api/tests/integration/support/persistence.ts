@@ -16,18 +16,13 @@ import { createBackupObjects } from '../../../src/db/s3-backup';
 export let postgres: Awaited<ReturnType<typeof testPostgres>>;
 export let resource: ReturnType<typeof createDatabase>;
 let server: Server;
-let persistenceDemos = false;
 let decorateBackup: ((objects: BackupObjects) => BackupObjects) | undefined;
-let backupObjects: BackupObjects | undefined;
+
+export let backupObjects: BackupObjects | undefined;
 
 export let s3Endpoint: string;
 
-export function enablePersistenceDemos(): void {
-  persistenceDemos = true;
-}
-
 export function enableBackupObjects(decorate: (objects: BackupObjects) => BackupObjects): void {
-  persistenceDemos = true;
   decorateBackup = decorate;
 }
 
@@ -83,7 +78,7 @@ beforeAll(async () => {
   const config = authConfig({ origin, rpId: '127.0.0.1', secret });
   const auth = createAuthentication({ database: resource.db, pool: resource.pool, config });
 
-  server.on('request', createApp({ auth, persistence: policy, persistenceDemos, backupObjects }));
+  server.on('request', createApp({ auth, exampleHarness: true, backupObjects }));
 }, 120_000);
 
 afterAll(async () => {
@@ -169,7 +164,7 @@ export async function client(): Promise<Client> {
   };
 }
 
-export const base = (target: Target) => `/persistence/tenants/${target.tenantId}/scopes/${target.scopeId}`;
+export const base = (target: Target) => `/example/vault/tenants/${target.tenantId}/scopes/${target.scopeId}`;
 export const collection = (target: Target, domain = 'operations') => `${base(target)}/domains/${domain}/records`;
 export const mutation = (title = 'Synthetic record', audience = 'owner') => ({
   kind: 'create',
@@ -183,7 +178,7 @@ export async function fixture() {
   const owner = await client();
   const member = await client();
   const outsider = await client();
-  const created = await owner.call('/persistence/tenants', 'POST', {});
+  const created = await owner.call('/example/vault/tenants', 'POST', {});
 
   expect(created.status).toBe(200);
   const tenant = created.body as Target;

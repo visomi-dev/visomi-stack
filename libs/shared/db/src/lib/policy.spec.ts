@@ -4,7 +4,7 @@ import { developmentPersistenceDemos } from './example';
 import { domainPolicySchema, parseProductPolicy } from './policy';
 import type { DomainPolicy, ProductPolicy } from './policy';
 
-it('requires a separate opt-in and refuses Cloud and backup demos outside the development/test profile', () => {
+it('requires both opt-ins for the technical harness and disables it in production', () => {
   const base = { VISOMI_PERSISTENCE_EXAMPLE: 'true' };
   const optedIn = { VISOMI_PERSISTENCE_DEMOS: 'true', ...base };
 
@@ -18,9 +18,7 @@ it('requires a separate opt-in and refuses Cloud and backup demos outside the de
   expect(() => developmentPersistenceDemos({ NODE_ENV: 'test', ...base, VISOMI_PERSISTENCE_DEMOS: 'yes' })).toThrow(
     'persistence_demos_unavailable',
   );
-  expect(() => developmentPersistenceDemos({ NODE_ENV: 'production', ...optedIn })).toThrow(
-    'persistence_example_unavailable',
-  );
+  expect(developmentPersistenceDemos({ NODE_ENV: 'production', ...optedIn })).toBe(false);
 });
 
 const operation: DomainPolicy = {

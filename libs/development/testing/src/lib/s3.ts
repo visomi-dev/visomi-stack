@@ -1,24 +1,43 @@
 import { setTimeout as delay } from 'node:timers/promises';
 
-import { HeadBucketCommand, S3Client } from '@aws-sdk/client-s3';
+import { S3Client } from '@bradenmacdonald/s3-lite-client';
 
 import { runTestCompose, type TestCompose } from './compose';
 
-const accessKeyId = 'visomi_s3_test';
-const secretAccessKey = 'synthetic-s3-test-password';
+const accessKey = 'visomi_s3_test';
+const secretKey = 'synthetic-s3-test-password';
 
 export const backupBucket = 'visomi-test-vault-backups';
 
 export function backupS3Client(endpoint: string) {
-  return new S3Client({
-    endpoint,
-    credentials: { accessKeyId, secretAccessKey },
+  const url = new URL(endpoint);
+
+  if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.href !== `${url.origin}/`) {
+    throw new Error('isolated_s3_endpoint_invalid');
+  }
+
+  const client = new S3Client({
+    endPoint: url.origin,
+    accessKey,
+    secretKey,
+    bucket: backupBucket,
     region: 'us-east-1',
-    forcePathStyle: true,
-    maxAttempts: 1,
-    requestChecksumCalculation: 'WHEN_REQUIRED',
-    responseChecksumValidation: 'WHEN_REQUIRED',
+    pathStyle: true,
   });
+
+  return async (method: 'GET' | 'PUT', key: string, body?: string, timeout = 4_000) => {
+    const signal = AbortSignal.timeout(timeout);
+    const signed = await client.getPresignedUrl(method, key, { expirySeconds: 15 });
+    const response = await fetch(signed, { method, body, redirect: 'error', signal });
+
+    if (response.status !== 200) {
+      await response.body?.cancel();
+
+      throw new Error('isolated_s3_request_failed');
+    }
+
+    return response;
+  };
 }
 
 /** Uses the test PostgreSQL fixture's owned Compose project and disposable volume. */
@@ -33,32 +52,31 @@ export async function testBackupS3(compose: TestCompose) {
   }
 
   const endpoint = `http://127.0.0.1:${port}`;
-  const s3 = backupS3Client(endpoint);
+  const request = backupS3Client(endpoint);
 
-  try {
-    for (let attempt = 0; ; attempt++) {
-      try {
-        await s3.send(new HeadBucketCommand({ Bucket: backupBucket }), { abortSignal: AbortSignal.timeout(1_000) });
+  for (let attempt = 0; ; attempt++) {
+    try {
+      // A signed write also proves that the configured private bucket has been created.
+      const response = await request('PUT', 'fixture-readiness', 'ready', 1_000);
 
-        break;
-      } catch {
-        if (attempt === 79) {
-          throw new Error('isolated_s3_startup_timeout');
-        }
+      await response.body?.cancel();
 
-        await delay(125);
+      break;
+    } catch {
+      if (attempt === 79) {
+        throw new Error('isolated_s3_startup_timeout');
       }
+
+      await delay(125);
     }
-  } finally {
-    s3.destroy();
   }
 
   return {
     endpoint,
     environment: {
       VISOMI_VAULT_BACKUP_S3_ENDPOINT: endpoint,
-      VISOMI_VAULT_BACKUP_S3_ACCESS_KEY: accessKeyId,
-      VISOMI_VAULT_BACKUP_S3_SECRET_KEY: secretAccessKey,
+      VISOMI_VAULT_BACKUP_S3_ACCESS_KEY: accessKey,
+      VISOMI_VAULT_BACKUP_S3_SECRET_KEY: secretKey,
       VISOMI_VAULT_BACKUP_S3_BUCKET: backupBucket,
     },
   };

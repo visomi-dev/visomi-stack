@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 
 import { DatabaseExample } from '../../db/example/example';
-import { PersistenceDemos } from '../../db/persistence-demos';
+import { ExampleAvailability } from '../../db/example-availability';
 import { VaultDemo } from '../demo/demo';
 
 @Component({
@@ -10,5 +10,5 @@ import { VaultDemo } from '../demo/demo';
   templateUrl: './vault-example.html',
 })
 export class VaultExample {
-  protected readonly demos = inject(PersistenceDemos);
+  protected readonly examples = inject(ExampleAvailability);
 }

@@ -1,87 +1,115 @@
-import { addAbortSignal, Readable } from 'node:stream';
-
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { S3Client } from '@bradenmacdonald/s3-lite-client';
 import type { BackupObjects } from '@visomi-stack/backend-db';
-import { developmentPersistenceDemos } from '@visomi-stack/shared-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 
 export function createBackupObjects(environment: NodeJS.ProcessEnv): BackupObjects | undefined {
   const endpoint = environment['VISOMI_VAULT_BACKUP_S3_ENDPOINT'];
+  const accessKey = environment['VISOMI_VAULT_BACKUP_S3_ACCESS_KEY'];
+  const secretKey = environment['VISOMI_VAULT_BACKUP_S3_SECRET_KEY'];
+  const bucket = environment['VISOMI_VAULT_BACKUP_S3_BUCKET'];
 
-  if (endpoint === undefined) {
+  if (
+    !endpoint ||
+    !URL.canParse(endpoint) ||
+    !accessKey ||
+    !secretKey ||
+    !bucket ||
+    !/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket)
+  ) {
     return undefined;
   }
 
   const url = new URL(endpoint);
-  const accessKeyId = environment['VISOMI_VAULT_BACKUP_S3_ACCESS_KEY'];
-  const secretAccessKey = environment['VISOMI_VAULT_BACKUP_S3_SECRET_KEY'];
-  const bucket = environment['VISOMI_VAULT_BACKUP_S3_BUCKET'];
+  const localHttp =
+    url.protocol === 'http:' &&
+    url.hostname === '127.0.0.1' &&
+    ['test', 'development'].includes(environment['NODE_ENV'] ?? '');
 
-  if (
-    !developmentPersistenceDemos(environment) ||
-    !['http:', 'https:'].includes(url.protocol) ||
-    url.hostname !== '127.0.0.1' ||
-    url.href !== `${url.origin}/` ||
-    !accessKeyId ||
-    !secretAccessKey ||
-    !bucket ||
-    !/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket)
-  ) {
-    throw new Error('vault_backup_configuration_invalid');
+  if (url.href !== `${url.origin}/` || (url.protocol !== 'https:' && !localHttp)) {
+    return undefined;
   }
 
   const client = new S3Client({
-    endpoint: url.origin,
-    credentials: { accessKeyId, secretAccessKey },
+    endPoint: url.origin,
+    pathStyle: true,
+    bucket,
+    accessKey,
+    secretKey,
     region: 'us-east-1',
-    forcePathStyle: true,
-    maxAttempts: 1,
-    requestChecksumCalculation: 'WHEN_REQUIRED',
-    responseChecksumValidation: 'WHEN_REQUIRED',
   });
+
+  async function request(method: 'PUT' | 'GET', key: string, body?: string) {
+    if (!/^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*$/.test(key)) {
+      throw new HttpError(503, 'vault_backup_unavailable');
+    }
+
+    const signal = AbortSignal.timeout(4_000);
+    const headers: Record<string, string> = { 'accept-encoding': 'identity' };
+
+    if (method === 'PUT') {
+      headers['content-type'] = 'application/json';
+      headers['if-none-match'] = '*';
+    }
+
+    // Keep the short-lived signature server-side. Native fetch controls cancellation and redirects.
+    const signed = await client.getPresignedUrl(method, key, { expirySeconds: 15, extraHeaders: headers });
+    const destination = new URL(signed);
+
+    if (destination.origin !== url.origin || destination.pathname !== `/${bucket}/${key}`) {
+      throw new HttpError(503, 'vault_backup_unavailable');
+    }
+
+    const response = await fetch(destination, { method, headers, body, signal, redirect: 'error' });
+
+    if (response.status !== 200) {
+      await response.body?.cancel();
+
+      throw new HttpError(503, 'vault_backup_unavailable');
+    }
+
+    return response;
+  }
 
   return {
     async put(key, body) {
-      await client.send(
-        new PutObjectCommand({
-          Bucket: bucket,
-          Key: key,
-          Body: body,
-          ContentType: 'application/json',
-          IfNoneMatch: '*',
-        }),
-        { abortSignal: AbortSignal.timeout(4_000) },
-      );
+      const response = await request('PUT', key, body);
+
+      await response.body?.cancel();
     },
     async get(key, bytes) {
-      const signal = AbortSignal.timeout(4_000);
-      const response = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }), {
-        abortSignal: signal,
-      });
-      const stream = response.Body;
+      const response = await request('GET', key);
+      const stream = response.body;
 
-      if (!(stream instanceof Readable)) {
+      if (!stream) {
         throw new HttpError(503, 'vault_backup_unavailable');
       }
 
-      try {
-        addAbortSignal(signal, stream);
+      const reader = stream.getReader();
 
-        if (response.ContentLength !== bytes) {
+      try {
+        const encoding = response.headers.get('content-encoding') ?? 'identity';
+
+        if (encoding !== 'identity' || response.headers.get('content-length') !== String(bytes)) {
           throw new HttpError(503, 'vault_backup_unavailable');
         }
 
-        const chunks: Buffer[] = [];
+        const chunks: Uint8Array[] = [];
         let length = 0;
 
-        for await (const chunk of stream as AsyncIterable<Buffer>) {
-          length += chunk.length;
+        for (;;) {
+          const result = await reader.read();
+
+          if (result.done) {
+            break;
+          }
+
+          length += result.value.length;
 
           if (length > bytes) {
             throw new HttpError(503, 'vault_backup_unavailable');
           }
 
-          chunks.push(chunk);
+          chunks.push(result.value);
         }
 
         if (length !== bytes) {
@@ -90,9 +118,12 @@ export function createBackupObjects(environment: NodeJS.ProcessEnv): BackupObjec
 
         return Buffer.concat(chunks, length).toString('utf8');
       } finally {
-        stream.destroy();
+        await reader.cancel().catch(() => undefined);
+
+        reader.releaseLock();
       }
     },
-    close: () => client.destroy(),
+    // Native fetch owns its connections.
+    close: () => undefined,
   };
 }

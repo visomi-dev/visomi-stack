@@ -3,7 +3,6 @@ import type { MailTransport, RealtimePublisher } from '@visomi-stack/backend-sha
 import type { Observability } from '@visomi-stack/web-backend-shared';
 import type { Request, RequestHandler } from 'express';
 import type { Pool } from 'pg';
-import type { ProductPolicy } from '@visomi-stack/shared-db';
 
 import type { AuthSnapshot } from './application-module';
 
@@ -20,7 +19,7 @@ export type EmbeddedAuthentication = {
   };
 };
 export type ApiModule = {
-  persistenceVersion?: 1;
+  exampleApiVersion?: 1;
   createBackupObjects?(environment: NodeJS.ProcessEnv): BackupObjects | undefined;
   createApp(options: {
     observability?: Observability;
@@ -29,8 +28,7 @@ export type ApiModule = {
     authMode: 'inherited';
     errorMode: 'inherited';
     helmetMode: 'inherited';
-    persistence?: ProductPolicy;
-    persistenceDemos?: boolean;
+    exampleHarness?: boolean;
     backupObjects?: BackupObjects;
   }): RequestHandler;
   authConfig(input: {

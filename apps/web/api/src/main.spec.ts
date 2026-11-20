@@ -109,8 +109,7 @@ describe('API executable lifecycle', () => {
 
     expect(boundary.createApp).toHaveBeenCalledWith(
       expect.objectContaining({
-        persistence: expect.objectContaining({ product: 'synthetic-example' }),
-        persistenceDemos: true,
+        exampleHarness: true,
         backupObjects,
       }),
     );

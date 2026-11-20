@@ -60,14 +60,14 @@ function exampleTransport(options: TransportOptions): ReplicaTransport {
       const body = { protocol: 1 as const, head, limit: 25 };
 
       if (!checkDevice) {
-        return api.request(`${path}/sync/pull`, { protocol: body.protocol, head }, signal);
+        return api.vault(`${path}/sync/pull`, { protocol: body.protocol, head }, signal);
       }
 
-      const document = await api.request(`${path}/devices`, undefined, signal);
+      const document = await api.vault(`${path}/devices`, undefined, signal);
       const registry = rosterSchema.parse(document);
 
       if (!registry.objectBackup) {
-        return api.request(`${path}/sync/pull`, body, signal);
+        return api.vault(`${path}/sync/pull`, body, signal);
       }
 
       if (!custody.ready || registry.key.generation !== binding.key.generation) {
@@ -91,8 +91,8 @@ function exampleTransport(options: TransportOptions): ReplicaTransport {
         bodyHash: encodeBytes(new Uint8Array(digest)),
       });
 
-      return api.request(`${path}/sync/pull`, { ...body, authorization }, signal);
+      return api.vault(`${path}/sync/pull`, { ...body, authorization }, signal);
     },
-    push: (value, signal) => api.request(`${path}/sync/push`, value, signal),
+    push: (value, signal) => api.vault(`${path}/sync/push`, value, signal),
   };
 }

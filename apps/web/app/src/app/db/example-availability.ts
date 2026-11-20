@@ -4,7 +4,7 @@ import { Session } from '../auth/session/session';
 import { DatabaseHttp } from '../shared/db/http';
 
 @Service({ autoProvided: false })
-export class PersistenceDemos {
+export class ExampleAvailability {
   private readonly api = inject(DatabaseHttp);
   private readonly session = inject(Session);
   private readonly destroyRef = inject(DestroyRef);
@@ -20,7 +20,7 @@ export class PersistenceDemos {
     const signal = this.session.cancellation();
 
     try {
-      const raw = await this.api.request('/cloud-example/policy', undefined, signal);
+      const raw = await this.api.cloud('/policy', undefined, signal);
       const document = raw as {
         policy?: { product?: unknown };
       } | null;
@@ -29,7 +29,7 @@ export class PersistenceDemos {
         this.confirmed.set(version);
       }
     } catch {
-      // In the default profile the development route is absent.
+      // An unavailable authenticated API leaves the examples disabled.
     } finally {
       if (!this.destroyRef.destroyed) {
         this.checked.set(true);

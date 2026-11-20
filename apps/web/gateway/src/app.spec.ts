@@ -7,7 +7,6 @@ import { AuthHttpError, HttpError, httpErrorHandler, initializeObservability } f
 import type { Request, RequestHandler, Response } from 'express';
 import express, { Router } from 'express';
 import { describe, expect, it, vi } from 'vitest';
-import { syntheticHybridPolicy } from '@visomi-stack/shared-db';
 
 import type { ApiModule, EmbeddedAuthentication } from './api-module';
 import { createGatewayApp } from './app';
@@ -39,7 +38,12 @@ function dispatch(
 }
 
 function apiFixture(handler: RequestHandler = (request, response) => response.json({ path: request.path })) {
-  return { createApp: vi.fn(() => handler), authConfig: vi.fn(), createAuthentication: vi.fn() } satisfies ApiModule;
+  return {
+    exampleApiVersion: 1,
+    createApp: vi.fn(() => handler),
+    authConfig: vi.fn(),
+    createAuthentication: vi.fn(),
+  } satisfies ApiModule;
 }
 
 describe('gateway composition', () => {
@@ -56,17 +60,17 @@ describe('gateway composition', () => {
     expect(enabled.body).toEqual({ enabled: true });
   });
 
-  it('passes an explicit persistence manifest only to a compatible compiled API', () => {
-    expect(() => createGatewayApp({ api: apiFixture(), persistence: syntheticHybridPolicy })).toThrow(
-      'api_persistence_unavailable',
-    );
-    const api = { ...apiFixture(), persistenceVersion: 1 as const };
+  it('requires the compiled Example API with auth and passes through its configured dependencies', () => {
+    const api = apiFixture();
+    const auth = { middleware: [] };
+    const incompatible = { ...api, exampleApiVersion: undefined };
 
+    expect(() => createGatewayApp({ api: incompatible, auth })).toThrow('api_examples_unavailable');
     const backupObjects = { get: vi.fn(), put: vi.fn(), close: vi.fn() };
 
-    createGatewayApp({ api, persistence: syntheticHybridPolicy, persistenceDemos: true, backupObjects });
+    createGatewayApp({ api, auth, exampleHarness: true, backupObjects });
     expect(api.createApp).toHaveBeenCalledWith(
-      expect.objectContaining({ persistence: syntheticHybridPolicy, persistenceDemos: true, backupObjects }),
+      expect.objectContaining({ basePath: '/api', auth, exampleHarness: true, backupObjects }),
     );
   });
   it('serves packaged public branding without authentication, cookies or website fallbacks', async () => {

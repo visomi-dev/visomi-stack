@@ -97,17 +97,22 @@ export const appRoutes: Routes = [
       import('./layouts/authenticated-layout/authenticated-layout').then((m) => m.AuthenticatedLayout),
     children: [
       {
-        path: 'vault-example',
-        data: { backedSample: true },
-        loadComponent: () => import('./vault/example/vault-example').then((m) => m.VaultExample),
-      },
-      {
-        path: 'cloud-example',
-        loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
-      },
-      {
-        path: 'cloud-example/:tenantId/:scopeId',
-        loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
+        path: 'example',
+        children: [
+          {
+            path: 'vault',
+            data: { backedSample: true },
+            loadComponent: () => import('./vault/example/vault-example').then((m) => m.VaultExample),
+          },
+          {
+            path: 'cloud',
+            loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
+          },
+          {
+            path: 'cloud/:tenantId/:scopeId',
+            loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
+          },
+        ],
       },
       { path: 'home', loadComponent: () => import('./home/home').then((m) => m.Home) },
       { path: 'persistence', loadComponent: () => import('./db/example/example').then((m) => m.DatabaseExample) },

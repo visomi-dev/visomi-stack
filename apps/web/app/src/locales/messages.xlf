@@ -3073,14 +3073,14 @@
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleChecking" datatype="html">
-        <source>Checking the test profile…</source>
+        <source>Checking Cloud availability…</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
           <context context-type="linenumber">15,16</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleUnavailable" datatype="html">
-        <source>This example is available only in the opted-in test profile.</source>
+        <source>The Cloud example is unavailable right now.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
           <context context-type="linenumber">17,19</context>
@@ -3375,7 +3375,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="vaultBackupStorageDisabled" datatype="html">
-        <source>Enable private object storage in the test profile to create a backup workspace.</source>
+        <source>Private backup storage is unavailable right now. You can still use the local vault.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">30,31</context>
@@ -3386,6 +3386,20 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultBackupUnavailable" datatype="html">
+        <source>The Vault backup service is unavailable right now.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">29</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleStorageUnavailable" datatype="html">
+        <source>Cloud storage is unavailable right now. Try again later.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="linenumber">221</context>
         </context-group>
       </trans-unit>
     </body>

@@ -1,4 +1,4 @@
-import { syntheticHybridPolicy, type ProductPolicy } from '@visomi-stack/shared-db';
+import type { ProductPolicy } from '@visomi-stack/shared-db';
 import type { BackupObjects } from '@visomi-stack/backend-db';
 import { HttpError, routes } from '@visomi-stack/web-backend-shared';
 import type { ErrorRequestHandler, Request } from 'express';
@@ -9,14 +9,18 @@ import type { AuthRuntime } from '../auth/runtime';
 import { requireFull } from '../auth/shared/identity';
 import { csrf, rateLimit } from '../auth/shared/security';
 
-import { persistenceContracts as contracts } from './contracts';
+import { persistenceContracts as contracts, persistenceRecordContracts as recordContracts } from './contracts';
 import { SaasRecords } from './records';
 import { registerVaultRoutes } from './vault-router';
 import { validatePersistenceComposition } from './composition';
 import { PersistenceMaintenance } from './maintenance';
 import { cloudExamplePolicy, useCloudRecordRole } from './cloud-example';
 
-export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy, objects?: BackupObjects) {
+export function createPersistenceRouter(
+  auth: AuthRuntime,
+  policy: ProductPolicy,
+  { objects, harness = false }: { objects?: BackupObjects; harness?: boolean } = {},
+) {
   const router = Router();
   const access = new Access(auth.database, validatePersistenceComposition(policy));
   const cloud = policy.product === cloudExamplePolicy.product;
@@ -50,7 +54,7 @@ export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy
     {
       contract: contracts.maintenance,
       handler: async (req, res, value) => {
-        if (cloud) {
+        if (!harness) {
           throw new HttpError(409, 'capability_unavailable');
         }
 
@@ -67,11 +71,16 @@ export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy
           origin: auth.config.origin,
           rpId: auth.config.rpId,
           ...(objects ? { objectBackups: true } : {}),
+          ...(harness ? { hybridHarness: true } : {}),
         }),
     },
     {
       contract: contracts.createTenant,
       handler: async (req, res) => {
+        if (!cloud && !harness && !objects) {
+          throw new HttpError(503, 'vault_backup_unavailable');
+        }
+
         const result = await access.createTenant(actor(req));
 
         return res.json(result);
@@ -80,25 +89,18 @@ export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy
     {
       contract: contracts.createScope,
       handler: async (req, res, value) => {
-        if (value.body.objectBackup) {
-          if (
-            policy.product !== syntheticHybridPolicy.product ||
-            value.body.kind !== 'resource' ||
-            value.params.scopeId !== value.params.tenantId
-          ) {
-            throw new HttpError(403, 'scope_access_denied');
-          }
+        const backup = value.body.objectBackup === true;
+        const rootResource = value.body.kind === 'resource' && value.params.scopeId === value.params.tenantId;
 
-          if (!objects) {
-            throw new HttpError(503, 'vault_backup_unavailable');
-          }
-        }
-
-        if (cloud && (value.body.kind !== 'resource' || value.params.scopeId !== value.params.tenantId)) {
+        if (cloud ? backup || !rootResource : backup ? !rootResource : !harness) {
           throw new HttpError(403, 'scope_access_denied');
         }
 
-        const result = await access.createScope(actor(req), value.params, value.body, value.body.objectBackup ?? false);
+        if (backup && !objects) {
+          throw new HttpError(503, 'vault_backup_unavailable');
+        }
+
+        const result = await access.createScope(actor(req), value.params, value.body, backup);
 
         return res.json(result);
       },
@@ -126,39 +128,44 @@ export function createPersistenceRouter(auth: AuthRuntime, policy: ProductPolicy
         return res.json(result);
       },
     },
-    {
-      contract: contracts.list,
-      handler: async (req, res, value) => {
-        const result = await records.list(actor(req), target(value.params), value.params.domain, value.query);
-
-        return res.json(result);
-      },
-    },
-    {
-      contract: contracts.export,
-      handler: async (req, res, value) => {
-        const result = await records.list(actor(req), target(value.params), value.params.domain, value.query);
-
-        return res.json(result);
-      },
-    },
-    {
-      contract: contracts.read,
-      handler: async (req, res, value) => {
-        const result = await records.read(actor(req), target(value.params), value.params.domain, value.params.id);
-
-        return res.json(result);
-      },
-    },
-    {
-      contract: contracts.mutate,
-      handler: async (req, res, value) => {
-        const result = await records.mutate(actor(req), target(value.params), value.params.domain, value.body);
-
-        return res.json(result);
-      },
-    },
   ]);
+
+  if (cloud || harness) {
+    routes.register(router, [
+      {
+        contract: recordContracts.list,
+        handler: async (req, res, value) => {
+          const result = await records.list(actor(req), target(value.params), value.params.domain, value.query);
+
+          return res.json(result);
+        },
+      },
+      {
+        contract: recordContracts.export,
+        handler: async (req, res, value) => {
+          const result = await records.list(actor(req), target(value.params), value.params.domain, value.query);
+
+          return res.json(result);
+        },
+      },
+      {
+        contract: recordContracts.read,
+        handler: async (req, res, value) => {
+          const result = await records.read(actor(req), target(value.params), value.params.domain, value.params.id);
+
+          return res.json(result);
+        },
+      },
+      {
+        contract: recordContracts.mutate,
+        handler: async (req, res, value) => {
+          const result = await records.mutate(actor(req), target(value.params), value.params.domain, value.body);
+
+          return res.json(result);
+        },
+      },
+    ]);
+  }
 
   if (!cloud) {
     registerVaultRoutes(router, access, objects);

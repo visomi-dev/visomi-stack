@@ -138,11 +138,11 @@ export class ExampleWorkspace {
     }
 
     await this.run(async (signal) => {
-      const parent = await this.api.request('/tenants', {}, signal);
+      const parent = await this.api.vault('/tenants', {}, signal);
 
       this.current(signal);
       const tenant = scopeSchema.parse(parent);
-      const created = await this.api.request(
+      const created = await this.api.vault(
         `/tenants/${tenant.tenantId}/scopes/${tenant.scopeId}/children`,
         this.backedSample ? { kind: 'resource', objectBackup: true } : { kind: 'resource' },
         signal,
@@ -153,7 +153,7 @@ export class ExampleWorkspace {
       const objectId = this.document.defaultView!.crypto.randomUUID();
 
       if (this.backedSample) {
-        await this.router.navigate(['/vault-example'], { queryParams: { ...target, objectId } });
+        await this.router.navigate(['/example/vault'], { queryParams: { ...target, objectId } });
       } else {
         await this.router.navigate(['/persistence', target.tenantId, target.scopeId, objectId]);
       }
@@ -171,7 +171,7 @@ export class ExampleWorkspace {
         audience: 'owner',
       };
 
-      await this.api.request(
+      await this.api.vault(
         this.records(target),
         current
           ? { ...shared, kind: 'update', id: current.id, expectedRevision: current.revision }
@@ -309,7 +309,7 @@ export class ExampleWorkspace {
 
   private async canBootstrap(target: ExampleTarget, signal: AbortSignal): Promise<boolean> {
     try {
-      await this.api.request(`${examplePrivatePath(target)}/devices`, undefined, signal);
+      await this.api.vault(`${examplePrivatePath(target)}/devices`, undefined, signal);
 
       return false;
     } catch (error) {
@@ -322,7 +322,7 @@ export class ExampleWorkspace {
   }
 
   private async loadCloud(target: ExampleTarget, signal: AbortSignal) {
-    const raw = await this.api.request(`${this.records(target)}?limit=1`, undefined, signal);
+    const raw = await this.api.vault(`${this.records(target)}?limit=1`, undefined, signal);
 
     this.current(signal);
     const value = cloudSchema.parse(raw).items[0] ?? null;
@@ -436,10 +436,14 @@ export class ExampleWorkspace {
       }
 
       void this.run(async (signal) => {
-        const raw = await this.api.request('/policy', undefined, signal);
+        const raw = await this.api.vault('/policy', undefined, signal);
 
         this.current(signal);
         const profile = readExampleProfile(raw, this.document.defaultView?.location.origin);
+
+        if (!this.backedSample && !profile.hybridHarness) {
+          return;
+        }
 
         const target = params.has('tenantId')
           ? targetSchema.parse({

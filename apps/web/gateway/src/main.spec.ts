@@ -146,7 +146,7 @@ describe('gateway executable ownership', () => {
 
     await start();
 
-    expect(boundary.createGatewayApp.mock.calls[0][0]).toMatchObject({ backupObjects, persistenceDemos: true });
+    expect(boundary.createGatewayApp.mock.calls[0][0]).toMatchObject({ backupObjects, exampleHarness: true });
     boundary.signals.get('SIGTERM')!();
 
     await vi.advanceTimersByTimeAsync(0);

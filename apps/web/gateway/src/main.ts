@@ -22,7 +22,7 @@ import {
   initializeObservability,
   proxyConfiguration,
 } from '@visomi-stack/web-backend-shared';
-import { developmentPersistenceDemos, developmentPersistencePolicy } from '@visomi-stack/shared-db';
+import { developmentPersistenceDemos } from '@visomi-stack/shared-db';
 
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -205,15 +205,13 @@ async function bootstrap() {
     pages: stackVisitPages,
   });
 
-  const persistence = developmentPersistencePolicy(process.env);
-  const persistenceDemos = developmentPersistenceDemos(process.env);
+  const exampleHarness = developmentPersistenceDemos(process.env);
 
   backupObjects = api.createBackupObjects?.(process.env);
 
   const application = createGatewayApp({
     visits,
-    ...(persistence ? { persistence } : {}),
-    ...(persistenceDemos ? { persistenceDemos } : {}),
+    ...(exampleHarness ? { exampleHarness } : {}),
     ...(backupObjects ? { backupObjects } : {}),
     api,
     site,

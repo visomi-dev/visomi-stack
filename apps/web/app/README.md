@@ -210,7 +210,7 @@ See [Web foundations](../../../docs/web-foundations.md) for the shared UI contra
 
 ## Reference vault
 
-The authenticated Vault example at `/app/{en,es}/vault-example` starts setup only
+The authenticated Vault example at `/app/{en,es}/example/vault` starts setup only
 when the visitor chooses **Set up my vault**. It asks the browser for an existing
 passkey for the current site and checks the credential's actual PRF result.
 Finishing setup verifies that same credential against the vault binding. If the

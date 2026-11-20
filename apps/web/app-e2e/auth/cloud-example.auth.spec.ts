@@ -38,6 +38,8 @@ test('Cloud shares only the selected synthetic notes with an explicitly permitte
 
     await page.locator('app-sidebar').getByRole('link', { name: 'Cloud example', exact: true }).click();
 
+    await expect(page).toHaveURL(/\/app\/en\/example\/cloud$/);
+
     await expect(page.getByRole('heading', { name: 'Cloud example', exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
@@ -92,6 +94,8 @@ test('Cloud shares only the selected synthetic notes with an explicitly permitte
       .filter({ hasText: 'Synthetic team note' })
       .getByRole('button', { name: 'Edit note' })
       .click();
+
+    await expect(page.getByLabel('Note title', { exact: true })).toHaveValue('Synthetic team note');
 
     await saveNote(page, 'Synthetic updated note', 'Updated team fixture', true);
 

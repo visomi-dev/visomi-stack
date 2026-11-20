@@ -87,7 +87,7 @@ async function fixture(generation = 1, schemaVersion = 1) {
     release: vi.fn(),
   };
   const api = {
-    request: vi.fn(async (path: string) =>
+    vault: vi.fn(async (path: string) =>
       path.endsWith('/devices')
         ? {
             key: binding.key,
@@ -203,7 +203,7 @@ it('rejects every operation for an object other than the explicitly unlocked tar
   await f.resource.unlock(f.target, 'synthetic.example.test', false);
 
   const target = { ...f.target, objectId: '66666666-6666-4666-8666-666666666666' };
-  const calls = f.api.request.mock.calls.length;
+  const calls = f.api.vault.mock.calls.length;
 
   for (const action of [
     () => f.resource.save(target, 'Wrong object'),
@@ -214,7 +214,7 @@ it('rejects every operation for an object other than the explicitly unlocked tar
     await expect(action()).rejects.toMatchObject({ code: 'stale-operation' });
   }
 
-  expect(f.api.request.mock.calls).toHaveLength(calls);
+  expect(f.api.vault.mock.calls).toHaveLength(calls);
 });
 
 it('does not resume an old save after another object is unlocked in the same scope', async () => {
@@ -258,7 +258,7 @@ it('restores an already opened local scope for its new view without any roster o
 
   await f.resource.resume(f.target, 'synthetic.example.test');
 
-  expect(f.api.request).not.toHaveBeenCalled();
+  expect(f.api.vault).not.toHaveBeenCalled();
   expect(f.vault.canResume).toHaveBeenCalledWith(f.binding);
   expect(f.vault.connect).toHaveBeenCalledWith(f.binding, 'synthetic.example.test', false, undefined);
   expect(f.vault.readEnvelope).toHaveBeenCalledWith(f.envelope);
@@ -286,22 +286,22 @@ it('rejects a late navigation resume before it can replace the target or reconne
   await rejected;
 
   expect(f.vault.connect).not.toHaveBeenCalled();
-  expect(f.api.request).not.toHaveBeenCalled();
+  expect(f.api.vault).not.toHaveBeenCalled();
 });
 
 it('retains the authorized roster epoch and generation through navigation before the first sync page arrives', async () => {
   const f = await fixture();
-  const request = f.api.request.getMockImplementation()!;
+  const request = f.api.vault.getMockImplementation()!;
   let finish!: (page: Awaited<ReturnType<typeof request>>) => void;
   const delayed = new Promise<Awaited<ReturnType<typeof request>>>((resolve) => {
     finish = resolve;
   });
 
-  f.api.request.mockImplementation((path) => (path.endsWith('/sync/pull') ? delayed : request(path)));
+  f.api.vault.mockImplementation((path) => (path.endsWith('/sync/pull') ? delayed : request(path)));
   const opening = f.resource.unlock(f.target, 'synthetic.example.test', false);
   const canceled = expect(opening).rejects.toMatchObject({ code: 'stale-operation' });
 
-  await vi.waitFor(() => expect(f.api.request.mock.calls.some(([path]) => path.endsWith('/sync/pull'))).toBe(true));
+  await vi.waitFor(() => expect(f.api.vault.mock.calls.some(([path]) => path.endsWith('/sync/pull'))).toBe(true));
 
   expect(f.initial.epoch).toBe(3);
   expect(f.commit).not.toHaveBeenCalled();
@@ -309,7 +309,7 @@ it('retains the authorized roster epoch and generation through navigation before
 
   await f.resource.resume(f.target, 'synthetic.example.test');
 
-  f.api.request.mockImplementation(async (path) => {
+  f.api.vault.mockImplementation(async (path) => {
     const page = await request(path);
 
     return { ...page, epoch: 2 };
@@ -330,7 +330,7 @@ it('retains the authorized roster epoch and generation through navigation before
 it('invalidates cached custody when the authorized roster no longer approves its device', async () => {
   const f = await fixture();
 
-  f.api.request.mockResolvedValueOnce({ key: f.binding.key, epoch: 3, phase: 'ready', devices: [] });
+  f.api.vault.mockResolvedValueOnce({ key: f.binding.key, epoch: 3, phase: 'ready', devices: [] });
 
   await expect(f.resource.unlock(f.target, 'synthetic.example.test', false)).rejects.toMatchObject({
     code: 'recovery-required',

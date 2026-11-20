@@ -6,10 +6,10 @@ separate implemented behavior from independent acceptance and provider operation
 
 ## Composition and authority
 
-`createApp({ auth, persistence: productPolicy })` opts into `/persistence` routes
-and their OpenAPI operations. The executable supplies auth/database resources;
+`createApp({ auth })` composes the Vault and Cloud example routers and their OpenAPI operations
+under `/example`. The gateway adds `/api`. The executable supplies auth/database resources;
 importing the module opens no pool, listener, timer or network connection.
-Default deployed composition does not enable this example automatically.
+The application without authentication does not mount the Example routers. The separate technical harness remains development/test only.
 `syntheticHybridPolicy` is an explicitly synthetic consumer example, not Nive
 configuration or a user-controlled reader-mode switch. Recovery `none` in that
 fixture does not choose a recovery policy for a real product.

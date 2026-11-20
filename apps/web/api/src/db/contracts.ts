@@ -75,6 +75,7 @@ export const persistenceContracts = {
         origin: z.url(),
         rpId: z.string(),
         objectBackups: z.literal(true).optional(),
+        hybridHarness: z.literal(true).optional(),
       }),
     ),
   }),
@@ -114,6 +115,9 @@ export const persistenceContracts = {
     request: z.object({ params: targetSchema, body: grantInputSchema }),
     responses: response(changed),
   }),
+};
+
+export const persistenceRecordContracts = {
   list: defineRoute({
     ...base,
     security: cookieSecurity,

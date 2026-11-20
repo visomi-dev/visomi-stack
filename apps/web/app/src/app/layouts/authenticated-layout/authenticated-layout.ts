@@ -31,7 +31,7 @@ import { LanguageSwitcher } from '../../i18n/language-switcher/language-switcher
 import { BrowserPrivacy } from '../../observability/browser-privacy/browser-privacy';
 import { ConsentNotice } from '../../observability/consent-notice/consent-notice';
 import { PrivacyLink } from '../../observability/privacy-link/privacy-link';
-import { PersistenceDemos } from '../../db/persistence-demos';
+import { ExampleAvailability } from '../../db/example-availability';
 
 @Component({
   selector: 'app-authenticated-layout',
@@ -60,7 +60,7 @@ import { PersistenceDemos } from '../../db/persistence-demos';
     AuthFeedback,
     Dialog,
   ],
-  providers: [Action, AuthHttp, Logout, Vaults, DatabaseHttp, PersistenceDemos],
+  providers: [Action, AuthHttp, Logout, Vaults, DatabaseHttp, ExampleAvailability],
   templateUrl: './authenticated-layout.html',
   styleUrl: './authenticated-layout.css',
 })
@@ -70,7 +70,7 @@ export class AuthenticatedLayout {
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly pageNavigation = inject(Navigation);
-  private readonly demos = inject(PersistenceDemos);
+  private readonly examples = inject(ExampleAvailability);
 
   private readonly mobileMenu = viewChild.required(Dialog);
 
@@ -91,17 +91,17 @@ export class AuthenticatedLayout {
   protected readonly navbarItems = [
     { path: '/home', label: $localize`:@@authHome:Home`, icon: 'M3 10 12 3l9 7v11h-6v-7H9v7H3Z' },
     {
-      path: '/vault-example',
+      path: '/example/vault',
       label: $localize`:@@vaultDemoTitle:Vault example`,
       icon: 'M4 5h16v14H4zM8 5v14m8-7h.01M12 12h.01',
     },
   ] as const;
   protected readonly primaryItems = computed(() => [
     this.navbarItems[0],
-    ...(this.demos.enabled()
+    ...(this.examples.enabled()
       ? [
           {
-            path: '/cloud-example',
+            path: '/example/cloud',
             label: $localize`:@@cloudExampleTitle:Cloud example`,
             icon: 'M6 18a4 4 0 0 1-.5-8 6.5 6.5 0 0 1 12.5 2.5 2.8 2.8 0 1 1 0 5.5Z',
           },
@@ -128,7 +128,7 @@ export class AuthenticatedLayout {
   readonly vaultMethod = computed(() => {
     this.pageNavigation.context();
     const url = this.router.url;
-    const ownsPrompt = url.startsWith('/persistence') || (this.demos.enabled() && url.startsWith('/vault-example?'));
+    const ownsPrompt = url.startsWith('/persistence') || (this.examples.enabled() && url.startsWith('/example/vault?'));
 
     return this.vaults.show() && !ownsPrompt ? this.vaults.binding()?.method : undefined;
   });
