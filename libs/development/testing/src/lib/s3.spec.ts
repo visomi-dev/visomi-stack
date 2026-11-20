@@ -29,7 +29,7 @@ it('waits for a private test bucket under the existing fixture owner', async () 
 
   await expect(testBackupS3(owner)).resolves.toMatchObject({
     endpoint: 'http://127.0.0.1:8555',
-    environment: { VISOMI_VAULT_BACKUP_S3_BUCKET: backupBucket },
+    environment: { PRIVATE_S3_BUCKET: backupBucket },
   });
 
   expect(runTestCompose).toHaveBeenNthCalledWith(1, owner, ['up', '-d', 'vault-s3']);

@@ -18,9 +18,9 @@ The remaining `/app/{en,es}/persistence` page is the technical hybrid harness fo
 
 New backups require a private S3-compatible bucket with these server-only settings.
 
-- `VISOMI_VAULT_BACKUP_S3_ENDPOINT` is the fixed HTTPS origin for path-style requests signed for `us-east-1`. Development and tests also accept HTTP on `127.0.0.1`.
-- `VISOMI_VAULT_BACKUP_S3_BUCKET` identifies the private bucket.
-- `VISOMI_VAULT_BACKUP_S3_ACCESS_KEY` and `VISOMI_VAULT_BACKUP_S3_SECRET_KEY` authorize the server to read and create backup objects and delete abandoned uploads under `vault-backups/`.
+- `PRIVATE_S3_ENDPOINT` is the fixed HTTPS origin for path-style requests signed for `us-east-1`. Development and tests also accept HTTP on `127.0.0.1`.
+- `PRIVATE_S3_BUCKET` identifies the private bucket.
+- `PRIVATE_S3_ACCESS_KEY` and `PRIVATE_S3_SECRET_KEY` authorize the server to read and create backup objects and delete abandoned uploads under `vault-backups/`.
 
 Missing or unsafe storage configuration leaves new Vault backups unavailable while the local Vault stays available. Previous workspaces keep their PostgreSQL ciphertext history and access rules. The authenticated tests start a pinned disposable SeaweedFS container with synthetic credentials. The production-mode support is tested in isolation.
 
