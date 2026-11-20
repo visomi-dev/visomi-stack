@@ -52,15 +52,11 @@ export async function prepare(page: Page) {
   try {
     await page.goto(origin);
 
-    await page.addScriptTag({
-      type: 'module',
-      content:
-        "import * as runtime from '/libs/web/frontend/db/src/index.ts'; import * as storage from '/libs/web/frontend/db/src/storage.ts'; const api = { ...runtime, ...storage }; import * as contracts from '/libs/shared/db/src/index.ts'; globalThis.fixtureModules = { api, contracts };",
-    });
+    const ready = await page.evaluate(() => Boolean((globalThis as FixtureWindow).fixtureModules));
 
-    await page.waitForFunction(() => Boolean((globalThis as FixtureWindow).fixtureModules), undefined, {
-      polling: 100,
-    });
+    if (!ready) {
+      throw new Error('Fixture module did not load with the document');
+    }
   } catch (error) {
     const statuses = [...failedModuleResponses].join(', ') || 'none';
 
@@ -85,7 +81,7 @@ beforeAll(async () => {
     configFile: false,
     appType: 'custom',
     resolve: { tsconfigPaths: true },
-    // The injected module is invisible to the HTML dependency scan.
+    // The test-only HTML is served by middleware, outside the dependency scan.
     optimizeDeps: { noDiscovery: true, include: ['dexie', 'hash-wasm', 'zod'] },
     server: { host: '127.0.0.1', port: 0 },
     logLevel: 'silent',
@@ -101,9 +97,14 @@ beforeAll(async () => {
             }
 
             response.setHeader('content-type', 'text/html');
-            response.end(
-              '<!doctype html><html lang="en"><title>Synthetic vault fixture</title><body>Vault storage test</body></html>',
-            );
+            response.end(`<!doctype html>
+              <html lang="en">
+                <head>
+                  <title>Synthetic vault fixture</title>
+                  <script type="module" src="/libs/web/frontend/db/tests/support/browser-entry.ts"></script>
+                </head>
+                <body>Vault storage test</body>
+              </html>`);
           });
         },
       },
