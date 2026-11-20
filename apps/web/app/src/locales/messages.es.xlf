@@ -1268,11 +1268,15 @@
       </trans-unit>
       <trans-unit id="vaultDemoTitle" datatype="html">
         <source>Vault example</source>
-        <target>Ejemplo de vault</target>
+        <target>Ejemplo de bóveda</target>
+      </trans-unit>
+      <trans-unit id="vaultDemoLocalHeading" datatype="html">
+        <source>Local-only sample</source>
+        <target>Muestra para este navegador</target>
       </trans-unit>
       <trans-unit id="vaultDemoDescription" datatype="html">
-        <source> Try opening an encrypted example note. The vault and its note stay in this browser. </source>
-        <target>Abre una nota cifrada de ejemplo. La bóveda y la nota se quedan en este navegador.</target>
+        <source> Try unlocking a separate sample note. This note stays in this browser. </source>
+        <target>Prueba cómo se desbloquea una nota de ejemplo. Esta nota solo se guarda en este navegador.</target>
       </trans-unit>
       <trans-unit id="vaultDemoUnavailable" datatype="html">
         <source>We can’t store the example vault on this device.</source>
@@ -1432,7 +1436,7 @@
       </trans-unit>
       <trans-unit id="vaultDevicesTitle" datatype="html">
         <source>Vault devices</source>
-        <target>Dispositivos del vault</target>
+        <target>Dispositivos de la bóveda</target>
       </trans-unit>
       <trans-unit id="vaultDevicesDescription" datatype="html">
         <source> Pair devices for this synthetic private resource. Keep this page open on both signed-in devices until pairing finishes. </source>
@@ -1504,23 +1508,23 @@
       </trans-unit>
       <trans-unit id="cloudExampleDescription" datatype="html">
         <source> Use test data to try a service-readable workspace. Notes are stored in PostgreSQL. Database row security and the app’s permission checks protect access. The server can read the notes, so this is regular cloud storage. </source>
-        <target>Usa datos de prueba para explorar un espacio de trabajo cuyas notas puede leer el servicio. Las notas se guardan en PostgreSQL. La seguridad por fila de la base de datos y las comprobaciones de permisos de la aplicación controlan el acceso. El servidor puede leer las notas: es almacenamiento en la nube convencional.</target>
+        <target>Usa notas de prueba para ver cómo funciona un espacio de trabajo en la nube. El servidor guarda las notas en PostgreSQL y puede leer su contenido. La aplicación verifica tus permisos y la base de datos controla el acceso a cada nota.</target>
       </trans-unit>
       <trans-unit id="cloudExamplePermissions" datatype="html">
         <source> The workspace owner writes notes and chooses which to share. A test account with read access can see only shared notes. Choose Vault for data that requires a separate device unlock. </source>
-        <target>La persona dueña del espacio de trabajo escribe las notas y elige cuáles compartir. Una cuenta de prueba con permiso de lectura solo puede ver las notas compartidas. Elige la bóveda si necesitas desbloquear los datos por separado en el dispositivo.</target>
+        <target>Si creas el espacio de trabajo, puedes escribir notas y decidir cuáles compartir. Quienes tengan permiso de lectura solo verán las notas que compartas. En la bóveda, los datos se desbloquean por separado en tu dispositivo.</target>
       </trans-unit>
       <trans-unit id="cloudExampleChecking" datatype="html">
         <source>Checking Cloud availability…</source>
-        <target>Comprobando si la nube está disponible…</target>
+        <target>Comprobando si el ejemplo está disponible…</target>
       </trans-unit>
       <trans-unit id="cloudExampleUnavailable" datatype="html">
         <source>The Cloud example is unavailable right now.</source>
-        <target>El ejemplo de nube no está disponible en este momento.</target>
+        <target>El ejemplo en la nube no está disponible por ahora.</target>
       </trans-unit>
       <trans-unit id="cloudExampleMemberId" datatype="html">
         <source>Your test account ID is <x id="INTERPOLATION" equiv-text="{{ id }}"/>.</source>
-        <target>El ID de tu cuenta de prueba es <x id="INTERPOLATION" equiv-text="{{ id }}"/>.</target>
+        <target>ID de tu cuenta de prueba: <x id="INTERPOLATION" equiv-text="{{ id }}"/></target>
       </trans-unit>
       <trans-unit id="cloudExampleInvalidLink" datatype="html">
         <source>This test workspace link is invalid.</source>
@@ -1532,15 +1536,15 @@
       </trans-unit>
       <trans-unit id="cloudExampleEmpty" datatype="html">
         <source>There are no visible notes in this workspace.</source>
-        <target>No hay notas visibles en este espacio de trabajo.</target>
+        <target>No hay notas que puedas ver en este espacio de trabajo.</target>
       </trans-unit>
       <trans-unit id="cloudExampleScopeAudience" datatype="html">
         <source>Shared with permitted readers</source>
-        <target>Compartida con cuentas autorizadas</target>
+        <target>Compartida con quienes tienen acceso</target>
       </trans-unit>
       <trans-unit id="cloudExampleOwnerAudience" datatype="html">
         <source>Owner only</source>
-        <target>Solo para la persona dueña</target>
+        <target>Solo para el propietario</target>
       </trans-unit>
       <trans-unit id="cloudExampleEdit" datatype="html">
         <source> Edit note </source>
@@ -1564,7 +1568,7 @@
       </trans-unit>
       <trans-unit id="cloudExampleNoteBody" datatype="html">
         <source>Synthetic note text</source>
-        <target>Texto de prueba de la nota</target>
+        <target>Contenido de la nota de prueba</target>
       </trans-unit>
       <trans-unit id="cloudExampleAudience" datatype="html">
         <source>Who can read this note?</source>
@@ -1584,7 +1588,7 @@
       </trans-unit>
       <trans-unit id="cloudExampleShareHelp" datatype="html">
         <source> Ask a verified test account for its ID. After granting access, send the workspace’s address to that account. Anyone who opens the address still needs permission. </source>
-        <target>Pídele su ID a quien tenga una cuenta de prueba verificada. Después de darle acceso, envíale la dirección del espacio de trabajo. Quien abra el enlace seguirá necesitando permiso.</target>
+        <target>Pídele su ID a la persona con la que quieras compartir el espacio. Su cuenta de prueba debe estar verificada. Una vez que le des acceso, envíale el enlace. Solo podrán ver las notas compartidas quienes tengan permiso.</target>
       </trans-unit>
       <trans-unit id="cloudExampleShareId" datatype="html">
         <source>Test account ID</source>
@@ -1592,7 +1596,7 @@
       </trans-unit>
       <trans-unit id="cloudExampleGrant" datatype="html">
         <source> Grant read access </source>
-        <target>Dar acceso de lectura</target>
+        <target>Dar permiso de lectura</target>
       </trans-unit>
       <trans-unit id="cloudExampleRevoke" datatype="html">
         <source> Remove access </source>
@@ -1612,11 +1616,11 @@
       </trans-unit>
       <trans-unit id="cloudExampleShared" datatype="html">
         <source>Read access granted.</source>
-        <target>Se concedió el acceso de lectura.</target>
+        <target>La cuenta ya tiene permiso de lectura.</target>
       </trans-unit>
       <trans-unit id="cloudExampleRevoked" datatype="html">
         <source>Access removed.</source>
-        <target>Se quitó el acceso.</target>
+        <target>La cuenta ya no tiene acceso.</target>
       </trans-unit>
       <trans-unit id="cloudExampleDenied" datatype="html">
         <source>This account doesn’t have access to the test workspace.</source>
@@ -1625,22 +1629,6 @@
       <trans-unit id="cloudExampleError" datatype="html">
         <source>We couldn’t complete that action. Try again.</source>
         <target>No pudimos completar la acción. Inténtalo de nuevo.</target>
-      </trans-unit>
-      <trans-unit id="vaultExampleBackupHeading" datatype="html">
-        <source>Local encrypted download</source>
-        <target>Descarga local cifrada</target>
-      </trans-unit>
-      <trans-unit id="vaultExampleBackupExplanation" datatype="html">
-        <source> Open the example note to download an encrypted copy. The file contains the encrypted note and its original device-bound key wrapper. Keep it private, especially if you use a PIN. </source>
-        <target>Abre la nota de ejemplo para descargar una copia cifrada. El archivo contiene la nota cifrada y la clave protegida del dispositivo original. Guarda el archivo en un lugar privado, sobre todo si usas un PIN.</target>
-      </trans-unit>
-      <trans-unit id="vaultExampleBackupRestoreLimit" datatype="html">
-        <source> Signing in doesn’t unlock the vault. This file has no authorized restore path on a second browser profile. Use the backed-up sample below to try restoring a note on a paired device. </source>
-        <target>Iniciar sesión no desbloquea la bóveda. Este archivo no se puede restaurar de forma autorizada en otro perfil del navegador. Prueba el ejemplo de abajo para respaldar y restaurar una nota en un dispositivo vinculado.</target>
-      </trans-unit>
-      <trans-unit id="vaultExampleBackupDownload" datatype="html">
-        <source> Download encrypted backup </source>
-        <target>Descargar respaldo cifrado</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleDenied" datatype="html">
         <source>This account doesn’t have access to the backup workspace.</source>
@@ -1651,8 +1639,8 @@
         <target>Respalda y restaura una nota de prueba</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleExplanation" datatype="html">
-        <source> Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy, then open this workspace on an approved device to download the same note. In workspaces with private object storage, this screen checks for updates while the vault is unlocked. Earlier workspaces keep their existing storage. </source>
-        <target>Crea una nota de prueba. Se cifra antes de guardarse en este navegador. Sube la copia cifrada y abre este espacio de trabajo en un dispositivo aprobado para descargar la misma nota. En los espacios con almacenamiento privado de objetos, esta pantalla busca actualizaciones mientras la bóveda está desbloqueada. Los espacios anteriores conservan su almacenamiento.</target>
+        <source> The browser encrypts the test note and saves it in IndexedDB. When you upload a backup, only the encrypted copy goes to the server. To restore the same note, pair your other device and unlock the vault there. </source>
+        <target>El navegador cifra la nota de prueba y la guarda en IndexedDB. Al hacer el respaldo, solo se envía la copia cifrada al servidor. Para recuperar la misma nota, vincula tu otro dispositivo y desbloquea ahí la bóveda.</target>
       </trans-unit>
       <trans-unit id="vaultSyncInProgress" datatype="html">
         <source>Syncing Vault…</source>
@@ -1672,31 +1660,31 @@
       </trans-unit>
       <trans-unit id="vaultBackedSampleCreate" datatype="html">
         <source>Create a backup test workspace</source>
-        <target>Crear espacio de prueba para respaldos</target>
+        <target>Crear un espacio de prueba con respaldo</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleNote" datatype="html">
         <source>Note in the backup workspace</source>
-        <target>Nota del espacio de trabajo del respaldo</target>
+        <target>Nota de prueba con respaldo</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleNeedsPairing" datatype="html">
         <source> Sign-in gives you access to the workspace. To restore the note on this browser, open Vault devices and get approval from a device that can already unlock it. </source>
-        <target>Al iniciar sesión puedes acceder al espacio de trabajo. Para restaurar la nota en este navegador, abre Dispositivos del vault y pide la aprobación de un dispositivo que ya pueda desbloquearla.</target>
+        <target>Vincula este dispositivo para recuperar la nota. Abre Dispositivos de la bóveda y pide la aprobación de un dispositivo que ya pueda desbloquearla.</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleUpload" datatype="html">
         <source>Upload encrypted note</source>
-        <target>Subir nota cifrada</target>
+        <target>Respaldar nota cifrada</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleRestore" datatype="html">
         <source>Download and restore note</source>
-        <target>Descargar y restaurar nota</target>
+        <target>Restaurar nota en este dispositivo</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleSynced" datatype="html">
         <source> The encrypted note is backed up and saved on this browser. </source>
-        <target>La nota cifrada está respaldada y guardada en este navegador.</target>
+        <target>La nota tiene un respaldo cifrado y está guardada en este navegador.</target>
       </trans-unit>
       <trans-unit id="vaultBackupStorageDisabled" datatype="html">
         <source>Private backup storage is unavailable right now. You can still use the local vault.</source>
-        <target>El almacenamiento privado de respaldos no está disponible. Puedes seguir usando la bóveda local.</target>
+        <target>Por ahora no se pueden guardar respaldos en la nube. Puedes usar la muestra local en este navegador.</target>
       </trans-unit>
       <trans-unit id="vaultBackupStorageRetry" datatype="html">
         <source>We couldn’t verify the encrypted backup. Your local data is unchanged. Try again later.</source>
@@ -1708,7 +1696,7 @@
       </trans-unit>
       <trans-unit id="cloudExampleStorageUnavailable" datatype="html">
         <source>Cloud storage is unavailable right now. Try again later.</source>
-        <target>El almacenamiento en la nube no está disponible en este momento. Inténtalo más tarde.</target>
+        <target>Por ahora no podemos acceder al almacenamiento en la nube. Inténtalo más tarde.</target>
       </trans-unit>
     </body>
   </file>

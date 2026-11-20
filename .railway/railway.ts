@@ -1,6 +1,17 @@
 import { readFileSync } from 'node:fs';
 
-import { database, defineRailway, github, image, postgres, preserve, project, service, volume } from 'railway/iac';
+import {
+  bucket,
+  database,
+  defineRailway,
+  github,
+  image,
+  postgres,
+  preserve,
+  project,
+  service,
+  volume,
+} from 'railway/iac';
 
 export const jaegerImage =
   'jaegertracing/jaeger:2.22.0@sha256:4d9387a02389204ef9a256cf291a36cfbae91983010e403b4d300202d07eff2a';
@@ -36,6 +47,7 @@ export const watchPatterns = [
 ];
 
 export default defineRailway(() => {
+  const privateFiles = bucket('private-files', { region: 'iad' });
   const brokerData = volume('redis-volume', { sizeMB: 50000, region: 'us-east4-eqdc4a' });
   const broker = database('Redis', 'redis', {
     image: 'redis:8.2',
@@ -115,6 +127,10 @@ export default defineRailway(() => {
       // One sanitizing HTTP ingress; no raw TCP exposure and only trusted private callers.
       AUTH_TRUST_PROXY: '1-hop',
       REALTIME_REDIS_URL: broker.env.REDIS_URL,
+      VISOMI_VAULT_BACKUP_S3_ENDPOINT: '${{private-files.ENDPOINT}}',
+      VISOMI_VAULT_BACKUP_S3_BUCKET: '${{private-files.BUCKET}}',
+      VISOMI_VAULT_BACKUP_S3_ACCESS_KEY: '${{private-files.ACCESS_KEY_ID}}',
+      VISOMI_VAULT_BACKUP_S3_SECRET_KEY: '${{private-files.SECRET_ACCESS_KEY}}',
       SMTP_HOST: preserve(),
       SMTP_PORT: preserve(),
       SMTP_SECURE: preserve(),
@@ -131,6 +147,6 @@ export default defineRailway(() => {
   });
 
   return project('visomi-stack', {
-    resources: [gateway, jaeger, broker, brokerData, appDatabase, databaseVolume],
+    resources: [gateway, jaeger, broker, brokerData, appDatabase, databaseVolume, privateFiles],
   });
 });

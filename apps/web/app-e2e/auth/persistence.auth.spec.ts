@@ -423,7 +423,7 @@ test('pairs a test private resource in Security across a PIN device and a PRF de
 
     await recipient.goto(pairingPage.replace('/app/en/', '/app/es/'));
 
-    await expect(recipient.getByRole('heading', { name: 'Dispositivos del vault', exact: true })).toBeVisible();
+    await expect(recipient.getByRole('heading', { name: 'Dispositivos de la bóveda', exact: true })).toBeVisible();
 
     await recipient.goto(pairingPage);
 

@@ -2699,12 +2699,19 @@
           <context context-type="linenumber">243,247</context>
         </context-group>
         <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/vault/example/vault-example.html</context>
+          <context context-type="linenumber">1</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultDemoLocalHeading" datatype="html">
+        <source>Local-only sample</source>
+        <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">2,4</context>
+          <context context-type="linenumber">2</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDemoDescription" datatype="html">
-        <source> Try opening an encrypted example note. The vault and its note stay in this browser. </source>
+        <source> Try unlocking a separate sample note. This note stays in this browser. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
           <context context-type="linenumber">5,8</context>
@@ -3290,34 +3297,6 @@
           <context context-type="linenumber">215</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="vaultExampleBackupHeading" datatype="html">
-        <source>Local encrypted download</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">148,150</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultExampleBackupExplanation" datatype="html">
-        <source> Open the example note to download an encrypted copy. The file contains the encrypted note and its original device-bound key wrapper. Keep it private, especially if you use a PIN. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">150,153</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultExampleBackupRestoreLimit" datatype="html">
-        <source> Signing in doesn’t unlock the vault. This file has no authorized restore path on a second browser profile. Use the backed-up sample below to try restoring a note on a paired device. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">156,160</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultExampleBackupDownload" datatype="html">
-        <source> Download encrypted backup </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">167,170</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="vaultBackedSampleDenied" datatype="html">
         <source>This account doesn’t have access to the backup workspace.</source>
         <context-group purpose="location">
@@ -3333,7 +3312,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="vaultBackedSampleExplanation" datatype="html">
-        <source> Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy, then open this workspace on an approved device to download the same note. In workspaces with private object storage, this screen checks for updates while the vault is unlocked. Earlier workspaces keep their existing storage. </source>
+        <source> The browser encrypts the test note and saves it in IndexedDB. When you upload a backup, only the encrypted copy goes to the server. To restore the same note, pair your other device and unlock the vault there. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">13,17</context>

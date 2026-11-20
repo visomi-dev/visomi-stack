@@ -1,4 +1,4 @@
--- Apply only to an isolated synthetic development/test database, after the normal migrations.
+-- Apply once after the normal migrations. The invoking table owner must be the gateway's database login.
 BEGIN;
 
 CREATE ROLE visomi_cloud_example_records NOLOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOINHERIT;
