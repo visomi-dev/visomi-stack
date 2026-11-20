@@ -2,18 +2,30 @@ import { createHmac, randomUUID } from 'node:crypto';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import { authSchema, createDatabase } from '@visomi-stack/backend-db';
+import { authSchema, createDatabase, type BackupObjects } from '@visomi-stack/backend-db';
 import { testPostgres } from '@visomi-stack/dev-testing/postgres';
+import { testBackupS3 } from '@visomi-stack/dev-testing/s3';
 import { createOperationId, syntheticHybridPolicy } from '@visomi-stack/shared-db';
-import { afterAll, beforeAll, beforeEach, expect } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, vi } from 'vitest';
 
 import type { SessionActor } from '../../../src/access/service';
 import { authConfig, createApp, createAuthentication } from '../../../src/app';
 import { principal } from '../../../src/auth/shared/identity';
+import { createBackupObjects } from '../../../src/db/s3-backup';
 
 export let postgres: Awaited<ReturnType<typeof testPostgres>>;
 export let resource: ReturnType<typeof createDatabase>;
 let server: Server;
+let decorateBackup: ((objects: BackupObjects) => BackupObjects) | undefined;
+
+export let backupObjects: BackupObjects | undefined;
+export const vaultNotice = vi.fn<(scopeId: string, cursor: number) => Promise<void>>();
+
+export let s3Endpoint: string;
+
+export function enableBackupObjects(decorate: (objects: BackupObjects) => BackupObjects): void {
+  decorateBackup = decorate;
+}
 
 export let origin: string;
 export const syntheticPersistenceSecret = 'synthetic-persistence-session-secret-32-bytes';
@@ -22,6 +34,8 @@ const secret = syntheticPersistenceSecret;
 export const policy = structuredClone(syntheticHybridPolicy);
 
 beforeEach(async () => {
+  vaultNotice.mockReset().mockResolvedValue(undefined);
+
   await resource.db.delete(authSchema.rateLimits);
 });
 
@@ -44,15 +58,40 @@ beforeAll(async () => {
 
   postgres = response1;
   resource = createDatabase(postgres.url);
+
+  if (decorateBackup) {
+    const s3 = await testBackupS3(postgres.compose);
+
+    s3Endpoint = s3.endpoint;
+    backupObjects = decorateBackup(
+      createBackupObjects({
+        NODE_ENV: 'test',
+        VISOMI_PERSISTENCE_EXAMPLE: 'true',
+        VISOMI_PERSISTENCE_DEMOS: 'true',
+        ...s3.environment,
+      })!,
+    );
+  }
+
   server = createServer();
 
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
 
   origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   const config = authConfig({ origin, rpId: '127.0.0.1', secret });
-  const auth = createAuthentication({ database: resource.db, pool: resource.pool, config });
+  const auth = createAuthentication({
+    database: resource.db,
+    pool: resource.pool,
+    config,
+    realtimePublisher: {
+      notifyDeviceApproval: async () => undefined,
+      notifySession: async () => undefined,
+      notifyUser: async () => undefined,
+      notifyVault: vaultNotice,
+    },
+  });
 
-  server.on('request', createApp({ auth, persistence: policy }));
+  server.on('request', createApp({ auth, exampleHarness: true, backupObjects }));
 }, 120_000);
 
 afterAll(async () => {
@@ -61,6 +100,8 @@ afterAll(async () => {
   }
 
   await resource?.close();
+
+  backupObjects?.close();
 
   await postgres?.stop();
 }, 120_000);
@@ -136,7 +177,7 @@ export async function client(): Promise<Client> {
   };
 }
 
-export const base = (target: Target) => `/persistence/tenants/${target.tenantId}/scopes/${target.scopeId}`;
+export const base = (target: Target) => `/example/vault/tenants/${target.tenantId}/scopes/${target.scopeId}`;
 export const collection = (target: Target, domain = 'operations') => `${base(target)}/domains/${domain}/records`;
 export const mutation = (title = 'Synthetic record', audience = 'owner') => ({
   kind: 'create',
@@ -150,7 +191,7 @@ export async function fixture() {
   const owner = await client();
   const member = await client();
   const outsider = await client();
-  const created = await owner.call('/persistence/tenants', 'POST', {});
+  const created = await owner.call('/example/vault/tenants', 'POST', {});
 
   expect(created.status).toBe(200);
   const tenant = created.body as Target;

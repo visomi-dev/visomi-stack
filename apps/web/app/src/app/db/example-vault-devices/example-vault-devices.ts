@@ -1,4 +1,4 @@
-import { Component, afterNextRender, inject, input } from '@angular/core';
+import { Component, afterNextRender, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { Button, Card, Field, Heading, Input, Link, PinInput, Text, Textarea } from '../../ui';
@@ -15,6 +15,14 @@ export class ExampleVaultDevices {
   protected readonly pairing = inject(ExampleVaultPairing);
 
   readonly target = input.required<ExampleTarget>();
+  readonly backed = input(false);
+  protected readonly resourceLink = computed(() => {
+    const { tenantId, scopeId, objectId } = this.target();
+
+    return this.backed() ? ['/example/vault'] : ['/persistence', tenantId, scopeId, objectId];
+  });
+  protected readonly resourceParams = computed(() => (this.backed() ? this.target() : null));
+
   readonly rpId = input.required<string>();
 
   private readonly initialize = afterNextRender(() => void this.pairing.initialize(this.target(), this.rpId()));

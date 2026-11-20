@@ -12,7 +12,7 @@ import type { Observability } from '@visomi-stack/web-backend-shared';
 
 import { authConfig, createApp, createAuthentication } from '../../../src/app';
 
-import { resource, policy, syntheticPersistenceSecret } from './persistence';
+import { resource, syntheticPersistenceSecret } from './persistence';
 
 type VaultApi = typeof VaultRuntime & typeof VaultStorage;
 
@@ -101,7 +101,7 @@ export async function browserServer(observability?: Observability) {
       config: authConfig({ origin, rpId: 'localhost', secret: syntheticPersistenceSecret }),
     });
 
-    api.use('/api', createApp({ auth, persistence: policy, observability }));
+    api.use('/api', createApp({ auth, exampleHarness: true, observability, basePath: '/api' }));
 
     const launched = await chromium.launch({ headless: true });
 

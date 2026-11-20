@@ -1,0 +1,2 @@
+ALTER TABLE "persistence_scopes" ADD COLUMN "object_backup" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "persistence_scopes" ADD CONSTRAINT "persistence_scope_object_backup" CHECK (NOT "object_backup" OR "kind" = 'resource');

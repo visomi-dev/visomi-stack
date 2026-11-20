@@ -11,6 +11,7 @@ const boundary = vi.hoisted(() => ({
   },
   observability: { event: vi.fn(), shutdown: vi.fn() },
   createApp: vi.fn(() => 'synthetic-app'),
+  createBackupObjects: vi.fn(),
   createServer: vi.fn(),
   initialize: vi.fn(),
   createDatabase: vi.fn(),
@@ -48,6 +49,7 @@ vi.mock('./app', () => ({
   authConfig: boundary.authConfig,
   createAuthentication: boundary.createAuthentication,
 }));
+vi.mock('./db/s3-backup', () => ({ createBackupObjects: boundary.createBackupObjects }));
 
 const originalExitCode = process.exitCode;
 
@@ -58,6 +60,9 @@ beforeEach(() => {
   vi.stubEnv('DATABASE_URL', '');
   vi.stubEnv('REALTIME_REDIS_URL', '');
   vi.stubEnv('AUTH_TRUST_PROXY', '');
+  vi.stubEnv('VISOMI_PERSISTENCE_EXAMPLE', undefined);
+  vi.stubEnv('VISOMI_PERSISTENCE_DEMOS', undefined);
+  boundary.createBackupObjects.mockReturnValue(undefined);
   boundary.createDatabase.mockReturnValue(boundary.database);
   boundary.smtpConfig.mockReturnValue(undefined);
   boundary.createSmtp.mockReturnValue(boundary.smtp);
@@ -93,6 +98,28 @@ afterEach(() => {
 });
 
 describe('API executable lifecycle', () => {
+  it('passes both explicit demo opt-ins to the application in a test profile', async () => {
+    vi.stubEnv('VISOMI_PERSISTENCE_EXAMPLE', 'true');
+    vi.stubEnv('VISOMI_PERSISTENCE_DEMOS', 'true');
+    const backupObjects = { close: vi.fn() };
+
+    boundary.createBackupObjects.mockReturnValueOnce(backupObjects);
+
+    await import('./main');
+
+    expect(boundary.createApp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        exampleHarness: true,
+        backupObjects,
+      }),
+    );
+    boundary.signals.get('SIGTERM')!();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(backupObjects.close).toHaveBeenCalledOnce();
+  });
+
   it('passes the explicit single-hop ingress policy to the application', async () => {
     vi.stubEnv('AUTH_TRUST_PROXY', '1-hop');
 

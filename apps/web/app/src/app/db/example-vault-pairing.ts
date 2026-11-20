@@ -138,7 +138,7 @@ export class ExampleVaultPairing {
 
         const custody = await this.vault.device(context, this.rpId, true, supplied);
         const keys = await custody.publicKeys();
-        const raw = await this.api.request(
+        const raw = await this.api.vault(
           `${this.path()}/devices/request`,
           { deviceId: context.deviceId, keys },
           signal,
@@ -201,7 +201,7 @@ export class ExampleVaultPairing {
         throw new VaultError('locked');
       }
 
-      await this.api.request(`${this.path()}/devices/approve`, { ...body, authorization }, signal);
+      await this.api.vault(`${this.path()}/devices/approve`, { ...body, authorization }, signal);
 
       this.message.set($localize`:@@vaultDevicesApproved:Device approved. Finish on the other device.`);
     });
@@ -224,7 +224,7 @@ export class ExampleVaultPairing {
     try {
       await this.run(async (signal, ownerId) => {
         const registry = await this.roster(ownerId, signal);
-        const raw = await this.api.request(
+        const raw = await this.api.vault(
           `${this.path()}/devices/${pending.context.deviceId}/delivery`,
           undefined,
           signal,
@@ -312,7 +312,7 @@ export class ExampleVaultPairing {
   }
 
   private async roster(ownerId: string, signal: AbortSignal) {
-    const raw = await this.api.request(`${this.path()}/devices`, undefined, signal);
+    const raw = await this.api.vault(`${this.path()}/devices`, undefined, signal);
     const registry = rosterSchema.parse(raw);
     const expected = { ...exampleLocalKey(this.target), generation: 1 };
 

@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { createDatabase, type DatabaseResource } from '@visomi-stack/backend-db';
+import { createDatabase, type BackupObjects, type DatabaseResource } from '@visomi-stack/backend-db';
 import {
   createMemoryRealtimeTransport,
   createRealtimePublisher,
@@ -22,7 +22,7 @@ import {
   initializeObservability,
   proxyConfiguration,
 } from '@visomi-stack/web-backend-shared';
-import { developmentPersistencePolicy } from '@visomi-stack/shared-db';
+import { developmentPersistenceDemos } from '@visomi-stack/shared-db';
 
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -41,6 +41,7 @@ const observability = initializeObservability({
   environment: process.env.NODE_ENV,
 });
 let database: DatabaseResource | undefined;
+let backupObjects: BackupObjects | undefined;
 let mail: MailTransport | undefined;
 let auth: EmbeddedAuthentication | undefined;
 let realtime: RealtimeRuntime | undefined;
@@ -85,6 +86,7 @@ async function stop(exitCode: number): Promise<void> {
     browserTelemetry?.close();
     visits?.close();
     mail?.close();
+    backupObjects?.close();
   } catch {
     databaseClosed = false;
   }
@@ -203,9 +205,14 @@ async function bootstrap() {
     pages: stackVisitPages,
   });
 
+  const exampleHarness = developmentPersistenceDemos(process.env);
+
+  backupObjects = api.exampleApiVersion === 1 ? api.createBackupObjects?.(process.env) : undefined;
+
   const application = createGatewayApp({
     visits,
-    persistence: developmentPersistencePolicy(process.env),
+    ...(exampleHarness ? { exampleHarness } : {}),
+    ...(backupObjects ? { backupObjects } : {}),
     api,
     site,
     application: angular,

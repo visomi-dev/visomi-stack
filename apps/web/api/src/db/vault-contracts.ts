@@ -5,6 +5,7 @@ import {
   approvedDeliverySchema,
   keyDomainSchema,
   syncWriteSchema,
+  syncReadSchema,
   syncPageSchema,
   syncHeadSchema,
 } from '@visomi-stack/shared-db';
@@ -14,7 +15,6 @@ import { targetSchema } from '../access/contracts';
 import { commonErrors, cookieSecurity, csrfSecurity } from '../auth/shared/contracts';
 
 import { approvalSchema, enrollmentRequestSchema, revokeDeviceSchema, rotateDevicesSchema } from './devices';
-import { syncReadSchema } from './opaque';
 
 const params = targetSchema.extend({ domain: z.string().regex(/^[a-z][a-z0-9-]{0,63}$/) });
 const path = '/tenants/:tenantId/scopes/:scopeId/domains/:domain';
@@ -75,6 +75,7 @@ export const vaultContracts = {
         key: keyDomainSchema,
         epoch: version,
         phase: z.enum(['ready', 'rotating']),
+        objectBackup: z.literal(true).optional(),
         devices: z.array(
           z.strictObject({
             id: z.uuid(),

@@ -12,16 +12,24 @@ export async function openLocalVault(options: {
   key: Omit<KeyDomain, 'generation'>;
   rpId: string;
   pin?: Uint8Array;
+  /** Use only on an explicit unlock action. Passive resume requires already-open custody. */
+  allowPasskey?: boolean;
   ownerId: string;
   signal: AbortSignal;
   current: () => void;
 }) {
-  const { vault, database, key, rpId, pin, ownerId, signal, current } = options;
+  const { vault, database, key, rpId, pin, allowPasskey, ownerId, signal, current } = options;
   const binding = await vault.localLatestBinding(key);
 
   current();
 
-  if (!binding || binding.ownerId !== ownerId || (pin ? binding.method !== 'pin-argon2id' : !vault.isOpen(binding))) {
+  if (
+    !binding ||
+    binding.ownerId !== ownerId ||
+    (pin
+      ? binding.method !== 'pin-argon2id'
+      : !vault.isOpen(binding) && !(allowPasskey && binding.method === 'passkey-prf'))
+  ) {
     throw new VaultError('recovery-required');
   }
 

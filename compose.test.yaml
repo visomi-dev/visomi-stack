@@ -1,5 +1,16 @@
 # Used together with compose.yaml, always with a unique test project and synthetic env file.
 services:
+  vault-s3:
+    image: docker.io/chrislusf/seaweedfs:4.54@sha256:4b42c212543a0acd4c0e675215ecdcaf62a186ef98def76c7e12701871222d15
+    command: ['mini', '-dir=/data']
+    environment:
+      AWS_ACCESS_KEY_ID: visomi_s3_test
+      AWS_SECRET_ACCESS_KEY: synthetic-s3-test-password
+      S3_BUCKET: visomi-test-vault-backups
+    ports:
+      - '127.0.0.1::8333'
+    volumes:
+      - vault-s3-data:/data
   app:
     build:
       target: test-runtime
@@ -16,3 +27,6 @@ services:
     volumes:
       - '${VISOMI_TEST_TELEMETRY_DIR}:/workspace/tmp/container-telemetry:Z'
     stop_grace_period: 6s
+
+volumes:
+  vault-s3-data:

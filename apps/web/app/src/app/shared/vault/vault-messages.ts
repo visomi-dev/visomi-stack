@@ -4,6 +4,8 @@ export function vaultMessage(state: string): string {
       return $localize`:@@vaultPinInvalid:Enter a 6-digit PIN. When setting it up, enter the same PIN twice.`;
     case 'sync_history_expired':
       return $localize`:@@vaultHistoryExpired:This device is older than the retained synchronization history. Keep its encrypted copy and pending changes. Recovery requires trusted client state; synchronization will not reset its checkpoint.`;
+    case 'vault_backup_unavailable':
+      return $localize`:@@vaultBackupStorageRetry:We couldn’t verify the encrypted backup. Your local data is unchanged. Try again later.`;
     case 'operation_expired':
       return $localize`:@@vaultOperationExpired:The retry window for this pending change expired. Keep the encrypted copy, synchronize, and explicitly resolve it before creating a new operation.`;
     case 'locked':

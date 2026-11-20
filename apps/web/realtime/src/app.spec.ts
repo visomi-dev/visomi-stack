@@ -9,6 +9,8 @@ import { attachRealtimeServer } from './app';
 
 const origin = 'https://app.example.test';
 const requestId = '9aef148d-8d52-4e4d-aace-18eabaeec543';
+const vaultScope = 'a30fdb5e-a3f4-4392-89f0-dd2981992fb1';
+const secondScope = 'c14ee0fd-744e-4e9e-b95e-94b3257924fa';
 
 async function setup() {
   const app = express();
@@ -17,9 +19,14 @@ async function setup() {
   const server = createServer(app);
   const sockets: Socket[] = [];
   let owner: string | undefined;
+  const vaultScopes = new Map<string, string>();
 
   app.get('/fixture-session', readSession, (request, response) => {
-    Object.assign(request.session, { fixture: true, passport: { user: request.query['user'] } });
+    Object.assign(request.session, {
+      fixture: true,
+      csrf: 'synthetic-csrf',
+      passport: { user: request.query['user'] },
+    });
     response.json({ sessionId: request.sessionID });
   });
   const realtime = attachRealtimeServer(server, {
@@ -27,6 +34,15 @@ async function setup() {
     readSession,
     readUser: async (user) => (typeof user === 'string' ? user : null),
     watchExpiration: async (sid, id) => (owner === sid && id === requestId ? Date.now() + 60_000 : 0),
+    async watchVault({ id, csrf }, proof) {
+      const scope = vaultScopes.get(id);
+
+      if (!scope || proof !== scope || csrf !== 'synthetic-csrf') {
+        throw new Error('denied');
+      }
+
+      return scope;
+    },
   });
 
   server.listen(0, '127.0.0.1');
@@ -43,6 +59,7 @@ async function setup() {
 
   return {
     ...realtime,
+    vaultScopes,
     async newSession(ownsRequest: boolean, user?: string) {
       const path = new URL('/fixture-session', url);
 
@@ -111,6 +128,62 @@ it('sends a payload-free hint to the owning anonymous session and disconnects it
     await fixture.notifyDeviceApproval(requestId);
 
     await expect(disconnected).resolves.toBe('io server disconnect');
+  } finally {
+    await fixture.close();
+  }
+});
+
+it('delivers only the Vault cursor in the approved scope and rechecks authority before notifying', async () => {
+  const fixture = await setup();
+
+  try {
+    const first = await fixture.newSession(false, 'synthetic-user');
+    const second = await fixture.newSession(false, 'synthetic-user');
+
+    fixture.vaultScopes.set(first.id, vaultScope);
+    fixture.vaultScopes.set(second.id, secondScope);
+    const denied = fixture.connect(second.cookie, origin, '/vault');
+
+    denied.auth = { proof: vaultScope };
+
+    const rejection = await new Promise<Error>((resolve) => denied.once('connect_error', resolve).connect());
+
+    expect(rejection.message).toBe('subscription_unavailable');
+
+    const missing = fixture.connect(undefined, origin, '/vault');
+    const anonymous = await new Promise<Error>((resolve) => missing.once('connect_error', resolve).connect());
+
+    expect(anonymous.message).toBe('subscription_unavailable');
+
+    const approved = fixture.connect(first.cookie, origin, '/vault');
+    const sibling = fixture.connect(second.cookie, origin, '/vault');
+
+    approved.auth = { proof: vaultScope };
+    sibling.auth = { proof: secondScope };
+
+    await Promise.all(
+      [approved, sibling].map((socket) => new Promise<void>((resolve) => socket.once('connect', resolve).connect())),
+    );
+
+    const hints: unknown[][] = [];
+
+    approved.on('vault:changed', (...args: unknown[]) => hints.push(args));
+    sibling.on('vault:changed', (...args: unknown[]) => hints.push(['wrong-scope', ...args]));
+    const firstHint = once(approved, 'vault:changed');
+
+    await fixture.notifyVault!(vaultScope, 4);
+
+    await expect(firstHint).resolves.toEqual([4]);
+
+    fixture.vaultScopes.delete(first.id);
+    const revoked = once(approved, 'disconnect');
+
+    await fixture.notifyVault!(vaultScope, 5);
+
+    await revoked;
+
+    expect(hints).toEqual([[4]]);
+    expect(sibling.connected).toBe(true);
   } finally {
     await fixture.close();
   }

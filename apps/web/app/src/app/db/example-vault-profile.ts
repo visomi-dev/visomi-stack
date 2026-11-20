@@ -12,7 +12,7 @@ export class ExampleVaultProfile {
 
   async relyingParty(): Promise<string> {
     try {
-      const raw = await this.api.request('/policy');
+      const raw = await this.api.vault('/policy');
       const profile = readExampleProfile(raw, this.document.defaultView?.location.origin);
 
       return profile.rpId;

@@ -161,7 +161,15 @@ describe('actual Chromium encrypted backup, recovery and recipient delivery', ()
           } catch (error) {
             rollback = (error as { code: string }).code;
           }
+          let wrongDevice = '';
+
+          try {
+            await api.restoreEncryptedBackup(empty, { ...binding, deviceId: crypto.randomUUID() }, 1, backup);
+          } catch (error) {
+            wrongDevice = (error as { code: string }).code;
+          }
           const missing = await empty.getKey(contracts.keyDomainId(binding.ownerId, binding.key));
+          const missingUnit = await empty.getUnit(contracts.vaultUnitId(binding.ownerId, context));
 
           await restored.forget(binding);
 
@@ -183,7 +191,8 @@ describe('actual Chromium encrypted backup, recovery and recipient delivery', ()
             quota,
             collision,
             rollback,
-            partialKey: missing !== undefined,
+            wrongDevice,
+            partialRestore: missing !== undefined || missingUnit !== undefined,
             forgotten,
           };
         },
@@ -197,7 +206,8 @@ describe('actual Chromium encrypted backup, recovery and recipient delivery', ()
         quota: 'quota',
         collision: 'revision-conflict',
         rollback: 'corrupt',
-        partialKey: false,
+        wrongDevice: 'corrupt',
+        partialRestore: false,
         forgotten: 'recovery-required',
       });
     } finally {

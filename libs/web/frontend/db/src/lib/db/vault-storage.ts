@@ -10,6 +10,8 @@ import {
   type WrappedKey,
 } from '@visomi-stack/shared-db';
 
+import { isLocalPasskeyOf, type LocalPasskeyStorage } from '../vault/local-passkey';
+
 import { VaultDatabase, openDatabase, storageError } from './database';
 
 const storedKeySchema = z.strictObject({
@@ -18,22 +20,43 @@ const storedKeySchema = z.strictObject({
   used: z.number().int().min(0).max(1_048_576),
 });
 const storedUnitSchema = z.strictObject({ id: z.string(), envelope: dataEnvelopeSchema });
+const localPasskeySchema = z.strictObject({ id: z.string(), pin: wrappedKeySchema, passkey: wrappedKeySchema });
 
 type StoredKey = z.infer<typeof storedKeySchema>;
 type StoredUnit = z.infer<typeof storedUnitSchema>;
+type LocalPasskey = z.infer<typeof localPasskeySchema>;
+
+// Data units use JSON tuple IDs. The reserved ID keeps the v1 key catalog and its readers intact.
+const localPasskeyId = (id: string) => `local-passkey:${id}`;
 
 /** Resolves only after transaction commit; request success alone is not durability. */
 export class IndexedDbVaultStorage implements VaultStorage {
-  private constructor(private readonly database: VaultDatabase) {}
+  readonly localPasskeys?: LocalPasskeyStorage;
 
-  static async open(factory: IDBFactory | undefined, name: string): Promise<IndexedDbVaultStorage> {
+  private constructor(
+    private readonly database: VaultDatabase,
+    enableLocalPasskeys: boolean,
+  ) {
+    if (enableLocalPasskeys) {
+      this.localPasskeys = {
+        get: (id) => this.getLocalPasskey(id),
+        add: (pin, passkey, signal) => this.addLocalPasskey(pin, passkey, signal),
+      };
+    }
+  }
+
+  static async open(
+    factory: IDBFactory | undefined,
+    name: string,
+    options?: { localPasskeys: true },
+  ): Promise<IndexedDbVaultStorage> {
     if (!factory) {
       throw new VaultError('unavailable');
     }
 
     const database = await openDatabase(new VaultDatabase(name, factory), factory, ['keys', 'units'], 'id');
 
-    return new IndexedDbVaultStorage(database);
+    return new IndexedDbVaultStorage(database, options?.localPasskeys === true);
   }
 
   async getKey(id: string): Promise<WrappedKey | undefined> {
@@ -242,6 +265,20 @@ export class IndexedDbVaultStorage implements VaultStorage {
   }
 
   async deleteKey(id: string): Promise<void> {
+    if (this.localPasskeys) {
+      try {
+        await this.database.transaction('rw', this.database.keys, this.database.units, async () => {
+          await this.database.keys.delete(id);
+
+          await this.database.units.delete(localPasskeyId(id));
+        });
+
+        return;
+      } catch (error) {
+        throw storageError(error);
+      }
+    }
+
     await this.change<StoredKey>('keys', id, () => undefined);
   }
 
@@ -283,6 +320,96 @@ export class IndexedDbVaultStorage implements VaultStorage {
 
   close(): void {
     this.database.close();
+  }
+
+  private async getLocalPasskey(id: string): Promise<WrappedKey | undefined> {
+    const entries = this.database.table<LocalPasskey, string>('units');
+    const alternateId = localPasskeyId(id);
+
+    try {
+      const found = await this.database.transaction('r', this.database.keys, entries, async () => {
+        const current = await this.database.keys.get(id);
+        const entry = await entries.get(alternateId);
+        const key = storedKeySchema.safeParse(current);
+        const alternate = localPasskeySchema.safeParse(entry);
+
+        if (
+          !key.success ||
+          !alternate.success ||
+          key.data.id !== id ||
+          alternate.data.id !== alternateId ||
+          keyDomainId(key.data.envelope.context.ownerId, key.data.envelope.context.key) !== id ||
+          JSON.stringify(key.data.envelope) !== JSON.stringify(alternate.data.pin) ||
+          !isLocalPasskeyOf(key.data.envelope.context, alternate.data.passkey.context)
+        ) {
+          return undefined;
+        }
+
+        return alternate.data.passkey;
+      });
+
+      return found;
+    } catch (error) {
+      throw storageError(error);
+    }
+  }
+
+  private async addLocalPasskey(pin: WrappedKey, passkey: WrappedKey, signal: AbortSignal): Promise<void> {
+    const primary = wrappedKeySchema.safeParse(pin);
+    const alternate = wrappedKeySchema.safeParse(passkey);
+
+    if (!primary.success || !alternate.success || !isLocalPasskeyOf(primary.data.context, alternate.data.context)) {
+      throw new VaultError('corrupt');
+    }
+
+    const id = keyDomainId(primary.data.context.ownerId, primary.data.context.key);
+    const alternateId = localPasskeyId(id);
+    const entries = this.database.table<LocalPasskey, string>('units');
+    let abort: (() => void) | undefined;
+
+    try {
+      signal.throwIfAborted();
+
+      await this.database.transaction('rw', this.database.keys, entries, async (transaction) => {
+        signal.throwIfAborted();
+        abort = () => {
+          try {
+            transaction.idbtrans.abort();
+          } catch (error) {
+            // A transaction that already committed is a completed enrollment.
+            if (!(error instanceof DOMException && error.name === 'InvalidStateError')) {
+              throw error;
+            }
+          }
+        };
+        signal.addEventListener('abort', abort, { once: true });
+
+        const current = await this.database.keys.get(id);
+        const key = storedKeySchema.safeParse(current);
+
+        if (!key.success || key.data.id !== id || JSON.stringify(key.data.envelope) !== JSON.stringify(primary.data)) {
+          throw new VaultError('revision-conflict');
+        }
+
+        const existing = await entries.get(alternateId);
+
+        if (existing !== undefined) {
+          throw new VaultError('revision-conflict');
+        }
+
+        signal.throwIfAborted();
+
+        await entries.add({ id: alternateId, pin: primary.data, passkey: alternate.data });
+
+        signal.throwIfAborted();
+      });
+    } catch (error) {
+      throw signal.aborted ? new VaultError('cancelled') : storageError(error);
+    } finally {
+      if (abort) {
+        signal.removeEventListener('abort', abort);
+      }
+    }
   }
 
   private async read<T>(store: string, id: string): Promise<T | undefined> {

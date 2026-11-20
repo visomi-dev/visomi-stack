@@ -75,6 +75,8 @@ beforeEach(() => {
   vi.stubEnv('SITE_APP_PATH', '/synthetic/compiled/site/server/entry.mjs');
   vi.stubEnv('APPLICATION_APP_PATH', '/synthetic/compiled/app/server/server.mjs');
   vi.stubEnv('AUTH_TRUST_PROXY', '');
+  vi.stubEnv('VISOMI_PERSISTENCE_EXAMPLE', undefined);
+  vi.stubEnv('VISOMI_PERSISTENCE_DEMOS', undefined);
   vi.stubEnv('HOST', '127.0.0.1');
   vi.stubEnv('PORT', '3456');
   vi.stubEnv('NODE_ENV', 'test');
@@ -135,6 +137,24 @@ async function start() {
 }
 
 describe('gateway executable ownership', () => {
+  it('starts and closes the compiled test backup transport with the profile', async () => {
+    vi.stubEnv('VISOMI_PERSISTENCE_EXAMPLE', 'true');
+    vi.stubEnv('VISOMI_PERSISTENCE_DEMOS', 'true');
+    const backupObjects = { close: vi.fn() };
+    const api = { ...boundary.api, exampleApiVersion: 1, createBackupObjects: () => backupObjects };
+
+    boundary.loadApi.mockResolvedValueOnce(api);
+
+    await start();
+
+    expect(boundary.createGatewayApp.mock.calls[0][0]).toMatchObject({ backupObjects, exampleHarness: true });
+    boundary.signals.get('SIGTERM')!();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(backupObjects.close).toHaveBeenCalledOnce();
+  });
+
   it.each([undefined, 'https://synthetic.example.test'])(
     'owns visit intake independently of technical telemetry for %s',
     async (origin) => {

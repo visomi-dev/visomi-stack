@@ -7,7 +7,8 @@ operational configuration and permission.
 
 ## Explicit bounded execution
 
-`POST /persistence/tenants/:tenantId/scopes/:scopeId/domains/:domain/maintenance`
+The technical development/test harness uses
+`POST /example/vault/tenants/:tenantId/scopes/:scopeId/domains/:domain/maintenance`
 accepts only `{ "limit": 1..100 }`. It uses the configured manifest and server
 clock; caller dates, retention overrides and unknown fields are rejected. Each
 phase handles at most that many rows. The caller must have a current verified
@@ -23,6 +24,12 @@ merely by importing application code. Product operations must separately decide
 when to invoke this endpoint; the implementation only invokes it in isolated tests.
 Expired enrollment challenges can be removed before any key registry is initialized.
 Cleanup derives only their authorized scope and never bootstraps a key to permit deletion.
+
+Object-backed Vault workspaces also accept the owner operation in normal composition.
+For those workspaces it reports `abandonedObjects`, which is either zero or one,
+and leaves the six historical maintenance counts at zero. It deletes only the
+expired upload reservation's private object and retains the reservation on storage
+failure. Published objects and history are outside the operation's scope.
 
 ## Receipt expiry without executing an old request again
 

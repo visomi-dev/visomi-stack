@@ -40,7 +40,7 @@ test('keeps the continuous shell, compact navigation and nested account destinat
 
   await expect(brand).toHaveAttribute('href', '/app/en/home');
 
-  await expect(navigation.getByRole('link')).toHaveCount(2);
+  await expect(navigation.getByRole('link')).toHaveText(['Home', 'Cloud example', 'Vault example']);
 
   await expect(navigation.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
 

@@ -1,0 +1,63 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "244417d1-0e13-4388-b0ec-82c641797538",
+  "prevIds": ["c5c1f30d-263c-4919-b284-a682c43d8903"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "persistence_scopes", "object_backup"],
+      "writes": [
+        "s|col|public.persistence_scopes.object_backup",
+        "n|col|public.persistence_scopes.object_backup",
+        "e|col|public.persistence_scopes.object_backup"
+      ],
+      "reads": ["n|tbl|public.persistence_scopes", "n|sch|public"]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": ["table", "public", "persistence_scopes"],
+      "writes": [
+        "s|ck|public.persistence_scopes.persistence_scope_object_backup",
+        "n|ck|public.persistence_scopes.persistence_scope_object_backup",
+        "e|ck|public.persistence_scopes.persistence_scope_object_backup",
+        "n|con|public.persistence_scopes.persistence_scope_object_backup"
+      ],
+      "reads": [
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.persistence_scopes.object_backup",
+        "n|col|public.persistence_scopes.kind"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "object_backup",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "persistence_scope_object_backup",
+        "value": "NOT \"object_backup\" OR \"kind\" = 'resource'",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

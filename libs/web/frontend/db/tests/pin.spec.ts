@@ -225,3 +225,356 @@ it('binds PIN wrapping to context and wipes disposable PINs; rejects late deriva
     await page.close();
   }
 });
+
+it('adds native PRF to a legacy PIN vault with the same key, bytes, generation and budget', async () => {
+  const context = await browser.newContext();
+
+  try {
+    const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+
+    await cdp.send('WebAuthn.enable');
+
+    await cdp.send('WebAuthn.addVirtualAuthenticator', {
+      options: {
+        protocol: 'ctap2',
+        transport: 'internal',
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+        automaticPresenceSimulation: true,
+        hasPrf: true,
+      },
+    });
+
+    await prepare(page);
+
+    const result = await page.evaluate(
+      async ({ vector, pinVector }) => {
+        const { api, contracts } = (globalThis as FixtureWindow).fixtureModules;
+        const name = crypto.randomUUID();
+        const pin = {
+          ...vector.wrapped.context,
+          method: api.pinMethod,
+          methodId: pinVector.methodId,
+          origin: location.origin,
+        };
+        const unit = { ...vector.data.context, key: pin.key, target: pin.key.scope };
+        const id = contracts.keyDomainId(pin.ownerId, pin.key);
+        const unitId = contracts.vaultUnitId(pin.ownerId, unit);
+        const text = new TextEncoder().encode('synthetic legacy note');
+        const passkeyEnv = {
+          origin: location.origin,
+          rpId: location.hostname,
+          credentials: navigator.credentials,
+          crypto,
+        };
+        const cancellation = new AbortController().signal;
+        const cipher = new api.WebCryptoCipher(crypto);
+        const pinUnlock = () => new api.PinUnlock(async () => new TextEncoder().encode(pinVector.pin));
+        const openStorage = () => api.IndexedDbVaultStorage.open(indexedDB, name, { localPasskeys: true });
+        const code = (work: Promise<unknown>) =>
+          work.then(
+            () => 'accepted',
+            (error) => error.code,
+          );
+
+        const legacy = await api.IndexedDbVaultStorage.open(indexedDB, name);
+        const previous = new api.BrowserVault(pin.ownerId, legacy, pinUnlock(), cipher);
+
+        await previous.initialize(pin);
+
+        const encrypted = await previous.seal(unit, text);
+        const original = await legacy.getKey(id);
+
+        if (!original) {
+          throw new Error('Legacy PIN wrapper missing');
+        }
+
+        previous.close();
+
+        const storage = await openStorage();
+        const pinVault = new api.BrowserVault(pin.ownerId, storage, pinUnlock(), cipher);
+        const locked = await code(pinVault.addLocalPasskey('AQ', new api.PrfUnlock(passkeyEnv), cancellation));
+
+        await pinVault.unlock(pin);
+
+        const methodId = await api.createPrfCredential(passkeyEnv, cancellation);
+        const passkey = await pinVault.addLocalPasskey(methodId, new api.PrfUnlock(passkeyEnv), cancellation);
+        const budgetAfterAdd = await code(storage.reserveEncryption(id, 1));
+        const second = await storage.localPasskeys!.get(id);
+        const verifier = pinUnlock();
+
+        if (!second) {
+          throw new Error('PRF wrapper missing');
+        }
+
+        const secretA = await verifier.secret(pin);
+        const secretB = await new api.PrfUnlock(passkeyEnv).secret(passkey);
+        const rawA = await cipher.unwrap(secretA, pin, original);
+        const rawB = await cipher.unwrap(secretB, passkey, second);
+        const sameKey = rawA.every((byte, index) => byte === rawB[index]);
+
+        for (const bytes of [secretA, secretB, rawA, rawB]) {
+          bytes.fill(0);
+        }
+        verifier.cancel();
+        pinVault.close();
+
+        const prfStorage = await openStorage();
+        const prfVault = new api.BrowserVault(pin.ownerId, prfStorage, new api.PrfUnlock(passkeyEnv), cipher);
+
+        await prfVault.unlockLocalPasskey(passkey);
+
+        const viaPrf = await prfVault.open(unit);
+
+        await prfVault.encrypt(unit, text);
+
+        const budgetAfterPrf = await code(prfStorage.reserveEncryption(id, 2));
+
+        prfVault.close();
+
+        const oldReader = await api.IndexedDbVaultStorage.open(indexedDB, name);
+        const pinReader = new api.BrowserVault(pin.ownerId, oldReader, pinUnlock(), cipher);
+
+        await pinReader.unlock(pin);
+
+        const viaPin = await pinReader.open(unit);
+
+        await pinReader.encrypt(unit, text);
+
+        const budgetAfterPin = await code(oldReader.reserveEncryption(id, 3));
+        const primary = await oldReader.getKey(id);
+        const catalog = await oldReader.latestBindings(pin.ownerId);
+        const unchanged = await oldReader.getUnit(unitId);
+        const sameBinding =
+          contracts.wrappingAad({ ...pin, method: 'passkey-prf', methodId }) === contracts.wrappingAad(passkey);
+
+        pinReader.close();
+
+        const forget = await openStorage();
+
+        await forget.deleteKey(id);
+
+        // Restoring the exact primary wrapper in this fixture must not revive its former alternate.
+        await forget.putKey(id, original, true);
+
+        const retainedAlternate = await forget.localPasskeys!.get(id);
+
+        forget.close();
+
+        return {
+          locked,
+          sameKey,
+          sameBinding,
+          sameCiphertext: JSON.stringify(encrypted) === JSON.stringify(unchanged),
+          samePin: JSON.stringify(original) === JSON.stringify(primary),
+          legacyCatalog: JSON.stringify(catalog) === JSON.stringify([pin]),
+          sameNote: new TextDecoder().decode(viaPrf) === new TextDecoder().decode(viaPin),
+          budget: [budgetAfterAdd, budgetAfterPrf, budgetAfterPin],
+          alternateRemoved: retainedAlternate === undefined,
+        };
+      },
+      { vector, pinVector },
+    );
+
+    expect(result).toEqual({
+      locked: 'locked',
+      sameKey: true,
+      sameBinding: true,
+      sameCiphertext: true,
+      samePin: true,
+      legacyCatalog: true,
+      sameNote: true,
+      budget: ['quota', 'quota', 'quota'],
+      alternateRemoved: true,
+    });
+  } finally {
+    await context.close();
+  }
+}, 60_000);
+
+it('rolls back cancelled, failed, stale and concurrent local passkey additions', async () => {
+  const page = await browser.newPage();
+
+  try {
+    await prepare(page);
+
+    const result = await page.evaluate(
+      async ({ vector, pinVector }) => {
+        const { api, contracts } = (globalThis as FixtureWindow).fixtureModules;
+        const name = crypto.randomUUID();
+        const pin = { ...vector.wrapped.context, method: api.pinMethod, methodId: pinVector.methodId };
+        const id = contracts.keyDomainId(pin.ownerId, pin.key);
+        const unit = { ...vector.data.context, key: pin.key, target: pin.key.scope };
+        const unitId = contracts.vaultUnitId(pin.ownerId, unit);
+        const bytes = new TextEncoder().encode('synthetic unchanged note');
+        const cipher = new api.WebCryptoCipher(crypto);
+        const openStorage = () => api.IndexedDbVaultStorage.open(indexedDB, name, { localPasskeys: true });
+        const pinUnlock = () => new api.PinUnlock(async () => new TextEncoder().encode(pinVector.pin));
+        const mockPrf = (value: number) => ({
+          secret: async () => new Uint8Array(32).fill(value),
+          cancel: () => undefined,
+        });
+        const code = (work: Promise<unknown>) =>
+          work.then(
+            () => 'accepted',
+            (error) => error.code,
+          );
+        const forever = new AbortController().signal;
+        const storage = await openStorage();
+        const vault = new api.BrowserVault(pin.ownerId, storage, pinUnlock(), cipher);
+
+        await vault.initialize(pin);
+
+        const before = await vault.seal(unit, bytes);
+        const original = await storage.getKey(id);
+
+        if (!original) {
+          throw new Error('Original PIN wrapper missing');
+        }
+
+        const failures: string[] = [];
+
+        for (const failure of ['cancelled', 'unsupported-prf', 'unavailable'] as const) {
+          const simulated = {
+            secret: async () => {
+              throw new contracts.VaultError(failure);
+            },
+            cancel: () => undefined,
+          };
+          const status = await code(vault.addLocalPasskey('AQ', simulated, forever));
+
+          failures.push(status);
+        }
+
+        let complete!: (secret: Uint8Array) => void;
+        const late = new Promise<Uint8Array>((resolve) => {
+          complete = resolve;
+        });
+        const pending = code(vault.addLocalPasskey('AQ', { secret: () => late, cancel: () => undefined }, forever));
+
+        vault.lock();
+        const disposable = new Uint8Array(32).fill(17);
+
+        complete(disposable);
+        const locked = await pending;
+
+        await vault.unlock(pin);
+
+        // Fire cancellation on the native write request before the IndexedDB transaction commits.
+        const logout = new AbortController();
+        const add = IDBObjectStore.prototype.add;
+        let wrote = false;
+
+        IDBObjectStore.prototype.add = function (value: { id?: string }, key?: IDBValidKey) {
+          const request = add.call(this, value, key);
+
+          if (value.id?.startsWith('local-passkey:')) {
+            request.addEventListener(
+              'success',
+              () => {
+                wrote = true;
+                logout.abort();
+              },
+              { once: true },
+            );
+          }
+
+          return request;
+        };
+        let rolledBack: string;
+
+        try {
+          const result = await code(vault.addLocalPasskey('AQ', mockPrf(1), logout.signal));
+
+          rolledBack = result;
+        } finally {
+          IDBObjectStore.prototype.add = add;
+        }
+
+        IDBObjectStore.prototype.add = function (value: { id?: string }, key?: IDBValidKey) {
+          if (value.id?.startsWith('local-passkey:')) {
+            throw new DOMException('Synthetic quota failure', 'QuotaExceededError');
+          }
+
+          return add.call(this, value, key);
+        };
+
+        let quota: string;
+
+        try {
+          const result = await code(vault.addLocalPasskey('AQ', mockPrf(1), forever));
+
+          quota = result;
+        } finally {
+          IDBObjectStore.prototype.add = add;
+        }
+
+        const pendingWrapper = await storage.localPasskeys!.get(id);
+        const otherStorage = await openStorage();
+        const other = new api.BrowserVault(pin.ownerId, otherStorage, pinUnlock(), cipher);
+
+        await other.unlock(pin);
+
+        const cancelledBeforeCommit = [locked, rolledBack];
+        const concurrent = await Promise.all([
+          code(vault.addLocalPasskey('AQ', mockPrf(1), forever)),
+          code(other.addLocalPasskey('Ag', mockPrf(2), forever)),
+        ]);
+
+        const enrolled = await storage.localPasskeys!.get(id);
+
+        if (!enrolled) {
+          throw new Error('Winning enrollment not persisted');
+        }
+
+        const foreign = await code(
+          storage.localPasskeys!.add(
+            original,
+            { ...enrolled, context: { ...enrolled.context, deviceId: crypto.randomUUID() } },
+            forever,
+          ),
+        );
+        const primary = await storage.getKey(id);
+        const after = await storage.getUnit(unitId);
+        const budget = await code(storage.reserveEncryption(id, 1));
+
+        vault.close();
+        other.close();
+
+        return {
+          absent: pendingWrapper === undefined,
+          wrote,
+          wiped: disposable.every((byte) => byte === 0),
+          failures,
+          cancelledBeforeCommit,
+          quota,
+          concurrent: concurrent.sort(),
+          foreign,
+          preserved:
+            JSON.stringify(primary) === JSON.stringify(original) && JSON.stringify(after) === JSON.stringify(before),
+          budget,
+          winner: ['AQ', 'Ag'].includes(enrolled.context.methodId),
+        };
+      },
+      { vector, pinVector },
+    );
+
+    expect(result).toEqual({
+      absent: true,
+      wrote: true,
+      wiped: true,
+      failures: ['cancelled', 'unsupported-prf', 'unavailable'],
+      cancelledBeforeCommit: ['stale-operation', 'cancelled'],
+      quota: 'quota',
+      concurrent: ['accepted', 'revision-conflict'],
+      foreign: 'corrupt',
+      preserved: true,
+      budget: 'quota',
+      winner: true,
+    });
+  } finally {
+    await page.close();
+  }
+}, 60_000);

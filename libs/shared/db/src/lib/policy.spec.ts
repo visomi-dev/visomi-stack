@@ -1,7 +1,25 @@
 import { describe, expect, it } from 'vitest';
 
+import { developmentPersistenceDemos } from './example';
 import { domainPolicySchema, parseProductPolicy } from './policy';
 import type { DomainPolicy, ProductPolicy } from './policy';
+
+it('requires both opt-ins for the technical harness and disables it in production', () => {
+  const base = { VISOMI_PERSISTENCE_EXAMPLE: 'true' };
+  const optedIn = { VISOMI_PERSISTENCE_DEMOS: 'true', ...base };
+
+  expect(developmentPersistenceDemos({ NODE_ENV: 'test', ...base })).toBe(false);
+  expect(developmentPersistenceDemos({ NODE_ENV: 'test', ...base, VISOMI_PERSISTENCE_DEMOS: 'false' })).toBe(false);
+  expect(developmentPersistenceDemos({ NODE_ENV: 'development', ...optedIn })).toBe(true);
+  expect(developmentPersistenceDemos({ NODE_ENV: 'test', ...optedIn })).toBe(true);
+  expect(() => developmentPersistenceDemos({ NODE_ENV: 'test', VISOMI_PERSISTENCE_DEMOS: 'true' })).toThrow(
+    'persistence_demos_unavailable',
+  );
+  expect(() => developmentPersistenceDemos({ NODE_ENV: 'test', ...base, VISOMI_PERSISTENCE_DEMOS: 'yes' })).toThrow(
+    'persistence_demos_unavailable',
+  );
+  expect(developmentPersistenceDemos({ NODE_ENV: 'production', ...optedIn })).toBe(false);
+});
 
 const operation: DomainPolicy = {
   domain: 'operations',

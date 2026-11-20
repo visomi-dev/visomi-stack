@@ -64,6 +64,30 @@ export class BrowserRealtimeSession {
     );
   }
 
+  watchVault(authorize: () => Promise<unknown>, notify: (cursor: number) => void): () => void {
+    return this.open('/vault', (socket) => {
+      socket.auth = (reply) => {
+        void authorize().then(
+          (proof) => reply({ proof }),
+          () => reply({}),
+        );
+      };
+
+      socket.on('connect', () => notify(0));
+      socket.on('disconnect', (reason) => {
+        if (reason === 'io server disconnect') {
+          socket.connect();
+        }
+      });
+
+      socket.on('vault:changed', (cursor: unknown) => {
+        if (typeof cursor === 'number' && Number.isSafeInteger(cursor) && cursor > 0 && cursor <= 2_147_483_647) {
+          notify(cursor);
+        }
+      });
+    });
+  }
+
   private open(namespace: string, configure: (socket: Socket) => void, failed?: () => void): () => void {
     let stopped = false;
     let socket: Socket | undefined;

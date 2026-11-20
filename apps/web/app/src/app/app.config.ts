@@ -9,7 +9,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(
       withI18nSupport(),
       withHttpTransferCacheOptions({
-        filter: (request) => !request.url.includes('/auth/') && !request.url.includes('/persistence/'),
+        filter: (request) => !/\/(?:auth|example)\//.test(request.url),
       }),
     ),
     provideRouter(appRoutes),
