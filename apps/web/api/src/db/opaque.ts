@@ -1,53 +1,63 @@
-import { vaultSchema } from '@visomi-stack/backend-db';
+import { vaultSchema, type BackupObjects } from '@visomi-stack/backend-db';
+import type { RealtimePublisher } from '@visomi-stack/backend-shared';
 import {
   dataAad,
-  deviceActionMessage,
   serializeDataEnvelope,
   syncWriteSchema,
-  syncHeadSchema,
+  syncReadSchema,
+  syncReadBody,
   syncCheckpointMessage,
   type SyncHead,
 } from '@visomi-stack/shared-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
-import { and, asc, eq, gt, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
-import { z } from 'zod';
 
 import { input, type Access, type ScopeAccess, type SessionActor } from '../access/service';
 
-import { publicHash, verifyDeviceAction } from './device-proof';
-import { scopeId, VaultAccess } from './vault-access';
+import { publicHash } from './device-proof';
+import { VaultAccess } from './vault-access';
 import { requireCurrentOperation } from './operation-time';
+import { BackupPayloads, type BackupReservation } from './backup-payload';
+import { requireSyncDevice } from './sync-device';
 
-const {
-  opaqueUnits: units,
-  opaqueEvents: events,
-  opaqueStreams: streams,
-  opaqueCommands: commands,
-  keyDevices,
-} = vaultSchema;
+const { opaqueUnits: units, opaqueEvents: events, opaqueStreams: streams, opaqueCommands: commands } = vaultSchema;
 
-export const syncReadSchema = z.strictObject({
-  protocol: z.literal(1),
-  head: syncHeadSchema,
-  limit: z.number().int().min(1).max(100).default(25),
-});
-
-/** Private PostgreSQL ciphertext transport, bounded units and append-only cursors; no object URLs or public bucket. */
+/** Bounded ciphertext transport with append-only cursors and scope-selected private storage. */
 export class OpaqueSync {
   private readonly vault: VaultAccess;
+  private readonly payloads: BackupPayloads;
 
-  constructor(private readonly access: Access) {
+  constructor(
+    private readonly access: Access,
+    objects?: BackupObjects,
+    private readonly notifyVault?: RealtimePublisher['notifyVault'],
+  ) {
     this.vault = new VaultAccess(access);
+    this.payloads = new BackupPayloads(objects);
   }
 
-  async read(actor: SessionActor, target: unknown, domain: string, raw: unknown) {
+  async read(actor: SessionActor, target: unknown, domain: string, raw: unknown, csrf?: string) {
     const value = input(syncReadSchema, raw);
     const policy = this.vault.policy(domain);
 
     return this.access.withScope(actor, target, 'read', async (context) => {
       this.scope(context, policy.authorization.scope);
-      const { registry } = await this.vault.registry(context, policy);
+      const { registry, key } = await this.vault.registry(context, policy);
+
+      if (context.scope.objectBackup) {
+        const proof = value.authorization;
+
+        if (!proof || !csrf) {
+          throw new HttpError(403, 'device_approval_required');
+        }
+
+        await requireSyncDevice(context, key, registry.epoch, proof, proof.operationId, syncReadBody(value, csrf));
+
+        requireCurrentOperation(proof.operationId, policy);
+        this.payloads.requireObjects();
+      }
+
       const head = await this.head(context, domain);
 
       await this.anchor(context, domain, value.head, head);
@@ -65,13 +75,18 @@ export class OpaqueSync {
         .orderBy(asc(events.cursor))
         .limit(value.limit);
       let bytes = 0;
-      const page = candidates
-        .filter((item) => {
-          bytes += item.bytes;
+      const selected = candidates.filter((item) => {
+        bytes += item.bytes;
 
-          return bytes <= 2_097_152;
-        })
-        .map(({ bytes: _bytes, ...event }) => event);
+        return bytes <= 2_097_152;
+      });
+      const page = await Promise.all(
+        selected.map(async ({ bytes, envelope, ...event }) => {
+          const opened = await this.payloads.read(context, envelope, bytes);
+
+          return { ...event, envelope: opened };
+        }),
+      );
       const cursor = page.at(-1)?.cursor ?? value.head.cursor;
 
       return {
@@ -96,11 +111,9 @@ export class OpaqueSync {
       throw new HttpError(413, 'quota_exceeded');
     }
 
-    return this.access.withScope(
-      actor,
-      target,
-      value.envelope.context.kind === 'tombstone' ? 'delete' : 'write',
-      async (context) => {
+    const action = value.envelope.context.kind === 'tombstone' ? 'delete' : 'write';
+    const write = (reservation?: BackupReservation) =>
+      this.access.withScope(actor, target, action, async (context) => {
         this.scope(context, policy.authorization.scope);
         const { registry, key } = await this.vault.registry(context, policy);
 
@@ -114,35 +127,6 @@ export class OpaqueSync {
           throw new HttpError(409, 'envelope_context_invalid');
         }
 
-        const authorization = value.authorization;
-
-        if (
-          authorization.action !== 'sync' ||
-          authorization.epoch !== registry.epoch ||
-          authorization.operationId !== value.operationId ||
-          deviceActionMessage({ ...authorization, key }) !== deviceActionMessage(authorization)
-        ) {
-          throw new HttpError(409, 'device_state_conflict');
-        }
-
-        const [device] = await context.tx
-          .select()
-          .from(keyDevices)
-          .where(
-            and(
-              eq(keyDevices.tenantId, key.scope.tenantId),
-              eq(keyDevices.scopeId, scopeId(key.scope)),
-              eq(keyDevices.domain, domain),
-              eq(keyDevices.id, authorization.deviceId),
-              eq(keyDevices.ownerId, actor.principal.id),
-              isNull(keyDevices.revokedAt),
-            ),
-          );
-
-        if (!device) {
-          throw new HttpError(403, 'device_approval_required');
-        }
-
         const body = {
           protocol: value.protocol,
           operationId: value.operationId,
@@ -151,7 +135,8 @@ export class OpaqueSync {
           envelope: value.envelope,
         };
 
-        verifyDeviceAction(device.signing, authorization, body);
+        await requireSyncDevice(context, key, registry.epoch, value.authorization, value.operationId, body);
+
         requireCurrentOperation(value.operationId, policy);
         const fingerprint = publicHash(JSON.stringify(body));
         const [previous] = await context.tx
@@ -220,6 +205,20 @@ export class OpaqueSync {
 
         const cursor = head.cursor + 1;
         const checkpoint = publicHash(syncCheckpointMessage(cursor, head.checkpoint, value.envelope));
+        let envelope: typeof events.$inferInsert.envelope = value.envelope;
+
+        if (context.scope.objectBackup) {
+          if (!reservation) {
+            const slot = await this.payloads.reserve(context, value.operationId, fingerprint, bytes);
+
+            return { cursor, checkpoint, reservation: slot };
+          }
+
+          const saved = await this.payloads.publish(context, reservation, value.envelope, wire, bytes);
+
+          envelope = saved;
+        }
+
         const row = {
           tenantId: context.target.tenantId,
           scopeId: context.scope.id,
@@ -229,7 +228,7 @@ export class OpaqueSync {
           generation: key.generation,
           cursor,
           checkpoint,
-          envelope: value.envelope,
+          envelope,
           bytes,
           tombstone: value.envelope.context.kind === 'tombstone',
         };
@@ -249,7 +248,7 @@ export class OpaqueSync {
           cursor,
           checkpoint,
           previousCheckpoint: head.checkpoint,
-          envelope: value.envelope,
+          envelope,
           bytes,
         });
 
@@ -272,9 +271,27 @@ export class OpaqueSync {
           checkpoint,
         });
 
-        return { cursor, checkpoint };
-      },
-    );
+        if (reservation) {
+          await this.payloads.clear(context, reservation.id);
+        }
+
+        return { cursor, checkpoint, backupScope: reservation ? context.scope.id : undefined };
+      });
+
+    // Record the slot before anything can reach S3. Publication then rechecks authority and head under the tenant lock.
+    const result = await write();
+
+    if (result.reservation) {
+      const published = await write(result.reservation);
+
+      if (published.backupScope) {
+        void this.notifyVault?.(published.backupScope, published.cursor).catch(() => undefined);
+      }
+
+      return { cursor: published.cursor, checkpoint: published.checkpoint };
+    }
+
+    return { cursor: result.cursor, checkpoint: result.checkpoint };
   }
 
   private scope(context: ScopeAccess, kind: string) {

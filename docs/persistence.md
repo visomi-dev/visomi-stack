@@ -8,6 +8,8 @@ a production enablement checklist that has already been completed. Start with th
 [device/sync contract](architecture/contracts/persistence-keys-sync.md), and
 [current test evidence](reviews/persistence-milestone.md).
 
+See [Vault and Cloud examples](persistence-examples.md) for the opt-in browser flows, database role setup, and restore boundaries.
+
 ## Choose domains before composing a product
 
 Use the strict `ProductPolicy` contract in `@visomi-stack/shared-db`.
@@ -39,10 +41,10 @@ restriction.
 
 ## Compose supported adapters explicitly
 
-`createApp({ auth, persistence: policy })` opts into the API. Authentication owns
+`createApp({ auth })` registers the Example API when authentication is configured. Authentication owns
 database/realtime resources, initialized and closed by its executable. Import the
 compiled application module when embedding it; never import its startup entrypoint.
-The default application does not mount persistence routes.
+The default application without authentication leaves the Example API unmounted.
 
 For a cloud-only SaaS product, declare cloud domains with `server-authorized`
 readers and use the SaaS adapter with the existing cloud authentication session.
@@ -59,19 +61,19 @@ The opaque adapter rejects server search/AI/analytics/jobs and never decrypts fo
 compatibility. A missing client capability produces a functional block; it must
 not switch the domain to server-readable storage.
 
-The standalone API can enable the synthetic fixture with
-`NODE_ENV=development VISOMI_PERSISTENCE_EXAMPLE=true`. The same switch in production
-or without an explicit development/test environment rejects startup. No environment
-variable is changed by this branch. Custom product manifests remain explicit
-composition inputs; do not treat the synthetic recovery choice as a Nive decision.
+The standalone API serves `/example/vault` and `/example/cloud` against its root.
+The compiled gateway owns the `/api` prefix for the same two routers and checks
+the compiled Example API capability before composing with authentication. See the
+[example guide](persistence-examples.md) for storage requirements and the current
+frontend routes.
 
-The same explicit example profile is available to the compiled gateway. Its public
-API capability version must match before composition. Open `/app/en/persistence`
-or `/app/es/persistence` after signing into the isolated development stack. The
-example creates a synthetic workspace and bookmarks its scope/object route; it
-keeps cloud-readable operations and client-encrypted notes in separate domains.
+The technical hybrid harness still lives at `/app/{en,es}/persistence` in the
+explicitly opted-in development/test profile. It exercises two storage modes and
+browser lifecycle, while the production-capable Example domain exposes the
+separate user-facing Vault and Cloud modes. The harness uses `/example/vault`
+and has no separate HTTP API alias.
 
-Only current verified users may obtain `/persistence/policy`. Do not put customer
+Only current verified users may obtain either example’s policy. Do not put customer
 records, wrapped keys, plaintext, or persistence responses into SSR transfer caches.
 The Angular application excludes persistence requests from transfer caching, and
 `VaultSession` never decrypts before explicit unlock. The shell may open a metadata-only
@@ -158,7 +160,7 @@ and its containing `Field` can also be used outside persistence.
 `VaultUnlock` receives method, busy/notice state, a PIN model and a caller-supplied
 stable `control-id`, and emits an explicit unlock action. It does not inject a
 session, Router, HTTP client or vault. The authenticated layout supplies `Vaults`
-and owns the `/persistence` exclusion so the resource screen and shell never show
+and owns the exclusions for the hybrid harness and Vault resource view so those screens and the shell never show
 duplicate prompts. `Vaults` has no product-route knowledge. Its scoped provider and
 the root account-bound `VaultSession` retain their existing lifetimes.
 

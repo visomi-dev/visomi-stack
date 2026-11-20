@@ -9,14 +9,17 @@ import { isVaultPin } from '@visomi-stack/web-frontend-db';
 import type { WrappingContext } from '@visomi-stack/shared-db';
 
 import { Session } from '../auth/session/session';
+import { BrowserRealtimeSession } from '../auth/session/browser-realtime-session';
 import { Navigation } from '../shared/navigation';
 import { DatabaseHttp } from '../shared/db/http';
 import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { vaultMessage } from '../shared/vault/vault-messages';
+import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
 
 import { ExamplePrivateResource } from './example-private-resource';
 import {
   exampleLocalKey,
+  examplePrivatePath,
   exampleTargetSchema as targetSchema,
   readExampleProfile,
   type ExampleTarget,
@@ -39,16 +42,27 @@ export class ExampleWorkspace {
   private readonly navigation = inject(Navigation);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly realtime = inject(BrowserRealtimeSession, { optional: true });
+  private readonly syncStatus = inject(VaultSyncStatus);
 
-  private readonly params = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
   private readonly rendered = signal(false);
   private readonly configured = signal(false);
   private readonly busyState = signal(false);
   private readonly noticeState = signal('');
   private readonly binding = signal<WrappingContext | null>(null);
   private readonly methodLoaded = signal(false);
+  private readonly backedScope = signal<'unknown' | 'empty' | 'enrolled'>('unknown');
   private readonly targetState = signal<ExampleTarget | null>(null);
+  private readonly watchCursor = signal<number | null>(null);
 
+  readonly privateResource = inject(ExamplePrivateResource);
+
+  private readonly hasVerifiedHistory = computed(() => this.privateResource.verifiedCursor() !== null);
+
+  readonly backedSample = this.route.snapshot.data['backedSample'] === true;
+  private readonly params = this.backedSample
+    ? toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap })
+    : toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
   private readonly ownerId = this.session.user()?.id;
   private readonly version = this.session.operationVersion();
   private readonly cloud = signal<z.infer<typeof cloudSchema>['items'][number] | null>(null);
@@ -64,8 +78,8 @@ export class ExampleWorkspace {
   private profile: ReturnType<typeof readExampleProfile> | undefined;
 
   readonly capabilities = inject(UnlockCapabilities);
-  readonly privateResource = inject(ExamplePrivateResource);
 
+  readonly objectBackups = signal(false);
   readonly cloudDraft = signal('');
   readonly privateDraft = signal('');
   readonly pinDraft = signal('');
@@ -93,7 +107,16 @@ export class ExampleWorkspace {
       (this.binding()?.method === 'passkey-prf' ||
         (!this.binding() && ['available', 'unknown'].includes(this.capabilities.prf()))),
   );
-  readonly canInitialize = computed(() => this.methodLoaded() && !this.binding());
+  readonly hasBinding = computed(() => this.binding() !== null);
+  readonly canInitialize = computed(
+    () => this.methodLoaded() && !this.hasBinding() && (!this.backedSample || this.backedScope() === 'empty'),
+  );
+  readonly canPair = computed(() => !this.backedSample || this.hasBinding() || this.backedScope() === 'enrolled');
+  readonly pairingParams = computed(() => {
+    const target = this.targetState();
+
+    return this.backedSample && target ? { ...target, sample: 'vault-backup' } : target;
+  });
 
   readonly busy = this.busyState.asReadonly();
   readonly notice = this.noticeState.asReadonly();
@@ -116,14 +139,18 @@ export class ExampleWorkspace {
   }
 
   async createWorkspace(): Promise<void> {
+    if (this.backedSample && !this.objectBackups()) {
+      return;
+    }
+
     await this.run(async (signal) => {
-      const parent = await this.api.request('/tenants', {}, signal);
+      const parent = await this.api.vault('/tenants', {}, signal);
 
       this.current(signal);
       const tenant = scopeSchema.parse(parent);
-      const created = await this.api.request(
+      const created = await this.api.vault(
         `/tenants/${tenant.tenantId}/scopes/${tenant.scopeId}/children`,
-        { kind: 'resource' },
+        this.backedSample ? { kind: 'resource', objectBackup: true } : { kind: 'resource' },
         signal,
       );
 
@@ -131,7 +158,11 @@ export class ExampleWorkspace {
       const target = scopeSchema.parse(created);
       const objectId = this.document.defaultView!.crypto.randomUUID();
 
-      await this.router.navigate(['/persistence', target.tenantId, target.scopeId, objectId]);
+      if (this.backedSample) {
+        await this.router.navigate(['/example/vault'], { queryParams: { ...target, objectId } });
+      } else {
+        await this.router.navigate(['/persistence', target.tenantId, target.scopeId, objectId]);
+      }
     });
   }
 
@@ -146,7 +177,7 @@ export class ExampleWorkspace {
         audience: 'owner',
       };
 
-      await this.api.request(
+      await this.api.vault(
         this.records(target),
         current
           ? { ...shared, kind: 'update', id: current.id, expectedRevision: current.revision }
@@ -170,7 +201,11 @@ export class ExampleWorkspace {
       }
 
       try {
-        await this.privateResource.unlock(this.requiredTarget(), this.profile.rpId, initialize);
+        const target = this.requiredTarget();
+
+        await (this.backedSample && !initialize
+          ? this.privateResource.unlock(target, this.profile.rpId, false, undefined, true)
+          : this.privateResource.unlock(target, this.profile.rpId, initialize));
       } catch (error) {
         this.current(signal);
 
@@ -229,6 +264,11 @@ export class ExampleWorkspace {
       await this.privateResource.save(this.requiredTarget(), this.privateDraft());
 
       this.current(signal);
+
+      if (this.backedSample) {
+        this.syncStatus.show('idle');
+      }
+
       this.privateDraft.set('');
       this.noticeState.set(
         $localize`:@@vaultSaved:The encrypted change is stored on this device. Synchronization is a separate operation.`,
@@ -237,7 +277,7 @@ export class ExampleWorkspace {
   }
 
   async synchronize(): Promise<void> {
-    await this.run(() => this.privateResource.synchronize(this.requiredTarget()));
+    await this.synchronizeWithStatus(true);
   }
 
   async keepPending(): Promise<void> {
@@ -254,6 +294,41 @@ export class ExampleWorkspace {
     this.pinConfirmation.set('');
     this.vault.lock();
     this.privateResource.close();
+  }
+
+  private async synchronizeWithStatus(flush: boolean): Promise<void> {
+    await this.run(async (signal) => {
+      const target = this.requiredTarget();
+
+      if (!this.backedSample) {
+        await this.privateResource.synchronize(target, flush);
+
+        return;
+      }
+
+      this.syncStatus.show('syncing');
+
+      try {
+        await this.privateResource.synchronize(target, flush);
+
+        this.current(signal);
+        this.syncStatus.show(this.privateResource.synchronized() ? 'synced' : 'idle');
+      } catch (error) {
+        this.current(signal);
+
+        if (this.vault.ready()) {
+          this.syncStatus.show('retry', () => {
+            if (flush) {
+              void this.synchronize();
+            } else {
+              this.watchCursor.set(0);
+            }
+          });
+        }
+
+        throw error;
+      }
+    });
   }
 
   private records(target: ExampleTarget) {
@@ -278,8 +353,22 @@ export class ExampleWorkspace {
     this.methodLoaded.set(true);
   }
 
+  private async canBootstrap(target: ExampleTarget, signal: AbortSignal): Promise<boolean> {
+    try {
+      await this.api.vault(`${examplePrivatePath(target)}/devices`, undefined, signal);
+
+      return false;
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.error?.error === 'key_scope_uninitialized') {
+        return true;
+      }
+
+      throw error;
+    }
+  }
+
   private async loadCloud(target: ExampleTarget, signal: AbortSignal) {
-    const raw = await this.api.request(`${this.records(target)}?limit=1`, undefined, signal);
+    const raw = await this.api.vault(`${this.records(target)}?limit=1`, undefined, signal);
 
     this.current(signal);
     const value = cloudSchema.parse(raw).items[0] ?? null;
@@ -310,7 +399,9 @@ export class ExampleWorkspace {
     this.vault.release();
     this.binding.set(null);
     this.methodLoaded.set(false);
+    this.backedScope.set('unknown');
     this.configured.set(false);
+    this.objectBackups.set(false);
     this.profile = undefined;
     this.targetState.set(null);
     this.cloud.set(null);
@@ -320,6 +411,11 @@ export class ExampleWorkspace {
     this.pinConfirmation.set('');
     this.noticeState.set('');
     this.busyState.set(false);
+
+    if (this.backedSample) {
+      this.watchCursor.set(null);
+      this.syncStatus.show('idle');
+    }
   }
 
   private async run(work: (signal: AbortSignal) => Promise<void>): Promise<void> {
@@ -343,7 +439,11 @@ export class ExampleWorkspace {
 
       const code = error instanceof HttpErrorResponse ? error.error?.error : (error as { code?: unknown })?.code;
 
-      this.noticeState.set(vaultMessage(typeof code === 'string' ? code : 'unavailable'));
+      this.noticeState.set(
+        this.backedSample && code === 'scope_access_denied'
+          ? $localize`:@@vaultBackedSampleDenied:This account doesn’t have access to the backup workspace.`
+          : vaultMessage(typeof code === 'string' ? code : 'unavailable'),
+      );
     } finally {
       if (signal === this.controller.signal && !signal.aborted) {
         this.busyState.set(false);
@@ -356,6 +456,10 @@ export class ExampleWorkspace {
 
     if (!this.vault.ready()) {
       this.privateDraft.set('');
+
+      if (this.backedSample) {
+        this.syncStatus.show('idle');
+      }
     }
 
     if (
@@ -364,6 +468,48 @@ export class ExampleWorkspace {
       this.session.user()?.id !== this.ownerId
     ) {
       untracked(() => this.reset());
+    }
+  });
+
+  private readonly watchBackedVault = effect((onCleanup) => {
+    const target = this.target();
+    const verified = this.hasVerifiedHistory();
+
+    if (!this.backedSample || !target || !this.available() || !verified || !this.vault.ready()) {
+      return;
+    }
+
+    const close = this.realtime?.watchVault(
+      () => this.privateResource.watchProof(target),
+      (cursor) => this.watchCursor.update((pending) => Math.max(pending ?? 0, cursor)),
+    );
+
+    onCleanup(() => {
+      close?.();
+      this.watchCursor.set(null);
+    });
+  });
+
+  private readonly syncOnVaultHint = effect(() => {
+    const hint = this.watchCursor();
+    const cursor = this.privateResource.verifiedCursor();
+
+    if (
+      hint !== null &&
+      cursor !== null &&
+      this.available() &&
+      this.vault.ready() &&
+      !this.busy() &&
+      !this.privateResource.pending() &&
+      !this.privateDraft()
+    ) {
+      untracked(() => {
+        this.watchCursor.set(null);
+
+        if (hint === 0 || hint > cursor) {
+          void this.synchronizeWithStatus(false);
+        }
+      });
     }
   });
 
@@ -387,10 +533,14 @@ export class ExampleWorkspace {
       }
 
       void this.run(async (signal) => {
-        const raw = await this.api.request('/policy', undefined, signal);
+        const raw = await this.api.vault('/policy', undefined, signal);
 
         this.current(signal);
         const profile = readExampleProfile(raw, this.document.defaultView?.location.origin);
+
+        if (!this.backedSample && !profile.hybridHarness) {
+          return;
+        }
 
         const target = params.has('tenantId')
           ? targetSchema.parse({
@@ -401,6 +551,7 @@ export class ExampleWorkspace {
           : null;
 
         this.profile = profile;
+        this.objectBackups.set(profile.objectBackups === true);
         this.targetState.set(target);
         this.configured.set(true);
 
@@ -409,11 +560,20 @@ export class ExampleWorkspace {
 
           this.current(signal);
 
+          if (this.backedSample && !this.hasBinding()) {
+            const empty = await this.canBootstrap(target, signal);
+
+            this.current(signal);
+            this.backedScope.set(empty ? 'empty' : 'enrolled');
+          }
+
           await this.privateResource.resume(target, profile.rpId);
 
           this.current(signal);
 
-          await this.loadCloud(target, signal);
+          if (!this.backedSample) {
+            await this.loadCloud(target, signal);
+          }
         }
       });
     });

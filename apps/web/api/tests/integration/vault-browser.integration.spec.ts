@@ -78,7 +78,7 @@ describe.each(scenarios)('two browser clients over PostgreSQL ($label)', (scenar
         },
         generation: 1,
       };
-      const path = `/api/persistence/tenants/${f.target.tenantId}/scopes/${f.target.scopeId}/domains/private-resources`;
+      const path = `/api/example/vault/tenants/${f.target.tenantId}/scopes/${f.target.scopeId}/domains/private-resources`;
       const laptop = await initializeBrowserVault(owner, {
         key,
         ownerId: f.owner.actor.principal.id,

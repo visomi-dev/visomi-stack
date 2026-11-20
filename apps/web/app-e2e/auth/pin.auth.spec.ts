@@ -20,7 +20,7 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
   const sent: string[] = [];
 
   page.on('request', (request) => {
-    if (request.url().includes('/api/persistence/')) {
+    if (request.url().includes('/api/example/vault/')) {
       sent.push(request.postData() ?? '');
     }
   });

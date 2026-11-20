@@ -1,4 +1,4 @@
-import { persistenceSchema, vaultSchema } from '@visomi-stack/backend-db';
+import { persistenceSchema, vaultSchema, type BackupObjects } from '@visomi-stack/backend-db';
 import { operationClockSkewMs, operationWindowMs, retentionDayMs, type DomainPolicy } from '@visomi-stack/shared-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lte } from 'drizzle-orm';
@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import { input, type Access, type ScopeAccess, type SessionActor } from '../access/service';
 
+import { BackupPayloads } from './backup-payload';
 import { scopeId, VaultAccess } from './vault-access';
 
 export const maintenanceSchema = z.strictObject({ limit: z.number().int().min(1).max(100) });
@@ -15,9 +16,16 @@ const { opaqueEvents: events, opaqueStreams: streams, opaqueUnits: units, keyCha
 
 /** Explicit owner operation; no scheduler, import-time work, client-supplied clock or retention override. */
 export class PersistenceMaintenance {
-  constructor(private readonly access: Access) {}
+  private readonly backups: BackupPayloads;
 
-  async run(actor: SessionActor, target: unknown, domain: string, raw: unknown) {
+  constructor(
+    private readonly access: Access,
+    objects?: BackupObjects,
+  ) {
+    this.backups = new BackupPayloads(objects);
+  }
+
+  async run(actor: SessionActor, target: unknown, domain: string, raw: unknown, objectOnly = false) {
     const { limit } = input(maintenanceSchema, raw);
     const policy = this.access.policy.domains.find((entry) => entry.domain === domain);
 
@@ -28,6 +36,20 @@ export class PersistenceMaintenance {
     return this.access.withScope(actor, target, 'delete', async (context) => {
       if (!context.membership.owner || context.scope.kind !== policy.authorization.scope) {
         throw new HttpError(403, 'scope_access_denied');
+      }
+
+      if (context.scope.objectBackup) {
+        if (policy.readers !== 'client-keys-only') {
+          throw new HttpError(409, 'domain_adapter_incompatible');
+        }
+
+        const abandonedObjects = await this.backups.cleanup(context);
+
+        return { receipts: 0, scrubbed: 0, purged: 0, events: 0, tombstones: 0, challenges: 0, abandonedObjects };
+      }
+
+      if (objectOnly) {
+        throw new HttpError(409, 'capability_unavailable');
       }
 
       const now = Date.now();

@@ -169,7 +169,7 @@ export class Access {
     });
   }
 
-  async createScope(actor: SessionActor, target: unknown, raw: unknown) {
+  async createScope(actor: SessionActor, target: unknown, raw: unknown, objectBackup = false) {
     const value = input(scopeInputSchema, raw);
 
     return this.withScope(actor, target, 'share', async ({ tx, scope }) => {
@@ -179,7 +179,9 @@ export class Access {
 
       const id = randomUUID();
 
-      await tx.insert(scopes).values({ id, tenantId: scope.tenantId, parentId: scope.id, kind: value.kind });
+      await tx
+        .insert(scopes)
+        .values({ id, tenantId: scope.tenantId, parentId: scope.id, kind: value.kind, objectBackup });
 
       return { tenantId: scope.tenantId, scopeId: id };
     });

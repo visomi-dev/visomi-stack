@@ -322,7 +322,7 @@ compiled application through `compose.yaml` plus `compose.test.yaml`. Playwright
 and its optional `--ui` stay on the host. Test PostgreSQL uses the same image as
 local Compose, with an independent project, volume, credentials and random
 loopback database port for each run. Native PostgreSQL and Redis are unnecessary.
-The tests do not start Redis or MinIO because neither application consumes them.
+The default suites skip Redis and the inherited MinIO service. The Vault object backup API and authenticated browser fixtures start a dedicated SeaweedFS service in their disposable Compose project.
 
 Docker Compose is detected first, falling back to `podman-compose`; select a
 provider with `VISOMI_TEST_COMPOSE=docker|podman-compose`. The E2E wrapper explicitly

@@ -1,0 +1,232 @@
+<section class="mx-auto grid w-full max-w-3xl gap-6 py-6" [attr.aria-busy]="workspace.busy()">
+  <header class="space-y-3">
+    <h1 appUI appNavigationHeading i18n="@@cloudExampleTitle">Cloud example</h1>
+
+    <p appUI tone="muted" i18n="@@cloudExampleDescription">
+      Use test data to try a service-readable workspace. Notes are stored in PostgreSQL. Database row security and the
+      app’s permission checks protect access. The server can read the notes, so this is regular cloud storage.
+    </p>
+
+    <p appUI tone="muted" i18n="@@cloudExamplePermissions">
+      The workspace owner writes notes and chooses which to share. A test account with read access can see only shared
+      notes. Choose Vault for data that requires a separate device unlock.
+    </p>
+  </header>
+
+  @if (!workspace.examples.checked()) {
+    <p role="status" i18n="@@cloudExampleChecking">Checking Cloud availability…</p>
+  } @else if (!workspace.examples.enabled()) {
+    <p role="status" i18n="@@cloudExampleUnavailable">The Cloud example is unavailable right now.</p>
+  } @else {
+    @if (workspace.memberId(); as id) {
+      <p class="wrap-break-word" i18n="@@cloudExampleMemberId">Your test account ID is {{ id }}.</p>
+    }
+
+    @if (!workspace.hasTarget()) {
+      <button
+        appUI
+        type="button"
+        class="justify-self-start"
+        [disabled]="workspace.busy()"
+        (click)="workspace.createWorkspace()"
+        i18n="@@persistenceCreateWorkspace"
+      >
+        Create a test workspace
+      </button>
+    } @else if (!workspace.target()) {
+      <p role="alert" i18n="@@cloudExampleInvalidLink">This test workspace link is invalid.</p>
+    } @else {
+      <div class="flex flex-wrap gap-3">
+        <button
+          appUI
+          type="button"
+          variant="secondary"
+          [disabled]="workspace.busy()"
+          (click)="workspace.refresh()"
+          i18n="@@cloudExampleRefresh"
+        >
+          Refresh notes
+        </button>
+      </div>
+
+      @if (workspace.loaded() && !workspace.notes().length) {
+        <p appUI tone="muted" i18n="@@cloudExampleEmpty">There are no visible notes in this workspace.</p>
+      }
+
+      @for (note of workspace.notes(); track note.id) {
+        <article appUI="card" padding="lg" class="grid gap-3">
+          <h2 appUI class="wrap-break-word">{{ note.title }}</h2>
+
+          <p class="wrap-break-word whitespace-pre-wrap">{{ note.body }}</p>
+
+          @if (note.audience === 'scope') {
+            <p appUI tone="muted" i18n="@@cloudExampleScopeAudience">Shared with permitted readers</p>
+          } @else {
+            <p appUI tone="muted" i18n="@@cloudExampleOwnerAudience">Owner only</p>
+          }
+
+          @if (workspace.canWrite()) {
+            <div class="flex flex-wrap gap-3">
+              <button
+                appUI
+                type="button"
+                variant="secondary"
+                [disabled]="workspace.busy()"
+                (click)="workspace.edit(note)"
+                i18n="@@cloudExampleEdit"
+              >
+                Edit note
+              </button>
+
+              <button
+                appUI
+                type="button"
+                variant="secondary"
+                [disabled]="workspace.busy()"
+                (click)="workspace.remove(note)"
+                i18n="@@cloudExampleDelete"
+              >
+                Delete note
+              </button>
+            </div>
+          }
+        </article>
+      }
+
+      @if (workspace.canWrite()) {
+        <form appUI="card" padding="lg" class="grid gap-4" (submit)="$event.preventDefault(); workspace.save()">
+          @if (workspace.selected()) {
+            <h2 appUI i18n="@@cloudExampleEditing">Edit test note</h2>
+          } @else {
+            <h2 appUI i18n="@@cloudExampleNew">New test note</h2>
+          }
+
+          <app-field control-id="cloud-note-title" label="Note title" i18n-label="@@cloudExampleNoteTitle">
+            <input
+              appUI
+              id="cloud-note-title"
+              type="text"
+              maxlength="160"
+              required
+              #noteTitle
+              [value]="workspace.title()"
+              [disabled]="workspace.busy()"
+              (input)="workspace.title.set(noteTitle.value)"
+            />
+          </app-field>
+
+          <app-field control-id="cloud-note-body" label="Synthetic note text" i18n-label="@@cloudExampleNoteBody">
+            <textarea
+              appUI
+              id="cloud-note-body"
+              rows="3"
+              maxlength="4000"
+              #noteBody
+              [value]="workspace.body()"
+              [disabled]="workspace.busy()"
+              (input)="workspace.body.set(noteBody.value)"
+            ></textarea>
+          </app-field>
+
+          <fieldset class="grid gap-2" [disabled]="workspace.busy()">
+            <legend i18n="@@cloudExampleAudience">Who can read this note?</legend>
+
+            <label class="flex items-center gap-2">
+              <input
+                type="radio"
+                name="cloud-audience"
+                value="owner"
+                [checked]="workspace.audience() === 'owner'"
+                (change)="workspace.audience.set('owner')"
+              />
+
+              <span i18n="@@cloudExampleOwnerAudience">Owner only</span>
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input
+                type="radio"
+                name="cloud-audience"
+                value="scope"
+                [checked]="workspace.audience() === 'scope'"
+                (change)="workspace.audience.set('scope')"
+              />
+
+              <span i18n="@@cloudExampleScopeAudience">Shared with permitted readers</span>
+            </label>
+          </fieldset>
+
+          <div class="flex flex-wrap gap-3">
+            <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@cloudExampleSave">Save note</button>
+
+            @if (workspace.selected()) {
+              <button
+                appUI
+                type="button"
+                variant="secondary"
+                [disabled]="workspace.busy()"
+                (click)="workspace.edit(null)"
+                i18n="@@cloudExampleCancelEdit"
+              >
+                Cancel edit
+              </button>
+            }
+          </div>
+        </form>
+
+        <section appUI="card" padding="lg" class="grid gap-4">
+          <h2 appUI i18n="@@cloudExampleShareTitle">Workspace access</h2>
+
+          <p appUI tone="muted" i18n="@@cloudExampleShareHelp">
+            Ask a verified test account for its ID. After granting access, send the workspace’s address to that account.
+            Anyone who opens the address still needs permission.
+          </p>
+
+          <app-field control-id="cloud-member" label="Test account ID" i18n-label="@@cloudExampleShareId">
+            <input
+              appUI
+              id="cloud-member"
+              type="text"
+              maxlength="36"
+              autocomplete="off"
+              spellcheck="false"
+              #member
+              [disabled]="workspace.busy()"
+            />
+          </app-field>
+
+          <div class="flex flex-wrap gap-3">
+            <button
+              appUI
+              type="button"
+              [disabled]="workspace.busy()"
+              (click)="workspace.setAccess(member.value, true)"
+              i18n="@@cloudExampleGrant"
+            >
+              Grant read access
+            </button>
+
+            <button
+              appUI
+              type="button"
+              variant="secondary"
+              [disabled]="workspace.busy()"
+              (click)="workspace.setAccess(member.value, false)"
+              i18n="@@cloudExampleRevoke"
+            >
+              Remove access
+            </button>
+          </div>
+        </section>
+      }
+    }
+  }
+
+  @if (workspace.status()) {
+    <p role="status">{{ workspace.status() }}</p>
+  }
+
+  @if (workspace.error()) {
+    <p role="alert">{{ workspace.error() }}</p>
+  }
+</section>

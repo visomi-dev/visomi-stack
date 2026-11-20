@@ -1,9 +1,8 @@
-import type { Database } from '@visomi-stack/backend-db';
+import type { BackupObjects, Database } from '@visomi-stack/backend-db';
 import type { MailTransport, RealtimePublisher } from '@visomi-stack/backend-shared';
 import type { Observability } from '@visomi-stack/web-backend-shared';
 import type { Request, RequestHandler } from 'express';
 import type { Pool } from 'pg';
-import type { ProductPolicy } from '@visomi-stack/shared-db';
 
 import type { AuthSnapshot } from './application-module';
 
@@ -17,10 +16,12 @@ export type EmbeddedAuthentication = {
     readSession: RequestHandler;
     readUser(serialized: unknown): Promise<string | null>;
     watchExpiration(sessionId: string, requestId: string): Promise<number>;
+    watchVault?(session: { id: string; user: unknown; csrf?: string }, proof: unknown): Promise<string>;
   };
 };
 export type ApiModule = {
-  persistenceVersion?: 1;
+  exampleApiVersion?: 1;
+  createBackupObjects?(environment: NodeJS.ProcessEnv): BackupObjects | undefined;
   createApp(options: {
     observability?: Observability;
     basePath?: string;
@@ -28,7 +29,8 @@ export type ApiModule = {
     authMode: 'inherited';
     errorMode: 'inherited';
     helmetMode: 'inherited';
-    persistence?: ProductPolicy;
+    exampleHarness?: boolean;
+    backupObjects?: BackupObjects;
   }): RequestHandler;
   authConfig(input: {
     origin: string;

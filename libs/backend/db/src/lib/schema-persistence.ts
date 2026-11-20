@@ -52,11 +52,13 @@ export const scopes = pgTable(
       .references(() => tenants.id, { onDelete: 'cascade' }),
     kind: text('kind').$type<'tenant' | 'group' | 'resource'>().notNull(),
     parentId: uuid('parent_id'),
+    objectBackup: boolean('object_backup').notNull().default(false),
   },
   (t) => [
     unique('persistence_scope_tenant_id').on(t.tenantId, t.id),
     foreignKey({ columns: [t.tenantId, t.parentId], foreignColumns: [t.tenantId, t.id] }),
     check('persistence_scope_kind', sql`${t.kind} IN ('tenant','group','resource')`),
+    check('persistence_scope_object_backup', sql`NOT ${t.objectBackup} OR ${t.kind} = 'resource'`),
     check(
       'persistence_scope_root',
       sql`(${t.kind} = 'tenant' AND ${t.id} = ${t.tenantId} AND ${t.parentId} IS NULL) OR (${t.kind} <> 'tenant' AND ${t.parentId} IS NOT NULL AND ${t.id} <> ${t.parentId})`,

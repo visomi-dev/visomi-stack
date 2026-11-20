@@ -1,62 +1,95 @@
-<section class="max-w-3xl space-y-8 py-6" [attr.aria-busy]="workspace.busy()">
+<section
+  class="space-y-8 py-6"
+  [class.max-w-3xl]="!workspace.backedSample"
+  [class.mx-auto]="workspace.backedSample"
+  [class.max-w-xl]="workspace.backedSample"
+  [attr.aria-busy]="workspace.busy()"
+>
   <header class="space-y-3">
-    <h1 appUI appNavigationHeading i18n="@@persistenceExampleHeading">Hybrid persistence example</h1>
+    @if (workspace.backedSample) {
+      <h2 appUI i18n="@@vaultBackedSampleTitle">Back up and restore a test note</h2>
 
-    <p appUI tone="muted" i18n="@@persistenceExampleDescription">
-      This development example uses test workspaces. The service can read account identity and operational notes. Unlock
-      private resources separately on this device.
-    </p>
+      <p appUI tone="muted" i18n="@@vaultBackedSampleExplanation">
+        Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy,
+        then open this workspace on an approved device to download the same note. In workspaces with private object
+        storage, this screen checks for updates while the vault is unlocked. Earlier workspaces keep their existing
+        storage.
+      </p>
+    } @else {
+      <h1 appUI appNavigationHeading i18n="@@persistenceExampleHeading">Hybrid persistence example</h1>
+
+      <p appUI tone="muted" i18n="@@persistenceExampleDescription">
+        This development example uses test workspaces. The service can read account identity and operational notes.
+        Unlock private resources separately on this device.
+      </p>
+    }
   </header>
 
   @if (!workspace.available()) {
-    <p role="status" i18n="@@persistenceExampleUnavailable">Set up the development profile to use this example.</p>
+    @if (workspace.backedSample) {
+      <p role="status" i18n="@@vaultBackupUnavailable">The Vault backup service is unavailable right now.</p>
+    } @else {
+      <p role="status" i18n="@@persistenceExampleUnavailable">Set up the development profile to use this example.</p>
+    }
+  } @else if (workspace.backedSample && !workspace.target() && !workspace.objectBackups()) {
+    <p role="status" i18n="@@vaultBackupStorageDisabled">
+      Private backup storage is unavailable right now. You can still use the local vault.
+    </p>
   } @else if (!workspace.target()) {
-    <button
-      appUI
-      type="button"
-      [disabled]="workspace.busy()"
-      (click)="workspace.createWorkspace()"
-      i18n="@@persistenceCreateWorkspace"
-    >
-      Create a test workspace
+    <button appUI type="button" [disabled]="workspace.busy()" (click)="workspace.createWorkspace()">
+      @if (workspace.backedSample) {
+        <span i18n="@@vaultBackedSampleCreate">Create a backup test workspace</span>
+      } @else {
+        <span i18n="@@persistenceCreateWorkspace">Create a test workspace</span>
+      }
     </button>
   } @else {
+    @if (!workspace.backedSample) {
+      <section class="space-y-4 rounded-xl border p-5">
+        <h2 appUI i18n="@@persistenceCloudHeading">Operational note · service-readable</h2>
+
+        <form class="space-y-4" (submit)="$event.preventDefault(); workspace.saveCloud()">
+          <app-field
+            control-id="operations-note"
+            label="Operational content"
+            i18n-label="@@persistenceCloudLabel"
+            description="Authorized services can read and process the contents of this note."
+            i18n-description="@@persistenceCloudDescription"
+            #cloudField="appField"
+          >
+            <textarea
+              appUI
+              id="operations-note"
+              name="operations-note"
+              rows="3"
+              maxlength="8192"
+              #cloudText
+              [attr.aria-describedby]="cloudField.describedBy()"
+              [value]="workspace.cloudDraft()"
+              [disabled]="workspace.busy()"
+              (input)="workspace.editOperationalNote(cloudText.value)"
+            ></textarea>
+          </app-field>
+
+          <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@persistenceSaveCloud">
+            Save operational note
+          </button>
+        </form>
+      </section>
+    }
+
     <section class="space-y-4 rounded-xl border p-5">
-      <h2 appUI i18n="@@persistenceCloudHeading">Operational note · service-readable</h2>
+      @if (workspace.backedSample) {
+        <h3 appUI i18n="@@vaultBackedSampleNote">Note in the backup workspace</h3>
+      } @else {
+        <h2 appUI i18n="@@vaultHeading">Private resource</h2>
+      }
 
-      <form class="space-y-4" (submit)="$event.preventDefault(); workspace.saveCloud()">
-        <app-field
-          control-id="operations-note"
-          label="Operational content"
-          i18n-label="@@persistenceCloudLabel"
-          description="Authorized services can read and process the contents of this note."
-          i18n-description="@@persistenceCloudDescription"
-          #cloudField="appField"
-        >
-          <textarea
-            appUI
-            id="operations-note"
-            name="operations-note"
-            rows="3"
-            maxlength="8192"
-            #cloudText
-            [attr.aria-describedby]="cloudField.describedBy()"
-            [value]="workspace.cloudDraft()"
-            [disabled]="workspace.busy()"
-            (input)="workspace.editOperationalNote(cloudText.value)"
-          ></textarea>
-        </app-field>
-
-        <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@persistenceSaveCloud">
-          Save operational note
-        </button>
-      </form>
-    </section>
-
-    <section class="space-y-4 rounded-xl border p-5">
-      <h2 appUI i18n="@@vaultHeading">Private resource</h2>
-
-      <a appUI routerLink="/security" [queryParams]="workspace.target()" i18n="@@vaultDevicesTitle">Vault devices</a>
+      @if (workspace.canPair()) {
+        <a appUI routerLink="/security" [queryParams]="workspace.pairingParams()" i18n="@@vaultDevicesTitle">
+          Vault devices
+        </a>
+      }
 
       <p role="status" aria-live="polite">{{ workspace.status() }}</p>
 
@@ -65,17 +98,30 @@
         keys can permanently lose access. Password reset does not recover private content.
       </p>
 
-      @if (workspace.showPrf() && !workspace.vault.ready()) {
+      @if (workspace.backedSample && workspace.canPair() && !workspace.hasBinding()) {
+        <p appUI tone="muted" i18n="@@vaultBackedSampleNeedsPairing">
+          Sign-in gives you access to the workspace. To restore the note on this browser, open Vault devices and get
+          approval from a device that can already unlock it.
+        </p>
+      }
+
+      @if (
+        workspace.showPrf() &&
+        !workspace.vault.ready() &&
+        (!workspace.backedSample || workspace.hasBinding() || workspace.canInitialize())
+      ) {
         <div class="flex flex-wrap gap-3">
-          <button
-            appUI
-            type="button"
-            [disabled]="workspace.busy() || workspace.vault.ready()"
-            (click)="workspace.unlock()"
-            i18n="@@vaultUnlock"
-          >
-            Unlock with a passkey
-          </button>
+          @if (!workspace.backedSample || workspace.hasBinding()) {
+            <button
+              appUI
+              type="button"
+              [disabled]="workspace.busy() || workspace.vault.ready()"
+              (click)="workspace.unlock()"
+              i18n="@@vaultUnlock"
+            >
+              Unlock with a passkey
+            </button>
+          }
 
           @if (workspace.canInitialize()) {
             <button
@@ -92,7 +138,11 @@
         </div>
       }
 
-      @if (workspace.showPin() && !workspace.vault.ready()) {
+      @if (
+        workspace.showPin() &&
+        !workspace.vault.ready() &&
+        (!workspace.backedSample || workspace.hasBinding() || workspace.canInitialize())
+      ) {
         <form class="space-y-4" (submit)="$event.preventDefault(); workspace.unlockWithPin()">
           <p appUI tone="muted" i18n="@@vaultPinWarning">
             If passkeys aren’t supported, you can use a 6-digit PIN. Anyone with a copy of your encrypted data can try
@@ -185,9 +235,14 @@
               variant="secondary"
               [disabled]="workspace.busy()"
               (click)="workspace.synchronize()"
-              i18n="@@persistenceSynchronize"
             >
-              Synchronize encrypted changes
+              @if (!workspace.backedSample) {
+                <span i18n="@@persistenceSynchronize">Synchronize encrypted changes</span>
+              } @else if (workspace.privateResource.pending()) {
+                <span i18n="@@vaultBackedSampleUpload">Upload encrypted note</span>
+              } @else {
+                <span i18n="@@vaultBackedSampleRestore">Download and restore note</span>
+              }
             </button>
           </div>
         </form>
@@ -200,6 +255,12 @@
 
         @if (workspace.vault.plaintext()) {
           <pre class="rounded-lg border p-4 break-words whitespace-pre-wrap">{{ workspace.vault.plaintext() }}</pre>
+
+          @if (workspace.backedSample && workspace.privateResource.synchronized()) {
+            <p role="status" i18n="@@vaultBackedSampleSynced">
+              The encrypted note is backed up and saved on this browser.
+            </p>
+          }
         }
 
         @if (workspace.privateResource.pending() && workspace.privateResource.conflict()) {

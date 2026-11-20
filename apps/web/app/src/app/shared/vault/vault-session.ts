@@ -157,6 +157,29 @@ export class VaultSession {
     );
   }
 
+  connectLocalPasskey(context: WrappingContext, rpId: string): Promise<void> {
+    return this.openBinding(context, rpId, false, undefined, (vault) => vault.unlockLocalPasskey(context));
+  }
+
+  async addLocalPasskey(pin: WrappingContext, rpId: string, methodId: string, signal: AbortSignal) {
+    const view = this.document.defaultView;
+
+    if (!view?.isSecureContext || pin.origin !== view.location.origin || !this.isOpen(pin) || !this.isSelected(pin)) {
+      throw new VaultError('locked');
+    }
+
+    const { vault, session, epoch } = this.active();
+    const cancellation = AbortSignal.any([session.signal, signal]);
+    const unlock = this.prfUnlocker(view, rpId);
+    const binding = await vault.addLocalPasskey(methodId, unlock, cancellation);
+
+    if (!this.current(epoch, session) || signal.aborted) {
+      throw new VaultError('stale-operation');
+    }
+
+    return binding;
+  }
+
   async deliver(context: WrappingContext, recipient: DeliveryBinding) {
     if (!this.isSelected(context) || !this.canResume(context)) {
       throw new VaultError('locked');
@@ -243,7 +266,7 @@ export class VaultSession {
     }
   }
 
-  async localBinding(key: KeyDomain): Promise<WrappingContext | undefined> {
+  async localBinding(key: KeyDomain, localPasskey = false): Promise<WrappingContext | undefined> {
     const ownerId = this.session.user()?.id;
 
     if (!ownerId) {
@@ -261,7 +284,10 @@ export class VaultSession {
     const storage = await this.database.vault(ownerId, session.signal);
 
     try {
-      const wrapped = await storage.getCurrentKey(ownerId, key);
+      const result = localPasskey
+        ? storage.localPasskeys?.get(keyDomainId(ownerId, key))
+        : storage.getCurrentKey(ownerId, key);
+      const wrapped = await result;
 
       if (!this.current(epoch, session)) {
         throw new VaultError('stale-operation');
@@ -338,12 +364,7 @@ export class VaultSession {
         binding,
         binding.method === 'pin-argon2id'
           ? new PinUnlock(async () => Uint8Array.from(pin!))
-          : new PrfUnlock({
-              origin: view.location.origin,
-              rpId,
-              credentials: view.navigator.credentials,
-              crypto: view.crypto,
-            }),
+          : this.prfUnlocker(view, rpId),
         view.crypto,
       );
 
@@ -413,6 +434,12 @@ export class VaultSession {
     });
   }
 
+  private prfUnlocker(view: Window, rpId: string): PrfUnlock {
+    const { location, navigator, crypto } = view;
+
+    return new PrfUnlock({ origin: location.origin, rpId, credentials: navigator.credentials, crypto });
+  }
+
   private async openBinding(
     context: WrappingContext,
     rpId: string,
@@ -440,11 +467,11 @@ export class VaultSession {
     this.bindCancellation(session.signal);
     const id = keyDomainId(context.ownerId, context.key);
 
-    if (context.method === 'pin-argon2id') {
-      if (!pin || !isVaultPin(pin)) {
-        throw new VaultError('pin-invalid');
-      }
+    if (context.method === 'pin-argon2id' && (!pin || !isVaultPin(pin))) {
+      throw new VaultError('pin-invalid');
+    }
 
+    if (context.method === 'pin-argon2id' || this.bindings.get(id)?.method !== context.method) {
       this.scopes.get(id)?.close(false);
       this.scopes.delete(id);
     }
@@ -473,12 +500,7 @@ export class VaultSession {
         storage,
         context.method === 'pin-argon2id'
           ? new PinUnlock(async () => Uint8Array.from(pin!))
-          : new PrfUnlock({
-              origin: view.location.origin,
-              rpId,
-              credentials: view.navigator.credentials,
-              crypto: view.crypto,
-            }),
+          : this.prfUnlocker(view, rpId),
         new WebCryptoCipher(view.crypto),
         (state) => {
           if (this.scopes.get(id) !== created) {

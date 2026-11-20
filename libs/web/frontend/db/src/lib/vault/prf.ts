@@ -23,8 +23,28 @@ export class PrfUnlock implements VaultUnlock {
   ) {}
 
   async secret(context: WrappingContext): Promise<Uint8Array> {
+    const result = await this.assertion({ context });
+
+    return result.secret;
+  }
+
+  /** Select an existing PRF-capable credential without registering one in the sign-in picker. */
+  async discover(signal: AbortSignal): Promise<string> {
+    const result = await this.assertion({ cancellation: signal });
+
+    result.secret.fill(0);
+
+    return result.credentialId;
+  }
+
+  cancel(): void {
+    this.pending?.abort();
+    this.pending = undefined;
+  }
+
+  private async assertion(request: { context: WrappingContext } | { cancellation: AbortSignal }) {
     this.cancel();
-    const binding = wrappingContextSchema.safeParse(context);
+    const binding = 'context' in request ? wrappingContextSchema.safeParse(request.context) : undefined;
     const { origin, rpId, credentials, crypto } = this.environment;
     let url: URL;
 
@@ -35,8 +55,7 @@ export class PrfUnlock implements VaultUnlock {
     }
 
     if (
-      !binding.success ||
-      binding.data.origin !== origin ||
+      (binding && (!binding.success || binding.data.origin !== origin)) ||
       url.origin !== origin ||
       (url.protocol !== 'https:' &&
         !(['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && url.protocol === 'http:')) ||
@@ -45,11 +64,15 @@ export class PrfUnlock implements VaultUnlock {
       throw new VaultError('origin-mismatch');
     }
 
-    if (binding.data.method !== 'passkey-prf' || !credentials?.get || !crypto?.subtle) {
+    const configured = binding?.data;
+
+    if ((configured && configured.method !== 'passkey-prf') || !credentials?.get || !crypto?.subtle) {
       throw new VaultError('unsupported-prf');
     }
 
     const controller = new AbortController();
+    const signal =
+      'cancellation' in request ? AbortSignal.any([controller.signal, request.cancellation]) : controller.signal;
 
     this.pending = controller;
     let prf: Uint8Array | undefined;
@@ -57,29 +80,43 @@ export class PrfUnlock implements VaultUnlock {
     try {
       const challenge = crypto.getRandomValues(new Uint8Array(32));
       const encoder = new TextEncoder();
-      const input = await crypto.subtle.digest(
-        'SHA-256',
-        encoder.encode(JSON.stringify(['visomi.prf', 1, wrappingAad(binding.data)])),
-      );
+      let input: BufferSource;
+
+      // Discovery probes with a disposable input. Only the binding-specific output can wrap a vault key.
+      if (configured) {
+        const digest = await crypto.subtle.digest(
+          'SHA-256',
+          encoder.encode(JSON.stringify(['visomi.prf', 1, wrappingAad(configured)])),
+        );
+
+        input = digest;
+      } else {
+        input = crypto.getRandomValues(new Uint8Array(32));
+      }
+
+      signal.throwIfAborted();
+
       const credential = await credentials.get({
         mediation: 'required',
-        signal: controller.signal,
+        signal,
         publicKey: {
           challenge,
           rpId,
           userVerification: 'required',
           timeout: 60_000,
-          allowCredentials: [
-            {
-              type: 'public-key',
-              id: decodeBytes(binding.data.methodId, Math.floor((binding.data.methodId.length * 6) / 8)),
-            },
-          ],
+          ...(configured && {
+            allowCredentials: [
+              {
+                type: 'public-key',
+                id: decodeBytes(configured.methodId, Math.floor((configured.methodId.length * 6) / 8)),
+              },
+            ],
+          }),
           extensions: { prf: { eval: { first: input } } },
         },
       });
 
-      if (controller.signal.aborted || this.pending !== controller) {
+      if (signal.aborted || this.pending !== controller) {
         throw new VaultError('cancelled');
       }
 
@@ -110,8 +147,9 @@ export class PrfUnlock implements VaultUnlock {
 
       if (
         !schema.safeParse(clientData).success ||
-        assertion.id !== binding.data.methodId ||
-        encodeBytes(new Uint8Array(assertion.rawId)) !== binding.data.methodId ||
+        !assertion.id ||
+        assertion.id !== encodeBytes(new Uint8Array(assertion.rawId)) ||
+        (configured && assertion.id !== configured.methodId) ||
         authData.length < 37 ||
         encodeBytes(authData.subarray(0, 32)) !== encodeBytes(new Uint8Array(expectedRpId)) ||
         (authData[32] & 5) !== 5
@@ -119,7 +157,7 @@ export class PrfUnlock implements VaultUnlock {
         throw new VaultError('origin-mismatch');
       }
 
-      if (controller.signal.aborted || this.pending !== controller) {
+      if (signal.aborted || this.pending !== controller) {
         throw new VaultError('cancelled');
       }
 
@@ -131,15 +169,14 @@ export class PrfUnlock implements VaultUnlock {
         throw new VaultError('unavailable');
       }
 
-      return Uint8Array.from(prf);
+      return { credentialId: assertion.id, secret: Uint8Array.from(prf) };
     } catch (error) {
       if (error instanceof VaultError) {
         throw error;
       }
 
       throw new VaultError(
-        controller.signal.aborted ||
-          (error instanceof DOMException && ['AbortError', 'NotAllowedError'].includes(error.name))
+        signal.aborted || (error instanceof DOMException && ['AbortError', 'NotAllowedError'].includes(error.name))
           ? 'cancelled'
           : 'unavailable',
       );
@@ -150,10 +187,5 @@ export class PrfUnlock implements VaultUnlock {
         this.pending = undefined;
       }
     }
-  }
-
-  cancel(): void {
-    this.pending?.abort();
-    this.pending = undefined;
   }
 }

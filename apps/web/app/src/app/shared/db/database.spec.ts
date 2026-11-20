@@ -5,11 +5,11 @@ import { IndexedDbReplicaStorage, IndexedDbVaultStorage } from '@visomi-stack/we
 
 import { Session } from '../../auth/session/session';
 
-import { ClientDatabase } from './database';
+import { ClientDatabase, VAULT_DATABASE_NAMESPACE } from './database';
 
 const owner = '11111111-1111-4111-8111-111111111111';
 
-function fixture(browser = true) {
+function fixture(browser = true, namespace?: string) {
   const user = signal({ id: owner });
   const version = signal(0);
   const factory = {};
@@ -25,6 +25,7 @@ function fixture(browser = true) {
     providers: [
       { provide: DOCUMENT, useValue: { defaultView: browser ? { indexedDB: factory } : null } },
       { provide: Session, useValue: { user, operationVersion: version, full: signal(true) } },
+      ...(namespace ? [{ provide: VAULT_DATABASE_NAMESPACE, useValue: namespace }] : []),
     ],
   });
 
@@ -64,6 +65,18 @@ it('does not open IndexedDB on the server or for another account', async () => {
 
   expect(f.openVault).not.toHaveBeenCalled();
   expect(f.openReplica).not.toHaveBeenCalled();
+});
+
+it('enables local passkey wrappers only for the isolated vault namespace', async () => {
+  const f = fixture(true, 'reference-demo');
+  const vault = await f.database.vault(owner);
+  const replica = await f.database.replica(owner);
+
+  expect(f.openVault).toHaveBeenCalledWith(f.factory, `reference-demo:${owner}`, { localPasskeys: true });
+  expect(f.openReplica).toHaveBeenCalledWith(f.factory, owner);
+
+  vault.close();
+  replica.close();
 });
 
 it.each(['navigation', 'account', 'destroy'] as const)(

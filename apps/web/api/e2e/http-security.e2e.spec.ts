@@ -7,6 +7,11 @@ test('applies the shared Helmet policy to successful requests, 404s and authenti
     ['/', 200],
     ['/missing', 404],
     ['/auth/passkeys', 401],
+    ['/example/vault/policy', 401],
+    ['/example/cloud/policy', 401],
+    ['/persistence/policy', 404],
+    ['/persistence/cloud-example/policy', 404],
+    ['/api/example/vault/policy', 404],
   ] as const) {
     const response = await request.get(path);
     const headers = response.headers();

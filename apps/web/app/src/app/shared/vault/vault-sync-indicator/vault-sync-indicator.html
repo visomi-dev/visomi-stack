@@ -1,0 +1,36 @@
+<span role="status" class="sr-only">{{ label() }}</span>
+
+@if (sync.phase() === 'retry') {
+  <button
+    appUI
+    type="button"
+    variant="ghost"
+    size="icon"
+    class="size-9"
+    aria-label="Retry Vault sync"
+    i18n-aria-label="@@vaultSyncRetry"
+    [attr.title]="label()"
+    (click)="sync.retry()"
+  >
+    <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <path d="M12 8v5m0 3h.01M12 3l10 18H2z" />
+    </svg>
+  </button>
+} @else if (label()) {
+  <span [attr.title]="label()" aria-hidden="true">
+    <svg
+      class="size-5"
+      [class.motion-safe:animate-spin]="sync.phase() === 'syncing'"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+    >
+      @if (sync.phase() === 'syncing') {
+        <path d="M20 7v5h-5m-11 5v-5h5m-4.5-2a8 8 0 0 1 13-4L20 12M4 12l2.5 6a8 8 0 0 0 13-4" />
+      } @else {
+        <path d="m5 12 5 5L20 7" />
+      }
+    </svg>
+  </span>
+}

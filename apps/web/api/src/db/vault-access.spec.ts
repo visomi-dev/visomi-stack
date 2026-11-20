@@ -10,9 +10,9 @@ const groupId = '22222222-2222-4222-8222-222222222222';
 const resourceId = '33333333-3333-4333-8333-333333333333';
 const vault = new VaultAccess({ policy: syntheticHybridPolicy } as Access);
 const ancestry: ScopeAccess['scope'][] = [
-  { id: resourceId, kind: 'resource', tenantId, parentId: groupId },
-  { id: groupId, kind: 'group', tenantId, parentId: tenantId },
-  { id: tenantId, kind: 'tenant', tenantId, parentId: null },
+  { id: resourceId, kind: 'resource', tenantId, parentId: groupId, objectBackup: false },
+  { id: groupId, kind: 'group', tenantId, parentId: tenantId, objectBackup: false },
+  { id: tenantId, kind: 'tenant', tenantId, parentId: null, objectBackup: false },
 ];
 const context: Pick<ScopeAccess, 'target' | 'scope' | 'ancestry'> = {
   target: { tenantId, scopeId: resourceId },

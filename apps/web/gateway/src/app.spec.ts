@@ -7,7 +7,6 @@ import { AuthHttpError, HttpError, httpErrorHandler, initializeObservability } f
 import type { Request, RequestHandler, Response } from 'express';
 import express, { Router } from 'express';
 import { describe, expect, it, vi } from 'vitest';
-import { syntheticHybridPolicy } from '@visomi-stack/shared-db';
 
 import type { ApiModule, EmbeddedAuthentication } from './api-module';
 import { createGatewayApp } from './app';
@@ -39,7 +38,12 @@ function dispatch(
 }
 
 function apiFixture(handler: RequestHandler = (request, response) => response.json({ path: request.path })) {
-  return { createApp: vi.fn(() => handler), authConfig: vi.fn(), createAuthentication: vi.fn() } satisfies ApiModule;
+  return {
+    exampleApiVersion: 1,
+    createApp: vi.fn(() => handler),
+    authConfig: vi.fn(),
+    createAuthentication: vi.fn(),
+  } satisfies ApiModule;
 }
 
 describe('gateway composition', () => {
@@ -56,14 +60,30 @@ describe('gateway composition', () => {
     expect(enabled.body).toEqual({ enabled: true });
   });
 
-  it('passes an explicit persistence manifest only to a compatible compiled API', () => {
-    expect(() => createGatewayApp({ api: apiFixture(), persistence: syntheticHybridPolicy })).toThrow(
-      'api_persistence_unavailable',
-    );
-    const api = { ...apiFixture(), persistenceVersion: 1 as const };
+  it('passes Example dependencies only to supporting APIs and preserves authentication for older artifacts', async () => {
+    const legacy = Router();
 
-    createGatewayApp({ api, persistence: syntheticHybridPolicy });
-    expect(api.createApp).toHaveBeenCalledWith(expect.objectContaining({ persistence: syntheticHybridPolicy }));
+    legacy.get('/auth/session', (_request, response) => response.json({ authenticated: true }));
+    const oldApi = { ...apiFixture(legacy), exampleApiVersion: undefined };
+
+    const backupObjects = { get: vi.fn(), put: vi.fn(), delete: vi.fn(), close: vi.fn() };
+    const existing = createGatewayApp({ api: oldApi, auth: { middleware: [] }, exampleHarness: true, backupObjects });
+
+    await expect(dispatch(existing, '/api/auth/session')).resolves.toMatchObject({ status: 200 });
+
+    for (const feature of ['vault', 'cloud']) {
+      await expect(dispatch(existing, `/api/example/${feature}/policy`)).resolves.toMatchObject({ status: 404 });
+    }
+
+    expect(oldApi.createApp).toHaveBeenCalledWith(expect.not.objectContaining({ backupObjects }));
+    expect(oldApi.createApp).toHaveBeenCalledWith(expect.not.objectContaining({ exampleHarness: true }));
+
+    const api = apiFixture();
+
+    createGatewayApp({ api, exampleHarness: true, backupObjects });
+    expect(api.createApp).toHaveBeenCalledWith(
+      expect.objectContaining({ basePath: '/api', exampleHarness: true, backupObjects }),
+    );
   });
   it('serves packaged public branding without authentication, cookies or website fallbacks', async () => {
     const authenticate = vi.fn<RequestHandler>((_request, _response, next) =>

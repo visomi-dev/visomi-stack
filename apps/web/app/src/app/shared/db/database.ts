@@ -15,9 +15,16 @@ export class ClientDatabase {
   private readonly namespace = inject(VAULT_DATABASE_NAMESPACE, { optional: true });
 
   vault(ownerId: string, signal?: AbortSignal) {
-    const name = this.namespace ? this.namespace + ':' + ownerId : ownerId;
+    const namespace = this.namespace;
 
-    return this.open(ownerId, (sdk, factory) => sdk.IndexedDbVaultStorage.open(factory, name), signal);
+    return this.open(
+      ownerId,
+      (sdk, factory) =>
+        namespace
+          ? sdk.IndexedDbVaultStorage.open(factory, namespace + ':' + ownerId, { localPasskeys: true })
+          : sdk.IndexedDbVaultStorage.open(factory, ownerId),
+      signal,
+    );
   }
 
   replica(ownerId: string, signal?: AbortSignal) {

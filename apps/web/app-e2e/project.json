@@ -20,6 +20,7 @@
       "inputs": [
         "default",
         "^production",
+        "{workspaceRoot}/libs/backend/db/tools/cloud-example-rls.sql",
         {
           "externalDependencies": ["@playwright/test"]
         },

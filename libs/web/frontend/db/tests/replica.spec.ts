@@ -175,6 +175,7 @@ describe('actual Chromium ciphertext replicas', () => {
           }
           const head = { cursor: 2, checkpoint: events[1].checkpoint };
           let corrupt = true;
+          let corruptSecond = false;
           let rollback = false;
           const transport = {
             async pull(pin: { cursor: number }) {
@@ -189,7 +190,7 @@ describe('actual Chromium ciphertext replicas', () => {
                 more: remaining.at(-1)?.cursor === 1,
               };
 
-              if (corrupt && remaining[0]) {
+              if (remaining[0] && (corrupt || (corruptSecond && pin.cursor === 1))) {
                 return { ...page, events: [{ ...remaining[0], checkpoint: api.encodeBytes(new Uint8Array(32)) }] };
               }
 
@@ -225,6 +226,19 @@ describe('actual Chromium ciphertext replicas', () => {
           corrupt = false;
           const part = await first.pull();
 
+          corruptSecond = true;
+          let existingCode = '';
+
+          try {
+            await first.pull(true);
+          } catch (error) {
+            existingCode = (error as { code: string }).code;
+          }
+          const retained = await firstStore.unit('synthetic-stream', base.objectId);
+          const retainedPin = await firstStore.pin('synthetic-stream');
+
+          corruptSecond = false;
+
           await first.pull();
 
           const second = new api.SyncReplica(
@@ -237,9 +251,20 @@ describe('actual Chromium ciphertext replicas', () => {
             authenticate,
           );
 
-          await second.pull();
+          corruptSecond = true;
+          let batchCode = '';
 
-          await second.pull();
+          try {
+            await second.pull(true);
+          } catch (error) {
+            batchCode = (error as { code: string }).code;
+          }
+          const batchPin = await secondStore.pin('synthetic-stream');
+          const premature = await secondStore.unit('synthetic-stream', base.objectId);
+
+          corruptSecond = false;
+
+          await second.pull(true);
 
           const unit = await secondStore.unit('synthetic-stream', base.objectId);
 
@@ -280,6 +305,12 @@ describe('actual Chromium ciphertext replicas', () => {
             corruptCode,
             unchanged,
             firstMore: part.more,
+            existingCode,
+            retained: retained?.ciphertext === events[0].envelope.ciphertext,
+            retainedPin: retainedPin.cursor,
+            batchCode,
+            batchPin: batchPin.cursor,
+            premature: premature !== undefined,
             pin,
             tombstone: unit?.context.kind,
             rollbackCode,
@@ -294,6 +325,12 @@ describe('actual Chromium ciphertext replicas', () => {
         corruptCode: 'integrity-failure',
         unchanged: { cursor: 0, checkpoint: null },
         firstMore: true,
+        existingCode: 'integrity-failure',
+        retained: true,
+        retainedPin: 1,
+        batchCode: 'integrity-failure',
+        batchPin: 0,
+        premature: false,
         pin: { cursor: 2 },
         tombstone: 'tombstone',
         rollbackCode: 'context-mismatch',
