@@ -249,7 +249,7 @@ test('keeps the continuous shell, compact navigation and nested account destinat
 
     backgrounds.add(disclosureBackground);
 
-    await drawer.getByRole('link', { name: 'Ejemplo de vault' }).focus();
+    await drawer.getByRole('link', { name: 'Ejemplo de bóveda' }).focus();
 
     await page.keyboard.press('Tab');
 

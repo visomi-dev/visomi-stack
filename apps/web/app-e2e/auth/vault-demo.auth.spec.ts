@@ -1,8 +1,5 @@
-import { readFile, rm } from 'node:fs/promises';
-
 import type { Locator, Page } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
-import { vaultBackupSchema } from '@visomi-stack/shared-db';
 
 import { expect, logout, passwordStart, signup, test } from './support/fixtures';
 
@@ -42,8 +39,6 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
   await expect(page).toHaveURL(/\/example\/vault$/);
 
   await expect(page.getByRole('heading', { name: 'Vault example', level: 1 })).toBeVisible();
-
-  await expect(page.getByRole('heading', { name: 'Local encrypted download', exact: true })).toHaveCount(0);
 
   await expect(page.getByRole('heading', { name: 'Back up and restore a test note', exact: true })).toHaveCount(0);
 
@@ -166,11 +161,11 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
 
   await expect(page).toHaveURL(/\/app\/es\/example\/vault$/);
 
-  await expect(page.getByRole('heading', { name: 'Ejemplo de vault', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ejemplo de bóveda', level: 1 })).toBeVisible();
 
   await expect(page.locator('app-vault-demo app-pin-input')).toBeVisible();
 
-  await expect(page.getByText(/se quedan en este navegador/)).toBeVisible();
+  await expect(page.getByText(/Esta nota solo se guarda en este navegador/)).toBeVisible();
 
   await expect(page.getByText(/no permite desbloquear con una clave de acceso/)).toHaveCount(0);
 
@@ -187,14 +182,14 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
   const localized = page.getByRole('dialog', { name: 'Navegación principal' });
   const localizedPrimary = localized.getByRole('navigation', { name: 'Navegación principal' });
 
-  await expect(localizedPrimary.getByRole('link').last()).toHaveText('Ejemplo de vault');
+  await expect(localizedPrimary.getByRole('link').last()).toHaveText('Ejemplo de bóveda');
 
   await expect(localized.getByRole('link', { name: 'Privacidad', exact: true })).toHaveAttribute(
     'href',
     '/es/privacy/',
   );
 
-  await localizedPrimary.getByRole('link', { name: 'Ejemplo de vault' }).click();
+  await localizedPrimary.getByRole('link', { name: 'Ejemplo de bóveda' }).click();
 
   await expect(localized).toBeHidden();
 
@@ -207,11 +202,8 @@ test('opens the last primary navigation item and unlocks the isolated synthetic 
   expect(persistence).toEqual([]);
 });
 
-test('downloads the local ciphertext only from an unlocked vault and keeps a same-account second profile isolated', async ({
-  page,
-  browser,
-}, info) => {
-  const backup = page.getByRole('button', { name: 'Download encrypted backup', exact: true });
+test('keeps the local note in its original profile without offering a file export', async ({ page, browser }, info) => {
+  const localVault = page.locator('app-vault-demo');
   const sample = 'Sample note: Garden workshop at 10:00.';
   const pin = '048261';
   const requests: string[] = [];
@@ -222,9 +214,13 @@ test('downloads the local ciphertext only from an unlocked vault and keeps a sam
 
   await page.goto('/app/en/example/vault');
 
-  await expect(page.getByRole('heading', { name: 'Local encrypted download', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Back up and restore a test note', exact: true })).toBeVisible();
 
-  await expect(backup).toHaveCount(0);
+  page.on('request', (request) => {
+    if (request.method() !== 'GET' && request.url().includes('/api/example/vault/')) {
+      requests.push('unexpected persistence write');
+    }
+  });
 
   await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
 
@@ -240,55 +236,11 @@ test('downloads the local ciphertext only from an unlocked vault and keeps a sam
 
   await expect(page.getByText(sample, { exact: true })).toBeVisible();
 
-  page.on('request', (request) => {
-    if (request.method() !== 'GET' && request.url().includes('/api/example/vault/')) {
-      requests.push('unexpected persistence write');
-    }
-  });
+  await expect(localVault.getByText(/export/i)).toHaveCount(0);
 
-  const [download] = await Promise.all([page.waitForEvent('download'), backup.click()]);
-  const path = info.outputPath('synthetic-vault-backup.json');
-
-  expect(download.suggestedFilename()).toBe('visomi-vault-example.backup.json');
-
-  await download.saveAs(path);
-
-  try {
-    const serialized = await readFile(path, 'utf8');
-    const artifact = vaultBackupSchema.parse(JSON.parse(serialized));
-
-    expect(serialized).not.toContain(sample);
-    expect(artifact.units).toHaveLength(1);
-    const localCiphertext = await page.evaluate(async (owner) => {
-      const storage = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(`visomi-vault:reference-demo:${owner}`);
-
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-
-      try {
-        const envelopes = await new Promise<unknown>((resolve, reject) => {
-          const request = storage.transaction('units').objectStore('units').getAll();
-
-          request.onsuccess = () => resolve(request.result.map(({ envelope }) => envelope));
-          request.onerror = () => reject(request.error);
-        });
-
-        return envelopes;
-      } finally {
-        storage.close();
-      }
-    }, artifact.key.context.ownerId);
-
-    expect(localCiphertext).toEqual(artifact.units);
-  } finally {
-    await rm(path, { force: true });
-  }
+  await expect(localVault.getByRole('button', { name: /download/i })).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Lock private resources', exact: true }).click();
-
-  await expect(backup).toHaveCount(0);
 
   const second = await browser.newContext({ baseURL: info.project.use.baseURL });
 
@@ -305,11 +257,9 @@ test('downloads the local ciphertext only from an unlocked vault and keeps a sam
 
     await recipient.goto('/app/es/example/vault');
 
-    await expect(recipient.getByRole('heading', { name: 'Descarga local cifrada', exact: true })).toBeVisible();
-
     await expect(recipient.getByRole('button', { name: 'Configurar mi bóveda', exact: true })).toBeVisible();
 
-    await expect(recipient.getByRole('button', { name: 'Descargar respaldo cifrado', exact: true })).toHaveCount(0);
+    await expect(recipient.locator('app-vault-demo').getByText(/exportar/i)).toHaveCount(0);
 
     await expect(recipient.locator('pre')).toHaveCount(0);
   } finally {

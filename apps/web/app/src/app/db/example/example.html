@@ -10,10 +10,8 @@
       <h2 appUI i18n="@@vaultBackedSampleTitle">Back up and restore a test note</h2>
 
       <p appUI tone="muted" i18n="@@vaultBackedSampleExplanation">
-        Create a new test note here. It is encrypted before it is stored in this browser. Upload the encrypted copy,
-        then open this workspace on an approved device to download the same note. In workspaces with private object
-        storage, this screen checks for updates while the vault is unlocked. Earlier workspaces keep their existing
-        storage.
+        The browser encrypts the test note and saves it in IndexedDB. When you upload a backup, only the encrypted copy
+        goes to the server. To restore the same note, pair your other device and unlock the vault there.
       </p>
     } @else {
       <h1 appUI appNavigationHeading i18n="@@persistenceExampleHeading">Hybrid persistence example</h1>
