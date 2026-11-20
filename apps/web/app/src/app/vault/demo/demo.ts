@@ -1,7 +1,12 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
 import { VaultError, vaultUnitId, type DataContext, type WrappingContext } from '@visomi-stack/shared-db';
-import { createPinMethodId, exportEncryptedBackup, PrfUnlock } from '@visomi-stack/web-frontend-db';
+import {
+  createPinMethodId,
+  createPrfCredential,
+  exportEncryptedBackup,
+  PrfUnlock,
+} from '@visomi-stack/web-frontend-db';
 
 import { Session } from '../../auth/session/session';
 import { ExampleAvailability } from '../../db/example-availability';
@@ -45,6 +50,7 @@ export class VaultDemo {
   protected readonly passkeyBinding = signal<WrappingContext | undefined>(undefined);
   protected readonly setup = signal<'loading' | 'passkey' | 'pin-option' | 'pin' | 'unavailable'>('loading');
   protected readonly pendingPasskey = signal<WrappingContext | undefined>(undefined);
+  protected readonly triedPasskey = signal(false);
   protected readonly pendingAddition = signal<string | undefined>(undefined);
   protected readonly pinSelected = signal(false);
   protected readonly pinDraft = signal('');
@@ -73,7 +79,7 @@ export class VaultDemo {
 
   protected readonly plaintext = this.vault.plaintext;
 
-  protected async setupPasskey(): Promise<void> {
+  protected async setupPasskey(enroll = false): Promise<void> {
     if (this.binding() || !['passkey', 'pin-option'].includes(this.setup())) {
       return;
     }
@@ -83,12 +89,26 @@ export class VaultDemo {
         const view = this.document.defaultView!;
 
         this.setup.set('passkey');
+        this.triedPasskey.set(true);
 
         try {
-          let binding = this.pendingPasskey();
+          let binding = enroll ? undefined : this.pendingPasskey();
 
           if (!binding) {
-            const methodId = await this.discoverPasskey(signal);
+            const environment = {
+              origin: view.location.origin,
+              rpId: view.location.hostname,
+              credentials: view.navigator.credentials,
+              crypto: view.crypto,
+            };
+
+            this.pendingPasskey.set(undefined);
+
+            if (enroll && !environment.credentials?.create) {
+              throw new VaultError('unsupported-prf');
+            }
+
+            const methodId = await (enroll ? createPrfCredential(environment, signal) : this.discoverPasskey(signal));
 
             signal.throwIfAborted();
             binding = this.newBinding('passkey-prf', methodId);

@@ -1,6 +1,8 @@
 import { DOCUMENT } from '@angular/common';
+import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { encodeBytes } from '@visomi-stack/web-frontend-db';
 import { IndexedDbReplicaStorage } from '@visomi-stack/web-frontend-db/storage';
 import { dataEnvelopeSchema, syncCheckpointMessage, type WrappingContext } from '@visomi-stack/shared-db';
@@ -14,9 +16,10 @@ import { ExamplePrivateResource } from './example-private-resource';
 afterEach(() => {
   TestBed.resetTestingModule();
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
-async function fixture(generation = 1, schemaVersion = 1) {
+async function fixture(generation = 1, schemaVersion = 1, backedSample = false) {
   const target = {
     tenantId: '11111111-1111-4111-8111-111111111111',
     scopeId: '22222222-2222-4222-8222-222222222222',
@@ -78,7 +81,7 @@ async function fixture(generation = 1, schemaVersion = 1) {
     canResume: vi.fn(() => true),
     isOpen: vi.fn(() => true),
     connect: vi.fn(async () => undefined),
-    device: vi.fn(async () => ({ publicKeys: async () => keys, lock: vi.fn() })),
+    device: vi.fn(async () => ({ publicKeys: async () => keys, sign: vi.fn(), ready: true, lock: vi.fn() })),
     ready: signal(true),
     readEnvelope: vi.fn(async () => undefined),
     clearDisplay: vi.fn(),
@@ -93,6 +96,7 @@ async function fixture(generation = 1, schemaVersion = 1) {
             key: binding.key,
             epoch: 3,
             phase: 'ready',
+            ...(backedSample ? { objectBackup: true as const } : {}),
             devices: [{ id: binding.deviceId, ownerId: binding.ownerId, ...keys, revokedAt: null }],
           }
         : {
@@ -101,7 +105,7 @@ async function fixture(generation = 1, schemaVersion = 1) {
             epoch: 3,
             phase: 'ready',
             head: { cursor: 1, checkpoint },
-            events: [{ cursor: 1, checkpoint, previousCheckpoint: null, envelope }],
+            events: [{ cursor: 1, checkpoint, previousCheckpoint: envelope.context.previousCheckpoint, envelope }],
             more: false,
           },
     ),
@@ -117,9 +121,11 @@ async function fixture(generation = 1, schemaVersion = 1) {
           full: signal(true),
           operationVersion: signal(0),
           cancellation: () => new AbortController().signal,
+          token: async () => 'synthetic-csrf',
         },
       },
       { provide: DOCUMENT, useValue: { defaultView: { crypto, indexedDB: {} } } },
+      { provide: ActivatedRoute, useValue: { snapshot: { data: { backedSample } } } },
       { provide: DatabaseHttp, useValue: api },
       { provide: VaultSession, useValue: vault },
     ],
@@ -138,6 +144,60 @@ async function fixture(generation = 1, schemaVersion = 1) {
     checkpoint,
   };
 }
+
+it('resumes a rate-limited restore from its verified page without committing partial state', async () => {
+  const f = await fixture(1, 1, true);
+  const request = f.api.vault.getMockImplementation()!;
+  const secondEnvelope = dataEnvelopeSchema.parse({
+    ...f.envelope,
+    context: { ...f.envelope.context, revision: 2, previousCheckpoint: f.checkpoint },
+  });
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(syncCheckpointMessage(2, f.checkpoint, secondEnvelope)),
+  );
+  const head = { cursor: 2, checkpoint: encodeBytes(new Uint8Array(digest)) };
+  let pages = 0;
+
+  f.api.vault.mockImplementation(async (path) => {
+    const reply = await request(path);
+
+    if (!reply.events) {
+      return reply;
+    }
+
+    pages++;
+
+    if (pages === 2) {
+      throw new HttpErrorResponse({ status: 429, headers: new HttpHeaders({ 'Retry-After': '1' }) });
+    }
+
+    return {
+      ...reply,
+      head,
+      more: pages === 1,
+      events: pages === 1 ? reply.events : [{ ...head, previousCheckpoint: f.checkpoint, envelope: secondEnvelope }],
+    };
+  });
+
+  vi.useFakeTimers();
+  const opening = f.resource.unlock(f.target, 'synthetic.example.test', false);
+
+  await vi.waitFor(() => expect(pages).toBe(2));
+
+  expect(f.commit).not.toHaveBeenCalled();
+
+  await vi.advanceTimersByTimeAsync(1_000);
+
+  await opening;
+
+  expect(pages).toBe(3);
+  expect(f.commit).toHaveBeenCalledOnce();
+  expect(f.commit).toHaveBeenCalledWith(expect.any(String), f.initial, expect.objectContaining(head), [
+    expect.objectContaining({ envelope: f.envelope }),
+    expect.objectContaining({ envelope: secondEnvelope }),
+  ]);
+});
 
 it('authenticates and displays an authorized historical generation while retaining the current writing binding', async () => {
   const f = await fixture();

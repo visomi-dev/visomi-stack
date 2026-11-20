@@ -38,7 +38,7 @@ export function createBackupObjects(environment: NodeJS.ProcessEnv): BackupObjec
     region: 'us-east-1',
   });
 
-  async function request(method: 'PUT' | 'GET', key: string, body?: string) {
+  async function request(method: 'PUT' | 'GET' | 'DELETE', key: string, body?: string) {
     if (!/^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*$/.test(key)) {
       throw new HttpError(503, 'vault_backup_unavailable');
     }
@@ -61,7 +61,7 @@ export function createBackupObjects(environment: NodeJS.ProcessEnv): BackupObjec
 
     const response = await fetch(destination, { method, headers, body, signal, redirect: 'error' });
 
-    if (response.status !== 200) {
+    if (response.status !== (method === 'DELETE' ? 204 : 200)) {
       await response.body?.cancel();
 
       throw new HttpError(503, 'vault_backup_unavailable');
@@ -71,6 +71,11 @@ export function createBackupObjects(environment: NodeJS.ProcessEnv): BackupObjec
   }
 
   return {
+    async delete(key) {
+      const response = await request('DELETE', key);
+
+      await response.body?.cancel();
+    },
     async put(key, body) {
       const response = await request('PUT', key, body);
 

@@ -2890,6 +2890,13 @@
           <context context-type="linenumber">72,75</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="vaultDemoCreatePasskey" datatype="html">
+        <source> Create a vault passkey </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
+          <context context-type="linenumber">129,130</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="vaultDemoRetryPasskey" datatype="html">
         <source>Try another passkey</source>
         <context-group purpose="location">
@@ -2912,7 +2919,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">130,131</context>
+          <context context-type="linenumber">142,143</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDemoVerify" datatype="html">

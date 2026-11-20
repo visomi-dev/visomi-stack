@@ -1,0 +1,219 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "c127f8e3-98fe-48de-a5c3-5189da9e37f2",
+  "prevIds": ["244417d1-0e13-4388-b0ec-82c641797538"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "vault_backup_staging"],
+      "writes": [
+        "s|tbl|public.vault_backup_staging",
+        "n|tbl|public.vault_backup_staging",
+        "e|tbl|public.vault_backup_staging",
+        "n|rel|public.vault_backup_staging",
+        "n|type|public.vault_backup_staging",
+        "n|rel|public.vault_backup_staging_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "vault_backup_staging"],
+      "writes": [
+        "s|fk|public.vault_backup_staging.vault_backup_staging_CP3cIQoiIiUi_fkey",
+        "n|fk|public.vault_backup_staging.vault_backup_staging_CP3cIQoiIiUi_fkey",
+        "e|fk|public.vault_backup_staging.vault_backup_staging_CP3cIQoiIiUi_fkey",
+        "n|con|public.vault_backup_staging.vault_backup_staging_CP3cIQoiIiUi_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.vault_backup_staging",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.vault_backup_staging.tenant_id",
+        "n|col|public.vault_backup_staging.scope_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "vault_backup_staging",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_backup_staging",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_backup_staging",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_backup_staging",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_backup_staging",
+        "name": "owner_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_backup_staging",
+        "name": "operation_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_backup_staging",
+        "name": "fingerprint",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_backup_staging",
+        "name": "bytes",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_backup_staging",
+        "name": "expires_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_backup_staging",
+        "name": "vault_backup_staging_CP3cIQoiIiUi_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_backup_staging",
+        "name": "vault_backup_staging_pkey",
+        "columns": ["scope_id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_backup_staging",
+        "name": "vault_backup_staging_bytes",
+        "value": "\"bytes\" > 0",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

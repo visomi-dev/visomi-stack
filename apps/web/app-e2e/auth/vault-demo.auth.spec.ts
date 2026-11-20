@@ -346,6 +346,40 @@ test.describe('Chromium virtual authenticator', () => {
     expect(writes).toEqual([]);
   });
 
+  test('creates a local vault passkey when discovery finds no eligible credential', async ({ page }) => {
+    await signup(page);
+
+    await addVirtualAuthenticator(page, true);
+
+    await page.addInitScript(() => {
+      const actual = CredentialsContainer.prototype.get;
+
+      CredentialsContainer.prototype.get = function (options) {
+        return options?.publicKey && !options.publicKey.allowCredentials?.length
+          ? Promise.reject(new DOMException('No synthetic discoverable credential', 'NotAllowedError'))
+          : actual.call(this, options);
+      };
+    });
+
+    const writes = watchApiWrites(page);
+
+    await page.goto('/app/en/example/vault');
+
+    await page.getByRole('button', { name: 'Set up my vault' }).click();
+
+    await expect(page.getByRole('alert')).toContainText('canceled');
+
+    await expect(page.getByRole('button', { name: 'Use a local PIN' })).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Create a vault passkey' }).click();
+
+    await finishPasskeySetup(page);
+
+    await provePasskeyUnlock(page);
+
+    expect(writes).toEqual([]);
+  });
+
   test('adds native PRF to a PIN vault and reopens the same note with either method', async ({ page }) => {
     await signup(page);
 
@@ -663,7 +697,7 @@ function watchApiWrites(page: Page): string[] {
   return writes;
 }
 
-async function registerVirtualPasskey(page: Page, hasPrf: boolean): Promise<void> {
+async function addVirtualAuthenticator(page: Page, hasPrf: boolean): Promise<void> {
   const cdp = await page.context().newCDPSession(page);
 
   await cdp.send('WebAuthn.enable');
@@ -679,6 +713,10 @@ async function registerVirtualPasskey(page: Page, hasPrf: boolean): Promise<void
       hasPrf,
     },
   });
+}
+
+async function registerVirtualPasskey(page: Page, hasPrf: boolean): Promise<void> {
+  await addVirtualAuthenticator(page, hasPrf);
 
   // The synthetic fixture supplies a credential before the demo selects it.
   await page.evaluate(async () => {

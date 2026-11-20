@@ -2,8 +2,8 @@ import { createHash, randomUUID } from 'node:crypto';
 
 import { persistenceSchema } from '@visomi-stack/backend-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
-import { operationIdSchema, type DomainPolicy } from '@visomi-stack/shared-db';
-import { and, asc, eq, gt, ilike, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { operationIdSchema, retentionDayMs, type DomainPolicy } from '@visomi-stack/shared-db';
+import { and, asc, eq, gt, ilike, isNull, not, or, sql, type SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { Access, input, type ScopeAccess, type SessionActor } from '../access/service';
@@ -165,6 +165,15 @@ export class SaasRecords {
       if (value.kind === 'create') {
         this.sharing(context, value.audience === 'scope');
         const id = randomUUID();
+        const now = new Date();
+        const active = this.retention(policy, now.getTime());
+
+        if (active && this.useRecordRole) {
+          await tx
+            .update(records)
+            .set({ title: '', body: '', deletedAt: now, updatedAt: now })
+            .where(and(this.predicate(context, policy), isNull(records.deletedAt), not(active)));
+        }
 
         await this.quota(context, policy, value.title, value.body);
 
@@ -268,10 +277,10 @@ export class SaasRecords {
     );
   }
 
-  private retention(policy: DomainPolicy): SQL | undefined {
+  private retention(policy: DomainPolicy, now = Date.now()): SQL | undefined {
     return policy.retention.activeDays === null
       ? undefined
-      : gt(records.createdAt, new Date(Date.now() - policy.retention.activeDays * 86_400_000));
+      : gt(records.createdAt, new Date(now - policy.retention.activeDays * retentionDayMs));
   }
 
   private sharing(context: ScopeAccess, changed: boolean) {

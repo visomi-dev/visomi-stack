@@ -141,8 +141,9 @@ describe('gateway executable ownership', () => {
     vi.stubEnv('VISOMI_PERSISTENCE_EXAMPLE', 'true');
     vi.stubEnv('VISOMI_PERSISTENCE_DEMOS', 'true');
     const backupObjects = { close: vi.fn() };
+    const api = { ...boundary.api, exampleApiVersion: 1, createBackupObjects: () => backupObjects };
 
-    boundary.loadApi.mockResolvedValueOnce({ ...boundary.api, createBackupObjects: () => backupObjects });
+    boundary.loadApi.mockResolvedValueOnce(api);
 
     await start();
 

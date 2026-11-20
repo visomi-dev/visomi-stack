@@ -25,6 +25,12 @@ when to invoke this endpoint; the implementation only invokes it in isolated tes
 Expired enrollment challenges can be removed before any key registry is initialized.
 Cleanup derives only their authorized scope and never bootstraps a key to permit deletion.
 
+Object-backed Vault workspaces also accept the owner operation in normal composition.
+For those workspaces it reports `abandonedObjects`, which is either zero or one,
+and leaves the six historical maintenance counts at zero. It deletes only the
+expired upload reservation's private object and retains the reservation on storage
+failure. Published objects and history are outside the operation's scope.
+
 ## Receipt expiry without executing an old request again
 
 SaaS mutations and opaque writes now require canonical lowercase UUIDv7 operation

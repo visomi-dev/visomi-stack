@@ -17,7 +17,7 @@ import { input, type Access, type ScopeAccess, type SessionActor } from '../acce
 import { publicHash } from './device-proof';
 import { VaultAccess } from './vault-access';
 import { requireCurrentOperation } from './operation-time';
-import { BackupPayloads } from './backup-payload';
+import { BackupPayloads, type BackupReservation } from './backup-payload';
 import { requireSyncDevice } from './sync-device';
 
 const { opaqueUnits: units, opaqueEvents: events, opaqueStreams: streams, opaqueCommands: commands } = vaultSchema;
@@ -109,11 +109,9 @@ export class OpaqueSync {
       throw new HttpError(413, 'quota_exceeded');
     }
 
-    return this.access.withScope(
-      actor,
-      target,
-      value.envelope.context.kind === 'tombstone' ? 'delete' : 'write',
-      async (context) => {
+    const action = value.envelope.context.kind === 'tombstone' ? 'delete' : 'write';
+    const write = (reservation?: BackupReservation) =>
+      this.access.withScope(actor, target, action, async (context) => {
         this.scope(context, policy.authorization.scope);
         const { registry, key } = await this.vault.registry(context, policy);
 
@@ -208,7 +206,13 @@ export class OpaqueSync {
         let envelope: typeof events.$inferInsert.envelope = value.envelope;
 
         if (context.scope.objectBackup) {
-          const saved = await this.payloads.publish(context, value.envelope, wire, bytes);
+          if (!reservation) {
+            const slot = await this.payloads.reserve(context, value.operationId, fingerprint, bytes);
+
+            return { cursor, checkpoint, reservation: slot };
+          }
+
+          const saved = await this.payloads.publish(context, reservation, value.envelope, wire, bytes);
 
           envelope = saved;
         }
@@ -265,9 +269,23 @@ export class OpaqueSync {
           checkpoint,
         });
 
+        if (reservation) {
+          await this.payloads.clear(context, reservation.id);
+        }
+
         return { cursor, checkpoint };
-      },
-    );
+      });
+
+    // Record the slot before anything can reach S3. Publication then rechecks authority and head under the tenant lock.
+    const result = await write();
+
+    if (result.reservation) {
+      const published = await write(result.reservation);
+
+      return { cursor: published.cursor, checkpoint: published.checkpoint };
+    }
+
+    return result;
   }
 
   private scope(context: ScopeAccess, kind: string) {

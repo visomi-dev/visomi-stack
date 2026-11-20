@@ -2,5 +2,6 @@
 export type BackupObjects = {
   put(key: string, body: string): Promise<void>;
   get(key: string, bytes: number): Promise<string>;
+  delete(key: string): Promise<void>;
   close(): void;
 };

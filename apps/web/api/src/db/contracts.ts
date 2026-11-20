@@ -58,6 +58,7 @@ export const persistenceContracts = {
         events: z.number().int().nonnegative(),
         tombstones: z.number().int().nonnegative(),
         challenges: z.number().int().nonnegative(),
+        abandonedObjects: z.number().int().nonnegative().optional(),
       }),
     ),
   }),

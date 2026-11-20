@@ -1374,6 +1374,10 @@
         <source>Verify passkey</source>
         <target>Verificar clave de acceso</target>
       </trans-unit>
+      <trans-unit id="vaultDemoCreatePasskey" datatype="html">
+        <source> Create a vault passkey </source>
+        <target>Crear una clave de acceso para la bóveda</target>
+      </trans-unit>
       <trans-unit id="vaultDemoRetryPasskey" datatype="html">
         <source>Try another passkey</source>
         <target>Probar otra clave de acceso</target>

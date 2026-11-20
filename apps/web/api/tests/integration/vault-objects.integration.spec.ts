@@ -11,6 +11,8 @@ import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 
 import { Access } from '../../src/access/service';
+import { BackupPayloads } from '../../src/db/backup-payload';
+import { PersistenceMaintenance } from '../../src/db/maintenance';
 import { OpaqueSync } from '../../src/db/opaque';
 
 import {
@@ -25,10 +27,17 @@ import {
 } from './support/persistence';
 import { authorize, boot, digest, identity, push, vaultBase } from './support/vault';
 
-let fault: 'put' | 'readback' | undefined;
+let fault: 'put' | 'readback' | 'delete' | undefined;
 
 enableBackupObjects((objects) => ({
   ...objects,
+  async delete(key) {
+    if (fault === 'delete') {
+      throw new Error();
+    }
+
+    await objects.delete(key);
+  },
   async put(key, body) {
     if (fault === 'put') {
       throw new Error();
@@ -176,6 +185,11 @@ it('stores ciphertext privately and publishes only verified references for the c
     expect(syncPageSchema.parse(pulled.body).events[0].envelope).toEqual(value.envelope);
 
     const next = push(device, proof, head, 1, 2, unit.id);
+    const { backupStaging } = vaultSchema;
+    const stageScope = eq(backupStaging.scopeId, scoped.target.scopeId);
+    const stages = () => resource.db.select().from(backupStaging).where(stageScope);
+    const maintenance = `${vaultBase(scoped.target)}/maintenance`;
+    let reservedId: string | undefined;
 
     for (const failure of ['put', 'readback'] as const) {
       fault = failure;
@@ -188,9 +202,34 @@ it('stores ciphertext privately and publishes only verified references for the c
       await expect(stored()).resolves.toEqual([unit]);
 
       await expect(history()).resolves.toEqual([event]);
+
+      const [stage] = await stages();
+
+      expect(stage).toMatchObject({
+        operationId: next.operationId,
+        bytes: Buffer.byteLength(serializeDataEnvelope(next.envelope)),
+      });
+      reservedId ??= stage.id;
+      expect(stage.id).toBe(reservedId);
     }
 
     fault = undefined;
+    const competitor = push(device, proof, head, 1, 2, unit.id);
+    const { authorization: _authorization, ...changed } = { ...competitor, operationId: next.operationId };
+
+    await expect(f.owner.call(`${path}/push`, 'POST', competitor)).resolves.toMatchObject({ status: 503 });
+
+    await expect(
+      f.owner.call(`${path}/push`, 'POST', {
+        ...changed,
+        authorization: authorize(device, proof.key, 1, 'sync', changed, next.operationId),
+      }),
+    ).resolves.toMatchObject({ status: 409, body: { error: 'idempotency_conflict' } });
+
+    await expect(f.owner.call(maintenance, 'POST', { limit: 1 })).resolves.toMatchObject({
+      body: { abandonedObjects: 0 },
+    });
+
     const replaceBytes = async (body: string) => {
       const result = await s3('PUT', key, body);
 
@@ -238,7 +277,86 @@ it('stores ciphertext privately and publishes only verified references for the c
 
     await expect(f.owner.call(`${path}/pull`, 'POST', good)).resolves.toMatchObject({ status: 200 });
 
-    await expect(f.owner.call(`${path}/push`, 'POST', next)).resolves.toMatchObject({ status: 200 });
+    const completed = await f.owner.call(`${path}/push`, 'POST', next);
+
+    expect(completed.status).toBe(200);
+
+    await expect(stages()).resolves.toEqual([]);
+
+    const [second] = await stored();
+
+    expect(second.envelope).toMatchObject({ id: reservedId });
+
+    const secondHead = syncHeadSchema.parse(completed.body);
+    const interrupted = push(device, proof, secondHead, 1, 3, unit.id);
+
+    const rollback = vi.spyOn(BackupPayloads.prototype, 'clear').mockRejectedValueOnce(new Error('synthetic rollback'));
+
+    try {
+      await expect(f.owner.call(`${path}/push`, 'POST', interrupted)).resolves.toMatchObject({
+        status: 503,
+        body: { error: 'persistence_unavailable' },
+      });
+    } finally {
+      rollback.mockRestore();
+    }
+
+    const [abandoned] = await stages();
+    const abandonedKey = `vault-backups/${scoped.target.scopeId}/${abandoned.id}`;
+    const orphan = await s3('GET', abandonedKey);
+
+    expect(orphan.ok).toBe(true);
+
+    await orphan.body?.cancel();
+
+    await resource.db
+      .update(backupStaging)
+      .set({ expiresAt: new Date(0) })
+      .where(stageScope);
+
+    const access = new Access(resource.db, policy);
+    const payloads = new BackupPayloads(backupObjects);
+
+    await expect(
+      access.withScope(f.owner.actor, scoped.target, 'write', (context) =>
+        payloads.publish(context, { id: abandoned.id, retry: true }, interrupted.envelope, '', 1),
+      ),
+    ).rejects.toMatchObject({ status: 503 });
+
+    await expect(f.outsider.call(maintenance, 'POST', { limit: 1 })).resolves.toMatchObject({ status: 403 });
+
+    await expect(
+      f.owner.call(maintenance.replace('/private-resources/', '/operations/'), 'POST', { limit: 1 }),
+    ).resolves.toMatchObject({ status: 409, body: { error: 'domain_adapter_incompatible' } });
+
+    fault = 'delete';
+
+    await expect(f.owner.call(`${path}/push`, 'POST', interrupted)).resolves.toMatchObject({
+      status: 503,
+      body: { error: 'vault_backup_unavailable' },
+    });
+
+    await expect(f.owner.call(maintenance, 'POST', { limit: 1 })).resolves.toMatchObject({ status: 503 });
+
+    await expect(stages()).resolves.toMatchObject([{ id: abandoned.id }]);
+
+    fault = undefined;
+
+    await expect(f.owner.call(maintenance, 'POST', { limit: 1 })).resolves.toMatchObject({
+      body: { abandonedObjects: 1 },
+    });
+
+    await expect(s3('GET', abandonedKey)).rejects.toThrow('isolated_s3_request_failed');
+
+    await expect(stages()).resolves.toEqual([]);
+
+    await expect(stored()).resolves.toEqual([second]);
+
+    await expect(backupObjects!.get(key, Buffer.byteLength(wire))).resolves.toBe(wire);
+
+    await expect(
+      new PersistenceMaintenance(access).run(f.owner.actor, f.target, 'private-resources', { limit: 1 }, true),
+    ).rejects.toMatchObject({ status: 409, code: 'capability_unavailable' });
   } finally {
     fault = undefined;
   }

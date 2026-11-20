@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
 
-import type { BackupObjects, vaultSchema } from '@visomi-stack/backend-db';
+import { vaultSchema, type BackupObjects } from '@visomi-stack/backend-db';
 import { dataEnvelopeSchema, deserializeDataEnvelope, encodedBytes, type DataEnvelope } from '@visomi-stack/shared-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import type { ScopeAccess } from '../access/service';
@@ -18,18 +19,104 @@ const referenceSchema = z.strictObject({
 });
 
 type StoredEnvelope = typeof vaultSchema.opaqueEvents.$inferSelect.envelope;
+export type BackupReservation = { id: string; retry: boolean };
+const { backupStaging } = vaultSchema;
 
 export class BackupPayloads {
   constructor(private readonly objects?: BackupObjects) {}
 
-  async publish(context: ScopeAccess, envelope: DataEnvelope, wire: string, bytes: number): Promise<StoredEnvelope> {
+  async reserve(
+    context: ScopeAccess,
+    operationId: string,
+    fingerprint: string,
+    bytes: number,
+  ): Promise<BackupReservation> {
+    this.requireObjects();
+    const prior = await this.staged(context);
+    const now = Date.now();
+    const expiresAt = new Date(now + 60_000);
+
+    if (prior && prior.expiresAt.getTime() > now) {
+      if (prior.ownerId !== context.actor.principal.id || prior.operationId !== operationId) {
+        throw new HttpError(503, 'vault_backup_unavailable');
+      }
+
+      if (prior.fingerprint !== fingerprint || prior.bytes !== bytes) {
+        throw new HttpError(409, 'idempotency_conflict');
+      }
+
+      await context.tx.update(backupStaging).set({ expiresAt }).where(eq(backupStaging.scopeId, context.scope.id));
+
+      return { id: prior.id, retry: true };
+    }
+
+    if (prior) {
+      await this.cleanup(context);
+    }
+
     const id = randomUUID();
+
+    await context.tx.insert(backupStaging).values({
+      tenantId: context.scope.tenantId,
+      scopeId: context.scope.id,
+      ownerId: context.actor.principal.id,
+      operationId,
+      fingerprint,
+      bytes,
+      expiresAt,
+      id,
+    });
+
+    return { id, retry: false };
+  }
+
+  async cleanup(context: ScopeAccess): Promise<number> {
+    const staged = await this.staged(context);
+
+    if (!staged || staged.expiresAt.getTime() > Date.now()) {
+      return 0;
+    }
+
+    try {
+      await this.requireObjects().delete(this.key(context, staged.id));
+    } catch {
+      // Keep the slot charged until the store confirms deletion.
+      throw new HttpError(503, 'vault_backup_unavailable');
+    }
+
+    await this.clear(context, staged.id);
+
+    return 1;
+  }
+
+  async publish(
+    context: ScopeAccess,
+    reservation: BackupReservation,
+    envelope: DataEnvelope,
+    wire: string,
+    bytes: number,
+  ): Promise<StoredEnvelope> {
+    const { id } = reservation;
+    const staged = await this.staged(context);
+
+    // Leave more than the signed request lifetime for a PUT before allowing reclamation.
+    if (!staged || staged.id !== id || staged.expiresAt.getTime() <= Date.now() + 20_000) {
+      throw new HttpError(503, 'vault_backup_unavailable');
+    }
+
     const key = this.key(context, id);
     const digest = publicHash(wire);
     const objects = this.requireObjects();
 
     try {
-      await objects.put(key, wire);
+      try {
+        await objects.put(key, wire);
+      } catch (error) {
+        if (!reservation.retry) {
+          throw error;
+        }
+        // An earlier conditional PUT may have succeeded before its response or read-back failed.
+      }
 
       const stored = await objects.get(key, bytes);
 
@@ -41,6 +128,12 @@ export class BackupPayloads {
     }
 
     return { format: 'vault-object', version: 1, id, digest, generation: envelope.context.key.generation };
+  }
+
+  async clear(context: ScopeAccess, id: string): Promise<void> {
+    await context.tx
+      .delete(backupStaging)
+      .where(and(eq(backupStaging.scopeId, context.scope.id), eq(backupStaging.id, id)));
   }
 
   async read(context: ScopeAccess, value: StoredEnvelope, bytes: number): Promise<DataEnvelope> {
@@ -85,5 +178,11 @@ export class BackupPayloads {
 
   private key(context: ScopeAccess, id: string) {
     return `vault-backups/${context.scope.id}/${id}`;
+  }
+
+  private async staged(context: ScopeAccess) {
+    const [staged] = await context.tx.select().from(backupStaging).where(eq(backupStaging.scopeId, context.scope.id));
+
+    return staged;
   }
 }

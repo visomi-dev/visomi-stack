@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { createOperationId, syncReadBody, VaultError, type WrappingContext } from '@visomi-stack/shared-db';
 import {
   encodeBytes,
@@ -7,6 +8,7 @@ import {
   type ReplicaStorage,
   type ReplicaTransport,
 } from '@visomi-stack/web-frontend-db';
+import { firstValueFrom, fromEvent, takeUntil, timer } from 'rxjs';
 
 import type { Session } from '../auth/session/session';
 import type { DatabaseHttp } from '../shared/db/http';
@@ -57,17 +59,17 @@ function exampleTransport(options: TransportOptions): ReplicaTransport {
 
   return {
     async pull(head, signal) {
-      const body = { protocol: 1 as const, head, limit: 25 };
+      const body = { protocol: 1 as const, head, limit: 100 };
 
       if (!checkDevice) {
         return api.vault(`${path}/sync/pull`, { protocol: body.protocol, head }, signal);
       }
 
-      const document = await api.vault(`${path}/devices`, undefined, signal);
+      const document = await retryRestore(() => api.vault(`${path}/devices`, undefined, signal), signal);
       const registry = rosterSchema.parse(document);
 
       if (!registry.objectBackup) {
-        return api.vault(`${path}/sync/pull`, body, signal);
+        return retryRestore(() => api.vault(`${path}/sync/pull`, body, signal), signal);
       }
 
       if (!custody.ready || registry.key.generation !== binding.key.generation) {
@@ -91,8 +93,33 @@ function exampleTransport(options: TransportOptions): ReplicaTransport {
         bodyHash: encodeBytes(new Uint8Array(digest)),
       });
 
-      return api.vault(`${path}/sync/pull`, { ...body, authorization }, signal);
+      return retryRestore(() => api.vault(`${path}/sync/pull`, { ...body, authorization }, signal), signal);
     },
     push: (value, signal) => api.vault(`${path}/sync/push`, value, signal),
   };
+}
+
+async function retryRestore(request: () => Promise<unknown>, signal: AbortSignal): Promise<unknown> {
+  // Stay inside this pull so the replica can retain verified pages until its atomic commit.
+  for (let attempt = 0; ; attempt++) {
+    signal.throwIfAborted();
+
+    try {
+      const value = await request();
+
+      return value;
+    } catch (error) {
+      if (!(error instanceof HttpErrorResponse) || error.status !== 429 || attempt === 2) {
+        throw error;
+      }
+
+      signal.throwIfAborted();
+      const seconds = Number(error.headers.get('Retry-After'));
+      const wait = seconds > 0 && seconds <= 60 ? Math.ceil(seconds) : 60;
+
+      await firstValueFrom(timer(wait * 1000).pipe(takeUntil(fromEvent(signal, 'abort'))), {
+        defaultValue: undefined,
+      });
+    }
+  }
 }

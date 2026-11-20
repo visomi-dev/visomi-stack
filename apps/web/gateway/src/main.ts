@@ -207,7 +207,7 @@ async function bootstrap() {
 
   const exampleHarness = developmentPersistenceDemos(process.env);
 
-  backupObjects = api.createBackupObjects?.(process.env);
+  backupObjects = api.exampleApiVersion === 1 ? api.createBackupObjects?.(process.env) : undefined;
 
   const application = createGatewayApp({
     visits,

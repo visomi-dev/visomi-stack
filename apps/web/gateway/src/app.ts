@@ -29,10 +29,7 @@ export function createGatewayApp(options: {
   errorMode?: 'managed' | 'inherited';
   staticDirectory?: string;
 }) {
-  if (options.auth && options.api.exampleApiVersion !== 1) {
-    throw new Error('api_examples_unavailable');
-  }
-
+  const examples = options.api.exampleApiVersion === 1;
   const app = express();
   const errors = pageErrors(options.site?.clientDirectory);
 
@@ -159,8 +156,8 @@ export function createGatewayApp(options: {
       helmetMode: 'inherited',
       auth: options.auth,
       observability: options.observability,
-      ...(options.exampleHarness ? { exampleHarness: true } : {}),
-      ...(options.backupObjects ? { backupObjects: options.backupObjects } : {}),
+      ...(examples && options.exampleHarness ? { exampleHarness: true } : {}),
+      ...(examples && options.backupObjects ? { backupObjects: options.backupObjects } : {}),
     }),
   );
 

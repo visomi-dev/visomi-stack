@@ -118,6 +118,19 @@
             }
           </button>
 
+          @if (triedPasskey() && !pendingPasskey()) {
+            <button
+              appUI
+              type="button"
+              variant="secondary"
+              [disabled]="busy()"
+              (click)="setupPasskey(true)"
+              i18n="@@vaultDemoCreatePasskey"
+            >
+              Create a vault passkey
+            </button>
+          }
+
           @if (setup() === 'pin-option') {
             <button
               appUI

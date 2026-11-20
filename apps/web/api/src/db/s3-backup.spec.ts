@@ -85,6 +85,27 @@ it.each(['https://outside.example.test/synthetic-bucket/fixture', 'http://127.0.
   },
 );
 
+it('signs fixed-origin staging cleanup and requires a successful S3 delete', async () => {
+  const request = vi.fn<typeof fetch>();
+  const storage = createBackupObjects(env)!;
+
+  vi.stubGlobal('fetch', request);
+  request.mockResolvedValueOnce(new Response(null, { status: 204 }));
+  request.mockResolvedValueOnce(new Response(null, { status: 403 }));
+
+  await expect(storage.delete('vault-backups/scope/abandoned')).resolves.toBeUndefined();
+
+  await expect(storage.delete('vault-backups/scope/abandoned')).rejects.toMatchObject({ status: 503 });
+
+  expect(request).toHaveBeenCalledWith(
+    expect.objectContaining({
+      origin: 'http://127.0.0.1:8333',
+      pathname: '/synthetic-bucket/vault-backups/scope/abandoned',
+    }),
+    expect.objectContaining({ method: 'DELETE', redirect: 'error', signal: expect.any(AbortSignal) }),
+  );
+});
+
 it('verifies response status, encoding, and bounded streaming before returning bytes', async () => {
   const request = vi.fn<typeof fetch>();
   const storage = createBackupObjects(env)!;

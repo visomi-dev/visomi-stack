@@ -36,12 +36,13 @@ it('applies the production migration command to an empty isolated database and c
           'persistence_tenants',
           'persistence_records',
           'persistence_grants',
+          'vault_backup_staging',
           'site_visit_days',
         ]),
       );
       const history = await pool.query('SELECT * FROM drizzle.__drizzle_migrations');
 
-      expect(history.rows).toHaveLength(10);
+      expect(history.rows).toHaveLength(11);
       const backupFlag = await pool.query(`
         select column_default, is_nullable from information_schema.columns
         where table_schema = 'public' and table_name = 'persistence_scopes' and column_name = 'object_backup'

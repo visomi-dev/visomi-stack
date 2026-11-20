@@ -60,17 +60,29 @@ describe('gateway composition', () => {
     expect(enabled.body).toEqual({ enabled: true });
   });
 
-  it('requires the compiled Example API with auth and passes through its configured dependencies', () => {
+  it('passes Example dependencies only to supporting APIs and preserves authentication for older artifacts', async () => {
+    const legacy = Router();
+
+    legacy.get('/auth/session', (_request, response) => response.json({ authenticated: true }));
+    const oldApi = { ...apiFixture(legacy), exampleApiVersion: undefined };
+
+    const backupObjects = { get: vi.fn(), put: vi.fn(), delete: vi.fn(), close: vi.fn() };
+    const existing = createGatewayApp({ api: oldApi, auth: { middleware: [] }, exampleHarness: true, backupObjects });
+
+    await expect(dispatch(existing, '/api/auth/session')).resolves.toMatchObject({ status: 200 });
+
+    for (const feature of ['vault', 'cloud']) {
+      await expect(dispatch(existing, `/api/example/${feature}/policy`)).resolves.toMatchObject({ status: 404 });
+    }
+
+    expect(oldApi.createApp).toHaveBeenCalledWith(expect.not.objectContaining({ backupObjects }));
+    expect(oldApi.createApp).toHaveBeenCalledWith(expect.not.objectContaining({ exampleHarness: true }));
+
     const api = apiFixture();
-    const auth = { middleware: [] };
-    const incompatible = { ...api, exampleApiVersion: undefined };
 
-    expect(() => createGatewayApp({ api: incompatible, auth })).toThrow('api_examples_unavailable');
-    const backupObjects = { get: vi.fn(), put: vi.fn(), close: vi.fn() };
-
-    createGatewayApp({ api, auth, exampleHarness: true, backupObjects });
+    createGatewayApp({ api, exampleHarness: true, backupObjects });
     expect(api.createApp).toHaveBeenCalledWith(
-      expect.objectContaining({ basePath: '/api', auth, exampleHarness: true, backupObjects }),
+      expect.objectContaining({ basePath: '/api', exampleHarness: true, backupObjects }),
     );
   });
   it('serves packaged public branding without authentication, cookies or website fallbacks', async () => {

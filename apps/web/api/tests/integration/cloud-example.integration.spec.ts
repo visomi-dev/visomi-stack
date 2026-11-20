@@ -36,6 +36,38 @@ function underRls<T>(actor: string, target: Target, check: (tx: Transaction) => 
   });
 }
 
+it('reclaims expired note capacity under the restricted Cloud role before creating a note', async () => {
+  const owner = await client();
+  const root = await owner.call(prefix, 'POST', {});
+  const workspace = await owner.call(`${base(root.body)}/children`, 'POST', { kind: 'resource' });
+  const target = workspace.body;
+  const records = `${base(target)}/domains/cloud-notes/records`;
+  const actor = owner.actor.principal.id;
+
+  await underRls(actor, target, (tx) =>
+    tx.execute(sql`
+    insert into public.persistence_records (id, tenant_id, scope_id, domain, owner_id, audience, title, body, revision, created_at)
+    select gen_random_uuid(), ${target.tenantId}, ${target.scopeId}, 'cloud-notes', ${actor}, 'owner',
+      'Synthetic expired title', 'Synthetic expired note', 1, now() - interval '91 days'
+    from generate_series(1, 20)
+  `),
+  );
+
+  await expect(owner.call(records)).resolves.toMatchObject({ status: 200, body: { items: [] } });
+
+  await expect(owner.call(records, 'POST', mutation('New test note'))).resolves.toMatchObject({ status: 200 });
+
+  const result = await underRls(actor, target, (tx) =>
+    tx.execute<{ scrubbed: number; active: number }>(sql`
+    select count(*) filter (where deleted_at is not null and title = '' and body = '')::int as scrubbed,
+      count(*) filter (where deleted_at is null)::int as active
+    from public.persistence_records
+  `),
+  );
+
+  expect(result.rows).toEqual([{ scrubbed: 20, active: 1 }]);
+});
+
 it('enforces Cloud owner/shared CRUD, explicit read access, and revocation at the API and in PostgreSQL', async () => {
   const [owner, collaborator, outsider] = await Promise.all([client(), client(), client()]);
   const root = await owner.call(prefix, 'POST', {});

@@ -25,7 +25,7 @@ export function createPersistenceRouter(
   const access = new Access(auth.database, validatePersistenceComposition(policy));
   const cloud = policy.product === cloudExamplePolicy.product;
   const records = new SaasRecords(access, cloud ? useCloudRecordRole : undefined);
-  const maintenance = new PersistenceMaintenance(access);
+  const maintenance = new PersistenceMaintenance(access, objects);
   const actor = (request: Request) => ({ sessionId: request.sessionID, principal: requireFull(request.user) });
   const target = (params: { tenantId: string; scopeId: string }) => ({
     tenantId: params.tenantId,
@@ -54,11 +54,17 @@ export function createPersistenceRouter(
     {
       contract: contracts.maintenance,
       handler: async (req, res, value) => {
-        if (!harness) {
+        if (cloud) {
           throw new HttpError(409, 'capability_unavailable');
         }
 
-        const result = await maintenance.run(actor(req), target(value.params), value.params.domain, value.body);
+        const result = await maintenance.run(
+          actor(req),
+          target(value.params),
+          value.params.domain,
+          value.body,
+          !harness,
+        );
 
         return res.json(result);
       },

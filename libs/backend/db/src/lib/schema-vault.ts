@@ -186,3 +186,21 @@ export const opaqueCommands = pgTable(
     index('vault_command_retention').on(t.tenantId, t.scopeId, t.domain, t.createdAt),
   ],
 );
+
+export const backupStaging = pgTable(
+  'vault_backup_staging',
+  {
+    scopeId: uuid('scope_id').primaryKey(),
+    tenantId: uuid('tenant_id').notNull(),
+    id: uuid('id').notNull(),
+    ownerId: uuid('owner_id').notNull(),
+    operationId: uuid('operation_id').notNull(),
+    fingerprint: text('fingerprint').notNull(),
+    bytes: integer('bytes').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    foreignKey({ columns: [t.tenantId, t.scopeId], foreignColumns: [scopes.tenantId, scopes.id] }),
+    check('vault_backup_staging_bytes', sql`${t.bytes} > 0`),
+  ],
+);
