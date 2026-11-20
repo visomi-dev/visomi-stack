@@ -324,14 +324,44 @@ it('stores ciphertext privately and publishes only verified references for the c
 
     await expect(f.owner.call(`${path}/pull`, 'POST', good)).resolves.toMatchObject({ status: 200 });
 
+    const access = new Access(resource.db, policy);
+    const withScope = access.withScope.bind(access);
+    let staged!: () => void;
+    let resume!: () => void;
+    const stagedWrite = new Promise<void>((resolve) => {
+      staged = resolve;
+    });
+    const resumeWrite = new Promise<void>((resolve) => {
+      resume = resolve;
+    });
+
+    // Pause after the first transaction commits, leaving the original retry's publication pending.
+    vi.spyOn(access, 'withScope').mockImplementationOnce(async (actor, target, action, work) => {
+      const result = await withScope(actor, target, action, work);
+
+      staged();
+
+      await resumeWrite;
+
+      return result;
+    });
     vaultNotice.mockRejectedValueOnce(new Error('synthetic pubsub outage'));
-    const [completed, repeated] = await Promise.all([
-      f.owner.call(`${path}/push`, 'POST', next),
-      f.owner.call(`${path}/push`, 'POST', next),
+    const retrying = new OpaqueSync(access, backupObjects, vaultNotice);
+    const repeated = retrying.write(f.owner.actor, scoped.target, 'private-resources', next);
+
+    await Promise.race([
+      stagedWrite,
+      repeated.then(() => {
+        throw new Error('retry_did_not_stage');
+      }),
     ]);
 
+    const completed = await f.owner.call(`${path}/push`, 'POST', next).finally(resume);
+
     expect(completed.status).toBe(200);
-    expect(repeated).toEqual(completed);
+
+    await expect(repeated).resolves.toEqual(completed.body);
+
     expect(vaultNotice.mock.calls).toEqual([
       [scoped.target.scopeId, 1],
       [scoped.target.scopeId, 2],
@@ -372,7 +402,6 @@ it('stores ciphertext privately and publishes only verified references for the c
       .set({ expiresAt: new Date(0) })
       .where(stageScope);
 
-    const access = new Access(resource.db, policy);
     const payloads = new BackupPayloads(backupObjects);
 
     await expect(
