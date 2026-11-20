@@ -21,6 +21,11 @@ const record = z.strictObject({
   audience: z.enum(['owner', 'scope']),
   revision: z.number().int().positive(),
 });
+const recordPage = z.strictObject({
+  items: z.array(record),
+  next: z.uuid().nullable(),
+  canWrite: z.boolean().optional(),
+});
 const changed = z.strictObject({ changed: z.literal(true) });
 const response = (schema: z.ZodType) => ({
   ...commonErrors,
@@ -53,6 +58,7 @@ export const persistenceContracts = {
         events: z.number().int().nonnegative(),
         tombstones: z.number().int().nonnegative(),
         challenges: z.number().int().nonnegative(),
+        abandonedObjects: z.number().int().nonnegative().optional(),
       }),
     ),
   }),
@@ -64,7 +70,15 @@ export const persistenceContracts = {
     operationId: 'persistence_policy',
     summary: 'Read the configured product manifest without unlocking private content',
     request: z.object({}),
-    responses: response(z.strictObject({ policy: productPolicySchema, origin: z.url(), rpId: z.string() })),
+    responses: response(
+      z.strictObject({
+        policy: productPolicySchema,
+        origin: z.url(),
+        rpId: z.string(),
+        objectBackups: z.literal(true).optional(),
+        hybridHarness: z.literal(true).optional(),
+      }),
+    ),
   }),
   createTenant: defineRoute({
     ...base,
@@ -102,6 +116,9 @@ export const persistenceContracts = {
     request: z.object({ params: targetSchema, body: grantInputSchema }),
     responses: response(changed),
   }),
+};
+
+export const persistenceRecordContracts = {
   list: defineRoute({
     ...base,
     security: cookieSecurity,
@@ -110,7 +127,7 @@ export const persistenceContracts = {
     operationId: 'persistence_records',
     summary: 'List or search authorized SaaS records',
     request: z.object({ params, query }),
-    responses: response(z.strictObject({ items: z.array(record), next: z.uuid().nullable() })),
+    responses: response(recordPage),
   }),
   export: defineRoute({
     ...base,
@@ -120,7 +137,7 @@ export const persistenceContracts = {
     operationId: 'persistence_export',
     summary: 'Export a page of authorized SaaS records',
     request: z.object({ params, query }),
-    responses: response(z.strictObject({ items: z.array(record), next: z.uuid().nullable() })),
+    responses: response(recordPage),
   }),
   read: defineRoute({
     ...base,

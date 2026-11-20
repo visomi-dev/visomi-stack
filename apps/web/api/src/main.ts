@@ -2,7 +2,7 @@
 // @nx-target-name: serve
 import { createServer } from 'node:http';
 
-import { createDatabase, type DatabaseResource } from '@visomi-stack/backend-db';
+import { createDatabase, type BackupObjects, type DatabaseResource } from '@visomi-stack/backend-db';
 import {
   createRealtimePublisher,
   createRedisRealtimeTransport,
@@ -12,12 +12,13 @@ import {
   type RealtimeTransport,
 } from '@visomi-stack/backend-shared';
 import { initializeObservability, proxyConfiguration } from '@visomi-stack/web-backend-shared';
+import { developmentPersistenceDemos } from '@visomi-stack/shared-db';
 
 import packageJson from '../package.json' with { type: 'json' };
 
 import { authConfig, createApp, createAuthentication } from './app';
 import type { AuthRuntime } from './auth/runtime';
-import { persistenceExample } from './db/composition';
+import { createBackupObjects } from './db/s3-backup';
 
 const observability = initializeObservability({
   service: 'web-api',
@@ -30,6 +31,7 @@ let auth: AuthRuntime | undefined;
 let realtimeTransport: RealtimeTransport | undefined;
 let startupFailed = false;
 let application: ReturnType<typeof createApp> | undefined;
+let backupObjects: BackupObjects | undefined;
 
 try {
   if (process.env.DATABASE_URL) {
@@ -61,9 +63,14 @@ try {
     });
   }
 
+  const exampleHarness = developmentPersistenceDemos(process.env);
+
+  backupObjects = createBackupObjects(process.env);
+
   application = createApp({
-    persistence: persistenceExample(process.env),
     observability,
+    ...(exampleHarness ? { exampleHarness } : {}),
+    ...(backupObjects ? { backupObjects } : {}),
     ...(auth ? { auth } : {}),
     ...proxyConfiguration(process.env.AUTH_TRUST_PROXY),
   });
@@ -96,6 +103,7 @@ async function stop(exitCode: number): Promise<void> {
 
   try {
     mail?.close();
+    backupObjects?.close();
   } catch {
     databaseClosed = false;
   }

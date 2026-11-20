@@ -8,6 +8,11 @@ test('mounts the API and public site with the host Helmet policy', async ({ requ
     ['/app/en/', 200],
     ['/app/es/', 200],
     ['/api/auth/passkeys', 401],
+    ['/api/example/vault/policy', 401],
+    ['/api/example/cloud/policy', 401],
+    ['/api/persistence/policy', 404],
+    ['/api/persistence/cloud-example/policy', 404],
+    ['/api/api/example/vault/policy', 404],
   ] as const) {
     const response = await request.get(path);
     const headers = response.headers();

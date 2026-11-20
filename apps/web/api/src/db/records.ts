@@ -2,8 +2,8 @@ import { createHash, randomUUID } from 'node:crypto';
 
 import { persistenceSchema } from '@visomi-stack/backend-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
-import { operationIdSchema, type DomainPolicy } from '@visomi-stack/shared-db';
-import { and, asc, eq, gt, ilike, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { operationIdSchema, retentionDayMs, type DomainPolicy } from '@visomi-stack/shared-db';
+import { and, asc, eq, gt, ilike, isNull, not, or, sql, type SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { Access, input, type ScopeAccess, type SessionActor } from '../access/service';
@@ -48,7 +48,10 @@ const publicRecord = {
 
 /** Server-readable adapter. It never accepts ciphertext-only domain policies. */
 export class SaasRecords {
-  constructor(private readonly access: Access) {}
+  constructor(
+    private readonly access: Access,
+    private readonly useRecordRole?: (context: ScopeAccess) => Promise<void>,
+  ) {}
 
   async list(actor: SessionActor, target: unknown, domain: string, rawPage: unknown) {
     const page = input(pageSchema, rawPage);
@@ -60,6 +63,9 @@ export class SaasRecords {
 
     return this.access.withScope(actor, target, 'read', async (context) => {
       this.scope(context, policy);
+
+      await this.useRecordRole?.(context);
+
       const search = page.search?.replace(/[\\%_]/g, '\\$&');
       const items = await context.tx
         .select(publicRecord)
@@ -77,7 +83,11 @@ export class SaasRecords {
         .limit(page.limit + 1);
       const more = items.length > page.limit;
 
-      return { items: items.slice(0, page.limit), next: more ? items[page.limit - 1].id : null };
+      return {
+        items: items.slice(0, page.limit),
+        next: more ? items[page.limit - 1].id : null,
+        ...(this.useRecordRole ? { canWrite: context.membership.owner } : {}),
+      };
     });
   }
 
@@ -87,6 +97,9 @@ export class SaasRecords {
 
     return this.access.withScope(actor, target, 'read', async (context) => {
       this.scope(context, policy);
+
+      await this.useRecordRole?.(context);
+
       const [record] = await context.tx
         .select(publicRecord)
         .from(records)
@@ -113,6 +126,9 @@ export class SaasRecords {
 
     return this.access.withScope(actor, target, value.kind === 'delete' ? 'delete' : 'write', async (context) => {
       this.scope(context, policy);
+
+      await this.useRecordRole?.(context);
+
       const { tx } = context;
 
       requireCurrentOperation(value.operationId, policy);
@@ -149,6 +165,15 @@ export class SaasRecords {
       if (value.kind === 'create') {
         this.sharing(context, value.audience === 'scope');
         const id = randomUUID();
+        const now = new Date();
+        const active = this.retention(policy, now.getTime());
+
+        if (active && this.useRecordRole) {
+          await tx
+            .update(records)
+            .set({ title: '', body: '', deletedAt: now, updatedAt: now })
+            .where(and(this.predicate(context, policy), isNull(records.deletedAt), not(active)));
+        }
 
         await this.quota(context, policy, value.title, value.body);
 
@@ -252,10 +277,10 @@ export class SaasRecords {
     );
   }
 
-  private retention(policy: DomainPolicy): SQL | undefined {
+  private retention(policy: DomainPolicy, now = Date.now()): SQL | undefined {
     return policy.retention.activeDays === null
       ? undefined
-      : gt(records.createdAt, new Date(Date.now() - policy.retention.activeDays * 86_400_000));
+      : gt(records.createdAt, new Date(now - policy.retention.activeDays * retentionDayMs));
   }
 
   private sharing(context: ScopeAccess, changed: boolean) {

@@ -55,7 +55,7 @@ function fixture(opened = false, method: WrappingContext['method'] = 'pin-argon2
     close: vi.fn(),
   };
   const database = { replica: vi.fn(async () => storage) };
-  const api = { request: vi.fn(async () => ({ origin: binding.origin, rpId: 'synthetic.example.test' })) };
+  const api = { vault: vi.fn(async () => ({ origin: binding.origin, rpId: 'synthetic.example.test' })) };
 
   TestBed.configureTestingModule({
     providers: [
@@ -100,7 +100,7 @@ it('offers closed local custody at app entry and unlocks PIN offline without cal
   );
 
   expect(f.storage.close).toHaveBeenCalledOnce();
-  expect(f.api.request).not.toHaveBeenCalled();
+  expect(f.api.vault).not.toHaveBeenCalled();
   expect(f.access.pin()).toBe('');
   expect(f.vault.connect.mock.calls[0][3]!.every((byte) => byte === 0)).toBe(true);
   expect(f.access.show()).toBe(false);
@@ -163,7 +163,7 @@ it('keeps a PRF binding as PRF and uses its configured RP ID', async () => {
 
   await f.access.unlock();
 
-  expect(f.api.request).toHaveBeenCalledWith('/policy', undefined, expect.any(AbortSignal));
+  expect(f.api.vault).toHaveBeenCalledWith('/policy', undefined, expect.any(AbortSignal));
   expect(f.vault.connect).toHaveBeenCalledWith(
     { ...binding, method: 'passkey-prf' },
     'synthetic.example.test',

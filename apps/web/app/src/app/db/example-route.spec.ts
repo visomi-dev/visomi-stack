@@ -9,10 +9,12 @@ import { filter, firstValueFrom } from 'rxjs';
 import { syntheticHybridPolicy, VaultError, type VaultState } from '@visomi-stack/shared-db';
 
 import { appRoutes } from '../app.routes';
+import { BrowserRealtimeSession } from '../auth/session/browser-realtime-session';
 import { Session } from '../auth/session/session';
 import { Navigation } from '../shared/navigation';
 import { DatabaseHttp } from '../shared/db/http';
 import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
+import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
 
 import { DatabaseExample } from './example/example';
 import { ExampleWorkspace } from './example-workspace';
@@ -39,6 +41,7 @@ function fixture(
   intercept?: (path: string, body: unknown, signal?: AbortSignal) => Promise<unknown> | undefined,
   guard: () => boolean | Promise<boolean> = () => true,
   support = 'unavailable',
+  backed = false,
 ) {
   const prf = signal(support);
   const capabilities = { prf, unavailable: vi.fn(() => prf.set('unavailable')) };
@@ -60,6 +63,8 @@ function fixture(
     pending: signal(false),
     synchronized: signal(false),
     conflict: signal(false),
+    verifiedCursor: signal<number | null>(null),
+    watchProof: vi.fn(async () => 'synthetic-proof'),
     close: vi.fn(),
     resume: vi.fn(async () => undefined),
     unlock: vi.fn(async (_target: ExampleTarget, _rpId: string, _initialize: boolean, _pin?: Uint8Array) => {
@@ -67,13 +72,13 @@ function fixture(
       plaintext.set('Synthetic private A');
     }),
     save: vi.fn(async () => undefined),
-    synchronize: vi.fn(async () => undefined),
+    synchronize: vi.fn(async (_target: ExampleTarget, _flush?: boolean) => undefined),
     keepPending: vi.fn(async () => undefined),
     useSynchronized: vi.fn(async () => undefined),
   };
   const requests: { path: string; body: unknown; signal?: AbortSignal }[] = [];
   const api = {
-    request: vi.fn(async (path: string, body?: unknown, signal?: AbortSignal) => {
+    vault: vi.fn(async (path: string, body?: unknown, signal?: AbortSignal) => {
       requests.push({ path, body, signal });
       const delayed = intercept?.(path, body, signal);
 
@@ -82,7 +87,12 @@ function fixture(
       }
 
       if (path === '/policy') {
-        return { policy: syntheticHybridPolicy, origin: document.location.origin, rpId: document.location.hostname };
+        return {
+          hybridHarness: true,
+          policy: syntheticHybridPolicy,
+          origin: document.location.origin,
+          rpId: document.location.hostname,
+        };
       }
 
       if (body !== undefined) {
@@ -105,17 +115,22 @@ function fixture(
   };
   const secured = appRoutes.find((route) => route.canActivateChild)!;
   const { loadComponent: _load, ...parent } = secured;
+  const stopWatching = vi.fn();
+  const watchVault = vi.fn((_proof: () => Promise<unknown>, _notify: (cursor: number) => void) => stopWatching);
 
   TestBed.configureTestingModule({
     providers: [
       { provide: UnlockCapabilities, useValue: capabilities },
+      { provide: BrowserRealtimeSession, useValue: { watchVault } },
       provideLocationMocks(),
       provideRouter([
         {
           ...parent,
           canActivateChild: [...(parent.canActivateChild ?? []), guard],
           component: TestLayout,
-          children: secured.children!.filter((route) => route.path?.startsWith('persistence')),
+          children: backed
+            ? [{ path: 'example/vault', component: DatabaseExample, data: { backedSample: true } }]
+            : secured.children!.filter((route) => route.path?.startsWith('persistence')),
         },
       ]),
       {
@@ -140,7 +155,7 @@ function fixture(
     },
   });
 
-  return { api, privateResource, requests, lock, capabilities };
+  return { api, privateResource, requests, lock, capabilities, watchVault, stopWatching };
 }
 
 afterEach(() => {
@@ -192,6 +207,87 @@ function deferred<T>() {
 
   return { promise, resolve };
 }
+
+it('coalesces Vault hints, preserves the outbox, and checks for missed updates after joining again', async () => {
+  const f = fixture(undefined, () => true, 'available', true);
+  const harness = await RouterTestingHarness.create();
+  const query = new URLSearchParams(a);
+
+  await harness.navigateByUrl(`/example/vault?${query}`);
+
+  await harness.fixture.whenStable();
+
+  const page = (harness.routeDebugElement!.query(By.directive(DatabaseExample)).componentInstance as DatabaseExample)
+    .workspace;
+  const header = TestBed.inject(VaultSyncStatus);
+
+  await page.unlock();
+
+  f.privateResource.verifiedCursor.set(1);
+
+  await harness.fixture.whenStable();
+
+  const invalidate = f.watchVault.mock.calls[0][1];
+
+  invalidate(1);
+  invalidate(1);
+
+  await harness.fixture.whenStable();
+
+  expect(f.privateResource.synchronize).not.toHaveBeenCalled();
+
+  f.privateResource.pending.set(true);
+  invalidate(3);
+  invalidate(2);
+
+  await harness.fixture.whenStable();
+
+  expect(f.privateResource.synchronize).not.toHaveBeenCalled();
+
+  const pull = deferred<void>();
+
+  f.privateResource.synchronize.mockImplementationOnce(async () => {
+    await pull.promise;
+
+    f.privateResource.verifiedCursor.set(3);
+    f.privateResource.synchronized.set(true);
+  });
+
+  f.privateResource.pending.set(false);
+  TestBed.tick();
+
+  expect(header.phase()).toBe('syncing');
+  expect(f.privateResource.synchronize).toHaveBeenCalledExactlyOnceWith(a, false);
+  invalidate(3);
+  invalidate(2);
+  pull.resolve();
+
+  await harness.fixture.whenStable();
+
+  expect(header.phase()).toBe('synced');
+  expect(f.watchVault).toHaveBeenCalledTimes(1);
+  expect(f.privateResource.synchronize).toHaveBeenCalledTimes(1);
+
+  page.lock();
+
+  await harness.fixture.whenStable();
+
+  expect(header.phase()).toBe('idle');
+  expect(f.stopWatching).toHaveBeenCalledOnce();
+
+  await page.unlock();
+
+  await harness.fixture.whenStable();
+
+  const rejoined = f.watchVault.mock.calls[1][1];
+
+  rejoined(0);
+
+  await harness.fixture.whenStable();
+
+  expect(f.privateResource.synchronize).toHaveBeenCalledTimes(2);
+  expect(f.privateResource.synchronize).toHaveBeenLastCalledWith(a, false);
+});
 
 async function navigate(harness: RouterTestingHarness, target: ExampleTarget) {
   await harness.navigateByUrl(url(target));

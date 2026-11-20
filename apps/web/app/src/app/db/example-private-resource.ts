@@ -1,5 +1,6 @@
 import type { IndexedDbReplicaStorage } from '@visomi-stack/web-frontend-db/storage';
 import { DOCUMENT } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DestroyRef, Service, effect, inject, signal } from '@angular/core';
 import type { z } from 'zod';
@@ -8,7 +9,7 @@ import {
   createPinMethodId,
   deviceCustodyContext,
   encodeBytes,
-  SyncReplica,
+  type SyncReplica,
   replicaId,
   type DeviceCustody,
 } from '@visomi-stack/web-frontend-db';
@@ -29,7 +30,9 @@ import { ClientDatabase } from '../shared/db/database';
 import { VaultSession } from '../shared/vault/vault-session';
 import { openLocalVault } from '../shared/vault/local-unlock';
 
-import { rosterSchema, validateExampleEnvelope, exampleLocalKey, type ExampleTarget } from './example-contracts';
+import { rosterSchema, validateExampleEnvelope, exampleLocalKey, examplePrivatePath } from './example-contracts';
+import type { ExampleTarget } from './example-contracts';
+import { exampleReplica, watchBackup } from './example-transport';
 
 export type { ExampleTarget } from './example-contracts';
 
@@ -41,10 +44,12 @@ export class ExamplePrivateResource {
   private readonly session = inject(Session);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly backupPage = inject(ActivatedRoute, { optional: true })?.snapshot.data['backedSample'] === true;
 
   private readonly pendingState = signal(false);
   private readonly synchronizedState = signal(false);
   private readonly conflictState = signal(false);
+  private readonly verifiedCursorState = signal<number | null>(null);
 
   readonly vault = inject(VaultSession);
   private readonly cleanup = this.destroyRef.onDestroy(() => {
@@ -63,8 +68,13 @@ export class ExamplePrivateResource {
   readonly pending = this.pendingState.asReadonly();
   readonly synchronized = this.synchronizedState.asReadonly();
   readonly conflict = this.conflictState.asReadonly();
+  readonly verifiedCursor = this.verifiedCursorState.asReadonly();
 
-  async unlock(target: ExampleTarget, rpId: string, initialize: boolean, pin?: Uint8Array): Promise<void> {
+  async watchProof(target: ExampleTarget) {
+    return watchBackup(this.api, this.session, target, this.active(target));
+  }
+
+  async unlock(target: ExampleTarget, rpId: string, initialize: boolean, pin?: Uint8Array, localOnly = false) {
     this.close();
     this.vault.release();
     const signal = this.controller.signal;
@@ -78,17 +88,17 @@ export class ExamplePrivateResource {
       throw new VaultError('unavailable');
     }
 
-    const path = this.path(target);
+    const path = examplePrivatePath(target);
     let registry: z.infer<typeof rosterSchema> | undefined;
 
-    if (pin && !initialize) {
-      await this.restoreLocal(target, rpId, pin, ownerId, signal);
+    if ((pin || localOnly) && !initialize) {
+      await this.restoreLocal(target, rpId, pin, ownerId, signal, localOnly);
 
       return;
     }
 
     try {
-      const raw = await this.api.request(`${path}/devices`, undefined, signal);
+      const raw = await this.api.vault(`${path}/devices`, undefined, signal);
 
       this.current(signal);
       registry = rosterSchema.parse(raw);
@@ -182,7 +192,7 @@ export class ExamplePrivateResource {
 
       this.current(signal);
 
-      const requested = await this.api.request(`${path}/devices/request`, { deviceId: binding.deviceId, keys }, signal);
+      const requested = await this.api.vault(`${path}/devices/request`, { deviceId: binding.deviceId, keys }, signal);
 
       this.current(signal);
 
@@ -190,11 +200,11 @@ export class ExamplePrivateResource {
 
       this.current(signal);
 
-      await this.api.request(`${path}/devices/bootstrap`, proof, signal);
+      await this.api.vault(`${path}/devices/bootstrap`, proof, signal);
 
       this.current(signal);
 
-      const roster = await this.api.request(`${path}/devices`, undefined, signal);
+      const roster = await this.api.vault(`${path}/devices`, undefined, signal);
 
       this.current(signal);
       registry = rosterSchema.parse(roster);
@@ -228,26 +238,19 @@ export class ExamplePrivateResource {
     await storage.advanceControl(id, { epoch: registry.epoch, generation: key.generation });
 
     this.current(signal);
-    const replica = new SyncReplica(
-      id,
-      key,
-      key.scope,
+    this.replica = exampleReplica({
+      api: this.api,
+      session: this.session,
+      path,
+      crypto: view.crypto,
+      custody,
+      binding,
       storage,
-      {
-        pull: (head, signal) => this.api.request(`${path}/sync/pull`, { protocol: 1, head }, signal),
-        push: (value, signal) => this.api.request(`${path}/sync/push`, value, signal),
-      },
-      view.crypto,
-      (envelope) => {
-        this.current(signal);
-        validateExampleEnvelope(this.binding, envelope);
-
-        return this.vault.readEnvelope(envelope, false);
-      },
-      registry.epoch,
-    );
-
-    this.replica = replica;
+      vault: this.vault,
+      checkDevice: this.backupPage || registry.objectBackup === true,
+      minimumEpoch: registry.epoch,
+      current: () => this.current(signal),
+    });
 
     await this.synchronize(target, false);
   }
@@ -367,14 +370,12 @@ export class ExamplePrivateResource {
 
     try {
       if (pending) {
-        await replica.flush();
-
-        this.current(signal);
+        await replica.flush(this.backupPage);
       } else {
         await this.pullAll(target);
-
-        this.current(signal);
       }
+
+      this.current(signal);
     } catch (error) {
       this.current(signal);
       const code = error instanceof HttpErrorResponse ? error.error?.error : (error as { code?: unknown })?.code;
@@ -394,9 +395,10 @@ export class ExamplePrivateResource {
 
       throw error;
     }
-    const value = await storage.unit(id, target.objectId);
+    const [value, pin] = await Promise.all([storage.unit(id, target.objectId), this.backupPage && storage.pin(id)]);
 
     this.current(signal);
+    this.verifiedCursorState.set(pin ? pin.cursor : null);
 
     if (value && value.context.kind !== 'tombstone') {
       await this.show(value, target);
@@ -423,6 +425,7 @@ export class ExamplePrivateResource {
     this.target = undefined;
     this.pendingState.set(false);
     this.synchronizedState.set(false);
+    this.verifiedCursorState.set(null);
   }
 
   async resume(target: ExampleTarget, rpId: string): Promise<void> {
@@ -451,6 +454,7 @@ export class ExamplePrivateResource {
     pin: Uint8Array | undefined,
     ownerId: string,
     signal: AbortSignal,
+    allowPasskey = false,
   ): Promise<void> {
     const opened = await openLocalVault({
       vault: this.vault,
@@ -458,6 +462,7 @@ export class ExamplePrivateResource {
       key: exampleLocalKey(target),
       rpId,
       pin,
+      allowPasskey,
       ownerId,
       signal,
       current: () => this.current(signal),
@@ -469,26 +474,21 @@ export class ExamplePrivateResource {
     this.storage = storage;
     const id = replicaId(ownerId, local.key, local.key.scope);
 
-    const path = this.path(target);
+    const path = examplePrivatePath(target);
 
-    this.replica = new SyncReplica(
-      id,
-      local.key,
-      local.key.scope,
+    this.replica = exampleReplica({
+      api: this.api,
+      session: this.session,
+      path,
+      crypto: this.document.defaultView!.crypto,
+      custody,
+      binding: local,
+      checkDevice: this.backupPage,
       storage,
-      {
-        pull: (head, signal) => this.api.request(`${path}/sync/pull`, { protocol: 1, head }, signal),
-        push: (value, signal) => this.api.request(`${path}/sync/push`, value, signal),
-      },
-      this.document.defaultView!.crypto,
-      (envelope) => {
-        this.current(signal);
-        validateExampleEnvelope(this.binding, envelope);
-
-        return this.vault.readEnvelope(envelope, false);
-      },
-      pinned.epoch,
-    );
+      vault: this.vault,
+      minimumEpoch: pinned.epoch,
+      current: () => this.current(signal),
+    });
 
     const pending = await storage.pending(id);
 
@@ -505,6 +505,8 @@ export class ExamplePrivateResource {
 
     this.current(signal);
     this.pendingState.set(Boolean(pending));
+
+    this.verifiedCursorState.set(this.backupPage && pinned.cursor > 0 ? pinned.cursor : null);
   }
 
   private async prepare(target: ExampleTarget, value: string) {
@@ -567,7 +569,7 @@ export class ExamplePrivateResource {
     let more: boolean;
 
     do {
-      const page = await replica.pull();
+      const page = await replica.pull(this.backupPage);
 
       this.current(signal);
 
@@ -640,10 +642,6 @@ export class ExamplePrivateResource {
     ) {
       throw new VaultError('stale-operation');
     }
-  }
-
-  private path(target: ExampleTarget) {
-    return `/tenants/${target.tenantId}/scopes/${target.scopeId}/domains/private-resources`;
   }
 
   private readonly accountChanged = effect(() => {

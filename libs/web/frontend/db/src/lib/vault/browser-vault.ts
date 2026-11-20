@@ -26,21 +26,24 @@ import {
 import { WebCryptoCipher } from '../crypto/cipher';
 import type { WebCryptoDevices } from '../crypto/devices';
 
+import { LocalPasskeyEnrollment, type LocalPasskeyStorage } from './local-passkey';
 import { historicalBinding, storeHistoricalKey, withStoredKey } from './stored-key';
 
 /** One independently locked key scope; records are loaded/decrypted individually. */
 export class BrowserVault implements VaultPort {
   private readonly recoveryOperations = new Set<VaultUnlock>();
+  private readonly localEnrollment = new LocalPasskeyEnrollment();
 
   private phase: VaultState = 'locked';
   private epoch = 0;
   private key: CryptoKey | undefined;
   private binding: WrappingContext | undefined;
   private closed = false;
+  private localPinEnvelope: WrappedKey | undefined;
 
   constructor(
     private readonly ownerId: string,
-    private readonly storage: VaultStorage,
+    private readonly storage: VaultStorage & { readonly localPasskeys?: LocalPasskeyStorage },
     private readonly unlocker: VaultUnlock,
     private readonly crypto: WebCryptoCipher,
     private readonly changed: (state: VaultState) => void = () => undefined,
@@ -87,40 +90,41 @@ export class BrowserVault implements VaultPort {
   }
 
   async unlock(context: WrappingContext): Promise<void> {
-    this.lock(false);
-    const epoch = this.epoch;
-    const binding = this.context(context);
-    let secret: Uint8Array | undefined;
-    let raw: Uint8Array | undefined;
+    return this.unlockKey(context, (id) => this.storage.getKey(id));
+  }
 
-    try {
-      const wrapped = await this.storage.getKey(keyDomainId(this.ownerId, binding.key));
+  async unlockLocalPasskey(context: WrappingContext): Promise<void> {
+    const local = this.storage.localPasskeys;
 
-      this.current(epoch);
-
-      if (!wrapped) {
-        throw new VaultError('recovery-required');
-      }
-
-      const unlockedSecret = await this.unlocker.secret(binding);
-
-      secret = unlockedSecret;
-      this.current(epoch);
-      const unwrapped = await this.crypto.unwrap(secret, binding, wrapped);
-
-      raw = unwrapped;
-      const key = await this.crypto.importDataKey(raw);
-
-      this.current(epoch);
-      this.key = key;
-      this.binding = binding;
-      this.setState('ready');
-    } catch (error) {
-      throw this.failure(error, epoch);
-    } finally {
-      secret?.fill(0);
-      raw?.fill(0);
+    if (!local || context.method !== 'passkey-prf') {
+      throw new VaultError('unavailable');
     }
+
+    return this.unlockKey(context, (id) => local.get(id));
+  }
+
+  /** Add a wrapper for the currently unlocked PIN key without exporting or sealing any data. */
+  async addLocalPasskey(methodId: string, unlock: VaultUnlock, signal: AbortSignal): Promise<WrappingContext> {
+    const local = this.storage.localPasskeys;
+    const original = this.localPinEnvelope;
+
+    if (!local || !original || !this.key || this.phase !== 'ready') {
+      throw new VaultError('locked');
+    }
+
+    const context = this.context({ ...original.context, method: 'passkey-prf', methodId });
+    const epoch = this.epoch;
+
+    return this.localEnrollment.add({
+      storage: local,
+      original,
+      context,
+      pin: this.unlocker,
+      passkey: unlock,
+      crypto: this.crypto,
+      signal,
+      current: () => this.current(epoch),
+    });
   }
 
   async seal(context: DataContext, plaintext: Uint8Array): Promise<DataEnvelope> {
@@ -354,6 +358,8 @@ export class BrowserVault implements VaultPort {
     this.epoch++;
     this.key = undefined;
     this.binding = undefined;
+    this.localPinEnvelope = undefined;
+    this.localEnrollment.cancel();
     this.unlocker.cancel();
     for (const recovery of this.recoveryOperations) {
       recovery.cancel();
@@ -377,6 +383,47 @@ export class BrowserVault implements VaultPort {
     this.channel?.close();
     this.storage.close();
     this.setState('unavailable');
+  }
+
+  private async unlockKey(
+    context: WrappingContext,
+    load: (id: string) => Promise<WrappedKey | undefined>,
+  ): Promise<void> {
+    this.lock(false);
+    const epoch = this.epoch;
+    const binding = this.context(context);
+    let secret: Uint8Array | undefined;
+    let raw: Uint8Array | undefined;
+
+    try {
+      const wrapped = await load(keyDomainId(this.ownerId, binding.key));
+
+      this.current(epoch);
+
+      if (!wrapped) {
+        throw new VaultError('recovery-required');
+      }
+
+      const unlockedSecret = await this.unlocker.secret(binding);
+
+      secret = unlockedSecret;
+      this.current(epoch);
+      const unwrapped = await this.crypto.unwrap(secret, binding, wrapped);
+
+      raw = unwrapped;
+      const key = await this.crypto.importDataKey(raw);
+
+      this.current(epoch);
+      this.key = key;
+      this.binding = binding;
+      this.localPinEnvelope = this.storage.localPasskeys && binding.method === 'pin-argon2id' ? wrapped : undefined;
+      this.setState('ready');
+    } catch (error) {
+      throw this.failure(error, epoch);
+    } finally {
+      secret?.fill(0);
+      raw?.fill(0);
+    }
   }
 
   private async sealUnit(context: DataContext, plaintext: Uint8Array, persist: boolean): Promise<DataEnvelope> {
@@ -446,6 +493,7 @@ export class BrowserVault implements VaultPort {
       this.current(epoch);
       this.key = key;
       this.binding = binding;
+      this.localPinEnvelope = this.storage.localPasskeys && binding.method === 'pin-argon2id' ? wrapped : undefined;
       this.setState('ready');
     } catch (error) {
       throw this.failure(error, epoch);
@@ -569,6 +617,8 @@ export class BrowserVault implements VaultPort {
     if (state !== 'quota') {
       this.key = undefined;
       this.binding = undefined;
+      this.localPinEnvelope = undefined;
+      this.localEnrollment.cancel();
       // Failed authentication invalidates other in-flight reads under this unlocked state as well.
       this.epoch++;
       this.unlocker.cancel();

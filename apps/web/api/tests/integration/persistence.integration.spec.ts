@@ -25,8 +25,8 @@ import {
 describe('real PostgreSQL and HTTP persistence boundaries', () => {
   it('sanitizes malformed/oversized bodies and unexpected adapter failures', async () => {
     const owner = await client();
-    const malformed = await owner.sendRaw('/persistence/tenants', '{synthetic-private-parse-marker');
-    const oversized = await owner.sendRaw('/persistence/tenants', JSON.stringify({ private: 'x'.repeat(33000) }));
+    const malformed = await owner.sendRaw('/example/vault/tenants', '{synthetic-private-parse-marker');
+    const oversized = await owner.sendRaw('/example/vault/tenants', JSON.stringify({ private: 'x'.repeat(33000) }));
 
     expect(malformed.status).toBe(400);
     expect(malformed.body).toEqual({ error: 'request_invalid' });
@@ -36,7 +36,7 @@ describe('real PostgreSQL and HTTP persistence boundaries', () => {
       .mockRejectedValueOnce(new Error('synthetic-private-driver-marker'));
 
     try {
-      const response = await owner.call('/persistence/tenants', 'POST', {});
+      const response = await owner.call('/example/vault/tenants', 'POST', {});
 
       expect(response.status).toBe(503);
       expect(response.body).toEqual({ error: 'persistence_unavailable' });
@@ -103,18 +103,18 @@ describe('real PostgreSQL and HTTP persistence boundaries', () => {
     expect(retry.status).toBe(404);
   });
   it('requires verified initialized sessions, Origin/CSRF and strict inputs; never reflects raw input', async () => {
-    const anonymous = await fetch(`${origin}/persistence/tenants`, { method: 'POST' });
+    const anonymous = await fetch(`${origin}/example/vault/tenants`, { method: 'POST' });
 
     expect(anonymous.status).toBe(401);
     const owner = await client();
 
-    const response4 = await owner.call('/persistence/tenants', 'POST', {}, { origin: 'https://wrong.example.test' });
+    const response4 = await owner.call('/example/vault/tenants', 'POST', {}, { origin: 'https://wrong.example.test' });
 
     expect(response4.status).toBe(403);
-    const response5 = await owner.call('/persistence/tenants', 'POST', {}, { 'x-csrf-token': 'invalid' });
+    const response5 = await owner.call('/example/vault/tenants', 'POST', {}, { 'x-csrf-token': 'invalid' });
 
     expect(response5.status).toBe(403);
-    const invalid = await owner.call('/persistence/tenants', 'POST', { plaintext: 'synthetic-private-marker' });
+    const invalid = await owner.call('/example/vault/tenants', 'POST', { plaintext: 'synthetic-private-marker' });
 
     expect(invalid.status).toBe(400);
     expect(JSON.stringify(invalid.body)).not.toContain('synthetic-private-marker');
@@ -189,7 +189,7 @@ describe('real PostgreSQL and HTTP persistence boundaries', () => {
       expect(JSON.stringify(response.body)).not.toContain(f.owner.actor.principal.id);
     }
 
-    const other = await f.owner.call('/persistence/tenants', 'POST', {});
+    const other = await f.owner.call('/example/vault/tenants', 'POST', {});
     const wrong = { ...f.target, tenantId: other.body.tenantId };
 
     const response17 = await f.owner.call(collection(wrong));
@@ -434,7 +434,7 @@ describe('real PostgreSQL and HTTP persistence boundaries', () => {
 
   it('enforces composite tenant foreign keys and survives reconnect without in-memory authorization state', async () => {
     const f = await fixture();
-    const another = await f.owner.call('/persistence/tenants', 'POST', {});
+    const another = await f.owner.call('/example/vault/tenants', 'POST', {});
 
     await expect(
       resource.db.insert(persistenceSchema.grants).values({

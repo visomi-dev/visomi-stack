@@ -14,6 +14,8 @@ import session from 'express-session';
 import { Passport } from 'passport';
 import type { Pool } from 'pg';
 
+import { createVaultWatch } from '../db/vault-watch';
+
 import { DevicesController } from './devices/controller';
 import { Devices } from './devices/service';
 import { EmailController } from './email/controller';
@@ -163,11 +165,13 @@ export function createAuthentication(options: {
       passkeys: injector.get<PasskeysController>(PasskeysController),
     },
     database,
+    realtimePublisher: options.realtimePublisher,
     config,
     middleware,
     realtime: {
       origin: config.origin,
       readSession,
+      watchVault: createVaultWatch(database),
       async readUser(serialized: unknown) {
         const principal = await readPrincipal(database, serialized);
 

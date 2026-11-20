@@ -1,4 +1,4 @@
-import { createApiDocument, defineRoute } from '@visomi-stack/web-backend-shared';
+import { createApiDocument, defineRoute, type RouteContract } from '@visomi-stack/web-backend-shared';
 import { z } from 'zod';
 
 import { devicesContracts } from './auth/devices/contract';
@@ -10,8 +10,6 @@ import { passwordContracts } from './auth/password/contract';
 import { recoveryContracts } from './auth/recovery/contract';
 import { sessionsContracts } from './auth/sessions/contract';
 import { totpContracts } from './auth/totp/contract';
-import { persistenceContracts } from './db/contracts';
-import { vaultContracts } from './db/vault-contracts';
 
 export const homeContract = defineRoute({
   method: 'get',
@@ -64,22 +62,12 @@ export const authContracts = [
   ...Object.values(passkeysContracts),
 ].map((contract) => ({ ...contract, path: `/auth${contract.path}` }));
 
-export function createOpenApiDocument(basePath = '/', persistence = false) {
+export function createOpenApiDocument(basePath = '/', examples: readonly RouteContract[] = []) {
   return createApiDocument({
     title: 'Visomi Stack API',
     version: '0.1.0',
     basePath,
-    contracts: [
-      homeContract,
-      documentationContract,
-      ...authContracts,
-      ...(persistence
-        ? [...Object.values(persistenceContracts), ...Object.values(vaultContracts)].map((contract) => ({
-            ...contract,
-            path: `/persistence${contract.path}`,
-          }))
-        : []),
-    ],
+    contracts: [homeContract, documentationContract, ...authContracts, ...examples],
     components: {
       securitySchemes: {
         sessionCookie: {

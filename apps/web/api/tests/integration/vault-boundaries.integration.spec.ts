@@ -71,7 +71,7 @@ describe('ciphertext API authorization and bounded failure states', () => {
     const uninitialized = await f.owner.call(`${vaultBase(f.target)}/devices`);
 
     expect(uninitialized.status).toBe(409);
-    const metadata = await f.owner.call('/persistence/policy');
+    const metadata = await f.owner.call('/example/vault/policy');
 
     expect(metadata.status).toBe(200);
     expect(metadata.body).toMatchObject({ policy: syntheticHybridPolicy });

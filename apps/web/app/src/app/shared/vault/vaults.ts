@@ -76,7 +76,7 @@ export class Vaults {
       let rpId = this.document.defaultView!.location.hostname;
 
       if (binding.method === 'passkey-prf') {
-        const raw = await this.api.request('/policy', undefined, signal);
+        const raw = await this.api.vault('/policy', undefined, signal);
 
         current();
         const profile = z.object({ origin: z.url(), rpId: z.string().min(1).max(253) }).parse(raw);

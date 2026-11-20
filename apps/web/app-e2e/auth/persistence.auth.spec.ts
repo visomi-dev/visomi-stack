@@ -27,7 +27,7 @@ test('hybrid persistence keeps private content out of transport and reopens lock
   const transport: string[] = [];
 
   page.on('request', (request) => {
-    if (request.url().includes('/api/persistence/')) {
+    if (request.url().includes('/api/example/vault/')) {
       transport.push(request.postData() ?? '');
     }
   });
@@ -306,7 +306,7 @@ test('SPA resource navigation and browser history isolate views and retain only 
 });
 
 function persistenceRequestBody(request: Request): string {
-  return request.url().includes('/api/persistence/') ? (request.postData() ?? '') : '';
+  return request.url().includes('/api/example/vault/') ? (request.postData() ?? '') : '';
 }
 
 test('pairs a test private resource in Security across a PIN device and a PRF device', async ({
@@ -401,9 +401,15 @@ test('pairs a test private resource in Security across a PIN device and a PRF de
 
     await expect(recipient.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
-    await recipient.route('**/api/persistence/policy', (route) => route.fulfill({ status: 404 }));
+    await recipient.goto(workspace);
 
-    const absent = recipient.waitForResponse('**/api/persistence/policy');
+    await expect(recipient.locator('pre')).toHaveCount(0);
+
+    await expect(recipient.getByText(first, { exact: true })).toHaveCount(0);
+
+    await recipient.route('**/api/example/vault/policy', (route) => route.fulfill({ status: 404 }));
+
+    const absent = recipient.waitForResponse('**/api/example/vault/policy');
 
     await recipient.goto(pairingPage);
 
@@ -413,7 +419,7 @@ test('pairs a test private resource in Security across a PIN device and a PRF de
 
     await expect(recipient.getByRole('heading', { name: 'Vault devices', exact: true })).toHaveCount(0);
 
-    await recipient.unroute('**/api/persistence/policy');
+    await recipient.unroute('**/api/example/vault/policy');
 
     await recipient.goto(pairingPage.replace('/app/en/', '/app/es/'));
 

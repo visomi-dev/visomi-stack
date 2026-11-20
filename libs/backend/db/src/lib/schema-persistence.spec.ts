@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { commands, grants, memberships, records, scopes, tenants } from './schema-persistence';
 import {
+  backupStaging,
   keyChallenges,
   keyDevices,
   keyScopes,
@@ -68,6 +69,17 @@ describe('persistence database security boundaries', () => {
     const registry = getTableConfig(keyDevices).foreignKeys.find((key) => key.reference().foreignTable === keyScopes);
 
     expect(registry.reference().columns.map((column) => column.name)).toEqual(['tenant_id', 'scope_id', 'domain']);
+  });
+
+  it('keeps abandoned backup reservations scoped until explicit cleanup', () => {
+    const staging = getTableConfig(backupStaging);
+    const [scope] = staging.foreignKeys;
+
+    expect(staging.columns.filter((column) => column.primary).map((column) => column.name)).toEqual(['scope_id']);
+    expect(staging.checks.map((check) => check.name)).toContain('vault_backup_staging_bytes');
+    expect(scope.reference().foreignTable).toBe(scopes);
+    expect(scope.reference().columns.map((column) => column.name)).toEqual(['tenant_id', 'scope_id']);
+    expect(scope.onDelete).not.toBe('cascade');
   });
 
   it('declares ancestry, revision and role checks with scoped pagination indexes', () => {
