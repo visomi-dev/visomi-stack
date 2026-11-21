@@ -41,3 +41,85 @@ it.each([
 
   await expect(new PrfUnlock(environment).secret(binding)).rejects.toMatchObject({ code });
 });
+
+it.each([true, false])(
+  'keeps resource and device PRF outputs bound to their original salts (dual output %s)',
+  async (dual) => {
+    const { deviceCustodyContext } = await import('./device-custody');
+    const { encodeBytes } = await import('../crypto/cipher');
+    const rpId = 'synthetic.example.test';
+    const encoder = new TextEncoder();
+    const salts: string[][] = [];
+    const get = vi.fn(async (request: CredentialRequestOptions) => {
+      const options = request.publicKey!;
+      const evaluation = options.extensions!.prf!.eval!;
+      const inputs = [evaluation.first, evaluation.second].filter((value) => value !== undefined);
+
+      salts.push(inputs.map((input) => encodeBytes(new Uint8Array(input as ArrayBuffer))));
+      const auth = new Uint8Array(37);
+      const hash = await crypto.subtle.digest('SHA-256', encoder.encode(rpId));
+
+      auth.set(new Uint8Array(hash));
+      auth[32] = 5;
+
+      return {
+        id: 'AQ',
+        rawId: Uint8Array.of(1).buffer,
+        type: 'public-key',
+        response: {
+          authenticatorData: auth.buffer,
+          clientDataJSON: encoder.encode(
+            JSON.stringify({
+              type: 'webauthn.get',
+              challenge: encodeBytes(new Uint8Array(options.challenge as ArrayBuffer)),
+              origin: binding.origin,
+            }),
+          ),
+        },
+        getClientExtensionResults: () => ({
+          prf: {
+            results: {
+              first: new Uint8Array(32).fill(salts.length === 1 ? 1 : 2),
+              ...(dual && { second: new Uint8Array(32).fill(2) }),
+            },
+          },
+        }),
+      };
+    });
+    const provider = new PrfUnlock({
+      origin: binding.origin,
+      rpId,
+      credentials: { get } as unknown as CredentialsContainer,
+      crypto,
+    });
+    const cancel = new AbortController();
+    const method = await provider.forDevice(binding, cancel.signal);
+    const device = deviceCustodyContext(binding);
+
+    await expect(method.secret({ ...binding, origin: 'https://other.example.test' })).rejects.toMatchObject({
+      code: 'stale-operation',
+    });
+
+    await expect(method.secret(binding)).resolves.toEqual(new Uint8Array(32).fill(1));
+
+    await expect(method.secret(binding)).rejects.toMatchObject({ code: 'stale-operation' });
+
+    await expect(method.secret(device)).resolves.toEqual(new Uint8Array(32).fill(2));
+
+    expect(salts[0][0]).not.toBe(salts[0][1]);
+    expect(get).toHaveBeenCalledTimes(dual ? 1 : 2);
+
+    if (!dual) {
+      expect(salts[1]).toEqual([salts[0][1]]);
+    }
+
+    method.cancel();
+    const interrupted = await provider.forDevice(binding, cancel.signal);
+
+    cancel.abort();
+
+    await expect(interrupted.secret(binding)).rejects.toMatchObject({ code: 'stale-operation' });
+
+    interrupted.cancel();
+  },
+);

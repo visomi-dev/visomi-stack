@@ -1359,12 +1359,12 @@
         <target>Dispositivos de la bóveda</target>
       </trans-unit>
       <trans-unit id="vaultDevicesDescription" datatype="html">
-        <source> Pair devices for this synthetic private resource. Keep this page open on both signed-in devices until pairing finishes. </source>
-        <target>Vincula dispositivos para este recurso privado de prueba. Mantén esta página abierta en ambos dispositivos con la sesión iniciada hasta terminar.</target>
+        <source> Open this page on both devices and sign in to the same account. Approve the new device from the one where you can already open the note. </source>
+        <target>Abre esta página en ambos dispositivos e inicia sesión con la misma cuenta. Aprueba el nuevo dispositivo desde el que ya puede abrir la nota.</target>
       </trans-unit>
       <trans-unit id="vaultDevicesOpen" datatype="html">
-        <source> Open test private resource </source>
-        <target>Abrir el recurso privado de prueba</target>
+        <source> Open vault note </source>
+        <target>Abrir nota</target>
       </trans-unit>
       <trans-unit id="vaultDevicesApproverFingerprint" datatype="html">
         <source>Approving device fingerprint</source>
@@ -1387,8 +1387,8 @@
         <target>Aprobar este dispositivo</target>
       </trans-unit>
       <trans-unit id="vaultDevicesUnlockFirst" datatype="html">
-        <source> Unlock the test private resource on this device before approving another device. </source>
-        <target>Abre y desbloquea el recurso privado de prueba en este dispositivo para aprobar otro.</target>
+        <source> Unlock the note on this device before approving another one. </source>
+        <target>Desbloquea la nota en este dispositivo para poder aprobar el otro.</target>
       </trans-unit>
       <trans-unit id="vaultDevicesFinishInstructions" datatype="html">
         <source> Share the request and fingerprint with the approving device. Then enter the fingerprint you see directly on that device. </source>
@@ -1427,12 +1427,12 @@
         <target>Ejemplo en la nube</target>
       </trans-unit>
       <trans-unit id="cloudExampleDescription" datatype="html">
-        <source> Use test data to try a service-readable workspace. Notes are stored in PostgreSQL. Database row security and the app’s permission checks protect access. The server can read the notes, so this is regular cloud storage. </source>
-        <target>Usa notas de prueba para ver cómo funciona un espacio de trabajo en la nube. El servidor guarda las notas en PostgreSQL y puede leer su contenido. La aplicación verifica tus permisos y la base de datos controla el acceso a cada nota.</target>
+        <source> Write notes and choose which ones to share. Readers see shared changes automatically. </source>
+        <target>Escribe notas y elige cuáles compartir. Las personas con acceso ven los cambios automáticamente.</target>
       </trans-unit>
       <trans-unit id="cloudExamplePermissions" datatype="html">
-        <source> The workspace owner writes notes and chooses which to share. A test account with read access can see only shared notes. Choose Vault for data that requires a separate device unlock. </source>
-        <target>Si creas el espacio de trabajo, puedes escribir notas y decidir cuáles compartir. Quienes tengan permiso de lectura solo verán las notas que compartas. En la bóveda, los datos se desbloquean por separado en tu dispositivo.</target>
+        <source> The server can read Cloud notes. Only the owner and people with permission can open them in the app. </source>
+        <target>El servidor puede leer las notas. En la aplicación, solo pueden abrirlas quien creó el espacio y las personas con permiso para verlas.</target>
       </trans-unit>
       <trans-unit id="cloudExampleChecking" datatype="html">
         <source>Checking Cloud availability…</source>
@@ -1447,8 +1447,8 @@
         <target>Este enlace al espacio de trabajo de prueba no es válido.</target>
       </trans-unit>
       <trans-unit id="cloudExampleEmpty" datatype="html">
-        <source>There are no visible notes in this workspace.</source>
-        <target>No hay notas que puedas ver en este espacio de trabajo.</target>
+        <source>There are no notes to show yet.</source>
+        <target>Aún no hay notas para mostrar.</target>
       </trans-unit>
       <trans-unit id="cloudExampleScopeAudience" datatype="html">
         <source>Shared with permitted readers</source>
@@ -1467,20 +1467,20 @@
         <target>Eliminar nota</target>
       </trans-unit>
       <trans-unit id="cloudExampleEditing" datatype="html">
-        <source>Edit test note</source>
-        <target>Editar nota de prueba</target>
+        <source>Edit note</source>
+        <target>Editar nota</target>
       </trans-unit>
       <trans-unit id="cloudExampleNew" datatype="html">
-        <source>New test note</source>
-        <target>Nueva nota de prueba</target>
+        <source>New note</source>
+        <target>Nueva nota</target>
       </trans-unit>
       <trans-unit id="cloudExampleNoteTitle" datatype="html">
         <source>Note title</source>
         <target>Título de la nota</target>
       </trans-unit>
       <trans-unit id="cloudExampleNoteBody" datatype="html">
-        <source>Synthetic note text</source>
-        <target>Contenido de la nota de prueba</target>
+        <source>Note text</source>
+        <target>Contenido</target>
       </trans-unit>
       <trans-unit id="cloudExampleAudience" datatype="html">
         <source>Who can read this note?</source>
@@ -1519,8 +1519,8 @@
         <target>Esta cuenta no tiene acceso al espacio de trabajo del respaldo.</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleExplanation" datatype="html">
-        <source> Your browser encrypts the test note before saving it. When you back it up, only the encrypted copy goes to the server. Link another device and unlock the vault there to restore the same note. </source>
-        <target>El navegador cifra la nota de prueba antes de guardarla. Al respaldarla, solo envía la copia cifrada al servidor. Vincula otro dispositivo y desbloquea la bóveda para recuperar la misma nota.</target>
+        <source> Write a note here and it backs up automatically. Your browser encrypts it before it leaves this device. You can open the same note on a linked device. </source>
+        <target>Escribe una nota y la bóveda la respaldará automáticamente. Tu navegador la cifra antes de enviarla. Puedes abrir la misma nota en otro dispositivo vinculado.</target>
       </trans-unit>
       <trans-unit id="vaultSyncInProgress" datatype="html">
         <source>Syncing Vault…</source>
@@ -1543,20 +1543,8 @@
         <target>Nota de la bóveda</target>
       </trans-unit>
       <trans-unit id="vaultBackedSampleNeedsPairing" datatype="html">
-        <source> Sign-in gives you access to the workspace. To restore the note on this browser, open Vault devices and get approval from a device that can already unlock it. </source>
-        <target>Vincula este dispositivo para recuperar la nota. Abre Dispositivos de la bóveda y pide la aprobación de un dispositivo que ya pueda desbloquearla.</target>
-      </trans-unit>
-      <trans-unit id="vaultBackedSampleUpload" datatype="html">
-        <source>Upload encrypted note</source>
-        <target>Respaldar nota cifrada</target>
-      </trans-unit>
-      <trans-unit id="vaultBackedSampleRestore" datatype="html">
-        <source>Download and restore note</source>
-        <target>Restaurar nota en este dispositivo</target>
-      </trans-unit>
-      <trans-unit id="vaultBackedSampleSynced" datatype="html">
-        <source> The encrypted note is backed up and saved on this browser. </source>
-        <target>La nota tiene un respaldo cifrado y está guardada en este navegador.</target>
+        <source> To restore the note on this browser, link it to your vault. Approve the request on a device where you can already open the note. </source>
+        <target>Para abrir la nota en este navegador, vincúlalo a tu bóveda. Aprueba la solicitud desde un dispositivo donde ya puedas leerla.</target>
       </trans-unit>
       <trans-unit id="vaultBackupStorageDisabled" datatype="html">
         <source>Vault backups are unavailable right now. Try again later.</source>
@@ -1697,6 +1685,54 @@
       <trans-unit id="cloudShareMailUnavailable" datatype="html">
         <source>Email is unavailable right now. You can share a link.</source>
         <target>Por ahora no se puede enviar correo. Puedes compartir un enlace.</target>
+      </trans-unit>
+      <trans-unit id="vaultAutoHelp" datatype="html">
+        <source>Changes are saved automatically. The vault locks after five minutes of inactivity.</source>
+        <target>Los cambios se guardan automáticamente. La bóveda se bloquea después de cinco minutos sin actividad.</target>
+      </trans-unit>
+      <trans-unit id="vaultSetupGuidance" datatype="html">
+        <source> Keep access to a linked device. If you lose access to every device, resetting your password won’t recover your note. </source>
+        <target>Conserva al menos un dispositivo vinculado. Si pierdes el acceso a todos, cambiar tu contraseña no te permitirá recuperar la nota.</target>
+      </trans-unit>
+      <trans-unit id="vaultSetupConfirm" datatype="html">
+        <source>Your browser will ask you to create a vault passkey and then use it to unlock this device.</source>
+        <target>Tu navegador te pedirá crear una clave de acceso para la bóveda y luego usarla para desbloquearla en este dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultDraftPending" datatype="html">
+        <source>Saving on this device…</source>
+        <target>Guardando en este dispositivo…</target>
+      </trans-unit>
+      <trans-unit id="vaultBackupPending" datatype="html">
+        <source>Saved on this device. Waiting for backup.</source>
+        <target>El cambio ya está guardado en este dispositivo. El respaldo está pendiente.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairDesktop" datatype="html">
+        <source>If your passkey is on your phone, choose that option in the browser and scan the QR code. Keep Bluetooth on for both devices. If passkey unlock is unavailable, you can set a PIN on this device.</source>
+        <target>Si tienes la clave de acceso en tu teléfono, elige esa opción en el navegador y escanea el código QR. Activa Bluetooth en ambos dispositivos. Si tu equipo no admite este tipo de desbloqueo, puedes configurar un PIN local.</target>
+      </trans-unit>
+      <trans-unit id="vaultLockNow" datatype="html">
+        <source>Lock vault now</source>
+        <target>Bloquear bóveda ahora</target>
+      </trans-unit>
+      <trans-unit id="vaultYourNote" datatype="html">
+        <source>Your note</source>
+        <target>Tu nota</target>
+      </trans-unit>
+      <trans-unit id="vaultNoteLocked" datatype="html">
+        <source>Unlock the vault to open your note.</source>
+        <target>Desbloquea la bóveda para abrir tu nota.</target>
+      </trans-unit>
+      <trans-unit id="vaultLocalSaveFailed" datatype="html">
+        <source>Your changes haven’t been saved on this device yet. Keep this page open and try again.</source>
+        <target>Tus cambios todavía no se han guardado en este dispositivo. Mantén abierta esta página y vuelve a intentarlo.</target>
+      </trans-unit>
+      <trans-unit id="vaultLocalRetry" datatype="html">
+        <source>Try saving again</source>
+        <target>Reintentar guardado</target>
+      </trans-unit>
+      <trans-unit id="vaultLinkDevice" datatype="html">
+        <source>Link a device</source>
+        <target>Vincular un dispositivo</target>
       </trans-unit>
     </body>
   </file>

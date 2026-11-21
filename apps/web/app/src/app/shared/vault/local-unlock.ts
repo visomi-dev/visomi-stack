@@ -1,9 +1,71 @@
-import { replicaId } from '@visomi-stack/web-frontend-db';
-import { VaultError, type KeyDomain } from '@visomi-stack/shared-db';
+import { PrfUnlock, replicaId } from '@visomi-stack/web-frontend-db';
+import { VaultError, type WrappingContext, type KeyDomain } from '@visomi-stack/shared-db';
 
 import type { ClientDatabase } from '../db/database';
 
 import type { VaultSession } from './vault-session';
+
+export function browserPrfUnlock(view: Window, rpId: string): PrfUnlock {
+  const { location, navigator, crypto } = view;
+
+  return new PrfUnlock({ origin: location.origin, rpId, credentials: navigator.credentials, crypto });
+}
+
+export function devicePrfUnlock(view: Window | null, binding: WrappingContext, rpId: string, signal: AbortSignal) {
+  if (!view?.isSecureContext || view.location.origin !== binding.origin) {
+    throw new VaultError('origin-mismatch');
+  }
+
+  return browserPrfUnlock(view, rpId).forDevice(binding, signal);
+}
+
+/** Open the note and its signing identity under the same explicit gesture. */
+export async function openVaultDevice(
+  vault: VaultSession,
+  binding: WrappingContext,
+  rpId: string,
+  options: {
+    initialize?: boolean;
+    provision?: boolean;
+    pin?: Uint8Array;
+    combinePrf?: boolean;
+    signal: AbortSignal;
+    current: () => void;
+  },
+) {
+  const { pin, signal, current } = options;
+  const initialize = options.initialize ?? false;
+  const provision = options.provision ?? false;
+
+  if (!options.combinePrf || pin || vault.isOpen(binding)) {
+    await vault.connect(binding, rpId, initialize, pin);
+
+    current();
+
+    return vault.device(binding, rpId, provision, pin);
+  }
+
+  const unlock = await vault.deviceUnlock(binding, rpId, signal);
+
+  try {
+    current();
+
+    await vault.connect(binding, rpId, initialize, undefined, unlock);
+
+    current();
+
+    const custody = await vault.device(binding, rpId, provision, undefined, unlock);
+
+    return custody;
+  } catch (error) {
+    current();
+    vault.lockContext(binding);
+
+    throw error;
+  } finally {
+    unlock.cancel();
+  }
+}
 
 /** Transfer connection ownership only after local custody and persisted generation checks succeed. */
 export async function openLocalVault(options: {
@@ -36,11 +98,7 @@ export async function openLocalVault(options: {
   let storage: Awaited<ReturnType<ClientDatabase['replica']>> | undefined;
 
   try {
-    await vault.connect(binding, rpId, false, pin);
-
-    current();
-
-    const identity = await vault.device(binding, rpId, false, pin);
+    const identity = await openVaultDevice(vault, binding, rpId, { pin, combinePrf: allowPasskey, signal, current });
 
     current();
 

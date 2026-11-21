@@ -156,7 +156,7 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await context.setOffline(true);
 
-  await page.getByRole('button', { name: 'Lock private resources', exact: true }).click();
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
 
   await expect(page.locator('pre')).toHaveCount(0);
 
@@ -254,7 +254,7 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await expect(page.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Lock private resources', exact: true }).click();
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
 
   await expect(page.getByLabel('Local unlock PIN', { exact: true })).toBeVisible();
 

@@ -1,4 +1,27 @@
-import { expect, signup, test } from './support/fixtures';
+import type { Page } from '@playwright/test';
+import { readMailCode } from '@visomi-stack/dev-testing';
+
+import { expect, signup, passwordStart, test } from './support/fixtures';
+
+async function virtualPasskey(page: Page) {
+  const cdp = await page.context().newCDPSession(page);
+
+  await cdp.send('WebAuthn.enable');
+
+  await cdp.send('WebAuthn.addVirtualAuthenticator', {
+    options: {
+      protocol: 'ctap2',
+      transport: 'internal',
+      hasResidentKey: true,
+      hasUserVerification: true,
+      isUserVerified: true,
+      automaticPresenceSimulation: true,
+      hasPrf: true,
+    },
+  });
+
+  return cdp;
+}
 
 test('opens the Vault navigation item without offering a separate vault when the API is unavailable', async ({
   page,
@@ -95,13 +118,11 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await page.getByRole('button', { name: 'Set up with PIN', exact: true }).click();
 
-  await page.getByLabel('Private text', { exact: true }).fill(note);
+  await page.getByLabel('Your note', { exact: true }).fill(note);
 
-  await page.getByRole('button', { name: 'Save encrypted change', exact: true }).click();
+  await expect(page.getByRole('button', { name: /save encrypted|upload encrypted/i })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Upload encrypted note', exact: true }).click();
-
-  await expect(page.getByRole('status').filter({ hasText: 'The encrypted note is backed up' })).toBeVisible();
+  await expect(page.locator('app-vault-sync-indicator').getByRole('status')).toHaveText('Vault synced');
 
   await page.reload();
 
@@ -123,7 +144,13 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await unlock.click();
 
-  await expect(page.locator('pre')).toHaveText(note);
+  await expect(page.getByLabel('Your note', { exact: true })).toHaveValue(note);
+
+  await page.goto('/app/en/example/cloud');
+
+  await expect(page.getByRole('button', { name: 'Create a test workspace' })).toBeVisible();
+
+  await expect(page.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
 });
 
 test('a canceled passkey setup stays retryable without offering PIN', async ({ page }) => {
@@ -170,22 +197,11 @@ test.describe('Vault passkey setup in Chromium', () => {
   // eslint-disable-next-line playwright/no-skipped-test
   test.skip(({ browserName }) => browserName !== 'chromium', 'Requires a Chromium virtual authenticator');
 
-  test('sets up the synchronized Vault with verified PRF and no PIN', async ({ context, page }) => {
-    const cdp = await context.newCDPSession(page);
+  test('sets up the synchronized Vault with verified PRF and no PIN', async ({ page }) => {
+    const cdp = await virtualPasskey(page);
+    let assertions = 0;
 
-    await cdp.send('WebAuthn.enable');
-
-    await cdp.send('WebAuthn.addVirtualAuthenticator', {
-      options: {
-        protocol: 'ctap2',
-        transport: 'internal',
-        hasResidentKey: true,
-        hasUserVerification: true,
-        isUserVerified: true,
-        automaticPresenceSimulation: true,
-        hasPrf: true,
-      },
-    });
+    cdp.on('WebAuthn.credentialAsserted', () => assertions++);
 
     await signup(page);
 
@@ -195,8 +211,104 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await page.getByRole('button', { name: 'Set up with a passkey', exact: true }).click();
 
-    await expect(page.getByLabel('Private text', { exact: true })).toBeVisible();
+    await expect(page.getByLabel('Your note', { exact: true })).toBeVisible();
+
+    await expect(page.getByLabel('Your note', { exact: true })).toBeEditable();
+
+    expect(assertions).toBe(1);
 
     await expect(page.locator('app-pin-input')).toHaveCount(0);
+  });
+
+  test('opens the backed note on an approved desktop with its own PIN and no passkey', async ({
+    page,
+    browser,
+  }, info) => {
+    await virtualPasskey(page);
+
+    const email = await signup(page);
+
+    await page.goto('/app/en/example/vault');
+
+    await page.getByRole('button', { name: 'Set up my vault' }).click();
+
+    await page.getByRole('button', { name: 'Set up with a passkey' }).click();
+
+    const note = 'Synthetic note from the first linked device';
+    const [publication] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith('/sync/push')),
+      page.getByLabel('Your note', { exact: true }).fill(note),
+    ]);
+
+    expect(publication.ok()).toBe(true);
+
+    await expect(page.locator('app-vault-sync-indicator').getByRole('status')).toHaveText('Vault synced');
+
+    const workspace = page.url();
+
+    await page.getByRole('link', { name: 'Link a device' }).click();
+
+    const desktop = await browser.newContext({ baseURL: info.project.use.baseURL });
+
+    try {
+      await desktop.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
+
+      const peer = await desktop.newPage();
+
+      await passwordStart(peer, email);
+
+      const code = await readMailCode(email);
+
+      await peer.getByLabel('Verification code', { exact: true }).fill(code);
+
+      await expect(peer.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
+
+      await peer.goto(workspace);
+
+      await expect(peer.getByLabel('Your note', { exact: true })).toHaveCount(0);
+
+      await peer.getByRole('link', { name: 'Link a device' }).click();
+
+      const pin = peer.getByLabel('Local unlock PIN', { exact: true });
+
+      await pin.fill('208146');
+
+      await peer.getByLabel('Confirm your new PIN').fill('208146');
+
+      await peer.getByRole('button', { name: 'Request pairing with PIN' }).click();
+
+      const proof = await peer.getByLabel('Pairing request', { exact: true }).inputValue();
+      const fingerprint = await peer.locator('[data-vault-recipient]').innerText();
+
+      await page.getByLabel('Pairing request', { exact: true }).fill(proof);
+
+      await page.getByLabel('New device fingerprint').fill(fingerprint);
+
+      await page.getByRole('button', { name: 'Approve this device' }).click();
+
+      await expect(page.getByRole('status').filter({ hasText: 'Device approved.' })).toBeVisible();
+
+      const approver = await page.locator('[data-vault-approver]').innerText();
+
+      await peer.getByLabel('Approving device fingerprint', { exact: true }).fill(approver);
+
+      await pin.fill('208146');
+
+      await peer.getByRole('button', { name: 'Finish pairing' }).click();
+
+      await peer.getByRole('link', { name: 'Open vault note' }).click();
+
+      await expect(peer.getByLabel('Your note', { exact: true })).toHaveValue(note);
+
+      await peer.reload();
+
+      await pin.fill('208146');
+
+      await peer.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
+
+      await expect(peer.getByLabel('Your note', { exact: true })).toHaveValue(note);
+    } finally {
+      await desktop.close();
+    }
   });
 });

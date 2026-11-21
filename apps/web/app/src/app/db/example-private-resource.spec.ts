@@ -204,7 +204,7 @@ it('authenticates and displays an authorized historical generation while retaini
 
   await f.resource.unlock(f.target, 'synthetic.example.test', false);
 
-  expect(f.vault.connect).toHaveBeenCalledWith(f.binding, 'synthetic.example.test', false);
+  expect(f.vault.connect).toHaveBeenCalledWith(f.binding, 'synthetic.example.test', false, undefined);
   expect(f.vault.readEnvelope).toHaveBeenCalledWith(f.envelope, false);
   expect(f.vault.readEnvelope).toHaveBeenCalledWith(f.envelope);
   expect(f.commit).toHaveBeenCalledWith(

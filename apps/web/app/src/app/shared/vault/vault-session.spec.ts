@@ -64,8 +64,13 @@ function fixture(browser = true) {
       {
         provide: DOCUMENT,
         useValue: {
+          addEventListener: document.addEventListener.bind(document),
           defaultView: browser
             ? {
+                setTimeout: window.setTimeout.bind(window),
+                clearTimeout: window.clearTimeout.bind(window),
+                addEventListener: window.addEventListener.bind(window),
+                removeEventListener: window.removeEventListener.bind(window),
                 location: { origin: binding.origin },
                 indexedDB: {},
                 isSecureContext: true,
