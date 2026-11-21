@@ -27,7 +27,6 @@ import { VaultUnlock } from '../../shared/vault/vault-unlock/vault-unlock';
 import { VaultSyncIndicator } from '../../shared/vault/vault-sync-indicator/vault-sync-indicator';
 import { Vaults } from '../../shared/vault/vaults';
 import { DatabaseHttp } from '../../shared/db/http';
-import { Navigation } from '../../shared/navigation';
 import { LanguageSwitcher } from '../../i18n/language-switcher/language-switcher';
 import { BrowserPrivacy } from '../../observability/browser-privacy/browser-privacy';
 import { ConsentNotice } from '../../observability/consent-notice/consent-notice';
@@ -71,7 +70,6 @@ export class AuthenticatedLayout {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
-  private readonly pageNavigation = inject(Navigation);
   private readonly examples = inject(ExampleAvailability);
 
   private readonly mobileMenu = viewChild.required(Dialog);
@@ -126,13 +124,14 @@ export class AuthenticatedLayout {
   readonly navigation = inject(AuthNavigation);
   readonly action = inject(Action);
 
-  // The example route owns its contextual prompt; shared vault code has no route exclusions.
   readonly vaultMethod = computed(() => {
-    this.pageNavigation.context();
-    const url = this.router.url;
-    const ownsPrompt = url.startsWith('/persistence') || (this.examples.enabled() && url.startsWith('/example/vault?'));
+    const domain = this.router.lastSuccessfulNavigation()?.finalUrl?.root.children['primary']?.segments[0]?.path;
 
-    return this.vaults.show() && !ownsPrompt ? this.vaults.binding()?.method : undefined;
+    if (domain === 'example' || domain === 'persistence') {
+      return undefined;
+    }
+
+    return this.vaults.show() ? this.vaults.binding()?.method : undefined;
   });
 
   logout(): void {

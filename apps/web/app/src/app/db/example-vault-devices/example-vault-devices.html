@@ -3,8 +3,8 @@
     <h2 appUI uiSize="sm" id="vault-devices-title" i18n="@@vaultDevicesTitle">Vault devices</h2>
 
     <p appUI tone="muted" i18n="@@vaultDevicesDescription">
-      Pair devices for this synthetic private resource. Keep this page open on both signed-in devices until pairing
-      finishes.
+      Open this page on both devices and sign in to the same account. Approve the new device from the one where you can
+      already open the note.
     </p>
   </header>
 
@@ -15,7 +15,7 @@
   @if (pairing.ready()) {
     @if (pairing.paired()) {
       <a appUI [routerLink]="resourceLink()" [queryParams]="resourceParams()" i18n="@@vaultDevicesOpen">
-        Open test private resource
+        Open vault note
       </a>
     } @else if (pairing.existing()) {
       @if (pairing.approverFingerprint()) {
@@ -56,12 +56,10 @@
           </button>
         </form>
       } @else {
-        <p appUI i18n="@@vaultDevicesUnlockFirst">
-          Unlock the test private resource on this device before approving another device.
-        </p>
+        <p appUI i18n="@@vaultDevicesUnlockFirst">Unlock the note on this device before approving another one.</p>
 
         <a appUI [routerLink]="resourceLink()" [queryParams]="resourceParams()" i18n="@@vaultDevicesOpen">
-          Open test private resource
+          Open vault note
         </a>
       }
     } @else if (pairing.pending(); as request) {
@@ -141,6 +139,11 @@
         </button>
       </form>
     } @else {
+      <p appUI tone="muted" i18n="@@vaultPairDesktop">
+        If your passkey is on your phone, choose that option in the browser and scan the QR code. Keep Bluetooth on for
+        both devices. If passkey unlock is unavailable, you can set a PIN on this device.
+      </p>
+
       <button
         appUI
         type="button"

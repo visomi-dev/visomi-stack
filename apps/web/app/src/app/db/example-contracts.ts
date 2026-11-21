@@ -13,6 +13,27 @@ import {
 export const exampleTargetSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid(), objectId: z.uuid() });
 export type ExampleTarget = z.infer<typeof exampleTargetSchema>;
 
+export const scopeSchema = exampleTargetSchema.omit({ objectId: true });
+export const cloudSchema = z.object({
+  items: z.array(
+    z.object({ id: z.uuid(), title: z.string(), body: z.string(), revision: z.number().int().positive() }),
+  ),
+});
+
+export function readExampleTarget(params: Pick<URLSearchParams, 'get' | 'has'>): ExampleTarget | null {
+  return params.has('tenantId')
+    ? exampleTargetSchema.parse({
+        tenantId: params.get('tenantId'),
+        scopeId: params.get('scopeId'),
+        objectId: params.get('objectId'),
+      })
+    : null;
+}
+
+export function exampleRecordsPath(target: ExampleTarget): string {
+  return `/tenants/${target.tenantId}/scopes/${target.scopeId}/domains/operations/records`;
+}
+
 export function examplePrivatePath(target: ExampleTarget): string {
   return `/tenants/${target.tenantId}/scopes/${target.scopeId}/domains/private-resources`;
 }

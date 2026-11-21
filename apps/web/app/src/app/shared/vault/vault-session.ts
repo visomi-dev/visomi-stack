@@ -5,7 +5,6 @@ import {
   DeviceCustody,
   isVaultPin,
   PinUnlock,
-  PrfUnlock,
   WebCryptoCipher,
   WebCryptoDevices,
 } from '@visomi-stack/web-frontend-db';
@@ -17,12 +16,18 @@ import {
   type DataEnvelope,
   type DeliveryBinding,
   type VaultState,
+  type VaultUnlock,
+  type WrappedKey,
   type WrappingContext,
   type KeyDomain,
 } from '@visomi-stack/shared-db';
 
 import { Session } from '../../auth/session/session';
 import { ClientDatabase } from '../db/database';
+
+import { custodyId, latestBindings } from './vault-bindings';
+import { browserPrfUnlock, devicePrfUnlock } from './local-unlock';
+import { watchVaultActivity } from './vault-auto-lock';
 
 /** Browser-only key custody bound to the current cloud account, never an automatic login side effect. */
 @Service()
@@ -39,12 +44,22 @@ export class VaultSession {
   private readonly catalog = signal<WrappingContext[]>([]);
 
   private readonly scopes = new Map<string, BrowserVault>();
-  private readonly bindings = new Map<string, WrappingContext>();
   private readonly devices = new Map<string, DeviceCustody>();
+  private readonly openCustody = computed(() => {
+    this.revision();
+
+    return (
+      [...this.scopes.values()].some((vault) => vault.state === 'ready') ||
+      [...this.devices.values()].some((device) => device.ready)
+    );
+  });
+
+  private readonly bindings = new Map<string, WrappingContext>();
   private readonly cleanup = this.destroyRef.onDestroy(() => this.dispose());
 
   private observedVersion = this.session.operationVersion();
   private epoch = 0;
+  private locked = new AbortController();
   private removeCancellation: (() => void) | undefined;
 
   readonly state = computed<VaultState>(() => {
@@ -90,7 +105,7 @@ export class VaultSession {
   }
 
   canResume(context: WrappingContext): boolean {
-    return this.isOpen(context) && this.devices.get(this.deviceId(context))?.ready === true;
+    return this.isOpen(context) && this.devices.get(custodyId(context))?.ready === true;
   }
 
   resume(context: WrappingContext): boolean {
@@ -112,7 +127,7 @@ export class VaultSession {
 
   /** Cancel obsolete view work synchronously, keeping only fully unlocked custody in this account session. */
   release(): void {
-    this.epoch++;
+    this.invalidate();
     this.selected.set(null);
     this.clearDisplay();
     this.phase.set('locked');
@@ -145,15 +160,30 @@ export class VaultSession {
         throw new VaultError('stale-operation');
       }
 
-      this.remember(bindings.filter((binding) => binding.key.domain !== 'device-custody'));
+      const resources = bindings.filter((binding) => binding.key.domain !== 'device-custody');
+
+      this.catalog.update((current) => latestBindings(current, resources));
     } finally {
       storage.close();
     }
   }
 
-  connect(context: WrappingContext, rpId: string, initialize = false, pin?: Uint8Array): Promise<void> {
+  deviceUnlock(binding: WrappingContext, rpId: string, signal: AbortSignal) {
+    const session = this.identity(binding.ownerId);
+    const cancellation = AbortSignal.any([session.signal, signal, this.locked.signal]);
+
+    return devicePrfUnlock(this.document.defaultView, binding, rpId, cancellation);
+  }
+
+  connect(
+    context: WrappingContext,
+    rpId: string,
+    initialize = false,
+    pin?: Uint8Array,
+    unlock?: VaultUnlock,
+  ): Promise<void> {
     return this.openBinding(context, rpId, initialize, pin, (vault) =>
-      initialize ? vault.initialize(context) : vault.unlock(context),
+      initialize ? vault.initialize(context, unlock) : vault.unlock(context, unlock),
     );
   }
 
@@ -170,7 +200,7 @@ export class VaultSession {
 
     const { vault, session, epoch } = this.active();
     const cancellation = AbortSignal.any([session.signal, signal]);
-    const unlock = this.prfUnlocker(view, rpId);
+    const unlock = browserPrfUnlock(view, rpId);
     const binding = await vault.addLocalPasskey(methodId, unlock, cancellation);
 
     if (!this.current(epoch, session) || signal.aborted) {
@@ -200,21 +230,8 @@ export class VaultSession {
     return this.openBinding(context, rpId, true, pin, (vault) => vault.install(context, raw));
   }
 
-  async seal(context: DataContext, value: string): Promise<DataEnvelope> {
-    const current = this.active();
-    const bytes = new TextEncoder().encode(value);
-
-    try {
-      const envelope = await current.vault.seal(context, bytes);
-
-      if (!this.current(current.epoch, current.session)) {
-        throw new VaultError('stale-operation');
-      }
-
-      return envelope;
-    } finally {
-      bytes.fill(0);
-    }
+  seal(context: DataContext, value: string): Promise<DataEnvelope> {
+    return this.encryptText(context, value, true);
   }
 
   async read(context: DataContext): Promise<void> {
@@ -232,21 +249,8 @@ export class VaultSession {
     }
   }
 
-  async prepare(context: DataContext, value: string): Promise<DataEnvelope> {
-    const current = this.active();
-    const bytes = new TextEncoder().encode(value);
-
-    try {
-      const envelope = await current.vault.encrypt(context, bytes);
-
-      if (!this.current(current.epoch, current.session)) {
-        throw new VaultError('stale-operation');
-      }
-
-      return envelope;
-    } finally {
-      bytes.fill(0);
-    }
+  prepare(context: DataContext, value: string): Promise<DataEnvelope> {
+    return this.encryptText(context, value, false);
   }
 
   async readEnvelope(envelope: DataEnvelope, display = true): Promise<void> {
@@ -266,64 +270,23 @@ export class VaultSession {
     }
   }
 
-  async localBinding(key: KeyDomain, localPasskey = false): Promise<WrappingContext | undefined> {
-    const ownerId = this.session.user()?.id;
-
-    if (!ownerId) {
-      throw new VaultError('locked');
-    }
-
-    const session = this.identity(ownerId);
-    const epoch = this.epoch;
-    const view = this.document.defaultView;
-
-    if (!view) {
-      throw new VaultError('unavailable');
-    }
-
-    const storage = await this.database.vault(ownerId, session.signal);
-
-    try {
-      const result = localPasskey
-        ? storage.localPasskeys?.get(keyDomainId(ownerId, key))
-        : storage.getCurrentKey(ownerId, key);
-      const wrapped = await result;
-
-      if (!this.current(epoch, session)) {
-        throw new VaultError('stale-operation');
-      }
-
-      return wrapped?.context;
-    } finally {
-      storage.close();
-    }
+  localBinding(key: KeyDomain, localPasskey = false): Promise<WrappingContext | undefined> {
+    return this.readLocalBinding((storage, ownerId) =>
+      localPasskey ? storage.localPasskeys?.get(keyDomainId(ownerId, key)) : storage.getCurrentKey(ownerId, key),
+    );
   }
 
-  async localLatestBinding(key: Omit<KeyDomain, 'generation'>): Promise<WrappingContext | undefined> {
-    const ownerId = this.session.user()?.id;
-
-    if (!ownerId) {
-      throw new VaultError('locked');
-    }
-
-    const session = this.identity(ownerId);
-    const epoch = this.epoch;
-    const storage = await this.database.vault(ownerId, session.signal);
-
-    try {
-      const wrapped = await storage.getLatestKey(ownerId, key);
-
-      if (!this.current(epoch, session)) {
-        throw new VaultError('stale-operation');
-      }
-
-      return wrapped?.context;
-    } finally {
-      storage.close();
-    }
+  localLatestBinding(key: Omit<KeyDomain, 'generation'>): Promise<WrappingContext | undefined> {
+    return this.readLocalBinding((storage, ownerId) => storage.getLatestKey(ownerId, key));
   }
 
-  async device(binding: WrappingContext, rpId: string, provision = false, pin?: Uint8Array): Promise<DeviceCustody> {
+  async device(
+    binding: WrappingContext,
+    rpId: string,
+    provision = false,
+    pin?: Uint8Array,
+    unlock?: VaultUnlock,
+  ): Promise<DeviceCustody> {
     const session = this.identity(binding.ownerId);
     const epoch = this.epoch;
     const view = this.document.defaultView;
@@ -333,7 +296,7 @@ export class VaultSession {
     }
 
     this.bindCancellation(session.signal);
-    const id = this.deviceId(binding);
+    const id = custodyId(binding);
 
     if (!provision && this.devices.get(id)?.ready) {
       return this.devices.get(id)!;
@@ -364,7 +327,7 @@ export class VaultSession {
         binding,
         binding.method === 'pin-argon2id'
           ? new PinUnlock(async () => Uint8Array.from(pin!))
-          : this.prfUnlocker(view, rpId),
+          : browserPrfUnlock(view, rpId),
         view.crypto,
       );
 
@@ -372,7 +335,7 @@ export class VaultSession {
       this.devices.set(id, device);
     }
 
-    await device.unlock(provision);
+    await device.unlock(provision, unlock);
 
     if (!this.current(epoch, session)) {
       throw new VaultError('stale-operation');
@@ -392,7 +355,7 @@ export class VaultSession {
       return;
     }
 
-    this.epoch++;
+    this.invalidate();
     this.clearDisplay();
 
     if (this.selected()?.id === id) {
@@ -401,12 +364,12 @@ export class VaultSession {
     }
 
     this.scopes.get(id)?.lock(false);
-    this.devices.get(this.deviceId(context))?.lock();
+    this.devices.get(custodyId(context))?.lock();
     this.revision.update((value) => value + 1);
   }
 
   lock(broadcast = true): void {
-    this.epoch++;
+    this.invalidate();
     this.cleartext.set('');
     this.phase.set('locked');
     for (const vault of this.scopes.values()) {
@@ -417,27 +380,56 @@ export class VaultSession {
     }
   }
 
-  private remember(bindings: WrappingContext[]): void {
-    this.catalog.update((current) => {
-      const latest = new Map<string, WrappingContext>();
+  private async encryptText(context: DataContext, value: string, store: boolean): Promise<DataEnvelope> {
+    const current = this.active();
+    const bytes = new TextEncoder().encode(value);
 
-      for (const binding of [...current, ...bindings]) {
-        const id = keyDomainId(binding.ownerId, { ...binding.key, generation: 1 });
-        const previous = latest.get(id);
+    try {
+      const operation = store ? current.vault.seal(context, bytes) : current.vault.encrypt(context, bytes);
+      const envelope = await operation;
 
-        if (!previous || previous.key.generation <= binding.key.generation) {
-          latest.set(id, binding);
-        }
+      if (!this.current(current.epoch, current.session)) {
+        throw new VaultError('stale-operation');
       }
 
-      return [...latest.values()];
-    });
+      return envelope;
+    } finally {
+      bytes.fill(0);
+    }
   }
 
-  private prfUnlocker(view: Window, rpId: string): PrfUnlock {
-    const { location, navigator, crypto } = view;
+  private async readLocalBinding(
+    read: (
+      storage: Awaited<ReturnType<ClientDatabase['vault']>>,
+      ownerId: string,
+    ) => Promise<WrappedKey | undefined> | undefined,
+  ): Promise<WrappingContext | undefined> {
+    const ownerId = this.session.user()?.id;
 
-    return new PrfUnlock({ origin: location.origin, rpId, credentials: navigator.credentials, crypto });
+    if (!ownerId) {
+      throw new VaultError('locked');
+    }
+
+    const session = this.identity(ownerId);
+
+    if (!this.document.defaultView) {
+      throw new VaultError('unavailable');
+    }
+
+    const epoch = this.epoch;
+    const storage = await this.database.vault(ownerId, session.signal);
+
+    try {
+      const wrapped = await read(storage, ownerId);
+
+      if (!this.current(epoch, session)) {
+        throw new VaultError('stale-operation');
+      }
+
+      return wrapped?.context;
+    } finally {
+      storage.close();
+    }
   }
 
   private async openBinding(
@@ -500,7 +492,7 @@ export class VaultSession {
         storage,
         context.method === 'pin-argon2id'
           ? new PinUnlock(async () => Uint8Array.from(pin!))
-          : this.prfUnlocker(view, rpId),
+          : browserPrfUnlock(view, rpId),
         new WebCryptoCipher(view.crypto),
         (state) => {
           if (this.scopes.get(id) !== created) {
@@ -533,18 +525,7 @@ export class VaultSession {
       throw new VaultError('stale-operation');
     }
 
-    this.remember([context]);
-  }
-
-  private deviceId(binding: WrappingContext): string {
-    return JSON.stringify([
-      binding.ownerId,
-      binding.key.product,
-      binding.key.scope.tenantId,
-      binding.deviceId,
-      binding.methodId,
-      binding.origin,
-    ]);
+    this.catalog.update((current) => latestBindings(current, [context]));
   }
 
   private identity(ownerId: string) {
@@ -582,6 +563,12 @@ export class VaultSession {
     return { vault, session, epoch: this.epoch };
   }
 
+  private invalidate(): void {
+    this.locked.abort();
+    this.locked = new AbortController();
+    this.epoch++;
+  }
+
   private current(epoch: number, session: { ownerId: string; version: number; signal: AbortSignal }): boolean {
     return (
       epoch === this.epoch &&
@@ -616,6 +603,12 @@ export class VaultSession {
     this.removeCancellation = undefined;
     this.selected.set(null);
   }
+
+  private readonly idleLock = effect((cleanup) => {
+    if (this.openCustody()) {
+      cleanup(watchVaultActivity(this.document, () => this.lock(false)));
+    }
+  });
 
   private readonly sessionChanged = effect(() => {
     const version = this.session.operationVersion();

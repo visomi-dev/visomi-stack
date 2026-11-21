@@ -13,13 +13,13 @@ async function saveNote(page: Page, title: string, body: string, shared = false)
 
   await expect(titleField).toHaveValue(title);
 
-  await page.getByLabel('Synthetic note text', { exact: true }).fill(body);
+  await page.getByLabel('Note text', { exact: true }).fill(body);
 
   await page.getByRole('radio', { name: shared ? 'Shared with permitted readers' : 'Owner only' }).check();
 
   await page.getByRole('button', { name: 'Save note', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'New test note', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'New note', exact: true })).toBeVisible();
 
   await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
 }
@@ -65,7 +65,7 @@ test('Cloud updates permitted readers in realtime and clears notes after revocat
 
     await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
 
-    await expect(page.getByRole('heading', { name: 'New test note', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'New note', exact: true })).toBeVisible();
 
     await expect(page.getByRole('button', { name: 'Refresh notes', exact: true })).toHaveCount(0);
 

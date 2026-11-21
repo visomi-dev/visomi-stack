@@ -83,7 +83,7 @@ test('hybrid persistence keeps private content out of transport and reopens lock
 
   await expect(page.locator('pre')).toHaveText(privateMarker);
 
-  await page.getByRole('button', { name: 'Lock private resources', exact: true }).click();
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
 
   await expect(page.locator('pre')).toHaveCount(0);
 
@@ -485,13 +485,13 @@ test('pairs a test private resource in Security across a PIN device and a PRF de
 
     await expect(recipient.getByRole('status')).toContainText(['The fingerprints don’t match.']);
 
-    await expect(recipient.getByRole('link', { name: 'Open test private resource', exact: true })).toHaveCount(0);
+    await expect(recipient.getByRole('link', { name: 'Open vault note', exact: true })).toHaveCount(0);
 
     await trust.fill(approverFingerprint);
 
     await finish.click();
 
-    await recipient.getByRole('link', { name: 'Open test private resource', exact: true }).click();
+    await recipient.getByRole('link', { name: 'Open vault note', exact: true }).click();
 
     await recipient.getByRole('button', { name: 'Synchronize encrypted changes', exact: true }).click();
 
@@ -507,7 +507,7 @@ test('pairs a test private resource in Security across a PIN device and a PRF de
 
     await expect(recipient.getByLabel('Private text', { exact: true })).toBeEnabled();
 
-    await recipient.getByRole('button', { name: 'Lock private resources', exact: true }).click();
+    await recipient.evaluate(() => window.dispatchEvent(new Event('pagehide')));
 
     await expect(recipient.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
 
