@@ -2,7 +2,7 @@
 services:
   vault-s3:
     image: docker.io/chrislusf/seaweedfs:4.54@sha256:4b42c212543a0acd4c0e675215ecdcaf62a186ef98def76c7e12701871222d15
-    command: ['mini', '-dir=/data']
+    command: ['mini', '-dir=/data', '-s3.domainName=t3.storageapi.dev']
     environment:
       AWS_ACCESS_KEY_ID: visomi_s3_test
       AWS_SECRET_ACCESS_KEY: synthetic-s3-test-password

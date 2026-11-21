@@ -17,11 +17,11 @@ The remaining `/app/{en,es}/persistence` page is the technical hybrid harness fo
 
 New backups require a private S3-compatible bucket with these server-only settings.
 
-- `PRIVATE_S3_ENDPOINT` is the fixed HTTPS origin for path-style requests signed for `us-east-1`. Development and tests also accept HTTP on `127.0.0.1`.
+- `PRIVATE_S3_ENDPOINT` is the base HTTPS origin. Use `https://t3.storageapi.dev` for Railway's virtual-host buckets. The server signs requests to the exact `<bucket>.t3.storageapi.dev` origin with region `auto`. Other endpoints use path-style requests signed for `us-east-1`. Development and tests also accept HTTP on `127.0.0.1`.
 - `PRIVATE_S3_BUCKET` identifies the private bucket.
 - `PRIVATE_S3_ACCESS_KEY` and `PRIVATE_S3_SECRET_KEY` authorize the server to read and create backup objects and delete abandoned uploads under `vault-backups/`.
 
-Missing or unsafe storage configuration prevents setting up a new backup workspace. An already enrolled device can still unlock its existing encrypted copy when the session and local custody allow it. Previous workspaces keep their PostgreSQL ciphertext history and access rules. The authenticated tests start a pinned disposable SeaweedFS container with synthetic credentials. The production-mode support is tested in isolation.
+Missing or unsafe storage configuration prevents setting up a new backup workspace. An already enrolled device can still unlock its existing encrypted copy when the session and local custody allow it. Previous workspaces keep their PostgreSQL ciphertext history and access rules. The tests start a pinned disposable SeaweedFS container with synthetic credentials. The API integration uses path-style URLs. The authenticated browser fixture forwards Railway-style signed requests to that local server while preserving the signed host and object path.
 
 The [Railway IaC definition](../.railway/railway.ts) declares the `private-files` bucket and references its credentials from the gateway. Vault uses the `vault-backups/` prefix within that bucket. PostgreSQL persists backup references and authorization metadata on its own volume.
 

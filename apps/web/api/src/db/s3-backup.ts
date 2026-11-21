@@ -2,6 +2,8 @@ import { S3Client } from '@bradenmacdonald/s3-lite-client';
 import type { BackupObjects } from '@visomi-stack/backend-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 
+const railwayHost = 't3.storageapi.dev';
+
 export function createBackupObjects(environment: NodeJS.ProcessEnv): BackupObjects | undefined {
   const endpoint = environment['PRIVATE_S3_ENDPOINT'];
   const accessKey = environment['PRIVATE_S3_ACCESS_KEY'];
@@ -20,22 +22,30 @@ export function createBackupObjects(environment: NodeJS.ProcessEnv): BackupObjec
   }
 
   const url = new URL(endpoint);
+  const hostname = url.hostname.replace(/\.$/, '');
+  const railway = hostname === railwayHost;
   const localHttp =
     url.protocol === 'http:' &&
     url.hostname === '127.0.0.1' &&
     ['test', 'development'].includes(environment['NODE_ENV'] ?? '');
 
-  if (url.href !== `${url.origin}/` || (url.protocol !== 'https:' && !localHttp)) {
+  if (
+    url.href !== `${url.origin}/` ||
+    (url.protocol !== 'https:' && !localHttp) ||
+    (railway && url.origin !== `https://${railwayHost}`) ||
+    hostname.endsWith(`.${railwayHost}`)
+  ) {
     return undefined;
   }
 
+  const destinationOrigin = railway ? `https://${bucket}.${railwayHost}` : url.origin;
   const client = new S3Client({
     endPoint: url.origin,
-    pathStyle: true,
+    pathStyle: !railway,
     bucket,
     accessKey,
     secretKey,
-    region: 'us-east-1',
+    region: railway ? 'auto' : 'us-east-1',
   });
 
   async function request(method: 'PUT' | 'GET' | 'DELETE', key: string, body?: string) {
@@ -53,9 +63,17 @@ export function createBackupObjects(environment: NodeJS.ProcessEnv): BackupObjec
 
     // Keep the short-lived signature server-side. Native fetch controls cancellation and redirects.
     const signed = await client.getPresignedUrl(method, key, { expirySeconds: 15, extraHeaders: headers });
-    const destination = new URL(signed);
+    const destination = URL.parse(signed);
+    const path = railway ? `/${key}` : `/${bucket}/${key}`;
 
-    if (destination.origin !== url.origin || destination.pathname !== `/${bucket}/${key}`) {
+    if (
+      !destination ||
+      destination.origin !== destinationOrigin ||
+      destination.pathname !== path ||
+      destination.username ||
+      destination.password ||
+      destination.hash
+    ) {
       throw new HttpError(503, 'vault_backup_unavailable');
     }
 
