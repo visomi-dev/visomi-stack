@@ -29,6 +29,8 @@ import type { WebCryptoDevices } from '../crypto/devices';
 import { LocalPasskeyEnrollment, type LocalPasskeyStorage } from './local-passkey';
 import { historicalBinding, storeHistoricalKey, withStoredKey } from './stored-key';
 
+type KeySetup = { supplied?: Uint8Array; exhausted?: boolean; unlock?: VaultUnlock };
+
 /** One independently locked key scope; records are loaded/decrypted individually. */
 export class BrowserVault implements VaultPort {
   private readonly recoveryOperations = new Set<VaultUnlock>();
@@ -60,8 +62,8 @@ export class BrowserVault implements VaultPort {
     return this.phase;
   }
 
-  async initialize(context: WrappingContext): Promise<void> {
-    return this.initializeKey(context);
+  initialize(context: WrappingContext, unlock = this.unlocker): Promise<void> {
+    return this.initializeKey(context, { unlock });
   }
 
   /** Explicit approved recipient/recovery path; never used as an implicit fallback from unlock. */
@@ -70,7 +72,7 @@ export class BrowserVault implements VaultPort {
       throw new VaultError('corrupt');
     }
 
-    return this.initializeKey(context, supplied);
+    return this.initializeKey(context, { supplied });
   }
 
   /** Caller verifies the signed recipient grant first. Keep current writing authority selected. */
@@ -89,8 +91,8 @@ export class BrowserVault implements VaultPort {
     }
   }
 
-  async unlock(context: WrappingContext): Promise<void> {
-    return this.unlockKey(context, (id) => this.storage.getKey(id));
+  unlock(context: WrappingContext, unlock = this.unlocker): Promise<void> {
+    return this.unlockKey(context, (id) => this.storage.getKey(id), unlock);
   }
 
   async unlockLocalPasskey(context: WrappingContext): Promise<void> {
@@ -334,7 +336,7 @@ export class BrowserVault implements VaultPort {
       this.current(epoch);
       this.recoveryOperations.delete(recovery);
 
-      await this.initializeKey(local, raw, true);
+      await this.initializeKey(local, { supplied: raw, exhausted: true });
     } finally {
       this.recoveryOperations.delete(recovery);
       secret?.fill(0);
@@ -388,6 +390,7 @@ export class BrowserVault implements VaultPort {
   private async unlockKey(
     context: WrappingContext,
     load: (id: string) => Promise<WrappedKey | undefined>,
+    unlock = this.unlocker,
   ): Promise<void> {
     this.lock(false);
     const epoch = this.epoch;
@@ -404,7 +407,7 @@ export class BrowserVault implements VaultPort {
         throw new VaultError('recovery-required');
       }
 
-      const unlockedSecret = await this.unlocker.secret(binding);
+      const unlockedSecret = await unlock.secret(binding);
 
       secret = unlockedSecret;
       this.current(epoch);
@@ -461,7 +464,9 @@ export class BrowserVault implements VaultPort {
     }
   }
 
-  private async initializeKey(context: WrappingContext, supplied?: Uint8Array, exhausted = false): Promise<void> {
+  private async initializeKey(context: WrappingContext, options: KeySetup = {}): Promise<void> {
+    const { supplied, exhausted = false, unlock = this.unlocker } = options;
+
     this.lock(false);
     const epoch = this.epoch;
     const binding = this.context(context);
@@ -478,7 +483,7 @@ export class BrowserVault implements VaultPort {
         throw new VaultError('revision-conflict');
       }
 
-      const unlockedSecret = await this.unlocker.secret(binding);
+      const unlockedSecret = await unlock.secret(binding);
 
       secret = unlockedSecret;
       this.current(epoch);

@@ -128,18 +128,18 @@ async function rejectLoginOnlyWatch(context: BrowserContext, origin: string) {
 async function publishNote(page: Page, note: string) {
   const panel = page.locator('app-database-example');
 
-  await panel.getByLabel('Private text', { exact: true }).fill(note);
+  const editor = panel.getByLabel('Your note', { exact: true });
 
-  await panel.getByRole('button', { name: 'Save encrypted change' }).click();
+  await expect(editor).toBeEditable();
 
   const [response] = await Promise.all([
     page.waitForResponse((candidate) => candidate.url().endsWith('/sync/push')),
-    panel.getByRole('button', { name: 'Upload encrypted note' }).click(),
+    editor.fill(note),
   ]);
 
   expect(response.ok()).toBe(true);
 
-  await expect(panel.getByRole('status').filter({ hasText: 'The encrypted note is backed up' })).toBeVisible();
+  await expect(page.locator('app-vault-sync-indicator').getByRole('status')).toHaveText('Vault synced');
 }
 
 test('backs up the Vault Example note to private object storage and restores it only after recipient pairing', async ({
@@ -183,28 +183,35 @@ test('backs up the Vault Example note to private object storage and restores it 
 
   await panel.getByRole('button', { name: 'Set up with PIN' }).click();
 
-  await panel.getByLabel('Private text', { exact: true }).fill(note);
-
-  await panel.getByRole('button', { name: 'Save encrypted change' }).click();
-
-  await expect(panel.locator('pre')).toHaveText(note);
-
   const workspace = new URL(page.url());
   const objectId = workspace.searchParams.get('objectId')!;
+  const editor = panel.getByLabel('Your note', { exact: true });
+
+  await expect(editor).toBeEditable();
+
+  await context.setOffline(true);
+
+  await editor.fill(note);
+
+  await expect(panel.getByText('Saved on this device. Waiting for backup.')).toBeVisible();
+
+  await expect(page.getByRole('button', { name: 'Retry Vault sync' })).toBeVisible();
+
   const source = await replicaNote(page, objectId);
 
   expect(source.stored).toBeUndefined();
-  expect(uploads).toBe(0);
-
+  expect(source.pending).toBeDefined();
   const [request] = await Promise.all([
     page.waitForRequest((candidate) => candidate.url().endsWith('/sync/push')),
-    panel.getByRole('button', { name: 'Upload encrypted note' }).click(),
+    context.setOffline(false),
   ]);
   const uploaded = syncWriteSchema.parse(request.postDataJSON());
 
   expect(uploaded.envelope).toEqual(source.pending);
 
-  await expect(panel.getByRole('status').filter({ hasText: 'The encrypted note is backed up' })).toBeVisible();
+  await expect(page.locator('app-vault-sync-indicator').getByRole('status')).toHaveText('Vault synced');
+
+  const attemptsBeforePairing = uploads;
 
   const committed = await replicaNote(page, objectId);
 
@@ -212,7 +219,7 @@ test('backs up the Vault Example note to private object storage and restores it 
   expect(committed.pending).toBeUndefined();
   const object = await objectFor(workspace.searchParams.get('scopeId')!, objectId, uploaded.envelope);
 
-  await panel.getByRole('link', { name: 'Vault devices' }).click();
+  await panel.getByRole('link', { name: 'Link a device' }).click();
 
   const approving = page.locator('[data-vault-approver]');
 
@@ -317,7 +324,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await rejectLoginOnlyWatch(recipientContext, workspace.origin);
 
-    await recipient.getByRole('link', { name: 'Vault devices' }).click();
+    await recipient.getByRole('link', { name: 'Link a device' }).click();
 
     await expect(recipient).toHaveURL(pairingUrl);
 
@@ -342,7 +349,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     expect(deniedDelivery.status()).toBe(404);
 
-    await expect(recipient.getByRole('link', { name: 'Open test private resource' })).toHaveCount(0);
+    await expect(recipient.getByRole('link', { name: 'Open vault note' })).toHaveCount(0);
 
     await expect(replicaNote(recipient, objectId)).resolves.toEqual({});
 
@@ -356,16 +363,6 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await finish.click();
 
-    await recipient.getByRole('link', { name: 'Open test private resource' }).click();
-
-    await expect(recipient).toHaveURL(workspace.href);
-
-    await expect(restore).toBeEnabled();
-
-    await expect(recipient.getByText(note, { exact: true })).toHaveCount(0);
-
-    await expect(replicaNote(recipient, objectId)).resolves.toEqual({});
-
     const replace = async (body: string) => {
       const result = await s3('PUT', object.key, body);
 
@@ -376,8 +373,10 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     const [failed] = await Promise.all([
       recipient.waitForResponse((response) => response.url().endsWith('/sync/pull')),
-      restore.click(),
+      recipient.getByRole('link', { name: 'Open vault note' }).click(),
     ]);
+
+    await expect(recipient).toHaveURL(workspace.href);
 
     expect(failed.status()).toBe(503);
 
@@ -400,7 +399,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     expect(download.ok()).toBe(true);
 
-    await expect(recipient.locator('app-database-example pre')).toHaveText(note);
+    await expect(recipient.getByLabel('Your note', { exact: true })).toHaveValue(note);
 
     const restored = await replicaNote(recipient, objectId);
 
@@ -415,28 +414,16 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await panel.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
 
-    await expect(panel.locator('pre')).toHaveText(note);
+    await expect(editor).toHaveValue(note);
 
     await recipient.setViewportSize({ width: 390, height: 844 });
 
     const indicator = recipient.locator('app-vault-sync-indicator');
     const indicatorStatus = indicator.getByRole('status');
     const peerPanel = recipient.locator('app-database-example');
-    const draft = peerPanel.getByLabel('Private text', { exact: true });
+    const draft = peerPanel.getByLabel('Your note', { exact: true });
 
     await expect(indicatorStatus).toHaveText('Vault synced');
-
-    await draft.fill('SYNTHETIC_UNSAVED_LOCAL_DRAFT');
-
-    await publishNote(page, nextNote);
-
-    await expect.poll(() => hints).toEqual([['vault:changed', 2]]);
-
-    await expect(peerPanel.locator('pre')).toHaveText(note);
-
-    await expect(draft).toHaveValue('SYNTHETIC_UNSAVED_LOCAL_DRAFT');
-
-    await expect(replicaNote(recipient, objectId)).resolves.toEqual(restored);
 
     const originalBox = await indicator.boundingBox();
     let releasePull!: () => void;
@@ -451,7 +438,13 @@ test('backs up the Vault Example note to private object storage and restores it 
     });
 
     try {
-      await draft.fill('');
+      await publishNote(page, nextNote);
+
+      await expect.poll(() => hints).toEqual([['vault:changed', 2]]);
+
+      await expect(draft).toHaveValue(note);
+
+      await expect(replicaNote(recipient, objectId)).resolves.toEqual(restored);
 
       await expect(indicatorStatus).toHaveText('Syncing Vault…');
 
@@ -460,7 +453,7 @@ test('backs up the Vault Example note to private object storage and restores it 
       releasePull();
     }
 
-    await expect(peerPanel.locator('pre')).toHaveText(nextNote);
+    await expect(draft).toHaveValue(nextNote);
 
     await expect(indicatorStatus).toHaveText('Vault synced');
 
@@ -474,13 +467,13 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     expect(prior.stored?.context.revision).toBe(2);
 
-    await recipient.getByRole('button', { name: 'Lock private resources' }).click();
+    await recipient.evaluate(() => window.dispatchEvent(new Event('pagehide')));
 
     await expect(peerPanel.getByRole('button', { name: 'Unlock with a passkey' })).toBeVisible();
 
     await publishNote(page, offlineNote);
 
-    await expect(peerPanel.locator('pre')).toHaveCount(0);
+    await expect(draft).toHaveCount(0);
 
     await expect(replicaNote(recipient, objectId)).resolves.toEqual(prior);
 
@@ -488,7 +481,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await peerPanel.getByRole('button', { name: 'Unlock with a passkey' }).click();
 
-    await expect(peerPanel.locator('pre')).toHaveText(offlineNote);
+    await expect(draft).toHaveValue(offlineNote);
 
     await expect.poll(() => vaultConnections).toBeGreaterThan(1);
 
@@ -506,9 +499,17 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await restoredPanel.getByRole('button', { name: 'Desbloquear con una clave de acceso' }).click();
 
-    await expect(restoredPanel.locator('pre')).toHaveText(offlineNote);
+    await expect(restoredPanel.locator('#private-note')).toHaveValue(offlineNote);
 
-    expect(uploads).toBe(3);
+    await expect(restoredPanel.getByLabel('Tu nota', { exact: true })).toHaveValue(offlineNote);
+
+    await expect(recipient.locator('header').getByRole('button', { name: /bloquear/i })).toHaveCount(0);
+
+    const fits = await recipient.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+
+    expect(fits).toBe(true);
+
+    expect(uploads).toBe(attemptsBeforePairing + 2);
     expect(exposedSecret).toBe(false);
   } finally {
     await Promise.all([recipientContext.close(), outsiderContext.close()]);

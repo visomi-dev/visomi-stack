@@ -8,8 +8,8 @@
   <header class="space-y-3">
     @if (workspace.backedSample) {
       <p appUI tone="muted" i18n="@@vaultBackedSampleExplanation">
-        Your browser encrypts the test note before saving it. When you back it up, only the encrypted copy goes to the
-        server. Link another device and unlock the vault there to restore the same note.
+        Write a note here and it backs up automatically. Your browser encrypts it before it leaves this device. You can
+        open the same note on a linked device.
       </p>
     } @else {
       <h1 appUI appNavigationHeading i18n="@@persistenceExampleHeading">Hybrid persistence example</h1>
@@ -75,29 +75,46 @@
     }
 
     <section class="space-y-4 rounded-xl border p-5">
-      @if (workspace.backedSample) {
+      @if (workspace.backedSample && !workspace.vault.ready()) {
         <h2 appUI i18n="@@vaultBackedSampleNote">Vault note</h2>
-      } @else {
+      } @else if (!workspace.backedSample) {
         <h2 appUI i18n="@@vaultHeading">Private resource</h2>
       }
 
-      @if (workspace.canPair()) {
+      @if (!workspace.backedSample && workspace.canPair()) {
         <a appUI routerLink="/security" [queryParams]="workspace.pairingParams()" i18n="@@vaultDevicesTitle">
           Vault devices
         </a>
       }
 
-      <p role="status" aria-live="polite">{{ workspace.status() }}</p>
+      @if (!workspace.backedSample) {
+        <p role="status">{{ workspace.status() }}</p>
+      } @else if (workspace.hasBinding() && !workspace.vault.ready()) {
+        <p role="status" i18n="@@vaultNoteLocked">Unlock the vault to open your note.</p>
+      }
 
-      <p appUI tone="muted" i18n="@@persistencePrivateLimits">
-        Private content is encrypted before synchronization. This synthetic profile has no recovery: losing all usable
-        keys can permanently lose access. Password reset does not recover private content.
-      </p>
+      @if (!workspace.backedSample) {
+        <p appUI tone="muted" i18n="@@persistencePrivateLimits">
+          Private content is encrypted before synchronization. This synthetic profile has no recovery: losing all usable
+          keys can permanently lose access. Password reset does not recover private content.
+        </p>
+      } @else if (!workspace.vault.ready() && workspace.canInitialize()) {
+        <p appUI tone="muted" i18n="@@vaultSetupGuidance">
+          Keep access to a linked device. If you lose access to every device, resetting your password won’t recover your
+          note.
+        </p>
+      }
 
       @if (workspace.backedSample && workspace.canPair() && !workspace.hasBinding()) {
         <p appUI tone="muted" i18n="@@vaultBackedSampleNeedsPairing">
-          Sign-in gives you access to the workspace. To restore the note on this browser, open Vault devices and get
-          approval from a device that can already unlock it.
+          To restore the note on this browser, link it to your vault. Approve the request on a device where you can
+          already open the note.
+        </p>
+      }
+
+      @if (workspace.backedSample && workspace.canInitialize() && workspace.showPrf() && !workspace.vault.ready()) {
+        <p appUI tone="muted" i18n="@@vaultSetupConfirm">
+          Your browser will ask you to create a vault passkey and then use it to unlock this device.
         </p>
       }
 
@@ -123,7 +140,7 @@
             <button
               appUI
               type="button"
-              variant="secondary"
+              [variant]="workspace.backedSample ? 'primary' : 'secondary'"
               [disabled]="workspace.busy() || workspace.vault.ready()"
               (click)="workspace.unlock(true)"
             >
@@ -182,7 +199,7 @@
               [digits]="6"
               [disabled]="workspace.busy()"
               [value]="workspace.pinDraft()"
-              (valueChange)="workspace.changePin($event)"
+              (valueChange)="workspace.pinDraft.set($event)"
             />
           </app-field>
 
@@ -193,7 +210,7 @@
                 [digits]="6"
                 [disabled]="workspace.busy()"
                 [value]="workspace.pinConfirmation()"
-                (valueChange)="workspace.changePinConfirmation($event)"
+                (valueChange)="workspace.pinConfirmation.set($event)"
               />
             </app-field>
 
@@ -210,7 +227,7 @@
               [digits]="6"
               [disabled]="workspace.busy()"
               [value]="workspace.pinConfirmation()"
-              (valueChange)="workspace.changePinConfirmation($event)"
+              (valueChange)="workspace.pinConfirmation.set($event)"
             />
           </app-field>
 
@@ -228,72 +245,108 @@
       }
 
       @if (workspace.vault.ready()) {
-        <form class="space-y-4" (submit)="$event.preventDefault(); workspace.savePrivate()">
+        @if (workspace.backedSample) {
           <app-field
             control-id="private-note"
-            label="Private text"
-            i18n-label="@@vaultPrivateText"
-            description="Only ciphertext is stored locally and synchronized. An encrypted pending change stays on this device until synchronization succeeds."
-            i18n-description="@@persistencePrivateDescription"
-            #privateField="appField"
+            label="Your note"
+            i18n-label="@@vaultYourNote"
+            description="Changes are saved automatically. The vault locks after five minutes of inactivity."
+            i18n-description="@@vaultAutoHelp"
+            #editor="appField"
           >
             <textarea
               appUI
               id="private-note"
               name="private-note"
-              rows="4"
+              rows="5"
               maxlength="8192"
               autocomplete="off"
               spellcheck="false"
-              #privateText
-              [attr.aria-describedby]="privateField.describedBy()"
-              [value]="workspace.privateDraft()"
-              [disabled]="workspace.busy() || workspace.privateResource.pending()"
-              (input)="workspace.editPrivateText(privateText.value)"
+              #note
+              [attr.aria-describedby]="editor.describedBy()"
+              [value]="workspace.editor.displayed()"
+              [readOnly]="workspace.editorReadOnly()"
+              (input)="workspace.editPrivateText(note.value)"
+              (blur)="workspace.saveDraft()"
             ></textarea>
           </app-field>
 
-          <div class="flex flex-wrap gap-3">
-            <button
-              appUI
-              type="submit"
-              [disabled]="workspace.busy() || workspace.privateResource.pending()"
-              i18n="@@vaultSave"
-            >
-              Save encrypted change
-            </button>
-
-            <button
-              appUI
-              type="button"
-              variant="secondary"
-              [disabled]="workspace.busy()"
-              (click)="workspace.synchronize()"
-            >
-              @if (!workspace.backedSample) {
-                <span i18n="@@persistenceSynchronize">Synchronize encrypted changes</span>
-              } @else if (workspace.privateResource.pending()) {
-                <span i18n="@@vaultBackedSampleUpload">Upload encrypted note</span>
-              } @else {
-                <span i18n="@@vaultBackedSampleRestore">Download and restore note</span>
-              }
-            </button>
-          </div>
-        </form>
-
-        @if (workspace.privateResource.pending()) {
-          <p role="status" i18n="@@persistencePending">
-            An encrypted change is waiting to sync. Keep the data on this device until it syncs.
-          </p>
-        }
-
-        @if (workspace.vault.plaintext()) {
-          <pre class="rounded-lg border p-4 break-words whitespace-pre-wrap">{{ workspace.vault.plaintext() }}</pre>
-
-          @if (workspace.backedSample && workspace.privateResource.synchronized()) {
-            <p role="status" i18n="@@vaultBackedSampleSynced">
-              The encrypted note is backed up and saved on this browser.
+          @if (workspace.editor.saveFailed()) {
+            <p role="status" i18n="@@vaultLocalSaveFailed">
+              Your changes haven’t been saved on this device yet. Keep this page open and try again.
             </p>
+
+            <button
+              appUI
+              variant="secondary"
+              type="button"
+              [disabled]="workspace.busy()"
+              (click)="workspace.saveDraft()"
+              i18n="@@vaultLocalRetry"
+            >
+              Try saving again
+            </button>
+          } @else if (workspace.editor.value() !== null) {
+            <p role="status" i18n="@@vaultDraftPending">Saving on this device…</p>
+          } @else if (workspace.privateResource.pending()) {
+            <p role="status" i18n="@@vaultBackupPending">Saved on this device. Waiting for backup.</p>
+          }
+        } @else {
+          <form class="space-y-4" (submit)="$event.preventDefault(); workspace.savePrivate()">
+            <app-field
+              control-id="private-note"
+              label="Private text"
+              i18n-label="@@vaultPrivateText"
+              description="Only ciphertext is stored locally and synchronized. An encrypted pending change stays on this device until synchronization succeeds."
+              i18n-description="@@persistencePrivateDescription"
+              #privateField="appField"
+            >
+              <textarea
+                appUI
+                id="private-note"
+                name="private-note"
+                rows="4"
+                maxlength="8192"
+                autocomplete="off"
+                spellcheck="false"
+                #privateText
+                [attr.aria-describedby]="privateField.describedBy()"
+                [value]="workspace.privateDraft()"
+                [disabled]="workspace.busy() || workspace.privateResource.pending()"
+                (input)="workspace.editPrivateText(privateText.value)"
+              ></textarea>
+            </app-field>
+
+            <div class="flex flex-wrap gap-3">
+              <button
+                appUI
+                type="submit"
+                [disabled]="workspace.busy() || workspace.privateResource.pending()"
+                i18n="@@vaultSave"
+              >
+                Save encrypted change
+              </button>
+
+              <button
+                appUI
+                type="button"
+                variant="secondary"
+                [disabled]="workspace.busy()"
+                (click)="workspace.synchronize()"
+              >
+                <span i18n="@@persistenceSynchronize">Synchronize encrypted changes</span>
+              </button>
+            </div>
+          </form>
+
+          @if (workspace.privateResource.pending()) {
+            <p role="status" i18n="@@persistencePending">
+              An encrypted change is waiting to sync. Keep the data on this device until it syncs.
+            </p>
+          }
+
+          @if (workspace.vault.plaintext()) {
+            <pre class="rounded-lg border p-4 break-words whitespace-pre-wrap">{{ workspace.vault.plaintext() }}</pre>
           }
         }
 
@@ -308,7 +361,7 @@
               appUI
               type="button"
               [disabled]="workspace.busy()"
-              (click)="workspace.keepPending()"
+              (click)="workspace.resolveConflict(true)"
               i18n="@@persistenceKeepPending"
             >
               Keep my pending version and synchronize
@@ -319,13 +372,21 @@
               type="button"
               variant="secondary"
               [disabled]="workspace.busy()"
-              (click)="workspace.useSynchronized()"
+              (click)="workspace.resolveConflict(false)"
               i18n="@@persistenceDiscardPending"
             >
               Discard my pending change and use the synchronized version
             </button>
           </div>
         }
+      }
+
+      @if (workspace.backedSample && workspace.canPair()) {
+        <div>
+          <a appUI routerLink="/security" [queryParams]="workspace.pairingParams()" i18n="@@vaultLinkDevice">
+            Link a device
+          </a>
+        </div>
       }
     </section>
   }

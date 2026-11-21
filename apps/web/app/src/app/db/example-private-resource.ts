@@ -28,7 +28,7 @@ import { Session } from '../auth/session/session';
 import { DatabaseHttp } from '../shared/db/http';
 import { ClientDatabase } from '../shared/db/database';
 import { VaultSession } from '../shared/vault/vault-session';
-import { openLocalVault } from '../shared/vault/local-unlock';
+import { openLocalVault, openVaultDevice } from '../shared/vault/local-unlock';
 
 import { rosterSchema, validateExampleEnvelope, exampleLocalKey, examplePrivatePath } from './example-contracts';
 import type { ExampleTarget } from './example-contracts';
@@ -114,12 +114,7 @@ export class ExamplePrivateResource {
       throw new VaultError('unavailable');
     }
 
-    const key: KeyDomain = registry?.key ?? {
-      product: syntheticHybridPolicy.product,
-      domain: 'private-resources',
-      scope: { kind: 'resource', tenantId: target.tenantId, groupId: null, resourceId: target.scopeId },
-      generation: 1,
-    };
+    const key: KeyDomain = registry?.key ?? { ...exampleLocalKey(target), generation: 1 };
 
     if (
       key.product !== syntheticHybridPolicy.product ||
@@ -166,10 +161,6 @@ export class ExamplePrivateResource {
       throw new VaultError(pin ? 'pin-invalid' : 'unsupported-prf');
     }
 
-    await (pin ? this.vault.connect(binding, rpId, !existing, pin) : this.vault.connect(binding, rpId, !existing));
-
-    this.current(signal);
-
     const custodyExists = await this.vault.localBinding(deviceCustodyContext(binding).key);
 
     this.current(signal);
@@ -178,9 +169,14 @@ export class ExamplePrivateResource {
       throw new VaultError('recovery-required');
     }
 
-    const custody = await (pin
-      ? this.vault.device(binding, rpId, !custodyExists, pin)
-      : this.vault.device(binding, rpId, !custodyExists));
+    const custody = await openVaultDevice(this.vault, binding, rpId, {
+      initialize: !existing,
+      provision: !custodyExists,
+      pin,
+      combinePrf: this.backupPage,
+      signal,
+      current: () => this.current(signal),
+    });
 
     this.current(signal);
 

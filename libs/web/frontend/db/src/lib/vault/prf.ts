@@ -9,6 +9,18 @@ import {
 
 import { decodeBytes, encodeBytes } from '../crypto/cipher';
 
+import { deviceCustodyContext } from './device-custody';
+
+function bytes(value?: BufferSource): Uint8Array | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return value instanceof ArrayBuffer
+    ? new Uint8Array(value)
+    : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+}
+
 /** Local WebAuthn ceremony only: PRF output/assertions are never sent to the cloud. */
 export class PrfUnlock implements VaultUnlock {
   private pending: AbortController | undefined;
@@ -28,6 +40,43 @@ export class PrfUnlock implements VaultUnlock {
     return result.secret;
   }
 
+  /** Evaluate both existing wrapping salts in one user-verified assertion for this credential. */
+  async forDevice(context: WrappingContext, signal: AbortSignal): Promise<VaultUnlock> {
+    const device = deviceCustodyContext(context);
+    const result = await this.assertion({ context, device, cancellation: signal });
+    const secrets = new Map([
+      [wrappingAad(context), result.secret],
+      [wrappingAad(device), result.second],
+    ]);
+
+    return {
+      secret: async (binding) => {
+        const id = wrappingAad(binding);
+        const secret = secrets.get(id);
+
+        if (signal.aborted || !secrets.delete(id)) {
+          throw new VaultError('stale-operation');
+        }
+
+        // Authenticators that return only the first result still verify the device salt separately.
+        if (!secret) {
+          const assertion = await this.assertion({ context: binding, cancellation: signal });
+
+          return assertion.secret;
+        }
+
+        return secret;
+      },
+      cancel: () => {
+        this.cancel();
+        for (const secret of secrets.values()) {
+          secret?.fill(0);
+        }
+        secrets.clear();
+      },
+    };
+  }
+
   /** Select an existing PRF-capable credential without registering one in the sign-in picker. */
   async discover(signal: AbortSignal): Promise<string> {
     const result = await this.assertion({ cancellation: signal });
@@ -42,9 +91,13 @@ export class PrfUnlock implements VaultUnlock {
     this.pending = undefined;
   }
 
-  private async assertion(request: { context: WrappingContext } | { cancellation: AbortSignal }) {
+  private async assertion(request: {
+    context?: WrappingContext;
+    device?: WrappingContext;
+    cancellation?: AbortSignal;
+  }) {
     this.cancel();
-    const binding = 'context' in request ? wrappingContextSchema.safeParse(request.context) : undefined;
+    const binding = request.context ? wrappingContextSchema.safeParse(request.context) : undefined;
     const { origin, rpId, credentials, crypto } = this.environment;
     let url: URL;
 
@@ -71,28 +124,23 @@ export class PrfUnlock implements VaultUnlock {
     }
 
     const controller = new AbortController();
-    const signal =
-      'cancellation' in request ? AbortSignal.any([controller.signal, request.cancellation]) : controller.signal;
+    const signal = request.cancellation
+      ? AbortSignal.any([controller.signal, request.cancellation])
+      : controller.signal;
 
     this.pending = controller;
     let prf: Uint8Array | undefined;
+    let second: Uint8Array | undefined;
 
     try {
       const challenge = crypto.getRandomValues(new Uint8Array(32));
       const encoder = new TextEncoder();
-      let input: BufferSource;
-
-      // Discovery probes with a disposable input. Only the binding-specific output can wrap a vault key.
-      if (configured) {
-        const digest = await crypto.subtle.digest(
-          'SHA-256',
-          encoder.encode(JSON.stringify(['visomi.prf', 1, wrappingAad(configured)])),
-        );
-
-        input = digest;
-      } else {
-        input = crypto.getRandomValues(new Uint8Array(32));
-      }
+      const salt = (context: WrappingContext) =>
+        crypto.subtle.digest('SHA-256', encoder.encode(JSON.stringify(['visomi.prf', 1, wrappingAad(context)])));
+      const [firstInput, secondInput] = await Promise.all([
+        configured ? salt(configured) : crypto.getRandomValues(new Uint8Array(32)),
+        request.device ? salt(request.device) : undefined,
+      ]);
 
       signal.throwIfAborted();
 
@@ -112,7 +160,7 @@ export class PrfUnlock implements VaultUnlock {
               },
             ],
           }),
-          extensions: { prf: { eval: { first: input } } },
+          extensions: { prf: { eval: { first: firstInput, ...(secondInput && { second: secondInput }) } } },
         },
       });
 
@@ -126,14 +174,10 @@ export class PrfUnlock implements VaultUnlock {
 
       const assertion = credential as PublicKeyCredential;
       const response = assertion.response as AuthenticatorAssertionResponse;
-      const first = assertion.getClientExtensionResults().prf?.results?.first;
+      const results = assertion.getClientExtensionResults().prf?.results;
 
-      if (first) {
-        prf =
-          first instanceof ArrayBuffer
-            ? new Uint8Array(first)
-            : new Uint8Array(first.buffer, first.byteOffset, first.byteLength);
-      }
+      prf = bytes(results?.first);
+      second = bytes(results?.second);
 
       const schema = z.object({
         type: z.literal('webauthn.get'),
@@ -165,11 +209,15 @@ export class PrfUnlock implements VaultUnlock {
         throw new VaultError('unsupported-prf');
       }
 
-      if (prf.byteLength !== 32) {
+      if (prf.byteLength !== 32 || (second && second.byteLength !== 32)) {
         throw new VaultError('unavailable');
       }
 
-      return { credentialId: assertion.id, secret: Uint8Array.from(prf) };
+      return {
+        credentialId: assertion.id,
+        secret: Uint8Array.from(prf),
+        second: request.device && second ? Uint8Array.from(second) : undefined,
+      };
     } catch (error) {
       if (error instanceof VaultError) {
         throw error;
@@ -182,6 +230,7 @@ export class PrfUnlock implements VaultUnlock {
       );
     } finally {
       prf?.fill(0);
+      second?.fill(0);
 
       if (this.pending === controller) {
         this.pending = undefined;

@@ -227,6 +227,8 @@ it('coalesces Vault hints, preserves the outbox, and checks for missed updates a
 
   await harness.fixture.whenStable();
 
+  expect(f.privateResource.synchronize).toHaveBeenCalledWith(a, false);
+  f.privateResource.synchronize.mockClear();
   const invalidate = f.watchVault.mock.calls[0][1];
 
   invalidate(1);
@@ -285,8 +287,64 @@ it('coalesces Vault hints, preserves the outbox, and checks for missed updates a
 
   await harness.fixture.whenStable();
 
-  expect(f.privateResource.synchronize).toHaveBeenCalledTimes(2);
+  expect(f.privateResource.synchronize).toHaveBeenCalledTimes(3);
   expect(f.privateResource.synchronize).toHaveBeenLastCalledWith(a, false);
+});
+
+it('protects an empty edit from a remote hint and cancels a scheduled save on lock', async () => {
+  const f = fixture(undefined, () => true, 'available', true);
+  const harness = await RouterTestingHarness.create();
+
+  await harness.navigateByUrl('/example/vault?' + new URLSearchParams(a));
+
+  await harness.fixture.whenStable();
+
+  const page = (harness.routeDebugElement!.query(By.directive(DatabaseExample)).componentInstance as DatabaseExample)
+    .workspace;
+
+  await page.unlock();
+
+  f.privateResource.synchronized.set(true);
+  f.privateResource.verifiedCursor.set(1);
+
+  await harness.fixture.whenStable();
+
+  page.editPrivateText('');
+  f.privateResource.synchronize.mockClear();
+  f.watchVault.mock.calls[0][1](2);
+
+  await harness.fixture.whenStable();
+
+  expect(page.editor.displayed()).toBe('');
+  expect(f.privateResource.synchronize).not.toHaveBeenCalled();
+
+  f.privateResource.save.mockRejectedValueOnce(new VaultError('quota'));
+
+  await page.saveDraft();
+
+  expect(page.editor.saveFailed()).toBe(true);
+  expect(page.editor.value()).toBe('');
+  expect(f.privateResource.synchronize).not.toHaveBeenCalled();
+  f.privateResource.save.mockClear();
+
+  await page.saveDraft();
+
+  expect(f.privateResource.save).toHaveBeenCalledExactlyOnceWith(a, '');
+  expect(f.privateResource.synchronize).toHaveBeenCalledWith(a, true);
+
+  await harness.fixture.whenStable();
+
+  vi.useFakeTimers();
+
+  try {
+    page.editPrivateText('synthetic draft');
+    page.lock();
+    vi.advanceTimersByTime(1000);
+    expect(page.editor.value()).toBeNull();
+    expect(f.privateResource.save).toHaveBeenCalledTimes(1);
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 async function navigate(harness: RouterTestingHarness, target: ExampleTarget) {

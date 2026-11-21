@@ -2826,10 +2826,22 @@
         <source>Vault devices</source>
       </trans-unit>
       <trans-unit id="vaultDevicesDescription" datatype="html">
-        <source> Pair devices for this synthetic private resource. Keep this page open on both signed-in devices until pairing finishes. </source>
+        <source> Open this page on both devices and sign in to the same account. Approve the new device from the one where you can already open the note. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example-vault-devices/example-vault-devices.html</context>
+          <context context-type="linenumber">6,10</context>
+        </context-group>
       </trans-unit>
       <trans-unit id="vaultDevicesOpen" datatype="html">
-        <source> Open test private resource </source>
+        <source> Open vault note </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example-vault-devices/example-vault-devices.html</context>
+          <context context-type="linenumber">18,20</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example-vault-devices/example-vault-devices.html</context>
+          <context context-type="linenumber">64,67</context>
+        </context-group>
       </trans-unit>
       <trans-unit id="vaultDevicesApproverFingerprint" datatype="html">
         <source>Approving device fingerprint</source>
@@ -2847,7 +2859,11 @@
         <source> Approve this device </source>
       </trans-unit>
       <trans-unit id="vaultDevicesUnlockFirst" datatype="html">
-        <source> Unlock the test private resource on this device before approving another device. </source>
+        <source> Unlock the note on this device before approving another one. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example-vault-devices/example-vault-devices.html</context>
+          <context context-type="linenumber">60,63</context>
+        </context-group>
       </trans-unit>
       <trans-unit id="vaultDevicesFinishInstructions" datatype="html">
         <source> Share the request and fingerprint with the approving device. Then enter the fingerprint you see directly on that device. </source>
@@ -2885,17 +2901,17 @@
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleDescription" datatype="html">
-        <source> Use test data to try a service-readable workspace. Notes are stored in PostgreSQL. Database row security and the app’s permission checks protect access. The server can read the notes, so this is regular cloud storage. </source>
+        <source> Write notes and choose which ones to share. Readers see shared changes automatically. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">5,8</context>
+          <context context-type="linenumber">6,9</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExamplePermissions" datatype="html">
-        <source> The workspace owner writes notes and chooses which to share. A test account with read access can see only shared notes. Choose Vault for data that requires a separate device unlock. </source>
+        <source> The server can read Cloud notes. Only the owner and people with permission can open them in the app. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">9,14</context>
+          <context context-type="linenumber">10,14</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleChecking" datatype="html">
@@ -2920,10 +2936,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleEmpty" datatype="html">
-        <source>There are no visible notes in this workspace.</source>
+        <source>There are no notes to show yet.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">51,54</context>
+          <context context-type="linenumber">34,37</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleScopeAudience" datatype="html">
@@ -2963,17 +2979,17 @@
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleEditing" datatype="html">
-        <source>Edit test note</source>
+        <source>Edit note</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">93,95</context>
+          <context context-type="linenumber">80,82</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleNew" datatype="html">
-        <source>New test note</source>
+        <source>New note</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">95,98</context>
+          <context context-type="linenumber">82,85</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleNoteTitle" datatype="html">
@@ -2984,10 +3000,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleNoteBody" datatype="html">
-        <source>Synthetic note text</source>
+        <source>Note text</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">111</context>
+          <context context-type="linenumber">99</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleAudience" datatype="html">
@@ -3054,10 +3070,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="vaultBackedSampleExplanation" datatype="html">
-        <source> Your browser encrypts the test note before saving it. When you back it up, only the encrypted copy goes to the server. Link another device and unlock the vault there to restore the same note. </source>
+        <source> Write a note here and it backs up automatically. Your browser encrypts it before it leaves this device. You can open the same note on a linked device. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
-          <context context-type="linenumber">13,17</context>
+          <context context-type="linenumber">11,14</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultSyncInProgress" datatype="html">
@@ -3096,31 +3112,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="vaultBackedSampleNeedsPairing" datatype="html">
-        <source> Sign-in gives you access to the workspace. To restore the note on this browser, open Vault devices and get approval from a device that can already unlock it. </source>
+        <source> To restore the note on this browser, link it to your vault. Approve the request on a device where you can already open the note. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
-          <context context-type="linenumber">94,99</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultBackedSampleUpload" datatype="html">
-        <source>Upload encrypted note</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
-          <context context-type="linenumber">233,235</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultBackedSampleRestore" datatype="html">
-        <source>Download and restore note</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
-          <context context-type="linenumber">235,237</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultBackedSampleSynced" datatype="html">
-        <source> The encrypted note is backed up and saved on this browser. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
-          <context context-type="linenumber">252,254</context>
+          <context context-type="linenumber">110,114</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultBackupStorageDisabled" datatype="html">
@@ -3358,6 +3353,90 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
           <context context-type="linenumber">316</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultAutoHelp" datatype="html">
+        <source>Changes are saved automatically. The vault locks after five minutes of inactivity.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">243,244</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultSetupGuidance" datatype="html">
+        <source> Keep access to a linked device. If you lose access to every device, resetting your password won’t recover your note. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">100,104</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultSetupConfirm" datatype="html">
+        <source>Your browser will ask you to create a vault passkey and then use it to unlock this device.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">112,115</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultDraftPending" datatype="html">
+        <source>Saving on this device…</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">251,252</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultBackupPending" datatype="html">
+        <source>Saved on this device. Waiting for backup.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">253,255</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPairDesktop" datatype="html">
+        <source>If your passkey is on your phone, choose that option in the browser and scan the QR code. Keep Bluetooth on for both devices. If passkey unlock is unavailable, you can set a PIN on this device.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example-vault-devices/example-vault-devices.html</context>
+          <context context-type="linenumber">143,145</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultLockNow" datatype="html">
+        <source>Lock vault now</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/layouts/authenticated-layout/authenticated-layout.html</context>
+          <context context-type="linenumber">450,452</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultYourNote" datatype="html">
+        <source>Your note</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">251,252</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultNoteLocked" datatype="html">
+        <source>Unlock the vault to open your note.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">93,96</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultLocalSaveFailed" datatype="html">
+        <source>Your changes haven’t been saved on this device yet. Keep this page open and try again.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">275,276</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultLocalRetry" datatype="html">
+        <source>Try saving again</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">276,277</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultLinkDevice" datatype="html">
+        <source>Link a device</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+          <context context-type="linenumber">384,387</context>
         </context-group>
       </trans-unit>
     </body>

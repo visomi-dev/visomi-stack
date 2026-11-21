@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Service, afterNextRender, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { createOperationId, VaultError } from '@visomi-stack/shared-db';
 import { isVaultPin } from '@visomi-stack/web-frontend-db';
 import type { WrappingContext } from '@visomi-stack/shared-db';
@@ -16,21 +16,18 @@ import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { vaultMessage } from '../shared/vault/vault-messages';
 import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
 
+import { VaultNoteDraft } from './vault-note-draft';
 import { ExamplePrivateResource } from './example-private-resource';
 import {
   exampleLocalKey,
+  exampleRecordsPath,
   examplePrivatePath,
-  exampleTargetSchema as targetSchema,
+  readExampleTarget,
+  scopeSchema,
+  cloudSchema,
   readExampleProfile,
   type ExampleTarget,
 } from './example-contracts';
-
-const scopeSchema = targetSchema.omit({ objectId: true });
-const cloudSchema = z.object({
-  items: z.array(
-    z.object({ id: z.uuid(), title: z.string(), body: z.string(), revision: z.number().int().positive() }),
-  ),
-});
 
 /** Route-local orchestration; components only bind state and invoke domain actions. */
 @Service({ autoProvided: false })
@@ -86,6 +83,10 @@ export class ExampleWorkspace {
   readonly pinConfirmation = signal('');
   readonly pinSetupSelected = signal(false);
 
+  readonly editor = new VaultNoteDraft(this.document, this.privateResource, this.syncStatus);
+  readonly busy = this.busyState.asReadonly();
+
+  readonly editorReadOnly = computed(() => this.busy() || this.editor.readOnly());
   readonly available = computed(
     () =>
       this.configured() &&
@@ -120,17 +121,8 @@ export class ExampleWorkspace {
     return this.backedSample && target ? { ...target, sample: 'vault-backup' } : target;
   });
 
-  readonly busy = this.busyState.asReadonly();
   readonly notice = this.noticeState.asReadonly();
   readonly target = this.targetState.asReadonly();
-
-  changePin(value: string): void {
-    this.pinDraft.set(value);
-  }
-
-  changePinConfirmation(value: string): void {
-    this.pinConfirmation.set(value);
-  }
 
   selectPinSetup(): void {
     if (this.canInitialize() && this.showPin()) {
@@ -143,7 +135,15 @@ export class ExampleWorkspace {
   }
 
   editPrivateText(value: string): void {
-    this.privateDraft.set(value);
+    if (this.backedSample && (!this.vault.ready() || this.editorReadOnly())) {
+      return;
+    }
+
+    if (this.backedSample) {
+      this.editor.edit(value, () => void this.saveDraft());
+    } else {
+      this.privateDraft.set(value);
+    }
   }
 
   async createWorkspace(): Promise<void> {
@@ -186,7 +186,7 @@ export class ExampleWorkspace {
       };
 
       await this.api.vault(
-        this.records(target),
+        exampleRecordsPath(target),
         current
           ? { ...shared, kind: 'update', id: current.id, expectedRevision: current.revision }
           : { ...shared, kind: 'create' },
@@ -231,6 +231,10 @@ export class ExampleWorkspace {
       this.current(signal);
 
       await this.loadBinding(this.requiredTarget(), signal);
+
+      if (!initialize) {
+        this.checkBackup();
+      }
     });
   }
 
@@ -261,10 +265,24 @@ export class ExampleWorkspace {
         this.current(signal);
 
         await this.loadBinding(this.requiredTarget(), signal);
+
+        if (!initialize) {
+          this.checkBackup();
+        }
       });
     } finally {
       pin.fill(0);
     }
+  }
+
+  async saveDraft(): Promise<void> {
+    if (!this.backedSample || this.editor.value() === null || !this.vault.ready() || this.editorReadOnly()) {
+      return;
+    }
+
+    await this.run((signal) =>
+      this.editor.persist(this.requiredTarget(), () => this.current(signal), this.checkBackup),
+    );
   }
 
   async savePrivate(): Promise<void> {
@@ -273,10 +291,6 @@ export class ExampleWorkspace {
 
       this.current(signal);
 
-      if (this.backedSample) {
-        this.syncStatus.show('idle');
-      }
-
       this.privateDraft.set('');
       this.noticeState.set(
         $localize`:@@vaultSaved:The encrypted change is stored on this device. Synchronization is a separate operation.`,
@@ -284,19 +298,18 @@ export class ExampleWorkspace {
     });
   }
 
-  async synchronize(): Promise<void> {
-    await this.synchronizeWithStatus(true);
+  synchronize(flush = true): Promise<void> {
+    return this.runSync((target) => this.privateResource.synchronize(target, flush));
   }
 
-  async keepPending(): Promise<void> {
-    await this.run(() => this.privateResource.keepPending(this.requiredTarget()));
-  }
-
-  async useSynchronized(): Promise<void> {
-    await this.run(() => this.privateResource.useSynchronized(this.requiredTarget()));
+  resolveConflict(keep: boolean): Promise<void> {
+    return this.runSync((target) =>
+      keep ? this.privateResource.keepPending(target) : this.privateResource.useSynchronized(target),
+    );
   }
 
   lock(): void {
+    this.editor.clear();
     this.privateDraft.set('');
     this.pinDraft.set('');
     this.pinConfirmation.set('');
@@ -304,43 +317,26 @@ export class ExampleWorkspace {
     this.privateResource.close();
   }
 
-  private async synchronizeWithStatus(flush: boolean): Promise<void> {
-    await this.run(async (signal) => {
+  private readonly checkBackup = () => {
+    if (this.backedSample && this.vault.ready()) {
+      this.watchCursor.set(0);
+    }
+  };
+
+  private runSync(operation: (target: ExampleTarget) => Promise<void>): Promise<void> {
+    return this.run((signal) => {
       const target = this.requiredTarget();
 
       if (!this.backedSample) {
-        await this.privateResource.synchronize(target, flush);
-
-        return;
+        return operation(target);
       }
 
-      this.syncStatus.show('syncing');
-
-      try {
-        await this.privateResource.synchronize(target, flush);
-
-        this.current(signal);
-        this.syncStatus.show(this.privateResource.synchronized() ? 'synced' : 'idle');
-      } catch (error) {
-        this.current(signal);
-
-        if (this.vault.ready()) {
-          this.syncStatus.show('retry', () => {
-            if (flush) {
-              void this.synchronize();
-            } else {
-              this.watchCursor.set(0);
-            }
-          });
-        }
-
-        throw error;
-      }
+      return this.editor.track(
+        () => operation(target),
+        () => this.current(signal),
+        this.checkBackup,
+      );
     });
-  }
-
-  private records(target: ExampleTarget) {
-    return `/tenants/${target.tenantId}/scopes/${target.scopeId}/domains/operations/records`;
   }
 
   private requiredTarget() {
@@ -376,7 +372,7 @@ export class ExampleWorkspace {
   }
 
   private async loadCloud(target: ExampleTarget, signal: AbortSignal) {
-    const raw = await this.api.vault(`${this.records(target)}?limit=1`, undefined, signal);
+    const raw = await this.api.vault(`${exampleRecordsPath(target)}?limit=1`, undefined, signal);
 
     this.current(signal);
     const value = cloudSchema.parse(raw).items[0] ?? null;
@@ -414,6 +410,7 @@ export class ExampleWorkspace {
     this.targetState.set(null);
     this.cloud.set(null);
     this.cloudDraft.set('');
+    this.editor.clear();
     this.privateDraft.set('');
     this.pinDraft.set('');
     this.pinConfirmation.set('');
@@ -448,6 +445,15 @@ export class ExampleWorkspace {
 
       const code = error instanceof HttpErrorResponse ? error.error?.error : (error as { code?: unknown })?.code;
 
+      if (
+        this.backedSample &&
+        error instanceof HttpErrorResponse &&
+        error.status === 0 &&
+        this.privateResource.pending()
+      ) {
+        return;
+      }
+
       this.noticeState.set(
         this.backedSample && code === 'scope_access_denied'
           ? $localize`:@@vaultBackedSampleDenied:This account doesn’t have access to the backup workspace.`
@@ -464,6 +470,7 @@ export class ExampleWorkspace {
     this.session.operationVersion();
 
     if (!this.vault.ready()) {
+      this.editor.clear();
       this.privateDraft.set('');
 
       if (this.backedSample) {
@@ -490,7 +497,8 @@ export class ExampleWorkspace {
 
     const close = this.realtime?.watchVault(
       () => this.privateResource.watchProof(target),
-      (cursor) => this.watchCursor.update((pending) => Math.max(pending ?? 0, cursor)),
+      (cursor) =>
+        this.watchCursor.update((pending) => (pending === 0 || cursor === 0 ? 0 : Math.max(pending ?? 0, cursor))),
     );
 
     onCleanup(() => {
@@ -505,18 +513,18 @@ export class ExampleWorkspace {
 
     if (
       hint !== null &&
-      cursor !== null &&
       this.available() &&
       this.vault.ready() &&
       !this.busy() &&
-      !this.privateResource.pending() &&
-      !this.privateDraft()
+      (hint === 0 || !this.privateResource.pending()) &&
+      !this.privateResource.conflict() &&
+      this.editor.value() === null
     ) {
       untracked(() => {
         this.watchCursor.set(null);
 
-        if (hint === 0 || hint > cursor) {
-          void this.synchronizeWithStatus(false);
+        if (hint === 0 || (cursor !== null && hint > cursor)) {
+          void this.synchronize(this.privateResource.pending());
         }
       });
     }
@@ -551,13 +559,7 @@ export class ExampleWorkspace {
           return;
         }
 
-        const target = params.has('tenantId')
-          ? targetSchema.parse({
-              tenantId: params.get('tenantId'),
-              scopeId: params.get('scopeId'),
-              objectId: params.get('objectId'),
-            })
-          : null;
+        const target = readExampleTarget(params);
 
         this.profile = profile;
         this.objectBackups.set(profile.objectBackups === true);
@@ -580,6 +582,8 @@ export class ExampleWorkspace {
 
           this.current(signal);
 
+          this.checkBackup();
+
           if (!this.backedSample) {
             await this.loadCloud(target, signal);
           }
@@ -588,5 +592,15 @@ export class ExampleWorkspace {
     });
   });
 
-  private readonly initialize = afterNextRender(() => this.rendered.set(true));
+  private readonly initialize = afterNextRender(() => {
+    this.rendered.set(true);
+    const view = this.document.defaultView;
+
+    if (!this.backedSample || !view) {
+      return;
+    }
+
+    view.addEventListener('online', this.checkBackup);
+    this.destroyRef.onDestroy(() => view.removeEventListener('online', this.checkBackup));
+  });
 }

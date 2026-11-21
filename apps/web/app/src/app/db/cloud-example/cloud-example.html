@@ -3,13 +3,11 @@
     <h1 appUI appNavigationHeading i18n="@@cloudExampleTitle">Cloud example</h1>
 
     <p appUI tone="muted" i18n="@@cloudExampleDescription">
-      Use test data to try a service-readable workspace. Notes are stored in PostgreSQL. Database row security and the
-      app’s permission checks protect access. The server can read the notes, so this is regular cloud storage.
+      Write notes and choose which ones to share. Readers see shared changes automatically.
     </p>
 
     <p appUI tone="muted" i18n="@@cloudExamplePermissions">
-      The workspace owner writes notes and chooses which to share. A test account with read access can see only shared
-      notes. Choose Vault for data that requires a separate device unlock.
+      The server can read Cloud notes. Only the owner and people with permission can open them in the app.
     </p>
   </header>
 
@@ -33,7 +31,7 @@
       <p role="alert" i18n="@@cloudExampleInvalidLink">This test workspace link is invalid.</p>
     } @else {
       @if (workspace.loaded() && !workspace.notes().length) {
-        <p appUI tone="muted" i18n="@@cloudExampleEmpty">There are no visible notes in this workspace.</p>
+        <p appUI tone="muted" i18n="@@cloudExampleEmpty">There are no notes to show yet.</p>
       }
 
       @for (note of workspace.notes(); track note.id) {
@@ -79,9 +77,9 @@
       @if (workspace.canWrite()) {
         <form appUI="card" padding="lg" class="grid gap-4" (submit)="$event.preventDefault(); workspace.save()">
           @if (workspace.selected()) {
-            <h2 appUI i18n="@@cloudExampleEditing">Edit test note</h2>
+            <h2 appUI i18n="@@cloudExampleEditing">Edit note</h2>
           } @else {
-            <h2 appUI i18n="@@cloudExampleNew">New test note</h2>
+            <h2 appUI i18n="@@cloudExampleNew">New note</h2>
           }
 
           <app-field control-id="cloud-note-title" label="Note title" i18n-label="@@cloudExampleNoteTitle">
@@ -98,7 +96,7 @@
             />
           </app-field>
 
-          <app-field control-id="cloud-note-body" label="Synthetic note text" i18n-label="@@cloudExampleNoteBody">
+          <app-field control-id="cloud-note-body" label="Note text" i18n-label="@@cloudExampleNoteBody">
             <textarea
               appUI
               id="cloud-note-body"
