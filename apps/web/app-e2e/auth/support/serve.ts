@@ -106,7 +106,13 @@ async function serve(): Promise<void> {
 
     const otlpPort = (otlp.address() as AddressInfo).port;
 
-    child = spawn(process.execPath, ['dist/apps/web/gateway/main.js'], {
+    const gatewayArgs = [
+      '--import',
+      './apps/web/app-e2e/auth/support/s3-virtual-host.ts',
+      'dist/apps/web/gateway/main.js',
+    ];
+
+    child = spawn(process.execPath, gatewayArgs, {
       cwd: workspaceRoot,
       stdio: 'inherit',
       env: {
@@ -133,6 +139,7 @@ async function serve(): Promise<void> {
         VISOMI_PERSISTENCE_EXAMPLE: 'true',
         VISOMI_PERSISTENCE_DEMOS: 'true',
         ...s3.environment,
+        PRIVATE_S3_ENDPOINT: 'https://t3.storageapi.dev',
         API_APP_PATH: '',
         SITE_APP_PATH: '',
         APPLICATION_APP_PATH: '',

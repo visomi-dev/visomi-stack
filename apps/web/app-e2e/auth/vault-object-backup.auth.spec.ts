@@ -171,15 +171,17 @@ test('backs up the Vault Example note to private object storage and restores it 
 
   const panel = page.locator('app-database-example');
 
-  await expect(panel.getByRole('heading', { name: 'Back up and restore a test note' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Vault example', level: 1 })).toBeVisible();
 
-  await panel.getByRole('button', { name: 'Create a backup test workspace' }).click();
+  await panel.getByRole('button', { name: 'Set up my vault' }).click();
+
+  await panel.getByRole('button', { name: 'Use a PIN on this device' }).click();
 
   await panel.getByLabel('Local unlock PIN', { exact: true }).fill(pin);
 
   await panel.getByLabel('Confirm your new PIN', { exact: true }).fill(pin);
 
-  await panel.getByRole('button', { name: 'Set up an empty private resource with PIN' }).click();
+  await panel.getByRole('button', { name: 'Set up with PIN' }).click();
 
   await panel.getByLabel('Private text', { exact: true }).fill(note);
 
@@ -498,7 +500,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     const restoredPanel = recipient.locator('app-database-example');
 
-    await expect(restoredPanel.getByRole('heading', { name: 'Respalda y restaura una nota de prueba' })).toBeVisible();
+    await expect(recipient.getByRole('heading', { name: 'Ejemplo de bóveda', level: 1 })).toBeVisible();
 
     await expect(recipient.getByText(note, { exact: true })).toHaveCount(0);
 

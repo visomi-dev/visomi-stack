@@ -84,6 +84,7 @@ export class ExampleWorkspace {
   readonly privateDraft = signal('');
   readonly pinDraft = signal('');
   readonly pinConfirmation = signal('');
+  readonly pinSetupSelected = signal(false);
 
   readonly available = computed(
     () =>
@@ -112,6 +113,7 @@ export class ExampleWorkspace {
     () => this.methodLoaded() && !this.hasBinding() && (!this.backedSample || this.backedScope() === 'empty'),
   );
   readonly canPair = computed(() => !this.backedSample || this.hasBinding() || this.backedScope() === 'enrolled');
+  readonly loading = computed(() => !this.rendered() || this.busyState());
   readonly pairingParams = computed(() => {
     const target = this.targetState();
 
@@ -128,6 +130,12 @@ export class ExampleWorkspace {
 
   changePinConfirmation(value: string): void {
     this.pinConfirmation.set(value);
+  }
+
+  selectPinSetup(): void {
+    if (this.canInitialize() && this.showPin()) {
+      this.pinSetupSelected.set(true);
+    }
   }
 
   editOperationalNote(value: string): void {
@@ -236,7 +244,7 @@ export class ExampleWorkspace {
 
     try {
       await this.run(async (signal) => {
-        if (initialize && !this.showPin()) {
+        if (initialize && (!this.showPin() || (this.backedSample && !this.pinSetupSelected()))) {
           throw new VaultError('unsupported-prf');
         }
 
@@ -409,6 +417,7 @@ export class ExampleWorkspace {
     this.privateDraft.set('');
     this.pinDraft.set('');
     this.pinConfirmation.set('');
+    this.pinSetupSelected.set(false);
     this.noticeState.set('');
     this.busyState.set(false);
 

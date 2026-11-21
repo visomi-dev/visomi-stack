@@ -1,6 +1,7 @@
+import { persistenceSchema } from '@visomi-stack/backend-db';
 import { parseProductPolicy, syntheticHybridPolicy } from '@visomi-stack/shared-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
-import { sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 
 import type { ScopeAccess } from '../access/service';
 
@@ -38,4 +39,28 @@ export async function useCloudRecordRole({ tx, actor, target }: ScopeAccess): Pr
       set_config('visomi.cloud_tenant', ${target.tenantId}, true),
       set_config('visomi.cloud_scope', ${target.scopeId}, true)
   `);
+}
+
+export async function cloudChangeRecipients({ tx, actor, target }: ScopeAccess, visibleToReaders: boolean) {
+  const owner = actor.principal.id;
+
+  if (!visibleToReaders) {
+    return [owner];
+  }
+
+  const { grants, memberships } = persistenceSchema;
+  const readers = await tx
+    .select({ id: grants.userId })
+    .from(grants)
+    .innerJoin(memberships, and(eq(grants.tenantId, memberships.tenantId), eq(grants.userId, memberships.userId)))
+    .where(
+      and(
+        eq(grants.tenantId, target.tenantId),
+        eq(grants.scopeId, target.scopeId),
+        eq(grants.role, 'viewer'),
+        isNull(memberships.revokedAt),
+      ),
+    );
+
+  return [owner, ...readers.map(({ id }) => id)];
 }

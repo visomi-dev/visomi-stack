@@ -1,0 +1,19 @@
+<main class="mx-auto grid w-full max-w-md gap-4 px-4 py-8" [attr.aria-busy]="!ready() || busy()">
+  <h1 appUI appNavigationHeading i18n="@@cloudJoinTitle">Join a Cloud workspace</h1>
+
+  @if (ready()) {
+    @if (!token()) {
+      <p role="alert" i18n="@@cloudJoinMissing">Open the original sharing link to continue.</p>
+    } @else if (session.full()) {
+      <button appUI type="button" [disabled]="busy()" (click)="join()" i18n="@@cloudJoinOpen">Open workspace</button>
+    } @else {
+      <p appUI tone="muted" i18n="@@cloudJoinRequirement">Sign in with a verified Stack account to open this link.</p>
+
+      <button appUI type="button" (click)="signIn()" i18n="@@cloudJoinSignIn">Sign in</button>
+    }
+  }
+
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+  }
+</main>

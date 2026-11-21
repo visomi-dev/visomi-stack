@@ -86,6 +86,19 @@ export const grants = pgTable(
   ],
 );
 
+export const cloudShareLinks = pgTable(
+  'cloud_share_links',
+  {
+    tenantId: uuid('tenant_id').notNull(),
+    scopeId: uuid('scope_id').primaryKey(),
+    tokenHash: text('token_hash').notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    foreignKey({ columns: [t.tenantId, t.scopeId], foreignColumns: [scopes.tenantId, scopes.id] }).onDelete('cascade'),
+  ],
+);
+
 export const records = pgTable(
   'persistence_records',
   {

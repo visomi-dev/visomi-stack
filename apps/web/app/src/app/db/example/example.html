@@ -7,11 +7,9 @@
 >
   <header class="space-y-3">
     @if (workspace.backedSample) {
-      <h2 appUI i18n="@@vaultBackedSampleTitle">Back up and restore a test note</h2>
-
       <p appUI tone="muted" i18n="@@vaultBackedSampleExplanation">
-        The browser encrypts the test note and saves it in IndexedDB. When you upload a backup, only the encrypted copy
-        goes to the server. To restore the same note, pair your other device and unlock the vault there.
+        Your browser encrypts the test note before saving it. When you back it up, only the encrypted copy goes to the
+        server. Link another device and unlock the vault there to restore the same note.
       </p>
     } @else {
       <h1 appUI appNavigationHeading i18n="@@persistenceExampleHeading">Hybrid persistence example</h1>
@@ -23,20 +21,20 @@
     }
   </header>
 
-  @if (!workspace.available()) {
+  @if (workspace.backedSample && workspace.loading() && !workspace.available()) {
+    <p role="status" i18n="@@vaultLoading">Loading the vault…</p>
+  } @else if (!workspace.available()) {
     @if (workspace.backedSample) {
       <p role="status" i18n="@@vaultBackupUnavailable">The Vault backup service is unavailable right now.</p>
     } @else {
       <p role="status" i18n="@@persistenceExampleUnavailable">Set up the development profile to use this example.</p>
     }
   } @else if (workspace.backedSample && !workspace.target() && !workspace.objectBackups()) {
-    <p role="status" i18n="@@vaultBackupStorageDisabled">
-      Private backup storage is unavailable right now. You can still use the local vault.
-    </p>
+    <p role="status" i18n="@@vaultBackupStorageDisabled">Vault backups are unavailable right now. Try again later.</p>
   } @else if (!workspace.target()) {
     <button appUI type="button" [disabled]="workspace.busy()" (click)="workspace.createWorkspace()">
       @if (workspace.backedSample) {
-        <span i18n="@@vaultBackedSampleCreate">Create a backup test workspace</span>
+        <span i18n="@@vaultDemoSetup">Set up my vault</span>
       } @else {
         <span i18n="@@persistenceCreateWorkspace">Create a test workspace</span>
       }
@@ -78,7 +76,7 @@
 
     <section class="space-y-4 rounded-xl border p-5">
       @if (workspace.backedSample) {
-        <h3 appUI i18n="@@vaultBackedSampleNote">Note in the backup workspace</h3>
+        <h2 appUI i18n="@@vaultBackedSampleNote">Vault note</h2>
       } @else {
         <h2 appUI i18n="@@vaultHeading">Private resource</h2>
       }
@@ -128,20 +126,44 @@
               variant="secondary"
               [disabled]="workspace.busy() || workspace.vault.ready()"
               (click)="workspace.unlock(true)"
-              i18n="@@persistenceInitializePrivate"
             >
-              Set up an empty private resource
+              @if (workspace.backedSample) {
+                <span i18n="@@vaultPrfSetup">Set up with a passkey</span>
+              } @else {
+                <span i18n="@@persistenceInitializePrivate">Set up an empty private resource</span>
+              }
             </button>
           }
         </div>
       }
 
       @if (
+        workspace.backedSample &&
+        workspace.canInitialize() &&
         workspace.showPin() &&
         !workspace.vault.ready() &&
-        (!workspace.backedSample || workspace.hasBinding() || workspace.canInitialize())
+        !workspace.pinSetupSelected()
       ) {
-        <form class="space-y-4" (submit)="$event.preventDefault(); workspace.unlockWithPin()">
+        <p appUI tone="muted" i18n="@@vaultSetupPrfUnavailable">Passkey unlock is unavailable here.</p>
+
+        <button appUI type="button" [disabled]="workspace.busy()" (click)="workspace.selectPinSetup()">
+          <span i18n="@@vaultDemoUsePin">Use a PIN on this device</span>
+        </button>
+      }
+
+      @if (
+        workspace.showPin() &&
+        !workspace.vault.ready() &&
+        (!workspace.backedSample ||
+          workspace.hasBinding() ||
+          (workspace.canInitialize() && workspace.pinSetupSelected()))
+      ) {
+        <form
+          class="space-y-4"
+          (submit)="
+            $event.preventDefault(); workspace.unlockWithPin(workspace.backedSample && workspace.canInitialize())
+          "
+        >
           <p appUI tone="muted" i18n="@@vaultPinWarning">
             If passkeys aren’t supported, you can use a 6-digit PIN. Anyone with a copy of your encrypted data can try
             every PIN offline, so a PIN offers less protection. Setup requires a connection. After setup, you can unlock
@@ -164,10 +186,24 @@
             />
           </app-field>
 
-          <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinUnlock">Unlock with PIN</button>
+          @if (workspace.backedSample && workspace.canInitialize()) {
+            <app-field control-id="vault-pin-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
+              <app-pin-input
+                required
+                [digits]="6"
+                [disabled]="workspace.busy()"
+                [value]="workspace.pinConfirmation()"
+                (valueChange)="workspace.changePinConfirmation($event)"
+              />
+            </app-field>
+
+            <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinSetup">Set up with PIN</button>
+          } @else {
+            <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinUnlock">Unlock with PIN</button>
+          }
         </form>
 
-        @if (workspace.canInitialize()) {
+        @if (!workspace.backedSample && workspace.canInitialize()) {
           <app-field control-id="vault-pin-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
             <app-pin-input
               required

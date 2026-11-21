@@ -13,6 +13,7 @@ const env = {
   PRIVATE_S3_SECRET_KEY: 'synthetic',
   PRIVATE_S3_BUCKET: 'synthetic-bucket',
 };
+const railwayEnv = { ...env, NODE_ENV: 'production', PRIVATE_S3_ENDPOINT: 'https://t3.storageapi.dev' };
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -28,6 +29,11 @@ it.each([
   { PRIVATE_S3_ENDPOINT: 'http://example.test/' },
   { PRIVATE_S3_ENDPOINT: 'http://127.0.0.1/bucket' },
   { PRIVATE_S3_ENDPOINT: 'https://example.test/?secret=synthetic' },
+  { PRIVATE_S3_ENDPOINT: 'https://t3.storageapi.dev:8443' },
+  { PRIVATE_S3_ENDPOINT: 'https://t3.storageapi.dev.' },
+  { PRIVATE_S3_ENDPOINT: 'https://t3.storageapi.dev/synthetic-bucket' },
+  { PRIVATE_S3_ENDPOINT: 'https://synthetic-bucket.t3.storageapi.dev' },
+  { PRIVATE_S3_ENDPOINT: 'https://other-bucket.t3.storageapi.dev' },
   { PRIVATE_S3_ACCESS_KEY: '' },
   { PRIVATE_S3_SECRET_KEY: '' },
   { PRIVATE_S3_BUCKET: '' },
@@ -36,7 +42,20 @@ it.each([
   expect(createBackupObjects({ ...env, ...override })).toBeUndefined();
 });
 
-it('signs conditional writes on the configured HTTPS origin in production', async () => {
+it.each([
+  {
+    endpoint: 'https://objects.example.test',
+    origin: 'https://objects.example.test',
+    prefix: '/synthetic-bucket/',
+    region: 'us-east-1',
+  },
+  {
+    endpoint: railwayEnv.PRIVATE_S3_ENDPOINT,
+    origin: 'https://synthetic-bucket.t3.storageapi.dev',
+    prefix: '/',
+    region: 'auto',
+  },
+])('signs conditional writes on the expected origin for $endpoint', async ({ endpoint, origin, prefix, region }) => {
   const request = vi.fn<typeof fetch>();
   const timeouts = vi.spyOn(AbortSignal, 'timeout');
 
@@ -45,7 +64,7 @@ it('signs conditional writes on the configured HTTPS origin in production', asyn
   const storage = createBackupObjects({
     ...env,
     NODE_ENV: 'production',
-    PRIVATE_S3_ENDPOINT: 'https://objects.example.test',
+    PRIVATE_S3_ENDPOINT: endpoint,
   })!;
 
   await storage.put('vault-backups/scope/object', 'encrypted');
@@ -57,9 +76,10 @@ it('signs conditional writes on the configured HTTPS origin in production', asyn
   const [destination, init] = request.mock.calls[0];
 
   expect(destination).toMatchObject({
-    origin: 'https://objects.example.test',
-    pathname: '/synthetic-bucket/vault-backups/scope/object',
+    origin,
+    pathname: `${prefix}vault-backups/scope/object`,
   });
+  expect((destination as URL).searchParams.get('X-Amz-Credential')).toContain(`/${region}/s3/aws4_request`);
   expect((destination as URL).searchParams.get('X-Amz-SignedHeaders')).toContain('if-none-match');
   expect((destination as URL).searchParams.get('X-Amz-Expires')).toBe('15');
   expect(init).toMatchObject({
@@ -71,19 +91,27 @@ it('signs conditional writes on the configured HTTPS origin in production', asyn
   storage.close();
 });
 
-it.each(['https://outside.example.test/synthetic-bucket/fixture', 'http://127.0.0.1:8333/other-bucket/fixture'])(
-  'rejects a signed destination outside the configured object path',
-  async (destination) => {
-    vi.spyOn(S3Client.prototype, 'getPresignedUrl').mockResolvedValueOnce(destination);
-    const request = vi.fn<typeof fetch>();
+it.each([
+  [env, 'https://outside.example.test/synthetic-bucket/fixture'],
+  [env, 'http://127.0.0.1:8333/other-bucket/fixture'],
+  [railwayEnv, 'not a URL'],
+  [railwayEnv, 'https://t3.storageapi.dev/synthetic-bucket/fixture'],
+  [railwayEnv, 'https://other-bucket.t3.storageapi.dev/fixture'],
+  [railwayEnv, 'https://synthetic-bucket.t3.storageapi.dev.example.test/fixture'],
+  [railwayEnv, 'https://synthetic-bucket.t3.storageapi.dev:8443/fixture'],
+  [railwayEnv, 'https://synthetic-bucket.t3.storageapi.dev/other/fixture'],
+  [railwayEnv, 'https://user:password@synthetic-bucket.t3.storageapi.dev/fixture'],
+  [railwayEnv, 'https://synthetic-bucket.t3.storageapi.dev/fixture#fragment'],
+])('rejects a signed destination outside the configured object path', async (configuration, destination) => {
+  vi.spyOn(S3Client.prototype, 'getPresignedUrl').mockResolvedValueOnce(destination);
+  const request = vi.fn<typeof fetch>();
 
-    vi.stubGlobal('fetch', request);
+  vi.stubGlobal('fetch', request);
 
-    await expect(createBackupObjects(env)!.get('fixture', 3)).rejects.toMatchObject({ status: 503 });
+  await expect(createBackupObjects(configuration)!.get('fixture', 3)).rejects.toMatchObject({ status: 503 });
 
-    expect(request).not.toHaveBeenCalled();
-  },
-);
+  expect(request).not.toHaveBeenCalled();
+});
 
 it('signs fixed-origin staging cleanup and requires a successful S3 delete', async () => {
   const request = vi.fn<typeof fetch>();

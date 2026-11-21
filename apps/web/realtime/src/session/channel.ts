@@ -71,7 +71,7 @@ export function attachSessionChannel(io: Server, readUser: ReadSessionUser) {
     });
   });
 
-  async function notify(room: string): Promise<void> {
+  async function notify(room: string, event: 'session:changed' | 'cloud:changed' = 'session:changed'): Promise<void> {
     await Promise.all(
       [...(sessions.adapter.rooms.get(room) ?? [])].map(async (id) => {
         const socket = sessions.sockets.get(id);
@@ -84,7 +84,7 @@ export function attachSessionChannel(io: Server, readUser: ReadSessionUser) {
 
         if (socket.connected) {
           if (current) {
-            socket.emit('session:changed');
+            socket.emit(event);
           } else {
             socket.disconnect();
           }
@@ -96,5 +96,6 @@ export function attachSessionChannel(io: Server, readUser: ReadSessionUser) {
   return {
     notifySession: (sessionId: string) => notify(`session:${sessionId}`),
     notifyUser: (userId: string) => notify(`user:${userId}`),
+    notifyCloud: (userId: string) => notify(`user:${userId}`, 'cloud:changed'),
   };
 }

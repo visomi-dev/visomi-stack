@@ -3,10 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { createOperationId } from '@visomi-stack/shared-db';
 import { sql } from 'drizzle-orm';
 import { beforeAll, expect, it } from 'vitest';
+import { z } from 'zod';
 
 import type { Transaction } from '../../src/auth/shared/identity';
 
-import { client, mutation, resource } from './support/persistence';
+import { authRuntime, client, cloudMail, cloudNotice, mutation, resource } from './support/persistence';
 
 const prefix = '/example/cloud/tenants';
 
@@ -91,6 +92,7 @@ it('enforces Cloud owner/shared CRUD, explicit read access, and revocation at th
 
   expect(privateNote.status).toBe(200);
   expect(sharedNote.status).toBe(200);
+  expect(cloudNotice.mock.calls).toEqual([[ownerId], [ownerId]]);
 
   await expect(owner.call(records)).resolves.toMatchObject({ body: { canWrite: true } });
 
@@ -159,13 +161,19 @@ it('enforces Cloud owner/shared CRUD, explicit read access, and revocation at th
     owner.call(`${base(root.body)}/members`, 'PUT', { userId: collaboratorId, active });
   const grant = (role: string) => owner.call(`${base(target)}/grants`, 'PUT', { userId: collaboratorId, role });
 
+  cloudNotice.mockClear().mockRejectedValueOnce(new Error('Synthetic transport unavailable'));
+
   await expect(member(true)).resolves.toMatchObject({ status: 200 });
 
   await expect(readByRole(collaboratorId)).resolves.toEqual([]);
 
   await expect(grant('editor')).resolves.toMatchObject({ status: 403 });
 
+  cloudNotice.mockRejectedValueOnce(new Error('Synthetic transport unavailable'));
+
   await expect(grant('viewer')).resolves.toMatchObject({ status: 200 });
+
+  expect(cloudNotice.mock.calls).toEqual([[collaboratorId], [collaboratorId]]);
 
   await expect(readByRole(collaboratorId)).resolves.toEqual([sharedNote.body.id]);
 
@@ -199,6 +207,8 @@ it('enforces Cloud owner/shared CRUD, explicit read access, and revocation at th
     ),
   ).rejects.toMatchObject({ cause: { code: '42501' } });
 
+  cloudNotice.mockClear().mockRejectedValueOnce(new Error('Synthetic transport unavailable'));
+
   const updated = await owner.call(records, 'POST', {
     kind: 'update',
     operationId: createOperationId(globalThis.crypto),
@@ -210,6 +220,7 @@ it('enforces Cloud owner/shared CRUD, explicit read access, and revocation at th
   });
 
   expect(updated.status).toBe(200);
+  expect(cloudNotice.mock.calls).toEqual([[ownerId], [collaboratorId]]);
 
   await expect(collaborator.call(`${records}/${sharedNote.body.id}`)).resolves.toMatchObject({
     body: { title: 'Updated shared test note' },
@@ -254,5 +265,146 @@ it('enforces Cloud owner/shared CRUD, explicit read access, and revocation at th
     await expect(owner.call(records)).resolves.toMatchObject({ status: 503 });
   } finally {
     await resource.pool.query('alter table public.persistence_records enable row level security');
+  }
+});
+
+it('allows only verified accounts to redeem an active link and rejects revoked readers, expired links and replaced links', async () => {
+  const [owner, reader, outsider, unverified] = await Promise.all([client(), client(), client(), client(false)]);
+  const root = await owner.call(prefix, 'POST', {});
+  const { body: target } = await owner.call(`${base(root.body)}/children`, 'POST', { kind: 'resource' });
+  const sharing = `${base(target)}/sharing`;
+  const join = '/example/cloud/sharing/join';
+  const notes = `${base(target)}/domains/cloud-notes/records`;
+
+  await expect(owner.call(`${base(root.body)}/sharing`)).resolves.toMatchObject({ status: 403 });
+
+  await expect(owner.call(sharing)).resolves.toMatchObject({ body: { linkExpiresAt: null, readers: [] } });
+
+  await expect(outsider.call(`${sharing}/link`, 'POST', {})).resolves.toMatchObject({ status: 403 });
+
+  const original = await owner.call(`${sharing}/link`, 'POST', {});
+  const { token } = z.object({ token: z.string().length(43) }).parse(original.body);
+
+  expect(original.status).toBe(200);
+
+  await expect(unverified.call(join, 'POST', { token })).resolves.toMatchObject({ status: 403 });
+
+  await expect(outsider.call(notes)).resolves.toMatchObject({ status: 403 });
+
+  cloudNotice.mockRejectedValueOnce(new Error('Synthetic transport unavailable'));
+
+  await expect(owner.call(join, 'POST', { token })).resolves.toMatchObject({ status: 200 });
+
+  await expect(reader.call(join, 'POST', { token })).resolves.toMatchObject({ status: 200, body: target });
+
+  await expect(reader.call(join, 'POST', { token })).resolves.toMatchObject({ status: 200, body: target });
+
+  await expect(reader.call(sharing)).resolves.toMatchObject({ status: 403 });
+
+  const readerId = reader.actor.principal.id;
+
+  await resource.pool.query("update persistence_grants set role = 'manager' where scope_id = $1 and user_id = $2", [
+    target.scopeId,
+    readerId,
+  ]);
+
+  await expect(reader.call(sharing)).resolves.toMatchObject({ status: 403 });
+
+  await resource.pool.query("update persistence_grants set role = 'viewer' where scope_id = $1 and user_id = $2", [
+    target.scopeId,
+    readerId,
+  ]);
+
+  await expect(owner.call(sharing)).resolves.toMatchObject({
+    body: { linkExpiresAt: expect.any(String), readers: [{ id: reader.actor.principal.id }] },
+  });
+
+  await expect(owner.call(`${sharing}/readers/${reader.actor.principal.id}`, 'DELETE')).resolves.toMatchObject({
+    status: 200,
+  });
+
+  await expect(owner.call(`${sharing}/readers/${reader.actor.principal.id}`, 'DELETE')).resolves.toMatchObject({
+    status: 200,
+  });
+
+  await expect(reader.call(join, 'POST', { token })).resolves.toMatchObject({ status: 403 });
+
+  await expect(reader.call(notes)).resolves.toMatchObject({ status: 403 });
+
+  const replacement = await owner.call(`${sharing}/link`, 'POST', {});
+  const { token: newToken } = z.object({ token: z.string() }).parse(replacement.body);
+
+  await expect(outsider.call(join, 'POST', { token })).resolves.toMatchObject({ status: 403 });
+
+  await resource.pool.query(
+    "update cloud_share_links set expires_at = now() - interval '1 second' where scope_id = $1",
+    [target.scopeId],
+  );
+
+  await expect(outsider.call(join, 'POST', { token: newToken })).resolves.toMatchObject({ status: 403 });
+
+  const active = await owner.call(`${sharing}/link`, 'POST', {});
+  const current = z.object({ token: z.string() }).parse(active.body);
+
+  await expect(
+    owner.call(`${base(root.body)}/members`, 'PUT', { userId: reader.actor.principal.id, active: false }),
+  ).resolves.toMatchObject({ status: 200 });
+
+  await expect(reader.call(join, 'POST', { token: current.token })).resolves.toMatchObject({ status: 403 });
+
+  await expect(owner.call(`${sharing}/link`, 'DELETE')).resolves.toMatchObject({ status: 200 });
+
+  await expect(outsider.call(join, 'POST', { token: current.token })).resolves.toMatchObject({ status: 403 });
+});
+
+it('emails only existing verified accounts and reports transport failure separately from read access', async () => {
+  const [owner, reader, unverified] = await Promise.all([client(), client(), client(false)]);
+  const root = await owner.call(prefix, 'POST', {});
+  const { body: target } = await owner.call(`${base(root.body)}/children`, 'POST', { kind: 'resource' });
+  const emailPath = `${base(target)}/sharing/email`;
+  const notes = `${base(target)}/domains/cloud-notes/records`;
+  const email = `${reader.actor.principal.id}@example.test`;
+
+  await expect(owner.call(emailPath, 'POST', { email, locale: 'en' })).resolves.toMatchObject({ status: 503 });
+
+  authRuntime.mail = { send: cloudMail, close: () => undefined };
+
+  try {
+    for (const unsupported of [
+      'missing@example.test',
+      `${unverified.actor.principal.id}@example.test`,
+      `${owner.actor.principal.id}@example.test`,
+    ]) {
+      await expect(owner.call(emailPath, 'POST', { email: unsupported, locale: 'en' })).resolves.toMatchObject({
+        status: 400,
+        body: { error: 'cloud_recipient_unavailable' },
+      });
+    }
+
+    expect(cloudMail).not.toHaveBeenCalled();
+
+    cloudMail.mockRejectedValueOnce(new Error('Synthetic SMTP failure'));
+
+    await expect(owner.call(emailPath, 'POST', { email, locale: 'en' })).resolves.toMatchObject({
+      status: 200,
+      body: { sent: false },
+    });
+
+    await expect(reader.call(notes)).resolves.toMatchObject({ status: 200, body: { canWrite: false } });
+
+    await expect(owner.call(emailPath, 'POST', { email, locale: 'es' })).resolves.toMatchObject({
+      status: 200,
+      body: { sent: true },
+    });
+
+    expect(cloudMail).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        to: email,
+        subject: 'Te compartieron un espacio en Stack',
+        text: expect.stringContaining(`/app/es/example/cloud/${target.tenantId}/${target.scopeId}`),
+      }),
+    );
+  } finally {
+    authRuntime.mail = undefined;
   }
 });

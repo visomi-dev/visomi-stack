@@ -1,12 +1,12 @@
-import { DOCUMENT } from '@angular/common';
+import { DOCUMENT, Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Service, computed, effect, inject, signal, untracked } from '@angular/core';
+import { LOCALE_ID, Service, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { createOperationId } from '@visomi-stack/shared-db';
 import { z } from 'zod';
 
-import { Session } from '../../auth/session/session';
+import { BrowserRealtimeSession } from '../../auth/session/browser-realtime-session';
 import { DatabaseHttp } from '../../shared/db/http';
 import { ExampleAvailability } from '../example-availability';
 
@@ -19,6 +19,12 @@ const noteSchema = z.strictObject({
   revision: z.number().int().positive(),
 });
 const pageSchema = z.strictObject({ items: z.array(noteSchema), next: z.null(), canWrite: z.boolean() });
+const sharingSchema = z.strictObject({
+  linkExpiresAt: z.iso.datetime().nullable(),
+  readers: z.array(z.strictObject({ id: z.uuid(), email: z.email() })),
+});
+const linkSchema = z.strictObject({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$/), expiresAt: z.iso.datetime() });
+const deliverySchema = z.strictObject({ sent: z.boolean() });
 
 type Workspace = z.infer<typeof workspaceSchema>;
 type Note = z.infer<typeof noteSchema>;
@@ -26,32 +32,41 @@ type Note = z.infer<typeof noteSchema>;
 const prefix = '/tenants';
 const scopePath = ({ tenantId, scopeId }: Workspace) => `${prefix}/${tenantId}/scopes/${scopeId}`;
 const notesPath = (target: Workspace) => `${scopePath(target)}/domains/cloud-notes/records`;
+const sharingPath = (target: Workspace) => `${scopePath(target)}/sharing`;
 
 @Service({ autoProvided: false })
 export class CloudWorkspace {
   private readonly api = inject(DatabaseHttp);
   private readonly document = inject(DOCUMENT);
+  private readonly location = inject(Location);
+  private readonly locale = inject(LOCALE_ID);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly session = inject(Session);
+  private readonly realtime = inject(BrowserRealtimeSession, { optional: true });
 
   private readonly params = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
+  private readonly readError = signal('');
+  private readonly actionError = signal('');
 
   private readonly page = signal<z.infer<typeof pageSchema> | null>(null);
 
   private controller?: AbortController;
+  private refreshRequest?: AbortController;
+  private refreshPending = false;
+  private lastCloudChange = this.realtime?.cloudChanges() ?? 0;
 
   readonly examples = inject(ExampleAvailability);
 
   readonly busy = signal(false);
   readonly status = signal('');
-  readonly error = signal('');
   readonly selected = signal<Note | null>(null);
   readonly title = signal('');
   readonly body = signal('');
   readonly audience = signal<Note['audience']>('owner');
+  readonly shareMode = signal<'link' | 'email' | null>(null);
+  readonly shareLink = signal('');
+  readonly shareEmail = signal('');
 
-  readonly memberId = computed(() => this.session.user()?.id);
   readonly target = computed(() => {
     const params = this.params();
     const parsed = workspaceSchema.safeParse({ tenantId: params.get('tenantId'), scopeId: params.get('scopeId') });
@@ -62,6 +77,9 @@ export class CloudWorkspace {
   readonly notes = computed(() => this.page()?.items ?? []);
   readonly canWrite = computed(() => this.page()?.canWrite === true);
   readonly loaded = computed(() => this.page() !== null);
+  readonly error = computed(() => this.readError() || this.actionError());
+
+  readonly sharing = signal<z.infer<typeof sharingSchema> | null>(null);
 
   async createWorkspace(): Promise<void> {
     await this.run(async (signal) => {
@@ -143,44 +161,144 @@ export class CloudWorkspace {
     });
   }
 
-  async setAccess(raw: string, active: boolean): Promise<void> {
+  async openSharing(mode: 'link' | 'email'): Promise<void> {
     const target = this.target();
-    const user = z.uuid().safeParse(raw.trim());
 
-    if (!target || !this.canWrite() || this.busy()) {
+    if (!target || !this.canWrite()) {
       return;
     }
 
-    if (!user.success || user.data === this.memberId()) {
-      this.error.set($localize`:@@cloudExampleMemberError:Enter the ID of another test account.`);
+    this.shareMode.set(mode);
 
+    await this.run((signal) => this.loadSharing(target, signal), true);
+  }
+
+  async createLink(): Promise<void> {
+    const target = this.target();
+
+    if (!target || !this.canWrite()) {
       return;
     }
 
     await this.run(async (signal) => {
-      const userId = user.data;
-      const root = scopePath({ tenantId: target.tenantId, scopeId: target.tenantId });
+      const raw = await this.api.cloud(`${sharingPath(target)}/link`, {}, signal);
+      const link = linkSchema.parse(raw);
+      const url = new URL(this.location.prepareExternalUrl('/example/cloud/join'), this.document.location.origin);
 
-      await this.api.cloud(`${root}/members`, { userId, active }, signal, 'PUT');
+      url.hash = link.token;
+      this.shareLink.set(url.href);
 
-      if (active) {
-        await this.api.cloud(`${scopePath(target)}/grants`, { userId, role: 'viewer' }, signal, 'PUT');
-      }
-
-      this.status.set(
-        active
-          ? $localize`:@@cloudExampleShared:Read access granted.`
-          : $localize`:@@cloudExampleRevoked:Access removed.`,
-      );
+      await this.loadSharing(target, signal);
     });
   }
 
-  async refresh(): Promise<void> {
+  async copyLink(input: HTMLInputElement): Promise<void> {
+    try {
+      await this.document.defaultView!.navigator.clipboard.writeText(input.value);
+
+      this.status.set($localize`:@@cloudLinkCopied:Link copied.`);
+    } catch {
+      input.focus();
+      input.select();
+      this.status.set($localize`:@@cloudLinkCopyManually:Copy the selected link.`);
+    }
+  }
+
+  async disableLink(): Promise<void> {
     const target = this.target();
 
-    if (target) {
-      await this.run((signal) => this.load(target, signal));
+    if (!target || !this.canWrite()) {
+      return;
     }
+
+    await this.run(async (signal) => {
+      await this.api.cloud(`${sharingPath(target)}/link`, undefined, signal, 'DELETE');
+
+      this.shareLink.set('');
+
+      await this.loadSharing(target, signal);
+
+      this.status.set($localize`:@@cloudLinkDisabled:Link disabled.`);
+    });
+  }
+
+  async sendEmail(): Promise<void> {
+    const target = this.target();
+
+    if (!target || !this.canWrite()) {
+      return;
+    }
+
+    await this.run(async (signal) => {
+      const raw = await this.api.cloud(
+        `${sharingPath(target)}/email`,
+        { email: this.shareEmail().trim(), locale: this.locale.startsWith('es') ? 'es' : 'en' },
+        signal,
+      );
+      const { sent } = deliverySchema.parse(raw);
+
+      await this.loadSharing(target, signal);
+
+      if (sent) {
+        this.shareEmail.set('');
+        this.status.set($localize`:@@cloudShareSent:Email sent.`);
+      } else {
+        this.actionError.set(
+          $localize`:@@cloudShareNotSent:Access was granted, but the email couldn’t be sent. Try sending it again.`,
+        );
+      }
+    });
+  }
+
+  async removeReader(userId: string): Promise<void> {
+    const target = this.target();
+
+    if (!target || !this.canWrite()) {
+      return;
+    }
+
+    await this.run(async (signal) => {
+      await this.api.cloud(`${sharingPath(target)}/readers/${userId}`, undefined, signal, 'DELETE');
+
+      await this.loadSharing(target, signal);
+
+      this.status.set($localize`:@@cloudExampleRevoked:Access removed.`);
+    });
+  }
+
+  private async loadSharing(target: Workspace, signal: AbortSignal): Promise<void> {
+    const raw = await this.api.cloud(sharingPath(target), undefined, signal);
+    const sharing = sharingSchema.parse(raw);
+
+    signal.throwIfAborted();
+    this.sharing.set(sharing);
+  }
+
+  private flushRefresh(): void {
+    const target = this.target();
+    const scope = this.controller;
+
+    if (!this.refreshPending || this.busy() || this.refreshRequest || !target || !this.examples.enabled() || !scope) {
+      return;
+    }
+
+    const request = new AbortController();
+    const signal = AbortSignal.any([scope.signal, request.signal]);
+
+    this.refreshPending = false;
+    this.refreshRequest = request;
+    void this.load(target, signal)
+      .catch((error: unknown) => {
+        if (!signal.aborted) {
+          this.readError.set(this.message(error));
+        }
+      })
+      .finally(() => {
+        if (this.refreshRequest === request) {
+          this.refreshRequest = undefined;
+          this.flushRefresh();
+        }
+      });
   }
 
   private async load(target: Workspace, signal: AbortSignal): Promise<void> {
@@ -189,9 +307,10 @@ export class CloudWorkspace {
 
     signal.throwIfAborted();
     this.page.set(page);
+    this.readError.set('');
   }
 
-  private async run(work: (signal: AbortSignal) => Promise<void>): Promise<void> {
+  private async run(work: (signal: AbortSignal) => Promise<void>, background = false): Promise<void> {
     const signal = this.controller?.signal;
 
     if (!this.examples.enabled() || !signal || signal.aborted || this.busy()) {
@@ -199,33 +318,55 @@ export class CloudWorkspace {
     }
 
     this.busy.set(true);
-    this.status.set('');
-    this.error.set('');
+
+    if (this.refreshRequest) {
+      this.refreshRequest.abort();
+      this.refreshRequest = undefined;
+      this.refreshPending = true;
+    }
+
+    if (!background) {
+      this.status.set('');
+    }
+
+    this.actionError.set('');
 
     try {
       await work(signal);
     } catch (error) {
       if (!signal.aborted) {
-        const status = error instanceof HttpErrorResponse ? error.status : undefined;
-        const denied = status === 403;
-
-        if (denied) {
-          this.page.set(null);
-          this.edit(null);
-        }
-
-        this.error.set(
-          denied
-            ? $localize`:@@cloudExampleDenied:This account doesn’t have access to the test workspace.`
-            : status === 503
-              ? $localize`:@@cloudExampleStorageUnavailable:Cloud storage is unavailable right now. Try again later.`
-              : $localize`:@@cloudExampleError:We couldn’t complete that action. Try again.`,
-        );
+        this.actionError.set(this.message(error));
       }
     } finally {
       if (!signal.aborted) {
         this.busy.set(false);
+
+        this.flushRefresh();
       }
+    }
+  }
+
+  private message(error: unknown): string {
+    const status = error instanceof HttpErrorResponse ? error.status : undefined;
+    const code = error instanceof HttpErrorResponse ? error.error?.error : undefined;
+    const denied = status === 403;
+
+    if (denied || status === 401) {
+      this.page.set(null);
+      this.edit(null);
+    }
+
+    switch (code) {
+      case 'cloud_recipient_unavailable':
+        return $localize`:@@cloudShareRecipient:Use the email address of another verified Stack account.`;
+      case 'cloud_mail_unavailable':
+        return $localize`:@@cloudShareMailUnavailable:Email is unavailable right now. You can share a link.`;
+      default:
+        return denied
+          ? $localize`:@@cloudExampleDenied:This account doesn’t have access to the test workspace.`
+          : status === 503
+            ? $localize`:@@cloudExampleStorageUnavailable:Cloud storage is unavailable right now. Try again later.`
+            : $localize`:@@cloudExampleError:We couldn’t complete that action. Try again.`;
     }
   }
 
@@ -238,15 +379,35 @@ export class CloudWorkspace {
 
       this.controller = controller;
       cleanup(() => controller.abort());
+      this.refreshRequest = undefined;
+      this.refreshPending = false;
       this.busy.set(false);
       this.page.set(null);
       this.edit(null);
       this.status.set('');
-      this.error.set('');
+      this.readError.set('');
+      this.actionError.set('');
+      this.shareMode.set(null);
+      this.sharing.set(null);
+      this.shareLink.set('');
+      this.shareEmail.set('');
 
       if (enabled && target) {
-        void this.refresh();
+        this.refreshPending = true;
+        this.flushRefresh();
       }
     });
+  });
+
+  private readonly refreshOnCloudChange = effect(() => {
+    const revision = this.realtime?.cloudChanges() ?? 0;
+
+    if (revision !== this.lastCloudChange) {
+      this.lastCloudChange = revision;
+      untracked(() => {
+        this.refreshPending = true;
+        this.flushRefresh();
+      });
+    }
   });
 }

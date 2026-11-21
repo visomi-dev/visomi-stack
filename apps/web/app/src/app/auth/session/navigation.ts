@@ -5,6 +5,9 @@ import { Router, type CanActivateFn } from '@angular/router';
 import { Session } from './session';
 import type { SessionSnapshot } from './models';
 
+const uuidPathSegment = '[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}';
+const cloudReturnPath = new RegExp(`^/example/cloud/(?:join|${uuidPathSegment}/${uuidPathSegment})$`);
+
 export function destination(session: SessionSnapshot): string {
   switch (session.access) {
     case 'unverified':
@@ -39,6 +42,10 @@ export function safeReturnTo(value: string | null, base: string): string | null 
   }
 
   const pathname = path.split(/[?#]/, 1)[0];
+
+  if (cloudReturnPath.test(pathname)) {
+    return path === pathname ? pathname : null;
+  }
 
   if (
     !/^\/(?:home|account|security(?:\/(?:passkeys|password|google|totp|recovery-codes|sessions|devices\/review))?)\/?$/.test(

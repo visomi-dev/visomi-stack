@@ -1,0 +1,158 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "2632e764-6554-4d84-a3e4-cecb02865792",
+  "prevIds": ["c127f8e3-98fe-48de-a5c3-5189da9e37f2"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "cloud_share_links"],
+      "writes": [
+        "s|tbl|public.cloud_share_links",
+        "n|tbl|public.cloud_share_links",
+        "e|tbl|public.cloud_share_links",
+        "n|rel|public.cloud_share_links",
+        "n|type|public.cloud_share_links",
+        "n|rel|public.cloud_share_links_pkey",
+        "n|rel|public.cloud_share_links_token_hash_key"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "cloud_share_links"],
+      "writes": [
+        "s|fk|public.cloud_share_links.cloud_share_links_XALabY9EZpqK_fkey",
+        "n|fk|public.cloud_share_links.cloud_share_links_XALabY9EZpqK_fkey",
+        "e|fk|public.cloud_share_links.cloud_share_links_XALabY9EZpqK_fkey",
+        "n|con|public.cloud_share_links.cloud_share_links_XALabY9EZpqK_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.cloud_share_links",
+        "n|sch|public",
+        "n|tbl|public.persistence_scopes",
+        "n|sch|public",
+        "n|col|public.cloud_share_links.tenant_id",
+        "n|col|public.cloud_share_links.scope_id",
+        "n|col|public.persistence_scopes.tenant_id",
+        "n|col|public.persistence_scopes.id",
+        "e|uniqueness|public.persistence_scopes.id.tenant_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "cloud_share_links",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cloud_share_links",
+        "name": "tenant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cloud_share_links",
+        "name": "scope_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cloud_share_links",
+        "name": "token_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cloud_share_links",
+        "name": "expires_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cloud_share_links",
+        "name": "cloud_share_links_XALabY9EZpqK_fkey",
+        "nameExplicit": false,
+        "columns": ["tenant_id", "scope_id"],
+        "schemaTo": "public",
+        "tableTo": "persistence_scopes",
+        "columnsTo": ["tenant_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cloud_share_links",
+        "name": "cloud_share_links_pkey",
+        "columns": ["scope_id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "cloud_share_links",
+        "name": "cloud_share_links_token_hash_key",
+        "nameExplicit": false,
+        "columns": ["token_hash"],
+        "nullsNotDistinct": false,
+        "entityType": "uniques"
+      }
+    }
+  ]
+}

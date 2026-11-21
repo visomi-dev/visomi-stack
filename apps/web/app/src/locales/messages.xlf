@@ -2383,10 +2383,6 @@
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
           <context context-type="linenumber">32,34</context>
         </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">72,73</context>
-        </context-group>
       </trans-unit>
       <trans-unit id="persistenceInitializePrivate" datatype="html">
         <source> Set up an empty private resource </source>
@@ -2400,10 +2396,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">67,68</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">27,28</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultPrivateText" datatype="html">
@@ -2477,7 +2469,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="vaultQuota" datatype="html">
-        <source>You’ve reached a storage or encryption limit. Export an encrypted backup before you change the storage settings.</source>
+        <source>You’ve reached a storage or encryption limit.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-messages.ts</context>
           <context context-type="linenumber">19</context>
@@ -2561,20 +2553,12 @@
       </trans-unit>
       <trans-unit id="vaultPinLength" datatype="html">
         <source>6 digits</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">48,49</context>
-        </context-group>
       </trans-unit>
       <trans-unit id="vaultPinLabel" datatype="html">
         <source>Local unlock PIN</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">103</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">46,47</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultPinUnlock" datatype="html">
@@ -2597,10 +2581,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">27</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">55</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultPinInitialize" datatype="html">
@@ -2633,10 +2613,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">43,45</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">62,64</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultUnlockHeading" datatype="html">
@@ -2681,13 +2657,6 @@
           <context context-type="linenumber">98,99</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="vaultDemoSample" datatype="html">
-        <source>Sample note: Garden workshop at 10:00.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.ts</context>
-          <context context-type="linenumber">275</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="vaultDemoTitle" datatype="html">
         <source> Vault example </source>
         <context-group purpose="location">
@@ -2703,40 +2672,8 @@
           <context context-type="linenumber">1</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="vaultDemoLocalHeading" datatype="html">
-        <source>Local-only sample</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">2</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoDescription" datatype="html">
-        <source> Try unlocking a separate sample note. This note stays in this browser. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">5,8</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoUnavailable" datatype="html">
-        <source>We can’t store the example vault on this device.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">11,13</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoLoading" datatype="html">
-        <source>Looking for the example vault on this device…</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">9,10</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="vaultDemoRead" datatype="html">
         <source> Open the example note </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">23,24</context>
-        </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">66,68</context>
@@ -2744,10 +2681,6 @@
       </trans-unit>
       <trans-unit id="vaultDemoCreate" datatype="html">
         <source>Set up the example vault</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">96,98</context>
-        </context-group>
       </trans-unit>
       <trans-unit id="authVerifyingCode" datatype="html">
         <source>Verifying code…</source>
@@ -2876,132 +2809,11 @@
           <context context-type="linenumber">95</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="vaultDemoPasskeyError" datatype="html">
-        <source>We couldn’t verify your passkey. Try again.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.ts</context>
-          <context context-type="linenumber">114</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoPinError" datatype="html">
-        <source>This PIN couldn’t unlock your vault. Check your PIN and try again.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.ts</context>
-          <context context-type="linenumber">237</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoPinWarning" datatype="html">
-        <source> Anyone with a copy of the encrypted data can try PINs offline. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">72,75</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoCreatePasskey" datatype="html">
-        <source> Create a vault passkey </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">129,130</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoRetryPasskey" datatype="html">
-        <source>Try another passkey</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">115,117</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="vaultDemoSetup" datatype="html">
         <source>Set up my vault</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">117,119</context>
-        </context-group>
       </trans-unit>
       <trans-unit id="vaultDemoUsePin" datatype="html">
-        <source> Use a local PIN </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">64,65</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">142,143</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoVerify" datatype="html">
-        <source>Verify passkey</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">33,34</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">113,114</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoVerifyHint" datatype="html">
-        <source>Verify the selected passkey to finish setup.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">107,110</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoWorking" datatype="html">
-        <source>Working on your vault…</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">14,17</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoAddPasskey" datatype="html">
-        <source>Add passkey</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">35,37</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoPasskeyAdded" datatype="html">
-        <source>Passkey added. You can still unlock with your PIN.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.ts</context>
-          <context context-type="linenumber">161</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoAddUnsupported" datatype="html">
-        <source>This passkey can’t unlock your vault. Try another passkey.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.ts</context>
-          <context context-type="linenumber">176</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoAddConflict" datatype="html">
-        <source>The vault changed in another tab. Reload to see its current unlock methods.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.ts</context>
-          <context context-type="linenumber">185</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoAddError" datatype="html">
-        <source>We couldn’t add the passkey. Try again.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.ts</context>
-          <context context-type="linenumber">194</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoAddCancelled" datatype="html">
-        <source>Passkey addition canceled. You can try again.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.ts</context>
-          <context context-type="linenumber">168</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultDemoNoPasskey" datatype="html">
-        <source> Passkey unlock is unavailable here. You can try another passkey or choose a local PIN. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/demo/demo.html</context>
-          <context context-type="linenumber">104,106</context>
-        </context-group>
+        <source>Use a PIN on this device</source>
       </trans-unit>
       <trans-unit id="exampleChartSummary" datatype="html">
         <source> <x id="INTERPOLATION" equiv-text="{{ total() | number }}"/> checks over <x id="INTERPOLATION_1" equiv-text="{{ period() }}"/> days. The busiest day had <x id="INTERPOLATION_2" equiv-text="{{ peak() }}"/> checks. </source>
@@ -3100,25 +2912,11 @@
           <context context-type="linenumber">17,19</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="cloudExampleMemberId" datatype="html">
-        <source>Your test account ID is <x id="INTERPOLATION" equiv-text="{{ id }}"/>.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">20,23</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="cloudExampleInvalidLink" datatype="html">
         <source>This test workspace link is invalid.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
           <context context-type="linenumber">35,37</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="cloudExampleRefresh" datatype="html">
-        <source> Refresh notes </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">46,48</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleEmpty" datatype="html">
@@ -3213,41 +3011,6 @@
           <context context-type="linenumber">157,158</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="cloudExampleShareTitle" datatype="html">
-        <source>Workspace access</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">164,165</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="cloudExampleShareHelp" datatype="html">
-        <source> Ask a verified test account for its ID. After granting access, send the workspace’s address to that account. Anyone who opens the address still needs permission. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">166,168</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="cloudExampleShareId" datatype="html">
-        <source>Test account ID</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">169</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="cloudExampleGrant" datatype="html">
-        <source> Grant read access </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">189,190</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="cloudExampleRevoke" datatype="html">
-        <source> Remove access </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
-          <context context-type="linenumber">199,200</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="cloudExampleSaved" datatype="html">
         <source>Note saved.</source>
         <context-group purpose="location">
@@ -3260,20 +3023,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
           <context context-type="linenumber">139</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="cloudExampleMemberError" datatype="html">
-        <source>Enter the ID of another test account.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
-          <context context-type="linenumber">152</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="cloudExampleShared" datatype="html">
-        <source>Read access granted.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
-          <context context-type="linenumber">169</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleRevoked" datatype="html">
@@ -3304,15 +3053,8 @@
           <context context-type="linenumber">389</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="vaultBackedSampleTitle" datatype="html">
-        <source>Back up and restore a test note</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
-          <context context-type="linenumber">10,12</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="vaultBackedSampleExplanation" datatype="html">
-        <source> The browser encrypts the test note and saves it in IndexedDB. When you upload a backup, only the encrypted copy goes to the server. To restore the same note, pair your other device and unlock the vault there. </source>
+        <source> Your browser encrypts the test note before saving it. When you back it up, only the encrypted copy goes to the server. Link another device and unlock the vault there to restore the same note. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">13,17</context>
@@ -3346,15 +3088,8 @@
           <context context-type="linenumber">10</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="vaultBackedSampleCreate" datatype="html">
-        <source>Create a backup test workspace</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
-          <context context-type="linenumber">32,34</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="vaultBackedSampleNote" datatype="html">
-        <source>Note in the backup workspace</source>
+        <source>Vault note</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">74,76</context>
@@ -3389,7 +3124,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="vaultBackupStorageDisabled" datatype="html">
-        <source>Private backup storage is unavailable right now. You can still use the local vault.</source>
+        <source>Vault backups are unavailable right now. Try again later.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">30,31</context>
@@ -3414,6 +3149,215 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
           <context context-type="linenumber">221</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultLoading" datatype="html">
+        <source>Loading the vault…</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPrfSetup" datatype="html">
+        <source>Set up with a passkey</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultSetupPrfUnavailable" datatype="html">
+        <source>Passkey unlock is unavailable here.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="vaultPinSetup" datatype="html">
+        <source>Set up with PIN</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudExampleShareTitle" datatype="html">
+        <source>Share workspace</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">161,163</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareLink" datatype="html">
+        <source> Share by link </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">173,174</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareEmail" datatype="html">
+        <source> Share by email </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">185,186</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareLinkHelp" datatype="html">
+        <source> Anyone with this link and a verified Stack account can read shared notes. The link expires after seven days. People who have already joined keep access until you remove them. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">191,193</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareLinkLabel" datatype="html">
+        <source>Sharing link</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">196</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareCopy" datatype="html">
+        <source> Copy link </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">207,208</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareReplaceLink" datatype="html">
+        <source>Replace link</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">220,222</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareCreateLink" datatype="html">
+        <source>Create link</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">222,224</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareDisableLink" datatype="html">
+        <source> Disable link </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">235,236</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareEmailLabel" datatype="html">
+        <source>Email address</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">245,246</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareEmailHelp" datatype="html">
+        <source>Use the email address of an existing verified Stack account.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">247,248</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareSend" datatype="html">
+        <source> Send email </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">271,272</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareReaders" datatype="html">
+        <source>People with access</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="linenumber">278,280</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareRemove" datatype="html">
+        <source> Remove access </source>
+      </trans-unit>
+      <trans-unit id="cloudJoinTitle" datatype="html">
+        <source>Join a Cloud workspace</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.html</context>
+          <context context-type="linenumber">2,5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudJoinMissing" datatype="html">
+        <source>Open the original sharing link to continue.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.html</context>
+          <context context-type="linenumber">6,7</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudJoinOpen" datatype="html">
+        <source>Open workspace</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.html</context>
+          <context context-type="linenumber">8,10</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudJoinRequirement" datatype="html">
+        <source>Sign in with a verified Stack account to open this link.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.html</context>
+          <context context-type="linenumber">10,12</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudJoinSignIn" datatype="html">
+        <source>Sign in</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.html</context>
+          <context context-type="linenumber">12,16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudJoinFailed" datatype="html">
+        <source>This link is unavailable or you don’t have access.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.ts</context>
+          <context context-type="linenumber">66</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudLinkCopied" datatype="html">
+        <source>Link copied.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="linenumber">192</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudLinkCopyManually" datatype="html">
+        <source>Copy the selected link.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="linenumber">196</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudLinkDisabled" datatype="html">
+        <source>Link disabled.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="linenumber">211</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareSent" datatype="html">
+        <source>Email sent.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="linenumber">234</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareNotSent" datatype="html">
+        <source>Access was granted, but the email couldn’t be sent. Try sending it again.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="linenumber">237</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareRecipient" datatype="html">
+        <source>Use the email address of another verified Stack account.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="linenumber">314</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareMailUnavailable" datatype="html">
+        <source>Email is unavailable right now. You can share a link.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="linenumber">316</context>
         </context-group>
       </trans-unit>
     </body>

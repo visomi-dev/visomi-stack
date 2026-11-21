@@ -223,10 +223,12 @@ it('routes session and user notices separately and rechecks the persisted sessio
     const second = await fixture.newSession(false, 'synthetic-user');
     const other = await fixture.newSession(false, 'other-user');
     const received = [vi.fn(), vi.fn(), vi.fn()];
+    const cloud = [vi.fn(), vi.fn(), vi.fn()];
     const sockets = [first, second, other].map(({ cookie }, index) => {
       const socket = fixture.connect(cookie, origin, '/session');
 
       socket.on('session:changed', received[index]);
+      socket.on('cloud:changed', cloud[index]);
 
       return socket;
     });
@@ -252,6 +254,15 @@ it('routes session and user notices separately and rechecks the persisted sessio
     expect(received.map((listener) => listener.mock.calls.length)).toEqual([2, 1, 0]);
     expect(received[0].mock.calls).toEqual([[], []]);
 
+    await fixture.notifyCloud('synthetic-user');
+
+    await Promise.all(
+      sockets.map((socket) => expect(socket.timeout(1000).emitWithAck('session:check')).resolves.toBe(true)),
+    );
+
+    expect(cloud.map((listener) => listener.mock.calls)).toEqual([[[]], [[]], []]);
+    expect(received.map((listener) => listener.mock.calls.length)).toEqual([2, 1, 0]);
+
     await fixture.revoke(first.id);
 
     await expect(sockets[0].timeout(1000).emitWithAck('session:check')).resolves.toBe(false);
@@ -260,11 +271,12 @@ it('routes session and user notices separately and rechecks the persisted sessio
 
     await fixture.revoke(second.id);
 
-    await fixture.notifyUser('synthetic-user');
+    await fixture.notifyCloud('synthetic-user');
 
     await expect(disconnected).resolves.toBe('io server disconnect');
 
     expect(received[1]).toHaveBeenCalledOnce();
+    expect(cloud[1]).toHaveBeenCalledOnce();
   } finally {
     await fixture.close();
   }
