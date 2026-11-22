@@ -105,8 +105,7 @@ export const appRoutes: Routes = [
         children: [
           {
             path: 'vault',
-            data: { backedSample: true },
-            loadComponent: () => import('./vault/example/vault-example').then((m) => m.VaultExample),
+            loadChildren: () => import('./vault/example/vault-routes').then((m) => m.vaultRoutes),
           },
           {
             path: 'cloud',
@@ -119,10 +118,13 @@ export const appRoutes: Routes = [
         ],
       },
       { path: 'home', loadComponent: () => import('./home/home').then((m) => m.Home) },
-      { path: 'persistence', loadComponent: () => import('./db/example/example').then((m) => m.DatabaseExample) },
+      {
+        path: 'persistence',
+        loadComponent: () => import('./db/persistence-example/persistence-example').then((m) => m.PersistenceExample),
+      },
       {
         path: 'persistence/:tenantId/:scopeId/:objectId',
-        loadComponent: () => import('./db/example/example').then((m) => m.DatabaseExample),
+        loadComponent: () => import('./db/persistence-example/persistence-example').then((m) => m.PersistenceExample),
       },
       { path: 'account', loadComponent: () => import('./auth/email/account/account').then((m) => m.Account) },
       {

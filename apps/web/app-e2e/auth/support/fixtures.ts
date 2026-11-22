@@ -58,6 +58,14 @@ export async function expireAuthentication(email: string): Promise<void> {
   }
 }
 
+export function vaultUnlockUrl(workspace: string | URL): string {
+  const url = new URL(workspace);
+
+  url.pathname += '/unlock';
+
+  return url.href;
+}
+
 export async function expireSession(email: string): Promise<void> {
   const pool = await isolatedPool();
 

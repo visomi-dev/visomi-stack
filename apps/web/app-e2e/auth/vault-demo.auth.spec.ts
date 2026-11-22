@@ -10,6 +10,7 @@ import {
   signup,
   passwordStart,
   test,
+  vaultUnlockUrl,
   virtualPasskey,
 } from './support/fixtures';
 
@@ -152,7 +153,7 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await page.reload();
 
-  await expect(page).toHaveURL(workspace);
+  await expect(page).toHaveURL(vaultUnlockUrl(workspace));
 
   const locked = page.getByRole('region', { name: 'Unlock your vault', exact: true });
 
@@ -234,7 +235,7 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await page.getByLabel('Verification code', { exact: true }).fill(code);
 
-  await expect(page).toHaveURL(workspace);
+  await expect(page).toHaveURL(vaultUnlockUrl(workspace));
 
   await expect(unlock).toBeVisible();
 
@@ -353,11 +354,16 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await open.click();
 
-    await expect(page).toHaveURL(workspace);
+    await expect(page).toHaveURL(vaultUnlockUrl(workspace));
 
     await expect(page.getByRole('heading', { name: 'Unlock your vault' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Use a passkey', exact: true }).click();
+    const [firstPull] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith('/sync/pull')),
+      page.getByRole('button', { name: 'Use a passkey', exact: true }).click(),
+    ]);
+
+    expect(firstPull.ok()).toBe(true);
 
     await expect(note).toBeEditable();
 
@@ -467,6 +473,12 @@ test.describe('Vault passkey setup in Chromium', () => {
     );
 
     await page.getByRole('button', { name: 'Sign in with a passkey', exact: true }).click();
+
+    await expect(page).toHaveURL(workspace.href);
+
+    await expect(passkey).toBeVisible();
+
+    await page.goto(vaultUnlockUrl(workspace));
 
     await expect(page).toHaveURL(workspace.href);
 
@@ -638,7 +650,7 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await page.reload();
 
-    await expect(page).toHaveURL(workspace);
+    await expect(page).toHaveURL(vaultUnlockUrl(workspace));
 
     const locked = page.getByRole('region', { name: 'Unlock your vault', exact: true });
     const usePasskey = locked.getByRole('button', { name: 'Use a passkey', exact: true });
@@ -719,7 +731,9 @@ test.describe('Vault passkey setup in Chromium', () => {
 
       await expect(peer.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
-      await peer.goto(workspace);
+      await peer.goto(vaultUnlockUrl(workspace));
+
+      await expect(peer).toHaveURL(workspace);
 
       await expect(peer.getByLabel('Your note', { exact: true })).toHaveCount(0);
 

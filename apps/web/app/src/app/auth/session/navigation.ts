@@ -45,9 +45,11 @@ export function safeReturnTo(value: string | null, base: string): string | null 
 
   const pathname = path.split(/[?#]/, 1)[0];
 
-  if (pathname === '/example/vault') {
+  const vaultPath = '/example/vault';
+
+  if (pathname === vaultPath || pathname === `${vaultPath}/unlock`) {
     if (path === pathname) {
-      return pathname;
+      return pathname === vaultPath ? vaultPath : null;
     }
 
     const { hash, searchParams } = new URL(path, 'https://internal.invalid');
@@ -58,7 +60,7 @@ export function safeReturnTo(value: string | null, base: string): string | null 
     };
 
     return !hash && searchParams.size === 3 && Object.values(target).every((id) => vaultReturnUuid.test(id))
-      ? `${pathname}?${new URLSearchParams(target)}`
+      ? `${vaultPath}?${new URLSearchParams(target)}`
       : null;
   }
 

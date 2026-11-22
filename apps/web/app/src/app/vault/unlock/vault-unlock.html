@@ -1,0 +1,77 @@
+<div class="mx-auto grid w-full max-w-sm gap-4 py-6" [attr.aria-busy]="workspace.busy()">
+  @if (workspace.available() && workspace.enrolled() && workspace.hasBinding() && !workspace.vaultReady()) {
+    <section appUI="card" padding="lg" aria-labelledby="locked-vault-heading">
+      <header class="grid justify-items-center gap-3 text-center">
+        <svg
+          class="size-8"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="5" y="10" width="14" height="11" rx="2" />
+
+          <path d="M8 10V7a4 4 0 1 1 8 0v3m-4 4v3" />
+        </svg>
+
+        <h1 appUI appNavigationHeading id="locked-vault-heading" i18n="@@vaultLockedHeading">Unlock your vault</h1>
+      </header>
+
+      @if (workspace.showPrf()) {
+        <button
+          appUI
+          type="button"
+          [disabled]="workspace.busy()"
+          [attr.aria-busy]="workspace.busy()"
+          (click)="workspace.unlock()"
+          i18n="@@vaultUsePasskey"
+        >
+          Use a passkey
+        </button>
+      } @else if (workspace.showPin()) {
+        <form class="grid min-w-0 gap-4" (submit)="$event.preventDefault(); workspace.unlockWithPin()">
+          <app-field
+            control-id="vault-pin"
+            label="Local unlock PIN"
+            i18n-label="@@vaultPinLabel"
+            description="6 digits"
+            i18n-description="@@vaultPinLength"
+          >
+            <app-pin-input
+              required
+              [digits]="6"
+              [disabled]="workspace.busy()"
+              [value]="workspace.pinDraft()"
+              (valueChange)="workspace.pinDraft.set($event)"
+            />
+          </app-field>
+
+          <button
+            appUI
+            type="submit"
+            [disabled]="workspace.busy()"
+            [attr.aria-busy]="workspace.busy()"
+            i18n="@@vaultPinUnlock"
+          >
+            Unlock with PIN
+          </button>
+        </form>
+      }
+    </section>
+
+    <div class="text-center">
+      <a appUI routerLink="/security" [queryParams]="workspace.pairingParams()" i18n="@@vaultLinkDevice">
+        Link a device
+      </a>
+    </div>
+  } @else if (!workspace.notice()) {
+    <p role="status" i18n="@@vaultLoading">Loading the vault…</p>
+  }
+
+  @if (workspace.notice()) {
+    <p role="status" aria-live="polite">{{ workspace.notice() }}</p>
+  }
+</div>

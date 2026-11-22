@@ -1,6 +1,6 @@
 import type { Page, Request, Response, TestInfo } from '@playwright/test';
 
-import { expect, expireSession, passkeySignup, signup, test, virtualPasskey } from './support/fixtures';
+import { expect, expireSession, passkeySignup, signup, test, vaultUnlockUrl, virtualPasskey } from './support/fixtures';
 
 const note = 'Synthetic note already opened before reload';
 const vaultPath = '/app/en/example/vault';
@@ -66,8 +66,6 @@ async function expectAuthenticatedVault(page: Page, info: TestInfo, url: string,
 
   page.off('response', markDocument);
   page.off('request', trace);
-
-  await expect(page).toHaveURL(url);
 
   const session = await page.evaluate(async () => {
     const response = await fetch('/api/auth/session', { cache: 'no-store' });
@@ -171,6 +169,7 @@ test('hard reload locks a configured passkey vault with a live session and keeps
   await saveNote(page);
 
   const url = page.url();
+  const unlockUrl = vaultUnlockUrl(url);
   const editor = page.getByLabel('Your note', { exact: true });
   const locked = page.getByRole('region', { name: 'Unlock your vault', exact: true });
   const unlock = locked.getByRole('button', { name: 'Use a passkey', exact: true });
@@ -184,6 +183,8 @@ test('hard reload locks a configured passkey vault with a live session and keeps
   // Start from a previously configured vault opened with its stored credential.
   await expectAuthenticatedVault(page, info, url, () => page.goto(url));
 
+  await expect(page).toHaveURL(unlockUrl);
+
   await unlock.click();
 
   await expect(editor).toHaveValue(note);
@@ -195,6 +196,8 @@ test('hard reload locks a configured passkey vault with a live session and keeps
   const reload = () => cdp.send('Page.reload', { ignoreCache: true });
 
   await expectAuthenticatedVault(page, info, url, reload);
+
+  await expect(page).toHaveURL(unlockUrl);
 
   await expect(unlock).toBeEnabled();
 
@@ -221,7 +224,7 @@ test('hard reload locks a configured passkey vault with a live session and keeps
 
   await expect(page.getByRole('status').filter({ hasText: 'Unlock canceled.' })).toBeVisible();
 
-  await expect(page).toHaveURL(url);
+  await expect(page).toHaveURL(unlockUrl);
 
   await expect(editor).toHaveCount(0);
 
@@ -241,7 +244,7 @@ test('hard reload locks a configured passkey vault with a live session and keeps
   const anonymous = await browser.newContext();
 
   try {
-    const response = await anonymous.request.get(url, { maxRedirects: 0 });
+    const response = await anonymous.request.get(unlockUrl, { maxRedirects: 0 });
 
     expectSignInRedirect(response.status(), response.headers()['location'], url);
   } finally {
@@ -273,7 +276,7 @@ test('hard reload locks a configured passkey vault with a live session and keeps
 
   await page.getByRole('button', { name: 'Sign in with a passkey', exact: true }).click();
 
-  await expect(page).toHaveURL(url);
+  await expect(page).toHaveURL(unlockUrl);
 
   await expect(locked).toBeVisible();
 
@@ -310,6 +313,7 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
   await saveNote(page);
 
   const url = page.url().replace('/app/en/', '/app/es/');
+  const unlockUrl = vaultUnlockUrl(url);
   const locked = page.getByRole('region', { name: 'Desbloquea tu bóveda', exact: true });
   const pin = locked.getByLabel('PIN de desbloqueo local', { exact: true });
   const unlock = locked.getByRole('button', { name: 'Desbloquear con PIN', exact: true });
@@ -317,7 +321,9 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
 
   await page.setViewportSize({ width: 390, height: 844 });
 
-  await expectAuthenticatedVault(page, info, url, () => page.goto(url));
+  await expectAuthenticatedVault(page, info, unlockUrl, () => page.goto(unlockUrl));
+
+  await expect(page).toHaveURL(unlockUrl);
 
   await pin.fill('048261');
 
@@ -326,6 +332,8 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
   await expect(editor).toHaveValue(note);
 
   await expectAuthenticatedVault(page, info, url, () => hardReload(page, url));
+
+  await expect(page).toHaveURL(unlockUrl);
 
   await expect(editor).toHaveCount(0);
 
@@ -340,6 +348,24 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
   await expect(editor).toHaveValue(note);
 
   await expect(page).toHaveURL(url);
+
+  await page.context().setOffline(true);
+
+  try {
+    await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+
+    await expect(page).toHaveURL(unlockUrl);
+
+    await pin.fill('048261');
+
+    await unlock.click();
+
+    await expect(editor).toHaveValue(note);
+
+    await expect(page).toHaveURL(url);
+  } finally {
+    await page.context().setOffline(false);
+  }
 });
 
 test('a session without a configured vault can load setup and ordinary protected pages', async ({ page }, info) => {
@@ -349,9 +375,26 @@ test('a session without a configured vault can load setup and ordinary protected
 
   await expectAuthenticatedVault(page, info, url, () => page.goto(url));
 
+  await expect(page).toHaveURL(url);
+
   await expect(page.getByRole('button', { name: 'Set up my vault', exact: true })).toBeVisible();
 
   await expect(page.getByRole('region', { name: 'Unlock your vault', exact: true })).toHaveCount(0);
+
+  const unsafe = new URL(vaultUnlockUrl(url));
+
+  unsafe.search = new URLSearchParams({
+    tenantId: '11111111-1111-4111-8111-111111111111',
+    scopeId: '22222222-2222-4222-8222-222222222222',
+    objectId: '33333333-3333-4333-8333-333333333333',
+    returnTo: 'https://external.example/',
+  }).toString();
+
+  await page.goto(unsafe.href);
+
+  await expect(page).toHaveURL(url);
+
+  await expect(page.getByRole('button', { name: 'Set up my vault', exact: true })).toBeVisible();
 
   await page.goto('/app/en/home');
 

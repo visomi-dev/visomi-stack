@@ -1,12 +1,34 @@
-import { Component } from '@angular/core';
+import { Component, effect, inject, untracked } from '@angular/core';
+import { ActivatedRoute, RouterOutlet } from '@angular/router';
 
-import { DatabaseExample } from '../../db/example/example';
-import { NavigationHeading } from '../../shared/navigation-heading';
-import { Heading } from '../../ui';
+import { ExampleWorkspace } from '../../db/example-workspace';
+import { exampleWorkspaceProviders } from '../../db/example-workspace-providers';
+
+import { VaultExampleNavigation } from './vault-example-navigation';
 
 @Component({
   selector: 'app-vault-example',
-  imports: [DatabaseExample, Heading, NavigationHeading],
+  imports: [RouterOutlet],
+  providers: exampleWorkspaceProviders,
   templateUrl: './vault-example.html',
 })
-export class VaultExample {}
+export class VaultExample {
+  private readonly route = inject(ActivatedRoute);
+  private readonly navigation = inject(VaultExampleNavigation);
+  private readonly workspace = inject(ExampleWorkspace);
+
+  private readonly showWorkspaceOrUnlock = effect(() => {
+    if (!this.workspace.available() || this.workspace.busy() || !this.workspace.bindingLoaded()) {
+      return;
+    }
+
+    const locked = this.workspace.enrolled() && this.workspace.hasBinding() && !this.workspace.vaultReady();
+    const onUnlockPage = this.route.firstChild?.snapshot.routeConfig?.path === 'unlock';
+
+    const target = this.workspace.target();
+
+    if (target && locked !== onUnlockPage) {
+      untracked(() => void this.navigation.switchView(locked, target));
+    }
+  });
+}

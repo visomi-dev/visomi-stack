@@ -86,6 +86,9 @@ it('preserves the Vault note destination and accepts only its three opaque ident
   expect(safeReturnTo(`${workspace}?${query.replace('-4222-', '-0222-')}`, '/app/es/')).toBeNull();
   expect(safeReturnTo(`${workspace}?${query}#synthetic`, '/app/es/')).toBeNull();
   expect(safeReturnTo(`${workspace}?tenantId=missing`, '/app/es/')).toBeNull();
+  expect(safeReturnTo(`/app/es${workspace}/unlock?${query}`, '/app/es/')).toBe(`${workspace}?${query}`);
+  expect(safeReturnTo(`${workspace}/unlock?${query}&returnTo=https://evil.example`, '/app/es/')).toBeNull();
+  expect(safeReturnTo(`${workspace}/unlock`, '/app/es/')).toBeNull();
 });
 
 it('guards share loaded state and distinguish identity from full access', async () => {
