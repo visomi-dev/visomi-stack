@@ -6,7 +6,7 @@ import { TestBed } from '@angular/core/testing';
 import { NavigationStart, provideRouter, Router, RouterOutlet } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { filter, firstValueFrom } from 'rxjs';
-import { syntheticHybridPolicy, VaultError, type VaultState } from '@visomi-stack/shared-db';
+import { syntheticHybridPolicy, VaultError, type VaultState, type WrappingContext } from '@visomi-stack/shared-db';
 
 import { appRoutes } from '../app.routes';
 import { BrowserRealtimeSession } from '../auth/session/browser-realtime-session';
@@ -18,6 +18,7 @@ import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
 
 import { DatabaseExample } from './example/example';
 import { ExampleWorkspace } from './example-workspace';
+import { exampleLocalKey } from './example-contracts';
 import { ExampleVaultWorkspaces } from './example-vault-workspaces';
 import { ExamplePrivateResource, type ExampleTarget } from './example-private-resource';
 
@@ -48,6 +49,16 @@ function fixture(
   const capabilities = { prf, unavailable: vi.fn(() => prf.set('unavailable')) };
   const state = signal<VaultState>('locked');
   const plaintext = signal('');
+  const enrollment: WrappingContext | undefined = backed
+    ? {
+        key: { ...exampleLocalKey(a), generation: 1 },
+        ownerId: '77777777-7777-4777-8777-777777777777',
+        deviceId: '88888888-8888-4888-8888-888888888888',
+        method: 'passkey-prf',
+        methodId: 'AQ',
+        origin: document.location.origin,
+      }
+    : undefined;
   const lock = vi.fn(() => {
     state.set('locked');
     plaintext.set('');
@@ -56,7 +67,7 @@ function fixture(
     vault: {
       state,
       release: lock,
-      localLatestBinding: vi.fn(async () => undefined),
+      localLatestBinding: vi.fn(async (): Promise<WrappingContext | undefined> => enrollment),
       ready: computed(() => state() === 'ready'),
       plaintext,
       lock,
@@ -150,7 +161,14 @@ function fixture(
     set: {
       providers: [
         ExampleWorkspace,
-        { provide: ExampleVaultWorkspaces, useValue: { page: signal(null), reset: vi.fn() } },
+        {
+          provide: ExampleVaultWorkspaces,
+          useValue: {
+            page: signal(null),
+            reset: vi.fn(),
+            enrollment: vi.fn(async () => ({ phase: 'enrolled', binding: enrollment })),
+          },
+        },
         { provide: DatabaseHttp, useValue: api },
         { provide: ExamplePrivateResource, useValue: privateResource },
       ],

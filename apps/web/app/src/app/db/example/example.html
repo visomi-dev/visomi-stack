@@ -5,7 +5,7 @@
   [class.max-w-xl]="workspace.backedSample"
   [attr.aria-busy]="workspace.busy()"
 >
-  @let configuredVaultLocked = workspace.backedSample && workspace.hasBinding() && !workspace.vault.ready();
+  @let configuredVaultLocked = workspace.enrolled() && workspace.hasBinding() && !workspace.vaultReady();
   @if (!configuredVaultLocked) {
     <header class="space-y-3">
       @if (workspace.backedSample) {
@@ -73,17 +73,17 @@
             </button>
           }
         </section>
-      } @else if (workspace.objectBackups()) {
-        <button
-          appUI
-          type="button"
-          [disabled]="workspace.busy()"
-          (click)="workspace.createWorkspace()"
-          i18n="@@vaultDemoSetup"
-        >
-          Set up my vault
+      }
+
+      @if (workspace.objectBackups() && (workspaces.pendingSetup || !workspaces.items.length)) {
+        <button appUI type="button" [disabled]="workspace.busy()" (click)="workspace.createWorkspace()">
+          @if (workspaces.pendingSetup) {
+            <span i18n="@@vaultResumeSetup">Continue vault setup</span>
+          } @else {
+            <span i18n="@@vaultDemoSetup">Set up my vault</span>
+          }
         </button>
-      } @else {
+      } @else if (!workspaces.items.length) {
         <p role="status" i18n="@@vaultBackupStorageDisabled">
           Vault backups are unavailable right now. Try again later.
         </p>
@@ -202,7 +202,7 @@
     }
 
     <section class="space-y-4 rounded-xl border p-5">
-      @if (workspace.backedSample && !workspace.vault.ready()) {
+      @if (workspace.backedSample && !workspace.vaultReady()) {
         <h2 appUI i18n="@@vaultBackedSampleNote">Vault note</h2>
       } @else if (!workspace.backedSample) {
         <h2 appUI i18n="@@vaultHeading">Private resource</h2>
@@ -223,7 +223,7 @@
           Private content is encrypted before synchronization. This synthetic profile has no recovery: losing all usable
           keys can permanently lose access. Password reset does not recover private content.
         </p>
-      } @else if (!workspace.vault.ready() && workspace.canInitialize()) {
+      } @else if (!workspace.vaultReady() && workspace.canInitialize()) {
         <p appUI tone="muted" i18n="@@vaultSetupGuidance">
           Keep access to a linked device. If you lose access to every device, resetting your password won’t recover your
           note.
@@ -237,19 +237,19 @@
         </p>
       }
 
-      @if (workspace.backedSample && workspace.canInitialize() && workspace.showPrf() && !workspace.vault.ready()) {
+      @if (workspace.backedSample && workspace.canInitialize() && workspace.showPrf() && !workspace.vaultReady()) {
         <p appUI tone="muted" i18n="@@vaultSetupConfirm">
           Use a passkey you’ve already registered for this account to set up the vault on this device.
         </p>
       }
 
-      @if (workspace.showPrf() && !workspace.vault.ready() && (!workspace.backedSample || workspace.canInitialize())) {
+      @if (workspace.showPrf() && !workspace.vaultReady() && (!workspace.backedSample || workspace.canInitialize())) {
         <div class="flex flex-wrap gap-3">
           @if (!workspace.backedSample) {
             <button
               appUI
               type="button"
-              [disabled]="workspace.busy() || workspace.vault.ready()"
+              [disabled]="workspace.busy() || workspace.vaultReady()"
               (click)="workspace.unlock()"
               i18n="@@vaultUnlock"
             >
@@ -262,7 +262,7 @@
               appUI
               type="button"
               [variant]="workspace.backedSample ? 'primary' : 'secondary'"
-              [disabled]="workspace.busy() || workspace.vault.ready()"
+              [disabled]="workspace.busy() || workspace.vaultReady()"
               (click)="workspace.unlock(true)"
             >
               @if (workspace.backedSample) {
@@ -279,8 +279,9 @@
         workspace.backedSample &&
         workspace.canInitialize() &&
         workspace.showPin() &&
-        !workspace.vault.ready() &&
-        !workspace.pinSetupSelected()
+        !workspace.vaultReady() &&
+        !workspace.pinSetupSelected() &&
+        !workspace.resumingPinSetup()
       ) {
         <p appUI tone="muted" i18n="@@vaultSetupPrfUnavailable">Passkey unlock is unavailable here.</p>
 
@@ -291,8 +292,9 @@
 
       @if (
         workspace.showPin() &&
-        !workspace.vault.ready() &&
-        (!workspace.backedSample || (workspace.canInitialize() && workspace.pinSetupSelected()))
+        !workspace.vaultReady() &&
+        (!workspace.backedSample ||
+          (workspace.canInitialize() && (workspace.pinSetupSelected() || workspace.resumingPinSetup())))
       ) {
         <form
           class="space-y-4"
@@ -309,15 +311,17 @@
           <ng-container [ngTemplateOutlet]="localPin" />
 
           @if (workspace.backedSample && workspace.canInitialize()) {
-            <app-field control-id="vault-pin-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
-              <app-pin-input
-                required
-                [digits]="6"
-                [disabled]="workspace.busy()"
-                [value]="workspace.pinConfirmation()"
-                (valueChange)="workspace.pinConfirmation.set($event)"
-              />
-            </app-field>
+            @if (!workspace.resumingPinSetup()) {
+              <app-field control-id="vault-pin-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
+                <app-pin-input
+                  required
+                  [digits]="6"
+                  [disabled]="workspace.busy()"
+                  [value]="workspace.pinConfirmation()"
+                  (valueChange)="workspace.pinConfirmation.set($event)"
+                />
+              </app-field>
+            }
 
             <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinSetup">Set up with PIN</button>
           } @else {
@@ -349,7 +353,7 @@
         }
       }
 
-      @if (workspace.vault.ready()) {
+      @if (workspace.vaultReady()) {
         @if (workspace.backedSample) {
           <app-field
             control-id="private-note"

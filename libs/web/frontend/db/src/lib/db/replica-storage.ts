@@ -60,6 +60,12 @@ export class IndexedDbReplicaStorage implements ReplicaStorage {
     return result.data;
   }
 
+  async hasVerifiedControl(id: string): Promise<boolean> {
+    const stored = await this.read('pins', id);
+
+    return stored !== undefined && pinSchema.safeParse(stored).success;
+  }
+
   async unit(id: string, objectId: string): Promise<DataEnvelope | undefined> {
     const value = await this.read('units', JSON.stringify([id, objectId]));
 

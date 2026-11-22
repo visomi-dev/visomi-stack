@@ -26,7 +26,7 @@ export async function openVaultDevice(
   rpId: string,
   options: {
     initialize?: boolean;
-    provision?: boolean;
+    provision?: boolean | 'resume';
     pin?: Uint8Array;
     combinePrf?: boolean;
     evaluated?: VaultUnlock;

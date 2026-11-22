@@ -1346,6 +1346,10 @@
         <source>Set up my vault</source>
         <target>Configurar mi bóveda</target>
       </trans-unit>
+      <trans-unit id="vaultResumeSetup" datatype="html">
+        <source>Continue vault setup</source>
+        <target>Continuar configuración de la bóveda</target>
+      </trans-unit>
       <trans-unit id="vaultDemoUsePin" datatype="html">
         <source>Use a PIN on this device</source>
         <target>Usar un PIN en este dispositivo</target>

@@ -6,6 +6,7 @@ export {
   exampleWorkspaceTargetSchema,
   exampleVaultTargetSchema,
   exampleWorkspacePageSchema,
+  exampleVaultWorkspacePageSchema,
 } from './lib/example';
 export * from './lib/crypto-contract';
 export * from './lib/vault-contract';

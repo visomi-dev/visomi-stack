@@ -151,26 +151,18 @@ export class ExamplePrivateResource {
     this.binding = binding;
 
     if (!registry) {
-      const keys = await custody.publicKeys();
+      try {
+        const committed = await this.bootstrap(path, binding, custody, signal);
 
-      this.current(signal);
+        registry = committed;
+      } catch (error) {
+        if (this.backupPage && !signal.aborted) {
+          this.vault.lockContext(binding);
+          this.close();
+        }
 
-      const requested = await this.api.vault(`${path}/devices/request`, { deviceId: binding.deviceId, keys }, signal);
-
-      this.current(signal);
-
-      const proof = await custody.prove(deviceChallengeSchema.parse(requested));
-
-      this.current(signal);
-
-      await this.api.vault(`${path}/devices/bootstrap`, proof, signal);
-
-      this.current(signal);
-
-      const roster = await this.api.vault(`${path}/devices`, undefined, signal);
-
-      this.current(signal);
-      registry = rosterSchema.parse(roster);
+        throw error;
+      }
     }
 
     const device = registry.devices.find(
@@ -408,6 +400,30 @@ export class ExamplePrivateResource {
     this.target = { ...target };
 
     await this.restoreLocal(target, rpId, undefined, binding.ownerId, this.controller.signal);
+  }
+
+  private async bootstrap(path: string, binding: WrappingContext, custody: DeviceCustody, signal: AbortSignal) {
+    const keys = await custody.publicKeys();
+
+    this.current(signal);
+
+    const requested = await this.api.vault(`${path}/devices/request`, { deviceId: binding.deviceId, keys }, signal);
+
+    this.current(signal);
+
+    const proof = await custody.prove(deviceChallengeSchema.parse(requested));
+
+    this.current(signal);
+
+    await this.api.vault(`${path}/devices/bootstrap`, proof, signal);
+
+    this.current(signal);
+
+    const roster = await this.api.vault(`${path}/devices`, undefined, signal);
+
+    this.current(signal);
+
+    return rosterSchema.parse(roster);
   }
 
   /** Explicit local unlock: no roster/network lookup. Server authorization is rechecked by later synchronization. */

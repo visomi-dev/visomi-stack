@@ -4,7 +4,12 @@ import { Router } from 'express';
 
 import type { AuthRuntime } from '../auth/runtime';
 import { cloudExamplePolicy } from '../db/cloud-example';
-import { persistenceContracts, persistenceRecordContracts } from '../db/contracts';
+import {
+  exampleVaultSetupContract,
+  exampleVaultWorkspacesContract,
+  persistenceContracts,
+  persistenceRecordContracts,
+} from '../db/contracts';
 import { createPersistenceRouter } from '../db/router';
 import { vaultContracts } from '../db/vault-contracts';
 
@@ -20,7 +25,14 @@ export function createExampleRouter(auth: AuthRuntime, harness?: boolean, object
     {
       path: '/vault',
       router: createPersistenceRouter(auth, syntheticHybridPolicy, { harness, objects }),
-      contracts: [...shared, ...Object.values(vaultContracts), ...(harness ? records : [])],
+      contracts: [
+        ...shared.map((contract) =>
+          contract === persistenceContracts.listWorkspaces ? exampleVaultWorkspacesContract : contract,
+        ),
+        exampleVaultSetupContract,
+        ...Object.values(vaultContracts),
+        ...(harness ? records : []),
+      ],
     },
     {
       path: '/cloud',

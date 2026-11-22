@@ -22,7 +22,6 @@ import { ExampleVaultWorkspaces } from './example-vault-workspaces';
 import {
   exampleLocalKey,
   exampleRecordsPath,
-  examplePrivatePath,
   readExampleTarget,
   cloudSchema,
   readExampleProfile,
@@ -112,10 +111,17 @@ export class ExampleWorkspace {
         (!this.binding() && ['available', 'unknown'].includes(this.capabilities.prf()))),
   );
   readonly hasBinding = computed(() => this.binding() !== null);
+  readonly enrolled = computed(() => this.backedScope() === 'enrolled');
+  readonly vaultReady = computed(() => (!this.backedSample || this.enrolled()) && this.vault.ready());
   readonly canInitialize = computed(
-    () => this.methodLoaded() && !this.hasBinding() && (!this.backedSample || this.backedScope() === 'empty'),
+    () =>
+      this.methodLoaded() &&
+      (this.backedSample ? this.objectBackups() && this.backedScope() === 'empty' : !this.hasBinding()),
   );
-  readonly canPair = computed(() => !this.backedSample || this.hasBinding() || this.backedScope() === 'enrolled');
+  readonly resumingPinSetup = computed(
+    () => this.backedSample && this.canInitialize() && this.binding()?.method === 'pin-argon2id',
+  );
+  readonly canPair = computed(() => !this.backedSample || this.enrolled());
   readonly loading = computed(() => !this.rendered() || this.busyState());
   readonly pairingParams = computed(() => {
     const target = this.targetState();
@@ -152,7 +158,7 @@ export class ExampleWorkspace {
   }
 
   editPrivateText(value: string): void {
-    if (this.backedSample && (!this.vault.ready() || this.editorReadOnly())) {
+    if (this.backedSample && (!this.vaultReady() || this.editorReadOnly())) {
       return;
     }
 
@@ -164,14 +170,18 @@ export class ExampleWorkspace {
   }
 
   async createWorkspace(): Promise<void> {
-    if (this.backedSample && !this.objectBackups()) {
-      return;
-    }
-
     await this.run(async (signal) => {
-      const target = await this.workspaceDirectory.create(this.backedSample, signal);
+      const target = await (this.backedSample
+        ? this.workspaceDirectory.startSetup(signal)
+        : this.workspaceDirectory.createHarness(signal));
 
       this.current(signal);
+
+      if (!target) {
+        await this.workspaceDirectory.load(signal);
+
+        return;
+      }
 
       if (this.backedSample) {
         await this.router.navigate(['/example/vault'], { queryParams: { ...target, objectId: target.scopeId } });
@@ -213,21 +223,19 @@ export class ExampleWorkspace {
 
   async unlock(initialize = false): Promise<void> {
     await this.run(async (signal) => {
-      if (!this.profile) {
+      const permitted = initialize ? this.canInitialize() : this.enrolled() && this.hasBinding();
+
+      if (!this.profile || (this.backedSample && !permitted)) {
         throw new VaultError('unavailable');
       }
 
-      try {
-        const target = this.requiredTarget();
+      const target = this.requiredTarget();
 
+      try {
         await (this.backedSample && !initialize
           ? this.privateResource.unlock(target, this.profile.rpId, false, undefined, true)
           : this.privateResource.unlock(target, this.profile.rpId, initialize));
       } catch (error) {
-        this.current(signal);
-
-        await this.loadBinding(this.requiredTarget(), signal);
-
         this.current(signal);
 
         if (error instanceof VaultError && error.code === 'unsupported-prf') {
@@ -235,15 +243,13 @@ export class ExampleWorkspace {
         }
 
         throw error;
+      } finally {
+        this.current(signal);
+
+        await this.loadBinding(target, signal);
       }
 
-      this.current(signal);
-
-      await this.loadBinding(this.requiredTarget(), signal);
-
-      if (!initialize) {
-        this.checkBackup();
-      }
+      this.checkBackup();
     });
   }
 
@@ -257,27 +263,31 @@ export class ExampleWorkspace {
 
     try {
       await this.run(async (signal) => {
-        if (initialize && (!this.showPin() || (this.backedSample && !this.pinSetupSelected()))) {
+        const pinSelected = this.resumingPinSetup() || this.pinSetupSelected();
+
+        if (initialize && (!this.showPin() || (this.backedSample && (!this.canInitialize() || !pinSelected)))) {
           throw new VaultError('unsupported-prf');
         }
 
-        if (!isVaultPin(pin) || (initialize && value !== confirmation)) {
+        if (!isVaultPin(pin) || (initialize && !this.resumingPinSetup() && value !== confirmation)) {
           throw new VaultError('pin-invalid');
         }
 
-        if (!this.profile) {
+        if (!this.profile || (this.backedSample && !initialize && (!this.enrolled() || !this.hasBinding()))) {
           throw new VaultError('unavailable');
         }
 
-        await this.privateResource.unlock(this.requiredTarget(), this.profile.rpId, initialize, pin);
+        const target = this.requiredTarget();
 
-        this.current(signal);
+        try {
+          await this.privateResource.unlock(target, this.profile.rpId, initialize, pin);
+        } finally {
+          this.current(signal);
 
-        await this.loadBinding(this.requiredTarget(), signal);
-
-        if (!initialize) {
-          this.checkBackup();
+          await this.loadBinding(target, signal);
         }
+
+        this.checkBackup();
       });
     } finally {
       pin.fill(0);
@@ -285,7 +295,7 @@ export class ExampleWorkspace {
   }
 
   async saveDraft(): Promise<void> {
-    if (!this.backedSample || this.editor.value() === null || !this.vault.ready() || this.editorReadOnly()) {
+    if (!this.backedSample || this.editor.value() === null || !this.vaultReady() || this.editorReadOnly()) {
       return;
     }
 
@@ -327,7 +337,7 @@ export class ExampleWorkspace {
   }
 
   private readonly checkBackup = () => {
-    if (this.backedSample && this.vault.ready()) {
+    if (this.backedSample && this.vaultReady()) {
       this.watchCursor.set(0);
     }
   };
@@ -360,24 +370,14 @@ export class ExampleWorkspace {
 
   private async loadBinding(target: ExampleTarget, signal: AbortSignal): Promise<void> {
     const binding = await this.vault.localLatestBinding(exampleLocalKey(target));
+    const state = await (this.backedSample
+      ? this.workspaceDirectory.enrollment(target, binding, signal)
+      : Promise.resolve({ binding, phase: 'unknown' as const }));
 
     this.current(signal);
-    this.binding.set(binding ?? null);
+    this.binding.set(state.binding ?? null);
+    this.backedScope.set(state.phase);
     this.methodLoaded.set(true);
-  }
-
-  private async canBootstrap(target: ExampleTarget, signal: AbortSignal): Promise<boolean> {
-    try {
-      await this.api.vault(`${examplePrivatePath(target)}/devices`, undefined, signal);
-
-      return false;
-    } catch (error) {
-      if (error instanceof HttpErrorResponse && error.error?.error === 'key_scope_uninitialized') {
-        return true;
-      }
-
-      throw error;
-    }
   }
 
   private async loadCloud(target: ExampleTarget, signal: AbortSignal) {
@@ -479,7 +479,7 @@ export class ExampleWorkspace {
   private readonly clearSessionState = effect(() => {
     this.session.operationVersion();
 
-    if (!this.vault.ready()) {
+    if (!this.vaultReady()) {
       this.editor.clear();
       this.privateDraft.set('');
 
@@ -501,7 +501,7 @@ export class ExampleWorkspace {
     const target = this.target();
     const verified = this.hasVerifiedHistory();
 
-    if (!this.backedSample || !target || !this.available() || !verified || !this.vault.ready()) {
+    if (!this.backedSample || !target || !this.available() || !verified || !this.vaultReady()) {
       return;
     }
 
@@ -524,7 +524,7 @@ export class ExampleWorkspace {
     if (
       hint !== null &&
       this.available() &&
-      this.vault.ready() &&
+      this.vaultReady() &&
       !this.busy() &&
       (hint === 0 || !this.privateResource.pending()) &&
       !this.privateResource.conflict() &&
@@ -585,14 +585,9 @@ export class ExampleWorkspace {
 
           this.current(signal);
 
-          if (this.backedSample && !this.hasBinding()) {
-            const empty = await this.canBootstrap(target, signal);
-
-            this.current(signal);
-            this.backedScope.set(empty ? 'empty' : 'enrolled');
+          if (!this.backedSample || (this.enrolled() && this.hasBinding())) {
+            await this.privateResource.resume(target, profile.rpId);
           }
-
-          await this.privateResource.resume(target, profile.rpId);
 
           this.current(signal);
 

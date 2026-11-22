@@ -14,6 +14,9 @@ export const exampleWorkspacePageSchema = z.strictObject({
   ),
   next: z.uuid().nullable(),
 });
+export const exampleVaultWorkspacePageSchema = exampleWorkspacePageSchema.extend({
+  pendingSetup: z.boolean().optional(),
+});
 
 /** Synthetic opt-in composition, never a derived product's recovery decision. */
 export const syntheticHybridPolicy = parseProductPolicy({

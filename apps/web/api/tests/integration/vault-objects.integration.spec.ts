@@ -2,6 +2,7 @@ import { vaultSchema } from '@visomi-stack/backend-db';
 import { backupBucket, backupS3Client } from '@visomi-stack/dev-testing/s3';
 import {
   createOperationId,
+  exampleWorkspaceTargetSchema,
   serializeDataEnvelope,
   syncHeadSchema,
   syncReadBody,
@@ -28,7 +29,7 @@ import {
   s3Endpoint,
   vaultNotice,
 } from './support/persistence';
-import { authorize, boot, digest, identity, push, vaultBase } from './support/vault';
+import { authorize, boot, digest, identity, push, request, vaultBase } from './support/vault';
 
 let fault: 'put' | 'readback' | 'delete' | undefined;
 
@@ -54,6 +55,68 @@ enableBackupObjects((objects) => ({
     return fault === 'readback' ? body.slice(1) : body;
   },
 }));
+
+it.each(['new', 'legacy'] as const)('lists only committed vaults and resumes %s setup', async (mode) => {
+  const f = await fixture();
+  const directory = '/example/vault/workspaces';
+  const setup = `${directory}/setup`;
+  let legacy: ReturnType<typeof exampleWorkspaceTargetSchema.parse> | undefined;
+
+  if (mode === 'legacy') {
+    const created = await f.owner.call(`${base(f.tenant)}/children`, 'POST', { kind: 'resource', objectBackup: true });
+
+    expect(created.status).toBe(200);
+    legacy = exampleWorkspaceTargetSchema.parse(created.body);
+  }
+
+  await expect(f.owner.call(directory)).resolves.toMatchObject({
+    status: 200,
+    body: { items: [], pendingSetup: mode === 'legacy' },
+  });
+
+  await expect(f.outsider.call(directory)).resolves.toMatchObject({
+    status: 200,
+    body: { items: [], pendingSetup: false },
+  });
+
+  const session = await browserSession(f.owner.actor.principal);
+  const [first, retry] = await Promise.all([
+    f.owner.call(setup, 'POST', {}),
+    f.owner.call(setup, 'POST', {}, { cookie: `visomi.sid=${session.cookie}`, 'x-csrf-token': session.csrf }),
+  ]);
+
+  expect(first.status).toBe(200);
+  expect(retry).toMatchObject({ status: 200, body: first.body });
+  const target = exampleWorkspaceTargetSchema.parse(first.body);
+
+  if (legacy) {
+    expect(target).toEqual(legacy);
+  }
+
+  await expect(f.owner.call(directory)).resolves.toMatchObject({
+    status: 200,
+    body: { items: [], next: null, pendingSetup: true },
+  });
+
+  await expect(f.owner.call(`${vaultBase(target)}/devices`)).resolves.toMatchObject({
+    status: 409,
+    body: { error: 'key_scope_uninitialized' },
+  });
+
+  const proofs = await Promise.all([request(f.owner, target, identity()), request(f.owner, target, identity())]);
+  const bootstraps = await Promise.all(
+    proofs.map((proof) => f.owner.call(`${vaultBase(target)}/devices/bootstrap`, 'POST', proof)),
+  );
+
+  expect(bootstraps.map(({ status }) => status).sort()).toEqual([200, 409]);
+
+  await expect(f.owner.call(directory)).resolves.toMatchObject({
+    status: 200,
+    body: { items: [{ ...target, objectId: null }], next: null, pendingSetup: false },
+  });
+
+  await expect(f.owner.call(setup, 'POST', {})).resolves.toMatchObject({ status: 200, body: null });
+});
 
 it('stores ciphertext privately and publishes only verified references for the current device and scope', async () => {
   const f = await fixture();
