@@ -469,7 +469,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await recipient.evaluate(() => window.dispatchEvent(new Event('pagehide')));
 
-    await expect(peerPanel.getByRole('button', { name: 'Unlock with a passkey' })).toBeVisible();
+    await expect(peerPanel.getByRole('button', { name: 'Use a passkey' })).toBeVisible();
 
     await publishNote(page, offlineNote);
 
@@ -479,7 +479,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     expect(hints).toEqual([['vault:changed', 2]]);
 
-    await peerPanel.getByRole('button', { name: 'Unlock with a passkey' }).click();
+    await peerPanel.getByRole('button', { name: 'Use a passkey' }).click();
 
     await expect(draft).toHaveValue(offlineNote);
 
@@ -497,7 +497,9 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await expect(recipient.getByText(note, { exact: true })).toHaveCount(0);
 
-    await restoredPanel.getByRole('button', { name: 'Desbloquear con una clave de acceso' }).click();
+    const locked = restoredPanel.getByRole('region', { name: 'Desbloquea tu bóveda', exact: true });
+
+    await locked.getByRole('button', { name: 'Usar passkey', exact: true }).click();
 
     await expect(restoredPanel.locator('#private-note')).toHaveValue(offlineNote);
 

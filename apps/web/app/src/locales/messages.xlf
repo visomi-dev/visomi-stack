@@ -3411,12 +3411,11 @@
           <context context-type="linenumber">251,252</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="vaultNoteLocked" datatype="html">
-        <source>You’re signed in. Unlock this vault to open your note.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
-          <context context-type="linenumber">93,96</context>
-        </context-group>
+      <trans-unit id="vaultLockedHeading" datatype="html">
+        <source>Unlock your vault</source>
+      </trans-unit>
+      <trans-unit id="vaultUsePasskey" datatype="html">
+        <source>Use a passkey</source>
       </trans-unit>
       <trans-unit id="vaultLocalSaveFailed" datatype="html">
         <source>Your changes haven’t been saved on this device yet. Keep this page open and try again.</source>

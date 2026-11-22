@@ -1718,9 +1718,13 @@
         <source>Your note</source>
         <target>Tu nota</target>
       </trans-unit>
-      <trans-unit id="vaultNoteLocked" datatype="html">
-        <source>You’re signed in. Unlock this vault to open your note.</source>
-        <target>Tu sesión está activa. Desbloquea esta bóveda para abrir tu nota.</target>
+      <trans-unit id="vaultLockedHeading" datatype="html">
+        <source>Unlock your vault</source>
+        <target>Desbloquea tu bóveda</target>
+      </trans-unit>
+      <trans-unit id="vaultUsePasskey" datatype="html">
+        <source>Use a passkey</source>
+        <target>Usar passkey</target>
       </trans-unit>
       <trans-unit id="vaultLocalSaveFailed" datatype="html">
         <source>Your changes haven’t been saved on this device yet. Keep this page open and try again.</source>
