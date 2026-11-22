@@ -32,9 +32,11 @@ test('hybrid persistence keeps private content out of transport and reopens lock
     }
   });
 
-  await page.goto('/app/en/persistence');
+  await page.goto('/app/en/db-example');
 
   await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
+
+  await expect(page).toHaveURL(/\/app\/en\/db-example(?:\/[a-f0-9-]{36}){3}$/);
 
   await expect(page.getByRole('heading', { name: 'Operational note · service-readable', exact: true })).toBeVisible();
 
@@ -183,7 +185,7 @@ test('SPA resource navigation and browser history isolate views and retain only 
   await signup(page);
 
   async function workspace(body: string) {
-    await page.goto('/app/en/persistence');
+    await page.goto('/app/en/db-example');
 
     await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
 
@@ -332,7 +334,7 @@ test('pairs a test private resource in Security across a PIN device and a PRF de
   page.on('request', observe);
   const email = await signup(page);
 
-  await page.goto('/app/en/persistence');
+  await page.goto('/app/en/db-example');
 
   await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
 

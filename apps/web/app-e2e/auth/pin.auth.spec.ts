@@ -25,7 +25,7 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
     }
   });
 
-  await page.goto('/app/en/persistence');
+  await page.goto('/app/en/db-example');
 
   await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
 

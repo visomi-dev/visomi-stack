@@ -179,7 +179,7 @@ export class ExampleWorkspace {
       } else {
         const objectId = this.document.defaultView!.crypto.randomUUID();
 
-        await this.router.navigate(['/persistence', target.tenantId, target.scopeId, objectId]);
+        await this.router.navigate(['/db-example', target.tenantId, target.scopeId, objectId]);
       }
     });
   }

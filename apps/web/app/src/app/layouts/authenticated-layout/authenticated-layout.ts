@@ -127,7 +127,7 @@ export class AuthenticatedLayout {
   readonly vaultMethod = computed(() => {
     const domain = this.router.lastSuccessfulNavigation()?.finalUrl?.root.children['primary']?.segments[0]?.path;
 
-    if (domain === 'example' || domain === 'persistence') {
+    if (domain === 'example' || domain === 'db-example') {
       return undefined;
     }
 

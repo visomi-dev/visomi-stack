@@ -36,7 +36,7 @@ const b: ExampleTarget = {
   scopeId: '55555555-5555-4555-8555-555555555555',
   objectId: '66666666-6666-4666-8666-666666666666',
 };
-const url = (target: ExampleTarget) => `/persistence/${target.tenantId}/${target.scopeId}/${target.objectId}`;
+const url = (target: ExampleTarget) => `/db-example/${target.tenantId}/${target.scopeId}/${target.objectId}`;
 const records = (target: ExampleTarget) =>
   `/tenants/${target.tenantId}/scopes/${target.scopeId}/domains/operations/records`;
 
@@ -143,7 +143,7 @@ function fixture(
           component: TestLayout,
           children: backed
             ? [{ path: 'example/vault', component: DatabaseExample, data: { backedSample: true } }]
-            : secured.children!.filter((route) => route.path?.startsWith('persistence')),
+            : secured.children!.filter((route) => route.path?.startsWith('db-example')),
         },
       ]),
       {

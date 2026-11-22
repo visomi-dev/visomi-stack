@@ -106,7 +106,7 @@ it('keeps route exclusions in the shell and reuses the shared prompt during SPA 
           component: AuthenticatedLayout,
           children: [
             { path: 'home', component: VaultRouteFixture },
-            { path: 'persistence', component: VaultRouteFixture },
+            { path: 'db-example', component: VaultRouteFixture },
             { path: 'account', component: VaultRouteFixture },
           ],
         },
@@ -131,7 +131,7 @@ it('keeps route exclusions in the shell and reuses the shared prompt during SPA 
 
   expect(harness.routeNativeElement?.querySelector('#workspace-vault-pin')).not.toBeNull();
 
-  await harness.navigateByUrl('/persistence');
+  await harness.navigateByUrl('/db-example');
 
   expect(harness.fixture.debugElement.query(By.directive(AuthenticatedLayout)).componentInstance).toBe(layout);
   expect(harness.routeNativeElement?.querySelector('#workspace-vault-pin')).toBeNull();

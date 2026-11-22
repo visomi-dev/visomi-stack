@@ -13,7 +13,7 @@ Stack offers two persistence modes. Use Cloud for service-readable data and acco
 
 Normal authentication registers the Example domain in development, test and production modes. The localized client routes are `/app/{en,es}/example/vault` and `/app/{en,es}/example/cloud`. The gateway mounts the API at `/api/example/vault` and `/api/example/cloud`. The standalone API serves the same routers at `/example/vault` and `/example/cloud` from its root. Both require a current verified full session, even for the policy probes. The former API namespace `/persistence` and the flattened example slugs have no API aliases.
 
-The remaining `/app/{en,es}/persistence` page is the technical hybrid harness for route isolation, offline sync and pairing regression tests. It uses the new Vault API and requires `NODE_ENV=development` or `NODE_ENV=test`, `VISOMI_PERSISTENCE_EXAMPLE=true`, and `VISOMI_PERSISTENCE_DEMOS=true`. Its server-readable operations and ability to create inline test workspaces are gated to that profile. The regular Vault example creates object-backed resources only.
+The `/app/{en,es}/db-example` page is the technical hybrid harness for route isolation, offline sync and pairing regression tests. It uses the new Vault API and requires `NODE_ENV=development` or `NODE_ENV=test`, `VISOMI_PERSISTENCE_EXAMPLE=true`, and `VISOMI_PERSISTENCE_DEMOS=true`. Its server-readable operations and ability to create inline test workspaces are gated to that profile. The regular Vault example creates object-backed resources only.
 
 New backups require a private S3-compatible bucket with these server-only settings.
 
