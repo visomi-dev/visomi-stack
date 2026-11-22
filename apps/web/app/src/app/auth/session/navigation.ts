@@ -1,13 +1,14 @@
 import { Location } from '@angular/common';
 import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
-import { exampleVaultTargetSchema } from '@visomi-stack/shared-db';
 
 import { Session } from './session';
 import type { SessionSnapshot } from './models';
 
 const uuidPathSegment = '[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}';
 const cloudReturnPath = new RegExp(`^/example/cloud(?:/(?:join|${uuidPathSegment}/${uuidPathSegment}))?$`);
+const vaultReturnUuid =
+  /^(?:[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/i;
 
 export function destination(session: SessionSnapshot): string {
   switch (session.access) {
@@ -50,10 +51,14 @@ export function safeReturnTo(value: string | null, base: string): string | null 
     }
 
     const { hash, searchParams } = new URL(path, 'https://internal.invalid');
-    const target = exampleVaultTargetSchema.safeParse(Object.fromEntries(searchParams));
+    const target = {
+      tenantId: searchParams.get('tenantId') ?? '',
+      scopeId: searchParams.get('scopeId') ?? '',
+      objectId: searchParams.get('objectId') ?? '',
+    };
 
-    return !hash && searchParams.size === 3 && target.success
-      ? `${pathname}?${new URLSearchParams(target.data)}`
+    return !hash && searchParams.size === 3 && Object.values(target).every((id) => vaultReturnUuid.test(id))
+      ? `${pathname}?${new URLSearchParams(target)}`
       : null;
   }
 

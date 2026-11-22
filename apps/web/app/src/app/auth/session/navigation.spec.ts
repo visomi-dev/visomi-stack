@@ -82,7 +82,8 @@ it('preserves the Vault note destination and accepts only its three opaque ident
   expect(safeReturnTo(workspace, '/app/es/')).toBe(workspace);
   expect(safeReturnTo(`/app/es${workspace}?${query}`, '/app/es/')).toBe(`${workspace}?${query}`);
   expect(safeReturnTo(`${workspace}?${query}&token=synthetic`, '/app/es/')).toBeNull();
-  expect(safeReturnTo(`${workspace}?${query}&${query}`, '/app/es/')).toBeNull();
+  expect(safeReturnTo(`${workspace}?${query.replace('scopeId=', 'tenantId=')}`, '/app/es/')).toBeNull();
+  expect(safeReturnTo(`${workspace}?${query.replace('-4222-', '-0222-')}`, '/app/es/')).toBeNull();
   expect(safeReturnTo(`${workspace}?${query}#synthetic`, '/app/es/')).toBeNull();
   expect(safeReturnTo(`${workspace}?tenantId=missing`, '/app/es/')).toBeNull();
 });
