@@ -58,6 +58,39 @@ export async function expireAuthentication(email: string): Promise<void> {
   }
 }
 
+export async function expireSession(email: string): Promise<void> {
+  const pool = await isolatedPool();
+
+  try {
+    const result = await pool.query(
+      "UPDATE auth_sessions SET expire = now() - interval '1 second' WHERE sess->'passport'->'user'->>'id' = (SELECT id::text FROM auth_users WHERE email = $1) AND revoked_at IS NULL AND expire > now()",
+      [email],
+    );
+
+    expect(result.rowCount).toBe(1);
+  } finally {
+    await pool.end();
+  }
+}
+
+export async function passkeySignup(page: Page, email = address()): Promise<string> {
+  await page.goto('/app/en/auth/sign-up');
+
+  await page.getByLabel('Email address', { exact: true }).fill(email);
+
+  await page.getByRole('button', { name: 'Create account with a passkey', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Verify your email', exact: true })).toBeVisible({ timeout: 15000 });
+
+  const code = await readMailCode(email);
+
+  await page.getByLabel('Verification code', { exact: true }).fill(code);
+
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
+
+  return email;
+}
+
 async function resetLimits(): Promise<void> {
   const pool = await isolatedPool();
 

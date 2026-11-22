@@ -1,5 +1,5 @@
 import { PrfUnlock, replicaId } from '@visomi-stack/web-frontend-db';
-import { VaultError, type WrappingContext, type KeyDomain } from '@visomi-stack/shared-db';
+import { VaultError, type WrappingContext, type KeyDomain, type VaultUnlock } from '@visomi-stack/shared-db';
 
 import type { ClientDatabase } from '../db/database';
 
@@ -29,15 +29,16 @@ export async function openVaultDevice(
     provision?: boolean;
     pin?: Uint8Array;
     combinePrf?: boolean;
+    evaluated?: VaultUnlock;
     signal: AbortSignal;
     current: () => void;
   },
 ) {
-  const { pin, signal, current } = options;
+  const { pin, signal, current, evaluated } = options;
   const initialize = options.initialize ?? false;
   const provision = options.provision ?? false;
 
-  if (!options.combinePrf || pin || vault.isOpen(binding)) {
+  if (!evaluated && (!options.combinePrf || pin || vault.isOpen(binding))) {
     await vault.connect(binding, rpId, initialize, pin);
 
     current();
@@ -45,7 +46,13 @@ export async function openVaultDevice(
     return vault.device(binding, rpId, provision, pin);
   }
 
-  const unlock = await vault.deviceUnlock(binding, rpId, signal);
+  let unlock = evaluated;
+
+  if (!unlock) {
+    const requested = await vault.deviceUnlock(binding, rpId, signal);
+
+    unlock = requested;
+  }
 
   try {
     current();
@@ -63,7 +70,9 @@ export async function openVaultDevice(
 
     throw error;
   } finally {
-    unlock.cancel();
+    if (!evaluated) {
+      unlock.cancel();
+    }
   }
 }
 

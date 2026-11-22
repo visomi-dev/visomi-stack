@@ -1695,8 +1695,12 @@
         <target>Conserva al menos un dispositivo vinculado. Si pierdes el acceso a todos, cambiar tu contraseña no te permitirá recuperar la nota.</target>
       </trans-unit>
       <trans-unit id="vaultSetupConfirm" datatype="html">
-        <source>Your browser will ask you to create a vault passkey and then use it to unlock this device.</source>
-        <target>Tu navegador te pedirá crear una clave de acceso para la bóveda y luego usarla para desbloquearla en este dispositivo.</target>
+        <source>Use a passkey you’ve already registered for this account to set up the vault on this device.</source>
+        <target>Usa una clave de acceso que ya registraste en esta cuenta para configurar la bóveda en este dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultPasskeyNotRegistered" datatype="html">
+        <source>Use a passkey registered to this account. You can manage your passkeys in Security.</source>
+        <target>Usa una clave de acceso registrada en esta cuenta. Puedes administrar tus claves de acceso en Seguridad.</target>
       </trans-unit>
       <trans-unit id="vaultDraftPending" datatype="html">
         <source>Saving on this device…</source>

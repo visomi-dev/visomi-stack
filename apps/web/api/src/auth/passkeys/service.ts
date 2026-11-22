@@ -29,6 +29,10 @@ type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 type Purpose = typeof challenges.$inferSelect.purpose;
 const hash = (challenge: string) => createHash('sha256').update(challenge).digest('hex');
 
+function activeCredentials(userId: string) {
+  return and(eq(credentials.userId, userId), isNull(credentials.revokedAt), isNull(credentials.pendingGrantId));
+}
+
 export class Passkeys {
   private readonly database = inject<Database>(DATABASE);
   private readonly config = inject<AuthConfig>(AUTH_CONFIG);
@@ -58,6 +62,8 @@ export class Passkeys {
       userDisplayName: user?.email ?? email ?? 'Visomi Stack account',
       attestationType: 'none',
       authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
+      // Some authenticators must opt in at registration. Vault evaluates PRF locally on a later gesture.
+      extensions: { prf: {} },
       excludeCredentials: existing.map((item) => ({
         id: item.credentialId,
         transports: item.transports as AuthenticatorTransport[],
@@ -268,12 +274,21 @@ export class Passkeys {
         backupState: credentials.backupState,
       })
       .from(credentials)
-      .where(and(eq(credentials.userId, user.id), isNull(credentials.revokedAt), isNull(credentials.pendingGrantId)));
+      .where(activeCredentials(user.id));
 
     return result.map(({ aaguid, ...credential }) => ({
       ...credential,
       providerName: passkeyProviderName(aaguid),
     }));
+  }
+
+  async vaultCredentialIds(user: Express.User): Promise<string[]> {
+    const result = await this.database
+      .select({ credentialId: credentials.credentialId })
+      .from(credentials)
+      .where(activeCredentials(user.id));
+
+    return result.map(({ credentialId }) => credentialId);
   }
 
   async rename(sid: string, user: Express.User, id: string, label: string) {

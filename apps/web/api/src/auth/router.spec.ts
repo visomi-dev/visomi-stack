@@ -119,6 +119,7 @@ function routerFixture() {
     register: vi.fn().mockResolvedValue(user),
     authenticate: vi.fn().mockResolvedValue(user),
     list: vi.fn().mockResolvedValue([{ id: credentialId, label: 'Synthetic' }]),
+    vaultCredentialIds: vi.fn().mockResolvedValue([response.id]),
     rename: vi.fn().mockResolvedValue(undefined),
     revoke: vi.fn().mockResolvedValue(undefined),
   };
@@ -270,6 +271,7 @@ describe('authentication router decisions and delegation', () => {
       ['POST', '/device-approval/deny'],
       ['DELETE', `/google/${credentialId}`],
       ['GET', '/methods'],
+      ['GET', '/passkeys/vault-credentials'],
       ['GET', '/sessions'],
       ['DELETE', `/sessions/${credentialId}`],
       ['POST', '/sessions/revoke-others'],
@@ -298,6 +300,7 @@ describe('authentication router decisions and delegation', () => {
 
       expect(missing.status, path).toBe(401);
     }
+    expect(fixture.passkeys.vaultCredentialIds).not.toHaveBeenCalled();
   });
 
   it('selects Google access middleware by intent while leaving malformed requests to the contract', async () => {
@@ -475,6 +478,16 @@ describe('authentication router decisions and delegation', () => {
     expect(fixture.passkeys.revoke).toHaveBeenCalledExactlyOnceWith('synthetic-session', user, credentialId);
     expect(renamed.status).toBe(204);
     expect(revoked.status).toBe(204);
+  });
+
+  it('returns Vault setup credential IDs for the authenticated owner', async () => {
+    const fixture = routerFixture();
+    const result = await fixture.dispatch('GET', '/passkeys/vault-credentials', undefined, { user });
+
+    expect(result.status).toBe(200);
+    expect(result.body).toEqual({ credentialIds: [response.id] });
+    expect(fixture.passkeys.vaultCredentialIds).toHaveBeenCalledExactlyOnceWith(user);
+    expect(fixture.passkeys.list).not.toHaveBeenCalled();
   });
 
   it('rejects switching the authenticated subject during a passkey reauthentication', async () => {

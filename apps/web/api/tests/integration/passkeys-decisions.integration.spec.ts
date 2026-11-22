@@ -177,6 +177,24 @@ describe('passkey persistence decisions with real PostgreSQL', () => {
     expect(unchanged.revokedAt).toBeNull();
   });
 
+  it('lists only the active WebAuthn IDs owned by the Vault setup account', async () => {
+    const owner = await registered();
+    const other = await registered();
+    const [stored] = await resource.db.select().from(credentials).where(eq(credentials.id, owner.user.credentialId));
+    const [foreign] = await resource.db.select().from(credentials).where(eq(credentials.id, other.user.credentialId));
+
+    await expect(passkeys.vaultCredentialIds(owner.user)).resolves.toEqual([stored.credentialId]);
+
+    await resource.db
+      .update(credentials)
+      .set({ revokedAt: new Date() })
+      .where(eq(credentials.id, owner.user.credentialId));
+
+    await expect(passkeys.vaultCredentialIds(owner.user)).resolves.toEqual([]);
+
+    await expect(passkeys.vaultCredentialIds(other.user)).resolves.toEqual([foreign.credentialId]);
+  });
+
   it('rejects mutations authenticated with a credential that was revoked after the session loaded', async () => {
     const f = await registered();
 

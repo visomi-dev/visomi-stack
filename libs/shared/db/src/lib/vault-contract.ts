@@ -18,7 +18,8 @@ export type VaultState =
   | 'cancelled'
   | 'origin-mismatch'
   | 'pin-invalid';
-export type VaultFailure = VaultState | 'stale-operation' | 'revision-conflict' | 'unsupported-version';
+export type VaultFailure =
+  VaultState | 'stale-operation' | 'revision-conflict' | 'unsupported-version' | 'passkey-not-registered';
 
 export class VaultError extends Error {
   constructor(readonly code: VaultFailure) {

@@ -190,6 +190,22 @@ export const passkeysContracts = {
       },
     },
   }),
+  vaultCredentialIds: defineRoute({
+    method: 'get',
+    path: '/passkeys/vault-credentials',
+    operationId: 'passkeys_vaultCredentialIds',
+    summary: 'List WebAuthn credential IDs for local vault setup',
+    tags: ['passkeys'],
+    security: cookieSecurity,
+    request: z.object({}),
+    responses: {
+      ...commonErrors,
+      200: {
+        description: 'Active WebAuthn credential IDs belonging to the verified account.',
+        content: { 'application/json': { schema: z.object({ credentialIds: z.array(z.base64url()) }) } },
+      },
+    },
+  }),
   renamePasskey: defineRoute({
     validationErrors,
     method: 'patch',

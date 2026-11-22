@@ -10,6 +10,7 @@ import { dataEnvelopeSchema, syncCheckpointMessage, type WrappingContext } from 
 import { Session } from '../auth/session/session';
 import { DatabaseHttp } from '../shared/db/http';
 import { VaultSession } from '../shared/vault/vault-session';
+import { AuthHttp } from '../auth/shared/http';
 
 import { ExamplePrivateResource } from './example-private-resource';
 
@@ -127,6 +128,7 @@ async function fixture(generation = 1, schemaVersion = 1, backedSample = false) 
       { provide: DOCUMENT, useValue: { defaultView: { crypto, indexedDB: {} } } },
       { provide: ActivatedRoute, useValue: { snapshot: { data: { backedSample } } } },
       { provide: DatabaseHttp, useValue: api },
+      { provide: AuthHttp, useValue: {} },
       { provide: VaultSession, useValue: vault },
     ],
   });

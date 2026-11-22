@@ -94,6 +94,7 @@ describe('passkey capability authorization', () => {
       rpID: config.rpId,
       attestationType: 'none',
       authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
+      extensions: { prf: {} },
       excludeCredentials: [],
     });
     expect(stored).toMatchObject({

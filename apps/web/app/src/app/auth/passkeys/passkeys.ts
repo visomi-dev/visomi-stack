@@ -27,6 +27,10 @@ export type Passkey = {
   backupState: boolean;
 };
 
+export function listVaultPasskeyIds(http: AuthHttp, signal: AbortSignal): Promise<{ credentialIds: string[] }> {
+  return http.request('GET', '/passkeys/vault-credentials', undefined, signal);
+}
+
 @Service({ autoProvided: false })
 export class Passkeys {
   private readonly http = inject(AuthHttp);
@@ -63,6 +67,8 @@ export class Passkeys {
     const response = await startRegistration({ optionsJSON: options.options });
 
     signal.throwIfAborted();
+
+    delete response.clientExtensionResults.prf;
 
     return this.http.request(
       'POST',

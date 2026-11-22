@@ -42,9 +42,14 @@ it.each([
   await expect(new PrfUnlock(environment).secret(binding)).rejects.toMatchObject({ code });
 });
 
-it.each([true, false])(
-  'keeps resource and device PRF outputs bound to their original salts (dual output %s)',
-  async (dual) => {
+it.each([
+  { dual: true, registered: false },
+  { dual: false, registered: false },
+  { dual: true, registered: true },
+  { dual: false, registered: true },
+])(
+  'keeps resource and device PRF outputs bound to their original salts (dual $dual / registered $registered)',
+  async ({ dual, registered }) => {
     const { deviceCustodyContext } = await import('./device-custody');
     const { encodeBytes } = await import('../crypto/cipher');
     const rpId = 'synthetic.example.test';
@@ -52,7 +57,9 @@ it.each([true, false])(
     const salts: string[][] = [];
     const get = vi.fn(async (request: CredentialRequestOptions) => {
       const options = request.publicKey!;
-      const evaluation = options.extensions!.prf!.eval!;
+      const prf = options.extensions!.prf!;
+      const evaluation = prf.evalByCredential?.[binding.methodId] ?? prf.eval!;
+
       const inputs = [evaluation.first, evaluation.second].filter((value) => value !== undefined);
 
       salts.push(inputs.map((input) => encodeBytes(new Uint8Array(input as ArrayBuffer))));
@@ -93,8 +100,22 @@ it.each([true, false])(
       crypto,
     });
     const cancel = new AbortController();
-    const method = await provider.forDevice(binding, cancel.signal);
+    const method = await (registered
+      ? provider.forRegisteredDevice(binding, ['Ag', 'AQ'], cancel.signal).then(({ unlock }) => unlock)
+      : provider.forDevice(binding, cancel.signal));
     const device = deviceCustodyContext(binding);
+
+    if (registered) {
+      const options = get.mock.calls[0][0].publicKey!;
+      const byCredential = options.extensions!.prf!.evalByCredential!;
+      const saltFor = (id: string) => encodeBytes(new Uint8Array(byCredential[id].first as ArrayBuffer));
+
+      expect(options.allowCredentials?.map(({ id }) => encodeBytes(new Uint8Array(id as ArrayBuffer)))).toEqual([
+        'Ag',
+        'AQ',
+      ]);
+      expect(saltFor('Ag')).not.toBe(saltFor('AQ'));
+    }
 
     await expect(method.secret({ ...binding, origin: 'https://other.example.test' })).rejects.toMatchObject({
       code: 'stale-operation',
@@ -111,6 +132,15 @@ it.each([true, false])(
 
     if (!dual) {
       expect(salts[1]).toEqual([salts[0][1]]);
+
+      if (registered) {
+        get.mockImplementationOnce(get.getMockImplementation()!);
+        get.mockRejectedValueOnce(new DOMException('Synthetic cancellation', 'NotAllowedError'));
+
+        await expect(provider.forRegisteredDevice(binding, ['AQ'], cancel.signal)).rejects.toMatchObject({
+          code: 'cancelled',
+        });
+      }
     }
 
     method.cancel();

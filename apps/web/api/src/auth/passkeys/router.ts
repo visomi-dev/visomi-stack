@@ -37,6 +37,7 @@ export function createPasskeyRouter(
     router,
     [
       { contract: passkeysContracts.listPasskeys, handler: controller.listPasskeys },
+      { contract: passkeysContracts.vaultCredentialIds, handler: controller.vaultCredentialIds },
       { contract: passkeysContracts.renamePasskey, handler: controller.renamePasskey },
       { contract: passkeysContracts.revokePasskey, handler: controller.revokePasskey },
     ],

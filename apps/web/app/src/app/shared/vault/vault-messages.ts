@@ -23,6 +23,8 @@ export function vaultMessage(state: string): string {
       return $localize`:@@vaultRecovery:This device doesn’t have a usable key. Use the product’s recovery or device approval process. Resetting a password won’t recover private data.`;
     case 'unsupported-prf':
       return $localize`:@@vaultNoPrf:This credential or browser can’t unlock private resources. Use a compatible device. The server can’t unlock this resource.`;
+    case 'passkey-not-registered':
+      return $localize`:@@vaultPasskeyNotRegistered:Use a passkey registered to this account. You can manage your passkeys in Security.`;
     case 'cancelled':
       return $localize`:@@vaultCancelled:Unlock canceled. Your private resources are still locked.`;
     case 'origin-mismatch':
