@@ -18,6 +18,7 @@ import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
 
 import { DatabaseExample } from './example/example';
 import { ExampleWorkspace } from './example-workspace';
+import { ExampleVaultWorkspaces } from './example-vault-workspaces';
 import { ExamplePrivateResource, type ExampleTarget } from './example-private-resource';
 
 @Component({ selector: 'app-test-persistence-layout', imports: [RouterOutlet], template: '<router-outlet />' })
@@ -149,6 +150,7 @@ function fixture(
     set: {
       providers: [
         ExampleWorkspace,
+        { provide: ExampleVaultWorkspaces, useValue: { page: signal(null), reset: vi.fn() } },
         { provide: DatabaseHttp, useValue: api },
         { provide: ExamplePrivateResource, useValue: privateResource },
       ],

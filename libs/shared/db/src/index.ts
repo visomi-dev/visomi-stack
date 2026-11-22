@@ -1,5 +1,12 @@
 export * from './lib/policy';
-export { syntheticHybridPolicy, developmentPersistencePolicy, developmentPersistenceDemos } from './lib/example';
+export {
+  syntheticHybridPolicy,
+  developmentPersistencePolicy,
+  developmentPersistenceDemos,
+  exampleWorkspaceTargetSchema,
+  exampleVaultTargetSchema,
+  exampleWorkspacePageSchema,
+} from './lib/example';
 export * from './lib/crypto-contract';
 export * from './lib/vault-contract';
 export * from './lib/device-contract';

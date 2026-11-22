@@ -1718,9 +1718,13 @@
         <source>Your note</source>
         <target>Tu nota</target>
       </trans-unit>
-      <trans-unit id="vaultNoteLocked" datatype="html">
-        <source>Unlock the vault to open your note.</source>
-        <target>Desbloquea la bóveda para abrir tu nota.</target>
+      <trans-unit id="vaultLockedHeading" datatype="html">
+        <source>Unlock your vault</source>
+        <target>Desbloquea tu bóveda</target>
+      </trans-unit>
+      <trans-unit id="vaultUsePasskey" datatype="html">
+        <source>Use a passkey</source>
+        <target>Usar passkey</target>
       </trans-unit>
       <trans-unit id="vaultLocalSaveFailed" datatype="html">
         <source>Your changes haven’t been saved on this device yet. Keep this page open and try again.</source>
@@ -1733,6 +1737,50 @@
       <trans-unit id="vaultLinkDevice" datatype="html">
         <source>Link a device</source>
         <target>Vincular un dispositivo</target>
+      </trans-unit>
+      <trans-unit id="vaultExistingWorkspaces" datatype="html">
+        <source>Your vaults</source>
+        <target>Tus bóvedas</target>
+      </trans-unit>
+      <trans-unit id="vaultOpenWorkspace" datatype="html">
+        <source>Open vault</source>
+        <target>Abrir bóveda</target>
+      </trans-unit>
+      <trans-unit id="exampleWorkspaceReference" datatype="html">
+        <source>ID <x id="INTERPOLATION" equiv-text="{{ item.scopeId }}"/></source>
+        <target>ID <x id="INTERPOLATION" equiv-text="{{ item.scopeId }}"/></target>
+      </trans-unit>
+      <trans-unit id="exampleMoreWorkspaces" datatype="html">
+        <source>Show more workspaces</source>
+        <target>Mostrar más espacios de trabajo</target>
+      </trans-unit>
+      <trans-unit id="exampleRetryWorkspaces" datatype="html">
+        <source>Retry loading workspaces</source>
+        <target>Volver a cargar los espacios de trabajo</target>
+      </trans-unit>
+      <trans-unit id="exampleLoadingWorkspaces" datatype="html">
+        <source>Loading workspaces…</source>
+        <target>Cargando espacios de trabajo…</target>
+      </trans-unit>
+      <trans-unit id="cloudExistingWorkspaces" datatype="html">
+        <source>Your Cloud workspaces</source>
+        <target>Tus espacios de trabajo en la nube</target>
+      </trans-unit>
+      <trans-unit id="cloudOpenWorkspace" datatype="html">
+        <source>Open workspace</source>
+        <target>Abrir espacio de trabajo</target>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceOwned" datatype="html">
+        <source>Owned</source>
+        <target>Propio</target>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceShared" datatype="html">
+        <source>Shared with you</source>
+        <target>Compartido contigo</target>
+      </trans-unit>
+      <trans-unit id="cloudNoWorkspaces" datatype="html">
+        <source>You don’t have any Cloud workspaces yet.</source>
+        <target>Aún no tienes espacios de trabajo en la nube.</target>
       </trans-unit>
     </body>
   </file>

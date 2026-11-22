@@ -17,16 +17,73 @@
     <p role="status" i18n="@@cloudExampleUnavailable">The Cloud example is unavailable right now.</p>
   } @else {
     @if (!workspace.hasTarget()) {
-      <button
-        appUI
-        type="button"
-        class="justify-self-start"
-        [disabled]="workspace.busy()"
-        (click)="workspace.createWorkspace()"
-        i18n="@@persistenceCreateWorkspace"
-      >
-        Create a test workspace
-      </button>
+      @if (workspace.workspaces(); as workspaces) {
+        @if (workspaces.items.length) {
+          <section class="grid gap-3" aria-labelledby="cloud-workspaces">
+            <h2 appUI id="cloud-workspaces" i18n="@@cloudExistingWorkspaces">Your Cloud workspaces</h2>
+
+            <ul class="grid gap-2">
+              @for (item of workspaces.items; track item.scopeId) {
+                <li>
+                  <a appUI [routerLink]="['/example/cloud', item.tenantId, item.scopeId]">
+                    <span i18n="@@cloudOpenWorkspace">Open workspace</span>
+
+                    <time [attr.datetime]="item.createdAt">{{ item.createdAt | date: 'medium' }}</time>
+
+                    <span class="break-all" i18n="@@exampleWorkspaceReference">ID {{ item.scopeId }}</span>
+
+                    @if (item.owner) {
+                      <span i18n="@@cloudWorkspaceOwned">Owned</span>
+                    } @else {
+                      <span i18n="@@cloudWorkspaceShared">Shared with you</span>
+                    }
+                  </a>
+                </li>
+              }
+            </ul>
+
+            @if (workspaces.next; as next) {
+              <button
+                appUI
+                type="button"
+                variant="secondary"
+                class="justify-self-start"
+                [disabled]="workspace.busy()"
+                (click)="workspace.loadMoreWorkspaces(next)"
+                i18n="@@exampleMoreWorkspaces"
+              >
+                Show more workspaces
+              </button>
+            }
+          </section>
+        } @else {
+          <p appUI tone="muted" i18n="@@cloudNoWorkspaces">You don’t have any Cloud workspaces yet.</p>
+        }
+
+        <button
+          appUI
+          type="button"
+          class="justify-self-start"
+          [disabled]="workspace.busy()"
+          (click)="workspace.createWorkspace()"
+          i18n="@@persistenceCreateWorkspace"
+        >
+          Create a test workspace
+        </button>
+      } @else if (workspace.error()) {
+        <button
+          appUI
+          type="button"
+          variant="secondary"
+          class="justify-self-start"
+          (click)="workspace.retryWorkspaces()"
+          i18n="@@exampleRetryWorkspaces"
+        >
+          Retry loading workspaces
+        </button>
+      } @else {
+        <p role="status" i18n="@@exampleLoadingWorkspaces">Loading workspaces…</p>
+      }
     } @else if (!workspace.target()) {
       <p role="alert" i18n="@@cloudExampleInvalidLink">This test workspace link is invalid.</p>
     } @else {

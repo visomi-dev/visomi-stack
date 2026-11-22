@@ -58,6 +58,14 @@ export function createPersistenceRouter(
   router.use(json({ limit: '32kb' }));
   routes.register(router, [
     {
+      contract: contracts.listWorkspaces,
+      handler: async (req, res, value) => {
+        const result = await access.listExampleWorkspaces(actor(req), !cloud, value.query);
+
+        return res.json(result);
+      },
+    },
+    {
       contract: contracts.maintenance,
       handler: async (req, res, value) => {
         if (cloud) {

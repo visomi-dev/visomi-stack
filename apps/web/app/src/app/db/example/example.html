@@ -5,21 +5,24 @@
   [class.max-w-xl]="workspace.backedSample"
   [attr.aria-busy]="workspace.busy()"
 >
-  <header class="space-y-3">
-    @if (workspace.backedSample) {
-      <p appUI tone="muted" i18n="@@vaultBackedSampleExplanation">
-        Write a note here and it backs up automatically. Your browser encrypts it before it leaves this device. You can
-        open the same note on a linked device.
-      </p>
-    } @else {
-      <h1 appUI appNavigationHeading i18n="@@persistenceExampleHeading">Hybrid persistence example</h1>
+  @let configuredVaultLocked = workspace.backedSample && workspace.hasBinding() && !workspace.vault.ready();
+  @if (!configuredVaultLocked) {
+    <header class="space-y-3">
+      @if (workspace.backedSample) {
+        <p appUI tone="muted" i18n="@@vaultBackedSampleExplanation">
+          Write a note here and it backs up automatically. Your browser encrypts it before it leaves this device. You
+          can open the same note on a linked device.
+        </p>
+      } @else {
+        <h1 appUI appNavigationHeading i18n="@@persistenceExampleHeading">Hybrid persistence example</h1>
 
-      <p appUI tone="muted" i18n="@@persistenceExampleDescription">
-        This development example uses test workspaces. The service can read account identity and operational notes.
-        Unlock private resources separately on this device.
-      </p>
-    }
-  </header>
+        <p appUI tone="muted" i18n="@@persistenceExampleDescription">
+          This development example uses test workspaces. The service can read account identity and operational notes.
+          Unlock private resources separately on this device.
+        </p>
+      }
+    </header>
+  }
 
   @if (workspace.backedSample && workspace.loading() && !workspace.available()) {
     <p role="status" i18n="@@vaultLoading">Loading the vault…</p>
@@ -29,16 +32,140 @@
     } @else {
       <p role="status" i18n="@@persistenceExampleUnavailable">Set up the development profile to use this example.</p>
     }
-  } @else if (workspace.backedSample && !workspace.target() && !workspace.objectBackups()) {
-    <p role="status" i18n="@@vaultBackupStorageDisabled">Vault backups are unavailable right now. Try again later.</p>
-  } @else if (!workspace.target()) {
-    <button appUI type="button" [disabled]="workspace.busy()" (click)="workspace.createWorkspace()">
-      @if (workspace.backedSample) {
-        <span i18n="@@vaultDemoSetup">Set up my vault</span>
+  } @else if (workspace.backedSample && !workspace.target()) {
+    @if (workspace.workspaces(); as workspaces) {
+      @if (workspaces.items.length) {
+        <section class="grid gap-3" aria-labelledby="existing-vaults">
+          <h2 appUI id="existing-vaults" i18n="@@vaultExistingWorkspaces">Your vaults</h2>
+
+          <ul class="grid gap-2">
+            @for (item of workspaces.items; track item.scopeId) {
+              <li>
+                <button
+                  appUI
+                  type="button"
+                  variant="secondary"
+                  class="max-w-full flex-wrap"
+                  [disabled]="workspace.busy()"
+                  (click)="workspace.openWorkspace(item)"
+                >
+                  <span i18n="@@vaultOpenWorkspace">Open vault</span>
+
+                  <time [attr.datetime]="item.createdAt">{{ item.createdAt | date: 'medium' }}</time>
+
+                  <span class="break-all" i18n="@@exampleWorkspaceReference">ID {{ item.scopeId }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+
+          @if (workspaces.next; as next) {
+            <button
+              appUI
+              type="button"
+              variant="secondary"
+              class="justify-self-start"
+              [disabled]="workspace.busy()"
+              (click)="workspace.discoverWorkspaces(next)"
+              i18n="@@exampleMoreWorkspaces"
+            >
+              Show more workspaces
+            </button>
+          }
+        </section>
+      } @else if (workspace.objectBackups()) {
+        <button
+          appUI
+          type="button"
+          [disabled]="workspace.busy()"
+          (click)="workspace.createWorkspace()"
+          i18n="@@vaultDemoSetup"
+        >
+          Set up my vault
+        </button>
       } @else {
-        <span i18n="@@persistenceCreateWorkspace">Create a test workspace</span>
+        <p role="status" i18n="@@vaultBackupStorageDisabled">
+          Vault backups are unavailable right now. Try again later.
+        </p>
       }
+    } @else if (workspace.notice()) {
+      <button
+        appUI
+        type="button"
+        variant="secondary"
+        [disabled]="workspace.busy()"
+        (click)="workspace.discoverWorkspaces()"
+        i18n="@@exampleRetryWorkspaces"
+      >
+        Retry loading workspaces
+      </button>
+    } @else {
+      <p role="status" i18n="@@exampleLoadingWorkspaces">Loading workspaces…</p>
+    }
+  } @else if (!workspace.target()) {
+    <button
+      appUI
+      type="button"
+      [disabled]="workspace.busy()"
+      (click)="workspace.createWorkspace()"
+      i18n="@@persistenceCreateWorkspace"
+    >
+      Create a test workspace
     </button>
+  } @else if (configuredVaultLocked) {
+    <section appUI="card" padding="lg" class="mx-auto w-full max-w-sm" aria-labelledby="locked-vault-heading">
+      <header class="grid justify-items-center gap-3 text-center">
+        <svg
+          class="size-8"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="5" y="10" width="14" height="11" rx="2" />
+
+          <path d="M8 10V7a4 4 0 1 1 8 0v3m-4 4v3" />
+        </svg>
+
+        <h2 appUI id="locked-vault-heading" i18n="@@vaultLockedHeading">Unlock your vault</h2>
+      </header>
+
+      @if (workspace.showPrf()) {
+        <button
+          appUI
+          type="button"
+          [disabled]="workspace.busy()"
+          [attr.aria-busy]="workspace.busy()"
+          (click)="workspace.unlock()"
+          i18n="@@vaultUsePasskey"
+        >
+          Use a passkey
+        </button>
+      } @else if (workspace.showPin()) {
+        <form class="grid min-w-0 gap-4" (submit)="$event.preventDefault(); workspace.unlockWithPin()">
+          <ng-container [ngTemplateOutlet]="localPin" />
+
+          <button
+            appUI
+            type="submit"
+            [disabled]="workspace.busy()"
+            [attr.aria-busy]="workspace.busy()"
+            i18n="@@vaultPinUnlock"
+          >
+            Unlock with PIN
+          </button>
+        </form>
+      }
+    </section>
+
+    @if (workspace.canPair()) {
+      <div class="text-center">
+        <ng-container [ngTemplateOutlet]="linkDevice" />
+      </div>
+    }
   } @else {
     @if (!workspace.backedSample) {
       <section class="space-y-4 rounded-xl border p-5">
@@ -89,8 +216,6 @@
 
       @if (!workspace.backedSample) {
         <p role="status">{{ workspace.status() }}</p>
-      } @else if (workspace.hasBinding() && !workspace.vault.ready()) {
-        <p role="status" i18n="@@vaultNoteLocked">Unlock the vault to open your note.</p>
       }
 
       @if (!workspace.backedSample) {
@@ -118,13 +243,9 @@
         </p>
       }
 
-      @if (
-        workspace.showPrf() &&
-        !workspace.vault.ready() &&
-        (!workspace.backedSample || workspace.hasBinding() || workspace.canInitialize())
-      ) {
+      @if (workspace.showPrf() && !workspace.vault.ready() && (!workspace.backedSample || workspace.canInitialize())) {
         <div class="flex flex-wrap gap-3">
-          @if (!workspace.backedSample || workspace.hasBinding()) {
+          @if (!workspace.backedSample) {
             <button
               appUI
               type="button"
@@ -171,9 +292,7 @@
       @if (
         workspace.showPin() &&
         !workspace.vault.ready() &&
-        (!workspace.backedSample ||
-          workspace.hasBinding() ||
-          (workspace.canInitialize() && workspace.pinSetupSelected()))
+        (!workspace.backedSample || (workspace.canInitialize() && workspace.pinSetupSelected()))
       ) {
         <form
           class="space-y-4"
@@ -187,21 +306,7 @@
             offline if you’re already signed in.
           </p>
 
-          <app-field
-            control-id="vault-pin"
-            label="Local unlock PIN"
-            i18n-label="@@vaultPinLabel"
-            description="6 digits"
-            i18n-description="@@vaultPinLength"
-          >
-            <app-pin-input
-              required
-              [digits]="6"
-              [disabled]="workspace.busy()"
-              [value]="workspace.pinDraft()"
-              (valueChange)="workspace.pinDraft.set($event)"
-            />
-          </app-field>
+          <ng-container [ngTemplateOutlet]="localPin" />
 
           @if (workspace.backedSample && workspace.canInitialize()) {
             <app-field control-id="vault-pin-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
@@ -383,9 +488,7 @@
 
       @if (workspace.backedSample && workspace.canPair()) {
         <div>
-          <a appUI routerLink="/security" [queryParams]="workspace.pairingParams()" i18n="@@vaultLinkDevice">
-            Link a device
-          </a>
+          <ng-container [ngTemplateOutlet]="linkDevice" />
         </div>
       }
     </section>
@@ -395,3 +498,25 @@
     <p role="status" aria-live="polite">{{ workspace.notice() }}</p>
   }
 </section>
+
+<ng-template #localPin>
+  <app-field
+    control-id="vault-pin"
+    label="Local unlock PIN"
+    i18n-label="@@vaultPinLabel"
+    description="6 digits"
+    i18n-description="@@vaultPinLength"
+  >
+    <app-pin-input
+      required
+      [digits]="6"
+      [disabled]="workspace.busy()"
+      [value]="workspace.pinDraft()"
+      (valueChange)="workspace.pinDraft.set($event)"
+    />
+  </app-field>
+</ng-template>
+
+<ng-template #linkDevice>
+  <a appUI routerLink="/security" [queryParams]="workspace.pairingParams()" i18n="@@vaultLinkDevice">Link a device</a>
+</ng-template>

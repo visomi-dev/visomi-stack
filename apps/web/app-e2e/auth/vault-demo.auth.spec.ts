@@ -1,7 +1,7 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
 
-import { expect, signup, passwordStart, test } from './support/fixtures';
+import { expect, logout, password, signup, passwordStart, test } from './support/fixtures';
 
 async function virtualPasskey(page: Page) {
   const cdp = await page.context().newCDPSession(page);
@@ -21,6 +21,19 @@ async function virtualPasskey(page: Page) {
   });
 
   return cdp;
+}
+
+async function expectCenteredCard(card: Locator): Promise<void> {
+  await expect(card).toBeVisible();
+
+  const offset = await card.evaluate((element) => {
+    const card = element.getBoundingClientRect();
+    const container = element.parentElement!.getBoundingClientRect();
+
+    return Math.abs(card.left + card.width / 2 - (container.left + container.width / 2));
+  });
+
+  expect(offset).toBeLessThanOrEqual(1);
 }
 
 test('opens the Vault navigation item without offering a separate vault when the API is unavailable', async ({
@@ -84,10 +97,10 @@ test('shows an unavailable backup state in Spanish without enabling another stor
   await expect(page.locator('app-pin-input')).toHaveCount(0);
 });
 
-test('sets up one synchronized Vault with an explicitly chosen PIN and reopens its note', async ({ page }) => {
+test('sets up one synchronized Vault with an explicitly chosen PIN and reopens its note', async ({ page }, info) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
 
-  await signup(page);
+  const email = await signup(page);
 
   await page.goto('/app/en/example/vault');
 
@@ -124,9 +137,43 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await expect(page.locator('app-vault-sync-indicator').getByRole('status')).toHaveText('Vault synced');
 
+  const workspace = page.url();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+
   await page.reload();
 
-  await expect(unlock).toBeVisible();
+  await expect(page).toHaveURL(workspace);
+
+  const locked = page.getByRole('region', { name: 'Unlock your vault', exact: true });
+
+  await expectCenteredCard(locked);
+
+  await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeVisible();
+
+  await expect(page.getByText('You’re signed in. Unlock this vault to open your note.')).toHaveCount(0);
+
+  await expect(locked.getByRole('button', { name: 'Use a passkey', exact: true })).toHaveCount(0);
+
+  await expect(locked.getByRole('button', { name: 'Unlock with PIN', exact: true })).toBeVisible();
+
+  const pinWidget = locked.locator('app-pin-input');
+  const pinWidth = await pinWidget.boundingBox();
+  const formWidth = await locked.locator('form').boundingBox();
+
+  expect(pinWidth?.width).toBeCloseTo(formWidth!.width);
+
+  await expect(pinWidget.locator('.slot')).toHaveCount(6);
+
+  await pin.focus();
+
+  await expect(pin).toBeFocused();
+
+  await page.keyboard.press('Tab');
+
+  await expect(unlock).toBeFocused();
+
+  await page.screenshot({ path: info.outputPath('vault-pin-locked-mobile.png'), animations: 'disabled' });
 
   await expect(confirmation).toHaveCount(0);
 
@@ -145,6 +192,42 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
   await unlock.click();
 
   await expect(page.getByLabel('Your note', { exact: true })).toHaveValue(note);
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  const primary = page.locator('app-sidebar').getByRole('navigation', { name: 'Primary navigation' });
+
+  await primary.getByRole('link', { name: 'Home', exact: true }).click();
+
+  await primary.getByRole('link', { name: 'Vault example', exact: true }).click();
+
+  await page.getByRole('button', { name: /Open vault/ }).click();
+
+  await expect(page).toHaveURL(workspace);
+
+  await expect(setup).toHaveCount(0);
+
+  await logout(page);
+
+  await page.goto(workspace);
+
+  await page.getByRole('link', { name: 'Use a password', exact: true }).click();
+
+  await page.getByLabel('Email address', { exact: true }).fill(email);
+
+  await page.getByLabel('Password', { exact: true }).fill(password);
+
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Confirm your sign-in', exact: true })).toBeVisible();
+
+  const code = await readMailCode(email);
+
+  await page.getByLabel('Verification code', { exact: true }).fill(code);
+
+  await expect(page).toHaveURL(workspace);
+
+  await expect(unlock).toBeVisible();
 
   await page.goto('/app/en/example/cloud');
 
@@ -197,7 +280,7 @@ test.describe('Vault passkey setup in Chromium', () => {
   // eslint-disable-next-line playwright/no-skipped-test
   test.skip(({ browserName }) => browserName !== 'chromium', 'Requires a Chromium virtual authenticator');
 
-  test('sets up the synchronized Vault with verified PRF and no PIN', async ({ page }) => {
+  test('sets up the synchronized Vault with verified PRF and no PIN', async ({ page }, info) => {
     const cdp = await virtualPasskey(page);
     let assertions = 0;
 
@@ -218,6 +301,37 @@ test.describe('Vault passkey setup in Chromium', () => {
     expect(assertions).toBe(1);
 
     await expect(page.locator('app-pin-input')).toHaveCount(0);
+
+    const workspace = page.url();
+
+    await page.reload();
+
+    await expect(page).toHaveURL(workspace);
+
+    const locked = page.getByRole('region', { name: 'Unlock your vault', exact: true });
+    const usePasskey = locked.getByRole('button', { name: 'Use a passkey', exact: true });
+
+    await expectCenteredCard(locked);
+
+    await expect(page.locator('app-sidebar').getByRole('navigation', { name: 'Primary navigation' })).toBeVisible();
+
+    await expect(locked.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
+
+    await expect(usePasskey).toBeEnabled();
+
+    expect(assertions).toBe(1);
+
+    await usePasskey.focus();
+
+    await expect(usePasskey).toBeFocused();
+
+    await page.screenshot({ path: info.outputPath('vault-passkey-locked-desktop.png'), animations: 'disabled' });
+
+    await usePasskey.press('Enter');
+
+    await expect(page.getByLabel('Your note', { exact: true })).toBeEditable();
+
+    expect(assertions).toBe(2);
   });
 
   test('opens the backed note on an approved desktop with its own PIN and no passkey', async ({

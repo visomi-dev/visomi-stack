@@ -3,7 +3,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import { authSchema, persistenceSchema, vaultSchema, type Database } from '@visomi-stack/backend-db';
 import { parseProductPolicy, type PersistenceAction, type ProductPolicy } from '@visomi-stack/shared-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import type { z } from 'zod';
 
 import { lockIdentity, requireFull, type Principal, type Transaction } from '../auth/shared/identity';
@@ -71,6 +72,81 @@ export class Access {
       await tx.insert(memberships).values({ tenantId: id, userId: actor.principal.id, owner: true });
 
       return { tenantId: id, scopeId: id };
+    });
+  }
+
+  async listExampleWorkspaces(
+    actor: SessionActor,
+    objectBackup: boolean,
+    { after, limit }: { after?: string; limit: number },
+  ) {
+    return this.database.transaction(async (tx) => {
+      await this.identity(tx, actor);
+
+      const directGrant = alias(grants, 'workspace_grant');
+      const rootGrant = alias(grants, 'workspace_root_grant');
+      const { opaqueUnits } = vaultSchema;
+      const objectId = sql<string | null>`(
+        select ${opaqueUnits.id} from ${opaqueUnits}
+        where ${opaqueUnits.tenantId} = ${scopes.tenantId}
+          and ${opaqueUnits.scopeId} = ${scopes.id}
+          and ${opaqueUnits.domain} = 'private-resources'
+          and not ${opaqueUnits.tombstone}
+        order by ${opaqueUnits.cursor} desc
+        limit 1
+      )`;
+      const readable = Object.entries(actions)
+        .filter(([, allowed]) => allowed.includes('read'))
+        .map(([role]) => role);
+
+      // Both example products create direct resource children. The nearer grant has precedence.
+      const rows = await tx
+        .select({
+          tenantId: tenants.id,
+          scopeId: scopes.id,
+          createdAt: tenants.createdAt,
+          owner: memberships.owner,
+          ...(objectBackup ? { objectId } : {}),
+        })
+        .from(memberships)
+        .innerJoin(tenants, eq(tenants.id, memberships.tenantId))
+        .innerJoin(scopes, and(eq(scopes.tenantId, tenants.id), eq(scopes.parentId, tenants.id)))
+        .leftJoin(
+          directGrant,
+          and(
+            eq(directGrant.tenantId, tenants.id),
+            eq(directGrant.scopeId, scopes.id),
+            eq(directGrant.userId, memberships.userId),
+          ),
+        )
+        .leftJoin(
+          rootGrant,
+          and(
+            eq(rootGrant.tenantId, tenants.id),
+            eq(rootGrant.scopeId, tenants.id),
+            eq(rootGrant.userId, memberships.userId),
+          ),
+        )
+        .where(
+          and(
+            eq(memberships.userId, actor.principal.id),
+            isNull(memberships.revokedAt),
+            eq(tenants.product, this.manifest.product),
+            eq(tenants.policyHash, this.policyHash),
+            eq(scopes.kind, 'resource'),
+            eq(scopes.objectBackup, objectBackup),
+            or(eq(memberships.owner, true), inArray(sql`coalesce(${directGrant.role}, ${rootGrant.role})`, readable)),
+            after ? gt(scopes.id, after) : undefined,
+          ),
+        )
+        .orderBy(asc(scopes.id))
+        .limit(limit + 1);
+      const page = rows.slice(0, limit);
+
+      return {
+        items: page.map((item) => ({ ...item, createdAt: item.createdAt.toISOString() })),
+        next: rows.length > limit ? page.at(-1)!.scopeId : null,
+      };
     });
   }
 

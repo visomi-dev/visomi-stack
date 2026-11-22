@@ -2,10 +2,10 @@
 
 Use synthetic notes and accounts in your demo workspaces.
 
-| Example                                           | Where data lives                                                                                                                                                                                      | Who can read it                                                                                                                                                                           |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Vault with synchronization** (`/example/vault`) | A new test note starts in IndexedDB. An explicit upload stores its encrypted envelope in private S3-compatible storage. PostgreSQL stores opaque references, versions, integrity and access metadata. | A device with a usable key can read its local copy. Access to the workspace and signed device authorization are required to download the backup.                                          |
-| **Cloud** (`/example/cloud`)                      | Notes go directly to PostgreSQL through the SaaS records API.                                                                                                                                         | The owner can create, read, edit, and delete notes. An explicitly permitted test account can read shared notes. Trusted services and database administrators can read the stored content. |
+| Example                                           | Where data lives                                                                                                                                                                                       | Who can read it                                                                                                                                                                           |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Vault with synchronization** (`/example/vault`) | A new test note starts in IndexedDB. An automatic backup stores its encrypted envelope in private S3-compatible storage. PostgreSQL stores opaque references, versions, integrity and access metadata. | A device with a usable key can read its local copy. Access to the workspace and signed device authorization are required to download the backup.                                          |
+| **Cloud** (`/example/cloud`)                      | Notes go directly to PostgreSQL through the SaaS records API.                                                                                                                                          | The owner can create, read, edit, and delete notes. An explicitly permitted test account can read shared notes. Trusted services and database administrators can read the stored content. |
 
 Stack offers two persistence modes. Use Cloud for service-readable data and account-based collaboration. Use Vault for client-encrypted data synchronized across approved devices. IndexedDB holds each device’s encrypted copy and pending changes within the synchronized Vault. Cloud access uses a verified account session, resource grants, and PostgreSQL row-level security (RLS). Cloud is service-readable SaaS storage and makes no zero-knowledge claim.
 
@@ -34,6 +34,12 @@ psql "$SYNTHETIC_EXAMPLE_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f libs/backend/db/
 ```
 
 On a deployed Stack database, an operator provisions the same policies after checking that the intended database has the standard persistence tables and that the restricted role and policies are absent. The setup grants the invoking login permission to switch roles. Verify that this is the login used by the deployed gateway, that it can switch to `visomi_cloud_example_records`, and that `row_security_active` returns true for both persistence tables in that role.
+
+## Reopen an existing workspace
+
+Open **Cloud example** from the authenticated menu. The workspace list shows workspaces you own or have permission to read. Choose a workspace to see its notes, or use its direct link. If access is revoked, the workspace is removed from the next list and its direct link is denied.
+
+Open **Vault example** from the menu and choose the existing vault. The list uses the signed-in account to find accessible backup workspaces. The vault still needs a linked device and explicit unlock to open its encrypted note. Reloading keeps the note address and locks the vault. If you need to sign in again, the app returns to that address so you can unlock the same vault.
 
 ## Try Cloud sharing
 

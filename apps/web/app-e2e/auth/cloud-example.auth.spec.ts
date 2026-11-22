@@ -38,6 +38,41 @@ function watchCloudHints(page: Page) {
   return hints;
 }
 
+test('shows distinct Cloud and Vault workspace labels when their tenant and dates match', async ({ page }) => {
+  await signup(page);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  const tenantId = '11111111-1111-4111-8111-111111111111';
+  const scopeIds = ['22222222-2222-4222-8222-222222222221', '22222222-2222-4222-8222-222222222222'];
+  const items = scopeIds.map((scopeId) => ({
+    tenantId,
+    scopeId,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    owner: true,
+  }));
+
+  await page.route('**/api/example/{cloud,vault}/workspaces', (route) =>
+    route.fulfill({ json: { items, next: null } }),
+  );
+
+  await page.goto('/app/en/example/cloud');
+
+  for (const scopeId of scopeIds) {
+    const link = page.getByRole('link', { name: new RegExp(`Open workspace.*ID ${scopeId}`) });
+
+    await expect(link).toBeVisible();
+
+    await expect(link).toHaveAttribute('href', `/app/en/example/cloud/${tenantId}/${scopeId}`);
+  }
+
+  await page.goto('/app/en/example/vault');
+
+  for (const scopeId of scopeIds) {
+    await expect(page.getByRole('button', { name: new RegExp(`Open vault.*ID ${scopeId}`) })).toBeVisible();
+  }
+});
+
 test('Cloud updates permitted readers in realtime and clears notes after revocation', async ({ page, browser }) => {
   const baseURL = test.info().project.use.baseURL;
   const readerContext = await browser.newContext({ baseURL, extraHTTPHeaders: { 'x-forwarded-for': '198.19.0.1' } });
@@ -74,6 +109,30 @@ test('Cloud updates permitted readers in realtime and clears notes after revocat
     await saveNote(page, 'Synthetic owner note', 'Owner fixture');
 
     await saveNote(page, 'Synthetic team note', 'Team fixture', true);
+
+    const primary = page.locator('app-sidebar').getByRole('navigation', { name: 'Primary navigation' });
+
+    await primary.getByRole('link', { name: 'Home', exact: true }).click();
+
+    await primary.getByRole('link', { name: 'Cloud example', exact: true }).click();
+
+    await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
+
+    await expect(page.getByText('There are no notes to show yet.')).toBeVisible();
+
+    await primary.getByRole('link', { name: 'Cloud example', exact: true }).click();
+
+    const workspaces = page.getByRole('link', { name: /Open workspace/ });
+
+    await expect(workspaces).toHaveCount(2);
+
+    await workspaces.and(page.locator(`a[href="${new URL(workspace).pathname}"]`)).click();
+
+    await expect(page).toHaveURL(workspace);
+
+    await expect(page.getByRole('heading', { name: 'Synthetic owner note', exact: true })).toBeVisible();
+
+    await expect(page.getByRole('heading', { name: 'Synthetic team note', exact: true })).toBeVisible();
 
     await expect(page.locator('app-pin-input')).toHaveCount(0);
 

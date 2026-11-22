@@ -18,21 +18,23 @@ import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
 
 import { VaultNoteDraft } from './vault-note-draft';
 import { ExamplePrivateResource } from './example-private-resource';
+import { ExampleVaultWorkspaces } from './example-vault-workspaces';
 import {
   exampleLocalKey,
   exampleRecordsPath,
   examplePrivatePath,
   readExampleTarget,
-  scopeSchema,
   cloudSchema,
   readExampleProfile,
   type ExampleTarget,
+  type ExampleWorkspacePage,
 } from './example-contracts';
 
 /** Route-local orchestration; components only bind state and invoke domain actions. */
 @Service({ autoProvided: false })
 export class ExampleWorkspace {
   private readonly api = inject(DatabaseHttp);
+  private readonly workspaceDirectory = inject(ExampleVaultWorkspaces);
   private readonly session = inject(Session);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -85,7 +87,6 @@ export class ExampleWorkspace {
 
   readonly editor = new VaultNoteDraft(this.document, this.privateResource, this.syncStatus);
   readonly busy = this.busyState.asReadonly();
-
   readonly editorReadOnly = computed(() => this.busy() || this.editor.readOnly());
   readonly available = computed(
     () =>
@@ -97,6 +98,7 @@ export class ExampleWorkspace {
   );
 
   readonly vault = this.privateResource.vault;
+
   readonly status = computed(() => vaultMessage(this.vault.state()));
   readonly showPin = computed(
     () =>
@@ -121,8 +123,23 @@ export class ExampleWorkspace {
     return this.backedSample && target ? { ...target, sample: 'vault-backup' } : target;
   });
 
+  readonly workspaces = this.workspaceDirectory.page;
   readonly notice = this.noticeState.asReadonly();
   readonly target = this.targetState.asReadonly();
+
+  async openWorkspace(workspace: ExampleWorkspacePage['items'][number]): Promise<void> {
+    await this.run(async (signal) => {
+      const target = await this.workspaceDirectory.target(workspace, signal);
+
+      this.current(signal);
+
+      await this.router.navigate(['/example/vault'], { queryParams: target });
+    });
+  }
+
+  async discoverWorkspaces(after?: string): Promise<void> {
+    await this.run((signal) => this.workspaceDirectory.load(signal, after));
+  }
 
   selectPinSetup(): void {
     if (this.canInitialize() && this.showPin()) {
@@ -152,23 +169,15 @@ export class ExampleWorkspace {
     }
 
     await this.run(async (signal) => {
-      const parent = await this.api.vault('/tenants', {}, signal);
+      const target = await this.workspaceDirectory.create(this.backedSample, signal);
 
       this.current(signal);
-      const tenant = scopeSchema.parse(parent);
-      const created = await this.api.vault(
-        `/tenants/${tenant.tenantId}/scopes/${tenant.scopeId}/children`,
-        this.backedSample ? { kind: 'resource', objectBackup: true } : { kind: 'resource' },
-        signal,
-      );
-
-      this.current(signal);
-      const target = scopeSchema.parse(created);
-      const objectId = this.document.defaultView!.crypto.randomUUID();
 
       if (this.backedSample) {
-        await this.router.navigate(['/example/vault'], { queryParams: { ...target, objectId } });
+        await this.router.navigate(['/example/vault'], { queryParams: { ...target, objectId: target.scopeId } });
       } else {
+        const objectId = this.document.defaultView!.crypto.randomUUID();
+
         await this.router.navigate(['/persistence', target.tenantId, target.scopeId, objectId]);
       }
     });
@@ -406,6 +415,7 @@ export class ExampleWorkspace {
     this.backedScope.set('unknown');
     this.configured.set(false);
     this.objectBackups.set(false);
+    this.workspaceDirectory.reset();
     this.profile = undefined;
     this.targetState.set(null);
     this.cloud.set(null);
@@ -565,6 +575,10 @@ export class ExampleWorkspace {
         this.objectBackups.set(profile.objectBackups === true);
         this.targetState.set(target);
         this.configured.set(true);
+
+        if (!target && this.backedSample) {
+          await this.workspaceDirectory.load(signal);
+        }
 
         if (target) {
           await this.loadBinding(target, signal);

@@ -183,6 +183,20 @@ it('stores ciphertext privately and publishes only verified references for the c
     const published = await f.owner.call(`${path}/push`, 'POST', value);
 
     expect(published.status).toBe(200);
+
+    await expect(f.owner.call('/example/vault/workspaces')).resolves.toMatchObject({
+      status: 200,
+      body: {
+        items: [{ ...scoped.target, objectId: value.envelope.context.objectId, owner: true }],
+        next: null,
+      },
+    });
+
+    await expect(f.outsider.call('/example/vault/workspaces')).resolves.toMatchObject({
+      status: 200,
+      body: { items: [], next: null },
+    });
+
     const head = syncHeadSchema.parse(published.body);
     const wire = serializeDataEnvelope(value.envelope);
     const { opaqueEvents, opaqueUnits } = vaultSchema;

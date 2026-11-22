@@ -35,16 +35,24 @@ function fixture(opened = false, method: WrappingContext['method'] = 'pin-argon2
   const local = { ...binding, method };
   const navigation = new AbortController();
   const version = signal(0);
+  const unlock = { cancel: vi.fn() };
   const vault = {
     knownBindings: signal([local]),
     canResume: () => open(),
+    isOpen: () => open(),
+    deviceUnlock: vi.fn(async () => unlock),
     discover: vi.fn(async () => undefined),
     release: vi.fn(),
     lock: vi.fn(() => open.set(false)),
     lockContext: vi.fn(() => open.set(false)),
     connect: vi.fn(
-      async (_binding: WrappingContext, _rpId: string, _initialize: boolean, _pin?: Uint8Array): Promise<void> =>
-        undefined,
+      async (
+        _binding: WrappingContext,
+        _rpId: string,
+        _initialize: boolean,
+        _pin?: Uint8Array,
+        _unlock?: typeof unlock,
+      ): Promise<void> => undefined,
     ),
     device: vi.fn(async () => {
       open.set(true);
@@ -78,7 +86,7 @@ function fixture(opened = false, method: WrappingContext['method'] = 'pin-argon2
 
   TestBed.tick();
 
-  return { access, open, vault, storage, api, navigation, version };
+  return { access, open, vault, storage, api, navigation, version, unlock };
 }
 
 afterEach(() => TestBed.resetTestingModule());
@@ -158,18 +166,17 @@ it('cancels synchronously on navigation and never restores identity from a late 
   expect(f.vault.connect.mock.calls[0][3]!.every((byte) => byte === 0)).toBe(true);
 });
 
-it('keeps a PRF binding as PRF and uses its configured RP ID', async () => {
+it('unlocks both Home PRF wrappers with one combined request at the configured RP ID', async () => {
   const f = fixture(false, 'passkey-prf');
+  const prf = { ...binding, method: 'passkey-prf' };
 
   await f.access.unlock();
 
   expect(f.api.vault).toHaveBeenCalledWith('/policy', undefined, expect.any(AbortSignal));
-  expect(f.vault.connect).toHaveBeenCalledWith(
-    { ...binding, method: 'passkey-prf' },
-    'synthetic.example.test',
-    false,
-    undefined,
-  );
+  expect(f.vault.deviceUnlock).toHaveBeenCalledExactlyOnceWith(prf, 'synthetic.example.test', expect.any(AbortSignal));
+  expect(f.vault.connect).toHaveBeenCalledWith(prf, 'synthetic.example.test', false, undefined, f.unlock);
+  expect(f.vault.device).toHaveBeenCalledWith(prf, 'synthetic.example.test', false, undefined, f.unlock);
+  expect(f.unlock.cancel).toHaveBeenCalledOnce();
 
   expect(f.access.show()).toBe(false);
 });
