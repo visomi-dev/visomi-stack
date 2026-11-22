@@ -2,6 +2,61 @@ import { describe, expect, it } from 'vitest';
 
 import { browser, prepare, vector, type FixtureWindow } from './support/browser';
 
+it('finishes an interrupted identity only when its existing wrapper can be unlocked', async () => {
+  const page = await browser.newPage();
+
+  try {
+    await prepare(page);
+
+    const result = await page.evaluate(
+      async ({ vector }) => {
+        const { api } = (globalThis as FixtureWindow).fixtureModules;
+        const binding = {
+          ...vector.wrapped.context,
+          origin: location.origin,
+          method: api.pinMethod,
+          methodId: api.createPinMethodId(crypto),
+        };
+        const pin = () => new api.PinUnlock(async () => new TextEncoder().encode('048261'));
+        const open = () => api.IndexedDbVaultStorage.open(indexedDB, binding.ownerId);
+        const storage = await open();
+        const wrapper = new api.BrowserVault(binding.ownerId, storage, pin(), new api.WebCryptoCipher(crypto));
+
+        await wrapper.initialize(api.deviceCustodyContext(binding));
+
+        wrapper.close();
+        const pausedStorage = await open();
+        const paused = new api.DeviceCustody(pausedStorage, binding, pin(), crypto);
+        const restore = await paused.unlock().then(
+          () => 'opened',
+          (error) => (error as { code: string }).code,
+        );
+
+        await paused.unlock('resume');
+
+        const first = await paused.publicKeys();
+
+        paused.close();
+        const reopenedStorage = await open();
+        const reopened = new api.DeviceCustody(reopenedStorage, binding, pin(), crypto);
+
+        await reopened.unlock('resume');
+
+        const next = await reopened.publicKeys();
+
+        reopened.close();
+
+        return { restore, sameIdentity: next.signing === first.signing && next.encryption === first.encryption };
+      },
+      { vector },
+    );
+
+    expect(result).toEqual({ restore: 'unavailable', sameIdentity: true });
+  } finally {
+    await page.close();
+  }
+});
+
 describe('actual Chromium PRF device identity custody', () => {
   it('persists identity separately from resource keys and restores signing/delivery authority only after explicit PRF unlock', async () => {
     const context = await browser.newContext();

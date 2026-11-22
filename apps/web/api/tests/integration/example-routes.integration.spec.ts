@@ -83,6 +83,12 @@ it('keeps authenticated production examples under exactly one mount prefix and f
 
       await expect(unavailable.json()).resolves.toEqual({ error: 'vault_backup_unavailable' });
 
+      const setup = await send(`${prefix}/example/vault/workspaces/setup`, {});
+
+      expect(setup.status).toBe(503);
+
+      await expect(setup.json()).resolves.toEqual({ error: 'vault_backup_unavailable' });
+
       const tenant = await send(`${prefix}/example/cloud/tenants`, {});
       const tenantBody = await tenant.json();
       const target = tenantBody as { tenantId: string; scopeId: string };

@@ -10,7 +10,12 @@ import type { AuthRuntime } from '../auth/runtime';
 import { requireFull } from '../auth/shared/identity';
 import { csrf, rateLimit } from '../auth/shared/security';
 
-import { persistenceContracts as contracts, persistenceRecordContracts as recordContracts } from './contracts';
+import {
+  exampleVaultSetupContract,
+  exampleVaultWorkspacesContract,
+  persistenceContracts as contracts,
+  persistenceRecordContracts as recordContracts,
+} from './contracts';
 import { SaasRecords } from './records';
 import { registerVaultRoutes } from './vault-router';
 import { validatePersistenceComposition } from './composition';
@@ -58,7 +63,7 @@ export function createPersistenceRouter(
   router.use(json({ limit: '32kb' }));
   routes.register(router, [
     {
-      contract: contracts.listWorkspaces,
+      contract: cloud ? contracts.listWorkspaces : exampleVaultWorkspacesContract,
       handler: async (req, res, value) => {
         const result = await access.listExampleWorkspaces(actor(req), !cloud, value.query);
 
@@ -194,6 +199,20 @@ export function createPersistenceRouter(
   if (cloud) {
     registerCloudSharing(router, access, auth);
   } else {
+    routes.register(router, [
+      {
+        contract: exampleVaultSetupContract,
+        handler: async (req, res) => {
+          if (!objects) {
+            throw new HttpError(503, 'vault_backup_unavailable');
+          }
+
+          const result = await access.startExampleVault(actor(req));
+
+          return res.json(result);
+        },
+      },
+    ]);
     registerVaultRoutes(router, access, objects, auth.realtimePublisher?.notifyVault);
   }
 

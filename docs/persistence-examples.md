@@ -41,6 +41,8 @@ Open **Cloud example** from the authenticated menu. The workspace list shows wor
 
 Open **Vault example** from the menu and choose the existing vault. The list uses the signed-in account to find accessible backup workspaces. The vault still needs a linked device and explicit unlock to open its encrypted note. Reloading keeps the note address and locks the vault. If you need to sign in again, the app returns to that address so you can unlock the same vault.
 
+The list includes a Vault Example workspace once the server has committed the initial device registry. A vault with no saved note is ready to open. Canceling setup or interrupting its first device registration leaves a reservation accessible through **Continue vault setup**. The owner can retry the same workspace with the original local unlock method. Setup can resume after device custody was partially stored. A new browser without local custody links to the completed vault through device approval.
+
 ## Try Cloud sharing
 
 1. Sign in to one test account, open **Cloud example**, and create a workspace. Save an owner-only note and a shared note with synthetic content.

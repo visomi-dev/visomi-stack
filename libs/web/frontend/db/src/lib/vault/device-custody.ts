@@ -1,5 +1,6 @@
 import {
   VaultError,
+  vaultUnitId,
   wrappingContextSchema,
   type DataContext,
   type DeliveryBinding,
@@ -47,7 +48,7 @@ export class DeviceCustody {
   private epoch = 0;
 
   constructor(
-    storage: VaultStorage,
+    private readonly storage: VaultStorage,
     dataBinding: WrappingContext,
     unlock: VaultUnlock,
     private readonly crypto: Crypto,
@@ -83,17 +84,25 @@ export class DeviceCustody {
     return Boolean(this.identity && this.vault.state === 'ready');
   }
 
-  async unlock(provision = false, unlock?: VaultUnlock): Promise<void> {
+  async unlock(provision: boolean | 'resume' = false, unlock?: VaultUnlock): Promise<void> {
     this.identity = undefined;
     // Starting the vault operation synchronously emits its initial lock. Capture before yielding to other operations.
-    const unlocking = provision ? this.vault.initialize(this.binding, unlock) : this.vault.unlock(this.binding, unlock);
+    const unlocking =
+      provision === true ? this.vault.initialize(this.binding, unlock) : this.vault.unlock(this.binding, unlock);
     const epoch = this.epoch;
 
     await unlocking;
 
     this.current(epoch);
 
-    if (provision) {
+    // Initial setup can be interrupted after storing the wrapper but before sealing the identity.
+    const present = await (provision === 'resume'
+      ? this.storage.getUnit(vaultUnitId(this.binding.ownerId, this.context))
+      : undefined);
+
+    this.current(epoch);
+
+    if (provision === true || (provision === 'resume' && !present)) {
       const identity = await provisionDeviceIdentity(this.crypto, async (material) => {
         await this.vault.seal(this.context, material);
       });

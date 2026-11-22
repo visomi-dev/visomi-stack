@@ -3,7 +3,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { authSchema, persistenceSchema, vaultSchema, type Database } from '@visomi-stack/backend-db';
 import { parseProductPolicy, type PersistenceAction, type ProductPolicy } from '@visomi-stack/shared-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
-import { and, asc, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, exists, gt, inArray, isNull, notExists, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { z } from 'zod';
 
@@ -12,6 +12,21 @@ import { lockIdentity, requireFull, type Principal, type Transaction } from '../
 import { grantInputSchema, memberInputSchema, scopeInputSchema, targetSchema, type AccessTarget } from './contracts';
 
 const { tenants, scopes, memberships, grants } = persistenceSchema;
+const { keyScopes, opaqueUnits } = vaultSchema;
+
+function vaultRegistry(tx: Transaction) {
+  // Bootstrap commits the first device and its registry in one transaction.
+  return tx
+    .select({ scopeId: keyScopes.scopeId })
+    .from(keyScopes)
+    .where(
+      and(
+        eq(keyScopes.tenantId, scopes.tenantId),
+        eq(keyScopes.scopeId, scopes.id),
+        eq(keyScopes.domain, 'private-resources'),
+      ),
+    );
+}
 
 export type SessionActor = { sessionId: string; principal: Principal };
 export type ScopeAccess = {
@@ -63,15 +78,35 @@ export class Access {
     return this.database.transaction(async (tx) => {
       await this.identity(tx, actor);
 
-      const id = randomUUID();
+      return this.insertTenant(tx, actor.principal.id);
+    });
+  }
 
-      await tx.insert(tenants).values({ id, product: this.policy.product, policyHash: this.policyHash });
+  async startExampleVault(actor: SessionActor) {
+    return this.database.transaction(async (tx) => {
+      // The account row lock is shared by setup and bootstrap, including requests from other sessions.
+      await this.identity(tx, actor);
 
-      await tx.insert(scopes).values({ id, tenantId: id, kind: 'tenant' });
+      const [pending] = await this.pendingVault(tx, actor.principal.id);
 
-      await tx.insert(memberships).values({ tenantId: id, userId: actor.principal.id, owner: true });
+      if (pending) {
+        return pending;
+      }
 
-      return { tenantId: id, scopeId: id };
+      const [enrolled] = await this.exampleWorkspaces(tx, actor.principal.id, true).limit(1);
+
+      if (enrolled) {
+        return null;
+      }
+
+      const { tenantId } = await this.insertTenant(tx, actor.principal.id);
+      const scopeId = randomUUID();
+
+      await tx
+        .insert(scopes)
+        .values({ id: scopeId, tenantId, parentId: tenantId, kind: 'resource', objectBackup: true });
+
+      return { tenantId, scopeId };
     });
   }
 
@@ -83,69 +118,14 @@ export class Access {
     return this.database.transaction(async (tx) => {
       await this.identity(tx, actor);
 
-      const directGrant = alias(grants, 'workspace_grant');
-      const rootGrant = alias(grants, 'workspace_root_grant');
-      const { opaqueUnits } = vaultSchema;
-      const objectId = sql<string | null>`(
-        select ${opaqueUnits.id} from ${opaqueUnits}
-        where ${opaqueUnits.tenantId} = ${scopes.tenantId}
-          and ${opaqueUnits.scopeId} = ${scopes.id}
-          and ${opaqueUnits.domain} = 'private-resources'
-          and not ${opaqueUnits.tombstone}
-        order by ${opaqueUnits.cursor} desc
-        limit 1
-      )`;
-      const readable = Object.entries(actions)
-        .filter(([, allowed]) => allowed.includes('read'))
-        .map(([role]) => role);
-
-      // Both example products create direct resource children. The nearer grant has precedence.
-      const rows = await tx
-        .select({
-          tenantId: tenants.id,
-          scopeId: scopes.id,
-          createdAt: tenants.createdAt,
-          owner: memberships.owner,
-          ...(objectBackup ? { objectId } : {}),
-        })
-        .from(memberships)
-        .innerJoin(tenants, eq(tenants.id, memberships.tenantId))
-        .innerJoin(scopes, and(eq(scopes.tenantId, tenants.id), eq(scopes.parentId, tenants.id)))
-        .leftJoin(
-          directGrant,
-          and(
-            eq(directGrant.tenantId, tenants.id),
-            eq(directGrant.scopeId, scopes.id),
-            eq(directGrant.userId, memberships.userId),
-          ),
-        )
-        .leftJoin(
-          rootGrant,
-          and(
-            eq(rootGrant.tenantId, tenants.id),
-            eq(rootGrant.scopeId, tenants.id),
-            eq(rootGrant.userId, memberships.userId),
-          ),
-        )
-        .where(
-          and(
-            eq(memberships.userId, actor.principal.id),
-            isNull(memberships.revokedAt),
-            eq(tenants.product, this.manifest.product),
-            eq(tenants.policyHash, this.policyHash),
-            eq(scopes.kind, 'resource'),
-            eq(scopes.objectBackup, objectBackup),
-            or(eq(memberships.owner, true), inArray(sql`coalesce(${directGrant.role}, ${rootGrant.role})`, readable)),
-            after ? gt(scopes.id, after) : undefined,
-          ),
-        )
-        .orderBy(asc(scopes.id))
-        .limit(limit + 1);
+      const rows = await this.exampleWorkspaces(tx, actor.principal.id, objectBackup, after).limit(limit + 1);
       const page = rows.slice(0, limit);
+      const pending = await (objectBackup ? this.pendingVault(tx, actor.principal.id) : []);
 
       return {
         items: page.map((item) => ({ ...item, createdAt: item.createdAt.toISOString() })),
         next: rows.length > limit ? page.at(-1)!.scopeId : null,
+        ...(objectBackup && { pendingSetup: pending.length > 0 }),
       };
     });
   }
@@ -400,6 +380,100 @@ export class Access {
 
       return { changed: true };
     });
+  }
+
+  private async insertTenant(tx: Transaction, userId: string) {
+    const id = randomUUID();
+
+    await tx.insert(tenants).values({ id, product: this.manifest.product, policyHash: this.policyHash });
+
+    await tx.insert(scopes).values({ id, tenantId: id, kind: 'tenant' });
+
+    await tx.insert(memberships).values({ tenantId: id, userId, owner: true });
+
+    return { tenantId: id, scopeId: id };
+  }
+
+  private pendingVault(tx: Transaction, userId: string) {
+    return tx
+      .select({ tenantId: tenants.id, scopeId: scopes.id })
+      .from(memberships)
+      .innerJoin(tenants, eq(tenants.id, memberships.tenantId))
+      .innerJoin(scopes, and(eq(scopes.tenantId, tenants.id), eq(scopes.parentId, tenants.id)))
+      .where(
+        and(
+          eq(memberships.userId, userId),
+          eq(memberships.owner, true),
+          isNull(memberships.revokedAt),
+          eq(tenants.product, this.manifest.product),
+          eq(tenants.policyHash, this.policyHash),
+          eq(scopes.kind, 'resource'),
+          eq(scopes.objectBackup, true),
+          notExists(vaultRegistry(tx)),
+        ),
+      )
+      .orderBy(desc(tenants.createdAt), asc(scopes.id))
+      .limit(1);
+  }
+
+  private exampleWorkspaces(tx: Transaction, userId: string, objectBackup: boolean, after?: string) {
+    const directGrant = alias(grants, 'workspace_grant');
+    const rootGrant = alias(grants, 'workspace_root_grant');
+    const objectId = sql<string | null>`(
+      select ${opaqueUnits.id} from ${opaqueUnits}
+      where ${opaqueUnits.tenantId} = ${scopes.tenantId}
+        and ${opaqueUnits.scopeId} = ${scopes.id}
+        and ${opaqueUnits.domain} = 'private-resources'
+        and not ${opaqueUnits.tombstone}
+      order by ${opaqueUnits.cursor} desc
+      limit 1
+    )`;
+    const readable = Object.entries(actions)
+      .filter(([, allowed]) => allowed.includes('read'))
+      .map(([role]) => role);
+
+    // Both example products create direct resource children. The nearer grant has precedence.
+    return tx
+      .select({
+        tenantId: tenants.id,
+        scopeId: scopes.id,
+        createdAt: tenants.createdAt,
+        owner: memberships.owner,
+        ...(objectBackup ? { objectId } : {}),
+      })
+      .from(memberships)
+      .innerJoin(tenants, eq(tenants.id, memberships.tenantId))
+      .innerJoin(scopes, and(eq(scopes.tenantId, tenants.id), eq(scopes.parentId, tenants.id)))
+      .leftJoin(
+        directGrant,
+        and(
+          eq(directGrant.tenantId, tenants.id),
+          eq(directGrant.scopeId, scopes.id),
+          eq(directGrant.userId, memberships.userId),
+        ),
+      )
+      .leftJoin(
+        rootGrant,
+        and(
+          eq(rootGrant.tenantId, tenants.id),
+          eq(rootGrant.scopeId, tenants.id),
+          eq(rootGrant.userId, memberships.userId),
+        ),
+      )
+      .where(
+        and(
+          eq(memberships.userId, userId),
+          isNull(memberships.revokedAt),
+          eq(tenants.product, this.manifest.product),
+          eq(tenants.policyHash, this.policyHash),
+          eq(scopes.kind, 'resource'),
+          eq(scopes.objectBackup, objectBackup),
+          or(eq(memberships.owner, true), inArray(sql`coalesce(${directGrant.role}, ${rootGrant.role})`, readable)),
+          objectBackup ? exists(vaultRegistry(tx)) : undefined,
+          after ? gt(scopes.id, after) : undefined,
+        ),
+      )
+      .orderBy(asc(scopes.id));
   }
 
   private async identity(tx: Transaction, actor: SessionActor) {

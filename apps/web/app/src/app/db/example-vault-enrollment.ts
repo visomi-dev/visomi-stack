@@ -79,9 +79,10 @@ export async function openExampleDevice(options: {
       throw new VaultError('recovery-required');
     }
 
+    const provision = custodyExists ? (backedSample && !enrolled ? 'resume' : false) : true;
     const custody = await openVaultDevice(vault, binding, rpId, {
       initialize: !existing,
-      provision: !custodyExists,
+      provision,
       pin,
       combinePrf: backedSample,
       evaluated,
@@ -90,6 +91,12 @@ export async function openExampleDevice(options: {
     });
 
     return { binding, custody };
+  } catch (error) {
+    if (binding && backedSample && !enrolled && !signal.aborted) {
+      vault.lockContext(binding);
+    }
+
+    throw error;
   } finally {
     evaluated?.cancel();
   }

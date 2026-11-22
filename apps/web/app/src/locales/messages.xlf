@@ -2812,6 +2812,9 @@
       <trans-unit id="vaultDemoSetup" datatype="html">
         <source>Set up my vault</source>
       </trans-unit>
+      <trans-unit id="vaultResumeSetup" datatype="html">
+        <source>Continue vault setup</source>
+      </trans-unit>
       <trans-unit id="vaultDemoUsePin" datatype="html">
         <source>Use a PIN on this device</source>
       </trans-unit>

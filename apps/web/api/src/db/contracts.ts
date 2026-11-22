@@ -1,6 +1,10 @@
 import { defineRoute } from '@visomi-stack/web-backend-shared';
 import { z } from 'zod';
-import { exampleWorkspacePageSchema, productPolicySchema } from '@visomi-stack/shared-db';
+import {
+  exampleVaultWorkspacePageSchema,
+  exampleWorkspacePageSchema,
+  productPolicySchema,
+} from '@visomi-stack/shared-db';
 
 import { grantInputSchema, memberInputSchema, scopeInputSchema, targetSchema } from '../access/contracts';
 import { commonErrors, cookieSecurity, csrfSecurity } from '../auth/shared/contracts';
@@ -127,6 +131,22 @@ export const persistenceContracts = {
     responses: response(changed),
   }),
 };
+
+export const exampleVaultWorkspacesContract = defineRoute({
+  ...persistenceContracts.listWorkspaces,
+  summary: 'List initialized vaults visible to the verified account and indicate any pending setup it owns',
+  responses: response(exampleVaultWorkspacePageSchema),
+});
+
+export const exampleVaultSetupContract = defineRoute({
+  ...base,
+  method: 'post',
+  path: '/workspaces/setup',
+  operationId: 'example_vault_start_setup',
+  summary: 'Resume or reserve the first Vault Example workspace',
+  request: z.object({ body: z.strictObject({}) }),
+  responses: response(targetSchema.nullable()),
+});
 
 export const persistenceRecordContracts = {
   list: defineRoute({

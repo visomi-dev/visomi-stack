@@ -283,7 +283,7 @@ export class VaultSession {
   async device(
     binding: WrappingContext,
     rpId: string,
-    provision = false,
+    provision: boolean | 'resume' = false,
     pin?: Uint8Array,
     unlock?: VaultUnlock,
   ): Promise<DeviceCustody> {
@@ -298,7 +298,7 @@ export class VaultSession {
     this.bindCancellation(session.signal);
     const id = custodyId(binding);
 
-    if (!provision && this.devices.get(id)?.ready) {
+    if (provision !== true && this.devices.get(id)?.ready) {
       return this.devices.get(id)!;
     }
 

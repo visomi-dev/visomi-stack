@@ -274,6 +274,121 @@ test.describe('Vault passkey setup in Chromium', () => {
   // eslint-disable-next-line playwright/no-skipped-test
   test.skip(({ browserName }) => browserName !== 'chromium', 'Requires a Chromium virtual authenticator');
 
+  test('resumes the same setup after cancellation and a bootstrap failure, then lists the empty vault', async ({
+    page,
+  }) => {
+    const { credentialIds } = await virtualPasskey(page);
+
+    await passkeySignup(page);
+
+    const registered = await credentialIds();
+    const directory = '/app/en/example/vault';
+    const resume = page.getByRole('button', { name: 'Continue vault setup', exact: true });
+    const open = page.getByRole('button', { name: /^Open vault/ });
+    const passkey = page.getByRole('button', { name: 'Set up with a passkey', exact: true });
+    const note = page.getByLabel('Your note', { exact: true });
+
+    await page.goto(directory);
+
+    await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
+
+    await expect(passkey).toBeVisible();
+
+    const workspace = page.url();
+
+    await page.evaluate(() => {
+      Object.defineProperty(navigator.credentials, 'get', {
+        value: async () => {
+          throw new DOMException('Synthetic user cancellation', 'NotAllowedError');
+        },
+      });
+    });
+
+    await passkey.click();
+
+    await expect(page.getByRole('status').filter({ hasText: 'Unlock canceled.' })).toBeVisible();
+
+    await page.goto(directory);
+
+    await expect(resume).toBeVisible();
+
+    await expect(open).toHaveCount(0);
+
+    await resume.click();
+
+    await expect(page).toHaveURL(workspace);
+
+    await page.route(
+      '**/devices/bootstrap',
+      (route) => route.fulfill({ status: 503, json: { error: 'persistence_unavailable' } }),
+      { times: 1 },
+    );
+
+    await passkey.click();
+
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Private storage is unavailable on this device.' }),
+    ).toBeVisible();
+
+    await expect(note).toHaveCount(0);
+
+    await expect(page.getByRole('heading', { name: 'Unlock your vault' })).toHaveCount(0);
+
+    await page.reload();
+
+    await expect(passkey).toBeEnabled();
+
+    await page.goto(directory);
+
+    await expect(resume).toBeVisible();
+
+    await expect(open).toHaveCount(0);
+
+    await resume.click();
+
+    await expect(page).toHaveURL(workspace);
+
+    await page.route(
+      '**/devices/bootstrap',
+      async (route) => {
+        const committed = await route.fetch();
+
+        expect(committed.ok()).toBe(true);
+
+        await route.abort('failed');
+      },
+      { times: 1 },
+    );
+
+    await passkey.click();
+
+    await expect(page.getByRole('heading', { name: 'Unlock your vault' })).toBeVisible();
+
+    const afterSetup = await credentialIds();
+
+    expect(afterSetup).toEqual(registered);
+
+    await page.goto(directory);
+
+    await expect(page.getByRole('heading', { name: 'Your vaults', exact: true })).toBeVisible();
+
+    await expect(open).toHaveCount(1);
+
+    await expect(resume).toHaveCount(0);
+
+    await open.click();
+
+    await expect(page).toHaveURL(workspace);
+
+    await expect(page.getByRole('heading', { name: 'Unlock your vault' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Use a passkey', exact: true }).click();
+
+    await expect(note).toBeEditable();
+
+    await expect(note).toHaveValue('');
+  });
+
   test('hard reload keeps an unconfigured Vault in the verified passkey session', async ({ page, browser }) => {
     const { cdp, credentialIds } = await virtualPasskey(page);
     const email = await passkeySignup(page);
@@ -632,6 +747,8 @@ test.describe('Vault passkey setup in Chromium', () => {
       await peer.goto(workspace);
 
       await expect(peer.getByLabel('Your note', { exact: true })).toHaveCount(0);
+
+      await expect(peer.getByRole('button', { name: 'Set up with a passkey', exact: true })).toHaveCount(0);
 
       await peer.getByRole('link', { name: 'Link a device' }).click();
 
