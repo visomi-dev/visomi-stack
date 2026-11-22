@@ -10,33 +10,8 @@ import {
   signup,
   passwordStart,
   test,
+  virtualPasskey,
 } from './support/fixtures';
-
-async function virtualPasskey(page: Page, hasPrf = true) {
-  const cdp = await page.context().newCDPSession(page);
-
-  await cdp.send('WebAuthn.enable');
-
-  const { authenticatorId } = await cdp.send('WebAuthn.addVirtualAuthenticator', {
-    options: {
-      protocol: 'ctap2',
-      transport: 'internal',
-      hasResidentKey: true,
-      hasUserVerification: true,
-      isUserVerified: true,
-      automaticPresenceSimulation: true,
-      hasPrf,
-    },
-  });
-
-  const credentialIds = async () => {
-    const result = await cdp.send('WebAuthn.getCredentials', { authenticatorId });
-
-    return result.credentials.map(({ credentialId }) => credentialId);
-  };
-
-  return { cdp, credentialIds };
-}
 
 async function legacyPasskeySignup(page: Page) {
   // Recreate the registration options shipped in 463ab0b on a PRF-capable authenticator.
