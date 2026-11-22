@@ -3424,6 +3424,12 @@
       <trans-unit id="vaultLockedHeading" datatype="html">
         <source>Unlock your vault</source>
       </trans-unit>
+      <trans-unit id="vaultUnlockPasskeySession" datatype="html">
+        <source>You’re still signed in. Use your passkey to unlock this vault.</source>
+      </trans-unit>
+      <trans-unit id="vaultUnlockPinSession" datatype="html">
+        <source>You’re still signed in. Use your PIN to unlock this vault.</source>
+      </trans-unit>
       <trans-unit id="vaultUsePasskey" datatype="html">
         <source>Use a passkey</source>
       </trans-unit>

@@ -18,6 +18,16 @@
         </svg>
 
         <h1 appUI appNavigationHeading id="locked-vault-heading" i18n="@@vaultLockedHeading">Unlock your vault</h1>
+
+        @if (workspace.showPrf()) {
+          <p appUI tone="muted" i18n="@@vaultUnlockPasskeySession">
+            You’re still signed in. Use your passkey to unlock this vault.
+          </p>
+        } @else if (workspace.showPin()) {
+          <p appUI tone="muted" i18n="@@vaultUnlockPinSession">
+            You’re still signed in. Use your PIN to unlock this vault.
+          </p>
+        }
       </header>
 
       @if (workspace.showPrf()) {
@@ -39,6 +49,7 @@
             i18n-label="@@vaultPinLabel"
             description="6 digits"
             i18n-description="@@vaultPinLength"
+            description-hidden
           >
             <app-pin-input
               required

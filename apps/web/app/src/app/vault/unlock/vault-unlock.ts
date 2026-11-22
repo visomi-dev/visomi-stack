@@ -3,11 +3,11 @@ import { RouterLink } from '@angular/router';
 
 import { ExampleWorkspace } from '../../db/example-workspace';
 import { NavigationHeading } from '../../shared/navigation-heading';
-import { Button, Card, Field, Heading, Link, PinInput } from '../../ui';
+import { Button, Card, Field, Heading, Link, PinInput, Text } from '../../ui';
 
 @Component({
   selector: 'app-vault-unlock',
-  imports: [Button, Card, Field, Heading, Link, NavigationHeading, PinInput, RouterLink],
+  imports: [Button, Card, Field, Heading, Link, NavigationHeading, PinInput, RouterLink, Text],
   templateUrl: './vault-unlock.html',
 })
 export class VaultUnlock {

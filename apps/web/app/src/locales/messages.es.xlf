@@ -1730,6 +1730,14 @@
         <source>Unlock your vault</source>
         <target>Desbloquea tu bóveda</target>
       </trans-unit>
+      <trans-unit id="vaultUnlockPasskeySession" datatype="html">
+        <source>You’re still signed in. Use your passkey to unlock this vault.</source>
+        <target>Sigues en tu cuenta. Usa tu llave de acceso para abrir la bóveda.</target>
+      </trans-unit>
+      <trans-unit id="vaultUnlockPinSession" datatype="html">
+        <source>You’re still signed in. Use your PIN to unlock this vault.</source>
+        <target>Sigues en tu cuenta. Usa tu PIN para abrir la bóveda.</target>
+      </trans-unit>
       <trans-unit id="vaultUsePasskey" datatype="html">
         <source>Use a passkey</source>
         <target>Usar passkey</target>

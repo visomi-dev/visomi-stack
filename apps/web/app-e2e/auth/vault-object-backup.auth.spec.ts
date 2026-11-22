@@ -507,6 +507,10 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     const locked = recipient.getByRole('region', { name: 'Desbloquea tu bóveda', exact: true });
 
+    await expect(
+      locked.getByText('Sigues en tu cuenta. Usa tu llave de acceso para abrir la bóveda.', { exact: true }),
+    ).toBeVisible();
+
     await locked.getByRole('button', { name: 'Usar passkey', exact: true }).click();
 
     await expect(restoredPanel.locator('#private-note')).toHaveValue(offlineNote);

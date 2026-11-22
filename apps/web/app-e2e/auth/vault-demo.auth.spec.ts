@@ -167,6 +167,10 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await expect(locked.getByRole('button', { name: 'Unlock with PIN', exact: true })).toBeVisible();
 
+  await expect(
+    locked.getByText('You’re still signed in. Use your PIN to unlock this vault.', { exact: true }),
+  ).toBeVisible();
+
   const pinWidget = locked.locator('app-pin-input');
   const pinWidth = await pinWidget.boundingBox();
   const formWidth = await locked.locator('form').boundingBox();

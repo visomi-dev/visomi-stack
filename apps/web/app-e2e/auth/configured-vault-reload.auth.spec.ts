@@ -201,6 +201,10 @@ test('hard reload locks a configured passkey vault with a live session and keeps
 
   await expect(unlock).toBeEnabled();
 
+  await expect(
+    locked.getByText('You’re still signed in. Use your passkey to unlock this vault.', { exact: true }),
+  ).toBeVisible();
+
   await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeVisible();
 
   await expect(page.locator('app-pin-input')).toHaveCount(0);
@@ -338,6 +342,16 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
   await expect(editor).toHaveCount(0);
 
   await expect(locked.getByRole('button', { name: 'Usar passkey', exact: true })).toHaveCount(0);
+
+  await expect(
+    locked.getByText('Sigues en tu cuenta. Usa tu PIN para abrir la bóveda.', { exact: true }),
+  ).toBeVisible();
+
+  await expect(locked.getByText('6 dígitos', { exact: true })).toHaveClass(/\bsr-only\b/);
+
+  await expect(pin).toHaveAccessibleDescription('6 dígitos');
+
+  await expect(pin).toHaveAttribute('maxlength', '6');
 
   await expect(page.getByRole('button', { name: 'Menú', exact: true })).toBeVisible();
 
