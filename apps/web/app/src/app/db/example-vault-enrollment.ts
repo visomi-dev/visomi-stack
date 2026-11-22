@@ -1,0 +1,96 @@
+import { createPinMethodId, createPrfCredential, deviceCustodyContext } from '@visomi-stack/web-frontend-db';
+import { VaultError, type KeyDomain, type VaultUnlock, type WrappingContext } from '@visomi-stack/shared-db';
+
+import { listVaultPasskeyIds } from '../auth/passkeys/passkeys';
+import type { AuthHttp } from '../auth/shared/http';
+import { browserPrfUnlock, openVaultDevice } from '../shared/vault/local-unlock';
+import type { VaultSession } from '../shared/vault/vault-session';
+
+export async function openExampleDevice(options: {
+  view: Window;
+  key: KeyDomain;
+  ownerId: string;
+  rpId: string;
+  signal: AbortSignal;
+  existing?: WrappingContext;
+  pin?: Uint8Array;
+  enrolled: boolean;
+  backedSample: boolean;
+  auth: AuthHttp;
+  vault: VaultSession;
+  current: () => void;
+}) {
+  const { view, key, ownerId, rpId, signal, existing, pin, enrolled, backedSample, auth, vault, current } = options;
+  let binding = existing;
+  let evaluated: VaultUnlock | undefined;
+
+  try {
+    if (!binding) {
+      const context = {
+        key,
+        ownerId,
+        deviceId: view.crypto.randomUUID(),
+        method: pin ? 'pin-argon2id' : 'passkey-prf',
+        origin: view.location.origin,
+      } satisfies Omit<WrappingContext, 'methodId'>;
+
+      if (backedSample && !pin) {
+        const { credentialIds } = await listVaultPasskeyIds(auth, signal);
+
+        current();
+
+        const selected = await browserPrfUnlock(view, rpId).forRegisteredDevice(context, credentialIds, signal);
+
+        evaluated = selected.unlock;
+        binding = selected.binding;
+        current();
+
+        // Account credentials can change while the browser picker is open.
+        const active = await listVaultPasskeyIds(auth, signal);
+
+        current();
+
+        if (!active.credentialIds.includes(selected.binding.methodId)) {
+          throw new VaultError('passkey-not-registered');
+        }
+      } else if (pin) {
+        binding = { ...context, methodId: createPinMethodId(view.crypto) };
+      } else {
+        const methodId = await createPrfCredential(
+          { origin: view.location.origin, rpId, credentials: view.navigator.credentials, crypto: view.crypto },
+          signal,
+        );
+
+        binding = { ...context, methodId };
+      }
+
+      current();
+    }
+
+    if ((binding.method === 'pin-argon2id') !== Boolean(pin)) {
+      throw new VaultError(pin ? 'pin-invalid' : 'unsupported-prf');
+    }
+
+    const custodyExists = await vault.localBinding(deviceCustodyContext(binding).key);
+
+    current();
+
+    if (!custodyExists && enrolled) {
+      throw new VaultError('recovery-required');
+    }
+
+    const custody = await openVaultDevice(vault, binding, rpId, {
+      initialize: !existing,
+      provision: !custodyExists,
+      pin,
+      combinePrf: backedSample,
+      evaluated,
+      signal,
+      current,
+    });
+
+    return { binding, custody };
+  } finally {
+    evaluated?.cancel();
+  }
+}

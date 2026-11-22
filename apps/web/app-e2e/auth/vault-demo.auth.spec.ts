@@ -1,14 +1,23 @@
 import type { Locator, Page } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
 
-import { expect, logout, password, signup, passwordStart, test } from './support/fixtures';
+import {
+  expect,
+  expireSession,
+  logout,
+  passkeySignup,
+  password,
+  signup,
+  passwordStart,
+  test,
+} from './support/fixtures';
 
-async function virtualPasskey(page: Page) {
+async function virtualPasskey(page: Page, hasPrf = true) {
   const cdp = await page.context().newCDPSession(page);
 
   await cdp.send('WebAuthn.enable');
 
-  await cdp.send('WebAuthn.addVirtualAuthenticator', {
+  const { authenticatorId } = await cdp.send('WebAuthn.addVirtualAuthenticator', {
     options: {
       protocol: 'ctap2',
       transport: 'internal',
@@ -16,11 +25,31 @@ async function virtualPasskey(page: Page) {
       hasUserVerification: true,
       isUserVerified: true,
       automaticPresenceSimulation: true,
-      hasPrf: true,
+      hasPrf,
     },
   });
 
-  return cdp;
+  const credentialIds = async () => {
+    const result = await cdp.send('WebAuthn.getCredentials', { authenticatorId });
+
+    return result.credentials.map(({ credentialId }) => credentialId);
+  };
+
+  return { cdp, credentialIds };
+}
+
+async function legacyPasskeySignup(page: Page) {
+  // Recreate the registration options shipped in 463ab0b on a PRF-capable authenticator.
+  await page.route('**/api/auth/passkeys/registration/options', async (route) => {
+    const response = await route.fetch();
+    const registration: { options: { extensions?: { prf?: unknown } } } = await response.json();
+
+    delete registration.options.extensions?.prf;
+
+    await route.fulfill({ response, json: registration });
+  });
+
+  return passkeySignup(page);
 }
 
 async function expectCenteredCard(card: Locator): Promise<void> {
@@ -131,7 +160,12 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await page.getByRole('button', { name: 'Set up with PIN', exact: true }).click();
 
-  await page.getByLabel('Your note', { exact: true }).fill(note);
+  const [publication] = await Promise.all([
+    page.waitForResponse((response) => response.url().endsWith('/sync/push')),
+    page.getByLabel('Your note', { exact: true }).fill(note),
+  ]);
+
+  expect(publication.ok()).toBe(true);
 
   await expect(page.getByRole('button', { name: /save encrypted|upload encrypted/i })).toHaveCount(0);
 
@@ -236,57 +270,262 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
   await expect(page.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
 });
 
-test('a canceled passkey setup stays retryable without offering PIN', async ({ page }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(window, 'PublicKeyCredential', {
-      value: class {
-        static async getClientCapabilities() {
-          return { 'extension:prf': true };
-        }
-      },
-    });
-    Object.defineProperty(navigator, 'credentials', {
-      value: {
-        async create() {
-          throw new DOMException('Synthetic cancellation', 'NotAllowedError');
-        },
-        async get() {
-          throw new Error('A canceled enrollment should not request an assertion');
-        },
-      },
-    });
-  });
-
-  await signup(page);
-
-  await page.goto('/app/en/example/vault');
-
-  await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
-
-  const passkey = page.getByRole('button', { name: 'Set up with a passkey', exact: true });
-
-  await passkey.click();
-
-  await expect(page.getByRole('status').filter({ hasText: 'Unlock canceled.' })).toBeVisible();
-
-  await expect(passkey).toBeEnabled();
-
-  await expect(page.getByRole('button', { name: 'Use a PIN on this device', exact: true })).toHaveCount(0);
-
-  await expect(page.locator('app-pin-input')).toHaveCount(0);
-});
-
 test.describe('Vault passkey setup in Chromium', () => {
   // eslint-disable-next-line playwright/no-skipped-test
   test.skip(({ browserName }) => browserName !== 'chromium', 'Requires a Chromium virtual authenticator');
 
+  test('hard reload keeps an unconfigured Vault in the verified passkey session', async ({ page, browser }) => {
+    const { cdp, credentialIds } = await virtualPasskey(page);
+    const email = await passkeySignup(page);
+    const registered = await credentialIds();
+
+    expect(registered).toHaveLength(1);
+
+    await page.locator('app-sidebar').getByRole('link', { name: 'Vault example', exact: true }).click();
+
+    const setup = page.getByRole('button', { name: 'Set up my vault', exact: true });
+
+    await expect(setup).toBeVisible();
+
+    async function reloadVault() {
+      const url = page.url();
+      const document = page.waitForResponse(
+        (response) => response.request().isNavigationRequest() && response.url() === url,
+      );
+
+      await cdp.send('Page.reload', { ignoreCache: true });
+
+      return document;
+    }
+
+    async function expectAuthenticatedReload() {
+      const url = page.url();
+      const cookies = await page.context().cookies(url);
+      const response = await reloadVault();
+      const html = await response.text();
+
+      expect(cookies.some(({ name }) => name === 'visomi.sid')).toBe(true);
+
+      expect(response.status()).toBe(200);
+      expect(html).toMatch(/"auth-initial-session":\{"available":true,"session":\{[^<]+?"access":"full"/);
+
+      await expect(page).toHaveURL(url);
+
+      await expect(page.getByRole('heading', { name: 'Vault example', exact: true })).toBeVisible();
+
+      await expect(page.getByRole('heading', { name: 'Unlock your vault', exact: true })).toHaveCount(0);
+
+      const session = await page.request.get('/api/auth/session');
+      const state: unknown = await session.json();
+
+      expect(state).toMatchObject({ access: 'full', user: { emailVerified: true }, method: 'passkey' });
+    }
+
+    await expectAuthenticatedReload();
+
+    await setup.click();
+
+    await page.evaluate(() => {
+      Object.defineProperty(navigator.credentials, 'get', {
+        value: async () => {
+          throw new DOMException('Synthetic user cancellation', 'NotAllowedError');
+        },
+      });
+    });
+
+    const passkey = page.getByRole('button', { name: 'Set up with a passkey', exact: true });
+
+    await passkey.click();
+
+    await expect(page.getByRole('status').filter({ hasText: 'Unlock canceled.' })).toBeVisible();
+
+    const afterCancellation = await credentialIds();
+
+    expect(afterCancellation).toEqual(registered);
+
+    await expect(passkey).toBeEnabled();
+
+    await expectAuthenticatedReload();
+
+    await expect(passkey).toBeVisible();
+
+    await expect(page.getByRole('button', { name: 'Use a PIN on this device', exact: true })).toHaveCount(0);
+
+    const workspace = new URL(page.url());
+    const returnTo = workspace.pathname.replace('/app/en', '') + workspace.search;
+    const anonymous = await browser.newContext();
+
+    try {
+      const response = await anonymous.request.get(workspace.href, { maxRedirects: 0 });
+      const redirect = new URL(response.headers()['location'], workspace);
+
+      expect(response.status()).toBe(302);
+      expect(redirect.pathname).toBe('/app/en/auth/sign-in');
+      expect(redirect.searchParams.get('returnTo')).toBe(returnTo);
+    } finally {
+      await anonymous.close();
+    }
+
+    await expireSession(email);
+
+    const response = await reloadVault();
+
+    expect(response.status()).toBe(302);
+
+    await expect(page).toHaveURL(
+      (url) => url.pathname === '/app/en/auth/sign-in' && url.searchParams.get('returnTo') === returnTo,
+    );
+
+    await page.getByRole('button', { name: 'Sign in with a passkey', exact: true }).click();
+
+    await expect(page).toHaveURL(workspace.href);
+
+    await expect(passkey).toBeVisible();
+  });
+
+  test('rejects another account’s passkey even when it can assert for the same RP', async ({ page }) => {
+    const { cdp, credentialIds } = await virtualPasskey(page);
+
+    await passkeySignup(page);
+
+    const [foreign] = await credentialIds();
+
+    await logout(page);
+
+    await passkeySignup(page);
+
+    const registered = await credentialIds();
+    const owned = registered.find((id) => id !== foreign)!;
+    const ownedId = Buffer.from(owned, 'base64').toString('base64url');
+    const list = await page.request.get('/api/auth/passkeys/vault-credentials');
+
+    const passkeys: unknown = await list.json();
+
+    expect(list.headers()['cache-control']).toBe('no-store');
+    expect(passkeys).toEqual({ credentialIds: [ownedId] });
+    expect(registered).toHaveLength(2);
+
+    await page.goto('/app/en/example/vault');
+
+    await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
+
+    await page.evaluate(
+      (bytes) => {
+        const get = navigator.credentials.get.bind(navigator.credentials);
+
+        Object.defineProperty(navigator.credentials, 'get', {
+          value: (options: CredentialRequestOptions) =>
+            get({
+              ...options,
+              publicKey: {
+                ...options.publicKey!,
+                allowCredentials: [{ type: 'public-key', id: Uint8Array.from(bytes) }],
+              },
+            }),
+        });
+      },
+      Array.from(Buffer.from(foreign, 'base64')),
+    );
+
+    const asserted: string[] = [];
+
+    cdp.on('WebAuthn.credentialAsserted', ({ credential }) => asserted.push(credential.credentialId));
+
+    const passkey = page.getByRole('button', { name: 'Set up with a passkey', exact: true });
+
+    await passkey.click();
+
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Use a passkey registered to this account.' }),
+    ).toBeVisible();
+
+    expect(asserted).toEqual([foreign]);
+    const afterRejection = await credentialIds();
+
+    expect(afterRejection).toEqual(registered);
+
+    await expect(page.getByRole('button', { name: 'Use a PIN on this device', exact: true })).toHaveCount(0);
+
+    await page.reload();
+
+    await expect(passkey).toBeEnabled();
+
+    await passkey.click();
+
+    await expect(page.getByLabel('Your note', { exact: true })).toBeEditable();
+
+    expect(asserted).toEqual([foreign, owned]);
+    const afterRetry = await credentialIds();
+
+    expect(afterRetry).toEqual(registered);
+  });
+
+  for (const { hasPrf, register, caseName } of [
+    { hasPrf: true, register: legacyPasskeySignup, caseName: 'legacy registration on a PRF-capable authenticator' },
+    { hasPrf: false, register: passkeySignup, caseName: 'new registration on an authenticator without PRF' },
+  ]) {
+    test(`offers a local PIN after a valid assertion without PRF (${caseName})`, async ({ page }) => {
+      const { cdp, credentialIds } = await virtualPasskey(page, hasPrf);
+
+      await register(page);
+
+      const registered = await credentialIds();
+      const asserted: string[] = [];
+
+      cdp.on('WebAuthn.credentialAsserted', ({ credential }) => asserted.push(credential.credentialId));
+
+      await page.goto('/app/en/example/vault');
+
+      await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
+
+      const pinOption = page.getByRole('button', { name: 'Use a PIN on this device', exact: true });
+
+      await expect(pinOption).toHaveCount(0);
+
+      await page.getByRole('button', { name: 'Set up with a passkey', exact: true }).click();
+
+      await expect(pinOption).toBeVisible();
+
+      expect(asserted).toEqual(registered);
+      const afterUnsupported = await credentialIds();
+
+      expect(afterUnsupported).toEqual(registered);
+
+      await expect(page.locator('app-pin-input')).toHaveCount(0);
+
+      await expect(page.getByLabel('Your note', { exact: true })).toHaveCount(0);
+
+      await pinOption.click();
+
+      await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
+
+      await page.getByLabel('Confirm your new PIN', { exact: true }).fill('048261');
+
+      await page.getByRole('button', { name: 'Set up with PIN', exact: true }).click();
+
+      await expect(page.getByLabel('Your note', { exact: true })).toBeEditable();
+
+      const afterPin = await credentialIds();
+
+      expect(afterPin).toEqual(registered);
+    });
+  }
+
   test('sets up the synchronized Vault with verified PRF and no PIN', async ({ page }, info) => {
-    const cdp = await virtualPasskey(page);
-    let assertions = 0;
+    const { cdp, credentialIds } = await virtualPasskey(page);
+    const assertions: string[] = [];
+    let prfSent = false;
 
-    cdp.on('WebAuthn.credentialAsserted', () => assertions++);
+    cdp.on('WebAuthn.credentialAsserted', ({ credential }) => assertions.push(credential.credentialId));
+    page.on('request', (request) => {
+      prfSent ||= /"prf"\s*:/.test(request.postData() ?? '');
+    });
 
-    await signup(page);
+    await passkeySignup(page);
+
+    const registered = await credentialIds();
+
+    expect(registered).toHaveLength(1);
 
     await page.goto('/app/en/example/vault');
 
@@ -298,7 +537,10 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await expect(page.getByLabel('Your note', { exact: true })).toBeEditable();
 
-    expect(assertions).toBe(1);
+    expect(assertions).toEqual(registered);
+    const afterSetup = await credentialIds();
+
+    expect(afterSetup).toEqual(registered);
 
     await expect(page.locator('app-pin-input')).toHaveCount(0);
 
@@ -319,7 +561,7 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await expect(usePasskey).toBeEnabled();
 
-    expect(assertions).toBe(1);
+    expect(assertions).toEqual(registered);
 
     await usePasskey.focus();
 
@@ -331,7 +573,11 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await expect(page.getByLabel('Your note', { exact: true })).toBeEditable();
 
-    expect(assertions).toBe(2);
+    expect(assertions).toEqual([...registered, ...registered]);
+    const afterUnlock = await credentialIds();
+
+    expect(afterUnlock).toEqual(registered);
+    expect(prfSent).toBe(false);
   });
 
   test('opens the backed note on an approved desktop with its own PIN and no passkey', async ({
@@ -341,6 +587,12 @@ test.describe('Vault passkey setup in Chromium', () => {
     await virtualPasskey(page);
 
     const email = await signup(page);
+
+    await page.goto('/app/en/security/passkeys');
+
+    await page.getByRole('button', { name: 'Add a passkey', exact: true }).click();
+
+    await expect(page.getByRole('status').filter({ hasText: 'Passkey added.' })).toBeVisible();
 
     await page.goto('/app/en/example/vault');
 

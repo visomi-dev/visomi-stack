@@ -4,15 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DestroyRef, Service, effect, inject, signal } from '@angular/core';
 import type { z } from 'zod';
-import {
-  createPrfCredential,
-  createPinMethodId,
-  deviceCustodyContext,
-  encodeBytes,
-  type SyncReplica,
-  replicaId,
-  type DeviceCustody,
-} from '@visomi-stack/web-frontend-db';
+import { encodeBytes, type SyncReplica, replicaId, type DeviceCustody } from '@visomi-stack/web-frontend-db';
 import {
   createOperationId,
   deviceChallengeSchema,
@@ -25,14 +17,16 @@ import {
 } from '@visomi-stack/shared-db';
 
 import { Session } from '../auth/session/session';
+import { AuthHttp } from '../auth/shared/http';
 import { DatabaseHttp } from '../shared/db/http';
 import { ClientDatabase } from '../shared/db/database';
 import { VaultSession } from '../shared/vault/vault-session';
-import { openLocalVault, openVaultDevice } from '../shared/vault/local-unlock';
+import { openLocalVault } from '../shared/vault/local-unlock';
 
 import { rosterSchema, validateExampleEnvelope, exampleLocalKey, examplePrivatePath } from './example-contracts';
 import type { ExampleTarget } from './example-contracts';
 import { exampleReplica, watchBackup } from './example-transport';
+import { openExampleDevice } from './example-vault-enrollment';
 
 export type { ExampleTarget } from './example-contracts';
 
@@ -40,6 +34,7 @@ export type { ExampleTarget } from './example-contracts';
 @Service({ autoProvided: false })
 export class ExamplePrivateResource {
   private readonly api = inject(DatabaseHttp);
+  private readonly auth = inject(AuthHttp);
   private readonly database = inject(ClientDatabase);
   private readonly session = inject(Session);
   private readonly document = inject(DOCUMENT);
@@ -135,46 +130,18 @@ export class ExamplePrivateResource {
       throw new VaultError('recovery-required');
     }
 
-    let binding = existing;
-
-    if (!binding) {
-      const method = pin
-        ? createPinMethodId(view.crypto)
-        : createPrfCredential(
-            { origin: view.location.origin, rpId, credentials: view.navigator.credentials, crypto: view.crypto },
-            AbortSignal.any([signal, this.session.cancellation()]),
-          );
-      const methodId = await method;
-
-      this.current(signal);
-      binding = {
-        key,
-        ownerId,
-        deviceId: view.crypto.randomUUID(),
-        method: pin ? 'pin-argon2id' : 'passkey-prf',
-        methodId,
-        origin: view.location.origin,
-      };
-    }
-
-    if ((binding.method === 'pin-argon2id') !== Boolean(pin)) {
-      throw new VaultError(pin ? 'pin-invalid' : 'unsupported-prf');
-    }
-
-    const custodyExists = await this.vault.localBinding(deviceCustodyContext(binding).key);
-
-    this.current(signal);
-
-    if (!custodyExists && registry) {
-      throw new VaultError('recovery-required');
-    }
-
-    const custody = await openVaultDevice(this.vault, binding, rpId, {
-      initialize: !existing,
-      provision: !custodyExists,
+    const { binding, custody } = await openExampleDevice({
+      view,
+      key,
+      ownerId,
+      rpId,
+      signal: AbortSignal.any([signal, this.session.cancellation()]),
+      existing,
       pin,
-      combinePrf: this.backupPage,
-      signal,
+      enrolled: Boolean(registry),
+      backedSample: this.backupPage,
+      auth: this.auth,
+      vault: this.vault,
       current: () => this.current(signal),
     });
 

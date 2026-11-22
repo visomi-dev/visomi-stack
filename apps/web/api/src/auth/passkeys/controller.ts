@@ -96,6 +96,12 @@ export class PasskeysController {
     response.json({ credentials: result });
   }
 
+  async vaultCredentialIds(request: IdentifiedRequest, response: Response) {
+    const credentialIds = await this.passkeys.vaultCredentialIds(request.user);
+
+    response.json({ credentialIds });
+  }
+
   async renamePasskey(request: IdentifiedRequest, response: Response, input: RenamePasskeyInput) {
     await this.passkeys.rename(request.sessionID, request.user, input.params.id, input.body.label);
 

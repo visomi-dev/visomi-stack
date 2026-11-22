@@ -35,46 +35,54 @@ export class PrfUnlock implements VaultUnlock {
   ) {}
 
   async secret(context: WrappingContext): Promise<Uint8Array> {
-    const result = await this.assertion({ context });
+    const result = await this.assertion({ contexts: [context] });
 
     return result.secret;
   }
 
   /** Evaluate both existing wrapping salts in one user-verified assertion for this credential. */
   async forDevice(context: WrappingContext, signal: AbortSignal): Promise<VaultUnlock> {
-    const device = deviceCustodyContext(context);
-    const result = await this.assertion({ context, device, cancellation: signal });
-    const secrets = new Map([
-      [wrappingAad(context), result.secret],
-      [wrappingAad(device), result.second],
-    ]);
+    const result = await this.assertion({ contexts: [context], device: true, cancellation: signal });
 
-    return {
-      secret: async (binding) => {
-        const id = wrappingAad(binding);
-        const secret = secrets.get(id);
+    return this.deviceSecrets(context, result, signal);
+  }
 
-        if (signal.aborted || !secrets.delete(id)) {
-          throw new VaultError('stale-operation');
-        }
+  /** The caller supplies only the authenticated account's registered WebAuthn credential IDs. */
+  async forRegisteredDevice(
+    context: Omit<WrappingContext, 'methodId'>,
+    credentialIds: readonly string[],
+    signal: AbortSignal,
+  ): Promise<{ binding: WrappingContext; unlock: VaultUnlock }> {
+    if (!credentialIds.length) {
+      throw new VaultError('passkey-not-registered');
+    }
 
-        // Authenticators that return only the first result still verify the device salt separately.
-        if (!secret) {
-          const assertion = await this.assertion({ context: binding, cancellation: signal });
+    const result = await this.assertion({
+      contexts: credentialIds.map((methodId) => ({ ...context, methodId })),
+      device: true,
+      registered: true,
+      cancellation: signal,
+    });
+    const binding = { ...context, methodId: result.credentialId };
 
-          return assertion.secret;
-        }
+    // Require both outputs before setup persists either wrapper. A canceled second prompt leaves no binding.
+    if (!result.second) {
+      try {
+        const device = await this.assertion({
+          contexts: [deviceCustodyContext(binding)],
+          registered: true,
+          cancellation: signal,
+        });
 
-        return secret;
-      },
-      cancel: () => {
-        this.cancel();
-        for (const secret of secrets.values()) {
-          secret?.fill(0);
-        }
-        secrets.clear();
-      },
-    };
+        result.second = device.secret;
+      } catch (error) {
+        result.secret.fill(0);
+
+        throw error;
+      }
+    }
+
+    return { binding, unlock: this.deviceSecrets(binding, result, signal) };
   }
 
   /** Select an existing PRF-capable credential without registering one in the sign-in picker. */
@@ -91,13 +99,52 @@ export class PrfUnlock implements VaultUnlock {
     this.pending = undefined;
   }
 
+  private deviceSecrets(
+    context: WrappingContext,
+    result: { secret: Uint8Array; second: Uint8Array | undefined },
+    signal: AbortSignal,
+  ): VaultUnlock {
+    const device = deviceCustodyContext(context);
+    const secrets = new Map([
+      [wrappingAad(context), result.secret],
+      [wrappingAad(device), result.second],
+    ]);
+
+    return {
+      secret: async (binding) => {
+        const id = wrappingAad(binding);
+        const secret = secrets.get(id);
+
+        if (signal.aborted || !secrets.delete(id)) {
+          throw new VaultError('stale-operation');
+        }
+
+        // Authenticators that return only the first result still verify the device salt separately.
+        if (!secret) {
+          const assertion = await this.assertion({ contexts: [binding], cancellation: signal });
+
+          return assertion.secret;
+        }
+
+        return secret;
+      },
+      cancel: () => {
+        this.cancel();
+        for (const secret of secrets.values()) {
+          secret?.fill(0);
+        }
+        secrets.clear();
+      },
+    };
+  }
+
   private async assertion(request: {
-    context?: WrappingContext;
-    device?: WrappingContext;
+    contexts?: readonly WrappingContext[];
+    device?: boolean;
+    registered?: boolean;
     cancellation?: AbortSignal;
   }) {
     this.cancel();
-    const binding = request.context ? wrappingContextSchema.safeParse(request.context) : undefined;
     const { origin, rpId, credentials, crypto } = this.environment;
     let url: URL;
 
@@ -108,7 +155,6 @@ export class PrfUnlock implements VaultUnlock {
     }
 
     if (
-      (binding && (!binding.success || binding.data.origin !== origin)) ||
       url.origin !== origin ||
       (url.protocol !== 'https:' &&
         !(['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && url.protocol === 'http:')) ||
@@ -117,9 +163,21 @@ export class PrfUnlock implements VaultUnlock {
       throw new VaultError('origin-mismatch');
     }
 
-    const configured = binding?.data;
+    const configured = request.contexts?.map((context) => {
+      const binding = wrappingContextSchema.safeParse(context);
 
-    if ((configured && configured.method !== 'passkey-prf') || !credentials?.get || !crypto?.subtle) {
+      if (!binding.success || binding.data.origin !== origin) {
+        throw new VaultError('origin-mismatch');
+      }
+
+      if (binding.data.method !== 'passkey-prf') {
+        throw new VaultError('unsupported-prf');
+      }
+
+      return binding.data;
+    });
+
+    if (!credentials?.get || !crypto?.subtle) {
       throw new VaultError('unsupported-prf');
     }
 
@@ -137,10 +195,20 @@ export class PrfUnlock implements VaultUnlock {
       const encoder = new TextEncoder();
       const salt = (context: WrappingContext) =>
         crypto.subtle.digest('SHA-256', encoder.encode(JSON.stringify(['visomi.prf', 1, wrappingAad(context)])));
-      const [firstInput, secondInput] = await Promise.all([
-        configured ? salt(configured) : crypto.getRandomValues(new Uint8Array(32)),
-        request.device ? salt(request.device) : undefined,
-      ]);
+      const evaluations = await Promise.all(
+        (configured ?? []).map(async (context) => {
+          const [first, second] = await Promise.all([
+            salt(context),
+            request.device ? salt(deviceCustodyContext(context)) : undefined,
+          ]);
+
+          return [context.methodId, { first, ...(second && { second }) }] as const;
+        }),
+      );
+      const prfInput =
+        evaluations.length > 1
+          ? { evalByCredential: Object.fromEntries(evaluations) }
+          : { eval: evaluations[0]?.[1] ?? { first: crypto.getRandomValues(new Uint8Array(32)) } };
 
       signal.throwIfAborted();
 
@@ -153,14 +221,12 @@ export class PrfUnlock implements VaultUnlock {
           userVerification: 'required',
           timeout: 60_000,
           ...(configured && {
-            allowCredentials: [
-              {
-                type: 'public-key',
-                id: decodeBytes(configured.methodId, Math.floor((configured.methodId.length * 6) / 8)),
-              },
-            ],
+            allowCredentials: configured.map(({ methodId }) => ({
+              type: 'public-key',
+              id: decodeBytes(methodId, Math.floor((methodId.length * 6) / 8)),
+            })),
           }),
-          extensions: { prf: { eval: { first: firstInput, ...(secondInput && { second: secondInput }) } } },
+          extensions: { prf: prfInput },
         },
       });
 
@@ -193,7 +259,6 @@ export class PrfUnlock implements VaultUnlock {
         !schema.safeParse(clientData).success ||
         !assertion.id ||
         assertion.id !== encodeBytes(new Uint8Array(assertion.rawId)) ||
-        (configured && assertion.id !== configured.methodId) ||
         authData.length < 37 ||
         encodeBytes(authData.subarray(0, 32)) !== encodeBytes(new Uint8Array(expectedRpId)) ||
         (authData[32] & 5) !== 5
@@ -203,6 +268,10 @@ export class PrfUnlock implements VaultUnlock {
 
       if (signal.aborted || this.pending !== controller) {
         throw new VaultError('cancelled');
+      }
+
+      if (configured && !configured.some(({ methodId }) => assertion.id === methodId)) {
+        throw new VaultError(request.registered ? 'passkey-not-registered' : 'origin-mismatch');
       }
 
       if (!prf) {
