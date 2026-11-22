@@ -17,12 +17,11 @@ import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
 import { VaultExampleNavigation } from '../vault/example/vault-example-navigation';
 
-import { DatabaseExample } from './example/example';
+import { DatabaseExample, DatabaseExampleRoute } from './example/example';
 import { ExampleWorkspace } from './example-workspace';
 import { exampleLocalKey } from './example-contracts';
 import { ExampleVaultWorkspaces } from './example-vault-workspaces';
 import { ExamplePrivateResource, type ExampleTarget } from './example-private-resource';
-import { PersistenceExample } from './persistence-example/persistence-example';
 
 @Component({ selector: 'app-test-persistence-layout', imports: [RouterOutlet], template: '<router-outlet />' })
 class TestLayout {}
@@ -159,7 +158,7 @@ function fixture(
     ],
   });
 
-  TestBed.overrideComponent(backed ? DatabaseExample : PersistenceExample, {
+  TestBed.overrideComponent(backed ? DatabaseExample : DatabaseExampleRoute, {
     set: {
       providers: [
         ExampleWorkspace,

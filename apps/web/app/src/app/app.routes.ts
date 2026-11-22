@@ -120,11 +120,11 @@ export const appRoutes: Routes = [
       { path: 'home', loadComponent: () => import('./home/home').then((m) => m.Home) },
       {
         path: 'persistence',
-        loadComponent: () => import('./db/persistence-example/persistence-example').then((m) => m.PersistenceExample),
+        loadComponent: () => import('./db/example/example').then((m) => m.DatabaseExampleRoute),
       },
       {
         path: 'persistence/:tenantId/:scopeId/:objectId',
-        loadComponent: () => import('./db/persistence-example/persistence-example').then((m) => m.PersistenceExample),
+        loadComponent: () => import('./db/example/example').then((m) => m.DatabaseExampleRoute),
       },
       { path: 'account', loadComponent: () => import('./auth/email/account/account').then((m) => m.Account) },
       {

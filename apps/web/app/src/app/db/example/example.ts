@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { NavigationHeading } from '../../shared/navigation-heading';
 import { Button, Card, Field, Link, PinInput, Heading, Text, Textarea } from '../../ui';
 import { ExampleWorkspace } from '../example-workspace';
+import { exampleWorkspaceProviders } from '../example-workspace-providers';
 
 @Component({
   selector: 'app-database-example',
@@ -27,3 +28,11 @@ import { ExampleWorkspace } from '../example-workspace';
 export class DatabaseExample {
   readonly workspace = inject(ExampleWorkspace);
 }
+
+@Component({
+  selector: 'app-database-example-route',
+  imports: [DatabaseExample],
+  providers: exampleWorkspaceProviders,
+  template: '<app-database-example />',
+})
+export class DatabaseExampleRoute {}
