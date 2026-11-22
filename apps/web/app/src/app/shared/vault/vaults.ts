@@ -11,6 +11,7 @@ import { DatabaseHttp } from '../db/http';
 
 import { VaultSession } from './vault-session';
 import { vaultMessage } from './vault-messages';
+import { openVaultDevice } from './local-unlock';
 
 /** Local unlock of existing vaults in an authenticated frontend; no product vault is created or converted here. */
 @Service({ autoProvided: false })
@@ -104,11 +105,12 @@ export class Vaults {
         storage.close();
       }
 
-      await this.vault.connect(binding, rpId, false, pin);
-
-      current();
-
-      await this.vault.device(binding, rpId, false, pin);
+      await openVaultDevice(this.vault, binding, rpId, {
+        pin,
+        combinePrf: true,
+        signal: AbortSignal.any([signal, navigation]),
+        current,
+      });
 
       current();
     } catch (error) {

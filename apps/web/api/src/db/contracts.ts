@@ -1,6 +1,6 @@
 import { defineRoute } from '@visomi-stack/web-backend-shared';
 import { z } from 'zod';
-import { productPolicySchema } from '@visomi-stack/shared-db';
+import { exampleWorkspacePageSchema, productPolicySchema } from '@visomi-stack/shared-db';
 
 import { grantInputSchema, memberInputSchema, scopeInputSchema, targetSchema } from '../access/contracts';
 import { commonErrors, cookieSecurity, csrfSecurity } from '../auth/shared/contracts';
@@ -43,6 +43,16 @@ const base = {
 const path = '/tenants/:tenantId/scopes/:scopeId';
 
 export const persistenceContracts = {
+  listWorkspaces: defineRoute({
+    ...base,
+    security: cookieSecurity,
+    method: 'get',
+    path: '/workspaces',
+    operationId: 'persistence_example_workspaces',
+    summary: 'List workspaces visible to the verified account in this example',
+    request: z.object({ query: query.pick({ after: true, limit: true }) }),
+    responses: response(exampleWorkspacePageSchema),
+  }),
   maintenance: defineRoute({
     ...base,
     method: 'post',

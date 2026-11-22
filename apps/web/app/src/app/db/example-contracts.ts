@@ -5,15 +5,19 @@ import {
   dataAad,
   VaultError,
   syntheticHybridPolicy,
+  exampleWorkspaceTargetSchema,
+  exampleVaultTargetSchema,
+  exampleWorkspacePageSchema,
   type KeyDomain,
   type WrappingContext,
   type DataEnvelope,
 } from '@visomi-stack/shared-db';
 
-export const exampleTargetSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid(), objectId: z.uuid() });
+export const exampleTargetSchema = exampleVaultTargetSchema;
 export type ExampleTarget = z.infer<typeof exampleTargetSchema>;
 
-export const scopeSchema = exampleTargetSchema.omit({ objectId: true });
+export const scopeSchema = exampleWorkspaceTargetSchema;
+export type ExampleWorkspacePage = z.infer<typeof exampleWorkspacePageSchema>;
 export const cloudSchema = z.object({
   items: z.array(
     z.object({ id: z.uuid(), title: z.string(), body: z.string(), revision: z.number().int().positive() }),

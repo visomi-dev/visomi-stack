@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
 
-import { expect, signup, passwordStart, test } from './support/fixtures';
+import { expect, logout, password, signup, passwordStart, test } from './support/fixtures';
 
 async function virtualPasskey(page: Page) {
   const cdp = await page.context().newCDPSession(page);
@@ -87,7 +87,7 @@ test('shows an unavailable backup state in Spanish without enabling another stor
 test('sets up one synchronized Vault with an explicitly chosen PIN and reopens its note', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
 
-  await signup(page);
+  const email = await signup(page);
 
   await page.goto('/app/en/example/vault');
 
@@ -124,7 +124,13 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await expect(page.locator('app-vault-sync-indicator').getByRole('status')).toHaveText('Vault synced');
 
+  const workspace = page.url();
+
   await page.reload();
+
+  await expect(page).toHaveURL(workspace);
+
+  await expect(page.getByText('You’re signed in. Unlock this vault to open your note.')).toBeVisible();
 
   await expect(unlock).toBeVisible();
 
@@ -145,6 +151,40 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
   await unlock.click();
 
   await expect(page.getByLabel('Your note', { exact: true })).toHaveValue(note);
+
+  const primary = page.locator('app-sidebar').getByRole('navigation', { name: 'Primary navigation' });
+
+  await primary.getByRole('link', { name: 'Home', exact: true }).click();
+
+  await primary.getByRole('link', { name: 'Vault example', exact: true }).click();
+
+  await page.getByRole('button', { name: /Open vault/ }).click();
+
+  await expect(page).toHaveURL(workspace);
+
+  await expect(setup).toHaveCount(0);
+
+  await logout(page);
+
+  await page.goto(workspace);
+
+  await page.getByRole('link', { name: 'Use a password', exact: true }).click();
+
+  await page.getByLabel('Email address', { exact: true }).fill(email);
+
+  await page.getByLabel('Password', { exact: true }).fill(password);
+
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Confirm your sign-in', exact: true })).toBeVisible();
+
+  const code = await readMailCode(email);
+
+  await page.getByLabel('Verification code', { exact: true }).fill(code);
+
+  await expect(page).toHaveURL(workspace);
+
+  await expect(unlock).toBeVisible();
 
   await page.goto('/app/en/example/cloud');
 
@@ -218,6 +258,22 @@ test.describe('Vault passkey setup in Chromium', () => {
     expect(assertions).toBe(1);
 
     await expect(page.locator('app-pin-input')).toHaveCount(0);
+
+    const workspace = page.url();
+
+    await page.reload();
+
+    await expect(page).toHaveURL(workspace);
+
+    await expect(page.getByText('You’re signed in. Unlock this vault to open your note.')).toBeVisible();
+
+    expect(assertions).toBe(1);
+
+    await page.getByRole('button', { name: 'Unlock with a passkey', exact: true }).click();
+
+    await expect(page.getByLabel('Your note', { exact: true })).toBeEditable();
+
+    expect(assertions).toBe(2);
   });
 
   test('opens the backed note on an approved desktop with its own PIN and no passkey', async ({

@@ -71,6 +71,20 @@ it('preserves the Cloud return path without putting its link secret in auth URLs
 
   expect(safeReturnTo('/app/es' + workspace, '/app/es/')).toBe(workspace);
   expect(safeReturnTo('/example/cloud/join', '/app/es/')).toBe('/example/cloud/join');
+  expect(safeReturnTo('/example/cloud', '/app/es/')).toBe('/example/cloud');
+});
+
+it('preserves the Vault note destination and accepts only its three opaque identifiers', () => {
+  const workspace = '/example/vault';
+  const query =
+    'tenantId=11111111-1111-4111-8111-111111111111&scopeId=22222222-2222-4222-8222-222222222222&objectId=33333333-3333-4333-8333-333333333333';
+
+  expect(safeReturnTo(workspace, '/app/es/')).toBe(workspace);
+  expect(safeReturnTo(`/app/es${workspace}?${query}`, '/app/es/')).toBe(`${workspace}?${query}`);
+  expect(safeReturnTo(`${workspace}?${query}&token=synthetic`, '/app/es/')).toBeNull();
+  expect(safeReturnTo(`${workspace}?${query}&${query}`, '/app/es/')).toBeNull();
+  expect(safeReturnTo(`${workspace}?${query}#synthetic`, '/app/es/')).toBeNull();
+  expect(safeReturnTo(`${workspace}?tenantId=missing`, '/app/es/')).toBeNull();
 });
 
 it('guards share loaded state and distinguish identity from full access', async () => {

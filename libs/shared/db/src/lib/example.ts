@@ -1,4 +1,19 @@
+import { z } from 'zod';
+
 import { parseProductPolicy } from './policy';
+
+export const exampleWorkspaceTargetSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid() });
+export const exampleVaultTargetSchema = exampleWorkspaceTargetSchema.extend({ objectId: z.uuid() });
+export const exampleWorkspacePageSchema = z.strictObject({
+  items: z.array(
+    exampleWorkspaceTargetSchema.extend({
+      createdAt: z.iso.datetime(),
+      owner: z.boolean(),
+      objectId: z.uuid().nullable().optional(),
+    }),
+  ),
+  next: z.uuid().nullable(),
+});
 
 /** Synthetic opt-in composition, never a derived product's recovery decision. */
 export const syntheticHybridPolicy = parseProductPolicy({

@@ -29,15 +29,85 @@
     } @else {
       <p role="status" i18n="@@persistenceExampleUnavailable">Set up the development profile to use this example.</p>
     }
-  } @else if (workspace.backedSample && !workspace.target() && !workspace.objectBackups()) {
-    <p role="status" i18n="@@vaultBackupStorageDisabled">Vault backups are unavailable right now. Try again later.</p>
-  } @else if (!workspace.target()) {
-    <button appUI type="button" [disabled]="workspace.busy()" (click)="workspace.createWorkspace()">
-      @if (workspace.backedSample) {
-        <span i18n="@@vaultDemoSetup">Set up my vault</span>
+  } @else if (workspace.backedSample && !workspace.target()) {
+    @if (workspace.workspaces(); as workspaces) {
+      @if (workspaces.items.length) {
+        <section class="grid gap-3" aria-labelledby="existing-vaults">
+          <h2 appUI id="existing-vaults" i18n="@@vaultExistingWorkspaces">Your vaults</h2>
+
+          <ul class="grid gap-2">
+            @for (item of workspaces.items; track item.scopeId) {
+              <li>
+                <button
+                  appUI
+                  type="button"
+                  variant="secondary"
+                  class="max-w-full flex-wrap"
+                  [disabled]="workspace.busy()"
+                  (click)="workspace.openWorkspace(item)"
+                >
+                  <span i18n="@@vaultOpenWorkspace">Open vault</span>
+
+                  <time [attr.datetime]="item.createdAt">{{ item.createdAt | date: 'medium' }}</time>
+
+                  <span class="break-all" i18n="@@exampleWorkspaceReference">ID {{ item.scopeId }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+
+          @if (workspaces.next; as next) {
+            <button
+              appUI
+              type="button"
+              variant="secondary"
+              class="justify-self-start"
+              [disabled]="workspace.busy()"
+              (click)="workspace.discoverWorkspaces(next)"
+              i18n="@@exampleMoreWorkspaces"
+            >
+              Show more workspaces
+            </button>
+          }
+        </section>
+      } @else if (workspace.objectBackups()) {
+        <button
+          appUI
+          type="button"
+          [disabled]="workspace.busy()"
+          (click)="workspace.createWorkspace()"
+          i18n="@@vaultDemoSetup"
+        >
+          Set up my vault
+        </button>
       } @else {
-        <span i18n="@@persistenceCreateWorkspace">Create a test workspace</span>
+        <p role="status" i18n="@@vaultBackupStorageDisabled">
+          Vault backups are unavailable right now. Try again later.
+        </p>
       }
+    } @else if (workspace.notice()) {
+      <button
+        appUI
+        type="button"
+        variant="secondary"
+        [disabled]="workspace.busy()"
+        (click)="workspace.discoverWorkspaces()"
+        i18n="@@exampleRetryWorkspaces"
+      >
+        Retry loading workspaces
+      </button>
+    } @else {
+      <p role="status" i18n="@@exampleLoadingWorkspaces">Loading workspaces…</p>
+    }
+  } @else if (!workspace.target()) {
+    <button
+      appUI
+      type="button"
+      [disabled]="workspace.busy()"
+      (click)="workspace.createWorkspace()"
+      i18n="@@persistenceCreateWorkspace"
+    >
+      Create a test workspace
     </button>
   } @else {
     @if (!workspace.backedSample) {
@@ -90,7 +160,7 @@
       @if (!workspace.backedSample) {
         <p role="status">{{ workspace.status() }}</p>
       } @else if (workspace.hasBinding() && !workspace.vault.ready()) {
-        <p role="status" i18n="@@vaultNoteLocked">Unlock the vault to open your note.</p>
+        <p role="status" i18n="@@vaultNoteLocked">You’re signed in. Unlock this vault to open your note.</p>
       }
 
       @if (!workspace.backedSample) {

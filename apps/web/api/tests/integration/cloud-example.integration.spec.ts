@@ -84,6 +84,33 @@ it('enforces Cloud owner/shared CRUD, explicit read access, and revocation at th
   expect(workspace.status).toBe(200);
 
   const target = workspace.body;
+  const otherWorkspace = await owner.call(`${base(root.body)}/children`, 'POST', { kind: 'resource' });
+  const workspacesPath = '/example/cloud/workspaces';
+  const [first, second] = [target, otherWorkspace.body].sort((a, b) => a.scopeId.localeCompare(b.scopeId));
+
+  await expect(owner.call(`${workspacesPath}?limit=1`)).resolves.toMatchObject({
+    status: 200,
+    body: {
+      items: [{ ...first, owner: true, createdAt: expect.any(String) }],
+      next: first.scopeId,
+    },
+  });
+
+  await expect(owner.call(`${workspacesPath}?limit=1&after=${first.scopeId}`)).resolves.toMatchObject({
+    status: 200,
+    body: { items: [{ ...second, owner: true }], next: null },
+  });
+
+  await expect(outsider.call(workspacesPath)).resolves.toMatchObject({
+    status: 200,
+    body: { items: [], next: null },
+  });
+
+  await expect(owner.call('/example/vault/workspaces')).resolves.toMatchObject({
+    status: 200,
+    body: { items: [], next: null },
+  });
+
   const records = `${base(target)}/domains/cloud-notes/records`;
   const ownerId = owner.actor.principal.id;
   const collaboratorId = collaborator.actor.principal.id;
@@ -173,6 +200,11 @@ it('enforces Cloud owner/shared CRUD, explicit read access, and revocation at th
 
   await expect(grant('viewer')).resolves.toMatchObject({ status: 200 });
 
+  await expect(collaborator.call(workspacesPath)).resolves.toMatchObject({
+    status: 200,
+    body: { items: [{ ...target, owner: false }], next: null },
+  });
+
   expect(cloudNotice.mock.calls).toEqual([[collaboratorId], [collaboratorId]]);
 
   await expect(readByRole(collaboratorId)).resolves.toEqual([sharedNote.body.id]);
@@ -227,6 +259,8 @@ it('enforces Cloud owner/shared CRUD, explicit read access, and revocation at th
   });
 
   await expect(grant('blocked')).resolves.toMatchObject({ status: 200 });
+
+  await expect(collaborator.call(workspacesPath)).resolves.toMatchObject({ body: { items: [], next: null } });
 
   await expect(readByRole(collaboratorId)).resolves.toEqual([]);
 

@@ -3412,7 +3412,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="vaultNoteLocked" datatype="html">
-        <source>Unlock the vault to open your note.</source>
+        <source>You’re signed in. Unlock this vault to open your note.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">93,96</context>
@@ -3438,6 +3438,39 @@
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">384,387</context>
         </context-group>
+      </trans-unit>
+      <trans-unit id="vaultExistingWorkspaces" datatype="html">
+        <source>Your vaults</source>
+      </trans-unit>
+      <trans-unit id="vaultOpenWorkspace" datatype="html">
+        <source>Open vault</source>
+      </trans-unit>
+      <trans-unit id="exampleWorkspaceReference" datatype="html">
+        <source>ID <x id="INTERPOLATION" equiv-text="{{ item.scopeId }}"/></source>
+      </trans-unit>
+      <trans-unit id="exampleMoreWorkspaces" datatype="html">
+        <source>Show more workspaces</source>
+      </trans-unit>
+      <trans-unit id="exampleRetryWorkspaces" datatype="html">
+        <source>Retry loading workspaces</source>
+      </trans-unit>
+      <trans-unit id="exampleLoadingWorkspaces" datatype="html">
+        <source>Loading workspaces…</source>
+      </trans-unit>
+      <trans-unit id="cloudExistingWorkspaces" datatype="html">
+        <source>Your Cloud workspaces</source>
+      </trans-unit>
+      <trans-unit id="cloudOpenWorkspace" datatype="html">
+        <source>Open workspace</source>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceOwned" datatype="html">
+        <source>Owned</source>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceShared" datatype="html">
+        <source>Shared with you</source>
+      </trans-unit>
+      <trans-unit id="cloudNoWorkspaces" datatype="html">
+        <source>You don’t have any Cloud workspaces yet.</source>
       </trans-unit>
     </body>
   </file>

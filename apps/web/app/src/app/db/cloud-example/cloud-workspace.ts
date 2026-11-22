@@ -3,14 +3,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { LOCALE_ID, Service, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { createOperationId } from '@visomi-stack/shared-db';
+import { createOperationId, exampleWorkspacePageSchema, exampleWorkspaceTargetSchema } from '@visomi-stack/shared-db';
 import { z } from 'zod';
 
 import { BrowserRealtimeSession } from '../../auth/session/browser-realtime-session';
 import { DatabaseHttp } from '../../shared/db/http';
 import { ExampleAvailability } from '../example-availability';
+import type { ExampleWorkspacePage } from '../example-contracts';
 
-const workspaceSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid() });
 const noteSchema = z.strictObject({
   id: z.uuid(),
   title: z.string(),
@@ -26,7 +26,7 @@ const sharingSchema = z.strictObject({
 const linkSchema = z.strictObject({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$/), expiresAt: z.iso.datetime() });
 const deliverySchema = z.strictObject({ sent: z.boolean() });
 
-type Workspace = z.infer<typeof workspaceSchema>;
+type Workspace = z.infer<typeof exampleWorkspaceTargetSchema>;
 type Note = z.infer<typeof noteSchema>;
 
 const prefix = '/tenants';
@@ -58,6 +58,7 @@ export class CloudWorkspace {
   readonly examples = inject(ExampleAvailability);
 
   readonly busy = signal(false);
+  readonly workspaces = signal<ExampleWorkspacePage | null>(null);
   readonly status = signal('');
   readonly selected = signal<Note | null>(null);
   readonly title = signal('');
@@ -69,7 +70,10 @@ export class CloudWorkspace {
 
   readonly target = computed(() => {
     const params = this.params();
-    const parsed = workspaceSchema.safeParse({ tenantId: params.get('tenantId'), scopeId: params.get('scopeId') });
+    const parsed = exampleWorkspaceTargetSchema.safeParse({
+      tenantId: params.get('tenantId'),
+      scopeId: params.get('scopeId'),
+    });
 
     return parsed.success ? parsed.data : undefined;
   });
@@ -81,12 +85,22 @@ export class CloudWorkspace {
 
   readonly sharing = signal<z.infer<typeof sharingSchema> | null>(null);
 
+  retryWorkspaces(): void {
+    this.readError.set('');
+    this.refreshPending = true;
+    this.flushRefresh();
+  }
+
+  async loadMoreWorkspaces(after: string): Promise<void> {
+    await this.run((signal) => this.loadWorkspaces(signal, after));
+  }
+
   async createWorkspace(): Promise<void> {
     await this.run(async (signal) => {
       const rawRoot = await this.api.cloud(prefix, {}, signal);
-      const root = workspaceSchema.parse(rawRoot);
+      const root = exampleWorkspaceTargetSchema.parse(rawRoot);
       const rawWorkspace = await this.api.cloud(`${scopePath(root)}/children`, { kind: 'resource' }, signal);
-      const workspace = workspaceSchema.parse(rawWorkspace);
+      const workspace = exampleWorkspaceTargetSchema.parse(rawWorkspace);
 
       signal.throwIfAborted();
 
@@ -278,7 +292,14 @@ export class CloudWorkspace {
     const target = this.target();
     const scope = this.controller;
 
-    if (!this.refreshPending || this.busy() || this.refreshRequest || !target || !this.examples.enabled() || !scope) {
+    if (
+      !this.refreshPending ||
+      this.busy() ||
+      this.refreshRequest ||
+      (this.hasTarget() && !target) ||
+      !this.examples.enabled() ||
+      !scope
+    ) {
       return;
     }
 
@@ -287,9 +308,13 @@ export class CloudWorkspace {
 
     this.refreshPending = false;
     this.refreshRequest = request;
-    void this.load(target, signal)
+    void (target ? this.load(target, signal) : this.loadWorkspaces(signal))
       .catch((error: unknown) => {
         if (!signal.aborted) {
+          if (!target) {
+            this.workspaces.set(null);
+          }
+
           this.readError.set(this.message(error));
         }
       })
@@ -307,6 +332,26 @@ export class CloudWorkspace {
 
     signal.throwIfAborted();
     this.page.set(page);
+    this.readError.set('');
+  }
+
+  private async loadWorkspaces(signal: AbortSignal, after?: string): Promise<void> {
+    const current = this.workspaces();
+    // Keep the visible UUID range even if sharing changes move its page boundaries.
+    const lastVisible = after ? undefined : current?.items.at(-1)?.scopeId;
+    const items = after ? [...(current?.items ?? [])] : [];
+    let cursor = after;
+
+    do {
+      const raw = await this.api.cloud(cursor ? `/workspaces?after=${cursor}` : '/workspaces', undefined, signal);
+      const page = exampleWorkspacePageSchema.parse(raw);
+
+      signal.throwIfAborted();
+      items.push(...page.items);
+      cursor = page.next ?? undefined;
+    } while (cursor && lastVisible && cursor < lastVisible);
+
+    this.workspaces.set({ items, next: cursor ?? null });
     this.readError.set('');
   }
 
@@ -353,6 +398,7 @@ export class CloudWorkspace {
 
     if (denied || status === 401) {
       this.page.set(null);
+      this.workspaces.set(null);
       this.edit(null);
     }
 
@@ -373,6 +419,7 @@ export class CloudWorkspace {
   private readonly loadWorkspace = effect((cleanup) => {
     const enabled = this.examples.enabled();
     const target = this.target();
+    const hasTarget = this.hasTarget();
 
     untracked(() => {
       const controller = new AbortController();
@@ -383,6 +430,7 @@ export class CloudWorkspace {
       this.refreshPending = false;
       this.busy.set(false);
       this.page.set(null);
+      this.workspaces.set(null);
       this.edit(null);
       this.status.set('');
       this.readError.set('');
@@ -392,7 +440,7 @@ export class CloudWorkspace {
       this.shareLink.set('');
       this.shareEmail.set('');
 
-      if (enabled && target) {
+      if (enabled && (!hasTarget || target)) {
         this.refreshPending = true;
         this.flushRefresh();
       }
