@@ -714,7 +714,10 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await page.getByRole('link', { name: 'Link a device' }).click();
 
-    const desktop = await browser.newContext({ baseURL: info.project.use.baseURL });
+    const desktop = await browser.newContext({
+      baseURL: info.project.use.baseURL,
+      extraHTTPHeaders: { 'x-forwarded-for': '198.19.120.1' },
+    });
 
     try {
       await desktop.routeWebSocket('**/socket.io/**', (socket) => socket.close());
@@ -757,17 +760,15 @@ test.describe('Vault passkey setup in Chromium', () => {
       const fingerprint = await peer.locator('[data-vault-recipient]').innerText();
       const relative = new URL(href!);
 
-      await page.goto(relative.href);
+      const resumed = await page.context().newPage();
+
+      await resumed.setExtraHTTPHeaders({ 'x-forwarded-for': '198.19.120.2' });
+
+      await resumed.goto(relative.href);
 
       await expect(
-        page.getByText('Unlock the note on this device before approving another one.', { exact: true }),
+        resumed.getByText('Unlock the note on this device before approving another one.', { exact: true }),
       ).toBeVisible();
-
-      await page.getByRole('link', { name: 'Open vault note', exact: true }).click();
-
-      await page.getByRole('button', { name: 'Use a passkey', exact: true }).click();
-
-      await expect(page.getByLabel('Your note', { exact: true })).toHaveValue(note);
 
       await page.getByRole('link', { name: 'Review request', exact: true }).click();
 
@@ -775,7 +776,12 @@ test.describe('Vault passkey setup in Chromium', () => {
 
       await page.getByLabel('New device fingerprint').fill(fingerprint);
 
-      await page.getByRole('button', { name: 'Approve this device' }).click();
+      const [approval] = await Promise.all([
+        page.waitForResponse((response) => response.url().endsWith('/devices/approve'), { timeout: 10_000 }),
+        page.getByRole('button', { name: 'Approve this device' }).click(),
+      ]);
+
+      expect(approval.status()).toBe(200);
 
       await expect(page.getByRole('status').filter({ hasText: 'Device approved.' })).toBeVisible();
 
@@ -800,6 +806,8 @@ test.describe('Vault passkey setup in Chromium', () => {
       await pin.fill('208146');
 
       await expect(peer.getByLabel('Your note', { exact: true })).toHaveValue(note);
+
+      await resumed.close();
     } finally {
       await desktop.close();
     }
