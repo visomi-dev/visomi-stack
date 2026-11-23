@@ -435,7 +435,7 @@ it('emails only existing verified accounts and reports transport failure separat
       expect.objectContaining({
         to: email,
         subject: 'Te compartieron un espacio en Stack',
-        text: expect.stringContaining(`/app/es/example/cloud/${target.tenantId}/${target.scopeId}`),
+        text: expect.stringContaining(`/app/es/db-example/cloud/${target.tenantId}/${target.scopeId}`),
       }),
     );
   } finally {

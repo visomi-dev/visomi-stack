@@ -11,7 +11,7 @@ export const appRoutes: Routes = [
   },
   { path: 'foundations', loadComponent: () => import('./foundations/foundations').then((m) => m.Foundations) },
   {
-    path: 'example/cloud/join',
+    path: 'db-example/cloud/join',
     loadComponent: () => import('./db/cloud-example/cloud-join/cloud-join').then((m) => m.CloudJoin),
   },
   {
@@ -101,21 +101,22 @@ export const appRoutes: Routes = [
       import('./layouts/authenticated-layout/authenticated-layout').then((m) => m.AuthenticatedLayout),
     children: [
       {
-        path: 'example',
-        children: [
-          {
-            path: 'vault',
-            loadChildren: () => import('./vault/example/vault-routes').then((m) => m.vaultRoutes),
-          },
-          {
-            path: 'cloud',
-            loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
-          },
-          {
-            path: 'cloud/:tenantId/:scopeId',
-            loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
-          },
+        path: '',
+        canMatch: [
+          (_route, segments) =>
+            segments.length === 2 &&
+            ((segments[0].path === 'db-example' && segments[1].path === 'vault') ||
+              (segments[0].path === 'vault' && segments[1].path === 'unlock')),
         ],
+        loadChildren: () => import('./vault/example/vault-routes').then((m) => m.vaultRoutes),
+      },
+      {
+        path: 'db-example/cloud',
+        loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
+      },
+      {
+        path: 'db-example/cloud/:tenantId/:scopeId',
+        loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
       },
       { path: 'home', loadComponent: () => import('./home/home').then((m) => m.Home) },
       {

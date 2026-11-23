@@ -6,7 +6,7 @@ import { Session } from './session';
 import type { SessionSnapshot } from './models';
 
 const uuidPathSegment = '[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}';
-const cloudReturnPath = new RegExp(`^/example/cloud(?:/(?:join|${uuidPathSegment}/${uuidPathSegment}))?$`);
+const cloudReturnPath = new RegExp(`^/db-example/cloud(?:/(?:join|${uuidPathSegment}/${uuidPathSegment}))?$`);
 const vaultReturnUuid =
   /^(?:[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/i;
 
@@ -45,9 +45,9 @@ export function safeReturnTo(value: string | null, base: string): string | null 
 
   const pathname = path.split(/[?#]/, 1)[0];
 
-  const vaultPath = '/example/vault';
+  const vaultPath = '/db-example/vault';
 
-  if (pathname === vaultPath || pathname === `${vaultPath}/unlock`) {
+  if (pathname === vaultPath || pathname === '/vault/unlock') {
     if (path === pathname) {
       return pathname === vaultPath ? vaultPath : null;
     }

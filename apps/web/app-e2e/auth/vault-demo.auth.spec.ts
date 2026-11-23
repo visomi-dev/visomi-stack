@@ -46,7 +46,7 @@ test('opens the Vault navigation item without offering a separate vault when the
 }) => {
   await page.route('**/api/example/{vault,cloud}/policy', (route) => route.fulfill({ status: 404 }));
 
-  await page.goto('/app/en/example/vault');
+  await page.goto('/app/en/db-example/vault');
 
   await expect(page).toHaveURL(/\/auth\/sign-in/);
 
@@ -60,7 +60,7 @@ test('opens the Vault navigation item without offering a separate vault when the
 
   await primary.getByRole('link', { name: 'Vault example', exact: true }).click();
 
-  await expect(page).toHaveURL(/\/example\/vault$/);
+  await expect(page).toHaveURL(/\/db-example\/vault$/);
 
   await expect(page.getByRole('heading', { name: 'Vault example', level: 1 })).toBeVisible();
 
@@ -87,7 +87,7 @@ test('shows an unavailable backup state in Spanish without enabling another stor
 
   await signup(page);
 
-  await page.goto('/app/es/example/vault');
+  await page.goto('/app/es/db-example/vault');
 
   const heading = page.getByRole('heading', { level: 1, name: /bóveda|vault/i });
 
@@ -107,7 +107,7 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   const email = await signup(page);
 
-  await page.goto('/app/en/example/vault');
+  await page.goto('/app/en/db-example/vault');
 
   const setup = page.getByRole('button', { name: 'Set up my vault', exact: true });
   const pinOption = page.getByRole('button', { name: 'Use a PIN on this device', exact: true });
@@ -243,7 +243,7 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await expect(unlock).toBeVisible();
 
-  await page.goto('/app/en/example/cloud');
+  await page.goto('/app/en/db-example/cloud');
 
   await expect(page.getByRole('button', { name: 'Create a test workspace' })).toBeVisible();
 
@@ -262,7 +262,7 @@ test.describe('Vault passkey setup in Chromium', () => {
     await passkeySignup(page);
 
     const registered = await credentialIds();
-    const directory = '/app/en/example/vault';
+    const directory = '/app/en/db-example/vault';
     const resume = page.getByRole('button', { name: 'Continue vault setup', exact: true });
     const open = page.getByRole('button', { name: /^Open vault/ });
     const passkey = page.getByRole('button', { name: 'Set up with a passkey', exact: true });
@@ -511,7 +511,7 @@ test.describe('Vault passkey setup in Chromium', () => {
     expect(passkeys).toEqual({ credentialIds: [ownedId] });
     expect(registered).toHaveLength(2);
 
-    await page.goto('/app/en/example/vault');
+    await page.goto('/app/en/db-example/vault');
 
     await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
 
@@ -580,7 +580,7 @@ test.describe('Vault passkey setup in Chromium', () => {
 
       cdp.on('WebAuthn.credentialAsserted', ({ credential }) => asserted.push(credential.credentialId));
 
-      await page.goto('/app/en/example/vault');
+      await page.goto('/app/en/db-example/vault');
 
       await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
 
@@ -633,7 +633,7 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     expect(registered).toHaveLength(1);
 
-    await page.goto('/app/en/example/vault');
+    await page.goto('/app/en/db-example/vault');
 
     await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
 
@@ -700,7 +700,7 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await expect(page.getByRole('status').filter({ hasText: 'Passkey added.' })).toBeVisible();
 
-    await page.goto('/app/en/example/vault');
+    await page.goto('/app/en/db-example/vault');
 
     await page.getByRole('button', { name: 'Set up my vault' }).click();
 

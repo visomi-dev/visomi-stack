@@ -23,7 +23,7 @@ export class VaultExample {
     }
 
     const locked = this.workspace.enrolled() && this.workspace.hasBinding() && !this.workspace.vaultReady();
-    const onUnlockPage = this.route.firstChild?.snapshot.routeConfig?.path === 'unlock';
+    const onUnlockPage = this.route.firstChild?.snapshot.data['vaultUnlock'] === true;
 
     const target = this.workspace.target();
 

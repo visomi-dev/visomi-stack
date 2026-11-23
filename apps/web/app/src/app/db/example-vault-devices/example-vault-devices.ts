@@ -19,7 +19,7 @@ export class ExampleVaultDevices {
   protected readonly resourceLink = computed(() => {
     const { tenantId, scopeId, objectId } = this.target();
 
-    return this.backed() ? ['/example/vault'] : ['/db-example', tenantId, scopeId, objectId];
+    return this.backed() ? ['/db-example/vault'] : ['/db-example', tenantId, scopeId, objectId];
   });
   protected readonly resourceParams = computed(() => (this.backed() ? this.target() : null));
 

@@ -41,7 +41,7 @@ export class CloudJoin {
       // Signing in still works when a storage policy requires reopening the original link.
     }
 
-    void this.router.navigate(['/auth/sign-in'], { queryParams: { returnTo: '/example/cloud/join' } });
+    void this.router.navigate(['/auth/sign-in'], { queryParams: { returnTo: '/db-example/cloud/join' } });
   }
 
   protected async join(): Promise<void> {
@@ -61,7 +61,7 @@ export class CloudJoin {
         // Some browsers do not expose session storage.
       }
 
-      await this.router.navigate(['/example/cloud', tenantId, scopeId], { replaceUrl: true });
+      await this.router.navigate(['/db-example/cloud', tenantId, scopeId], { replaceUrl: true });
     } catch {
       if (!this.lifetime.signal.aborted) {
         this.error.set($localize`:@@cloudJoinFailed:This link is unavailable or you don’t have access.`);

@@ -25,7 +25,7 @@
             <ul class="grid gap-2">
               @for (item of workspaces.items; track item.scopeId) {
                 <li>
-                  <a appUI [routerLink]="['/example/cloud', item.tenantId, item.scopeId]">
+                  <a appUI [routerLink]="['/db-example/cloud', item.tenantId, item.scopeId]">
                     <span i18n="@@cloudOpenWorkspace">Open workspace</span>
 
                     <time [attr.datetime]="item.createdAt">{{ item.createdAt | date: 'medium' }}</time>

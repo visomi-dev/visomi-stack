@@ -3,7 +3,7 @@ import type { Page, Request, Response, TestInfo } from '@playwright/test';
 import { expect, expireSession, passkeySignup, signup, test, vaultUnlockUrl, virtualPasskey } from './support/fixtures';
 
 const note = 'Synthetic note already opened before reload';
-const vaultPath = '/app/en/example/vault';
+const vaultPath = '/app/en/db-example/vault';
 const vaultApi = '/api/example/vault/';
 
 function firstDocument(page: Page, url: string) {
@@ -122,7 +122,7 @@ function expectSignInRedirect(status: number, location: string | undefined, prot
   expect(status).toBe(302);
   expect(redirect.origin).toBe(target.origin);
   expect(redirect.pathname).toBe('/app/en/auth/sign-in');
-  expect(redirect.searchParams.get('returnTo')).toBe('/example/vault' + target.search);
+  expect(redirect.searchParams.get('returnTo')).toBe('/db-example/vault' + target.search);
 }
 
 function trackSignInVaultRequests(page: Page) {

@@ -13,10 +13,11 @@ export const vaultRoutes: Routes = [
     data: { backedSample: true },
     // Load both views on entry so an open vault can still be locked and unlocked offline.
     children: [
-      { path: '', pathMatch: 'full', component: DatabaseExample },
+      { path: 'db-example/vault', pathMatch: 'full', component: DatabaseExample },
       {
-        path: 'unlock',
+        path: 'vault/unlock',
         component: VaultUnlock,
+        data: { vaultUnlock: true },
         canActivate: [vaultUnlockTargetGuard],
         runGuardsAndResolvers: 'always',
       },

@@ -11,7 +11,7 @@ export class VaultExampleNavigation {
   private viewNavigationId: number | undefined;
 
   async switchView(locked: boolean, target: ExampleTarget): Promise<void> {
-    const path = locked ? '/example/vault/unlock' : '/example/vault';
+    const path = locked ? '/vault/unlock' : '/db-example/vault';
     const tree = this.router.createUrlTree([path], { queryParams: target });
     const destination = { tree, target };
 

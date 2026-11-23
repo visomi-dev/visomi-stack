@@ -61,7 +61,7 @@ export async function expireAuthentication(email: string): Promise<void> {
 export function vaultUnlockUrl(workspace: string | URL): string {
   const url = new URL(workspace);
 
-  url.pathname += '/unlock';
+  url.pathname = url.pathname.replace(/\/db-example\/vault$/, '/vault/unlock');
 
   return url.href;
 }

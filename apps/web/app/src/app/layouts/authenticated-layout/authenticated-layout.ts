@@ -91,7 +91,7 @@ export class AuthenticatedLayout {
   protected readonly navbarItems = [
     { path: '/home', label: $localize`:@@authHome:Home`, icon: 'M3 10 12 3l9 7v11h-6v-7H9v7H3Z' },
     {
-      path: '/example/vault',
+      path: '/db-example/vault',
       label: $localize`:@@vaultDemoTitle:Vault example`,
       icon: 'M4 5h16v14H4zM8 5v14m8-7h.01M12 12h.01',
     },
@@ -101,7 +101,7 @@ export class AuthenticatedLayout {
     ...(this.examples.enabled()
       ? [
           {
-            path: '/example/cloud',
+            path: '/db-example/cloud',
             label: $localize`:@@cloudExampleTitle:Cloud example`,
             icon: 'M6 18a4 4 0 0 1-.5-8 6.5 6.5 0 0 1 12.5 2.5 2.8 2.8 0 1 1 0 5.5Z',
           },
@@ -125,9 +125,10 @@ export class AuthenticatedLayout {
   readonly action = inject(Action);
 
   readonly vaultMethod = computed(() => {
-    const domain = this.router.lastSuccessfulNavigation()?.finalUrl?.root.children['primary']?.segments[0]?.path;
+    const segments = this.router.lastSuccessfulNavigation()?.finalUrl?.root.children['primary']?.segments;
+    const domain = segments?.[0]?.path;
 
-    if (domain === 'example' || domain === 'db-example') {
+    if (domain === 'db-example' || (domain === 'vault' && segments?.[1]?.path === 'unlock')) {
       return undefined;
     }
 

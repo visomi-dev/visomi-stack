@@ -104,7 +104,7 @@ export class CloudWorkspace {
 
       signal.throwIfAborted();
 
-      await this.router.navigate(['/example/cloud', workspace.tenantId, workspace.scopeId]);
+      await this.router.navigate(['/db-example/cloud', workspace.tenantId, workspace.scopeId]);
     });
   }
 
@@ -197,7 +197,7 @@ export class CloudWorkspace {
     await this.run(async (signal) => {
       const raw = await this.api.cloud(`${sharingPath(target)}/link`, {}, signal);
       const link = linkSchema.parse(raw);
-      const url = new URL(this.location.prepareExternalUrl('/example/cloud/join'), this.document.location.origin);
+      const url = new URL(this.location.prepareExternalUrl('/db-example/cloud/join'), this.document.location.origin);
 
       url.hash = link.token;
       this.shareLink.set(url.href);

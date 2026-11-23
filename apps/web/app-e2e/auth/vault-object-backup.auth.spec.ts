@@ -167,7 +167,7 @@ test('backs up the Vault Example note to private object storage and restores it 
   page.on('request', observe);
   const email = await signup(page);
 
-  await page.goto('/app/en/example/vault');
+  await page.goto('/app/en/db-example/vault');
 
   const panel = page.locator('app-database-example');
 

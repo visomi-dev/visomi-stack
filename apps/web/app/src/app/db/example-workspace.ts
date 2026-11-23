@@ -130,7 +130,7 @@ export class ExampleWorkspace {
 
       this.current(signal);
 
-      await this.router.navigate(['/example/vault'], { queryParams: target });
+      await this.router.navigate(['/db-example/vault'], { queryParams: target });
     });
   }
 
@@ -175,7 +175,7 @@ export class ExampleWorkspace {
       }
 
       if (this.backedSample) {
-        await this.router.navigate(['/example/vault'], { queryParams: { ...target, objectId: target.scopeId } });
+        await this.router.navigate(['/db-example/vault'], { queryParams: { ...target, objectId: target.scopeId } });
       } else {
         const objectId = this.document.defaultView!.crypto.randomUUID();
 
@@ -328,7 +328,7 @@ export class ExampleWorkspace {
   }
 
   private readonly checkBackup = () => {
-    if (this.backedSample && this.vaultReady() && this.route.firstChild?.snapshot.routeConfig?.path !== 'unlock') {
+    if (this.backedSample && this.vaultReady() && this.route.firstChild?.snapshot.data['vaultUnlock'] !== true) {
       this.watchCursor.set(0);
     }
   };
