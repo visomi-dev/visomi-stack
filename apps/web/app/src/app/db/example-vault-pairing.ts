@@ -119,6 +119,10 @@ export class ExampleVaultPairing {
       const raw = await this.api.vault(`${this.path()}/devices/pairing/${requestId}`, undefined, signal);
       const proof = deviceProofSchema.parse(raw);
 
+      if (proof.requestId !== requestId) {
+        throw new VaultError('corrupt');
+      }
+
       signal.throwIfAborted();
       this.reviewProof.set(proof);
     } catch {
