@@ -328,6 +328,39 @@ test('ordinary reload retains the session before and after passkey unlock on Vau
   expect(assertions).toBe(2);
 });
 
+test('ordinary reload retains the session before and after PIN unlock on Vault and Home', async ({ page }, info) => {
+  await setupPinVault(page);
+
+  await saveNote(page);
+
+  const url = page.url().replace('/app/en/', '/app/es/');
+  const unlockUrl = vaultUnlockUrl(url);
+  const pin = page.getByLabel('PIN de desbloqueo local', { exact: true });
+  const editor = page.getByLabel('Tu nota', { exact: true });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await page.goto(unlockUrl);
+
+  await expectAuthenticatedDocument(page, info, unlockUrl, note, () => page.reload());
+
+  await expect(page).toHaveURL(unlockUrl);
+
+  await pin.fill('048261');
+
+  await expect(editor).toHaveValue(note);
+
+  await expectAuthenticatedDocument(page, info, url, note, () => page.reload());
+
+  await expect(page).toHaveURL(unlockUrl);
+
+  await pin.fill('048261');
+
+  await expect(editor).toHaveValue(note);
+
+  await reloadHomeFromOpenVault(page, info, 'Inicio');
+});
+
 test('a directly opened PIN vault stays in the localized shell after hard reload and opens the same note', async ({
   page,
 }, info) => {
@@ -348,10 +381,6 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
 
   await expect(page).toHaveURL(unlockUrl);
 
-  await expectAuthenticatedDocument(page, info, unlockUrl, note, () => page.reload());
-
-  await expect(page).toHaveURL(unlockUrl);
-
   await pin.fill('04826');
 
   await expect(pin).toHaveValue('04826');
@@ -359,14 +388,6 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
   await expect(editor).toHaveCount(0);
 
   await pin.pressSequentially('1');
-
-  await expect(editor).toHaveValue(note);
-
-  await expectAuthenticatedDocument(page, info, url, note, () => page.reload());
-
-  await expect(page).toHaveURL(unlockUrl);
-
-  await pin.fill('048261');
 
   await expect(editor).toHaveValue(note);
 
@@ -418,8 +439,6 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
   } finally {
     await page.context().setOffline(false);
   }
-
-  await reloadHomeFromOpenVault(page, info, 'Inicio');
 });
 
 test('a locked vault links to its device pairing instructions by keyboard', async ({ page }, info) => {
