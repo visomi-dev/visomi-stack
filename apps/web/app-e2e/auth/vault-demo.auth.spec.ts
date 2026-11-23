@@ -165,7 +165,7 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await expect(locked.getByRole('button', { name: 'Use a passkey', exact: true })).toHaveCount(0);
 
-  await expect(locked.getByRole('button', { name: 'Unlock with PIN', exact: true })).toBeVisible();
+  await expect(unlock).toHaveCount(0);
 
   await expect(
     locked.getByText('You’re still signed in. Use your PIN to unlock this vault.', { exact: true }),
@@ -173,19 +173,15 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   const pinWidget = locked.locator('app-pin-input');
   const pinWidth = await pinWidget.boundingBox();
-  const formWidth = await locked.locator('form').boundingBox();
+  const fieldWidth = await locked.locator('app-field').boundingBox();
 
-  expect(pinWidth?.width).toBeCloseTo(formWidth!.width);
+  expect(pinWidth?.width).toBeCloseTo(fieldWidth!.width);
 
   await expect(pinWidget.locator('.slot')).toHaveCount(6);
 
   await pin.focus();
 
   await expect(pin).toBeFocused();
-
-  await page.keyboard.press('Tab');
-
-  await expect(unlock).toBeFocused();
 
   await page.screenshot({ path: info.outputPath('vault-pin-locked-mobile.png'), animations: 'disabled' });
 
@@ -195,15 +191,15 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await pin.fill('048260');
 
-  await unlock.click();
-
   await expect(page.getByRole('status').filter({ hasText: /PIN|encrypted data/i })).toBeVisible();
 
   await expect(page.getByText(note, { exact: true })).toHaveCount(0);
 
-  await pin.fill('048261');
+  await expect(pin).toHaveValue('');
 
-  await unlock.click();
+  await expect(pin).toBeFocused();
+
+  await pin.fill('048261');
 
   await expect(page.getByLabel('Your note', { exact: true })).toHaveValue(note);
 
@@ -241,7 +237,7 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await expect(page).toHaveURL(vaultUnlockUrl(workspace));
 
-  await expect(unlock).toBeVisible();
+  await expect(pin).toBeVisible();
 
   await page.goto('/app/en/db-example/cloud');
 
@@ -779,8 +775,6 @@ test.describe('Vault passkey setup in Chromium', () => {
       await peer.reload();
 
       await pin.fill('208146');
-
-      await peer.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
 
       await expect(peer.getByLabel('Your note', { exact: true })).toHaveValue(note);
     } finally {

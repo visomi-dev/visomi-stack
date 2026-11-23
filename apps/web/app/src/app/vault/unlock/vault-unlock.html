@@ -42,34 +42,24 @@
           Use a passkey
         </button>
       } @else if (workspace.showPin()) {
-        <form class="grid min-w-0 gap-4" (submit)="$event.preventDefault(); workspace.unlockWithPin()">
-          <app-field
-            control-id="vault-pin"
-            label="Local unlock PIN"
-            i18n-label="@@vaultPinLabel"
-            description="6 digits"
-            i18n-description="@@vaultPinLength"
-            description-hidden
-          >
-            <app-pin-input
-              required
-              [digits]="6"
-              [disabled]="workspace.busy()"
-              [value]="workspace.pinDraft()"
-              (valueChange)="workspace.pinDraft.set($event)"
-            />
-          </app-field>
-
-          <button
-            appUI
-            type="submit"
+        <app-field
+          class="min-w-0"
+          control-id="vault-pin"
+          label="Local unlock PIN"
+          i18n-label="@@vaultPinLabel"
+          description="6 digits"
+          i18n-description="@@vaultPinLength"
+          description-hidden
+        >
+          <app-pin-input
+            required
+            [digits]="6"
             [disabled]="workspace.busy()"
-            [attr.aria-busy]="workspace.busy()"
-            i18n="@@vaultPinUnlock"
-          >
-            Unlock with PIN
-          </button>
-        </form>
+            [value]="workspace.pinDraft()"
+            (valueChange)="workspace.pinDraft.set($event)"
+            (completed)="!workspace.busy() && workspace.unlockWithPin()"
+          />
+        </app-field>
       }
     </section>
 

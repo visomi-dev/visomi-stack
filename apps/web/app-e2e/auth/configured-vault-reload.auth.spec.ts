@@ -329,9 +329,13 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
 
   await expect(page).toHaveURL(unlockUrl);
 
-  await pin.fill('048261');
+  await pin.fill('04826');
 
-  await unlock.click();
+  await expect(pin).toHaveValue('04826');
+
+  await expect(editor).toHaveCount(0);
+
+  await pin.pressSequentially('1');
 
   await expect(editor).toHaveValue(note);
 
@@ -342,6 +346,8 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
   await expect(editor).toHaveCount(0);
 
   await expect(locked.getByRole('button', { name: 'Usar passkey', exact: true })).toHaveCount(0);
+
+  await expect(unlock).toHaveCount(0);
 
   await expect(
     locked.getByText('Sigues en tu cuenta. Usa tu PIN para abrir la bóveda.', { exact: true }),
@@ -355,9 +361,10 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
 
   await expect(page.getByRole('button', { name: 'Menú', exact: true })).toBeVisible();
 
-  await pin.fill('048261');
-
-  await unlock.click();
+  await pin.evaluate((element) => {
+    (element as HTMLInputElement).value = '048261';
+    element.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertFromPaste' }));
+  });
 
   await expect(editor).toHaveValue(note);
 
@@ -371,8 +378,6 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
     await expect(page).toHaveURL(unlockUrl);
 
     await pin.fill('048261');
-
-    await unlock.click();
 
     await expect(editor).toHaveValue(note);
 

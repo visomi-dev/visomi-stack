@@ -420,8 +420,6 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await page.getByLabel('Local unlock PIN', { exact: true }).fill(pin);
 
-    await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
-
     await expect(editor).toHaveValue(note);
 
     await recipient.setViewportSize({ width: 390, height: 844 });
