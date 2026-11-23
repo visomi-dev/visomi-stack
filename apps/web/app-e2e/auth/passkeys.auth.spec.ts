@@ -1,8 +1,41 @@
+import type { Page } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
 
-import { expect, test, address, password, logout, expireAuthentication } from './support/fixtures';
+import {
+  expect,
+  test,
+  address,
+  password,
+  logout,
+  expireAuthentication,
+  passkeySignup,
+  virtualPasskey,
+} from './support/fixtures';
 
 type RegistrationOptions = { options: { user: { id: string; name: string; displayName: string } } };
+
+async function signInWithoutRename(page: Page) {
+  const observed = await page.evaluateHandle(() => {
+    let calls = 0;
+    const original = PublicKeyCredential.signalCurrentUserDetails.bind(PublicKeyCredential);
+
+    PublicKeyCredential.signalCurrentUserDetails = (details) => {
+      calls++;
+
+      return original(details);
+    };
+
+    return () => calls;
+  });
+
+  await page.getByRole('button', { name: 'Sign in with a passkey', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
+
+  const calls = await observed.evaluate((count) => count());
+
+  expect(calls).toBe(0);
+}
 
 test('registers and authenticates a real virtual passkey through the browser', async ({ page }) => {
   const cdp = await page.context().newCDPSession(page);
@@ -62,9 +95,7 @@ test('registers and authenticates a real virtual passkey through the browser', a
 
   await logout(page);
 
-  await page.getByRole('button', { name: 'Sign in with a passkey', exact: true }).click();
-
-  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
+  await signInWithoutRename(page);
 
   await page.goto('/app/en/security/passkeys');
 
@@ -123,6 +154,52 @@ test('registers and authenticates a real virtual passkey through the browser', a
   await page.getByRole('button', { name: 'Confirm removal', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Sign-in options', exact: true })).toBeVisible();
+
+  await cdp.detach();
+});
+
+test('sign-in preserves an existing passkey with a historical display name', async ({ page }) => {
+  const { cdp, credentialIds } = await virtualPasskey(page);
+  const legacyLabel = 'Historical synthetic name';
+
+  // Model an older registration's display metadata while keeping the issued user handle and challenge.
+  await page.route(
+    '**/api/auth/passkeys/registration/options',
+    async (route) => {
+      const response = await route.fetch();
+      const body = await response.json();
+
+      body.options.user.name = legacyLabel;
+      body.options.user.displayName = legacyLabel;
+
+      await route.fulfill({ response, json: body });
+    },
+    { times: 1 },
+  );
+
+  await passkeySignup(page);
+
+  const ids = await credentialIds();
+
+  await logout(page);
+
+  let assertions = 0;
+  let renames = 0;
+
+  cdp.on('WebAuthn.credentialAsserted', () => assertions++);
+  cdp.on('WebAuthn.credentialUpdated', ({ credential }) => {
+    if (credential.userName !== legacyLabel || credential.userDisplayName !== legacyLabel) {
+      renames++;
+    }
+  });
+
+  await signInWithoutRename(page);
+
+  expect(assertions).toBe(1);
+  expect(renames).toBe(0);
+  const remaining = await credentialIds();
+
+  expect(remaining).toEqual(ids);
 
   await cdp.detach();
 });

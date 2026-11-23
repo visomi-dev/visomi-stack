@@ -1708,15 +1708,15 @@
       </trans-unit>
       <trans-unit id="vaultLockedHeading" datatype="html">
         <source>Unlock your vault</source>
-        <target>Desbloquea tu bóveda</target>
+        <target>Abre tu bóveda</target>
       </trans-unit>
       <trans-unit id="vaultUnlockPasskeySession" datatype="html">
-        <source>You’re still signed in. Use your passkey to unlock this vault.</source>
-        <target>Sigues en tu cuenta. Usa tu llave de acceso para abrir la bóveda.</target>
+        <source>Use your passkey to view your data.</source>
+        <target>Usa tu llave de acceso para ver tus datos.</target>
       </trans-unit>
       <trans-unit id="vaultUnlockPinSession" datatype="html">
-        <source>You’re still signed in. Use your PIN to unlock this vault.</source>
-        <target>Sigues en tu cuenta. Usa tu PIN para abrir la bóveda.</target>
+        <source>Use your PIN to view your data.</source>
+        <target>Usa tu PIN para ver tus datos.</target>
       </trans-unit>
       <trans-unit id="vaultUsePasskey" datatype="html">
         <source>Use a passkey</source>
@@ -1729,6 +1729,10 @@
       <trans-unit id="vaultLocalRetry" datatype="html">
         <source>Try saving again</source>
         <target>Reintentar guardado</target>
+      </trans-unit>
+      <trans-unit id="vaultUnlockLinkAnotherDevice" datatype="html">
+        <source>Link another device</source>
+        <target>Vincular otro dispositivo</target>
       </trans-unit>
       <trans-unit id="vaultLinkDevice" datatype="html">
         <source>Link a device</source>

@@ -3392,10 +3392,10 @@
         <source>Unlock your vault</source>
       </trans-unit>
       <trans-unit id="vaultUnlockPasskeySession" datatype="html">
-        <source>You’re still signed in. Use your passkey to unlock this vault.</source>
+        <source>Use your passkey to view your data.</source>
       </trans-unit>
       <trans-unit id="vaultUnlockPinSession" datatype="html">
-        <source>You’re still signed in. Use your PIN to unlock this vault.</source>
+        <source>Use your PIN to view your data.</source>
       </trans-unit>
       <trans-unit id="vaultUsePasskey" datatype="html">
         <source>Use a passkey</source>
@@ -3413,6 +3413,9 @@
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">276,277</context>
         </context-group>
+      </trans-unit>
+      <trans-unit id="vaultUnlockLinkAnotherDevice" datatype="html">
+        <source>Link another device</source>
       </trans-unit>
       <trans-unit id="vaultLinkDevice" datatype="html">
         <source>Link a device</source>

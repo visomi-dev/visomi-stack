@@ -20,13 +20,9 @@
         <h1 appUI appNavigationHeading id="locked-vault-heading" i18n="@@vaultLockedHeading">Unlock your vault</h1>
 
         @if (workspace.showPrf()) {
-          <p appUI tone="muted" i18n="@@vaultUnlockPasskeySession">
-            You’re still signed in. Use your passkey to unlock this vault.
-          </p>
+          <p appUI tone="muted" i18n="@@vaultUnlockPasskeySession">Use your passkey to view your data.</p>
         } @else if (workspace.showPin()) {
-          <p appUI tone="muted" i18n="@@vaultUnlockPinSession">
-            You’re still signed in. Use your PIN to unlock this vault.
-          </p>
+          <p appUI tone="muted" i18n="@@vaultUnlockPinSession">Use your PIN to view your data.</p>
         }
       </header>
 
@@ -63,11 +59,13 @@
       }
     </section>
 
-    <div class="text-center">
-      <a appUI routerLink="/security" [queryParams]="workspace.pairingParams()" i18n="@@vaultLinkDevice">
-        Link a device
-      </a>
-    </div>
+    @if (workspace.canPair() && workspace.pairingParams(); as target) {
+      <div class="text-center">
+        <a appUI variant="muted" routerLink="/security" [queryParams]="target" i18n="@@vaultUnlockLinkAnotherDevice">
+          Link another device
+        </a>
+      </div>
+    }
   } @else if (!workspace.notice()) {
     <p role="status" i18n="@@vaultLoading">Loading the vault…</p>
   }

@@ -499,15 +499,13 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     const restoredPanel = recipient.locator('app-database-example');
 
-    await expect(recipient.getByRole('heading', { name: 'Desbloquea tu bóveda', level: 1 })).toBeVisible();
+    await expect(recipient.getByRole('heading', { name: 'Abre tu bóveda', level: 1 })).toBeVisible();
 
     await expect(recipient.getByText(note, { exact: true })).toHaveCount(0);
 
-    const locked = recipient.getByRole('region', { name: 'Desbloquea tu bóveda', exact: true });
+    const locked = recipient.getByRole('region', { name: 'Abre tu bóveda', exact: true });
 
-    await expect(
-      locked.getByText('Sigues en tu cuenta. Usa tu llave de acceso para abrir la bóveda.', { exact: true }),
-    ).toBeVisible();
+    await expect(locked.getByText('Usa tu llave de acceso para ver tus datos.', { exact: true })).toBeVisible();
 
     await locked.getByRole('button', { name: 'Usar passkey', exact: true }).click();
 

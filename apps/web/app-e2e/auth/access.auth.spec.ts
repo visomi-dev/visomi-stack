@@ -188,3 +188,53 @@ test('resets a password without signing in', async ({ page, context }) => {
 
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 });
+
+test('Continue and Try again can return to Home without a passkey ceremony', async ({ page, context }) => {
+  let ceremonies = 0;
+
+  context.on('request', (request) => {
+    if (new URL(request.url()).pathname.startsWith('/api/auth/passkeys/authentication/')) {
+      ceremonies++;
+    }
+  });
+
+  await page.goto('/app/en/home');
+
+  await expect(page.getByRole('button', { name: 'Sign in with a passkey', exact: true })).toBeVisible();
+
+  // Only the second tab has a deliberately unavailable session read.
+  const retryTab = await context.newPage();
+
+  await retryTab.route('**/api/auth/session', (route) => route.abort('failed'));
+
+  await retryTab.goto('/app/en/home');
+
+  const retry = retryTab.getByRole('button', { name: 'Try again', exact: true });
+
+  await expect(retry).toBeVisible();
+
+  const account = await context.newPage();
+
+  await signup(account);
+
+  await page.bringToFront();
+
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
+
+  await retryTab.unroute('**/api/auth/session');
+
+  const [session] = await Promise.all([
+    retryTab.waitForResponse((response) => new URL(response.url()).pathname === '/api/auth/session'),
+    retry.click(),
+  ]);
+
+  expect(session.status()).toBe(200);
+
+  await expect(retryTab.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
+
+  expect(ceremonies).toBe(0);
+});
