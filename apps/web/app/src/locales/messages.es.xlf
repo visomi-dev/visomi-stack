@@ -1206,10 +1206,6 @@
         <source>Local unlock PIN</source>
         <target>PIN de desbloqueo local</target>
       </trans-unit>
-      <trans-unit id="vaultPinUnlock" datatype="html">
-        <source>Unlock with PIN</source>
-        <target>Desbloquear con PIN</target>
-      </trans-unit>
       <trans-unit id="vaultPinConfirm" datatype="html">
         <source>Confirm your new PIN</source>
         <target>Confirma tu nuevo PIN</target>
@@ -1229,22 +1225,6 @@
       <trans-unit id="vaultPanelPinUnlock" datatype="html">
         <source>Unlock with PIN</source>
         <target>Desbloquear con PIN</target>
-      </trans-unit>
-      <trans-unit id="vaultUnlockHeading" datatype="html">
-        <source>Unlock your private resources</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
-          <context context-type="linenumber">7,9</context>
-        </context-group>
-        <target>Desbloquea tus recursos privados</target>
-      </trans-unit>
-      <trans-unit id="vaultUnlockDescription" datatype="html">
-        <source>Unlock the vault to open its private resources. Other vaults may use a different key or PIN. An unlocked vault stays open while you navigate until you lock it or sign out.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
-          <context context-type="linenumber">10,14</context>
-        </context-group>
-        <target>Desbloquea el vault para abrir sus recursos privados. Otros vaults pueden usar otra clave o PIN. Puedes seguir navegando con un vault abierto hasta que lo bloquees o cierres sesión.</target>
       </trans-unit>
       <trans-unit id="vaultSeparation" datatype="html">
         <source>You’re signed in. Unlock this resource separately on this device.</source>
@@ -1729,6 +1709,14 @@
       <trans-unit id="vaultLockedHeading" datatype="html">
         <source>Unlock your vault</source>
         <target>Desbloquea tu bóveda</target>
+      </trans-unit>
+      <trans-unit id="vaultUnlockPasskeySession" datatype="html">
+        <source>You’re still signed in. Use your passkey to unlock this vault.</source>
+        <target>Sigues en tu cuenta. Usa tu llave de acceso para abrir la bóveda.</target>
+      </trans-unit>
+      <trans-unit id="vaultUnlockPinSession" datatype="html">
+        <source>You’re still signed in. Use your PIN to unlock this vault.</source>
+        <target>Sigues en tu cuenta. Usa tu PIN para abrir la bóveda.</target>
       </trans-unit>
       <trans-unit id="vaultUsePasskey" datatype="html">
         <source>Use a passkey</source>

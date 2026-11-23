@@ -45,9 +45,9 @@ it.each([
   '/app/es/home',
   '/home#synthetic',
   '/home\\evil',
-  '/example/cloud/join#synthetic-link',
-  '/example/cloud/join?token=synthetic',
-  '/example/cloud/not-a-tenant/not-a-workspace',
+  '/db-example/cloud/join#synthetic-link',
+  '/db-example/cloud/join?token=synthetic',
+  '/db-example/cloud/not-a-tenant/not-a-workspace',
 ])('rejects unsafe return targets %s', (value) => {
   expect(safeReturnTo(value, '/app/en/')).toBe(value === '/home#synthetic' ? '/home' : null);
 });
@@ -67,15 +67,15 @@ it('preserves only the allowed device review handle', () => {
 });
 
 it('preserves the Cloud return path without putting its link secret in auth URLs', () => {
-  const workspace = '/example/cloud/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222';
+  const workspace = '/db-example/cloud/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222';
 
   expect(safeReturnTo('/app/es' + workspace, '/app/es/')).toBe(workspace);
-  expect(safeReturnTo('/example/cloud/join', '/app/es/')).toBe('/example/cloud/join');
-  expect(safeReturnTo('/example/cloud', '/app/es/')).toBe('/example/cloud');
+  expect(safeReturnTo('/db-example/cloud/join', '/app/es/')).toBe('/db-example/cloud/join');
+  expect(safeReturnTo('/db-example/cloud', '/app/es/')).toBe('/db-example/cloud');
 });
 
 it('preserves the Vault note destination and accepts only its three opaque identifiers', () => {
-  const workspace = '/example/vault';
+  const workspace = '/db-example/vault';
   const query =
     'tenantId=11111111-1111-4111-8111-111111111111&scopeId=22222222-2222-4222-8222-222222222222&objectId=33333333-3333-4333-8333-333333333333';
 
@@ -86,6 +86,9 @@ it('preserves the Vault note destination and accepts only its three opaque ident
   expect(safeReturnTo(`${workspace}?${query.replace('-4222-', '-0222-')}`, '/app/es/')).toBeNull();
   expect(safeReturnTo(`${workspace}?${query}#synthetic`, '/app/es/')).toBeNull();
   expect(safeReturnTo(`${workspace}?tenantId=missing`, '/app/es/')).toBeNull();
+  expect(safeReturnTo(`/app/es/vault/unlock?${query}`, '/app/es/')).toBe(`${workspace}?${query}`);
+  expect(safeReturnTo(`/vault/unlock?${query}&returnTo=https://evil.example`, '/app/es/')).toBeNull();
+  expect(safeReturnTo('/vault/unlock', '/app/es/')).toBeNull();
 });
 
 it('guards share loaded state and distinguish identity from full access', async () => {

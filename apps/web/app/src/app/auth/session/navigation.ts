@@ -6,7 +6,7 @@ import { Session } from './session';
 import type { SessionSnapshot } from './models';
 
 const uuidPathSegment = '[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}';
-const cloudReturnPath = new RegExp(`^/example/cloud(?:/(?:join|${uuidPathSegment}/${uuidPathSegment}))?$`);
+const cloudReturnPath = new RegExp(`^/db-example/cloud(?:/(?:join|${uuidPathSegment}/${uuidPathSegment}))?$`);
 const vaultReturnUuid =
   /^(?:[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/i;
 
@@ -45,9 +45,11 @@ export function safeReturnTo(value: string | null, base: string): string | null 
 
   const pathname = path.split(/[?#]/, 1)[0];
 
-  if (pathname === '/example/vault') {
+  const vaultPath = '/db-example/vault';
+
+  if (pathname === vaultPath || pathname === '/vault/unlock') {
     if (path === pathname) {
-      return pathname;
+      return pathname === vaultPath ? vaultPath : null;
     }
 
     const { hash, searchParams } = new URL(path, 'https://internal.invalid');
@@ -58,7 +60,7 @@ export function safeReturnTo(value: string | null, base: string): string | null 
     };
 
     return !hash && searchParams.size === 3 && Object.values(target).every((id) => vaultReturnUuid.test(id))
-      ? `${pathname}?${new URLSearchParams(target)}`
+      ? `${vaultPath}?${new URLSearchParams(target)}`
       : null;
   }
 

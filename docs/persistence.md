@@ -67,7 +67,7 @@ the compiled Example API capability before composing with authentication. See th
 [example guide](persistence-examples.md) for storage requirements and the current
 frontend routes.
 
-The technical hybrid harness still lives at `/app/{en,es}/persistence` in the
+The technical hybrid harness lives at `/app/{en,es}/db-example` in the
 explicitly opted-in development/test profile. It exercises two storage modes and
 browser lifecycle, while the production-capable Example domain exposes the
 separate user-facing Vault and Cloud modes. The harness uses `/example/vault`

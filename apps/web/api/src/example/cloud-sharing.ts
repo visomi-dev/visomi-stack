@@ -198,7 +198,7 @@ export function registerCloudSharing(router: Router, access: Access, auth: AuthR
 
         hint(notification.userId);
         const url = new URL(
-          `/app/${body.locale}/example/cloud/${params.tenantId}/${params.scopeId}`,
+          `/app/${body.locale}/db-example/cloud/${params.tenantId}/${params.scopeId}`,
           auth.config.origin,
         );
         const subject =

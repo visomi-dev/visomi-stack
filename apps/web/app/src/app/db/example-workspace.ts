@@ -16,6 +16,7 @@ import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { vaultMessage } from '../shared/vault/vault-messages';
 import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
 
+import { VaultExampleNavigation } from './example/vault/vault-example-navigation';
 import { VaultNoteDraft } from './vault-note-draft';
 import { ExamplePrivateResource } from './example-private-resource';
 import { ExampleVaultWorkspaces } from './example-vault-workspaces';
@@ -42,6 +43,7 @@ export class ExampleWorkspace {
   private readonly destroyRef = inject(DestroyRef);
   private readonly realtime = inject(BrowserRealtimeSession, { optional: true });
   private readonly syncStatus = inject(VaultSyncStatus);
+  private readonly vaultView = inject(VaultExampleNavigation);
 
   private readonly rendered = signal(false);
   private readonly configured = signal(false);
@@ -64,12 +66,7 @@ export class ExampleWorkspace {
   private readonly ownerId = this.session.user()?.id;
   private readonly version = this.session.operationVersion();
   private readonly cloud = signal<z.infer<typeof cloudSchema>['items'][number] | null>(null);
-
-  private removeNavigationCancel: (() => void) | undefined;
-  private readonly cleanup = this.destroyRef.onDestroy(() => {
-    this.removeNavigationCancel?.();
-    this.reset();
-  });
+  private readonly cleanup = this.destroyRef.onDestroy(() => this.reset());
 
   private navigationSignal: AbortSignal | undefined;
   private controller = new AbortController();
@@ -87,14 +84,7 @@ export class ExampleWorkspace {
   readonly editor = new VaultNoteDraft(this.document, this.privateResource, this.syncStatus);
   readonly busy = this.busyState.asReadonly();
   readonly editorReadOnly = computed(() => this.busy() || this.editor.readOnly());
-  readonly available = computed(
-    () =>
-      this.configured() &&
-      !this.navigation.active() &&
-      this.session.full() &&
-      this.session.user()?.id === this.ownerId &&
-      this.session.operationVersion() === this.version,
-  );
+  readonly available = computed(() => this.configured() && !this.navigation.active() && this.sameSession());
 
   readonly vault = this.privateResource.vault;
 
@@ -129,6 +119,7 @@ export class ExampleWorkspace {
     return this.backedSample && target ? { ...target, sample: 'vault-backup' } : target;
   });
 
+  readonly bindingLoaded = this.methodLoaded.asReadonly();
   readonly workspaces = this.workspaceDirectory.page;
   readonly notice = this.noticeState.asReadonly();
   readonly target = this.targetState.asReadonly();
@@ -139,7 +130,7 @@ export class ExampleWorkspace {
 
       this.current(signal);
 
-      await this.router.navigate(['/example/vault'], { queryParams: target });
+      await this.router.navigate(['/db-example/vault'], { queryParams: target });
     });
   }
 
@@ -184,11 +175,11 @@ export class ExampleWorkspace {
       }
 
       if (this.backedSample) {
-        await this.router.navigate(['/example/vault'], { queryParams: { ...target, objectId: target.scopeId } });
+        await this.router.navigate(['/db-example/vault'], { queryParams: { ...target, objectId: target.scopeId } });
       } else {
         const objectId = this.document.defaultView!.crypto.randomUUID();
 
-        await this.router.navigate(['/persistence', target.tenantId, target.scopeId, objectId]);
+        await this.router.navigate(['/db-example', target.tenantId, target.scopeId, objectId]);
       }
     });
   }
@@ -337,7 +328,7 @@ export class ExampleWorkspace {
   }
 
   private readonly checkBackup = () => {
-    if (this.backedSample && this.vaultReady()) {
+    if (this.backedSample && this.vaultReady() && this.route.firstChild?.snapshot.data['vaultUnlock'] !== true) {
       this.watchCursor.set(0);
     }
   };
@@ -390,6 +381,14 @@ export class ExampleWorkspace {
     this.cloudDraft.set(value?.body ?? '');
   }
 
+  private sameSession(): boolean {
+    return (
+      this.session.full() &&
+      this.session.operationVersion() === this.version &&
+      this.session.user()?.id === this.ownerId
+    );
+  }
+
   private current(signal: AbortSignal): void {
     if (
       signal.aborted ||
@@ -397,17 +396,21 @@ export class ExampleWorkspace {
       this.navigationSignal?.aborted ||
       this.navigationSignal !== this.navigation.context().cancellation ||
       this.navigation.active() ||
-      !this.session.full() ||
-      this.session.operationVersion() !== this.version ||
-      this.session.user()?.id !== this.ownerId
+      !this.sameSession()
     ) {
       throw new VaultError('stale-operation');
     }
   }
 
-  private reset(): void {
+  private reset(preserveTarget = false): void {
     this.controller.abort();
     this.controller = new AbortController();
+    this.noticeState.set('');
+
+    if (preserveTarget) {
+      return;
+    }
+
     this.privateResource.close();
     this.vault.release();
     this.binding.set(null);
@@ -425,7 +428,6 @@ export class ExampleWorkspace {
     this.pinDraft.set('');
     this.pinConfirmation.set('');
     this.pinSetupSelected.set(false);
-    this.noticeState.set('');
     this.busyState.set(false);
 
     if (this.backedSample) {
@@ -488,11 +490,7 @@ export class ExampleWorkspace {
       }
     }
 
-    if (
-      !this.session.full() ||
-      this.session.operationVersion() !== this.version ||
-      this.session.user()?.id !== this.ownerId
-    ) {
+    if (!this.sameSession()) {
       untracked(() => this.reset());
     }
   });
@@ -540,48 +538,49 @@ export class ExampleWorkspace {
     }
   });
 
-  private readonly routeChanged = effect(() => {
+  private readonly routeChanged = effect((onCleanup) => {
     const params = this.params();
     const rendered = this.rendered();
     const navigating = this.navigation.active();
     const context = this.navigation.context();
 
     untracked(() => {
-      this.reset();
-      this.removeNavigationCancel?.();
+      this.reset(this.vaultView.preservesTarget(context.id));
       this.navigationSignal = context.cancellation;
-      const cancel = () => this.reset();
+      const cancel = () => this.reset(this.vaultView.acceptView(this.target(), !this.busy() && this.sameSession()));
 
       context.cancellation.addEventListener('abort', cancel, { once: true });
-      this.removeNavigationCancel = () => context.cancellation.removeEventListener('abort', cancel);
+      onCleanup(() => context.cancellation.removeEventListener('abort', cancel));
 
       if (!rendered || navigating || context.cancellation.aborted) {
         return;
       }
 
       void this.run(async (signal) => {
-        const raw = await this.api.vault('/policy', undefined, signal);
+        let profile = this.profile;
 
-        this.current(signal);
-        const profile = readExampleProfile(raw, this.document.defaultView?.location.origin);
+        if (!profile) {
+          const raw = await this.api.vault('/policy', undefined, signal);
 
-        if (!this.backedSample && !profile.hybridHarness) {
-          return;
+          this.current(signal);
+          profile = readExampleProfile(raw, this.document.defaultView?.location.origin);
+
+          if (!this.backedSample && !profile.hybridHarness) {
+            return;
+          }
+
+          this.profile = profile;
+          this.objectBackups.set(profile.objectBackups === true);
+          this.targetState.set(readExampleTarget(params));
+          this.configured.set(true);
         }
 
-        const target = readExampleTarget(params);
-
-        this.profile = profile;
-        this.objectBackups.set(profile.objectBackups === true);
-        this.targetState.set(target);
-        this.configured.set(true);
-
-        if (!target && this.backedSample) {
-          await this.workspaceDirectory.load(signal);
-        }
+        const target = this.target();
 
         if (target) {
-          await this.loadBinding(target, signal);
+          if (!this.bindingLoaded()) {
+            await this.loadBinding(target, signal);
+          }
 
           this.current(signal);
 
@@ -596,6 +595,8 @@ export class ExampleWorkspace {
           if (!this.backedSample) {
             await this.loadCloud(target, signal);
           }
+        } else if (this.backedSample) {
+          await this.workspaceDirectory.load(signal);
         }
       });
     });

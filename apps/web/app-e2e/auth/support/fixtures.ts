@@ -58,6 +58,14 @@ export async function expireAuthentication(email: string): Promise<void> {
   }
 }
 
+export function vaultUnlockUrl(workspace: string | URL): string {
+  const url = new URL(workspace);
+
+  url.pathname = url.pathname.replace(/\/db-example\/vault$/, '/vault/unlock');
+
+  return url.href;
+}
+
 export async function expireSession(email: string): Promise<void> {
   const pool = await isolatedPool();
 
@@ -89,6 +97,32 @@ export async function passkeySignup(page: Page, email = address()): Promise<stri
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
   return email;
+}
+
+export async function virtualPasskey(page: Page, hasPrf = true) {
+  const cdp = await page.context().newCDPSession(page);
+
+  await cdp.send('WebAuthn.enable');
+
+  const { authenticatorId } = await cdp.send('WebAuthn.addVirtualAuthenticator', {
+    options: {
+      protocol: 'ctap2',
+      transport: 'internal',
+      hasResidentKey: true,
+      hasUserVerification: true,
+      isUserVerified: true,
+      automaticPresenceSimulation: true,
+      hasPrf,
+    },
+  });
+
+  const credentialIds = async () => {
+    const result = await cdp.send('WebAuthn.getCredentials', { authenticatorId });
+
+    return result.credentials.map(({ credentialId }) => credentialId);
+  };
+
+  return { cdp, credentialIds };
 }
 
 async function resetLimits(): Promise<void> {

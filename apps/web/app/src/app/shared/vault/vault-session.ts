@@ -143,31 +143,6 @@ export class VaultSession {
     }
   }
 
-  async discover(): Promise<void> {
-    const ownerId = this.session.user()?.id;
-
-    if (!ownerId) {
-      throw new VaultError('locked');
-    }
-
-    const session = this.identity(ownerId);
-    const storage = await this.database.vault(ownerId, session.signal);
-
-    try {
-      const bindings = await storage.latestBindings(ownerId);
-
-      if (!this.current(this.epoch, session)) {
-        throw new VaultError('stale-operation');
-      }
-
-      const resources = bindings.filter((binding) => binding.key.domain !== 'device-custody');
-
-      this.catalog.update((current) => latestBindings(current, resources));
-    } finally {
-      storage.close();
-    }
-  }
-
   deviceUnlock(binding: WrappingContext, rpId: string, signal: AbortSignal) {
     const session = this.identity(binding.ownerId);
     const cancellation = AbortSignal.any([session.signal, signal, this.locked.signal]);

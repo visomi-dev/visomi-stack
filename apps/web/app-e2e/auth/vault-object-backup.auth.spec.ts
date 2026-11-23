@@ -9,7 +9,7 @@ import { serializeDataEnvelope, syncWriteSchema, type DataEnvelope } from '@viso
 import { Pool } from 'pg';
 import { io } from 'socket.io-client';
 
-import { expect, test, signup, passwordStart } from './support/fixtures';
+import { expect, test, signup, passwordStart, vaultUnlockUrl } from './support/fixtures';
 
 // The paired recipient uses Chromium's native virtual WebAuthn authenticator.
 // eslint-disable-next-line playwright/no-skipped-test
@@ -167,7 +167,7 @@ test('backs up the Vault Example note to private object storage and restores it 
   page.on('request', observe);
   const email = await signup(page);
 
-  await page.goto('/app/en/example/vault');
+  await page.goto('/app/en/db-example/vault');
 
   const panel = page.locator('app-database-example');
 
@@ -285,6 +285,14 @@ test('backs up the Vault Example note to private object storage and restores it 
     await expect(outsider.getByText('This account doesn’t have access to the backup workspace.')).toBeVisible();
 
     await expect(outsider.getByRole('button', { name: 'Download and restore note' })).toHaveCount(0);
+
+    await outsider.goto(vaultUnlockUrl(workspace));
+
+    await expect(outsider.getByText('This account doesn’t have access to the backup workspace.')).toBeVisible();
+
+    await expect(outsider.getByRole('button', { name: 'Use a passkey', exact: true })).toHaveCount(0);
+
+    await expect(outsider.getByLabel('Your note', { exact: true })).toHaveCount(0);
 
     await passwordStart(recipient, email);
 
@@ -410,9 +418,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await page.goto(workspace.href);
 
-    await panel.getByLabel('Local unlock PIN', { exact: true }).fill(pin);
-
-    await panel.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
+    await page.getByLabel('Local unlock PIN', { exact: true }).fill(pin);
 
     await expect(editor).toHaveValue(note);
 
@@ -469,7 +475,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await recipient.evaluate(() => window.dispatchEvent(new Event('pagehide')));
 
-    await expect(peerPanel.getByRole('button', { name: 'Use a passkey' })).toBeVisible();
+    await expect(recipient.getByRole('button', { name: 'Use a passkey' })).toBeVisible();
 
     await publishNote(page, offlineNote);
 
@@ -479,7 +485,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     expect(hints).toEqual([['vault:changed', 2]]);
 
-    await peerPanel.getByRole('button', { name: 'Use a passkey' }).click();
+    await recipient.getByRole('button', { name: 'Use a passkey' }).click();
 
     await expect(draft).toHaveValue(offlineNote);
 
@@ -493,11 +499,15 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     const restoredPanel = recipient.locator('app-database-example');
 
-    await expect(recipient.getByRole('heading', { name: 'Ejemplo de bóveda', level: 1 })).toBeVisible();
+    await expect(recipient.getByRole('heading', { name: 'Desbloquea tu bóveda', level: 1 })).toBeVisible();
 
     await expect(recipient.getByText(note, { exact: true })).toHaveCount(0);
 
-    const locked = restoredPanel.getByRole('region', { name: 'Desbloquea tu bóveda', exact: true });
+    const locked = recipient.getByRole('region', { name: 'Desbloquea tu bóveda', exact: true });
+
+    await expect(
+      locked.getByText('Sigues en tu cuenta. Usa tu llave de acceso para abrir la bóveda.', { exact: true }),
+    ).toBeVisible();
 
     await locked.getByRole('button', { name: 'Usar passkey', exact: true }).click();
 

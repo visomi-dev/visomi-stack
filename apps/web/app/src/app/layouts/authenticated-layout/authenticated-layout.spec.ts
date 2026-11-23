@@ -8,7 +8,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import type { SessionSnapshot } from '../../auth/session/models';
 import { Session } from '../../auth/session/session';
 import { BackupCodes } from '../../auth/totp/backup-codes/backup-codes';
-import { Vaults } from '../../shared/vault/vaults';
+import { VaultSession } from '../../shared/vault/vault-session';
 
 import { AuthenticatedLayout } from './authenticated-layout';
 
@@ -80,21 +80,17 @@ it('recreates private routed content only when the account identity changes', as
 @Component({ selector: 'app-vault-route-fixture', template: '<h1>Fixture route</h1>' })
 class VaultRouteFixture {}
 
-it('keeps route exclusions in the shell and reuses the shared prompt during SPA navigation', async () => {
+it('offers to lock an open vault in the account menu', async () => {
   const user = signal({
     id: '11111111-1111-4111-8111-111111111111',
     email: 'synthetic@example.test',
     emailVerified: true,
   });
-  const access = {
-    show: signal(true),
-    binding: () => ({ method: 'pin-argon2id' as const }),
-    busy: signal(false),
-    pin: signal(''),
-    notice: signal(''),
-    unlock: vi.fn(),
-    lock: vi.fn(),
-    vault: { knownBindings: signal([]) },
+  const resumable = signal(false);
+  const vault = {
+    knownBindings: () => [{}],
+    canResume: resumable,
+    lock: vi.fn(() => resumable.set(false)),
   };
 
   TestBed.configureTestingModule({
@@ -106,7 +102,6 @@ it('keeps route exclusions in the shell and reuses the shared prompt during SPA 
           component: AuthenticatedLayout,
           children: [
             { path: 'home', component: VaultRouteFixture },
-            { path: 'persistence', component: VaultRouteFixture },
             { path: 'account', component: VaultRouteFixture },
           ],
         },
@@ -124,25 +119,24 @@ it('keeps route exclusions in the shell and reuses the shared prompt during SPA 
     ],
   });
 
-  TestBed.overrideComponent(AuthenticatedLayout, { add: { providers: [{ provide: Vaults, useValue: access }] } });
+  TestBed.overrideProvider(VaultSession, { useValue: vault });
 
   const harness = await RouterTestingHarness.create('/home');
-  const layout = harness.fixture.debugElement.query(By.directive(AuthenticatedLayout)).componentInstance;
+  const lockButtons = () =>
+    [...(harness.routeNativeElement?.querySelectorAll('button') ?? [])].filter(
+      (button) => button.textContent?.trim() === 'Lock vault now',
+    );
 
-  expect(harness.routeNativeElement?.querySelector('#workspace-vault-pin')).not.toBeNull();
-
-  await harness.navigateByUrl('/persistence');
-
-  expect(harness.fixture.debugElement.query(By.directive(AuthenticatedLayout)).componentInstance).toBe(layout);
-  expect(harness.routeNativeElement?.querySelector('#workspace-vault-pin')).toBeNull();
-
-  await harness.navigateByUrl('/account');
-
-  expect(harness.routeNativeElement?.querySelector('#workspace-vault-pin')).not.toBeNull();
-  access.show.set(false);
+  expect(lockButtons()).toHaveLength(0);
+  resumable.set(true);
 
   await harness.fixture.whenStable();
 
-  expect(harness.routeNativeElement?.querySelector('#workspace-vault-pin')).toBeNull();
-  expect(access.unlock).not.toHaveBeenCalled();
+  expect(lockButtons().length).toBeGreaterThan(0);
+  lockButtons()[0].click();
+
+  await harness.fixture.whenStable();
+
+  expect(vault.lock).toHaveBeenCalledOnce();
+  expect(lockButtons()).toHaveLength(0);
 });

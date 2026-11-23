@@ -1,3 +1,7 @@
+@if (workspace.backedSample) {
+  <h1 appUI appNavigationHeading class="mx-auto w-full max-w-xl" i18n="@@vaultDemoTitle">Vault example</h1>
+}
+
 <section
   class="space-y-8 py-6"
   [class.max-w-3xl]="!workspace.backedSample"
@@ -113,59 +117,7 @@
       Create a test workspace
     </button>
   } @else if (configuredVaultLocked) {
-    <section appUI="card" padding="lg" class="mx-auto w-full max-w-sm" aria-labelledby="locked-vault-heading">
-      <header class="grid justify-items-center gap-3 text-center">
-        <svg
-          class="size-8"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <rect x="5" y="10" width="14" height="11" rx="2" />
-
-          <path d="M8 10V7a4 4 0 1 1 8 0v3m-4 4v3" />
-        </svg>
-
-        <h2 appUI id="locked-vault-heading" i18n="@@vaultLockedHeading">Unlock your vault</h2>
-      </header>
-
-      @if (workspace.showPrf()) {
-        <button
-          appUI
-          type="button"
-          [disabled]="workspace.busy()"
-          [attr.aria-busy]="workspace.busy()"
-          (click)="workspace.unlock()"
-          i18n="@@vaultUsePasskey"
-        >
-          Use a passkey
-        </button>
-      } @else if (workspace.showPin()) {
-        <form class="grid min-w-0 gap-4" (submit)="$event.preventDefault(); workspace.unlockWithPin()">
-          <ng-container [ngTemplateOutlet]="localPin" />
-
-          <button
-            appUI
-            type="submit"
-            [disabled]="workspace.busy()"
-            [attr.aria-busy]="workspace.busy()"
-            i18n="@@vaultPinUnlock"
-          >
-            Unlock with PIN
-          </button>
-        </form>
-      }
-    </section>
-
-    @if (workspace.canPair()) {
-      <div class="text-center">
-        <ng-container [ngTemplateOutlet]="linkDevice" />
-      </div>
-    }
+    <p role="status" i18n="@@vaultLoading">Loading the vault…</p>
   } @else {
     @if (!workspace.backedSample) {
       <section class="space-y-4 rounded-xl border p-5">
@@ -296,49 +248,30 @@
         (!workspace.backedSample ||
           (workspace.canInitialize() && (workspace.pinSetupSelected() || workspace.resumingPinSetup())))
       ) {
-        <form
-          class="space-y-4"
-          (submit)="
-            $event.preventDefault(); workspace.unlockWithPin(workspace.backedSample && workspace.canInitialize())
-          "
-        >
+        <div class="space-y-4">
           <p appUI tone="muted" i18n="@@vaultPinWarning">
             If passkeys aren’t supported, you can use a 6-digit PIN. Anyone with a copy of your encrypted data can try
             every PIN offline, so a PIN offers less protection. Setup requires a connection. After setup, you can unlock
             offline if you’re already signed in.
           </p>
 
-          <ng-container [ngTemplateOutlet]="localPin" />
+          @if (workspace.backedSample) {
+            <form class="space-y-4" (submit)="$event.preventDefault(); workspace.unlockWithPin(true)">
+              <ng-container [ngTemplateOutlet]="localPin" />
 
-          @if (workspace.backedSample && workspace.canInitialize()) {
-            @if (!workspace.resumingPinSetup()) {
-              <app-field control-id="vault-pin-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
-                <app-pin-input
-                  required
-                  [digits]="6"
-                  [disabled]="workspace.busy()"
-                  [value]="workspace.pinConfirmation()"
-                  (valueChange)="workspace.pinConfirmation.set($event)"
-                />
-              </app-field>
-            }
+              @if (!workspace.resumingPinSetup()) {
+                <ng-container [ngTemplateOutlet]="confirmPin" />
+              }
 
-            <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinSetup">Set up with PIN</button>
+              <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinSetup">Set up with PIN</button>
+            </form>
           } @else {
-            <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@vaultPinUnlock">Unlock with PIN</button>
+            <ng-container [ngTemplateOutlet]="localPin" />
           }
-        </form>
+        </div>
 
         @if (!workspace.backedSample && workspace.canInitialize()) {
-          <app-field control-id="vault-pin-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
-            <app-pin-input
-              required
-              [digits]="6"
-              [disabled]="workspace.busy()"
-              [value]="workspace.pinConfirmation()"
-              (valueChange)="workspace.pinConfirmation.set($event)"
-            />
-          </app-field>
+          <ng-container [ngTemplateOutlet]="confirmPin" />
 
           <button
             appUI
@@ -512,11 +445,25 @@
     i18n-description="@@vaultPinLength"
   >
     <app-pin-input
+      #localPinControl
       required
       [digits]="6"
       [disabled]="workspace.busy()"
       [value]="workspace.pinDraft()"
       (valueChange)="workspace.pinDraft.set($event)"
+      (completed)="autoUnlockPin() && !workspace.busy() && workspace.unlockWithPin()"
+    />
+  </app-field>
+</ng-template>
+
+<ng-template #confirmPin>
+  <app-field control-id="vault-pin-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
+    <app-pin-input
+      required
+      [digits]="6"
+      [disabled]="workspace.busy()"
+      [value]="workspace.pinConfirmation()"
+      (valueChange)="workspace.pinConfirmation.set($event)"
     />
   </app-field>
 </ng-template>

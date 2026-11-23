@@ -56,17 +56,17 @@ test('shows distinct Cloud and Vault workspace labels when their tenant and date
     route.fulfill({ json: { items, next: null } }),
   );
 
-  await page.goto('/app/en/example/cloud');
+  await page.goto('/app/en/db-example/cloud');
 
   for (const scopeId of scopeIds) {
     const link = page.getByRole('link', { name: new RegExp(`Open workspace.*ID ${scopeId}`) });
 
     await expect(link).toBeVisible();
 
-    await expect(link).toHaveAttribute('href', `/app/en/example/cloud/${tenantId}/${scopeId}`);
+    await expect(link).toHaveAttribute('href', `/app/en/db-example/cloud/${tenantId}/${scopeId}`);
   }
 
-  await page.goto('/app/en/example/vault');
+  await page.goto('/app/en/db-example/vault');
 
   for (const scopeId of scopeIds) {
     await expect(page.getByRole('button', { name: new RegExp(`Open vault.*ID ${scopeId}`) })).toBeVisible();
@@ -94,7 +94,7 @@ test('Cloud updates permitted readers in realtime and clears notes after revocat
 
     await page.locator('app-sidebar').getByRole('link', { name: 'Cloud example', exact: true }).click();
 
-    await expect(page).toHaveURL(/\/app\/en\/example\/cloud$/);
+    await expect(page).toHaveURL(/\/app\/en\/db-example\/cloud$/);
 
     await expect(page.getByRole('heading', { name: 'Cloud example', exact: true })).toBeVisible();
 
@@ -260,7 +260,7 @@ test('opens a sharing link after sign-in and grants only read access to shared n
 
   await signup(page);
 
-  await page.goto('/app/en/example/cloud');
+  await page.goto('/app/en/db-example/cloud');
 
   await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
 

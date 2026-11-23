@@ -3,10 +3,10 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
-import { BrowserRealtimeSession } from '../../auth/session/browser-realtime-session';
-import { DatabaseHttp } from '../../shared/db/http';
-import { ExampleAvailability } from '../example-availability';
-import type { ExampleWorkspacePage } from '../example-contracts';
+import { BrowserRealtimeSession } from '../../../auth/session/browser-realtime-session';
+import { DatabaseHttp } from '../../../shared/db/http';
+import { ExampleAvailability } from '../../example-availability';
+import type { ExampleWorkspacePage } from '../../example-contracts';
 
 import { CloudWorkspace } from './cloud-workspace';
 

@@ -10,33 +10,9 @@ import {
   signup,
   passwordStart,
   test,
+  vaultUnlockUrl,
+  virtualPasskey,
 } from './support/fixtures';
-
-async function virtualPasskey(page: Page, hasPrf = true) {
-  const cdp = await page.context().newCDPSession(page);
-
-  await cdp.send('WebAuthn.enable');
-
-  const { authenticatorId } = await cdp.send('WebAuthn.addVirtualAuthenticator', {
-    options: {
-      protocol: 'ctap2',
-      transport: 'internal',
-      hasResidentKey: true,
-      hasUserVerification: true,
-      isUserVerified: true,
-      automaticPresenceSimulation: true,
-      hasPrf,
-    },
-  });
-
-  const credentialIds = async () => {
-    const result = await cdp.send('WebAuthn.getCredentials', { authenticatorId });
-
-    return result.credentials.map(({ credentialId }) => credentialId);
-  };
-
-  return { cdp, credentialIds };
-}
 
 async function legacyPasskeySignup(page: Page) {
   // Recreate the registration options shipped in 463ab0b on a PRF-capable authenticator.
@@ -70,7 +46,7 @@ test('opens the Vault navigation item without offering a separate vault when the
 }) => {
   await page.route('**/api/example/{vault,cloud}/policy', (route) => route.fulfill({ status: 404 }));
 
-  await page.goto('/app/en/example/vault');
+  await page.goto('/app/en/db-example/vault');
 
   await expect(page).toHaveURL(/\/auth\/sign-in/);
 
@@ -84,7 +60,7 @@ test('opens the Vault navigation item without offering a separate vault when the
 
   await primary.getByRole('link', { name: 'Vault example', exact: true }).click();
 
-  await expect(page).toHaveURL(/\/example\/vault$/);
+  await expect(page).toHaveURL(/\/db-example\/vault$/);
 
   await expect(page.getByRole('heading', { name: 'Vault example', level: 1 })).toBeVisible();
 
@@ -111,7 +87,7 @@ test('shows an unavailable backup state in Spanish without enabling another stor
 
   await signup(page);
 
-  await page.goto('/app/es/example/vault');
+  await page.goto('/app/es/db-example/vault');
 
   const heading = page.getByRole('heading', { level: 1, name: /bóveda|vault/i });
 
@@ -131,7 +107,7 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   const email = await signup(page);
 
-  await page.goto('/app/en/example/vault');
+  await page.goto('/app/en/db-example/vault');
 
   const setup = page.getByRole('button', { name: 'Set up my vault', exact: true });
   const pinOption = page.getByRole('button', { name: 'Use a PIN on this device', exact: true });
@@ -177,7 +153,7 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await page.reload();
 
-  await expect(page).toHaveURL(workspace);
+  await expect(page).toHaveURL(vaultUnlockUrl(workspace));
 
   const locked = page.getByRole('region', { name: 'Unlock your vault', exact: true });
 
@@ -189,23 +165,23 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await expect(locked.getByRole('button', { name: 'Use a passkey', exact: true })).toHaveCount(0);
 
-  await expect(locked.getByRole('button', { name: 'Unlock with PIN', exact: true })).toBeVisible();
+  await expect(unlock).toHaveCount(0);
+
+  await expect(
+    locked.getByText('You’re still signed in. Use your PIN to unlock this vault.', { exact: true }),
+  ).toBeVisible();
 
   const pinWidget = locked.locator('app-pin-input');
   const pinWidth = await pinWidget.boundingBox();
-  const formWidth = await locked.locator('form').boundingBox();
+  const fieldWidth = await locked.locator('app-field').boundingBox();
 
-  expect(pinWidth?.width).toBeCloseTo(formWidth!.width);
+  expect(pinWidth?.width).toBeCloseTo(fieldWidth!.width);
 
   await expect(pinWidget.locator('.slot')).toHaveCount(6);
 
   await pin.focus();
 
   await expect(pin).toBeFocused();
-
-  await page.keyboard.press('Tab');
-
-  await expect(unlock).toBeFocused();
 
   await page.screenshot({ path: info.outputPath('vault-pin-locked-mobile.png'), animations: 'disabled' });
 
@@ -215,15 +191,15 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await pin.fill('048260');
 
-  await unlock.click();
-
   await expect(page.getByRole('status').filter({ hasText: /PIN|encrypted data/i })).toBeVisible();
 
   await expect(page.getByText(note, { exact: true })).toHaveCount(0);
 
-  await pin.fill('048261');
+  await expect(pin).toHaveValue('');
 
-  await unlock.click();
+  await expect(pin).toBeFocused();
+
+  await pin.fill('048261');
 
   await expect(page.getByLabel('Your note', { exact: true })).toHaveValue(note);
 
@@ -259,11 +235,11 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await page.getByLabel('Verification code', { exact: true }).fill(code);
 
-  await expect(page).toHaveURL(workspace);
+  await expect(page).toHaveURL(vaultUnlockUrl(workspace));
 
-  await expect(unlock).toBeVisible();
+  await expect(pin).toBeVisible();
 
-  await page.goto('/app/en/example/cloud');
+  await page.goto('/app/en/db-example/cloud');
 
   await expect(page.getByRole('button', { name: 'Create a test workspace' })).toBeVisible();
 
@@ -282,7 +258,7 @@ test.describe('Vault passkey setup in Chromium', () => {
     await passkeySignup(page);
 
     const registered = await credentialIds();
-    const directory = '/app/en/example/vault';
+    const directory = '/app/en/db-example/vault';
     const resume = page.getByRole('button', { name: 'Continue vault setup', exact: true });
     const open = page.getByRole('button', { name: /^Open vault/ });
     const passkey = page.getByRole('button', { name: 'Set up with a passkey', exact: true });
@@ -378,11 +354,16 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await open.click();
 
-    await expect(page).toHaveURL(workspace);
+    await expect(page).toHaveURL(vaultUnlockUrl(workspace));
 
     await expect(page.getByRole('heading', { name: 'Unlock your vault' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Use a passkey', exact: true }).click();
+    const [firstPull] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith('/sync/pull')),
+      page.getByRole('button', { name: 'Use a passkey', exact: true }).click(),
+    ]);
+
+    expect(firstPull.ok()).toBe(true);
 
     await expect(note).toBeEditable();
 
@@ -496,6 +477,12 @@ test.describe('Vault passkey setup in Chromium', () => {
     await expect(page).toHaveURL(workspace.href);
 
     await expect(passkey).toBeVisible();
+
+    await page.goto(vaultUnlockUrl(workspace));
+
+    await expect(page).toHaveURL(workspace.href);
+
+    await expect(passkey).toBeVisible();
   });
 
   test('rejects another account’s passkey even when it can assert for the same RP', async ({ page }) => {
@@ -520,7 +507,7 @@ test.describe('Vault passkey setup in Chromium', () => {
     expect(passkeys).toEqual({ credentialIds: [ownedId] });
     expect(registered).toHaveLength(2);
 
-    await page.goto('/app/en/example/vault');
+    await page.goto('/app/en/db-example/vault');
 
     await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
 
@@ -589,7 +576,7 @@ test.describe('Vault passkey setup in Chromium', () => {
 
       cdp.on('WebAuthn.credentialAsserted', ({ credential }) => asserted.push(credential.credentialId));
 
-      await page.goto('/app/en/example/vault');
+      await page.goto('/app/en/db-example/vault');
 
       await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
 
@@ -642,7 +629,7 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     expect(registered).toHaveLength(1);
 
-    await page.goto('/app/en/example/vault');
+    await page.goto('/app/en/db-example/vault');
 
     await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
 
@@ -663,7 +650,7 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await page.reload();
 
-    await expect(page).toHaveURL(workspace);
+    await expect(page).toHaveURL(vaultUnlockUrl(workspace));
 
     const locked = page.getByRole('region', { name: 'Unlock your vault', exact: true });
     const usePasskey = locked.getByRole('button', { name: 'Use a passkey', exact: true });
@@ -709,7 +696,7 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await expect(page.getByRole('status').filter({ hasText: 'Passkey added.' })).toBeVisible();
 
-    await page.goto('/app/en/example/vault');
+    await page.goto('/app/en/db-example/vault');
 
     await page.getByRole('button', { name: 'Set up my vault' }).click();
 
@@ -744,7 +731,9 @@ test.describe('Vault passkey setup in Chromium', () => {
 
       await expect(peer.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
-      await peer.goto(workspace);
+      await peer.goto(vaultUnlockUrl(workspace));
+
+      await expect(peer).toHaveURL(workspace);
 
       await expect(peer.getByLabel('Your note', { exact: true })).toHaveCount(0);
 
@@ -786,8 +775,6 @@ test.describe('Vault passkey setup in Chromium', () => {
       await peer.reload();
 
       await pin.fill('208146');
-
-      await peer.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
 
       await expect(peer.getByLabel('Your note', { exact: true })).toHaveValue(note);
     } finally {

@@ -16,7 +16,8 @@ import { DatabaseHttp } from '../shared/db/http';
 import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
 
-import { DatabaseExample } from './example/example';
+import { VaultExampleNavigation } from './example/vault/vault-example-navigation';
+import { DatabaseExample, DatabaseExampleRoute } from './example/example';
 import { ExampleWorkspace } from './example-workspace';
 import { exampleLocalKey } from './example-contracts';
 import { ExampleVaultWorkspaces } from './example-vault-workspaces';
@@ -35,7 +36,7 @@ const b: ExampleTarget = {
   scopeId: '55555555-5555-4555-8555-555555555555',
   objectId: '66666666-6666-4666-8666-666666666666',
 };
-const url = (target: ExampleTarget) => `/persistence/${target.tenantId}/${target.scopeId}/${target.objectId}`;
+const url = (target: ExampleTarget) => `/db-example/${target.tenantId}/${target.scopeId}/${target.objectId}`;
 const records = (target: ExampleTarget) =>
   `/tenants/${target.tenantId}/scopes/${target.scopeId}/domains/operations/records`;
 
@@ -141,8 +142,8 @@ function fixture(
           canActivateChild: [...(parent.canActivateChild ?? []), guard],
           component: TestLayout,
           children: backed
-            ? [{ path: 'example/vault', component: DatabaseExample, data: { backedSample: true } }]
-            : secured.children!.filter((route) => route.path?.startsWith('persistence')),
+            ? [{ path: 'db-example/vault', component: DatabaseExample, data: { backedSample: true } }]
+            : secured.children!.filter((route) => route.path?.startsWith('db-example')),
         },
       ]),
       {
@@ -157,10 +158,11 @@ function fixture(
     ],
   });
 
-  TestBed.overrideComponent(DatabaseExample, {
+  TestBed.overrideComponent(backed ? DatabaseExample : DatabaseExampleRoute, {
     set: {
       providers: [
         ExampleWorkspace,
+        VaultExampleNavigation,
         {
           provide: ExampleVaultWorkspaces,
           useValue: {
@@ -233,7 +235,7 @@ it('coalesces Vault hints, preserves the outbox, and checks for missed updates a
   const harness = await RouterTestingHarness.create();
   const query = new URLSearchParams(a);
 
-  await harness.navigateByUrl(`/example/vault?${query}`);
+  await harness.navigateByUrl(`/db-example/vault?${query}`);
 
   await harness.fixture.whenStable();
 
@@ -315,7 +317,7 @@ it('protects an empty edit from a remote hint and cancels a scheduled save on lo
   const f = fixture(undefined, () => true, 'available', true);
   const harness = await RouterTestingHarness.create();
 
-  await harness.navigateByUrl('/example/vault?' + new URLSearchParams(a));
+  await harness.navigateByUrl('/db-example/vault?' + new URLSearchParams(a));
 
   await harness.fixture.whenStable();
 

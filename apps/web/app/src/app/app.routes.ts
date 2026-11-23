@@ -11,8 +11,8 @@ export const appRoutes: Routes = [
   },
   { path: 'foundations', loadComponent: () => import('./foundations/foundations').then((m) => m.Foundations) },
   {
-    path: 'example/cloud/join',
-    loadComponent: () => import('./db/cloud-example/cloud-join/cloud-join').then((m) => m.CloudJoin),
+    path: 'db-example/cloud/join',
+    loadComponent: () => import('./db/example/cloud/join/cloud-join').then((m) => m.CloudJoin),
   },
   {
     path: 'auth',
@@ -101,28 +101,31 @@ export const appRoutes: Routes = [
       import('./layouts/authenticated-layout/authenticated-layout').then((m) => m.AuthenticatedLayout),
     children: [
       {
-        path: 'example',
-        children: [
-          {
-            path: 'vault',
-            data: { backedSample: true },
-            loadComponent: () => import('./vault/example/vault-example').then((m) => m.VaultExample),
-          },
-          {
-            path: 'cloud',
-            loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
-          },
-          {
-            path: 'cloud/:tenantId/:scopeId',
-            loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
-          },
+        path: '',
+        canMatch: [
+          (_route, segments) =>
+            segments.length === 2 &&
+            ((segments[0].path === 'db-example' && segments[1].path === 'vault') ||
+              (segments[0].path === 'vault' && segments[1].path === 'unlock')),
         ],
+        loadChildren: () => import('./db/example/vault/vault-routes').then((m) => m.vaultRoutes),
+      },
+      {
+        path: 'db-example/cloud',
+        loadComponent: () => import('./db/example/cloud/cloud-example').then((m) => m.CloudExample),
+      },
+      {
+        path: 'db-example/cloud/:tenantId/:scopeId',
+        loadComponent: () => import('./db/example/cloud/cloud-example').then((m) => m.CloudExample),
       },
       { path: 'home', loadComponent: () => import('./home/home').then((m) => m.Home) },
-      { path: 'persistence', loadComponent: () => import('./db/example/example').then((m) => m.DatabaseExample) },
       {
-        path: 'persistence/:tenantId/:scopeId/:objectId',
-        loadComponent: () => import('./db/example/example').then((m) => m.DatabaseExample),
+        path: 'db-example',
+        loadComponent: () => import('./db/example/example').then((m) => m.DatabaseExampleRoute),
+      },
+      {
+        path: 'db-example/:tenantId/:scopeId/:objectId',
+        loadComponent: () => import('./db/example/example').then((m) => m.DatabaseExampleRoute),
       },
       { path: 'account', loadComponent: () => import('./auth/email/account/account').then((m) => m.Account) },
       {

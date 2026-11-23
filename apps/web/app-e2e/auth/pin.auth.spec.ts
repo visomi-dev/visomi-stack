@@ -25,7 +25,7 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
     }
   });
 
-  await page.goto('/app/en/persistence');
+  await page.goto('/app/en/db-example');
 
   await page.getByRole('button', { name: 'Create a test workspace', exact: true }).click();
 
@@ -108,9 +108,7 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await expect(page).toHaveURL(/\/home$/);
 
-  await expect(page.getByRole('heading', { name: 'Unlock your private resources', exact: true })).toHaveCount(0);
-
-  await expect(page.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
+  await expect(pin).toHaveCount(0);
 
   const account = await openAccount(page);
 
@@ -160,17 +158,23 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await expect(page.locator('pre')).toHaveCount(0);
 
-  await page.getByLabel('Local unlock PIN', { exact: true }).fill('999999');
+  await expect(page.getByRole('button', { name: 'Unlock with PIN', exact: true })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
+  await pin.fill('999999');
 
   await expect(page.getByRole('status')).toContainText(['We couldn’t verify the encrypted data']);
 
   await expect(page.locator('pre')).toHaveCount(0);
 
-  await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
+  await expect(pin).toBeFocused();
 
-  await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
+  await pin.fill('04826');
+
+  await expect(pin).toHaveValue('04826');
+
+  await expect(page.locator('pre')).toHaveCount(0);
+
+  await pin.pressSequentially('1');
 
   await expect(page.locator('pre')).toHaveText(marker);
 
@@ -223,40 +227,42 @@ test('PIN setup and offline reopen work without WebAuthn and preserve ciphertext
 
   await expect(page.locator('pre')).toHaveCount(0);
 
-  await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
-
-  await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
+  await pin.fill('048261');
 
   await expect(page.locator('pre')).toHaveText(marker);
 
   await page.goto('/app/en/home');
 
-  await expect(page.getByRole('heading', { name: 'Unlock your private resources', exact: true })).toBeVisible();
+  const homeAccount = await openAccount(page);
 
-  await expect(page.locator('pre')).toHaveCount(0);
+  await expect(pin).toHaveCount(0);
 
-  await context.setOffline(true);
+  await homeAccount.getByRole('link', { name: 'Account', exact: true }).click();
 
-  await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
+  await expect(page).toHaveURL(/\/account$/);
 
-  await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
-
-  await expect(page.getByRole('heading', { name: 'Unlock your private resources', exact: true })).toHaveCount(0);
-
-  await context.setOffline(false);
+  await expect(pin).toHaveCount(0);
 
   await page.evaluate((path) => {
     history.pushState(null, '', path);
     dispatchEvent(new PopStateEvent('popstate', { state: null }));
   }, workspace);
 
+  await expect(pin).toBeEnabled();
+
+  await expect(page.locator('pre')).toHaveCount(0);
+
+  await context.setOffline(true);
+
+  await pin.fill('048261');
+
   await expect(page.locator('pre')).toHaveText(marker);
 
-  await expect(page.getByLabel('Local unlock PIN', { exact: true })).toHaveCount(0);
+  await expect(pin).toHaveCount(0);
 
   await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
 
-  await expect(page.getByLabel('Local unlock PIN', { exact: true })).toBeVisible();
+  await expect(pin).toBeVisible();
 
   await expect(page.locator('pre')).toHaveCount(0);
 });
