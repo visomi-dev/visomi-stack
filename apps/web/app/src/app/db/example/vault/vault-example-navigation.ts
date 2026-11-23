@@ -1,7 +1,7 @@
 import { Service, inject } from '@angular/core';
 import { Router, type UrlTree } from '@angular/router';
 
-import type { ExampleTarget } from '../../db/example-contracts';
+import type { ExampleTarget } from '../../example-contracts';
 
 @Service({ autoProvided: false })
 export class VaultExampleNavigation {

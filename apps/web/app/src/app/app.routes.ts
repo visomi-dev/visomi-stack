@@ -12,7 +12,7 @@ export const appRoutes: Routes = [
   { path: 'foundations', loadComponent: () => import('./foundations/foundations').then((m) => m.Foundations) },
   {
     path: 'db-example/cloud/join',
-    loadComponent: () => import('./db/cloud-example/cloud-join/cloud-join').then((m) => m.CloudJoin),
+    loadComponent: () => import('./db/example/cloud/join/cloud-join').then((m) => m.CloudJoin),
   },
   {
     path: 'auth',
@@ -108,15 +108,15 @@ export const appRoutes: Routes = [
             ((segments[0].path === 'db-example' && segments[1].path === 'vault') ||
               (segments[0].path === 'vault' && segments[1].path === 'unlock')),
         ],
-        loadChildren: () => import('./vault/example/vault-routes').then((m) => m.vaultRoutes),
+        loadChildren: () => import('./db/example/vault/vault-routes').then((m) => m.vaultRoutes),
       },
       {
         path: 'db-example/cloud',
-        loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
+        loadComponent: () => import('./db/example/cloud/cloud-example').then((m) => m.CloudExample),
       },
       {
         path: 'db-example/cloud/:tenantId/:scopeId',
-        loadComponent: () => import('./db/cloud-example/cloud-example').then((m) => m.CloudExample),
+        loadComponent: () => import('./db/example/cloud/cloud-example').then((m) => m.CloudExample),
       },
       { path: 'home', loadComponent: () => import('./home/home').then((m) => m.Home) },
       {

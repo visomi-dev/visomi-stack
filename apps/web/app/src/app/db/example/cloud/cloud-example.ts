@@ -2,8 +2,8 @@ import { DatePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { NavigationHeading } from '../../shared/navigation-heading';
-import { Button, Card, Field, Heading, Link, Text } from '../../ui';
+import { NavigationHeading } from '../../../shared/navigation-heading';
+import { Button, Card, Field, Heading, Link, Text } from '../../../ui';
 
 import { CloudWorkspace } from './cloud-workspace';
 

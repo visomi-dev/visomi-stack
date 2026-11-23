@@ -2,10 +2,10 @@ import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, afterNextRender, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { Session } from '../../../auth/session/session';
-import { DatabaseHttp } from '../../../shared/db/http';
-import { NavigationHeading } from '../../../shared/navigation-heading';
-import { Button, Heading, Text } from '../../../ui';
+import { Session } from '../../../../auth/session/session';
+import { DatabaseHttp } from '../../../../shared/db/http';
+import { NavigationHeading } from '../../../../shared/navigation-heading';
+import { Button, Heading, Text } from '../../../../ui';
 
 import { CloudJoinRequest } from './cloud-join-request';
 

@@ -1,7 +1,7 @@
 import { Service, inject } from '@angular/core';
 import { z } from 'zod';
 
-import { DatabaseHttp } from '../../../shared/db/http';
+import { DatabaseHttp } from '../../../../shared/db/http';
 
 const workspace = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid() });
 

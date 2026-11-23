@@ -1,8 +1,8 @@
 import type { Routes } from '@angular/router';
 
-import { DatabaseExample } from '../../db/example/example';
-import { VaultUnlock } from '../unlock/vault-unlock';
-import { vaultUnlockTargetGuard } from '../unlock/vault-unlock-target';
+import { DatabaseExample } from '../example';
+import { VaultUnlock } from '../../../vault/unlock/vault-unlock';
+import { vaultUnlockTargetGuard } from '../../../vault/unlock/vault-unlock-target';
 
 import { VaultExample } from './vault-example';
 

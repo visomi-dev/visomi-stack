@@ -1,8 +1,8 @@
 import { Component, effect, inject, untracked } from '@angular/core';
 import { ActivatedRoute, RouterOutlet } from '@angular/router';
 
-import { ExampleWorkspace } from '../../db/example-workspace';
-import { exampleWorkspaceProviders } from '../../db/example-workspace-providers';
+import { ExampleWorkspace } from '../../example-workspace';
+import { exampleWorkspaceProviders } from '../../example-workspace-providers';
 
 import { VaultExampleNavigation } from './vault-example-navigation';
 

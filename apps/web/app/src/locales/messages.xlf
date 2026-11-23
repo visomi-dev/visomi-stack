@@ -2668,7 +2668,7 @@
           <context context-type="linenumber">243,247</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/vault/example/vault-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/vault/vault-example.html</context>
           <context context-type="linenumber">1</context>
         </context-group>
       </trans-unit>
@@ -2895,7 +2895,7 @@
       <trans-unit id="cloudExampleTitle" datatype="html">
         <source>Cloud example</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">3,4</context>
         </context-group>
         <context-group purpose="location">
@@ -2906,162 +2906,162 @@
       <trans-unit id="cloudExampleDescription" datatype="html">
         <source> Write notes and choose which ones to share. Readers see shared changes automatically. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">6,9</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExamplePermissions" datatype="html">
         <source> The server can read Cloud notes. Only the owner and people with permission can open them in the app. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">10,14</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleChecking" datatype="html">
         <source>Checking Cloud availability…</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">15,16</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleUnavailable" datatype="html">
         <source>The Cloud example is unavailable right now.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">17,19</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleInvalidLink" datatype="html">
         <source>This test workspace link is invalid.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">35,37</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleEmpty" datatype="html">
         <source>There are no notes to show yet.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">34,37</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleScopeAudience" datatype="html">
         <source>Shared with permitted readers</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">59,61</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">143,145</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleOwnerAudience" datatype="html">
         <source>Owner only</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">61,63</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">133,135</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleEdit" datatype="html">
         <source> Edit note </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">73,74</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleDelete" datatype="html">
         <source> Delete note </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">83,84</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleEditing" datatype="html">
         <source>Edit note</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">80,82</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleNew" datatype="html">
         <source>New note</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">82,85</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleNoteTitle" datatype="html">
         <source>Note title</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">98</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleNoteBody" datatype="html">
         <source>Note text</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">99</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleAudience" datatype="html">
         <source>Who can read this note?</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">124,125</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleSave" datatype="html">
         <source>Save note</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">147,148</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleCancelEdit" datatype="html">
         <source> Cancel edit </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">157,158</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleSaved" datatype="html">
         <source>Note saved.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.ts</context>
           <context context-type="linenumber">111</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleDeleted" datatype="html">
         <source>Note deleted.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.ts</context>
           <context context-type="linenumber">139</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleRevoked" datatype="html">
         <source>Access removed.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.ts</context>
           <context context-type="linenumber">170</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleDenied" datatype="html">
         <source>This account doesn’t have access to the test workspace.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.ts</context>
           <context context-type="linenumber">214</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleError" datatype="html">
         <source>We couldn’t complete that action. Try again.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.ts</context>
           <context context-type="linenumber">215</context>
         </context-group>
       </trans-unit>
@@ -3145,7 +3145,7 @@
       <trans-unit id="cloudExampleStorageUnavailable" datatype="html">
         <source>Cloud storage is unavailable right now. Try again later.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-workspace.ts</context>
           <context context-type="linenumber">221</context>
         </context-group>
       </trans-unit>
@@ -3176,91 +3176,91 @@
       <trans-unit id="cloudExampleShareTitle" datatype="html">
         <source>Share workspace</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">161,163</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareLink" datatype="html">
         <source> Share by link </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">173,174</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareEmail" datatype="html">
         <source> Share by email </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">185,186</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareLinkHelp" datatype="html">
         <source> Anyone with this link and a verified Stack account can read shared notes. The link expires after seven days. People who have already joined keep access until you remove them. </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">191,193</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareLinkLabel" datatype="html">
         <source>Sharing link</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">196</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareCopy" datatype="html">
         <source> Copy link </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">207,208</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareReplaceLink" datatype="html">
         <source>Replace link</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">220,222</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareCreateLink" datatype="html">
         <source>Create link</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">222,224</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareDisableLink" datatype="html">
         <source> Disable link </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">235,236</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareEmailLabel" datatype="html">
         <source>Email address</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">245,246</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareEmailHelp" datatype="html">
         <source>Use the email address of an existing verified Stack account.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">247,248</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareSend" datatype="html">
         <source> Send email </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">271,272</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareReaders" datatype="html">
         <source>People with access</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-example.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">278,280</context>
         </context-group>
       </trans-unit>
@@ -3270,91 +3270,91 @@
       <trans-unit id="cloudJoinTitle" datatype="html">
         <source>Join a Cloud workspace</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/join/cloud-join.html</context>
           <context context-type="linenumber">2,5</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudJoinMissing" datatype="html">
         <source>Open the original sharing link to continue.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/join/cloud-join.html</context>
           <context context-type="linenumber">6,7</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudJoinOpen" datatype="html">
         <source>Open workspace</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/join/cloud-join.html</context>
           <context context-type="linenumber">8,10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudJoinRequirement" datatype="html">
         <source>Sign in with a verified Stack account to open this link.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/join/cloud-join.html</context>
           <context context-type="linenumber">10,12</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudJoinSignIn" datatype="html">
         <source>Sign in</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.html</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/join/cloud-join.html</context>
           <context context-type="linenumber">12,16</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudJoinFailed" datatype="html">
         <source>This link is unavailable or you don’t have access.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-join/cloud-join.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/join/cloud-join.ts</context>
           <context context-type="linenumber">66</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudLinkCopied" datatype="html">
         <source>Link copied.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-workspace.ts</context>
           <context context-type="linenumber">192</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudLinkCopyManually" datatype="html">
         <source>Copy the selected link.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-workspace.ts</context>
           <context context-type="linenumber">196</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudLinkDisabled" datatype="html">
         <source>Link disabled.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-workspace.ts</context>
           <context context-type="linenumber">211</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareSent" datatype="html">
         <source>Email sent.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-workspace.ts</context>
           <context context-type="linenumber">234</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareNotSent" datatype="html">
         <source>Access was granted, but the email couldn’t be sent. Try sending it again.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-workspace.ts</context>
           <context context-type="linenumber">237</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareRecipient" datatype="html">
         <source>Use the email address of another verified Stack account.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-workspace.ts</context>
           <context context-type="linenumber">314</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudShareMailUnavailable" datatype="html">
         <source>Email is unavailable right now. You can share a link.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/cloud-example/cloud-workspace.ts</context>
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-workspace.ts</context>
           <context context-type="linenumber">316</context>
         </context-group>
       </trans-unit>

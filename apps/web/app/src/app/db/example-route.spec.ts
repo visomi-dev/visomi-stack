@@ -15,8 +15,8 @@ import { Navigation } from '../shared/navigation';
 import { DatabaseHttp } from '../shared/db/http';
 import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
-import { VaultExampleNavigation } from '../vault/example/vault-example-navigation';
 
+import { VaultExampleNavigation } from './example/vault/vault-example-navigation';
 import { DatabaseExample, DatabaseExampleRoute } from './example/example';
 import { ExampleWorkspace } from './example-workspace';
 import { exampleLocalKey } from './example-contracts';

@@ -6,10 +6,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { createOperationId, exampleWorkspacePageSchema, exampleWorkspaceTargetSchema } from '@visomi-stack/shared-db';
 import { z } from 'zod';
 
-import { BrowserRealtimeSession } from '../../auth/session/browser-realtime-session';
-import { DatabaseHttp } from '../../shared/db/http';
-import { ExampleAvailability } from '../example-availability';
-import type { ExampleWorkspacePage } from '../example-contracts';
+import { BrowserRealtimeSession } from '../../../auth/session/browser-realtime-session';
+import { DatabaseHttp } from '../../../shared/db/http';
+import { ExampleAvailability } from '../../example-availability';
+import type { ExampleWorkspacePage } from '../../example-contracts';
 
 const noteSchema = z.strictObject({
   id: z.uuid(),

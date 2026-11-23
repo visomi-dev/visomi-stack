@@ -15,8 +15,8 @@ import { DatabaseHttp } from '../shared/db/http';
 import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { vaultMessage } from '../shared/vault/vault-messages';
 import { VaultSyncStatus } from '../shared/vault/vault-sync-status';
-import { VaultExampleNavigation } from '../vault/example/vault-example-navigation';
 
+import { VaultExampleNavigation } from './example/vault/vault-example-navigation';
 import { VaultNoteDraft } from './vault-note-draft';
 import { ExamplePrivateResource } from './example-private-resource';
 import { ExampleVaultWorkspaces } from './example-vault-workspaces';
