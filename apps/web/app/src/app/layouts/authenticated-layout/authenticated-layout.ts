@@ -31,6 +31,7 @@ import { BrowserPrivacy } from '../../observability/browser-privacy/browser-priv
 import { ConsentNotice } from '../../observability/consent-notice/consent-notice';
 import { PrivacyLink } from '../../observability/privacy-link/privacy-link';
 import { ExampleAvailability } from '../../db/example-availability';
+import { ExampleVaultPairingNotices } from '../../db/example-vault-pairing-notices';
 
 @Component({
   selector: 'app-authenticated-layout',
@@ -59,7 +60,7 @@ import { ExampleAvailability } from '../../db/example-availability';
     AuthFeedback,
     Dialog,
   ],
-  providers: [Action, AuthHttp, Logout, DatabaseHttp, ExampleAvailability],
+  providers: [Action, AuthHttp, Logout, DatabaseHttp, ExampleAvailability, ExampleVaultPairingNotices],
   templateUrl: './authenticated-layout.html',
   styleUrl: './authenticated-layout.css',
 })
@@ -74,6 +75,7 @@ export class AuthenticatedLayout {
 
   private readonly desktopAccount = viewChild.required<ElementRef<HTMLElement>>('desktopAccount');
 
+  protected readonly vaultPairings = inject(ExampleVaultPairingNotices);
   protected readonly vault = inject(VaultSession);
 
   protected readonly sidebarCompact = signal(false);

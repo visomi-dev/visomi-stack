@@ -2,10 +2,12 @@
   <header class="space-y-2">
     <h2 appUI uiSize="sm" id="vault-devices-title" i18n="@@vaultDevicesTitle">Vault devices</h2>
 
-    <p appUI tone="muted" i18n="@@vaultDevicesDescription">
-      Open this page on both devices and sign in to the same account. Approve the new device from the one where you can
-      already open the note.
-    </p>
+    @if (!backed()) {
+      <p appUI tone="muted" i18n="@@vaultDevicesDescription">
+        Open this page on both devices and sign in to the same account. Approve the new device from the one where you
+        can already open the note.
+      </p>
+    }
   </header>
 
   @if (pairing.message()) {
@@ -23,38 +25,69 @@
 
         <code class="block break-all" data-vault-approver>{{ pairing.approverFingerprint() }}</code>
 
-        <form
-          class="space-y-3"
-          (submit)="$event.preventDefault(); pairing.approve(proof.value, recipientFingerprint.value)"
-        >
-          <p appUI tone="muted" i18n="@@vaultDevicesApproveInstructions">
-            Paste the request from the new device. Enter the fingerprint shown directly on that device.
+        @if (pairing.reviewUnavailable()) {
+          <p appUI role="status" i18n="@@vaultPairingUnavailable">
+            This request is no longer available. Start a new request on the other device.
           </p>
-
-          <app-field control-id="vault-recipient-request" label="Pairing request" i18n-label="@@vaultDevicesRequest">
-            <textarea appUI id="vault-recipient-request" #proof maxlength="4096" rows="3" required></textarea>
-          </app-field>
-
-          <app-field
-            control-id="vault-recipient-fingerprint"
-            label="New device fingerprint"
-            i18n-label="@@vaultDevicesRecipientFingerprint"
+        } @else if (backed() && !pairing.reviewProof()) {
+          <p appUI i18n="@@vaultPairingWaitingHere">Requests from your other devices will appear in the app.</p>
+        } @else {
+          <form
+            class="space-y-3"
+            (submit)="
+              $event.preventDefault();
+              backed()
+                ? pairing.approveReview(recipientFingerprint.value)
+                : pairing.approve(manualProof, recipientFingerprint.value)
+            "
           >
-            <input
-              appUI
-              id="vault-recipient-fingerprint"
-              #recipientFingerprint
-              maxlength="48"
-              required
-              autocomplete="off"
-              spellcheck="false"
-            />
-          </app-field>
+            @if (backed()) {
+              <p appUI tone="muted" i18n="@@vaultPairingConfirmInstructions">
+                Enter the fingerprint shown on the new device to confirm you are linking the right one.
+              </p>
+            } @else {
+              <p appUI tone="muted" i18n="@@vaultDevicesApproveInstructions">
+                Paste the request from the new device. Enter the fingerprint shown directly on that device.
+              </p>
 
-          <button appUI type="submit" [disabled]="pairing.busy()" i18n="@@vaultDevicesApprove">
-            Approve this device
-          </button>
-        </form>
+              <app-field
+                control-id="vault-recipient-request"
+                label="Pairing request"
+                i18n-label="@@vaultDevicesRequest"
+              >
+                <textarea
+                  appUI
+                  id="vault-recipient-request"
+                  #proof
+                  maxlength="4096"
+                  rows="3"
+                  required
+                  (input)="manualProof = proof.value"
+                ></textarea>
+              </app-field>
+            }
+
+            <app-field
+              control-id="vault-recipient-fingerprint"
+              label="New device fingerprint"
+              i18n-label="@@vaultDevicesRecipientFingerprint"
+            >
+              <input
+                appUI
+                id="vault-recipient-fingerprint"
+                #recipientFingerprint
+                maxlength="48"
+                required
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </app-field>
+
+            <button appUI type="submit" [disabled]="pairing.busy()" i18n="@@vaultDevicesApprove">
+              Approve this device
+            </button>
+          </form>
+        }
       } @else {
         <p appUI i18n="@@vaultDevicesUnlockFirst">Unlock the note on this device before approving another one.</p>
 
@@ -63,50 +96,91 @@
         </a>
       }
     } @else if (pairing.pending(); as request) {
-      <app-field control-id="vault-pairing-request" label="Pairing request" i18n-label="@@vaultDevicesRequest">
-        <textarea appUI id="vault-pairing-request" rows="3" readonly [value]="request.token"></textarea>
-      </app-field>
+      @if (request.reviewLink; as link) {
+        @if (pairing.approval() === 'expired') {
+          <p appUI role="status" i18n="@@vaultPairingExpired">This request expired.</p>
 
-      <p appUI i18n="@@vaultDevicesRecipientFingerprint">New device fingerprint</p>
+          <button appUI type="button" (click)="pairing.resetExpired()" i18n="@@vaultPairingStartAgain">
+            Start again
+          </button>
+        } @else if (pairing.approval() === 'waiting') {
+          <p appUI role="status" i18n="@@vaultPairingWaiting">Waiting for approval on your other device.</p>
 
-      <code class="block break-all" data-vault-recipient>{{ request.fingerprint }}</code>
+          <p appUI tone="muted" i18n="@@vaultPairingLinkInstructions">
+            Review the request in Stack on a device that can already open this vault. If the notice doesn’t appear, open
+            this link there.
+          </p>
 
-      <p appUI tone="muted" i18n="@@vaultDevicesFinishInstructions">
-        Share the request and fingerprint with the approving device. Then enter the fingerprint you see directly on that
-        device.
-      </p>
-
-      <form class="space-y-3" (submit)="$event.preventDefault(); pairing.finish(approver.value)">
-        <app-field
-          control-id="vault-approver-fingerprint"
-          label="Approving device fingerprint"
-          i18n-label="@@vaultDevicesApproverFingerprint"
-        >
-          <input
+          <button
             appUI
-            id="vault-approver-fingerprint"
-            #approver
-            maxlength="48"
-            required
-            autocomplete="off"
-            spellcheck="false"
-          />
-        </app-field>
+            variant="secondary"
+            type="button"
+            (click)="pairing.copyReviewLink(link)"
+            i18n="@@vaultPairingCopyLink"
+          >
+            Copy review link
+          </button>
 
-        @if (request.context.method === 'pin-argon2id') {
-          <app-field control-id="vault-pairing-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel">
-            <app-pin-input
+          <a appUI [href]="link" target="_blank" rel="noopener" i18n="@@vaultPairingOpenLink">Open review link</a>
+        } @else {
+          <p appUI role="status" i18n="@@vaultPairingApproved">Approved. Finish linking this device.</p>
+        }
+      } @else {
+        <app-field control-id="vault-pairing-request" label="Pairing request" i18n-label="@@vaultDevicesRequest">
+          <textarea appUI id="vault-pairing-request" rows="3" readonly [value]="request.token"></textarea>
+        </app-field>
+      }
+
+      @if (pairing.approval() !== 'expired') {
+        <p appUI i18n="@@vaultDevicesRecipientFingerprint">New device fingerprint</p>
+
+        <code class="block break-all" data-vault-recipient>{{ request.fingerprint }}</code>
+      }
+
+      @if (!request.reviewLink) {
+        <p appUI tone="muted" i18n="@@vaultDevicesFinishInstructions">
+          Share the request and fingerprint with the approving device. Then enter the fingerprint you see directly on
+          that device.
+        </p>
+      }
+
+      @if (!request.reviewLink || pairing.approval() === 'approved') {
+        <form class="space-y-3" (submit)="$event.preventDefault(); pairing.finish(approver.value)">
+          <app-field
+            control-id="vault-approver-fingerprint"
+            label="Approving device fingerprint"
+            i18n-label="@@vaultDevicesApproverFingerprint"
+          >
+            <input
+              appUI
+              id="vault-approver-fingerprint"
+              #approver
+              maxlength="48"
               required
-              [digits]="6"
-              [disabled]="pairing.busy()"
-              [value]="pairing.pin()"
-              (valueChange)="pairing.pin.set($event)"
+              autocomplete="off"
+              spellcheck="false"
             />
           </app-field>
-        }
 
-        <button appUI type="submit" [disabled]="pairing.busy()" i18n="@@vaultDevicesFinish">Finish pairing</button>
-      </form>
+          @if (request.context.method === 'pin-argon2id') {
+            <app-field control-id="vault-pairing-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel">
+              <app-pin-input
+                required
+                [digits]="6"
+                [disabled]="pairing.busy()"
+                [value]="pairing.pin()"
+                (valueChange)="pairing.pin.set($event)"
+              />
+            </app-field>
+          }
+
+          <button appUI type="submit" [disabled]="pairing.busy()" i18n="@@vaultDevicesFinish">Finish pairing</button>
+        </form>
+      }
+    } @else if (review()) {
+      <p appUI role="status" i18n="@@vaultPairingNeedsLinkedDevice">
+        Open this review link on a device that can already unlock this vault.
+      </p>
     } @else if (pairing.capabilities.prf() === 'unavailable') {
       <form class="space-y-3" (submit)="$event.preventDefault(); pairing.request(true)">
         <p appUI tone="muted" i18n="@@vaultDevicesPinDescription">

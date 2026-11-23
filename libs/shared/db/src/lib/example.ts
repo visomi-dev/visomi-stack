@@ -4,6 +4,8 @@ import { parseProductPolicy } from './policy';
 
 export const exampleWorkspaceTargetSchema = z.strictObject({ tenantId: z.uuid(), scopeId: z.uuid() });
 export const exampleVaultTargetSchema = exampleWorkspaceTargetSchema.extend({ objectId: z.uuid() });
+export const exampleVaultPairingLinkSchema = exampleVaultTargetSchema.extend({ requestId: z.uuid() });
+export const exampleVaultPairingListSchema = z.array(exampleVaultPairingLinkSchema).max(32);
 export const exampleWorkspacePageSchema = z.strictObject({
   items: z.array(
     exampleWorkspaceTargetSchema.extend({

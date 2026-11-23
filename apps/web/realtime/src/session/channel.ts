@@ -71,7 +71,10 @@ export function attachSessionChannel(io: Server, readUser: ReadSessionUser) {
     });
   });
 
-  async function notify(room: string, event: 'session:changed' | 'cloud:changed' = 'session:changed'): Promise<void> {
+  async function notify(
+    room: string,
+    event: 'session:changed' | 'cloud:changed' | 'vault-pairing:changed' = 'session:changed',
+  ): Promise<void> {
     await Promise.all(
       [...(sessions.adapter.rooms.get(room) ?? [])].map(async (id) => {
         const socket = sessions.sockets.get(id);
@@ -97,5 +100,6 @@ export function attachSessionChannel(io: Server, readUser: ReadSessionUser) {
     notifySession: (sessionId: string) => notify(`session:${sessionId}`),
     notifyUser: (userId: string) => notify(`user:${userId}`),
     notifyCloud: (userId: string) => notify(`user:${userId}`, 'cloud:changed'),
+    notifyVaultPairing: (userId: string) => notify(`user:${userId}`, 'vault-pairing:changed'),
   };
 }

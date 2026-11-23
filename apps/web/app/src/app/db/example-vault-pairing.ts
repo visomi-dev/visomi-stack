@@ -1,10 +1,12 @@
-import { DOCUMENT } from '@angular/common';
-import { DestroyRef, Service, inject, signal } from '@angular/core';
+import { DOCUMENT, Location } from '@angular/common';
+import { DestroyRef, Service, effect, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import {
   VaultError,
   approvedDeliverySchema,
   deviceChallengeSchema,
   deviceProofSchema,
+  deviceProofMessage,
   keyDomainId,
   signingPinSchema,
   type DeviceProof,
@@ -20,6 +22,7 @@ import {
 } from '@visomi-stack/web-frontend-db';
 
 import { Session } from '../auth/session/session';
+import { BrowserRealtimeSession } from '../auth/session/browser-realtime-session';
 import { ClientDatabase } from '../shared/db/database';
 import { DatabaseHttp } from '../shared/db/http';
 import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
@@ -27,6 +30,7 @@ import { VaultSession } from '../shared/vault/vault-session';
 import { vaultMessage } from '../shared/vault/vault-messages';
 
 import { exampleLocalKey, rosterSchema, type ExampleTarget } from './example-contracts';
+import { watchVaultPairing } from './example-vault-pairing-watch';
 
 @Service({ autoProvided: false })
 export class ExampleVaultPairing {
@@ -35,6 +39,9 @@ export class ExampleVaultPairing {
   private readonly session = inject(Session);
   private readonly vault = inject(VaultSession);
   private readonly view = inject(DOCUMENT).defaultView!;
+  private readonly router = inject(Router);
+  private readonly location = inject(Location);
+  private readonly realtime = inject(BrowserRealtimeSession, { optional: true });
 
   private readonly lifetime = new AbortController();
 
@@ -44,6 +51,7 @@ export class ExampleVaultPairing {
     proof: DeviceProof;
     fingerprint: string;
     token: string;
+    reviewLink?: string;
   } | null>(null);
 
   private readonly cleanup = inject(DestroyRef).onDestroy(() => {
@@ -57,6 +65,7 @@ export class ExampleVaultPairing {
 
   private target!: ExampleTarget;
   private rpId!: string;
+  private backed = false;
 
   readonly capabilities = inject(UnlockCapabilities);
 
@@ -66,12 +75,16 @@ export class ExampleVaultPairing {
   readonly ready = signal(false);
   readonly paired = signal(false);
   readonly approverFingerprint = signal('');
+  readonly reviewProof = signal<DeviceProof | null>(null);
+  readonly reviewUnavailable = signal(false);
+  readonly approval = signal<'waiting' | 'approved' | 'expired'>('waiting');
   readonly pin = signal('');
   readonly confirmPin = signal('');
 
-  async initialize(target: ExampleTarget, rpId: string): Promise<void> {
+  async initialize(target: ExampleTarget, rpId: string, backed: boolean): Promise<void> {
     this.target = target;
     this.rpId = rpId;
+    this.backed = backed;
 
     await this.run(async (signal, ownerId) => {
       const registry = await this.roster(ownerId, signal);
@@ -92,6 +105,27 @@ export class ExampleVaultPairing {
       signal.throwIfAborted();
       this.approverFingerprint.set(fingerprint);
     });
+  }
+
+  async loadReview(requestId: string | undefined, signal: AbortSignal): Promise<void> {
+    this.reviewProof.set(null);
+    this.reviewUnavailable.set(false);
+
+    if (!requestId) {
+      return;
+    }
+
+    try {
+      const raw = await this.api.vault(`${this.path()}/devices/pairing/${requestId}`, undefined, signal);
+      const proof = deviceProofSchema.parse(raw);
+
+      signal.throwIfAborted();
+      this.reviewProof.set(proof);
+    } catch {
+      if (!signal.aborted) {
+        this.reviewUnavailable.set(true);
+      }
+    }
   }
 
   async request(usePin = false): Promise<void> {
@@ -145,13 +179,59 @@ export class ExampleVaultPairing {
         );
         const proof = await custody.prove(deviceChallengeSchema.parse(raw));
         const fingerprint = await new WebCryptoDevices(this.view.crypto).fingerprint(proof);
+        let reviewLink: string | undefined;
+
+        if (this.backed) {
+          const published = await this.api.vault(`${this.path()}/devices/pairing`, proof, signal);
+          const confirmed = deviceProofSchema.parse(published);
+
+          if (deviceProofMessage(confirmed) !== deviceProofMessage(proof) || confirmed.proof !== proof.proof) {
+            throw new VaultError('corrupt');
+          }
+
+          const link = this.router.createUrlTree(['/security'], {
+            queryParams: { sample: 'vault-backup', ...this.target, requestId: proof.requestId },
+          });
+
+          reviewLink = new URL(
+            this.location.prepareExternalUrl(this.router.serializeUrl(link)),
+            this.view.location.origin,
+          ).href;
+        }
 
         signal.throwIfAborted();
-        this.pending.set({ context, custody, proof, fingerprint, token: JSON.stringify(proof) });
+        this.approval.set('waiting');
+        this.pending.set({ context, custody, proof, fingerprint, token: JSON.stringify(proof), reviewLink });
       }, true);
     } finally {
       supplied?.fill(0);
     }
+  }
+
+  async copyReviewLink(link: string): Promise<void> {
+    try {
+      await this.view.navigator.clipboard.writeText(link);
+
+      this.message.set($localize`:@@vaultPairingLinkCopied:Review link copied.`);
+    } catch {
+      this.message.set($localize`:@@vaultPairingLinkCopyFailed:Select and copy the review link below.`);
+    }
+  }
+
+  resetExpired(): void {
+    const pending = this.pending();
+
+    if (pending && this.approval() === 'expired') {
+      this.vault.lockContext(pending.context);
+      this.pending.set(null);
+      this.approval.set('waiting');
+    }
+  }
+
+  approveReview(fingerprint: string): Promise<void> {
+    const proof = this.reviewProof();
+
+    return proof ? this.approve(JSON.stringify(proof), fingerprint) : Promise.resolve();
   }
 
   approve(token: string, verifiedFingerprint: string): Promise<void> {
@@ -165,6 +245,13 @@ export class ExampleVaultPairing {
       const registry = await this.roster(ownerId, signal);
       const proof = deviceProofSchema.parse(JSON.parse(token));
       const fingerprint = await new WebCryptoDevices(this.view.crypto).fingerprint(proof);
+
+      if (this.backed && Date.parse(proof.expiresAt) <= Date.now()) {
+        this.reviewProof.set(null);
+        this.reviewUnavailable.set(true);
+
+        return;
+      }
 
       if (fingerprint !== verifiedFingerprint.trim()) {
         this.fingerprintMismatch();
@@ -203,6 +290,7 @@ export class ExampleVaultPairing {
 
       await this.api.vault(`${this.path()}/devices/approve`, { ...body, authorization }, signal);
 
+      this.reviewProof.set(null);
       this.message.set($localize`:@@vaultDevicesApproved:Device approved. Finish on the other device.`);
     });
   }
@@ -210,7 +298,7 @@ export class ExampleVaultPairing {
   async finish(verifiedFingerprint: string): Promise<void> {
     const pending = this.pending();
 
-    if (!pending) {
+    if (!pending || (pending.reviewLink && this.approval() !== 'approved')) {
       return;
     }
 
@@ -393,4 +481,44 @@ export class ExampleVaultPairing {
       this.busy.set(false);
     }
   }
+
+  private readonly watchApproval = effect((cleanup) => {
+    const pending = this.pending();
+    const full = this.session.full();
+
+    this.realtime?.vaultPairingChanges();
+    this.realtime?.connected();
+
+    if (!pending?.reviewLink || !full || this.approval() !== 'waiting') {
+      return;
+    }
+
+    const controller = new AbortController();
+    const stop = watchVaultPairing(
+      this.view,
+      async () => {
+        try {
+          const roster = await this.roster(pending.proof.ownerId, controller.signal);
+
+          if (controller.signal.aborted) {
+            return;
+          }
+
+          if (roster.devices.some(({ id, revokedAt }) => id === pending.context.deviceId && !revokedAt)) {
+            this.approval.set('approved');
+          } else if (Date.parse(pending.proof.expiresAt) <= Date.now()) {
+            this.approval.set('expired');
+          }
+        } catch {
+          // Retry the authenticated read on reconnect or the next poll.
+        }
+      },
+      () => !!this.realtime?.connected(),
+    );
+
+    cleanup(() => {
+      stop();
+      controller.abort();
+    });
+  });
 }

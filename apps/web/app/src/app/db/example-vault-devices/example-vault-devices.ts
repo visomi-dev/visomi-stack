@@ -1,4 +1,4 @@
-import { Component, afterNextRender, computed, inject, input } from '@angular/core';
+import { Component, afterNextRender, computed, effect, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { Button, Card, Field, Heading, Input, Link, PinInput, Text, Textarea } from '../../ui';
@@ -23,7 +23,25 @@ export class ExampleVaultDevices {
   });
   protected readonly resourceParams = computed(() => (this.backed() ? this.target() : null));
 
+  protected manualProof = '';
+
+  readonly review = input<string>();
   readonly rpId = input.required<string>();
 
-  private readonly initialize = afterNextRender(() => void this.pairing.initialize(this.target(), this.rpId()));
+  private readonly initialize = afterNextRender(
+    () => void this.pairing.initialize(this.target(), this.rpId(), this.backed()),
+  );
+
+  private readonly loadReview = effect((cleanup) => {
+    const requestId = this.review();
+
+    if (!this.pairing.approverFingerprint()) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    void this.pairing.loadReview(requestId, controller.signal);
+    cleanup(() => controller.abort());
+  });
 }

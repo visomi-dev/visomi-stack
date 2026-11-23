@@ -9,7 +9,12 @@
 
   @if (pairingRelyingParty(); as rpId) {
     @for (target of pairingTargets(); track target.tenantId + target.scopeId + target.objectId) {
-      <app-example-vault-devices [target]="target" [rpId]="rpId" [backed]="pairingBackedSample()" />
+      <app-example-vault-devices
+        [target]="target"
+        [rpId]="rpId"
+        [backed]="pairingBackedSample()"
+        [review]="pairingRequestId()"
+      />
     }
   }
 

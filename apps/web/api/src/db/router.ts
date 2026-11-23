@@ -213,7 +213,7 @@ export function createPersistenceRouter(
         },
       },
     ]);
-    registerVaultRoutes(router, access, objects, auth.realtimePublisher?.notifyVault);
+    registerVaultRoutes(router, access, objects, auth.realtimePublisher);
   }
 
   const errors: ErrorRequestHandler = (error, _request, _response, next) => {

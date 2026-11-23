@@ -24,12 +24,14 @@ import {
   browserSession,
   enableBackupObjects,
   fixture,
+  grant,
+  pairingNotice,
   policy,
   resource,
   s3Endpoint,
   vaultNotice,
 } from './support/persistence';
-import { authorize, boot, digest, identity, push, request, vaultBase } from './support/vault';
+import { authorize, boot, digest, identity, prove, push, request, vaultBase } from './support/vault';
 
 let fault: 'put' | 'readback' | 'delete' | undefined;
 
@@ -116,6 +118,94 @@ it.each(['new', 'legacy'] as const)('lists only committed vaults and resumes %s 
   });
 
   await expect(f.owner.call(setup, 'POST', {})).resolves.toMatchObject({ status: 200, body: null });
+});
+
+it('lists only proved, live pairing requests for the owner and exact Vault Example scope', async () => {
+  const f = await fixture();
+  const workspace = await f.owner.call('/example/vault/workspaces/setup', 'POST', {});
+  const target = exampleWorkspaceTargetSchema.parse(workspace.body);
+  const devices = `${vaultBase(target)}/devices`;
+  const first = await request(f.owner, target, identity());
+
+  await expect(f.owner.call(`${devices}/bootstrap`, 'POST', first)).resolves.toMatchObject({ status: 200 });
+
+  const recipient = identity();
+  const proof = await request(f.owner, target, recipient);
+  const { proof: _signature, ...challenge } = proof;
+  const different = prove(recipient, { ...challenge, challenge: Buffer.alloc(32, 27).toString('base64url') });
+  const list = '/example/vault/pairing-requests';
+  const review = `${devices}/pairing/${proof.requestId}`;
+
+  await expect(f.owner.call(list)).resolves.toMatchObject({ status: 200, body: [] });
+
+  await expect(f.owner.call(review)).resolves.toMatchObject({ status: 404 });
+
+  await expect(f.outsider.call(`${devices}/pairing`, 'POST', proof)).resolves.toMatchObject({ status: 403 });
+
+  await expect(f.owner.call(`${devices}/pairing`, 'POST', different)).resolves.toMatchObject({ status: 400 });
+
+  expect(pairingNotice).not.toHaveBeenCalled();
+  pairingNotice.mockRejectedValueOnce(new Error('Synthetic unavailable notification transport'));
+
+  await expect(f.owner.call(`${devices}/pairing`, 'POST', proof)).resolves.toMatchObject({ status: 200 });
+
+  expect(pairingNotice).toHaveBeenCalledExactlyOnceWith(proof.ownerId);
+
+  await expect(f.owner.call(list)).resolves.toMatchObject({
+    status: 200,
+    body: [{ ...target, objectId: target.scopeId, requestId: proof.requestId }],
+  });
+
+  await expect(f.owner.call(review)).resolves.toMatchObject({ status: 200, body: proof });
+
+  await expect(f.outsider.call(review)).resolves.toMatchObject({ status: 403 });
+
+  await expect(f.outsider.call(list)).resolves.toMatchObject({ status: 200, body: [] });
+
+  const second = await f.owner.call(`${base(f.tenant)}/children`, 'POST', { kind: 'resource', objectBackup: true });
+  const otherTarget = exampleWorkspaceTargetSchema.parse(second.body);
+  const other = await request(f.owner, otherTarget, identity());
+
+  await expect(f.owner.call(`${vaultBase(otherTarget)}/devices/bootstrap`, 'POST', other)).resolves.toMatchObject({
+    status: 200,
+  });
+
+  await expect(f.owner.call(`${vaultBase(otherTarget)}/devices/pairing/${proof.requestId}`)).resolves.toMatchObject({
+    status: 404,
+  });
+
+  await grant(f, 'manager', otherTarget);
+
+  await expect(f.member.call(`${vaultBase(otherTarget)}/devices/pairing/${other.requestId}`)).resolves.toMatchObject({
+    status: 403,
+  });
+
+  const registry = eq(vaultSchema.keyScopes.scopeId, target.scopeId);
+
+  await resource.db.update(vaultSchema.keyScopes).set({ phase: 'rotating' }).where(registry);
+
+  await expect(f.owner.call(review)).resolves.toMatchObject({ status: 403 });
+
+  await resource.db.update(vaultSchema.keyScopes).set({ phase: 'ready', generation: 2 }).where(registry);
+
+  await expect(f.owner.call(review)).resolves.toMatchObject({ status: 404 });
+
+  await resource.db.update(vaultSchema.keyScopes).set({ generation: 1 }).where(registry);
+
+  await boot(f, identity());
+
+  await expect(f.owner.call(`${vaultBase(f.target)}/devices/pairing/${proof.requestId}`)).resolves.toMatchObject({
+    status: 403,
+  });
+
+  await resource.db
+    .update(vaultSchema.keyChallenges)
+    .set({ expiresAt: new Date(0) })
+    .where(eq(vaultSchema.keyChallenges.id, proof.requestId));
+
+  await expect(f.owner.call(review)).resolves.toMatchObject({ status: 404 });
+
+  await expect(f.owner.call(list)).resolves.toMatchObject({ status: 200, body: [] });
 });
 
 it('stores ciphertext privately and publishes only verified references for the current device and scope', async () => {

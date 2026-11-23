@@ -1,6 +1,7 @@
-import { Component, afterNextRender, computed, inject, signal } from '@angular/core';
+import { Component, afterNextRender, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { exampleVaultPairingLinkSchema } from '@visomi-stack/shared-db';
 
 import { ExampleVaultDevices } from '../../../db/example-vault-devices/example-vault-devices';
 import { exampleTargetSchema } from '../../../db/example-contracts';
@@ -28,6 +29,7 @@ export class Security {
   private readonly examples = inject(ExampleAvailability, { optional: true });
 
   private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
+  private readonly rendered = signal(false);
 
   protected readonly pairingRelyingParty = signal('');
 
@@ -44,6 +46,12 @@ export class Security {
 
     return target.success ? [target.data] : [];
   });
+  protected readonly pairingRequestId = computed(() => {
+    const target = this.pairingTargets()[0];
+    const parsed = exampleVaultPairingLinkSchema.safeParse({ ...target, requestId: this.params().get('requestId') });
+
+    return parsed.success && this.pairingBackedSample() ? parsed.data.requestId : undefined;
+  });
 
   readonly session = inject(Session);
   readonly action = inject(Action);
@@ -53,14 +61,21 @@ export class Security {
   readonly enabled = $localize`:@@authEnabled:Enabled`;
   readonly disabled = $localize`:@@authNotEnabled:Not enabled`;
 
-  private readonly verifyPairingProfile = afterNextRender(async () => {
-    if (!this.pairingTargets().length) {
+  private readonly activatePairing = afterNextRender(() => this.rendered.set(true));
+
+  private readonly verifyPairingProfile = effect((cleanup) => {
+    if (!this.rendered() || !this.pairingTargets().length || this.pairingRelyingParty()) {
       return;
     }
 
-    const rpId = await this.profile.relyingParty();
+    const controller = new AbortController();
 
-    this.pairingRelyingParty.set(rpId);
+    cleanup(() => controller.abort());
+    void this.profile.relyingParty().then((rpId) => {
+      if (!controller.signal.aborted) {
+        this.pairingRelyingParty.set(rpId);
+      }
+    });
   });
 
   private readonly initialize = afterNextRender(

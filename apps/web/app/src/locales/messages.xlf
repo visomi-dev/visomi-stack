@@ -2816,6 +2816,51 @@
       <trans-unit id="vaultDevicesApproverFingerprint" datatype="html">
         <source>Approving device fingerprint</source>
       </trans-unit>
+      <trans-unit id="vaultPairingNotice" datatype="html">
+        <source>A device is waiting to link to your vault.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingReview" datatype="html">
+        <source>Review request</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingUnavailable" datatype="html">
+        <source>This request is no longer available. Start a new request on the other device.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingWaitingHere" datatype="html">
+        <source>Requests from your other devices will appear in the app.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingConfirmInstructions" datatype="html">
+        <source>Enter the fingerprint shown on the new device to confirm you are linking the right one.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingExpired" datatype="html">
+        <source>This request expired.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingStartAgain" datatype="html">
+        <source>Start again</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingWaiting" datatype="html">
+        <source>Waiting for approval on your other device.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingLinkInstructions" datatype="html">
+        <source>Review the request in Stack on a device that can already open this vault. If the notice doesn’t appear, open this link there.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCopyLink" datatype="html">
+        <source>Copy review link</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingNeedsLinkedDevice" datatype="html">
+        <source>Open this review link on a device that can already unlock this vault.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingOpenLink" datatype="html">
+        <source>Open review link</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingApproved" datatype="html">
+        <source>Approved. Finish linking this device.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingLinkCopied" datatype="html">
+        <source>Review link copied.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingLinkCopyFailed" datatype="html">
+        <source>Select and copy the review link below.</source>
+      </trans-unit>
       <trans-unit id="vaultDevicesApproveInstructions" datatype="html">
         <source> Paste the request from the new device. Enter the fingerprint shown directly on that device. </source>
       </trans-unit>

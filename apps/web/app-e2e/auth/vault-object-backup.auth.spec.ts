@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { BrowserContext, Page, Request } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
 import { backupS3Client } from '@visomi-stack/dev-testing/s3';
-import { serializeDataEnvelope, syncWriteSchema, type DataEnvelope } from '@visomi-stack/shared-db';
+import { deviceProofSchema, serializeDataEnvelope, syncWriteSchema, type DataEnvelope } from '@visomi-stack/shared-db';
 import { Pool } from 'pg';
 import { io } from 'socket.io-client';
 
@@ -336,24 +336,35 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await expect(recipient).toHaveURL(pairingUrl);
 
-    await recipient.getByRole('button', { name: 'Request pairing with a passkey' }).click();
+    const [publication] = await Promise.all([
+      recipient.waitForResponse((response) => response.url().endsWith('/devices/pairing')),
+      recipient.getByRole('button', { name: 'Request pairing with a passkey' }).click(),
+    ]);
+    const published = await publication.json();
+    const proof = deviceProofSchema.parse(published);
+    const devicePath = new URL(publication.url());
+
+    const readPairing = await outsiderContext.request.get(`${devicePath.href}/${proof.requestId}`);
+    const outsiderRequests = await outsiderContext.request.get('/api/example/vault/pairing-requests');
+    const outsiderPending = await outsiderRequests.json();
+
+    expect(readPairing.ok()).toBe(false);
+    expect(outsiderRequests.ok()).toBe(true);
+    expect(outsiderPending).toEqual([]);
 
     const fingerprint = recipient.locator('[data-vault-recipient]');
+    const finish = recipient.getByRole('button', { name: 'Finish pairing', exact: true });
 
     await expect(fingerprint).toHaveText(/^[A-Za-z0-9_-]{43}$/);
 
+    await expect(finish).toHaveCount(0);
+
+    await expect(recipient.getByLabel('Pairing request', { exact: true })).toHaveCount(0);
+
     const recipientId = await fingerprint.innerText();
-    const pairingRequest = await recipient.getByLabel('Pairing request', { exact: true }).inputValue();
-    const trust = recipient.getByLabel('Approving device fingerprint', { exact: true });
-    const finish = recipient.getByRole('button', { name: 'Finish pairing', exact: true });
-
-    await trust.fill(approver);
-
-    const unapproved = recipient.waitForResponse((response) => response.url().endsWith('/delivery'));
-
-    await finish.click();
-
-    const deniedDelivery = await unapproved;
+    const deniedDelivery = await recipientContext.request.get(
+      devicePath.href.replace(/\/pairing$/, `/${proof.deviceId}/delivery`),
+    );
 
     expect(deniedDelivery.status()).toBe(404);
 
@@ -361,13 +372,25 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await expect(replicaNote(recipient, objectId)).resolves.toEqual({});
 
-    await page.getByLabel('Pairing request', { exact: true }).fill(pairingRequest);
+    await page.getByRole('link', { name: 'Review request', exact: true }).click();
 
-    await page.getByLabel('New device fingerprint', { exact: true }).fill(recipientId);
+    const recipientFingerprint = page.getByLabel('New device fingerprint', { exact: true });
+
+    await recipientFingerprint.fill('X'.repeat(43));
+
+    await page.getByRole('button', { name: 'Approve this device' }).click();
+
+    await expect(page.getByRole('status').filter({ hasText: 'The fingerprints don’t match.' })).toBeVisible();
+
+    await expect(finish).toHaveCount(0);
+
+    await recipientFingerprint.fill(recipientId);
 
     await page.getByRole('button', { name: 'Approve this device' }).click();
 
     await expect(page.getByRole('status').filter({ hasText: 'Device approved.' })).toBeVisible();
+
+    await recipient.getByLabel('Approving device fingerprint', { exact: true }).fill(approver);
 
     await finish.click();
 

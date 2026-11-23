@@ -5,6 +5,8 @@ export {
   developmentPersistenceDemos,
   exampleWorkspaceTargetSchema,
   exampleVaultTargetSchema,
+  exampleVaultPairingLinkSchema,
+  exampleVaultPairingListSchema,
   exampleWorkspacePageSchema,
   exampleVaultWorkspacePageSchema,
 } from './lib/example';

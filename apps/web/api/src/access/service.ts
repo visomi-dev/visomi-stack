@@ -12,7 +12,7 @@ import { lockIdentity, requireFull, type Principal, type Transaction } from '../
 import { grantInputSchema, memberInputSchema, scopeInputSchema, targetSchema, type AccessTarget } from './contracts';
 
 const { tenants, scopes, memberships, grants } = persistenceSchema;
-const { keyScopes, opaqueUnits } = vaultSchema;
+const { keyChallenges, keyScopes, opaqueUnits } = vaultSchema;
 
 function vaultRegistry(tx: Transaction) {
   // Bootstrap commits the first device and its registry in one transaction.
@@ -127,6 +127,49 @@ export class Access {
         next: rows.length > limit ? page.at(-1)!.scopeId : null,
         ...(objectBackup && { pendingSetup: pending.length > 0 }),
       };
+    });
+  }
+
+  async listExampleVaultPairings(actor: SessionActor) {
+    return this.database.transaction(async (tx) => {
+      await this.identity(tx, actor);
+
+      const workspaces = this.exampleWorkspaces(tx, actor.principal.id, true).as('pairing_workspaces');
+
+      return tx
+        .select({
+          tenantId: keyChallenges.tenantId,
+          scopeId: keyChallenges.scopeId,
+          objectId: sql<string>`coalesce(${workspaces.objectId!}, ${keyChallenges.scopeId})`,
+          requestId: keyChallenges.id,
+        })
+        .from(keyChallenges)
+        .innerJoin(
+          workspaces,
+          and(eq(workspaces.tenantId, keyChallenges.tenantId), eq(workspaces.scopeId, keyChallenges.scopeId)),
+        )
+        .innerJoin(
+          keyScopes,
+          and(
+            eq(keyScopes.tenantId, keyChallenges.tenantId),
+            eq(keyScopes.scopeId, keyChallenges.scopeId),
+            eq(keyScopes.domain, keyChallenges.domain),
+          ),
+        )
+        .where(
+          and(
+            eq(keyChallenges.ownerId, actor.principal.id),
+            eq(workspaces.owner, true),
+            eq(keyChallenges.domain, 'private-resources'),
+            eq(keyScopes.phase, 'ready'),
+            isNull(keyChallenges.consumedAt),
+            gt(keyChallenges.expiresAt, new Date()),
+            sql`${keyChallenges.value} ? 'proof'`,
+            sql`${keyChallenges.value}->'key'->>'generation' = ${keyScopes.generation}::text`,
+          ),
+        )
+        .orderBy(desc(keyChallenges.expiresAt), asc(keyChallenges.id))
+        .limit(32);
     });
   }
 
@@ -427,7 +470,7 @@ export class Access {
         and not ${opaqueUnits.tombstone}
       order by ${opaqueUnits.cursor} desc
       limit 1
-    )`;
+    )`.as('object_id');
     const readable = Object.entries(actions)
       .filter(([, allowed]) => allowed.includes('read'))
       .map(([role]) => role);
@@ -435,8 +478,8 @@ export class Access {
     // Both example products create direct resource children. The nearer grant has precedence.
     return tx
       .select({
-        tenantId: tenants.id,
-        scopeId: scopes.id,
+        tenantId: sql<string>`${tenants.id}`.as('workspace_tenant_id'),
+        scopeId: sql<string>`${scopes.id}`.as('workspace_scope_id'),
         createdAt: tenants.createdAt,
         owner: memberships.owner,
         ...(objectBackup ? { objectId } : {}),

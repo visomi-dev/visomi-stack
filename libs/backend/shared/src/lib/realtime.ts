@@ -5,6 +5,7 @@ export type RealtimePublisher = {
   notifySession(sessionId: string): Promise<void>;
   notifyUser(userId: string): Promise<void>;
   notifyCloud?(userId: string): Promise<void>;
+  notifyVaultPairing?(userId: string): Promise<void>;
   notifyVault?(scopeId: string, cursor: number): Promise<void>;
 };
 
@@ -17,6 +18,7 @@ const notificationMethods = {
   session: 'notifySession',
   user: 'notifyUser',
   cloud: 'notifyCloud',
+  pairing: 'notifyVaultPairing',
 } as const;
 
 export type RealtimeEvent =
@@ -35,6 +37,7 @@ export function createRealtimePublisher(transport: RealtimeTransport) {
     notifySession: (id) => transport.publish({ kind: 'session', id }),
     notifyUser: (id) => transport.publish({ kind: 'user', id }),
     notifyCloud: (id) => transport.publish({ kind: 'cloud', id }),
+    notifyVaultPairing: (id) => transport.publish({ kind: 'pairing', id }),
     notifyVault: (id, cursor) => transport.publish({ kind: 'vault', id, cursor }),
   } satisfies RealtimePublisher;
 }

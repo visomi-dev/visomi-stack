@@ -48,6 +48,38 @@ export class KeyDevices {
     this.vault = new VaultAccess(access);
   }
 
+  async publishPairing(actor: SessionActor, target: unknown, raw: unknown) {
+    const proof = input(deviceProofSchema, raw);
+
+    if (proof.ownerId !== actor.principal.id) {
+      throw new HttpError(403, 'scope_access_denied');
+    }
+
+    verifyDeviceProof(proof);
+
+    return this.withExamplePairing(actor, target, proof.requestId, async (context, condition, challenge) => {
+      if (deviceProofMessage(challenge.value) !== deviceProofMessage(proof)) {
+        throw new HttpError(400, 'device_challenge_invalid');
+      }
+
+      await context.tx.update(keyChallenges).set({ value: proof }).where(condition);
+
+      return proof;
+    });
+  }
+
+  async readPairing(actor: SessionActor, target: unknown, id: string) {
+    return this.withExamplePairing(actor, target, id, async (_context, _condition, challenge) => {
+      const proof = deviceProofSchema.safeParse(challenge.value);
+
+      if (!proof.success) {
+        throw new HttpError(404, 'device_challenge_invalid');
+      }
+
+      return proof.data;
+    });
+  }
+
   async request(actor: SessionActor, target: unknown, domain: string, raw: unknown) {
     const value = input(enrollmentRequestSchema, raw);
     const policy = this.vault.policy(domain);
@@ -357,6 +389,45 @@ export class KeyDevices {
         .where(keyPredicate(key));
 
       return { generation: key.generation + 1, epoch: registry.epoch + 1, phase: 'ready' as const };
+    });
+  }
+
+  private async withExamplePairing<T>(
+    actor: SessionActor,
+    target: unknown,
+    id: string,
+    use: (
+      context: ScopeAccess,
+      condition: ReturnType<typeof and>,
+      row: typeof keyChallenges.$inferSelect,
+    ) => Promise<T>,
+  ) {
+    const domain = 'private-resources';
+    const policy = this.vault.policy(domain);
+
+    return this.access.withScope(actor, target, 'share', async (context) => {
+      const { key, registry } = await this.vault.registry(context, policy, true);
+
+      if (!context.scope.objectBackup || !context.membership.owner || registry.phase !== 'ready') {
+        throw new HttpError(403, 'scope_access_denied');
+      }
+
+      const condition = and(
+        eq(keyChallenges.tenantId, key.scope.tenantId),
+        eq(keyChallenges.scopeId, context.scope.id),
+        eq(keyChallenges.domain, domain),
+        eq(keyChallenges.id, id),
+        eq(keyChallenges.ownerId, actor.principal.id),
+        isNull(keyChallenges.consumedAt),
+        gt(keyChallenges.expiresAt, new Date()),
+      );
+      const [challenge] = await context.tx.select().from(keyChallenges).where(condition);
+
+      if (!challenge || challenge.value.key.generation !== key.generation) {
+        throw new HttpError(404, 'device_challenge_invalid');
+      }
+
+      return use(context, condition, challenge);
     });
   }
 

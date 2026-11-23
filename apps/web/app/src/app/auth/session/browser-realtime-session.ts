@@ -7,20 +7,24 @@ type ApprovalEvent = 'connected' | 'disconnected' | 'changed';
 export class BrowserRealtimeSession {
   private readonly online = signal(false);
   private readonly cloudRevision = signal(0);
+  private readonly pairingRevision = signal(0);
 
   private session: Socket | undefined;
 
   readonly connected = this.online.asReadonly();
   readonly cloudChanges = this.cloudRevision.asReadonly();
+  readonly vaultPairingChanges = this.pairingRevision.asReadonly();
 
   connectSession(refresh: () => void): () => void {
     const invalidateCloud = () => this.cloudRevision.update((revision) => revision + 1);
+    const invalidatePairing = () => this.pairingRevision.update((revision) => revision + 1);
     const close = this.open('/session', (socket) => {
       this.session = socket;
       socket.on('connect', () => {
         this.online.set(true);
 
         invalidateCloud();
+        invalidatePairing();
       });
 
       socket.on('disconnect', (reason) => {
@@ -34,6 +38,7 @@ export class BrowserRealtimeSession {
       socket.on('connect_error', () => this.online.set(false));
       socket.on('session:changed', refresh);
       socket.on('cloud:changed', invalidateCloud);
+      socket.on('vault-pairing:changed', invalidatePairing);
     });
 
     return () => {

@@ -14,13 +14,41 @@ export function registerVaultRoutes(
   router: Router,
   access: Access,
   objects?: BackupObjects,
-  notifyVault?: RealtimePublisher['notifyVault'],
+  realtime?: RealtimePublisher,
 ) {
   const devices = new KeyDevices(access);
-  const sync = new OpaqueSync(access, objects, notifyVault);
+  const sync = new OpaqueSync(access, objects, realtime?.notifyVault);
   const actor = (req: Request) => ({ sessionId: req.sessionID, principal: requireFull(req.user) });
+  const target = ({ tenantId, scopeId }: { tenantId: string; scopeId: string }) => ({ tenantId, scopeId });
+  const notifyPairing = (ownerId: string) => void realtime?.notifyVaultPairing?.(ownerId).catch(() => undefined);
 
   routes.register(router, [
+    {
+      contract: contracts.pairings,
+      handler: async (req, res) => {
+        const result = await access.listExampleVaultPairings(actor(req));
+
+        return res.json(result);
+      },
+    },
+    {
+      contract: contracts.publishPairing,
+      handler: async (req, res, value) => {
+        const result = await devices.publishPairing(actor(req), value.params, value.body);
+
+        notifyPairing(result.ownerId);
+
+        return res.json(result);
+      },
+    },
+    {
+      contract: contracts.readPairing,
+      handler: async (req, res, value) => {
+        const proof = await devices.readPairing(actor(req), target(value.params), value.params.id);
+
+        return res.json(proof);
+      },
+    },
     {
       contract: contracts.request,
       handler: async (req, res, value) => {
@@ -56,6 +84,8 @@ export function registerVaultRoutes(
           value.params.domain,
           value.body,
         );
+
+        notifyPairing(value.body.proof.ownerId);
 
         return res.json(result);
       },

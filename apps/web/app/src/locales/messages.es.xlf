@@ -1354,6 +1354,66 @@
         <source>Approving device fingerprint</source>
         <target>Huella del dispositivo que aprueba</target>
       </trans-unit>
+      <trans-unit id="vaultPairingNotice" datatype="html">
+        <source>A device is waiting to link to your vault.</source>
+        <target>Un dispositivo espera vincularse a tu bóveda.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingReview" datatype="html">
+        <source>Review request</source>
+        <target>Revisar solicitud</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingUnavailable" datatype="html">
+        <source>This request is no longer available. Start a new request on the other device.</source>
+        <target>Esta solicitud ya no está disponible. Inicia una nueva en el otro dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingWaitingHere" datatype="html">
+        <source>Requests from your other devices will appear in the app.</source>
+        <target>Las solicitudes de tus otros dispositivos aparecerán en la app.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingConfirmInstructions" datatype="html">
+        <source>Enter the fingerprint shown on the new device to confirm you are linking the right one.</source>
+        <target>Ingresa la huella que aparece en el dispositivo nuevo para confirmar que es el correcto.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingExpired" datatype="html">
+        <source>This request expired.</source>
+        <target>Esta solicitud venció.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingStartAgain" datatype="html">
+        <source>Start again</source>
+        <target>Volver a empezar</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingWaiting" datatype="html">
+        <source>Waiting for approval on your other device.</source>
+        <target>Esperando aprobación en tu otro dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingLinkInstructions" datatype="html">
+        <source>Review the request in Stack on a device that can already open this vault. If the notice doesn’t appear, open this link there.</source>
+        <target>Revisa la solicitud en Stack desde un dispositivo que ya pueda abrir esta bóveda. Si no aparece el aviso, abre este enlace ahí.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingCopyLink" datatype="html">
+        <source>Copy review link</source>
+        <target>Copiar enlace de revisión</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingNeedsLinkedDevice" datatype="html">
+        <source>Open this review link on a device that can already unlock this vault.</source>
+        <target>Abre este enlace en un dispositivo que ya pueda abrir esta bóveda.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingOpenLink" datatype="html">
+        <source>Open review link</source>
+        <target>Abrir enlace de revisión</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingApproved" datatype="html">
+        <source>Approved. Finish linking this device.</source>
+        <target>Solicitud aprobada. Termina de vincular este dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingLinkCopied" datatype="html">
+        <source>Review link copied.</source>
+        <target>Copiaste el enlace de revisión.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingLinkCopyFailed" datatype="html">
+        <source>Select and copy the review link below.</source>
+        <target>Selecciona y copia el enlace de revisión.</target>
+      </trans-unit>
       <trans-unit id="vaultDevicesApproveInstructions" datatype="html">
         <source> Paste the request from the new device. Enter the fingerprint shown directly on that device. </source>
         <target>Pega la solicitud del dispositivo nuevo. Escribe la huella que aparece en ese dispositivo.</target>

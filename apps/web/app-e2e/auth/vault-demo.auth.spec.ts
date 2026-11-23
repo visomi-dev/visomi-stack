@@ -717,6 +717,8 @@ test.describe('Vault passkey setup in Chromium', () => {
     const desktop = await browser.newContext({ baseURL: info.project.use.baseURL });
 
     try {
+      await desktop.routeWebSocket('**/socket.io/**', (socket) => socket.close());
+
       await desktop.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
 
       const peer = await desktop.newPage();
@@ -747,10 +749,29 @@ test.describe('Vault passkey setup in Chromium', () => {
 
       await peer.getByRole('button', { name: 'Request pairing with PIN' }).click();
 
-      const proof = await peer.getByLabel('Pairing request', { exact: true }).inputValue();
-      const fingerprint = await peer.locator('[data-vault-recipient]').innerText();
+      const reviewLink = peer.getByRole('link', { name: 'Open review link', exact: true });
 
-      await page.getByLabel('Pairing request', { exact: true }).fill(proof);
+      await expect(reviewLink).toBeVisible();
+
+      const href = await reviewLink.getAttribute('href');
+      const fingerprint = await peer.locator('[data-vault-recipient]').innerText();
+      const relative = new URL(href!);
+
+      await page.goto(relative.href);
+
+      await expect(
+        page.getByText('Unlock the note on this device before approving another one.', { exact: true }),
+      ).toBeVisible();
+
+      await page.getByRole('link', { name: 'Open vault note', exact: true }).click();
+
+      await page.getByRole('button', { name: 'Use a passkey', exact: true }).click();
+
+      await expect(page.getByLabel('Your note', { exact: true })).toHaveValue(note);
+
+      await page.getByRole('link', { name: 'Review request', exact: true }).click();
+
+      await expect(page).toHaveURL(relative.href);
 
       await page.getByLabel('New device fingerprint').fill(fingerprint);
 
@@ -760,7 +781,11 @@ test.describe('Vault passkey setup in Chromium', () => {
 
       const approver = await page.locator('[data-vault-approver]').innerText();
 
-      await peer.getByLabel('Approving device fingerprint', { exact: true }).fill(approver);
+      const trust = peer.getByLabel('Approving device fingerprint', { exact: true });
+
+      await expect(trust).toBeVisible({ timeout: 15_000 });
+
+      await trust.fill(approver);
 
       await pin.fill('208146');
 
