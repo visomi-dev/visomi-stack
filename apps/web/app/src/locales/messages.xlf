@@ -2379,10 +2379,6 @@
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">45,47</context>
         </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
-          <context context-type="linenumber">32,34</context>
-        </context-group>
       </trans-unit>
       <trans-unit id="persistenceInitializePrivate" datatype="html">
         <source> Set up an empty private resource </source>
@@ -2561,17 +2557,6 @@
           <context context-type="linenumber">103</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="vaultPinUnlock" datatype="html">
-        <source>Unlock with PIN</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
-          <context context-type="linenumber">117,120</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
-          <context context-type="linenumber">30,32</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="vaultPinConfirm" datatype="html">
         <source>Confirm your new PIN</source>
         <context-group purpose="location">
@@ -2603,30 +2588,12 @@
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">12,16</context>
         </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
-          <context context-type="linenumber">13,17</context>
-        </context-group>
       </trans-unit>
       <trans-unit id="vaultPanelPinUnlock" datatype="html">
         <source>Unlock with PIN</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-panel/vault-panel.html</context>
           <context context-type="linenumber">43,45</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultUnlockHeading" datatype="html">
-        <source>Unlock your private resources</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
-          <context context-type="linenumber">7,9</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="vaultUnlockDescription" datatype="html">
-        <source> Unlock the vault to open its private resources. Other vaults may use a different key or PIN. An unlocked vault stays open while you navigate until you lock it or sign out. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-unlock/vault-unlock.html</context>
-          <context context-type="linenumber">6,10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultSeparation" datatype="html">

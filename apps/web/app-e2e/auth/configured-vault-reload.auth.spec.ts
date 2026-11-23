@@ -294,6 +294,8 @@ test('hard reload locks a configured passkey vault with a live session and keeps
 
   await expect(locked).toHaveCount(0);
 
+  await expect(page.getByRole('heading', { name: 'Unlock your private resources', exact: true })).toHaveCount(0);
+
   expect(assertions).toHaveLength(beforeHome);
 });
 

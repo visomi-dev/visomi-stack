@@ -23,9 +23,8 @@ import { AuthFeedback } from '../../auth/shared/feedback/feedback';
 import { Session } from '../../auth/session/session';
 import { Logout } from '../../auth/session/logout';
 import { AuthNavigation } from '../../auth/shared/navigation';
-import { VaultUnlock } from '../../shared/vault/vault-unlock/vault-unlock';
 import { VaultSyncIndicator } from '../../shared/vault/vault-sync-indicator/vault-sync-indicator';
-import { Vaults } from '../../shared/vault/vaults';
+import { VaultSession } from '../../shared/vault/vault-session';
 import { DatabaseHttp } from '../../shared/db/http';
 import { LanguageSwitcher } from '../../i18n/language-switcher/language-switcher';
 import { BrowserPrivacy } from '../../observability/browser-privacy/browser-privacy';
@@ -39,7 +38,6 @@ import { ExampleAvailability } from '../../db/example-availability';
     BrowserPrivacy,
     ConsentNotice,
     PrivacyLink,
-    VaultUnlock,
     VaultSyncIndicator,
     AppShell,
     Sidebar,
@@ -61,7 +59,7 @@ import { ExampleAvailability } from '../../db/example-availability';
     AuthFeedback,
     Dialog,
   ],
-  providers: [Action, AuthHttp, Logout, Vaults, DatabaseHttp, ExampleAvailability],
+  providers: [Action, AuthHttp, Logout, DatabaseHttp, ExampleAvailability],
   templateUrl: './authenticated-layout.html',
   styleUrl: './authenticated-layout.css',
 })
@@ -75,6 +73,8 @@ export class AuthenticatedLayout {
   private readonly mobileMenu = viewChild.required(Dialog);
 
   private readonly desktopAccount = viewChild.required<ElementRef<HTMLElement>>('desktopAccount');
+
+  protected readonly vault = inject(VaultSession);
 
   protected readonly sidebarCompact = signal(false);
   protected readonly accountOpen = signal(false);
@@ -109,6 +109,9 @@ export class AuthenticatedLayout {
       : []),
     this.navbarItems[1],
   ]);
+  protected readonly canLockVault = computed(() =>
+    this.vault.knownBindings().some((binding) => this.vault.canResume(binding)),
+  );
 
   protected readonly signOutLabel = $localize`:@@authSignOut:Sign out`;
   protected readonly expandSidebar = $localize`:@@shellExpandSidebar:Expand sidebar`;
@@ -120,20 +123,8 @@ export class AuthenticatedLayout {
   ];
   protected readonly accountMenu = $localize`:@@shellAccountMenu:Account menu`;
 
-  readonly vaults = inject(Vaults);
   readonly navigation = inject(AuthNavigation);
   readonly action = inject(Action);
-
-  readonly vaultMethod = computed(() => {
-    const segments = this.router.lastSuccessfulNavigation()?.finalUrl?.root.children['primary']?.segments;
-    const domain = segments?.[0]?.path;
-
-    if (domain === 'db-example' || (domain === 'vault' && segments?.[1]?.path === 'unlock')) {
-      return undefined;
-    }
-
-    return this.vaults.show() ? this.vaults.binding()?.method : undefined;
-  });
 
   logout(): void {
     void this.signOut.run({

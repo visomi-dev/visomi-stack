@@ -521,8 +521,6 @@ test('pairs a test private resource in Security across a PIN device and a PRF de
 
     await pin.fill('048261');
 
-    await page.getByRole('button', { name: 'Unlock with PIN', exact: true }).click();
-
     await page.getByRole('button', { name: 'Synchronize encrypted changes', exact: true }).click();
 
     await expect(page.locator('pre')).toHaveText(second);

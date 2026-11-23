@@ -178,15 +178,6 @@
     }
 
     @if (session.full()) {
-      <app-vault-unlock
-        control-id="workspace-vault"
-        [method]="vaultMethod()"
-        [busy]="vaults.busy()"
-        [notice]="vaults.notice()"
-        [(pin)]="vaults.pin"
-        (unlock)="vaults.unlock()"
-      />
-
       @for (user of [session.user()]; track user?.id) {
         <router-outlet class="hidden" />
       }
@@ -445,14 +436,14 @@
   </nav>
 
   <div class="mt-2 border-t border-zinc-200 pt-2 dark:border-zinc-700">
-    @if (vaults.vault.knownBindings().length && vaults.closed().length < vaults.vault.knownBindings().length) {
+    @if (canLockVault()) {
       <button
         appUI
         type="button"
         size="sm"
         variant="ghost"
         class="w-full justify-start"
-        (click)="closeAccount(desktop); vaults.lock()"
+        (click)="closeAccount(desktop); vault.lock()"
         i18n="@@vaultLockNow"
       >
         Lock vault now

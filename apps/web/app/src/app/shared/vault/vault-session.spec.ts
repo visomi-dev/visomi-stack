@@ -42,11 +42,9 @@ function fixture(browser = true) {
   vi.spyOn(PrfUnlock.prototype, 'secret').mockImplementation(async () => new Uint8Array(32));
   const close = vi.spyOn(BrowserVault.prototype, 'close');
   const currentKey = vi.fn(async () => ({ context: binding }));
-  const latestBindings = vi.fn(async () => [binding]);
   const openStorage = vi.spyOn(IndexedDbVaultStorage, 'open').mockResolvedValue({
     getKey: vi.fn(async () => ({ context: binding })),
     getCurrentKey: currentKey,
-    latestBindings,
     getUnit: vi.fn(async () => ({})),
     close: vi.fn(),
   } as unknown as IndexedDbVaultStorage);
@@ -86,7 +84,7 @@ function fixture(browser = true) {
 
   TestBed.tick();
 
-  return { vault, user, full, version, cancellation, openCipher, close, openStorage, currentKey, latestBindings };
+  return { vault, user, full, version, cancellation, openCipher, close, openStorage, currentKey };
 }
 
 describe('vault account lifecycle', () => {
@@ -257,25 +255,12 @@ it('synchronously cancels a pending ceremony on release instead of treating its 
   expect(late.every((byte) => byte === 0)).toBe(true);
 });
 
-it('does not forget a newly opened vault when startup metadata discovery finishes late', async () => {
+it('tracks an opened local binding for the active account and clears it on cancellation', async () => {
   const f = fixture();
-  let finish!: (bindings: WrappingContext[]) => void;
 
-  f.latestBindings.mockImplementationOnce(
-    () =>
-      new Promise((resolve) => {
-        finish = resolve;
-      }),
-  );
-  const discovery = f.vault.discover();
-
-  await vi.waitFor(() => expect(f.latestBindings).toHaveBeenCalled());
+  expect(f.vault.knownBindings()).toEqual([]);
 
   await f.vault.connect(binding, 'synthetic.example.test');
-
-  finish([]);
-
-  await discovery;
 
   expect(f.vault.knownBindings()).toEqual([binding]);
   f.cancellation.abort();
