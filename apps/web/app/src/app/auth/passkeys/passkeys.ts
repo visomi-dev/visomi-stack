@@ -1,4 +1,3 @@
-import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Service, inject } from '@angular/core';
 import {
   startAuthentication,
@@ -6,8 +5,6 @@ import {
   browserSupportsWebAuthn,
   browserSupportsWebAuthnAutofill,
   WebAuthnAbortService,
-  sendSignal,
-  bufferToBase64URLString,
   type PublicKeyCredentialRequestOptionsJSON,
   type PublicKeyCredentialCreationOptionsJSON,
 } from '@simplewebauthn/browser';
@@ -36,7 +33,6 @@ export class Passkeys {
   private readonly http = inject(AuthHttp);
   private readonly destroyRef = inject(DestroyRef);
   private readonly session = inject(Session);
-  private readonly document = inject(DOCUMENT);
 
   private readonly cleanup = this.destroyRef.onDestroy(() => this.cancel());
 
@@ -121,14 +117,6 @@ export class Passkeys {
 
     signal.throwIfAborted();
 
-    if (result.access === 'full' && result.user?.email && options.options.rpId) {
-      await this.updateSavedName(options.options.rpId, result.user.id, result.user.email, signal).catch(
-        () => undefined,
-      );
-
-      signal.throwIfAborted();
-    }
-
     return result;
   }
 
@@ -142,51 +130,6 @@ export class Passkeys {
 
   revoke(id: string): Promise<void> {
     return this.http.request('DELETE', '/passkeys/' + encodeURIComponent(id));
-  }
-
-  private async updateSavedName(rpId: string, userId: string, email: string, signal: AbortSignal): Promise<void> {
-    const view = this.document.defaultView;
-
-    if (!view) {
-      return;
-    }
-
-    const encoder = new TextEncoder();
-    const [account, details] = await Promise.all([
-      view.crypto.subtle.digest('SHA-256', encoder.encode(JSON.stringify([rpId, userId]))),
-      view.crypto.subtle.digest('SHA-256', encoder.encode(JSON.stringify([rpId, userId, email]))),
-    ]);
-
-    signal.throwIfAborted();
-    const storage = view.localStorage;
-    const key = `visomi.passkey-name.${bufferToBase64URLString(account)}`;
-    const marker = bufferToBase64URLString(details);
-    const previous = storage.getItem(key);
-
-    if (previous === marker) {
-      return;
-    }
-
-    // Reserve the update before signaling. A browser that cannot retain the marker skips the optional update.
-    storage.setItem(key, marker);
-
-    void sendSignal({
-      signalName: 'currentUserDetails',
-      rpID: rpId,
-      userID: bufferToBase64URLString(encoder.encode(userId).buffer),
-      userName: email,
-      userDisplayName: email,
-    })
-      .catch(() => {
-        if (storage.getItem(key) === marker) {
-          if (previous === null) {
-            storage.removeItem(key);
-          } else {
-            storage.setItem(key, previous);
-          }
-        }
-      })
-      .catch(() => undefined);
   }
 
   private begin(): AbortSignal {

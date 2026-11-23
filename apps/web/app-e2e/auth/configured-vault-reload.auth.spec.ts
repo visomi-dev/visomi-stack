@@ -1,19 +1,16 @@
 import type { Page, Request, Response, TestInfo } from '@playwright/test';
 
 import { expect, expireSession, passkeySignup, signup, test, vaultUnlockUrl, virtualPasskey } from './support/fixtures';
+import {
+  firstDocument,
+  expectAuthenticatedDocument,
+  observeHydration,
+  hydrationSession,
+} from './support/session-reload';
 
 const note = 'Synthetic note already opened before reload';
 const vaultPath = '/app/en/db-example/vault';
 const vaultApi = '/api/example/vault/';
-
-function firstDocument(page: Page, url: string) {
-  return page.waitForResponse(
-    (response) =>
-      response.url() === url &&
-      response.request().isNavigationRequest() &&
-      response.request().redirectedFrom() === null,
-  );
-}
 
 async function hardReload(page: Page, url: string) {
   // Routing bypasses Playwright's HTTP cache on engines without Chromium's Page.reload command.
@@ -29,75 +26,24 @@ async function hardReload(page: Page, url: string) {
   await page.reload({ waitUntil: 'domcontentloaded' });
 }
 
-async function expectAuthenticatedVault(page: Page, info: TestInfo, url: string, navigate: () => Promise<unknown>) {
-  const cookies = await page.context().cookies(url);
-  const hasSessionCookie = cookies.some((cookie) => cookie.name === 'visomi.sid');
-  const document = firstDocument(page, url);
-  const order: string[] = [];
-  const sessionRequests = new Set<Request>();
-  const markDocument = (response: Response) => {
-    if (response.url() === url && response.request().isNavigationRequest()) {
-      order.push('protected-document-response');
-    }
-  };
-  const revalidation = page.waitForResponse((response) => sessionRequests.has(response.request()));
-  const trace = (request: Request) => {
-    const path = new URL(request.url()).pathname;
+test.beforeEach(async ({ context }) => {
+  await observeHydration(context);
+});
 
-    if (path === '/api/auth/session' && request.method() === 'GET' && order.includes('protected-document-response')) {
-      sessionRequests.add(request);
-    }
+async function reloadHomeFromOpenVault(page: Page, info: TestInfo, label: string) {
+  await page.getByRole('link', { name: label, exact: true }).first().click();
 
-    if (path === vaultApi + 'policy') {
-      order.push('vault-policy');
-    }
-  };
-  const policy = page.waitForResponse((response) => new URL(response.url()).pathname === vaultApi + 'policy');
+  await expect(page.getByRole('heading', { name: label, exact: true })).toBeVisible();
 
-  page.on('response', markDocument);
-  page.on('request', trace);
+  const url = page.url();
 
-  const [first, revalidated, vaultPolicy] = await Promise.all([document, revalidation, policy, navigate()]);
+  expect(new URL(url).pathname.endsWith('/home')).toBe(true);
 
-  expect(first.status()).toBe(200);
-  expect(first.request().redirectedTo()).toBeNull();
-  const html = await first.text();
-  const ssrFull = /"auth-initial-session":\{"available":true,"session":\{[^<]+?"access":"full"/.test(html);
+  await expectAuthenticatedDocument(page, info, url, note, () => page.reload());
 
-  page.off('response', markDocument);
-  page.off('request', trace);
+  await expect(page).toHaveURL(url);
 
-  const session = await page.evaluate(async () => {
-    const response = await fetch('/api/auth/session', { cache: 'no-store' });
-    const value: { access?: string; user?: { emailVerified?: boolean } } = await response.json();
-
-    return { status: response.status, access: value.access, verified: value.user?.emailVerified };
-  });
-
-  expect(first.headers()['cache-control']).toBe('no-store');
-  expect(ssrFull).toBe(true);
-  expect(html.includes('<app-authenticated-layout')).toBe(true);
-  expect(html.includes(note)).toBe(false);
-  expect(revalidated.status()).toBe(200);
-  expect(session.status).toBe(200);
-  expect(session.access).toBe('full');
-  expect(session.verified).toBe(true);
-  expect(vaultPolicy.status()).toBe(200);
-  expect(hasSessionCookie).toBe(true);
-  expect(order.slice(0, 2)).toEqual(['protected-document-response', 'vault-policy']);
-
-  await info.attach('protected-document', {
-    body: JSON.stringify({
-      initialStatus: first.status(),
-      redirected: Boolean(first.request().redirectedTo()),
-      hasSessionCookie,
-      ssrSession: ssrFull ? 'full' : 'other',
-      revalidationStatus: revalidated.status(),
-      browserSession: session.access === 'full' ? 'full' : 'other',
-      browserOrder: order.slice(0, 2),
-    }),
-    contentType: 'application/json',
-  });
+  await expect(page.getByRole('heading', { name: label, exact: true })).toBeVisible();
 }
 
 async function setupVault(page: Page) {
@@ -115,6 +61,24 @@ async function saveNote(page: Page) {
   expect(publication.ok()).toBe(true);
 }
 
+async function setupPinVault(page: Page) {
+  await page.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
+
+  await signup(page);
+
+  await setupVault(page);
+
+  await page.getByRole('button', { name: 'Use a PIN on this device', exact: true }).click();
+
+  await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
+
+  await page.getByLabel('Confirm your new PIN', { exact: true }).fill('048261');
+
+  await page.getByRole('button', { name: 'Set up with PIN', exact: true }).click();
+
+  await expect(page.getByLabel('Your note', { exact: true })).toBeVisible();
+}
+
 function expectSignInRedirect(status: number, location: string | undefined, protectedUrl: string) {
   const target = new URL(protectedUrl);
   const redirect = new URL(location ?? '', target);
@@ -122,7 +86,9 @@ function expectSignInRedirect(status: number, location: string | undefined, prot
   expect(status).toBe(302);
   expect(redirect.origin).toBe(target.origin);
   expect(redirect.pathname).toBe('/app/en/auth/sign-in');
-  expect(redirect.searchParams.get('returnTo')).toBe('/db-example/vault' + target.search);
+  expect(redirect.searchParams.get('returnTo')).toBe(
+    target.pathname.endsWith('/home') ? '/home' : '/db-example/vault' + target.search,
+  );
 }
 
 function trackSignInVaultRequests(page: Page) {
@@ -181,7 +147,7 @@ test('hard reload locks a configured passkey vault with a live session and keeps
   await page.setViewportSize({ width: 390, height: 844 });
 
   // Start from a previously configured vault opened with its stored credential.
-  await expectAuthenticatedVault(page, info, url, () => page.goto(url));
+  await expectAuthenticatedDocument(page, info, url, note, () => page.goto(url));
 
   await expect(page).toHaveURL(unlockUrl);
 
@@ -195,15 +161,13 @@ test('hard reload locks a configured passkey vault with a live session and keeps
 
   const reload = () => cdp.send('Page.reload', { ignoreCache: true });
 
-  await expectAuthenticatedVault(page, info, url, reload);
+  await expectAuthenticatedDocument(page, info, url, note, reload);
 
   await expect(page).toHaveURL(unlockUrl);
 
   await expect(unlock).toBeEnabled();
 
-  await expect(
-    locked.getByText('You’re still signed in. Use your passkey to unlock this vault.', { exact: true }),
-  ).toBeVisible();
+  await expect(locked.getByText('Use your passkey to view your data.', { exact: true })).toBeVisible();
 
   await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeVisible();
 
@@ -278,7 +242,14 @@ test('hard reload locks a configured passkey vault with a live session and keeps
     contentType: 'application/json',
   });
 
-  await page.getByRole('button', { name: 'Sign in with a passkey', exact: true }).click();
+  const beforeSignIn = assertions.length;
+  const [verified] = await Promise.all([
+    page.waitForResponse((response) => new URL(response.url()).pathname === '/api/auth/passkeys/authentication/verify'),
+    page.getByRole('button', { name: 'Sign in with a passkey', exact: true }).click(),
+  ]);
+
+  expect(verified.status()).toBe(200);
+  expect(assertions).toHaveLength(beforeSignIn + 1);
 
   await expect(page).toHaveURL(unlockUrl);
 
@@ -299,35 +270,85 @@ test('hard reload locks a configured passkey vault with a live session and keeps
   expect(assertions).toHaveLength(beforeHome);
 });
 
-test('a directly opened PIN vault stays in the localized shell after hard reload and opens the same note', async ({
+test('ordinary reload retains the session before and after passkey unlock on Vault and Home', async ({
   page,
+  browserName,
 }, info) => {
-  await page.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
+  // eslint-disable-next-line playwright/no-skipped-test
+  test.skip(browserName !== 'chromium', 'Requires Chromium virtual WebAuthn PRF');
+  const { cdp } = await virtualPasskey(page);
 
-  await signup(page);
+  await passkeySignup(page);
 
   await setupVault(page);
 
-  await page.getByRole('button', { name: 'Use a PIN on this device', exact: true }).click();
+  await page.getByRole('button', { name: 'Set up with a passkey', exact: true }).click();
 
-  await page.getByLabel('Local unlock PIN', { exact: true }).fill('048261');
+  await saveNote(page);
 
-  await page.getByLabel('Confirm your new PIN', { exact: true }).fill('048261');
+  const url = page.url();
+  const locked = vaultUnlockUrl(url);
+  const editor = page.getByLabel('Your note', { exact: true });
+  const unlock = page.getByRole('button', { name: 'Use a passkey', exact: true });
 
-  await page.getByRole('button', { name: 'Set up with PIN', exact: true }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await page.reload();
+
+  await expect(page).toHaveURL(locked);
+
+  let assertions = 0;
+
+  cdp.on('WebAuthn.credentialAsserted', () => assertions++);
+
+  await expectAuthenticatedDocument(page, info, locked, note, () => page.reload());
+
+  await expect(unlock).toBeEnabled();
+
+  expect(assertions).toBe(0);
+
+  await unlock.click();
+
+  await expect(editor).toHaveValue(note);
+
+  await expect(page).toHaveURL(url);
+
+  await expectAuthenticatedDocument(page, info, url, note, () => page.reload());
+
+  await expect(page).toHaveURL(locked);
+
+  expect(assertions).toBe(1);
+
+  await unlock.click();
+
+  await expect(editor).toHaveValue(note);
+
+  await reloadHomeFromOpenVault(page, info, 'Home');
+
+  expect(assertions).toBe(2);
+});
+
+test('a directly opened PIN vault stays in the localized shell after hard reload and opens the same note', async ({
+  page,
+}, info) => {
+  await setupPinVault(page);
 
   await saveNote(page);
 
   const url = page.url().replace('/app/en/', '/app/es/');
   const unlockUrl = vaultUnlockUrl(url);
-  const locked = page.getByRole('region', { name: 'Desbloquea tu bóveda', exact: true });
+  const locked = page.getByRole('region', { name: 'Abre tu bóveda', exact: true });
   const pin = locked.getByLabel('PIN de desbloqueo local', { exact: true });
   const unlock = locked.getByRole('button', { name: 'Desbloquear con PIN', exact: true });
   const editor = page.getByLabel('Tu nota', { exact: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
 
-  await expectAuthenticatedVault(page, info, unlockUrl, () => page.goto(unlockUrl));
+  await expectAuthenticatedDocument(page, info, unlockUrl, note, () => page.goto(unlockUrl));
+
+  await expect(page).toHaveURL(unlockUrl);
+
+  await expectAuthenticatedDocument(page, info, unlockUrl, note, () => page.reload());
 
   await expect(page).toHaveURL(unlockUrl);
 
@@ -341,7 +362,15 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
 
   await expect(editor).toHaveValue(note);
 
-  await expectAuthenticatedVault(page, info, url, () => hardReload(page, url));
+  await expectAuthenticatedDocument(page, info, url, note, () => page.reload());
+
+  await expect(page).toHaveURL(unlockUrl);
+
+  await pin.fill('048261');
+
+  await expect(editor).toHaveValue(note);
+
+  await expectAuthenticatedDocument(page, info, url, note, () => hardReload(page, url));
 
   await expect(page).toHaveURL(unlockUrl);
 
@@ -351,9 +380,7 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
 
   await expect(unlock).toHaveCount(0);
 
-  await expect(
-    locked.getByText('Sigues en tu cuenta. Usa tu PIN para abrir la bóveda.', { exact: true }),
-  ).toBeVisible();
+  await expect(locked.getByText('Usa tu PIN para ver tus datos.', { exact: true })).toBeVisible();
 
   await expect(locked.getByText('6 dígitos', { exact: true })).toHaveClass(/\bsr-only\b/);
 
@@ -362,6 +389,10 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
   await expect(pin).toHaveAttribute('maxlength', '6');
 
   await expect(page.getByRole('button', { name: 'Menú', exact: true })).toBeVisible();
+
+  await pin.focus();
+
+  await expect(pin).toBeFocused();
 
   await pin.evaluate((element) => {
     (element as HTMLInputElement).value = '048261';
@@ -387,6 +418,44 @@ test('a directly opened PIN vault stays in the localized shell after hard reload
   } finally {
     await page.context().setOffline(false);
   }
+
+  await reloadHomeFromOpenVault(page, info, 'Inicio');
+});
+
+test('a locked vault links to its device pairing instructions by keyboard', async ({ page }, info) => {
+  await setupPinVault(page);
+
+  const url = page.url().replace('/app/en/', '/app/es/');
+  const target = new URL(url).searchParams;
+
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await page.goto(vaultUnlockUrl(url));
+
+  await expect(page.getByRole('heading', { name: 'Abre tu bóveda', exact: true })).toBeVisible();
+
+  const pairing = page.getByRole('link', { name: 'Vincular otro dispositivo', exact: true });
+
+  await pairing.focus();
+
+  await expect(pairing).toBeFocused();
+
+  await page.screenshot({ path: info.outputPath('vault-pin-es-mobile.png'), animations: 'disabled' });
+
+  await pairing.press('Enter');
+
+  await expect(page.getByRole('heading', { name: 'Seguridad', exact: true })).toBeVisible();
+
+  const security = new URL(page.url());
+
+  for (const field of ['tenantId', 'scopeId', 'objectId']) {
+    expect(target.has(field)).toBe(true);
+    expect(security.searchParams.get(field)).toBe(target.get(field));
+  }
+
+  await expect(
+    page.getByText('Desbloquea la nota en este dispositivo para poder aprobar el otro.', { exact: true }),
+  ).toBeVisible();
 });
 
 test('a session without a configured vault can load setup and ordinary protected pages', async ({ page }, info) => {
@@ -394,7 +463,7 @@ test('a session without a configured vault can load setup and ordinary protected
 
   const url = new URL(vaultPath, page.url()).href;
 
-  await expectAuthenticatedVault(page, info, url, () => page.goto(url));
+  await expectAuthenticatedDocument(page, info, url, note, () => page.goto(url));
 
   await expect(page).toHaveURL(url);
 
@@ -422,4 +491,38 @@ test('a session without a configured vault can load setup and ordinary protected
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
   await expect(page.getByRole('region', { name: 'Unlock your vault', exact: true })).toHaveCount(0);
+});
+
+test('Home reload redirects expired and anonymous sessions to sign-in with the Home return path', async ({
+  page,
+  browser,
+}) => {
+  const email = await signup(page);
+  const homeUrl = page.url();
+
+  await expireSession(email);
+
+  const anonymous = await browser.newContext();
+
+  try {
+    await observeHydration(anonymous);
+
+    const visitor = await anonymous.newPage();
+
+    for (const [tab, navigate] of [
+      [page, () => page.reload()],
+      [visitor, () => visitor.goto(homeUrl)],
+    ] as const) {
+      const document = firstDocument(tab, homeUrl);
+      const [first] = await Promise.all([document, navigate()]);
+      const session = await hydrationSession(tab);
+
+      expectSignInRedirect(first.status(), first.headers()['location'], homeUrl);
+      expect(session).toEqual({ status: 200, access: 'anonymous' });
+
+      await expect(tab.getByRole('button', { name: 'Sign in with a passkey', exact: true })).toBeVisible();
+    }
+  } finally {
+    await anonymous.close();
+  }
 });
