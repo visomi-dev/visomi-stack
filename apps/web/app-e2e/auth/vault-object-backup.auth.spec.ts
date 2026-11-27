@@ -578,9 +578,17 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await expect(indicatorStatus).toHaveText('Vault synced');
 
+    // The localized offline reopen starts a separate visit after the accelerated linking and live-sync journey.
+    await waitForRequestWindow();
+
     await recipient.route('**/sync/pull', (route) => route.abort());
 
-    await recipient.goto(workspace.href.replace('/app/en/', '/app/es/'));
+    const localized = workspace.href.replace('/app/en/', '/app/es/');
+    const localizedDocument = await recipient.goto(localized);
+
+    expect(localizedDocument?.status()).toBe(200);
+
+    await expect(recipient).toHaveURL(vaultUnlockUrl(localized));
 
     const restoredPanel = recipient.locator('app-database-example');
 
