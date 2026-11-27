@@ -78,6 +78,16 @@ export function safeReturnTo(value: string | null, base: string): string | null 
 
   const url = new URL(path, 'https://internal.invalid');
 
+  if (pathname === '/security' && url.searchParams.get('sample') === 'vault-backup') {
+    const keys = ['tenantId', 'scopeId', 'objectId', 'requestId'];
+
+    return !url.hash &&
+      url.searchParams.size === keys.length + 1 &&
+      keys.every((key) => vaultReturnUuid.test(url.searchParams.get(key) ?? ''))
+      ? pathname + url.search
+      : null;
+  }
+
   if (
     url.search &&
     !(

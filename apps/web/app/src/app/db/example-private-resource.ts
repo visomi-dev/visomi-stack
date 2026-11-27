@@ -7,7 +7,6 @@ import type { z } from 'zod';
 import { encodeBytes, type SyncReplica, replicaId, type DeviceCustody } from '@visomi-stack/web-frontend-db';
 import {
   createOperationId,
-  deviceChallengeSchema,
   syncWriteSchema,
   syntheticHybridPolicy,
   VaultError,
@@ -26,6 +25,7 @@ import { openLocalVault } from '../shared/vault/local-unlock';
 import { rosterSchema, validateExampleEnvelope, exampleLocalKey, examplePrivatePath } from './example-contracts';
 import type { ExampleTarget } from './example-contracts';
 import { exampleReplica, watchBackup } from './example-transport';
+import { ExampleRecoverySetup } from './example-recovery-setup';
 import { openExampleDevice } from './example-vault-enrollment';
 
 export type { ExampleTarget } from './example-contracts';
@@ -60,10 +60,20 @@ export class ExamplePrivateResource {
   private target: ExampleTarget | undefined;
   private version = 0;
 
+  readonly recovery = new ExampleRecoverySetup(this.api, this.vault);
   readonly pending = this.pendingState.asReadonly();
   readonly synchronized = this.synchronizedState.asReadonly();
   readonly conflict = this.conflictState.asReadonly();
   readonly verifiedCursor = this.verifiedCursorState.asReadonly();
+
+  async enrollWithMethod(target: ExampleTarget, method?: WrappingContext['method']) {
+    const { binding, custody, signal, storage, id } = this.active(target);
+    const control = await this.recovery.enroll(examplePrivatePath(target), binding, custody, signal, method);
+
+    this.current(signal);
+
+    await storage.advanceControl(id, control);
+  }
 
   async watchProof(target: ExampleTarget) {
     return watchBackup(this.api, this.session, target, this.active(target));
@@ -130,84 +140,100 @@ export class ExamplePrivateResource {
       throw new VaultError('recovery-required');
     }
 
-    const { binding, custody } = await openExampleDevice({
-      view,
-      key,
-      ownerId,
-      rpId,
-      signal: AbortSignal.any([signal, this.session.cancellation()]),
-      existing,
-      pin,
-      enrolled: Boolean(registry),
-      backedSample: this.backupPage,
-      auth: this.auth,
-      vault: this.vault,
-      current: () => this.current(signal),
-    });
+    const initialKey =
+      this.backupPage && !registry && !existing ? view.crypto.getRandomValues(new Uint8Array(32)) : undefined;
 
-    this.current(signal);
+    try {
+      const { binding, custody } = await openExampleDevice({
+        initialKey,
+        view,
+        key,
+        ownerId,
+        rpId,
+        signal: AbortSignal.any([signal, this.session.cancellation()]),
+        existing,
+        pin,
+        enrolled: Boolean(registry),
+        backedSample: this.backupPage,
+        auth: this.auth,
+        vault: this.vault,
+        current: () => this.current(signal),
+      });
 
-    this.custody = custody;
-    this.binding = binding;
+      this.current(signal);
 
-    if (!registry) {
-      try {
-        const committed = await this.bootstrap(path, binding, custody, signal);
+      this.custody = custody;
+      this.binding = binding;
 
-        registry = committed;
-      } catch (error) {
-        if (this.backupPage && !signal.aborted) {
-          this.vault.lockContext(binding);
-          this.close();
+      if (!registry) {
+        try {
+          let approval;
+
+          if (this.backupPage) {
+            const confirmed = await this.recovery.confirmed(path, binding, custody, 1, signal, initialKey, pin);
+
+            approval = confirmed;
+          }
+
+          const committed = await this.recovery.bootstrap(path, binding, custody, signal, approval);
+
+          registry = committed;
+        } catch (error) {
+          if (this.backupPage && !signal.aborted) {
+            this.vault.lockContext(binding);
+            this.close();
+          }
+
+          throw error;
         }
-
-        throw error;
       }
+
+      const device = registry.devices.find(
+        (device) => device.id === binding.deviceId && device.ownerId === ownerId && !device.revokedAt,
+      );
+      const keys = await custody.publicKeys();
+
+      this.current(signal);
+
+      if (!device || device.signing !== keys.signing || device.encryption !== keys.encryption) {
+        this.vault.lockContext(binding);
+        this.close();
+
+        throw new VaultError('recovery-required');
+      }
+
+      const storage = await this.database.replica(ownerId, signal);
+
+      if (signal.aborted) {
+        storage.close();
+
+        throw new VaultError('stale-operation');
+      }
+
+      this.storage = storage;
+      const id = replicaId(ownerId, key, key.scope);
+
+      await storage.advanceControl(id, { epoch: registry.epoch, generation: key.generation });
+
+      this.current(signal);
+      this.replica = exampleReplica({
+        api: this.api,
+        session: this.session,
+        path,
+        crypto: view.crypto,
+        custody,
+        binding,
+        storage,
+        vault: this.vault,
+        checkDevice: this.backupPage || registry.objectBackup === true,
+        minimumEpoch: registry.epoch,
+        current: () => this.current(signal),
+      });
+
+      await this.synchronize(target, false);
+    } finally {
+      initialKey?.fill(0);
     }
-
-    const device = registry.devices.find(
-      (device) => device.id === binding.deviceId && device.ownerId === ownerId && !device.revokedAt,
-    );
-    const keys = await custody.publicKeys();
-
-    this.current(signal);
-
-    if (!device || device.signing !== keys.signing || device.encryption !== keys.encryption) {
-      this.vault.lockContext(binding);
-      this.close();
-
-      throw new VaultError('recovery-required');
-    }
-
-    const storage = await this.database.replica(ownerId, signal);
-
-    if (signal.aborted) {
-      storage.close();
-
-      throw new VaultError('stale-operation');
-    }
-
-    this.storage = storage;
-    const id = replicaId(ownerId, key, key.scope);
-
-    await storage.advanceControl(id, { epoch: registry.epoch, generation: key.generation });
-
-    this.current(signal);
-    this.replica = exampleReplica({
-      api: this.api,
-      session: this.session,
-      path,
-      crypto: view.crypto,
-      custody,
-      binding,
-      storage,
-      vault: this.vault,
-      checkDevice: this.backupPage || registry.objectBackup === true,
-      minimumEpoch: registry.epoch,
-      current: () => this.current(signal),
-    });
-
-    await this.synchronize(target, false);
   }
 
   async save(target: ExampleTarget, value: string): Promise<void> {
@@ -400,30 +426,6 @@ export class ExamplePrivateResource {
     this.target = { ...target };
 
     await this.restoreLocal(target, rpId, undefined, binding.ownerId, this.controller.signal);
-  }
-
-  private async bootstrap(path: string, binding: WrappingContext, custody: DeviceCustody, signal: AbortSignal) {
-    const keys = await custody.publicKeys();
-
-    this.current(signal);
-
-    const requested = await this.api.vault(`${path}/devices/request`, { deviceId: binding.deviceId, keys }, signal);
-
-    this.current(signal);
-
-    const proof = await custody.prove(deviceChallengeSchema.parse(requested));
-
-    this.current(signal);
-
-    await this.api.vault(`${path}/devices/bootstrap`, proof, signal);
-
-    this.current(signal);
-
-    const roster = await this.api.vault(`${path}/devices`, undefined, signal);
-
-    this.current(signal);
-
-    return rosterSchema.parse(roster);
   }
 
   /** Explicit local unlock: no roster/network lookup. Server authorization is rechecked by later synchronization. */

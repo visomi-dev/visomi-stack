@@ -10,6 +10,7 @@ it('delivers events through the selected transport and detaches receivers on clo
     notifySession: vi.fn(),
     notifyUser: vi.fn(),
     notifyCloud: vi.fn(),
+    notifyVaultPairing: vi.fn(),
     notifyVault: vi.fn(),
   };
 
@@ -23,12 +24,15 @@ it('delivers events through the selected transport and detaches receivers on clo
 
   await publisher.notifyCloud('other-synthetic-user');
 
+  await publisher.notifyVaultPairing('synthetic-user');
+
   await publisher.notifyVault('synthetic-scope', 7);
 
   expect(sink.notifyDeviceApproval).toHaveBeenCalledExactlyOnceWith('synthetic-request');
   expect(sink.notifySession).toHaveBeenCalledExactlyOnceWith('synthetic-session');
   expect(sink.notifyUser).toHaveBeenCalledExactlyOnceWith('synthetic-user');
   expect(sink.notifyCloud).toHaveBeenCalledExactlyOnceWith('other-synthetic-user');
+  expect(sink.notifyVaultPairing).toHaveBeenCalledExactlyOnceWith('synthetic-user');
   expect(sink.notifyVault).toHaveBeenCalledExactlyOnceWith('synthetic-scope', 7);
   transport.close();
 

@@ -22,6 +22,7 @@ let decorateBackup: ((objects: BackupObjects) => BackupObjects) | undefined;
 
 export let backupObjects: BackupObjects | undefined;
 export const vaultNotice = vi.fn<(scopeId: string, cursor: number) => Promise<void>>();
+export const pairingNotice = vi.fn<(userId: string) => Promise<void>>();
 export const cloudNotice = vi.fn<(userId: string) => Promise<void>>();
 export const cloudMail = vi.fn<MailTransport['send']>();
 
@@ -39,6 +40,7 @@ export const policy = structuredClone(syntheticHybridPolicy);
 
 beforeEach(async () => {
   vaultNotice.mockReset().mockResolvedValue(undefined);
+  pairingNotice.mockReset().mockResolvedValue(undefined);
   cloudNotice.mockReset().mockResolvedValue(undefined);
   cloudMail.mockReset().mockResolvedValue(undefined);
 
@@ -96,6 +98,7 @@ beforeAll(async () => {
       notifyUser: async () => undefined,
       notifyCloud: cloudNotice,
       notifyVault: vaultNotice,
+      notifyVaultPairing: pairingNotice,
     },
   });
 

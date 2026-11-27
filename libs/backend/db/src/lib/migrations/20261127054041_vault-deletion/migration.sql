@@ -1,0 +1,1 @@
+ALTER TABLE "persistence_scopes" ADD COLUMN "deleting_backup" boolean DEFAULT false NOT NULL;

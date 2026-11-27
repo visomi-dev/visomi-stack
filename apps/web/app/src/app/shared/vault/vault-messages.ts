@@ -1,5 +1,10 @@
 export function vaultMessage(state: string): string {
   switch (state) {
+    case 'recovery_setup_expired':
+      return $localize`:@@vaultRecoveryExpired:Recovery setup expired. Start again and save the new file.`;
+    case 'vault_deletion_pending':
+    case 'vault_backup_busy':
+      return $localize`:@@vaultDeletionPending:Deletion is in progress. Return to Your vaults and retry deleting this vault in a minute.`;
     case 'pin-invalid':
       return $localize`:@@vaultPinInvalid:Enter a 6-digit PIN. When setting it up, enter the same PIN twice.`;
     case 'sync_history_expired':

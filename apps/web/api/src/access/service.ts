@@ -12,7 +12,7 @@ import { lockIdentity, requireFull, type Principal, type Transaction } from '../
 import { grantInputSchema, memberInputSchema, scopeInputSchema, targetSchema, type AccessTarget } from './contracts';
 
 const { tenants, scopes, memberships, grants } = persistenceSchema;
-const { keyScopes, opaqueUnits } = vaultSchema;
+const { keyChallenges, keyScopes, opaqueUnits } = vaultSchema;
 
 function vaultRegistry(tx: Transaction) {
   // Bootstrap commits the first device and its registry in one transaction.
@@ -82,7 +82,7 @@ export class Access {
     });
   }
 
-  async startExampleVault(actor: SessionActor) {
+  async startExampleVault(actor: SessionActor, additional = false) {
     return this.database.transaction(async (tx) => {
       // The account row lock is shared by setup and bootstrap, including requests from other sessions.
       await this.identity(tx, actor);
@@ -95,7 +95,7 @@ export class Access {
 
       const [enrolled] = await this.exampleWorkspaces(tx, actor.principal.id, true).limit(1);
 
-      if (enrolled) {
+      if (enrolled && !additional) {
         return null;
       }
 
@@ -113,12 +113,18 @@ export class Access {
   async listExampleWorkspaces(
     actor: SessionActor,
     objectBackup: boolean,
-    { after, limit }: { after?: string; limit: number },
+    { after, limit, includeDeleting }: { after?: string; limit: number; includeDeleting?: string },
   ) {
     return this.database.transaction(async (tx) => {
       await this.identity(tx, actor);
 
-      const rows = await this.exampleWorkspaces(tx, actor.principal.id, objectBackup, after).limit(limit + 1);
+      const rows = await this.exampleWorkspaces(
+        tx,
+        actor.principal.id,
+        objectBackup,
+        after,
+        includeDeleting === 'true',
+      ).limit(limit + 1);
       const page = rows.slice(0, limit);
       const pending = await (objectBackup ? this.pendingVault(tx, actor.principal.id) : []);
 
@@ -130,11 +136,55 @@ export class Access {
     });
   }
 
+  async listExampleVaultPairings(actor: SessionActor) {
+    return this.database.transaction(async (tx) => {
+      await this.identity(tx, actor);
+
+      const workspaces = this.exampleWorkspaces(tx, actor.principal.id, true).as('pairing_workspaces');
+
+      return tx
+        .select({
+          tenantId: keyChallenges.tenantId,
+          scopeId: keyChallenges.scopeId,
+          objectId: sql<string>`coalesce(${workspaces.objectId!}, ${keyChallenges.scopeId})`,
+          requestId: keyChallenges.id,
+        })
+        .from(keyChallenges)
+        .innerJoin(
+          workspaces,
+          and(eq(workspaces.tenantId, keyChallenges.tenantId), eq(workspaces.scopeId, keyChallenges.scopeId)),
+        )
+        .innerJoin(
+          keyScopes,
+          and(
+            eq(keyScopes.tenantId, keyChallenges.tenantId),
+            eq(keyScopes.scopeId, keyChallenges.scopeId),
+            eq(keyScopes.domain, keyChallenges.domain),
+          ),
+        )
+        .where(
+          and(
+            eq(keyChallenges.ownerId, actor.principal.id),
+            eq(workspaces.owner, true),
+            eq(keyChallenges.domain, 'private-resources'),
+            eq(keyScopes.phase, 'ready'),
+            isNull(keyChallenges.consumedAt),
+            gt(keyChallenges.expiresAt, new Date()),
+            sql`${keyChallenges.value} ? 'proof'`,
+            sql`${keyChallenges.value}->'key'->>'generation' = ${keyScopes.generation}::text`,
+          ),
+        )
+        .orderBy(desc(keyChallenges.expiresAt), asc(keyChallenges.id))
+        .limit(32);
+    });
+  }
+
   async withScope<T>(
     actor: SessionActor,
     rawTarget: unknown,
     action: PersistenceAction,
     work: (access: ScopeAccess) => Promise<T>,
+    deletingBackup = false,
   ) {
     const target = input(targetSchema, rawTarget);
 
@@ -182,6 +232,10 @@ export class Access {
         !['tenant', 'group/tenant', 'resource/tenant', 'resource/group/tenant'].includes(kinds)
       ) {
         throw new HttpError(403, 'scope_access_denied');
+      }
+
+      if (scope.deletingBackup && !deletingBackup) {
+        throw new HttpError(409, 'vault_deletion_pending');
       }
 
       let allowedActions: readonly PersistenceAction[] = ['read', 'write', 'share', 'delete'];
@@ -409,6 +463,7 @@ export class Access {
           eq(tenants.policyHash, this.policyHash),
           eq(scopes.kind, 'resource'),
           eq(scopes.objectBackup, true),
+          eq(scopes.deletingBackup, false),
           notExists(vaultRegistry(tx)),
         ),
       )
@@ -416,7 +471,13 @@ export class Access {
       .limit(1);
   }
 
-  private exampleWorkspaces(tx: Transaction, userId: string, objectBackup: boolean, after?: string) {
+  private exampleWorkspaces(
+    tx: Transaction,
+    userId: string,
+    objectBackup: boolean,
+    after?: string,
+    includeDeleting = false,
+  ) {
     const directGrant = alias(grants, 'workspace_grant');
     const rootGrant = alias(grants, 'workspace_root_grant');
     const objectId = sql<string | null>`(
@@ -427,7 +488,7 @@ export class Access {
         and not ${opaqueUnits.tombstone}
       order by ${opaqueUnits.cursor} desc
       limit 1
-    )`;
+    )`.as('object_id');
     const readable = Object.entries(actions)
       .filter(([, allowed]) => allowed.includes('read'))
       .map(([role]) => role);
@@ -435,11 +496,12 @@ export class Access {
     // Both example products create direct resource children. The nearer grant has precedence.
     return tx
       .select({
-        tenantId: tenants.id,
-        scopeId: scopes.id,
+        tenantId: sql<string>`${tenants.id}`.as('workspace_tenant_id'),
+        scopeId: sql<string>`${scopes.id}`.as('workspace_scope_id'),
         createdAt: tenants.createdAt,
         owner: memberships.owner,
         ...(objectBackup ? { objectId } : {}),
+        ...(includeDeleting ? { deletingBackup: scopes.deletingBackup } : {}),
       })
       .from(memberships)
       .innerJoin(tenants, eq(tenants.id, memberships.tenantId))
@@ -470,6 +532,7 @@ export class Access {
           eq(scopes.objectBackup, objectBackup),
           or(eq(memberships.owner, true), inArray(sql`coalesce(${directGrant.role}, ${rootGrant.role})`, readable)),
           objectBackup ? exists(vaultRegistry(tx)) : undefined,
+          objectBackup && !includeDeleting ? eq(scopes.deletingBackup, false) : undefined,
           after ? gt(scopes.id, after) : undefined,
         ),
       )

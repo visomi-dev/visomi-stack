@@ -1,6 +1,15 @@
 import type { Page, Request, Response, TestInfo } from '@playwright/test';
 
-import { expect, expireSession, passkeySignup, signup, test, vaultUnlockUrl, virtualPasskey } from './support/fixtures';
+import {
+  saveRecoveryKey,
+  expect,
+  expireSession,
+  passkeySignup,
+  signup,
+  test,
+  vaultUnlockUrl,
+  virtualPasskey,
+} from './support/fixtures';
 import {
   firstDocument,
   expectAuthenticatedDocument,
@@ -53,6 +62,10 @@ async function setupVault(page: Page) {
 }
 
 async function saveNote(page: Page) {
+  await expect(page.locator('app-vault-sync-indicator').getByRole('status')).toHaveText('Vault synced');
+
+  await expect(page.getByLabel('Your note', { exact: true })).toBeEditable();
+
   const [publication] = await Promise.all([
     page.waitForResponse((response) => response.url().endsWith('/sync/push')),
     page.getByLabel('Your note', { exact: true }).fill(note),
@@ -75,6 +88,8 @@ async function setupPinVault(page: Page) {
   await page.getByLabel('Confirm your new PIN', { exact: true }).fill('048261');
 
   await page.getByRole('button', { name: 'Set up with PIN', exact: true }).click();
+
+  await saveRecoveryKey(page);
 
   await expect(page.getByLabel('Your note', { exact: true })).toBeVisible();
 }
@@ -131,6 +146,8 @@ test('hard reload locks a configured passkey vault with a live session and keeps
   await setupVault(page);
 
   await page.getByRole('button', { name: 'Set up with a passkey', exact: true }).click();
+
+  await saveRecoveryKey(page);
 
   await saveNote(page);
 
@@ -283,6 +300,8 @@ test('ordinary reload retains the session before and after passkey unlock on Vau
   await setupVault(page);
 
   await page.getByRole('button', { name: 'Set up with a passkey', exact: true }).click();
+
+  await saveRecoveryKey(page);
 
   await saveNote(page);
 

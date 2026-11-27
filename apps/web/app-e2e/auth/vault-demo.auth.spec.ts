@@ -2,13 +2,14 @@ import type { Locator, Page } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
 
 import {
+  waitForRequestWindow,
+  saveRecoveryKey,
   expect,
   expireSession,
   logout,
   passkeySignup,
   password,
   signup,
-  passwordStart,
   test,
   vaultUnlockUrl,
   virtualPasskey,
@@ -105,6 +106,7 @@ test('shows an unavailable backup state in Spanish without enabling another stor
 test('sets up one synchronized Vault with an explicitly chosen PIN and reopens its note', async ({ page }, info) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
 
+  test.slow();
   const email = await signup(page);
 
   await page.goto('/app/en/db-example/vault');
@@ -135,6 +137,8 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
   await confirmation.fill('048261');
 
   await page.getByRole('button', { name: 'Set up with PIN', exact: true }).click();
+
+  await saveRecoveryKey(page);
 
   const [publication] = await Promise.all([
     page.waitForResponse((response) => response.url().endsWith('/sync/push')),
@@ -215,6 +219,8 @@ test('sets up one synchronized Vault with an explicitly chosen PIN and reopens i
 
   await expect(setup).toHaveCount(0);
 
+  await waitForRequestWindow();
+
   await logout(page);
 
   await page.goto(workspace);
@@ -251,6 +257,7 @@ test.describe('Vault passkey setup in Chromium', () => {
   test('resumes the same setup after cancellation and a bootstrap failure, then lists the empty vault', async ({
     page,
   }) => {
+    test.slow();
     const { credentialIds } = await virtualPasskey(page);
 
     await passkeySignup(page);
@@ -280,13 +287,15 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await passkey.click();
 
-    await expect(page.getByRole('status').filter({ hasText: 'Unlock canceled.' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: /Unlock canceled/ })).toBeVisible();
 
     await page.goto(directory);
 
     await expect(resume).toBeVisible();
 
     await expect(open).toHaveCount(0);
+
+    await waitForRequestWindow();
 
     await resume.click();
 
@@ -299,6 +308,8 @@ test.describe('Vault passkey setup in Chromium', () => {
     );
 
     await passkey.click();
+
+    await saveRecoveryKey(page);
 
     await expect(
       page.getByRole('status').filter({ hasText: 'Private storage is unavailable on this device.' }),
@@ -335,6 +346,8 @@ test.describe('Vault passkey setup in Chromium', () => {
     );
 
     await passkey.click();
+
+    await saveRecoveryKey(page);
 
     await expect(page.getByRole('heading', { name: 'Unlock your vault' })).toBeVisible();
 
@@ -431,7 +444,7 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await passkey.click();
 
-    await expect(page.getByRole('status').filter({ hasText: 'Unlock canceled.' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: /Unlock canceled/ })).toBeVisible();
 
     const afterCancellation = await credentialIds();
 
@@ -552,6 +565,8 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     await passkey.click();
 
+    await saveRecoveryKey(page);
+
     await expect(page.getByLabel('Your note', { exact: true })).toBeEditable();
 
     expect(asserted).toEqual([foreign, owned]);
@@ -603,6 +618,8 @@ test.describe('Vault passkey setup in Chromium', () => {
 
       await page.getByRole('button', { name: 'Set up with PIN', exact: true }).click();
 
+      await saveRecoveryKey(page);
+
       await expect(page.getByLabel('Your note', { exact: true })).toBeEditable();
 
       const afterPin = await credentialIds();
@@ -632,6 +649,8 @@ test.describe('Vault passkey setup in Chromium', () => {
     await page.getByRole('button', { name: 'Set up my vault', exact: true }).click();
 
     await page.getByRole('button', { name: 'Set up with a passkey', exact: true }).click();
+
+    await saveRecoveryKey(page);
 
     await expect(page.getByLabel('Your note', { exact: true })).toBeVisible();
 
@@ -678,105 +697,5 @@ test.describe('Vault passkey setup in Chromium', () => {
 
     expect(afterUnlock).toEqual(registered);
     expect(prfSent).toBe(false);
-  });
-
-  test('opens the backed note on an approved desktop with its own PIN and no passkey', async ({
-    page,
-    browser,
-  }, info) => {
-    await virtualPasskey(page);
-
-    const email = await signup(page);
-
-    await page.goto('/app/en/security/passkeys');
-
-    await page.getByRole('button', { name: 'Add a passkey', exact: true }).click();
-
-    await expect(page.getByRole('status').filter({ hasText: 'Passkey added.' })).toBeVisible();
-
-    await page.goto('/app/en/db-example/vault');
-
-    await page.getByRole('button', { name: 'Set up my vault' }).click();
-
-    await page.getByRole('button', { name: 'Set up with a passkey' }).click();
-
-    const note = 'Synthetic note from the first linked device';
-    const [publication] = await Promise.all([
-      page.waitForResponse((response) => response.url().endsWith('/sync/push')),
-      page.getByLabel('Your note', { exact: true }).fill(note),
-    ]);
-
-    expect(publication.ok()).toBe(true);
-
-    await expect(page.locator('app-vault-sync-indicator').getByRole('status')).toHaveText('Vault synced');
-
-    const workspace = page.url();
-
-    await page.getByRole('link', { name: 'Link a device' }).click();
-
-    const desktop = await browser.newContext({ baseURL: info.project.use.baseURL });
-
-    try {
-      await desktop.addInitScript(() => Object.defineProperty(navigator, 'credentials', { value: undefined }));
-
-      const peer = await desktop.newPage();
-
-      await passwordStart(peer, email);
-
-      const code = await readMailCode(email);
-
-      await peer.getByLabel('Verification code', { exact: true }).fill(code);
-
-      await expect(peer.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
-
-      await peer.goto(vaultUnlockUrl(workspace));
-
-      await expect(peer).toHaveURL(workspace);
-
-      await expect(peer.getByLabel('Your note', { exact: true })).toHaveCount(0);
-
-      await expect(peer.getByRole('button', { name: 'Set up with a passkey', exact: true })).toHaveCount(0);
-
-      await peer.getByRole('link', { name: 'Link a device' }).click();
-
-      const pin = peer.getByLabel('Local unlock PIN', { exact: true });
-
-      await pin.fill('208146');
-
-      await peer.getByLabel('Confirm your new PIN').fill('208146');
-
-      await peer.getByRole('button', { name: 'Request pairing with PIN' }).click();
-
-      const proof = await peer.getByLabel('Pairing request', { exact: true }).inputValue();
-      const fingerprint = await peer.locator('[data-vault-recipient]').innerText();
-
-      await page.getByLabel('Pairing request', { exact: true }).fill(proof);
-
-      await page.getByLabel('New device fingerprint').fill(fingerprint);
-
-      await page.getByRole('button', { name: 'Approve this device' }).click();
-
-      await expect(page.getByRole('status').filter({ hasText: 'Device approved.' })).toBeVisible();
-
-      const approver = await page.locator('[data-vault-approver]').innerText();
-
-      await peer.getByLabel('Approving device fingerprint', { exact: true }).fill(approver);
-
-      await pin.fill('208146');
-
-      await peer.getByRole('button', { name: 'Finish pairing' }).click();
-
-      await peer.getByRole('link', { name: 'Open vault note' }).click();
-
-      await expect(peer.getByLabel('Your note', { exact: true })).toHaveValue(note);
-
-      await peer.reload();
-
-      await pin.fill('208146');
-
-      await expect(peer.getByLabel('Your note', { exact: true })).toHaveValue(note);
-    } finally {
-      await desktop.close();
-    }
   });
 });

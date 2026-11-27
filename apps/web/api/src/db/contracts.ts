@@ -135,6 +135,9 @@ export const persistenceContracts = {
 export const exampleVaultWorkspacesContract = defineRoute({
   ...persistenceContracts.listWorkspaces,
   summary: 'List initialized vaults visible to the verified account and indicate any pending setup it owns',
+  request: z.object({
+    query: query.pick({ after: true, limit: true }).extend({ includeDeleting: z.literal('true').optional() }),
+  }),
   responses: response(exampleVaultWorkspacePageSchema),
 });
 
@@ -143,9 +146,19 @@ export const exampleVaultSetupContract = defineRoute({
   method: 'post',
   path: '/workspaces/setup',
   operationId: 'example_vault_start_setup',
-  summary: 'Resume or reserve the first Vault Example workspace',
-  request: z.object({ body: z.strictObject({}) }),
+  summary: 'Resume a pending setup or reserve a Vault Example workspace',
+  request: z.object({ body: z.strictObject({ additional: z.literal(true).optional() }) }),
   responses: response(targetSchema.nullable()),
+});
+
+export const exampleVaultDeleteContract = defineRoute({
+  ...base,
+  method: 'delete',
+  path: '/workspaces/:tenantId/:scopeId',
+  operationId: 'example_vault_delete',
+  summary: 'Delete the selected owner-controlled Vault Example and its backups',
+  request: z.object({ params: targetSchema, body: z.strictObject({ confirmScopeId: z.uuid() }) }),
+  responses: response(changed),
 });
 
 export const persistenceRecordContracts = {

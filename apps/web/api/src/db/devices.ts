@@ -34,6 +34,10 @@ export const approvalSchema = z.strictObject({
   history: deviceHistorySchema.optional(),
   authorization: deviceActionSchema,
 });
+export const bootstrapSchema = z.union([
+  deviceProofSchema,
+  z.strictObject({ primary: deviceProofSchema, recovery: approvalSchema }),
+]);
 export const revokeDeviceSchema = z.strictObject({ deviceId: protocolIdSchema, authorization: deviceActionSchema });
 export const rotateDevicesSchema = z.strictObject({
   deliveries: z.array(deviceDeliverySchema).min(1).max(64),
@@ -46,6 +50,38 @@ export class KeyDevices {
 
   constructor(private readonly access: Access) {
     this.vault = new VaultAccess(access);
+  }
+
+  async publishPairing(actor: SessionActor, target: unknown, raw: unknown) {
+    const proof = input(deviceProofSchema, raw);
+
+    if (proof.ownerId !== actor.principal.id) {
+      throw new HttpError(403, 'scope_access_denied');
+    }
+
+    verifyDeviceProof(proof);
+
+    return this.withExamplePairing(actor, target, proof.requestId, async (context, condition, challenge) => {
+      if (deviceProofMessage(challenge.value) !== deviceProofMessage(proof)) {
+        throw new HttpError(400, 'device_challenge_invalid');
+      }
+
+      await context.tx.update(keyChallenges).set({ value: proof }).where(condition);
+
+      return proof;
+    });
+  }
+
+  async readPairing(actor: SessionActor, target: unknown, id: string) {
+    return this.withExamplePairing(actor, target, id, async (_context, _condition, challenge) => {
+      const proof = deviceProofSchema.safeParse(challenge.value);
+
+      if (!proof.success) {
+        throw new HttpError(404, 'device_challenge_invalid');
+      }
+
+      return proof.data;
+    });
   }
 
   async request(actor: SessionActor, target: unknown, domain: string, raw: unknown) {
@@ -105,7 +141,23 @@ export class KeyDevices {
   }
 
   async bootstrap(actor: SessionActor, target: unknown, domain: string, raw: unknown) {
-    const proof = input(deviceProofSchema, raw);
+    const value = input(bootstrapSchema, raw);
+    const proof = 'primary' in value ? value.primary : value;
+    const recovery = 'primary' in value ? value.recovery : undefined;
+
+    if (recovery) {
+      if (
+        recovery.proof.ownerId !== actor.principal.id ||
+        recovery.authorization.deviceId !== proof.deviceId ||
+        recovery.proof.deviceId === proof.deviceId
+      ) {
+        throw new HttpError(403, 'scope_access_denied');
+      }
+
+      await this.consume(actor, target, domain, recovery.proof);
+
+      verifyDeviceProof(recovery.proof);
+    }
 
     await this.consume(actor, target, domain, proof);
 
@@ -144,7 +196,15 @@ export class KeyDevices {
         challenge,
       });
 
-      return { generation: 1, epoch: 1, phase: 'ready' as const };
+      if (recovery) {
+        if (!context.scope.objectBackup) {
+          throw new HttpError(403, 'scope_access_denied');
+        }
+
+        await this.approveWithin(context, domain, recovery);
+      }
+
+      return { generation: 1, epoch: recovery ? 2 : 1, phase: 'ready' as const };
     });
   }
 
@@ -154,69 +214,8 @@ export class KeyDevices {
     await this.consume(actor, target, domain, value.proof);
 
     verifyDeviceProof(value.proof);
-    const policy = this.vault.policy(domain);
 
-    return this.access.withScope(actor, target, 'share', async (context) => {
-      const { key, registry } = await this.vault.registry(context, policy, true);
-
-      if (registry.phase !== 'ready') {
-        throw new HttpError(409, 'rotation_required');
-      }
-
-      await this.authorize(context, registry, value.authorization, 'approve', {
-        proof: value.proof,
-        delivery: value.delivery,
-        ...(value.history ? { history: value.history } : {}),
-      });
-
-      await this.access.requireRecipient(context, value.proof.ownerId);
-
-      const count = await context.tx
-        .select({ id: keyDevices.id })
-        .from(keyDevices)
-        .where(and(this.deviceScope(context, domain), isNull(keyDevices.revokedAt)))
-        .limit(64);
-
-      if (count.length >= 64) {
-        throw new HttpError(413, 'device_quota');
-      }
-
-      this.delivery(value.proof, value.delivery, key.generation);
-
-      await requireHistory(context, key, value.proof, value.history ?? []);
-
-      const { proof: _proof, ...challenge } = value.proof;
-
-      await context.tx.insert(keyDevices).values({
-        tenantId: key.scope.tenantId,
-        scopeId: context.scope.id,
-        domain,
-        id: value.proof.deviceId,
-        ownerId: value.proof.ownerId,
-        signing: value.proof.keys.signing,
-        encryption: value.proof.keys.encryption,
-        challenge,
-        delivery: {
-          format: 'visomi.approved-device-key',
-          version: 1,
-          delivery: value.delivery,
-          authorization: value.authorization,
-          witness: {
-            kind: 'enrollment',
-            proof: value.proof,
-            delivery: value.delivery,
-            ...(value.history ? { history: value.history } : {}),
-          },
-        },
-      });
-
-      await context.tx
-        .update(keyScopes)
-        .set({ epoch: registry.epoch + 1 })
-        .where(keyPredicate(key));
-
-      return { generation: registry.generation, epoch: registry.epoch + 1 };
-    });
+    return this.access.withScope(actor, target, 'share', (context) => this.approveWithin(context, domain, value));
   }
 
   async roster(actor: SessionActor, target: unknown, domain: string) {
@@ -357,6 +356,108 @@ export class KeyDevices {
         .where(keyPredicate(key));
 
       return { generation: key.generation + 1, epoch: registry.epoch + 1, phase: 'ready' as const };
+    });
+  }
+
+  private async approveWithin(context: ScopeAccess, domain: string, value: z.infer<typeof approvalSchema>) {
+    const policy = this.vault.policy(domain);
+    const { key, registry } = await this.vault.registry(context, policy, true);
+
+    if (registry.phase !== 'ready') {
+      throw new HttpError(409, 'rotation_required');
+    }
+
+    await this.authorize(context, registry, value.authorization, 'approve', {
+      proof: value.proof,
+      delivery: value.delivery,
+      ...(value.history ? { history: value.history } : {}),
+    });
+
+    await this.access.requireRecipient(context, value.proof.ownerId);
+
+    const count = await context.tx
+      .select({ id: keyDevices.id })
+      .from(keyDevices)
+      .where(and(this.deviceScope(context, domain), isNull(keyDevices.revokedAt)))
+      .limit(64);
+
+    if (count.length >= 64) {
+      throw new HttpError(413, 'device_quota');
+    }
+
+    this.delivery(value.proof, value.delivery, key.generation);
+
+    await requireHistory(context, key, value.proof, value.history ?? []);
+
+    const { proof: _proof, ...challenge } = value.proof;
+
+    await context.tx.insert(keyDevices).values({
+      tenantId: key.scope.tenantId,
+      scopeId: context.scope.id,
+      domain,
+      id: value.proof.deviceId,
+      ownerId: value.proof.ownerId,
+      signing: value.proof.keys.signing,
+      encryption: value.proof.keys.encryption,
+      challenge,
+      delivery: {
+        format: 'visomi.approved-device-key',
+        version: 1,
+        delivery: value.delivery,
+        authorization: value.authorization,
+        witness: {
+          kind: 'enrollment',
+          proof: value.proof,
+          delivery: value.delivery,
+          ...(value.history ? { history: value.history } : {}),
+        },
+      },
+    });
+
+    await context.tx
+      .update(keyScopes)
+      .set({ epoch: registry.epoch + 1 })
+      .where(keyPredicate(key));
+
+    return { generation: registry.generation, epoch: registry.epoch + 1 };
+  }
+
+  private async withExamplePairing<T>(
+    actor: SessionActor,
+    target: unknown,
+    id: string,
+    use: (
+      context: ScopeAccess,
+      condition: ReturnType<typeof and>,
+      row: typeof keyChallenges.$inferSelect,
+    ) => Promise<T>,
+  ) {
+    const domain = 'private-resources';
+    const policy = this.vault.policy(domain);
+
+    return this.access.withScope(actor, target, 'share', async (context) => {
+      const { key, registry } = await this.vault.registry(context, policy, true);
+
+      if (!context.scope.objectBackup || !context.membership.owner || registry.phase !== 'ready') {
+        throw new HttpError(403, 'scope_access_denied');
+      }
+
+      const condition = and(
+        eq(keyChallenges.tenantId, key.scope.tenantId),
+        eq(keyChallenges.scopeId, context.scope.id),
+        eq(keyChallenges.domain, domain),
+        eq(keyChallenges.id, id),
+        eq(keyChallenges.ownerId, actor.principal.id),
+        isNull(keyChallenges.consumedAt),
+        gt(keyChallenges.expiresAt, new Date()),
+      );
+      const [challenge] = await context.tx.select().from(keyChallenges).where(condition);
+
+      if (!challenge || challenge.value.key.generation !== key.generation) {
+        throw new HttpError(404, 'device_challenge_invalid');
+      }
+
+      return use(context, condition, challenge);
     });
   }
 

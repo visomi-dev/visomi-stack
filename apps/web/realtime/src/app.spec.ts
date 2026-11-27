@@ -224,11 +224,13 @@ it('routes session and user notices separately and rechecks the persisted sessio
     const other = await fixture.newSession(false, 'other-user');
     const received = [vi.fn(), vi.fn(), vi.fn()];
     const cloud = [vi.fn(), vi.fn(), vi.fn()];
+    const pairing = [vi.fn(), vi.fn(), vi.fn()];
     const sockets = [first, second, other].map(({ cookie }, index) => {
       const socket = fixture.connect(cookie, origin, '/session');
 
       socket.on('session:changed', received[index]);
       socket.on('cloud:changed', cloud[index]);
+      socket.on('vault-pairing:changed', pairing[index]);
 
       return socket;
     });
@@ -256,11 +258,14 @@ it('routes session and user notices separately and rechecks the persisted sessio
 
     await fixture.notifyCloud('synthetic-user');
 
+    await fixture.notifyVaultPairing('synthetic-user');
+
     await Promise.all(
       sockets.map((socket) => expect(socket.timeout(1000).emitWithAck('session:check')).resolves.toBe(true)),
     );
 
     expect(cloud.map((listener) => listener.mock.calls)).toEqual([[[]], [[]], []]);
+    expect(pairing.map((listener) => listener.mock.calls)).toEqual([[[]], [[]], []]);
     expect(received.map((listener) => listener.mock.calls.length)).toEqual([2, 1, 0]);
 
     await fixture.revoke(first.id);

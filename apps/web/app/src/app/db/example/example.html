@@ -50,7 +50,7 @@
                   type="button"
                   variant="secondary"
                   class="max-w-full flex-wrap"
-                  [disabled]="workspace.busy()"
+                  [disabled]="workspace.busy() || item.deletingBackup"
                   (click)="workspace.openWorkspace(item)"
                 >
                   <span i18n="@@vaultOpenWorkspace">Open vault</span>
@@ -59,6 +59,47 @@
 
                   <span class="break-all" i18n="@@exampleWorkspaceReference">ID {{ item.scopeId }}</span>
                 </button>
+
+                @if (item.owner) {
+                  @if (workspace.deleting()?.scopeId === item.scopeId) {
+                    <p appUI i18n="@@vaultDeleteWarning">
+                      Permanently delete this vault and its cloud backup? Other vaults will stay available. Copies
+                      already saved on devices may remain.
+                    </p>
+
+                    <button
+                      appUI
+                      type="button"
+                      [disabled]="workspace.busy()"
+                      (click)="workspace.deleteSelected()"
+                      i18n="@@vaultDeleteConfirm"
+                    >
+                      Permanently delete this vault
+                    </button>
+
+                    <button
+                      appUI
+                      variant="secondary"
+                      type="button"
+                      [disabled]="workspace.busy()"
+                      (click)="workspace.deleting.set(null)"
+                      i18n="@@vaultDeleteCancel"
+                    >
+                      Cancel
+                    </button>
+                  } @else {
+                    <button
+                      appUI
+                      variant="secondary"
+                      type="button"
+                      [disabled]="workspace.busy()"
+                      (click)="workspace.deleting.set(item)"
+                      i18n="@@vaultDelete"
+                    >
+                      Delete vault
+                    </button>
+                  }
+                }
               </li>
             }
           </ul>
@@ -79,10 +120,12 @@
         </section>
       }
 
-      @if (workspace.objectBackups() && (workspaces.pendingSetup || !workspaces.items.length)) {
+      @if (workspace.objectBackups()) {
         <button appUI type="button" [disabled]="workspace.busy()" (click)="workspace.createWorkspace()">
           @if (workspaces.pendingSetup) {
             <span i18n="@@vaultResumeSetup">Continue vault setup</span>
+          } @else if (workspaces.items.length) {
+            <span i18n="@@vaultCreateAnother">Create another vault</span>
           } @else {
             <span i18n="@@vaultDemoSetup">Set up my vault</span>
           }
@@ -116,6 +159,35 @@
     >
       Create a test workspace
     </button>
+  } @else if (workspace.privateResource.recovery.recoveryDownload(); as url) {
+    <section appUI="card" class="space-y-3">
+      <h2 appUI i18n="@@vaultSaveRecoveryTitle">Save your recovery key</h2>
+
+      <p appUI i18n="@@vaultSaveRecoveryHelp">
+        Keep this file somewhere safe outside this device. You’ll need it to recover this vault if you lose access to
+        your devices.
+      </p>
+
+      <a
+        appUI
+        [href]="url"
+        [download]="'vault-recovery-' + workspace.target()?.scopeId + '.json'"
+        (click)="workspace.privateResource.recovery.downloaded.set(true)"
+        i18n="@@vaultDownloadRecovery"
+      >
+        Download recovery key
+      </a>
+
+      <button
+        appUI
+        type="button"
+        [disabled]="!workspace.privateResource.recovery.downloaded()"
+        (click)="workspace.privateResource.recovery.confirmRecovery()"
+        i18n="@@vaultConfirmRecovery"
+      >
+        I saved my recovery key
+      </button>
+    </section>
   } @else if (configuredVaultLocked) {
     <p role="status" i18n="@@vaultLoading">Loading the vault…</p>
   } @else {
@@ -175,17 +247,12 @@
           Private content is encrypted before synchronization. This synthetic profile has no recovery: losing all usable
           keys can permanently lose access. Password reset does not recover private content.
         </p>
-      } @else if (!workspace.vaultReady() && workspace.canInitialize()) {
-        <p appUI tone="muted" i18n="@@vaultSetupGuidance">
-          Keep access to a linked device. If you lose access to every device, resetting your password won’t recover your
-          note.
-        </p>
       }
 
       @if (workspace.backedSample && workspace.canPair() && !workspace.hasBinding()) {
-        <p appUI tone="muted" i18n="@@vaultBackedSampleNeedsPairing">
-          To restore the note on this browser, link it to your vault. Approve the request on a device where you can
-          already open the note.
+        <p appUI tone="muted" i18n="@@vaultDeviceRestoreOptions">
+          To restore the note on this browser, link it from a device that can open your vault or use your saved recovery
+          key in Vault devices.
         </p>
       }
 
@@ -195,7 +262,31 @@
         </p>
       }
 
-      @if (workspace.showPrf() && !workspace.vaultReady() && (!workspace.backedSample || workspace.canInitialize())) {
+      @if (
+        workspace.backedSample &&
+        workspace.canInitialize() &&
+        workspace.showPrf() &&
+        !workspace.hasBinding() &&
+        !workspace.pinSetupSelected()
+      ) {
+        <button
+          appUI
+          type="button"
+          variant="secondary"
+          [disabled]="workspace.busy()"
+          (click)="workspace.selectPinSetup()"
+          i18n="@@vaultAlternativePin"
+        >
+          Use a PIN instead
+        </button>
+      }
+
+      @if (
+        workspace.showPrf() &&
+        !workspace.pinSetupSelected() &&
+        !workspace.vaultReady() &&
+        (!workspace.backedSample || workspace.canInitialize())
+      ) {
         <div class="flex flex-wrap gap-3">
           @if (!workspace.backedSample) {
             <button
@@ -312,6 +403,36 @@
               (blur)="workspace.saveDraft()"
             ></textarea>
           </app-field>
+
+          @if (workspace.canEnrollRecovery()) {
+            <details>
+              <summary i18n="@@vaultManageRecovery">Recovery key</summary>
+
+              <p appUI i18n="@@vaultAddRecoveryHelp">Save a recovery key for this vault while you can open it.</p>
+
+              @if (workspace.showPin()) {
+                <app-field control-id="recovery-pin" label="Confirm local PIN" i18n-label="@@vaultRecoveryPin">
+                  <app-pin-input
+                    [digits]="6"
+                    [disabled]="workspace.busy()"
+                    [value]="workspace.recoveryPin()"
+                    (valueChange)="workspace.recoveryPin.set($event)"
+                  />
+                </app-field>
+              }
+
+              <button
+                appUI
+                variant="secondary"
+                type="button"
+                [disabled]="workspace.busy()"
+                (click)="workspace.enrollRecovery()"
+                i18n="@@vaultAddRecovery"
+              >
+                Set up a recovery key
+              </button>
+            </details>
+          }
 
           @if (workspace.editor.saveFailed()) {
             <p role="status" i18n="@@vaultLocalSaveFailed">

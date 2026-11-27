@@ -67,12 +67,12 @@ export class BrowserVault implements VaultPort {
   }
 
   /** Explicit approved recipient/recovery path; never used as an implicit fallback from unlock. */
-  async install(context: WrappingContext, supplied: Uint8Array): Promise<void> {
+  async install(context: WrappingContext, supplied: Uint8Array, unlock = this.unlocker): Promise<void> {
     if (supplied.length !== 32) {
       throw new VaultError('corrupt');
     }
 
-    return this.initializeKey(context, { supplied });
+    return this.initializeKey(context, { supplied, unlock });
   }
 
   /** Caller verifies the signed recipient grant first. Keep current writing authority selected. */
@@ -197,7 +197,7 @@ export class BrowserVault implements VaultPort {
     }
   }
 
-  async deliver(recipient: DeliveryBinding, devices: WebCryptoDevices): Promise<DeviceDelivery> {
+  async deliver(recipient: DeliveryBinding, devices: WebCryptoDevices, unlock = this.unlocker) {
     const parsed = deliveryBindingSchema.safeParse(recipient);
 
     if (!parsed.success) {
@@ -212,7 +212,7 @@ export class BrowserVault implements VaultPort {
       throw new VaultError('locked');
     }
 
-    return this.withRawKey((raw) => devices.seal(raw, parsed.data));
+    return this.withRawKey((raw) => devices.seal(raw, parsed.data), this.binding, unlock);
   }
 
   /** Explicit historical grant preparation; the caller signs this ciphertext in the current approval body. */
@@ -528,7 +528,11 @@ export class BrowserVault implements VaultPort {
     }
   }
 
-  private async withRawKey<T>(work: (raw: Uint8Array) => Promise<T>, binding = this.binding): Promise<T> {
+  private async withRawKey<T>(
+    work: (raw: Uint8Array) => Promise<T>,
+    binding = this.binding,
+    unlock = this.unlocker,
+  ): Promise<T> {
     if (!binding || !this.key) {
       throw new VaultError('locked');
     }
@@ -536,14 +540,7 @@ export class BrowserVault implements VaultPort {
     const epoch = this.epoch;
 
     try {
-      const result = await withStoredKey(
-        this.storage,
-        this.unlocker,
-        this.crypto,
-        binding,
-        () => this.current(epoch),
-        work,
-      );
+      const result = await withStoredKey(this.storage, unlock, this.crypto, binding, () => this.current(epoch), work);
 
       return result;
     } catch (error) {

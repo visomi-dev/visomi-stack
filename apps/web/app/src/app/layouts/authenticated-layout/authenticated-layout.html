@@ -178,6 +178,27 @@
     }
 
     @if (session.full()) {
+      @for (request of vaultPairings.pending(); track request.requestId) {
+        <div appUI="alert" class="flex flex-wrap items-center justify-between gap-2">
+          <span role="status" i18n="@@vaultPairingNotice">A device is waiting to link to your vault.</span>
+
+          <a
+            appUI
+            routerLink="/security"
+            [queryParams]="{
+              sample: 'vault-backup',
+              tenantId: request.tenantId,
+              scopeId: request.scopeId,
+              objectId: request.objectId,
+              requestId: request.requestId,
+            }"
+            i18n="@@vaultPairingReview"
+          >
+            Review request
+          </a>
+        </div>
+      }
+
       @for (user of [session.user()]; track user?.id) {
         <router-outlet class="hidden" />
       }

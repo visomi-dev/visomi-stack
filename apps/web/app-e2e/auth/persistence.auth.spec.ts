@@ -474,6 +474,8 @@ test('pairs a test private resource in Security across a PIN device and a PRF de
 
     await fingerprintInput.fill(recipientFingerprint);
 
+    await page.getByLabel('Confirm local PIN', { exact: true }).fill('048261');
+
     await approve.click();
 
     await expect(page.getByRole('status')).toContainText(['Device approved.']);

@@ -1,3 +1,4 @@
+import { setTimeout as delay } from 'node:timers/promises';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -28,6 +29,21 @@ async function isolatedPool(): Promise<Pool> {
   return new Pool({ connectionString: url.toString() });
 }
 
+export async function expireVaultPairing(requestId: string): Promise<void> {
+  const pool = await isolatedPool();
+
+  try {
+    const result = await pool.query(
+      'UPDATE vault_key_challenges SET expires_at = now() WHERE id = $1 AND consumed_at IS NULL',
+      [requestId],
+    );
+
+    expect(result.rowCount).toBe(1);
+  } finally {
+    await pool.end();
+  }
+}
+
 export async function expireEmailVerification(email: string): Promise<void> {
   const pool = await isolatedPool();
 
@@ -56,6 +72,18 @@ export async function expireAuthentication(email: string): Promise<void> {
   } finally {
     await pool.end();
   }
+}
+
+export async function saveRecoveryKey(page: Page) {
+  const download = page.waitForEvent('download');
+
+  await page.getByRole('link', { name: 'Download recovery key', exact: true }).click();
+
+  const file = await download;
+
+  await page.getByRole('button', { name: 'I saved my recovery key', exact: true }).click();
+
+  return file;
 }
 
 export function vaultUnlockUrl(workspace: string | URL): string {
@@ -123,6 +151,23 @@ export async function virtualPasskey(page: Page, hasPrf = true) {
   };
 
   return { cdp, credentialIds };
+}
+
+/** Several full journeys run in seconds on one synthetic client. Respect the gateway's real one-minute budget. */
+export async function waitForRequestWindow(): Promise<void> {
+  const pool = await isolatedPool();
+
+  try {
+    const result = await pool.query<{ remaining: number }>(
+      `SELECT COALESCE(CEIL(EXTRACT(EPOCH FROM (max(expires_at) - now())) * 1000), 0)::int AS remaining
+       FROM auth_rate_limits WHERE key <> 'global' AND attempts >= 24
+         AND expires_at BETWEEN now() AND now() + interval '1 minute'`,
+    );
+
+    await delay(result.rows[0].remaining);
+  } finally {
+    await pool.end();
+  }
 }
 
 async function resetLimits(): Promise<void> {

@@ -66,6 +66,18 @@ it('preserves only the allowed device review handle', () => {
   expect(safeReturnTo(target + '&requestId=synthetic-proof', '/app/es/')).toBeNull();
 });
 
+it('preserves an exact Vault review link across sign-in', () => {
+  const target =
+    '/security?sample=vault-backup&tenantId=11111111-1111-4111-8111-111111111111' +
+    '&scopeId=22222222-2222-4222-8222-222222222222&objectId=33333333-3333-4333-8333-333333333333' +
+    '&requestId=44444444-4444-4444-8444-444444444444';
+
+  expect(safeReturnTo('/app/es' + target, '/app/es/')).toBe(target);
+  expect(safeReturnTo(target + '&requestId=invalid', '/app/es/')).toBeNull();
+  expect(safeReturnTo(target + '&returnTo=/home', '/app/es/')).toBeNull();
+  expect(safeReturnTo(target + '#extra', '/app/es/')).toBeNull();
+});
+
 it('preserves the Cloud return path without putting its link secret in auth URLs', () => {
   const workspace = '/db-example/cloud/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222';
 

@@ -1,7 +1,13 @@
+import { Router } from '@angular/router';
 import { Service, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { exampleVaultWorkspacePageSchema, VaultError, type WrappingContext } from '@visomi-stack/shared-db';
-import { replicaId } from '@visomi-stack/web-frontend-db';
+import {
+  exampleVaultWorkspacePageSchema,
+  keyDomainId,
+  VaultError,
+  type WrappingContext,
+} from '@visomi-stack/shared-db';
+import { deviceCustodyContext, replicaId } from '@visomi-stack/web-frontend-db';
 
 import { ClientDatabase } from '../shared/db/database';
 import { DatabaseHttp } from '../shared/db/http';
@@ -19,28 +25,98 @@ import {
 /** Directory of authorized workspaces and the note to open in each one. */
 @Service({ autoProvided: false })
 export class ExampleVaultWorkspaces {
+  private readonly router = inject(Router);
   private readonly api = inject(DatabaseHttp);
   private readonly database = inject(ClientDatabase);
   private readonly vault = inject(VaultSession);
 
   private readonly result = signal<ReturnType<typeof exampleVaultWorkspacePageSchema.parse> | null>(null);
 
+  readonly deleting = signal<ExampleWorkspacePage['items'][number] | null>(null);
+
   readonly page = this.result.asReadonly();
+
+  async deleteSelected(signal: AbortSignal) {
+    const item = this.deleting();
+
+    if (!item?.owner) {
+      return;
+    }
+
+    await this.api.vault(
+      '/workspaces/' + item.tenantId + '/' + item.scopeId,
+      { confirmScopeId: item.scopeId },
+      signal,
+      'DELETE',
+    );
+
+    await this.forgetLocal(item, signal);
+
+    this.deleting.set(null);
+
+    await this.load(signal);
+  }
 
   reset(): void {
     this.result.set(null);
   }
 
   async load(signal: AbortSignal, after?: string): Promise<void> {
-    const raw = await this.api.vault(after ? `/workspaces?after=${after}` : '/workspaces', undefined, signal);
+    const query = new URLSearchParams({ includeDeleting: 'true' });
+
+    if (after) {
+      query.set('after', after);
+    }
+
+    const raw = await this.api.vault('/workspaces?' + query, undefined, signal);
     const page = exampleVaultWorkspacePageSchema.parse(raw);
 
     signal.throwIfAborted();
     this.result.set({ ...page, items: [...(after ? (this.page()?.items ?? []) : []), ...page.items] });
   }
 
-  async startSetup(signal: AbortSignal) {
-    const raw = await this.api.vault('/workspaces/setup', {}, signal);
+  async forgetLocal(target: ExampleWorkspacePage['items'][number], signal: AbortSignal) {
+    const binding = await this.vault.localLatestBinding(exampleLocalKey(target));
+
+    if (!binding) {
+      return;
+    }
+
+    this.vault.lockContext(binding);
+
+    const storage = await this.database.vault(binding.ownerId, signal);
+
+    try {
+      await storage.deleteKey(keyDomainId(binding.ownerId, binding.key));
+
+      await storage.deleteKey(keyDomainId(binding.ownerId, deviceCustodyContext(binding).key));
+    } finally {
+      storage.close();
+    }
+  }
+
+  async createWorkspace(backed: boolean, signal: AbortSignal, current: () => void) {
+    const target = await (backed ? this.startSetup(signal, !!this.page()?.items.length) : this.createHarness(signal));
+
+    current();
+
+    if (!target) {
+      await this.load(signal);
+
+      return;
+    }
+
+    if (backed) {
+      await this.router.navigate(['/db-example/vault'], { queryParams: { ...target, objectId: target.scopeId } });
+    } else {
+      const objectId = crypto.randomUUID();
+
+      await this.router.navigate(['/db-example', target.tenantId, target.scopeId, objectId]);
+    }
+  }
+
+  async startSetup(signal: AbortSignal, additional = false) {
+    const raw = await this.api.vault('/workspaces/setup', additional ? { additional: true } : {}, signal);
 
     return scopeSchema.nullable().parse(raw);
   }
@@ -85,6 +161,14 @@ export class ExampleVaultWorkspaces {
 
       throw error;
     }
+  }
+
+  async openWorkspace(workspace: ExampleWorkspacePage['items'][number], signal: AbortSignal, current: () => void) {
+    const target = await this.target(workspace, signal);
+
+    current();
+
+    await this.router.navigate(['/db-example/vault'], { queryParams: target });
   }
 
   async target({ tenantId, scopeId, objectId }: ExampleWorkspacePage['items'][number], signal: AbortSignal) {

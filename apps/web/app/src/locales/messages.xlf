@@ -2816,6 +2816,51 @@
       <trans-unit id="vaultDevicesApproverFingerprint" datatype="html">
         <source>Approving device fingerprint</source>
       </trans-unit>
+      <trans-unit id="vaultPairingNotice" datatype="html">
+        <source>A device is waiting to link to your vault.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingReview" datatype="html">
+        <source>Review request</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingUnavailable" datatype="html">
+        <source>This request is no longer available. Start a new request on the other device.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingWaitingHere" datatype="html">
+        <source>Requests from your other devices will appear in the app.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingConfirmInstructions" datatype="html">
+        <source>Enter the fingerprint shown on the new device to confirm you are linking the right one.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingExpired" datatype="html">
+        <source>This request is no longer available.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingStartAgain" datatype="html">
+        <source>Start again</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingWaiting" datatype="html">
+        <source>Waiting for approval on your other device.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingLinkInstructions" datatype="html">
+        <source>Review the request in Stack on a device that can already open this vault. If the notice doesn’t appear, open this link there.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCopyLink" datatype="html">
+        <source>Copy review link</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingNeedsLinkedDevice" datatype="html">
+        <source>Open this review link on a device that can already unlock this vault.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingOpenLink" datatype="html">
+        <source>Open review link</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingApproved" datatype="html">
+        <source>Approved. Finish linking this device.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingLinkCopied" datatype="html">
+        <source>Review link copied.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingLinkCopyFailed" datatype="html">
+        <source>Select and copy the review link below.</source>
+      </trans-unit>
       <trans-unit id="vaultDevicesApproveInstructions" datatype="html">
         <source> Paste the request from the new device. Enter the fingerprint shown directly on that device. </source>
       </trans-unit>
@@ -3456,6 +3501,87 @@
       </trans-unit>
       <trans-unit id="cloudNoWorkspaces" datatype="html">
         <source>You don’t have any Cloud workspaces yet.</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoveryEnabled" datatype="html">
+        <source>Your recovery key is ready to use.</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoveryPin" datatype="html">
+        <source>Confirm local PIN</source>
+      </trans-unit>
+      <trans-unit id="vaultRestoreFile" datatype="html">
+        <source>Recover with a saved key</source>
+      </trans-unit>
+      <trans-unit id="vaultRestoreHelp" datatype="html">
+        <source>Select the file you saved for this vault, then choose how to unlock it on this device.</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoveryFile" datatype="html">
+        <source>Vault recovery key file</source>
+      </trans-unit>
+      <trans-unit id="vaultPairPinHelp" datatype="html">
+        <source>A local PIN unlocks this vault on this device. Someone with a copy of its encrypted storage can try PINs offline.</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoverPin" datatype="html">
+        <source>Recover with PIN</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoverPasskey" datatype="html">
+        <source>Recover with a passkey</source>
+      </trans-unit>
+      <trans-unit id="vaultAlternativePin" datatype="html">
+        <source>Use a PIN instead</source>
+      </trans-unit>
+      <trans-unit id="vaultNewCredentialOptions" datatype="html">
+        <source>Other passkey options</source>
+      </trans-unit>
+      <trans-unit id="vaultResumeLocalCredential" datatype="html">
+        <source>Continue with this device’s passkey</source>
+      </trans-unit>
+      <trans-unit id="vaultCreateLocalCredential" datatype="html">
+        <source>Create a new passkey for this device</source>
+      </trans-unit>
+      <trans-unit id="vaultDeleteWarning" datatype="html">
+        <source>Permanently delete this vault and its cloud backup? Other vaults will stay available. Copies already saved on devices may remain.</source>
+      </trans-unit>
+      <trans-unit id="vaultDeleteConfirm" datatype="html">
+        <source>Permanently delete this vault</source>
+      </trans-unit>
+      <trans-unit id="vaultDeleteCancel" datatype="html">
+        <source>Cancel</source>
+      </trans-unit>
+      <trans-unit id="vaultDelete" datatype="html">
+        <source>Delete vault</source>
+      </trans-unit>
+      <trans-unit id="vaultCreateAnother" datatype="html">
+        <source>Create another vault</source>
+      </trans-unit>
+      <trans-unit id="vaultSaveRecoveryTitle" datatype="html">
+        <source>Save your recovery key</source>
+      </trans-unit>
+      <trans-unit id="vaultSaveRecoveryHelp" datatype="html">
+        <source>Keep this file somewhere safe outside this device. You’ll need it to recover this vault if you lose access to your devices.</source>
+      </trans-unit>
+      <trans-unit id="vaultDownloadRecovery" datatype="html">
+        <source>Download recovery key</source>
+      </trans-unit>
+      <trans-unit id="vaultConfirmRecovery" datatype="html">
+        <source>I saved my recovery key</source>
+      </trans-unit>
+      <trans-unit id="vaultManageRecovery" datatype="html">
+        <source>Recovery key</source>
+      </trans-unit>
+      <trans-unit id="vaultAddRecoveryHelp" datatype="html">
+        <source>Save a recovery key for this vault while you can open it.</source>
+      </trans-unit>
+      <trans-unit id="vaultAddRecovery" datatype="html">
+        <source>Set up a recovery key</source>
+      </trans-unit>
+      <trans-unit id="vaultDeviceRestoreOptions" datatype="html">
+        <source>To restore the note on this browser, link it from a device that can open your vault or use your saved recovery key in Vault devices.</source>
+      </trans-unit>
+      <trans-unit id="vaultDeletionPending" datatype="html">
+        <source>Deletion is in progress. Return to Your vaults and retry deleting this vault in a minute.</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoveryExpired" datatype="html">
+        <source>Recovery setup expired. Start again and save the new file.</source>
       </trans-unit>
     </body>
   </file>

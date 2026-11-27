@@ -2,6 +2,7 @@ import { defineRoute } from '@visomi-stack/web-backend-shared';
 import {
   deviceChallengeSchema,
   deviceProofSchema,
+  exampleVaultPairingListSchema,
   approvedDeliverySchema,
   keyDomainSchema,
   syncWriteSchema,
@@ -14,10 +15,17 @@ import { z } from 'zod';
 import { targetSchema } from '../access/contracts';
 import { commonErrors, cookieSecurity, csrfSecurity } from '../auth/shared/contracts';
 
-import { approvalSchema, enrollmentRequestSchema, revokeDeviceSchema, rotateDevicesSchema } from './devices';
+import {
+  bootstrapSchema,
+  approvalSchema,
+  enrollmentRequestSchema,
+  revokeDeviceSchema,
+  rotateDevicesSchema,
+} from './devices';
 
 const params = targetSchema.extend({ domain: z.string().regex(/^[a-z][a-z0-9-]{0,63}$/) });
 const path = '/tenants/:tenantId/scopes/:scopeId/domains/:domain';
+const pairingPath = '/tenants/:tenantId/scopes/:scopeId/domains/private-resources/devices/pairing';
 const version = z.number().int().positive();
 const state = z.strictObject({ generation: version, epoch: version, phase: z.enum(['ready', 'rotating']).optional() });
 const response = (schema: z.ZodType) => ({
@@ -35,6 +43,35 @@ const base = {
 };
 
 export const vaultContracts = {
+  pairings: defineRoute({
+    ...base,
+    security: cookieSecurity,
+    method: 'get',
+    path: '/pairing-requests',
+    operationId: 'vault_pairing_requests',
+    summary: 'Find pending requests for the current account’s Vault Example workspaces',
+    request: z.object({}),
+    responses: response(exampleVaultPairingListSchema),
+  }),
+  publishPairing: defineRoute({
+    ...base,
+    method: 'post',
+    path: pairingPath,
+    operationId: 'vault_pairing_publish',
+    summary: 'Publish a proved Vault Example request for review',
+    request: z.object({ params: targetSchema, body: deviceProofSchema }),
+    responses: response(deviceProofSchema),
+  }),
+  readPairing: defineRoute({
+    ...base,
+    security: cookieSecurity,
+    method: 'get',
+    path: `${pairingPath}/:id`,
+    operationId: 'vault_pairing_read',
+    summary: 'Read a currently pending Vault Example request',
+    request: z.object({ params: targetSchema.extend({ id: z.uuid() }) }),
+    responses: response(deviceProofSchema),
+  }),
   request: defineRoute({
     ...base,
     method: 'post',
@@ -50,7 +87,7 @@ export const vaultContracts = {
     path: `${path}/devices/bootstrap`,
     operationId: 'vault_device_bootstrap',
     summary: 'Initialize an empty key scope with owner possession proof',
-    request: z.object({ params, body: deviceProofSchema }),
+    request: z.object({ params, body: bootstrapSchema }),
     responses: response(state),
   }),
   approve: defineRoute({
