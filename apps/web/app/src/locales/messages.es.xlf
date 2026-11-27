@@ -1375,8 +1375,8 @@
         <target>Ingresa la huella que aparece en el dispositivo nuevo para confirmar que es el correcto.</target>
       </trans-unit>
       <trans-unit id="vaultPairingExpired" datatype="html">
-        <source>This request expired.</source>
-        <target>Esta solicitud venció.</target>
+        <source>This request is no longer available.</source>
+        <target>Esta solicitud ya no está disponible.</target>
       </trans-unit>
       <trans-unit id="vaultPairingStartAgain" datatype="html">
         <source>Start again</source>
@@ -1881,6 +1881,10 @@
       <trans-unit id="vaultNewCredentialOptions" datatype="html">
         <source>Other passkey options</source>
         <target>Otras opciones de llave de acceso</target>
+      </trans-unit>
+      <trans-unit id="vaultResumeLocalCredential" datatype="html">
+        <source>Continue with this device’s passkey</source>
+        <target>Continuar con la llave de acceso de este dispositivo</target>
       </trans-unit>
       <trans-unit id="vaultCreateLocalCredential" datatype="html">
         <source>Create a new passkey for this device</source>

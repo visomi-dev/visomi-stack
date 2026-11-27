@@ -7,7 +7,6 @@ import { ExampleVaultDevices } from '../../../db/example-vault-devices/example-v
 import { exampleTargetSchema } from '../../../db/example-contracts';
 import { DatabaseHttp } from '../../../shared/db/http';
 import { ExampleVaultProfile } from '../../../db/example-vault-profile';
-import { ExampleAvailability } from '../../../db/example-availability';
 import { NavigationHeading } from '../../../shared/navigation-heading';
 import { Heading, Text, Link, Card } from '../../../ui';
 import { AuthHttp } from '../../shared/http';
@@ -26,16 +25,18 @@ export class Security {
   private readonly api = inject(Methods);
   private readonly profile = inject(ExampleVaultProfile);
   private readonly route = inject(ActivatedRoute);
-  private readonly examples = inject(ExampleAvailability, { optional: true });
 
   private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   private readonly rendered = signal(false);
 
-  protected readonly pairingRelyingParty = signal('');
+  private readonly vaultProfile = signal<Awaited<ReturnType<ExampleVaultProfile['load']>>>(undefined);
 
-  protected readonly pairingBackedSample = computed(
-    () => this.examples?.enabled() === true && this.params().get('sample') === 'vault-backup',
-  );
+  protected readonly pairingBackedSample = computed(() => this.params().get('sample') === 'vault-backup');
+  protected readonly pairingRelyingParty = computed(() => {
+    const profile = this.vaultProfile();
+
+    return profile && (this.pairingBackedSample() ? profile.objectBackups : profile.hybridHarness) ? profile.rpId : '';
+  });
   protected readonly pairingTargets = computed(() => {
     const params = this.params();
     const target = exampleTargetSchema.safeParse({
@@ -64,16 +65,16 @@ export class Security {
   private readonly activatePairing = afterNextRender(() => this.rendered.set(true));
 
   private readonly verifyPairingProfile = effect((cleanup) => {
-    if (!this.rendered() || !this.pairingTargets().length || this.pairingRelyingParty()) {
+    if (!this.rendered() || !this.pairingTargets().length || this.vaultProfile()) {
       return;
     }
 
     const controller = new AbortController();
 
     cleanup(() => controller.abort());
-    void this.profile.relyingParty().then((rpId) => {
+    void this.profile.load().then((profile) => {
       if (!controller.signal.aborted) {
-        this.pairingRelyingParty.set(rpId);
+        this.vaultProfile.set(profile);
       }
     });
   });

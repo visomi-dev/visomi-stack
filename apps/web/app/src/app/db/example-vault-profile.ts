@@ -10,15 +10,15 @@ export class ExampleVaultProfile {
   private readonly api = inject(DatabaseHttp);
   private readonly document = inject(DOCUMENT);
 
-  async relyingParty(): Promise<string> {
+  async load() {
     try {
       const raw = await this.api.vault('/policy');
       const profile = readExampleProfile(raw, this.document.defaultView?.location.origin);
 
-      return profile.rpId;
+      return profile;
     } catch {
       // The reference action exists only in the explicit synthetic API composition.
-      return '';
+      return undefined;
     }
   }
 }

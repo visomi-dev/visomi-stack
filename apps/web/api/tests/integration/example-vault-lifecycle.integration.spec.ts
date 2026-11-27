@@ -1,5 +1,5 @@
 import { vaultSchema } from '@visomi-stack/backend-db';
-import { exampleWorkspaceTargetSchema, syncHeadSchema } from '@visomi-stack/shared-db';
+import { exampleVaultWorkspacePageSchema, exampleWorkspaceTargetSchema, syncHeadSchema } from '@visomi-stack/shared-db';
 import { eq } from 'drizzle-orm';
 import { expect, it } from 'vitest';
 
@@ -146,6 +146,21 @@ it('requires owner confirmation and resumes deletion after a staged object or in
     await expect(removal()).resolves.toMatchObject({ status: 503 });
 
     await expect(f.owner.call(vaultBase(target) + '/devices')).resolves.toMatchObject({ status: 409 });
+
+    const directory = '/example/vault/workspaces';
+    const cachedClient = exampleVaultWorkspacePageSchema.shape.items.element.omit({ deletingBackup: true }).array();
+    const legacy = await f.owner.call(directory);
+
+    expect(cachedClient.parse(legacy.body.items).map((item) => item.scopeId)).toEqual([other.scopeId]);
+    const current = await f.owner.call(directory + '?includeDeleting=true');
+
+    expect(current.body.items).toHaveLength(2);
+    expect(current.body.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ scopeId: target.scopeId, deletingBackup: true }),
+        expect.objectContaining({ scopeId: other.scopeId, deletingBackup: false }),
+      ]),
+    );
   } finally {
     fault = undefined;
   }

@@ -404,33 +404,35 @@
             ></textarea>
           </app-field>
 
-          <details>
-            <summary i18n="@@vaultManageRecovery">Recovery key</summary>
+          @if (workspace.canEnrollRecovery()) {
+            <details>
+              <summary i18n="@@vaultManageRecovery">Recovery key</summary>
 
-            <p appUI i18n="@@vaultAddRecoveryHelp">Save a recovery key for this vault while you can open it.</p>
+              <p appUI i18n="@@vaultAddRecoveryHelp">Save a recovery key for this vault while you can open it.</p>
 
-            @if (workspace.showPin()) {
-              <app-field control-id="recovery-pin" label="Confirm local PIN" i18n-label="@@vaultRecoveryPin">
-                <app-pin-input
-                  [digits]="6"
-                  [disabled]="workspace.busy()"
-                  [value]="workspace.recoveryPin()"
-                  (valueChange)="workspace.recoveryPin.set($event)"
-                />
-              </app-field>
-            }
+              @if (workspace.showPin()) {
+                <app-field control-id="recovery-pin" label="Confirm local PIN" i18n-label="@@vaultRecoveryPin">
+                  <app-pin-input
+                    [digits]="6"
+                    [disabled]="workspace.busy()"
+                    [value]="workspace.recoveryPin()"
+                    (valueChange)="workspace.recoveryPin.set($event)"
+                  />
+                </app-field>
+              }
 
-            <button
-              appUI
-              variant="secondary"
-              type="button"
-              [disabled]="workspace.busy()"
-              (click)="workspace.enrollRecovery()"
-              i18n="@@vaultAddRecovery"
-            >
-              Set up a recovery key
-            </button>
-          </details>
+              <button
+                appUI
+                variant="secondary"
+                type="button"
+                [disabled]="workspace.busy()"
+                (click)="workspace.enrollRecovery()"
+                i18n="@@vaultAddRecovery"
+              >
+                Set up a recovery key
+              </button>
+            </details>
+          }
 
           @if (workspace.editor.saveFailed()) {
             <p role="status" i18n="@@vaultLocalSaveFailed">

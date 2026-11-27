@@ -67,9 +67,12 @@ export class ExamplePrivateResource {
   readonly verifiedCursor = this.verifiedCursorState.asReadonly();
 
   async enrollWithMethod(target: ExampleTarget, method?: WrappingContext['method']) {
-    const { binding, custody, signal } = this.active(target);
+    const { binding, custody, signal, storage, id } = this.active(target);
+    const control = await this.recovery.enroll(examplePrivatePath(target), binding, custody, signal, method);
 
-    return this.recovery.enroll(examplePrivatePath(target), binding, custody, signal, method);
+    this.current(signal);
+
+    await storage.advanceControl(id, control);
   }
 
   async watchProof(target: ExampleTarget) {

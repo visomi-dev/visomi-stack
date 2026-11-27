@@ -44,9 +44,22 @@ export class ExampleRecoverySetup {
 
       const raw = await this.api.vault(path + '/devices', undefined, signal);
       const roster = rosterSchema.parse(raw);
+
+      if (
+        binding.key.generation !== 1 ||
+        roster.phase !== 'ready' ||
+        roster.key.generation !== binding.key.generation
+      ) {
+        throw new VaultError('recovery-required');
+      }
+
       const approval = await this.confirmed(path, binding, custody, roster.epoch, signal, undefined, pin);
 
       await this.api.vault(path + '/devices/approve', approval, signal);
+
+      signal.throwIfAborted();
+
+      return { epoch: approval.authorization.epoch + 1, generation: binding.key.generation };
     } finally {
       pin?.fill(0);
     }

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   dataEnvelopeSchema,
   wrappedKeySchema,
+  wrappingAad,
   VaultError,
   keyDomainId,
   type KeyDomain,
@@ -261,6 +262,26 @@ export class IndexedDbVaultStorage implements VaultStorage {
       }
 
       return { id, envelope: parsed.data };
+    });
+  }
+
+  /** Discard only a competing setup's exact wrapper, before it has encrypted any data. */
+  async discardUnusedBinding(context: WrappedKey['context']): Promise<void> {
+    const id = keyDomainId(context.ownerId, context.key);
+
+    await this.change<StoredKey>('keys', id, (value) => {
+      const parsed = storedKeySchema.safeParse(value);
+
+      if (
+        !parsed.success ||
+        parsed.data.id !== id ||
+        parsed.data.used !== 0 ||
+        wrappingAad(parsed.data.envelope.context) !== wrappingAad(context)
+      ) {
+        throw new VaultError('revision-conflict');
+      }
+
+      return undefined;
     });
   }
 

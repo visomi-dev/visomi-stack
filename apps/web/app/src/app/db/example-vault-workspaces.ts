@@ -62,7 +62,13 @@ export class ExampleVaultWorkspaces {
   }
 
   async load(signal: AbortSignal, after?: string): Promise<void> {
-    const raw = await this.api.vault(after ? `/workspaces?after=${after}` : '/workspaces', undefined, signal);
+    const query = new URLSearchParams({ includeDeleting: 'true' });
+
+    if (after) {
+      query.set('after', after);
+    }
+
+    const raw = await this.api.vault('/workspaces?' + query, undefined, signal);
     const page = exampleVaultWorkspacePageSchema.parse(raw);
 
     signal.throwIfAborted();

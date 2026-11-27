@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { DOCUMENT, Location } from '@angular/common';
 import { DestroyRef, Service, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
@@ -12,7 +13,7 @@ import {
   type DeviceProof,
   type WrappingContext,
 } from '@visomi-stack/shared-db';
-import { WebCryptoDevices, encodeBytes, isVaultPin, replicaId } from '@visomi-stack/web-frontend-db';
+import { WebCryptoDevices, encodeBytes, isVaultPin } from '@visomi-stack/web-frontend-db';
 
 import { AuthHttp } from '../auth/shared/http';
 import { Session } from '../auth/session/session';
@@ -23,8 +24,9 @@ import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { VaultSession } from '../shared/vault/vault-session';
 import { vaultMessage } from '../shared/vault/vault-messages';
 
+import { installApprovedKey } from './example-vault-enrollment';
 import { ExamplePairingDraft, openPairingDevice } from './example-pairing-draft';
-import { recoverApproval, readRecovery } from './example-vault-recovery';
+import { approvalAction, deliveryRecipient, recoverApproval, readRecovery } from './example-vault-recovery';
 import { exampleLocalKey, rosterSchema, type ExampleTarget } from './example-contracts';
 import { watchVaultPairing } from './example-vault-pairing-watch';
 
@@ -89,34 +91,16 @@ export class ExampleVaultPairing {
 
     await this.run(async (signal, ownerId) => {
       const registry = await this.roster(ownerId, signal);
-      const existing = await this.vault.localBinding(registry.key);
+      const existing = await this.registeredBinding(registry);
 
       signal.throwIfAborted();
       this.existing.set(existing ?? null);
 
       if (this.backed && !existing) {
-        const draft = this.drafts.readDraft(ownerId, registry.key);
+        const pending = await this.drafts.resume(ownerId, registry, signal);
 
-        if (draft?.proof && !draft.recovering) {
-          if (
-            !draft.published &&
-            Date.parse(draft.proof.expiresAt) > Date.now() &&
-            !registry.devices.some((device) => device.id === draft.context.deviceId)
-          ) {
-            await this.drafts.publish(draft.context, draft.proof, signal);
-          }
-
-          const fingerprint = await new WebCryptoDevices(this.view.crypto).fingerprint(draft.proof);
-
-          signal.throwIfAborted();
-          this.pending.set({
-            context: draft.context,
-            proof: draft.proof,
-            fingerprint,
-            token: JSON.stringify(draft.proof),
-            reviewLink: this.drafts.reviewLink(draft.proof),
-          });
-        }
+        signal.throwIfAborted();
+        this.pending.set(pending);
       }
 
       this.ready.set(true);
@@ -173,7 +157,7 @@ export class ExampleVaultPairing {
         }
 
         const registry = await this.roster(ownerId, signal);
-        const existing = await this.vault.localBinding(registry.key);
+        const existing = await this.registeredBinding(registry);
 
         if (existing) {
           throw new VaultError('revision-conflict');
@@ -226,10 +210,7 @@ export class ExampleVaultPairing {
         let reviewLink: string | undefined;
 
         if (authority) {
-          this.view.localStorage.setItem(
-            this.drafts.draftKey(ownerId),
-            JSON.stringify({ context, proof, recovering: true }),
-          );
+          this.drafts.save(context, { proof, recovering: true });
 
           const signer = await recoverApproval(
             this.api,
@@ -239,7 +220,16 @@ export class ExampleVaultPairing {
             registry.epoch,
             enrolled,
             signal,
-          );
+          ).catch((error: unknown) => {
+            if (
+              error instanceof HttpErrorResponse &&
+              ['device_state_conflict', 'device_challenge_invalid'].includes(error.error?.error)
+            ) {
+              this.drafts.save(context);
+            }
+
+            throw error;
+          });
 
           await this.installRecipient(context, proof, fingerprint, signer, signal, supplied);
 
@@ -250,7 +240,7 @@ export class ExampleVaultPairing {
 
         if (this.backed) {
           // Persist only public request metadata; private identities stay in encrypted local custody.
-          this.view.localStorage.setItem(this.drafts.draftKey(ownerId), JSON.stringify({ context, proof }));
+          this.drafts.save(context, { proof });
 
           await this.drafts.publish(context, proof, signal);
 
@@ -264,6 +254,10 @@ export class ExampleVaultPairing {
     } finally {
       supplied?.fill(0);
     }
+  }
+
+  hasDedicatedPasskey(): boolean {
+    return this.drafts.dedicated();
   }
 
   async copyReviewLink(link: string): Promise<void> {
@@ -283,10 +277,7 @@ export class ExampleVaultPairing {
       this.vault.lockContext(pending.context);
 
       if (this.backed) {
-        this.view.localStorage.setItem(
-          this.drafts.draftKey(pending.context.ownerId),
-          JSON.stringify({ context: pending.context }),
-        );
+        this.drafts.save(pending.context);
       }
 
       this.pending.set(null);
@@ -343,18 +334,11 @@ export class ExampleVaultPairing {
       }
 
       const delivery = await this.vault
-        .deliver(existing, this.deliveryBinding(proof, fingerprint), pin)
+        .deliver(existing, deliveryRecipient(proof, fingerprint), pin)
         .finally(() => pin?.fill(0));
       const body = { proof, delivery };
-      const bodyHash = await this.digest(body);
-      const authorization = await custody.sign({
-        key: registry.key,
-        action: 'approve',
-        deviceId: existing.deviceId,
-        epoch: registry.epoch,
-        operationId: this.view.crypto.randomUUID(),
-        bodyHash,
-      });
+      const action = await approvalAction(this.view.crypto, registry.key, existing.deviceId, registry.epoch, body);
+      const authorization = await custody.sign(action);
 
       signal.throwIfAborted();
 
@@ -450,30 +434,27 @@ export class ExampleVaultPairing {
     }
 
     const custody = await this.vault.device(context, this.rpId, false, pin);
-    const key = await custody.open(this.deliveryBinding(proof, fingerprint), delivery, signer);
+    const key = await custody.open(deliveryRecipient(proof, fingerprint), delivery, signer);
 
     try {
       signal.throwIfAborted();
 
-      const storage = await this.database.replica(context.ownerId, signal);
+      await installApprovedKey({
+        database: this.database,
+        vault: this.vault,
+        context,
+        signal,
+        backed: this.backed,
+        roster: () => this.roster(context.ownerId, signal),
+        install: () => {
+          if (!custody.ready) {
+            throw new VaultError('locked');
+          }
 
-      try {
-        await storage.advanceControl(replicaId(context.ownerId, context.key, context.key.scope), {
-          generation: context.key.generation,
-          epoch: delivery.authorization.epoch + 1,
-        });
-      } finally {
-        storage.close();
-      }
-      const installed = await this.vault.localBinding(context.key);
-
-      signal.throwIfAborted();
-
-      if (!custody.ready || installed) {
-        throw new VaultError('locked');
-      }
-
-      await this.vault.install(context, this.rpId, key, pin);
+          return this.vault.install(context, this.rpId, key, pin);
+        },
+        epoch: delivery.authorization.epoch + 1,
+      });
     } finally {
       key.fill(0);
     }
@@ -496,23 +477,31 @@ export class ExampleVaultPairing {
     const registry = rosterSchema.parse(raw);
     const expected = { ...exampleLocalKey(this.target), generation: 1 };
 
-    if (registry.phase !== 'ready' || keyDomainId(ownerId, registry.key) !== keyDomainId(ownerId, expected)) {
+    if (
+      Boolean(registry.objectBackup) !== this.backed ||
+      registry.phase !== 'ready' ||
+      keyDomainId(ownerId, registry.key) !== keyDomainId(ownerId, expected)
+    ) {
       throw new VaultError('recovery-required');
     }
 
     return registry;
   }
 
-  private deliveryBinding(proof: DeviceProof, fingerprint: string) {
-    return {
-      key: proof.key,
-      ownerId: proof.ownerId,
-      deviceId: proof.deviceId,
-      requestId: proof.requestId,
-      challenge: proof.challenge,
-      fingerprint,
-      encryption: proof.keys.encryption,
-    };
+  private async registeredBinding(registry: ReturnType<typeof rosterSchema.parse>) {
+    const local = await this.vault.localBinding(registry.key);
+
+    if (!local || !this.backed) {
+      return local;
+    }
+
+    const device = registry.devices.find(({ id }) => id === local.deviceId);
+
+    if (device && (device.revokedAt || device.ownerId !== local.ownerId)) {
+      throw new VaultError('recovery-required');
+    }
+
+    return device ? local : undefined;
   }
 
   private async digest(value: unknown): Promise<string> {
@@ -586,10 +575,19 @@ export class ExampleVaultPairing {
     }
 
     const controller = new AbortController();
+    let unavailable = false;
     const stop = watchVaultPairing(
       this.view,
       async () => {
         try {
+          const available = await this.drafts.available(pending.proof, controller.signal);
+
+          if (available) {
+            unavailable = false;
+
+            return;
+          }
+
           const roster = await this.roster(pending.proof.ownerId, controller.signal);
 
           if (controller.signal.aborted) {
@@ -598,8 +596,11 @@ export class ExampleVaultPairing {
 
           if (roster.devices.some(({ id, revokedAt }) => id === pending.context.deviceId && !revokedAt)) {
             this.approval.set('approved');
-          } else if (Date.parse(pending.proof.expiresAt) <= Date.now()) {
+          } else if (unavailable || Date.parse(pending.proof.expiresAt) <= Date.now()) {
             this.approval.set('expired');
+          } else {
+            // A concurrent approval may be between challenge consumption and committing its delivery.
+            unavailable = true;
           }
         } catch {
           // Retry the authenticated read on reconnect or the next poll.

@@ -288,7 +288,9 @@ export class VaultSession {
     this.bindCancellation(session.signal);
     const id = custodyId(binding);
 
-    if (provision !== true && this.devices.get(id)?.ready) {
+    const verifyPin = provision === 'resume' && binding.method === 'pin-argon2id';
+
+    if (provision !== true && !verifyPin && this.devices.get(id)?.ready) {
       return this.devices.get(id)!;
     }
 

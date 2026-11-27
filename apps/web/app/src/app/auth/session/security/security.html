@@ -8,7 +8,10 @@
   <app-auth-feedback [action]="action" />
 
   @if (pairingRelyingParty(); as rpId) {
-    @for (target of pairingTargets(); track target.tenantId + target.scopeId + target.objectId) {
+    @for (
+      target of pairingTargets();
+      track target.tenantId + target.scopeId + target.objectId + pairingBackedSample()
+    ) {
       <app-example-vault-devices
         [target]="target"
         [rpId]="rpId"

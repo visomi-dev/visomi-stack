@@ -34,6 +34,10 @@ const recoveryFile = z.strictObject({
 export async function proofRecipient(devices: WebCryptoDevices, proof: DeviceProof) {
   const fingerprint = await devices.fingerprint(proof);
 
+  return deliveryRecipient(proof, fingerprint);
+}
+
+export function deliveryRecipient(proof: DeviceProof, fingerprint: string) {
   return {
     key: proof.key,
     ownerId: proof.ownerId,

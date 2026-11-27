@@ -6,6 +6,7 @@ import {
   signup,
   passwordStart,
   vaultUnlockUrl,
+  expireVaultPairing,
   virtualPasskey,
   saveRecoveryKey,
 } from './support/fixtures';
@@ -17,6 +18,8 @@ test('opens the backed note on an approved desktop with its own PIN and no passk
   page,
   browser,
 }, info) => {
+  test.slow();
+
   await virtualPasskey(page);
 
   const email = await signup(page);
@@ -85,7 +88,29 @@ test('opens the backed note on an approved desktop with its own PIN and no passk
 
     await peer.getByLabel('Confirm your new PIN').fill('208146');
 
-    await peer.getByRole('button', { name: 'Request pairing with PIN' }).click();
+    const request = peer.getByRole('button', { name: 'Request pairing with PIN' });
+    const publication = () => peer.waitForResponse((response) => response.url().endsWith('/devices/pairing'));
+    const [first] = await Promise.all([publication(), request.click()]);
+    const previous = first.request().postDataJSON();
+
+    await expireVaultPairing(previous.requestId);
+
+    const restart = peer.getByRole('button', { name: 'Start again', exact: true });
+
+    await expect(restart).toBeVisible({ timeout: 25_000 });
+
+    await restart.click();
+
+    await pin.fill('208146');
+
+    await peer.getByLabel('Confirm your new PIN').fill('208146');
+
+    const [next] = await Promise.all([publication(), request.click()]);
+    const resumedRequest = next.request().postDataJSON();
+
+    expect(resumedRequest.requestId).not.toBe(previous.requestId);
+    expect(resumedRequest.deviceId).toBe(previous.deviceId);
+    expect(resumedRequest.keys).toEqual(previous.keys);
 
     const reviewLink = peer.getByRole('link', { name: 'Open review link', exact: true });
 

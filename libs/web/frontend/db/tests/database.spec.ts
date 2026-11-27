@@ -81,6 +81,7 @@ it('opens native version-one ciphertext databases without upgrading or resetting
         const vault = await api.IndexedDbVaultStorage.open(indexedDB, owner);
         const second = await api.IndexedDbVaultStorage.open(indexedDB, owner);
         const replica = await api.IndexedDbReplicaStorage.open(indexedDB, owner);
+        const [discardUsed] = await Promise.allSettled([vault.discardUnusedBinding(wrapped.context)]);
         const restoredKey = await vault.getCurrentKey(owner, wrapped.context.key);
         const restoredUnit = await vault.getUnit(unitId);
         const restoredPin = await replica.pin('synthetic-stream');
@@ -109,6 +110,7 @@ it('opens native version-one ciphertext databases without upgrading or resetting
 
         return {
           versions,
+          discardUsed: discardUsed.status === 'rejected' && discardUsed.reason.code,
           key: restoredKey?.ciphertext === wrapped.ciphertext,
           unit: restoredUnit?.ciphertext === envelope.ciphertext,
           pin: JSON.stringify(restoredPin) === JSON.stringify(pin),
@@ -126,6 +128,7 @@ it('opens native version-one ciphertext databases without upgrading or resetting
 
     expect(result).toEqual({
       versions: [1, 1],
+      discardUsed: 'revision-conflict',
       key: true,
       unit: true,
       pin: true,

@@ -135,6 +135,9 @@ export const persistenceContracts = {
 export const exampleVaultWorkspacesContract = defineRoute({
   ...persistenceContracts.listWorkspaces,
   summary: 'List initialized vaults visible to the verified account and indicate any pending setup it owns',
+  request: z.object({
+    query: query.pick({ after: true, limit: true }).extend({ includeDeleting: z.literal('true').optional() }),
+  }),
   responses: response(exampleVaultWorkspacePageSchema),
 });
 

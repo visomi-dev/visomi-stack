@@ -111,6 +111,7 @@ export class ExampleWorkspace {
   readonly resumingPinSetup = computed(
     () => this.backedSample && this.canInitialize() && this.binding()?.method === 'pin-argon2id',
   );
+  readonly canEnrollRecovery = computed(() => this.binding()?.key.generation === 1);
   readonly canPair = computed(() => !this.backedSample || this.enrolled());
   readonly loading = computed(() => !this.rendered() || this.busyState());
   readonly pairingParams = computed(() => {

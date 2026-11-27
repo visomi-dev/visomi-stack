@@ -1,10 +1,13 @@
-import { createPinMethodId, createPrfCredential, deviceCustodyContext } from '@visomi-stack/web-frontend-db';
+import { replicaId, createPinMethodId, createPrfCredential, deviceCustodyContext } from '@visomi-stack/web-frontend-db';
 import { VaultError, type KeyDomain, type VaultUnlock, type WrappingContext } from '@visomi-stack/shared-db';
 
+import type { ClientDatabase } from '../shared/db/database';
 import { listVaultPasskeyIds } from '../auth/passkeys/passkeys';
 import type { AuthHttp } from '../auth/shared/http';
 import { browserPrfUnlock, openVaultDevice } from '../shared/vault/local-unlock';
 import type { VaultSession } from '../shared/vault/vault-session';
+
+import type { rosterSchema } from './example-contracts';
 
 export async function openExampleDevice(options: {
   view: Window;
@@ -117,5 +120,60 @@ export async function registeredVaultMethod(
     selected.unlock.cancel();
 
     throw error;
+  }
+}
+
+/** Install only after verifying the recipient delivery and the independent approver pin. */
+export async function installApprovedKey(options: {
+  database: ClientDatabase;
+  vault: VaultSession;
+  context: WrappingContext;
+  signal: AbortSignal;
+  backed: boolean;
+  roster: () => Promise<ReturnType<typeof rosterSchema.parse>>;
+  install: () => Promise<void>;
+  epoch: number;
+}) {
+  const { database, vault, context, signal, backed, roster, install, epoch } = options;
+  const storage = await database.replica(context.ownerId, signal);
+  const id = replicaId(context.ownerId, context.key, context.key.scope);
+
+  try {
+    const installed = await vault.localBinding(context.key);
+
+    if (installed) {
+      const registry = await roster();
+      const previouslyVerified = await storage.hasVerifiedControl(id);
+
+      if (
+        !backed ||
+        registry.devices.some((device) => device.id === installed.deviceId) ||
+        !registry.devices.some(
+          (device) => device.id === context.deviceId && device.ownerId === context.ownerId && !device.revokedAt,
+        ) ||
+        previouslyVerified
+      ) {
+        throw new VaultError('revision-conflict');
+      }
+
+      const local = await database.vault(context.ownerId, signal);
+
+      try {
+        await local.discardUnusedBinding(installed);
+      } finally {
+        local.close();
+      }
+    }
+
+    signal.throwIfAborted();
+
+    await install();
+
+    await storage.advanceControl(id, {
+      generation: context.key.generation,
+      epoch,
+    });
+  } finally {
+    storage.close();
   }
 }

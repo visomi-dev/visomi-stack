@@ -52,7 +52,7 @@ test('shows distinct Cloud and Vault workspace labels when their tenant and date
     owner: true,
   }));
 
-  await page.route('**/api/example/{cloud,vault}/workspaces', (route) =>
+  await page.route('**/api/example/{cloud,vault}/workspaces*', (route) =>
     route.fulfill({ json: { items, next: null } }),
   );
 

@@ -109,7 +109,7 @@
     } @else if (pairing.pending(); as request) {
       @if (request.reviewLink; as link) {
         @if (pairing.approval() === 'expired') {
-          <p appUI role="status" i18n="@@vaultPairingExpired">This request expired.</p>
+          <p appUI role="status" i18n="@@vaultPairingExpired">This request is no longer available.</p>
 
           <button appUI type="button" (click)="pairing.resetExpired()" i18n="@@vaultPairingStartAgain">
             Start again
@@ -289,9 +289,12 @@
               type="button"
               [disabled]="pairing.busy()"
               (click)="pairing.request(false, true)"
-              i18n="@@vaultCreateLocalCredential"
             >
-              Create a new passkey for this device
+              @if (pairing.hasDedicatedPasskey()) {
+                <span i18n="@@vaultResumeLocalCredential">Continue with this device’s passkey</span>
+              } @else {
+                <span i18n="@@vaultCreateLocalCredential">Create a new passkey for this device</span>
+              }
             </button>
           </details>
         }

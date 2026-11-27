@@ -2832,7 +2832,7 @@
         <source>Enter the fingerprint shown on the new device to confirm you are linking the right one.</source>
       </trans-unit>
       <trans-unit id="vaultPairingExpired" datatype="html">
-        <source>This request expired.</source>
+        <source>This request is no longer available.</source>
       </trans-unit>
       <trans-unit id="vaultPairingStartAgain" datatype="html">
         <source>Start again</source>
@@ -3531,6 +3531,9 @@
       </trans-unit>
       <trans-unit id="vaultNewCredentialOptions" datatype="html">
         <source>Other passkey options</source>
+      </trans-unit>
+      <trans-unit id="vaultResumeLocalCredential" datatype="html">
+        <source>Continue with this device’s passkey</source>
       </trans-unit>
       <trans-unit id="vaultCreateLocalCredential" datatype="html">
         <source>Create a new passkey for this device</source>

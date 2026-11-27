@@ -9,8 +9,15 @@ import {
   type WrappingContext,
   type DeviceProof,
 } from '@visomi-stack/shared-db';
-import { createPinMethodId, createPrfCredential, deviceCustodyContext } from '@visomi-stack/web-frontend-db';
+import {
+  WebCryptoDevices,
+  createPinMethodId,
+  createPrfCredential,
+  deviceCustodyContext,
+} from '@visomi-stack/web-frontend-db';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Location } from '@angular/common';
+import { signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { z } from 'zod';
 
@@ -19,9 +26,11 @@ import { AuthHttp } from '../auth/shared/http';
 import type { DatabaseHttp } from '../shared/db/http';
 
 import { registeredVaultMethod } from './example-vault-enrollment';
-import { examplePrivatePath, type ExampleTarget } from './example-contracts';
+import { examplePrivatePath, type rosterSchema, type ExampleTarget } from './example-contracts';
 
 export class ExamplePairingDraft {
+  readonly dedicated = signal(false);
+
   constructor(
     private readonly target: ExampleTarget,
     private readonly view: Window,
@@ -52,6 +61,7 @@ export class ExamplePairingDraft {
       .strictObject({
         context: wrappingContextSchema,
         proof: deviceProofSchema.optional(),
+        dedicated: z.literal(true).optional(),
         published: z.boolean().optional(),
         recovering: z.boolean().optional(),
       })
@@ -78,6 +88,81 @@ export class ExamplePairingDraft {
     return draft.data;
   }
 
+  save(
+    context: WrappingContext,
+    state: { proof?: DeviceProof; published?: boolean; recovering?: boolean; dedicated?: boolean } = {},
+  ) {
+    const previous = this.readDraft(context.ownerId, context.key);
+    const dedicated = state.dedicated || (previous?.context.deviceId === context.deviceId && previous.dedicated);
+
+    this.dedicated.set(Boolean(dedicated));
+
+    this.view.localStorage.setItem(
+      this.draftKey(context.ownerId),
+      JSON.stringify({ ...state, context, dedicated: dedicated || undefined }),
+    );
+  }
+
+  retired(error: unknown) {
+    return (
+      error instanceof HttpErrorResponse && error.status === 404 && error.error?.error === 'device_challenge_invalid'
+    );
+  }
+
+  async resume(ownerId: string, registry: ReturnType<typeof rosterSchema.parse>, signal: AbortSignal) {
+    const draft = this.readDraft(ownerId, registry.key);
+
+    this.dedicated.set(draft?.dedicated === true);
+
+    if (draft?.proof && !draft.recovering) {
+      if (
+        !draft.published &&
+        Date.parse(draft.proof.expiresAt) > Date.now() &&
+        !registry.devices.some((device) => device.id === draft.context.deviceId)
+      ) {
+        try {
+          await this.publish(draft.context, draft.proof, signal);
+        } catch (error) {
+          if (!this.retired(error)) {
+            throw error;
+          }
+        }
+      }
+
+      const fingerprint = await new WebCryptoDevices(this.view.crypto).fingerprint(draft.proof);
+
+      signal.throwIfAborted();
+
+      return {
+        context: draft.context,
+        proof: draft.proof,
+        fingerprint,
+        token: JSON.stringify(draft.proof),
+        reviewLink: this.reviewLink(draft.proof),
+      };
+    }
+
+    return null;
+  }
+
+  async available(proof: DeviceProof, signal: AbortSignal) {
+    if (Date.parse(proof.expiresAt) <= Date.now()) {
+      return false;
+    }
+
+    try {
+      await this.api.vault(examplePrivatePath(this.target) + '/devices/pairing/' + proof.requestId, undefined, signal);
+
+      return true;
+    } catch (error) {
+      if (this.retired(error)) {
+        return false;
+      }
+
+      throw error;
+    }
+  }
+
   reviewLink(proof: DeviceProof) {
     const link = this.router.createUrlTree(['/security'], {
       queryParams: { sample: 'vault-backup', ...this.target, requestId: proof.requestId },
@@ -87,14 +172,22 @@ export class ExamplePairingDraft {
   }
 
   async publish(context: WrappingContext, proof: DeviceProof, signal: AbortSignal) {
-    const published = await this.api.vault(examplePrivatePath(this.target) + '/devices/pairing', proof, signal);
+    const published = await this.api
+      .vault(examplePrivatePath(this.target) + '/devices/pairing', proof, signal)
+      .catch((error: unknown) => {
+        if (this.retired(error)) {
+          this.save(context);
+        }
+
+        throw error;
+      });
     const confirmed = deviceProofSchema.parse(published);
 
     if (deviceProofMessage(confirmed) !== deviceProofMessage(proof) || confirmed.proof !== proof.proof) {
       throw new VaultError('corrupt');
     }
 
-    this.view.localStorage.setItem(this.draftKey(context.ownerId), JSON.stringify({ context, proof, published: true }));
+    this.save(context, { proof, published: true });
   }
 }
 
@@ -124,7 +217,7 @@ export async function openPairingDevice(options: {
   let context: WrappingContext;
   let unlock: VaultUnlock | undefined;
 
-  if (draft?.context.method === base.method && !createNew) {
+  if (draft?.context.method === base.method && (!createNew || draft.dedicated)) {
     context = draft.context;
   } else if (usePin) {
     context = { ...base, methodId: createPinMethodId(view.crypto) };
@@ -151,7 +244,7 @@ export async function openPairingDevice(options: {
     signal.throwIfAborted();
 
     if (backed && context.deviceId !== draft?.context.deviceId) {
-      view.localStorage.setItem(drafts.draftKey(ownerId), JSON.stringify({ context }));
+      drafts.save(context, { dedicated: createNew });
     }
 
     const previous = await vault.localBinding(deviceCustodyContext(context).key);

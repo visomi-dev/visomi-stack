@@ -29,6 +29,21 @@ async function isolatedPool(): Promise<Pool> {
   return new Pool({ connectionString: url.toString() });
 }
 
+export async function expireVaultPairing(requestId: string): Promise<void> {
+  const pool = await isolatedPool();
+
+  try {
+    const result = await pool.query(
+      'UPDATE vault_key_challenges SET expires_at = now() WHERE id = $1 AND consumed_at IS NULL',
+      [requestId],
+    );
+
+    expect(result.rowCount).toBe(1);
+  } finally {
+    await pool.end();
+  }
+}
+
 export async function expireEmailVerification(email: string): Promise<void> {
   const pool = await isolatedPool();
 

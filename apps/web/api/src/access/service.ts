@@ -113,12 +113,18 @@ export class Access {
   async listExampleWorkspaces(
     actor: SessionActor,
     objectBackup: boolean,
-    { after, limit }: { after?: string; limit: number },
+    { after, limit, includeDeleting }: { after?: string; limit: number; includeDeleting?: string },
   ) {
     return this.database.transaction(async (tx) => {
       await this.identity(tx, actor);
 
-      const rows = await this.exampleWorkspaces(tx, actor.principal.id, objectBackup, after).limit(limit + 1);
+      const rows = await this.exampleWorkspaces(
+        tx,
+        actor.principal.id,
+        objectBackup,
+        after,
+        includeDeleting === 'true',
+      ).limit(limit + 1);
       const page = rows.slice(0, limit);
       const pending = await (objectBackup ? this.pendingVault(tx, actor.principal.id) : []);
 
@@ -160,7 +166,6 @@ export class Access {
           and(
             eq(keyChallenges.ownerId, actor.principal.id),
             eq(workspaces.owner, true),
-            eq(workspaces.deletingBackup!, false),
             eq(keyChallenges.domain, 'private-resources'),
             eq(keyScopes.phase, 'ready'),
             isNull(keyChallenges.consumedAt),
@@ -466,7 +471,13 @@ export class Access {
       .limit(1);
   }
 
-  private exampleWorkspaces(tx: Transaction, userId: string, objectBackup: boolean, after?: string) {
+  private exampleWorkspaces(
+    tx: Transaction,
+    userId: string,
+    objectBackup: boolean,
+    after?: string,
+    includeDeleting = false,
+  ) {
     const directGrant = alias(grants, 'workspace_grant');
     const rootGrant = alias(grants, 'workspace_root_grant');
     const objectId = sql<string | null>`(
@@ -489,7 +500,8 @@ export class Access {
         scopeId: sql<string>`${scopes.id}`.as('workspace_scope_id'),
         createdAt: tenants.createdAt,
         owner: memberships.owner,
-        ...(objectBackup ? { objectId, deletingBackup: scopes.deletingBackup } : {}),
+        ...(objectBackup ? { objectId } : {}),
+        ...(includeDeleting ? { deletingBackup: scopes.deletingBackup } : {}),
       })
       .from(memberships)
       .innerJoin(tenants, eq(tenants.id, memberships.tenantId))
@@ -520,6 +532,7 @@ export class Access {
           eq(scopes.objectBackup, objectBackup),
           or(eq(memberships.owner, true), inArray(sql`coalesce(${directGrant.role}, ${rootGrant.role})`, readable)),
           objectBackup ? exists(vaultRegistry(tx)) : undefined,
+          objectBackup && !includeDeleting ? eq(scopes.deletingBackup, false) : undefined,
           after ? gt(scopes.id, after) : undefined,
         ),
       )
