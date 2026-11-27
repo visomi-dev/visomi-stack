@@ -389,7 +389,9 @@ test('backs up the Vault Example note to private object storage and restores it 
       recipient.waitForResponse((response) => response.url().endsWith('/devices/pairing')),
       recipient.getByRole('button', { name: 'Request pairing with a passkey' }).click(),
     ]);
-    const published = await publication.json();
+
+    expect(publication.ok()).toBe(true);
+    const published = publication.request().postDataJSON();
     const beforeReload = await recipient.getByRole('link', { name: 'Open review link' }).getAttribute('href');
 
     await recipient.reload();

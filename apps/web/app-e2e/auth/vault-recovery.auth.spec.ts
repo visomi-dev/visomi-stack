@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { buffer as readStream } from 'node:stream/consumers';
 
 import type { Page } from '@playwright/test';
 import { readMailCode } from '@visomi-stack/dev-testing';
@@ -51,8 +51,8 @@ async function makeVault(page: Page, label: string, note: string) {
 
   await expect(page.locator('app-vault-sync-indicator').getByRole('status')).toHaveText('Vault synced');
 
-  const path = await download.path();
-  const buffer = await readFile(path!);
+  const stream = await download.createReadStream();
+  const buffer = await readStream(stream);
 
   return { url: page.url(), file: { name: 'synthetic-recovery.json', mimeType: 'application/json', buffer } };
 }
@@ -207,8 +207,8 @@ test('enrolls recovery on an existing vault and restores it with an existing pas
 
   await expect(page.getByText('Your recovery key is ready to use.', { exact: true })).toBeVisible();
 
-  const path = await saved.path();
-  const buffer = await readFile(path!);
+  const stream = await saved.createReadStream();
+  const buffer = await readStream(stream);
 
   await page.context().close();
 
