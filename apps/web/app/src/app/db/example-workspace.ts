@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Service, afterNextRender, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import type { z } from 'zod';
 import { createOperationId, VaultError } from '@visomi-stack/shared-db';
 import { isVaultPin } from '@visomi-stack/web-frontend-db';
@@ -37,7 +37,6 @@ export class ExampleWorkspace {
   private readonly workspaceDirectory = inject(ExampleVaultWorkspaces);
   private readonly session = inject(Session);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
   private readonly navigation = inject(Navigation);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
@@ -83,16 +82,17 @@ export class ExampleWorkspace {
 
   readonly editor = new VaultNoteDraft(this.document, this.privateResource, this.syncStatus);
   readonly busy = this.busyState.asReadonly();
+
   readonly editorReadOnly = computed(() => this.busy() || this.editor.readOnly());
   readonly available = computed(() => this.configured() && !this.navigation.active() && this.sameSession());
 
   readonly vault = this.privateResource.vault;
-
   readonly status = computed(() => vaultMessage(this.vault.state()));
   readonly showPin = computed(
     () =>
       this.methodLoaded() &&
-      (this.binding()?.method === 'pin-argon2id' || (!this.binding() && this.capabilities.prf() === 'unavailable')),
+      (this.binding()?.method === 'pin-argon2id' ||
+        (!this.binding() && (this.capabilities.prf() === 'unavailable' || this.pinSetupSelected()))),
   );
   readonly showPrf = computed(
     () =>
@@ -119,19 +119,15 @@ export class ExampleWorkspace {
     return this.backedSample && target ? { ...target, sample: 'vault-backup' } : target;
   });
 
+  readonly deleting = this.workspaceDirectory.deleting;
+  readonly recoveryPin = this.privateResource.recovery.pin;
   readonly bindingLoaded = this.methodLoaded.asReadonly();
   readonly workspaces = this.workspaceDirectory.page;
   readonly notice = this.noticeState.asReadonly();
   readonly target = this.targetState.asReadonly();
 
-  async openWorkspace(workspace: ExampleWorkspacePage['items'][number]): Promise<void> {
-    await this.run(async (signal) => {
-      const target = await this.workspaceDirectory.target(workspace, signal);
-
-      this.current(signal);
-
-      await this.router.navigate(['/db-example/vault'], { queryParams: target });
-    });
+  openWorkspace(workspace: ExampleWorkspacePage['items'][number]) {
+    return this.run((signal) => this.workspaceDirectory.openWorkspace(workspace, signal, () => this.current(signal)));
   }
 
   async discoverWorkspaces(after?: string): Promise<void> {
@@ -139,7 +135,7 @@ export class ExampleWorkspace {
   }
 
   selectPinSetup(): void {
-    if (this.canInitialize() && this.showPin()) {
+    if (this.canInitialize() && !this.hasBinding()) {
       this.pinSetupSelected.set(true);
     }
   }
@@ -160,27 +156,22 @@ export class ExampleWorkspace {
     }
   }
 
-  async createWorkspace(): Promise<void> {
-    await this.run(async (signal) => {
-      const target = await (this.backedSample
-        ? this.workspaceDirectory.startSetup(signal)
-        : this.workspaceDirectory.createHarness(signal));
+  createWorkspace() {
+    return this.run((signal) =>
+      this.workspaceDirectory.createWorkspace(this.backedSample, signal, () => this.current(signal)),
+    );
+  }
+
+  deleteSelected() {
+    return this.run((signal) => this.workspaceDirectory.deleteSelected(signal));
+  }
+
+  enrollRecovery() {
+    return this.run(async (signal) => {
+      await this.privateResource.enrollWithMethod(this.requiredTarget(), this.binding()?.method);
 
       this.current(signal);
-
-      if (!target) {
-        await this.workspaceDirectory.load(signal);
-
-        return;
-      }
-
-      if (this.backedSample) {
-        await this.router.navigate(['/db-example/vault'], { queryParams: { ...target, objectId: target.scopeId } });
-      } else {
-        const objectId = this.document.defaultView!.crypto.randomUUID();
-
-        await this.router.navigate(['/db-example', target.tenantId, target.scopeId, objectId]);
-      }
+      this.noticeState.set($localize`:@@vaultRecoveryEnabled:Your recovery key is ready to use.`);
     });
   }
 
@@ -428,6 +419,8 @@ export class ExampleWorkspace {
     this.pinDraft.set('');
     this.pinConfirmation.set('');
     this.pinSetupSelected.set(false);
+    this.recoveryPin.set('');
+    this.deleting.set(null);
     this.busyState.set(false);
 
     if (this.backedSample) {

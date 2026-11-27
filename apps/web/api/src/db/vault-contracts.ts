@@ -15,7 +15,13 @@ import { z } from 'zod';
 import { targetSchema } from '../access/contracts';
 import { commonErrors, cookieSecurity, csrfSecurity } from '../auth/shared/contracts';
 
-import { approvalSchema, enrollmentRequestSchema, revokeDeviceSchema, rotateDevicesSchema } from './devices';
+import {
+  bootstrapSchema,
+  approvalSchema,
+  enrollmentRequestSchema,
+  revokeDeviceSchema,
+  rotateDevicesSchema,
+} from './devices';
 
 const params = targetSchema.extend({ domain: z.string().regex(/^[a-z][a-z0-9-]{0,63}$/) });
 const path = '/tenants/:tenantId/scopes/:scopeId/domains/:domain';
@@ -81,7 +87,7 @@ export const vaultContracts = {
     path: `${path}/devices/bootstrap`,
     operationId: 'vault_device_bootstrap',
     summary: 'Initialize an empty key scope with owner possession proof',
-    request: z.object({ params, body: deviceProofSchema }),
+    request: z.object({ params, body: bootstrapSchema }),
     responses: response(state),
   }),
   approve: defineRoute({

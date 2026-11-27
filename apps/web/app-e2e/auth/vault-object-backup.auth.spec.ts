@@ -9,7 +9,15 @@ import { deviceProofSchema, serializeDataEnvelope, syncWriteSchema, type DataEnv
 import { Pool } from 'pg';
 import { io } from 'socket.io-client';
 
-import { expect, test, signup, passwordStart, vaultUnlockUrl } from './support/fixtures';
+import {
+  waitForRequestWindow,
+  saveRecoveryKey,
+  expect,
+  test,
+  signup,
+  passwordStart,
+  vaultUnlockUrl,
+} from './support/fixtures';
 
 // The paired recipient uses Chromium's native virtual WebAuthn authenticator.
 // eslint-disable-next-line playwright/no-skipped-test
@@ -147,6 +155,8 @@ test('backs up the Vault Example note to private object storage and restores it 
   context,
   browser,
 }, info) => {
+  test.slow();
+
   await context.addInitScript(() => {
     Object.defineProperty(window, 'PublicKeyCredential', { value: undefined, configurable: true });
   });
@@ -182,6 +192,8 @@ test('backs up the Vault Example note to private object storage and restores it 
   await panel.getByLabel('Confirm your new PIN', { exact: true }).fill(pin);
 
   await panel.getByRole('button', { name: 'Set up with PIN' }).click();
+
+  await saveRecoveryKey(page);
 
   const workspace = new URL(page.url());
   const objectId = workspace.searchParams.get('objectId')!;
@@ -260,7 +272,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await cdp.send('WebAuthn.enable');
 
-    await cdp.send('WebAuthn.addVirtualAuthenticator', {
+    const { authenticatorId } = await cdp.send('WebAuthn.addVirtualAuthenticator', {
       options: {
         protocol: 'ctap2',
         transport: 'internal',
@@ -302,6 +314,21 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await expect(recipient.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 
+    await recipient.goto('/app/en/security/passkeys');
+
+    await recipient.getByRole('button', { name: 'Add a passkey', exact: true }).click();
+
+    await expect(recipient.getByRole('status').filter({ hasText: 'Passkey added.' })).toBeVisible();
+
+    const ids = async () => {
+      const result = await cdp.send('WebAuthn.getCredentials', { authenticatorId });
+
+      return result.credentials.map((c) => c.credentialId);
+    };
+    const registered = await ids();
+
+    expect(registered).toHaveLength(1);
+
     await recipient.goto(workspace.href);
 
     const restore = recipient.getByRole('button', { name: 'Download and restore note' });
@@ -332,15 +359,46 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await rejectLoginOnlyWatch(recipientContext, workspace.origin);
 
+    await waitForRequestWindow();
+
     await recipient.getByRole('link', { name: 'Link a device' }).click();
 
     await expect(recipient).toHaveURL(pairingUrl);
 
+    await recipient.evaluate(() => {
+      const original = navigator.credentials.get.bind(navigator.credentials);
+
+      Object.defineProperty(navigator.credentials, 'get', {
+        configurable: true,
+        value: async () => {
+          Object.defineProperty(navigator.credentials, 'get', { configurable: true, value: original });
+
+          throw new DOMException('Synthetic cancellation', 'NotAllowedError');
+        },
+      });
+    });
+
+    await recipient.getByRole('button', { name: 'Request pairing with a passkey' }).click();
+
+    await expect(recipient.getByRole('status').filter({ hasText: /Unlock canceled/ })).toBeVisible();
+
+    const afterCancellation = await ids();
+
+    expect(afterCancellation).toEqual(registered);
     const [publication] = await Promise.all([
       recipient.waitForResponse((response) => response.url().endsWith('/devices/pairing')),
       recipient.getByRole('button', { name: 'Request pairing with a passkey' }).click(),
     ]);
     const published = await publication.json();
+    const beforeReload = await recipient.getByRole('link', { name: 'Open review link' }).getAttribute('href');
+
+    await recipient.reload();
+
+    await expect(recipient.getByRole('link', { name: 'Open review link' })).toHaveAttribute('href', beforeReload!);
+
+    const afterResume = await ids();
+
+    expect(afterResume).toEqual(registered);
     const proof = deviceProofSchema.parse(published);
     const devicePath = new URL(publication.url());
 
@@ -385,6 +443,8 @@ test('backs up the Vault Example note to private object storage and restores it 
     await expect(finish).toHaveCount(0);
 
     await recipientFingerprint.fill(recipientId);
+
+    await page.getByLabel('Confirm local PIN', { exact: true }).fill(pin);
 
     await page.getByRole('button', { name: 'Approve this device' }).click();
 

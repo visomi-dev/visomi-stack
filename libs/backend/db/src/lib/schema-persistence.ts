@@ -53,6 +53,7 @@ export const scopes = pgTable(
     kind: text('kind').$type<'tenant' | 'group' | 'resource'>().notNull(),
     parentId: uuid('parent_id'),
     objectBackup: boolean('object_backup').notNull().default(false),
+    deletingBackup: boolean('deleting_backup').notNull().default(false),
   },
   (t) => [
     unique('persistence_scope_tenant_id').on(t.tenantId, t.id),

@@ -82,7 +82,7 @@ export class Access {
     });
   }
 
-  async startExampleVault(actor: SessionActor) {
+  async startExampleVault(actor: SessionActor, additional = false) {
     return this.database.transaction(async (tx) => {
       // The account row lock is shared by setup and bootstrap, including requests from other sessions.
       await this.identity(tx, actor);
@@ -95,7 +95,7 @@ export class Access {
 
       const [enrolled] = await this.exampleWorkspaces(tx, actor.principal.id, true).limit(1);
 
-      if (enrolled) {
+      if (enrolled && !additional) {
         return null;
       }
 
@@ -160,6 +160,7 @@ export class Access {
           and(
             eq(keyChallenges.ownerId, actor.principal.id),
             eq(workspaces.owner, true),
+            eq(workspaces.deletingBackup!, false),
             eq(keyChallenges.domain, 'private-resources'),
             eq(keyScopes.phase, 'ready'),
             isNull(keyChallenges.consumedAt),
@@ -178,6 +179,7 @@ export class Access {
     rawTarget: unknown,
     action: PersistenceAction,
     work: (access: ScopeAccess) => Promise<T>,
+    deletingBackup = false,
   ) {
     const target = input(targetSchema, rawTarget);
 
@@ -225,6 +227,10 @@ export class Access {
         !['tenant', 'group/tenant', 'resource/tenant', 'resource/group/tenant'].includes(kinds)
       ) {
         throw new HttpError(403, 'scope_access_denied');
+      }
+
+      if (scope.deletingBackup && !deletingBackup) {
+        throw new HttpError(409, 'vault_deletion_pending');
       }
 
       let allowedActions: readonly PersistenceAction[] = ['read', 'write', 'share', 'delete'];
@@ -452,6 +458,7 @@ export class Access {
           eq(tenants.policyHash, this.policyHash),
           eq(scopes.kind, 'resource'),
           eq(scopes.objectBackup, true),
+          eq(scopes.deletingBackup, false),
           notExists(vaultRegistry(tx)),
         ),
       )
@@ -482,7 +489,7 @@ export class Access {
         scopeId: sql<string>`${scopes.id}`.as('workspace_scope_id'),
         createdAt: tenants.createdAt,
         owner: memberships.owner,
-        ...(objectBackup ? { objectId } : {}),
+        ...(objectBackup ? { objectId, deletingBackup: scopes.deletingBackup } : {}),
       })
       .from(memberships)
       .innerJoin(tenants, eq(tenants.id, memberships.tenantId))

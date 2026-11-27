@@ -12,6 +12,7 @@ export const exampleWorkspacePageSchema = z.strictObject({
       createdAt: z.iso.datetime(),
       owner: z.boolean(),
       objectId: z.uuid().nullable().optional(),
+      deletingBackup: z.boolean().optional(),
     }),
   ),
   next: z.uuid().nullable(),

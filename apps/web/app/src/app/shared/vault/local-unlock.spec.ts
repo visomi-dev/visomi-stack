@@ -66,7 +66,7 @@ describe('local PIN connection ownership and rollback boundary', () => {
     const result = await openLocalVault(f.options);
 
     expect(f.vault.localLatestBinding).toHaveBeenCalledWith(f.options.key);
-    expect(f.vault.connect).toHaveBeenCalledWith(binding, f.options.rpId, false, f.options.pin);
+    expect(f.vault.connect).toHaveBeenCalledWith(binding, f.options.rpId, false, f.options.pin, undefined, undefined);
     expect(result.pinned).toEqual({ cursor: 8, checkpoint: 'synthetic-checkpoint', generation: 2, epoch: 3 });
     expect(result.storage).toBe(f.storage);
     expect(f.storage.close).not.toHaveBeenCalled();

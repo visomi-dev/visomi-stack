@@ -11,6 +11,7 @@ import { requireFull } from '../auth/shared/identity';
 import { csrf, rateLimit } from '../auth/shared/security';
 
 import {
+  exampleVaultDeleteContract,
   exampleVaultSetupContract,
   exampleVaultWorkspacesContract,
   persistenceContracts as contracts,
@@ -201,13 +202,21 @@ export function createPersistenceRouter(
   } else {
     routes.register(router, [
       {
+        contract: exampleVaultDeleteContract,
+        handler: async (req, res, value) => {
+          const result = await maintenance.deleteVault(actor(req), value.params, value.body.confirmScopeId);
+
+          return res.json(result);
+        },
+      },
+      {
         contract: exampleVaultSetupContract,
-        handler: async (req, res) => {
+        handler: async (req, res, value) => {
           if (!objects) {
             throw new HttpError(503, 'vault_backup_unavailable');
           }
 
-          const result = await access.startExampleVault(actor(req));
+          const result = await access.startExampleVault(actor(req), value.body.additional);
 
           return res.json(result);
         },

@@ -3,13 +3,14 @@ import { DatePipe, DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 import { NavigationHeading } from '../../shared/navigation-heading';
-import { Button, Field, Link, PinInput, Heading, Text, Textarea } from '../../ui';
+import { Button, Card, Field, Link, PinInput, Heading, Text, Textarea } from '../../ui';
 import { ExampleWorkspace } from '../example-workspace';
 import { exampleWorkspaceProviders } from '../example-workspace-providers';
 
 @Component({
   selector: 'app-database-example',
   imports: [
+    Card,
     PinInput,
     Button,
     Field,

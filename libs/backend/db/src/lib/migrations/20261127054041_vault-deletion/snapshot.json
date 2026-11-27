@@ -1,0 +1,37 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "497501e1-bb2a-4dd1-abec-8c7c902bd6cd",
+  "prevIds": ["2632e764-6554-4d84-a3e4-cecb02865792"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "persistence_scopes", "deleting_backup"],
+      "writes": [
+        "s|col|public.persistence_scopes.deleting_backup",
+        "n|col|public.persistence_scopes.deleting_backup",
+        "e|col|public.persistence_scopes.deleting_backup"
+      ],
+      "reads": ["n|tbl|public.persistence_scopes", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "persistence_scopes",
+        "name": "deleting_backup",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

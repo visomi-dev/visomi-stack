@@ -14,6 +14,7 @@ export async function openExampleDevice(options: {
   signal: AbortSignal;
   existing?: WrappingContext;
   pin?: Uint8Array;
+  initialKey?: Uint8Array;
   enrolled: boolean;
   backedSample: boolean;
   auth: AuthHttp;
@@ -35,24 +36,10 @@ export async function openExampleDevice(options: {
       } satisfies Omit<WrappingContext, 'methodId'>;
 
       if (backedSample && !pin) {
-        const { credentialIds } = await listVaultPasskeyIds(auth, signal);
+        const selected = await registeredVaultMethod(view, rpId, context, auth, signal);
 
-        current();
-
-        const selected = await browserPrfUnlock(view, rpId).forRegisteredDevice(context, credentialIds, signal);
-
-        evaluated = selected.unlock;
         binding = selected.binding;
-        current();
-
-        // Account credentials can change while the browser picker is open.
-        const active = await listVaultPasskeyIds(auth, signal);
-
-        current();
-
-        if (!active.credentialIds.includes(selected.binding.methodId)) {
-          throw new VaultError('passkey-not-registered');
-        }
+        evaluated = selected.unlock;
       } else if (pin) {
         binding = { ...context, methodId: createPinMethodId(view.crypto) };
       } else {
@@ -82,6 +69,7 @@ export async function openExampleDevice(options: {
     const provision = custodyExists ? (backedSample && !enrolled ? 'resume' : false) : true;
     const custody = await openVaultDevice(vault, binding, rpId, {
       initialize: !existing,
+      initialKey: options.initialKey,
       provision,
       pin,
       combinePrf: backedSample,
@@ -99,5 +87,35 @@ export async function openExampleDevice(options: {
     throw error;
   } finally {
     evaluated?.cancel();
+  }
+}
+
+export async function registeredVaultMethod(
+  view: Window,
+  rpId: string,
+  context: Omit<WrappingContext, 'methodId'>,
+  auth: AuthHttp,
+  signal: AbortSignal,
+) {
+  const { credentialIds } = await listVaultPasskeyIds(auth, signal);
+
+  signal.throwIfAborted();
+
+  const selected = await browserPrfUnlock(view, rpId).forRegisteredDevice(context, credentialIds, signal);
+
+  try {
+    const active = await listVaultPasskeyIds(auth, signal);
+
+    signal.throwIfAborted();
+
+    if (!active.credentialIds.includes(selected.binding.methodId)) {
+      throw new VaultError('passkey-not-registered');
+    }
+
+    return selected;
+  } catch (error) {
+    selected.unlock.cancel();
+
+    throw error;
   }
 }

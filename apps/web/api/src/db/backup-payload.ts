@@ -168,6 +168,35 @@ export class BackupPayloads {
     }
   }
 
+  async deleteScope(context: ScopeAccess): Promise<void> {
+    const store = this.requireObjects();
+    const staged = await this.staged(context);
+
+    if (staged && staged.expiresAt.getTime() > Date.now()) {
+      throw new HttpError(409, 'vault_backup_busy');
+    }
+
+    // Events retain the immutable ciphertext references, including earlier revisions.
+    const events = vaultSchema.opaqueEvents;
+    const rows = await context.tx
+      .select({ envelope: events.envelope })
+      .from(events)
+      .where(and(eq(events.tenantId, context.scope.tenantId), eq(events.scopeId, context.scope.id)));
+    const ids = new Set(rows.map(({ envelope }) => referenceSchema.parse(envelope).id));
+
+    if (staged) {
+      ids.add(staged.id);
+    }
+
+    for (const id of ids) {
+      await store.delete(this.key(context, id));
+    }
+
+    if (staged) {
+      await this.clear(context, staged.id);
+    }
+  }
+
   requireObjects(): BackupObjects {
     if (!this.objects) {
       throw new HttpError(503, 'vault_backup_unavailable');

@@ -3502,6 +3502,84 @@
       <trans-unit id="cloudNoWorkspaces" datatype="html">
         <source>You don’t have any Cloud workspaces yet.</source>
       </trans-unit>
+      <trans-unit id="vaultRecoveryEnabled" datatype="html">
+        <source>Your recovery key is ready to use.</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoveryPin" datatype="html">
+        <source>Confirm local PIN</source>
+      </trans-unit>
+      <trans-unit id="vaultRestoreFile" datatype="html">
+        <source>Recover with a saved key</source>
+      </trans-unit>
+      <trans-unit id="vaultRestoreHelp" datatype="html">
+        <source>Select the file you saved for this vault, then choose how to unlock it on this device.</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoveryFile" datatype="html">
+        <source>Vault recovery key file</source>
+      </trans-unit>
+      <trans-unit id="vaultPairPinHelp" datatype="html">
+        <source>A local PIN unlocks this vault on this device. Someone with a copy of its encrypted storage can try PINs offline.</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoverPin" datatype="html">
+        <source>Recover with PIN</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoverPasskey" datatype="html">
+        <source>Recover with a passkey</source>
+      </trans-unit>
+      <trans-unit id="vaultAlternativePin" datatype="html">
+        <source>Use a PIN instead</source>
+      </trans-unit>
+      <trans-unit id="vaultNewCredentialOptions" datatype="html">
+        <source>Other passkey options</source>
+      </trans-unit>
+      <trans-unit id="vaultCreateLocalCredential" datatype="html">
+        <source>Create a new passkey for this device</source>
+      </trans-unit>
+      <trans-unit id="vaultDeleteWarning" datatype="html">
+        <source>Permanently delete this vault and its cloud backup? Other vaults will stay available. Copies already saved on devices may remain.</source>
+      </trans-unit>
+      <trans-unit id="vaultDeleteConfirm" datatype="html">
+        <source>Permanently delete this vault</source>
+      </trans-unit>
+      <trans-unit id="vaultDeleteCancel" datatype="html">
+        <source>Cancel</source>
+      </trans-unit>
+      <trans-unit id="vaultDelete" datatype="html">
+        <source>Delete vault</source>
+      </trans-unit>
+      <trans-unit id="vaultCreateAnother" datatype="html">
+        <source>Create another vault</source>
+      </trans-unit>
+      <trans-unit id="vaultSaveRecoveryTitle" datatype="html">
+        <source>Save your recovery key</source>
+      </trans-unit>
+      <trans-unit id="vaultSaveRecoveryHelp" datatype="html">
+        <source>Keep this file somewhere safe outside this device. You’ll need it to recover this vault if you lose access to your devices.</source>
+      </trans-unit>
+      <trans-unit id="vaultDownloadRecovery" datatype="html">
+        <source>Download recovery key</source>
+      </trans-unit>
+      <trans-unit id="vaultConfirmRecovery" datatype="html">
+        <source>I saved my recovery key</source>
+      </trans-unit>
+      <trans-unit id="vaultManageRecovery" datatype="html">
+        <source>Recovery key</source>
+      </trans-unit>
+      <trans-unit id="vaultAddRecoveryHelp" datatype="html">
+        <source>Save a recovery key for this vault while you can open it.</source>
+      </trans-unit>
+      <trans-unit id="vaultAddRecovery" datatype="html">
+        <source>Set up a recovery key</source>
+      </trans-unit>
+      <trans-unit id="vaultDeviceRestoreOptions" datatype="html">
+        <source>To restore the note on this browser, link it from a device that can open your vault or use your saved recovery key in Vault devices.</source>
+      </trans-unit>
+      <trans-unit id="vaultDeletionPending" datatype="html">
+        <source>Deletion is in progress. Return to Your vaults and retry deleting this vault in a minute.</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoveryExpired" datatype="html">
+        <source>Recovery setup expired. Start again and save the new file.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

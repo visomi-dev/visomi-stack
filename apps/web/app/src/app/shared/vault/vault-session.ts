@@ -156,9 +156,14 @@ export class VaultSession {
     initialize = false,
     pin?: Uint8Array,
     unlock?: VaultUnlock,
+    initialKey?: Uint8Array,
   ): Promise<void> {
     return this.openBinding(context, rpId, initialize, pin, (vault) =>
-      initialize ? vault.initialize(context, unlock) : vault.unlock(context, unlock),
+      initialKey && initialize
+        ? vault.install(context, initialKey, unlock)
+        : initialize
+          ? vault.initialize(context, unlock)
+          : vault.unlock(context, unlock),
     );
   }
 
@@ -185,13 +190,17 @@ export class VaultSession {
     return binding;
   }
 
-  async deliver(context: WrappingContext, recipient: DeliveryBinding) {
+  async deliver(context: WrappingContext, recipient: DeliveryBinding, pin?: Uint8Array) {
     if (!this.isSelected(context) || !this.canResume(context)) {
       throw new VaultError('locked');
     }
 
     const { vault, session, epoch } = this.active();
-    const delivery = await vault.deliver(recipient, new WebCryptoDevices(this.document.defaultView!.crypto));
+    const delivery = await vault.deliver(
+      recipient,
+      new WebCryptoDevices(this.document.defaultView!.crypto),
+      pin ? new PinUnlock(async () => Uint8Array.from(pin)) : undefined,
+    );
 
     if (!this.current(epoch, session)) {
       throw new VaultError('stale-operation');
@@ -201,8 +210,14 @@ export class VaultSession {
   }
 
   /** Caller has verified the signed delivery with the independently trusted signer. */
-  install(context: WrappingContext, rpId: string, raw: Uint8Array, pin?: Uint8Array): Promise<void> {
-    return this.openBinding(context, rpId, true, pin, (vault) => vault.install(context, raw));
+  install(
+    context: WrappingContext,
+    rpId: string,
+    raw: Uint8Array,
+    pin?: Uint8Array,
+    unlock?: VaultUnlock,
+  ): Promise<void> {
+    return this.openBinding(context, rpId, true, pin, (vault) => vault.install(context, raw, unlock));
   }
 
   seal(context: DataContext, value: string): Promise<DataEnvelope> {

@@ -65,6 +65,7 @@ function fixture(
     plaintext.set('');
   });
   const privateResource = {
+    recovery: { pin: signal(''), recoveryDownload: signal('') },
     vault: {
       state,
       release: lock,
@@ -166,6 +167,7 @@ function fixture(
         {
           provide: ExampleVaultWorkspaces,
           useValue: {
+            deleting: signal(null),
             page: signal(null),
             reset: vi.fn(),
             enrollment: vi.fn(async () => ({ phase: 'enrolled', binding: enrollment })),

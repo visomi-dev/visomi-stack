@@ -25,6 +25,7 @@ export async function openVaultDevice(
   binding: WrappingContext,
   rpId: string,
   options: {
+    initialKey?: Uint8Array;
     initialize?: boolean;
     provision?: boolean | 'resume';
     pin?: Uint8Array;
@@ -39,7 +40,7 @@ export async function openVaultDevice(
   const provision = options.provision ?? false;
 
   if (!evaluated && (!options.combinePrf || pin || vault.isOpen(binding))) {
-    await vault.connect(binding, rpId, initialize, pin);
+    await vault.connect(binding, rpId, initialize, pin, undefined, options.initialKey);
 
     current();
 
@@ -57,7 +58,7 @@ export async function openVaultDevice(
   try {
     current();
 
-    await vault.connect(binding, rpId, initialize, undefined, unlock);
+    await vault.connect(binding, rpId, initialize, undefined, unlock, options.initialKey);
 
     current();
 

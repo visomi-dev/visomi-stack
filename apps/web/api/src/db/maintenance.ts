@@ -25,6 +25,52 @@ export class PersistenceMaintenance {
     this.backups = new BackupPayloads(objects);
   }
 
+  async deleteVault(actor: SessionActor, target: unknown, confirmation: string) {
+    this.backups.requireObjects();
+    const deleting = <T>(work: (context: ScopeAccess) => Promise<T>) =>
+      this.access.withScope(
+        actor,
+        target,
+        'delete',
+        async (context) => {
+          if (
+            !context.membership.owner ||
+            context.scope.kind !== 'resource' ||
+            !context.scope.objectBackup ||
+            context.scope.id !== confirmation
+          ) {
+            throw new HttpError(403, 'scope_access_denied');
+          }
+
+          return work(context);
+        },
+        true,
+      );
+
+    // Once destruction starts, failed external deletes remain retryable and the scope cannot accept new writes.
+    await deleting(async (context) => {
+      await context.tx
+        .update(persistenceSchema.scopes)
+        .set({ deletingBackup: true })
+        .where(eq(persistenceSchema.scopes.id, context.scope.id));
+    });
+
+    return deleting(async (context) => {
+      await this.backups.deleteScope(context);
+
+      await context.tx
+        .delete(persistenceSchema.scopes)
+        .where(
+          and(
+            eq(persistenceSchema.scopes.tenantId, context.target.tenantId),
+            eq(persistenceSchema.scopes.id, context.scope.id),
+          ),
+        );
+
+      return { changed: true as const };
+    });
+  }
+
   async run(actor: SessionActor, target: unknown, domain: string, raw: unknown, objectOnly = false) {
     const { limit } = input(maintenanceSchema, raw);
     const policy = this.access.policy.domains.find((entry) => entry.domain === domain);

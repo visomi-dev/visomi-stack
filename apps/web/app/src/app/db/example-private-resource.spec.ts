@@ -206,7 +206,15 @@ it('authenticates and displays an authorized historical generation while retaini
 
   await f.resource.unlock(f.target, 'synthetic.example.test', false);
 
-  expect(f.vault.connect).toHaveBeenCalledWith(f.binding, 'synthetic.example.test', false, undefined);
+  expect(f.vault.connect).toHaveBeenCalledWith(
+    f.binding,
+    'synthetic.example.test',
+    false,
+    undefined,
+    undefined,
+    undefined,
+  );
+
   expect(f.vault.readEnvelope).toHaveBeenCalledWith(f.envelope, false);
   expect(f.vault.readEnvelope).toHaveBeenCalledWith(f.envelope);
   expect(f.commit).toHaveBeenCalledWith(
@@ -322,7 +330,15 @@ it('restores an already opened local scope for its new view without any roster o
 
   expect(f.api.vault).not.toHaveBeenCalled();
   expect(f.vault.canResume).toHaveBeenCalledWith(f.binding);
-  expect(f.vault.connect).toHaveBeenCalledWith(f.binding, 'synthetic.example.test', false, undefined);
+  expect(f.vault.connect).toHaveBeenCalledWith(
+    f.binding,
+    'synthetic.example.test',
+    false,
+    undefined,
+    undefined,
+    undefined,
+  );
+
   expect(f.vault.readEnvelope).toHaveBeenCalledWith(f.envelope);
   f.resource.close();
   expect(f.vault.lock).not.toHaveBeenCalled();

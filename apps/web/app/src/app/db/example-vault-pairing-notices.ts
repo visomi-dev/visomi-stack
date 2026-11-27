@@ -1,15 +1,14 @@
 import { DOCUMENT } from '@angular/common';
 import { Service, afterNextRender, effect, inject, signal } from '@angular/core';
-import { exampleVaultPairingListSchema } from '@visomi-stack/shared-db';
+import { exampleVaultPairingListSchema, syntheticHybridPolicy } from '@visomi-stack/shared-db';
 import type { z } from 'zod';
 
 import { BrowserRealtimeSession } from '../auth/session/browser-realtime-session';
 import { Session } from '../auth/session/session';
 import { DatabaseHttp } from '../shared/db/http';
-import { VaultSession } from '../shared/vault/vault-session';
+import { ClientDatabase } from '../shared/db/database';
 
 import { ExampleAvailability } from './example-availability';
-import { exampleLocalKey } from './example-contracts';
 import { watchVaultPairing } from './example-vault-pairing-watch';
 
 type Request = z.infer<typeof exampleVaultPairingListSchema>[number];
@@ -18,7 +17,7 @@ type Request = z.infer<typeof exampleVaultPairingListSchema>[number];
 export class ExampleVaultPairingNotices {
   private readonly api = inject(DatabaseHttp);
   private readonly session = inject(Session);
-  private readonly vault = inject(VaultSession);
+  private readonly database = inject(ClientDatabase);
   private readonly examples = inject(ExampleAvailability);
   private readonly realtime = inject(BrowserRealtimeSession, { optional: true });
   private readonly view = inject(DOCUMENT).defaultView;
@@ -30,14 +29,38 @@ export class ExampleVaultPairingNotices {
 
   private async load(signal: AbortSignal): Promise<void> {
     try {
-      const raw = await this.api.vault('/pairing-requests', undefined, signal);
+      const owner = this.session.user()?.id;
+
+      if (!owner) {
+        return;
+      }
+
+      const storage = await this.database.vault(owner, signal);
+      const scopes = new Set<string>();
+
+      try {
+        const bindings = await storage.latestBindings(owner);
+
+        for (const { key } of bindings) {
+          if (
+            key.product === syntheticHybridPolicy.product &&
+            key.domain === 'private-resources' &&
+            key.scope.kind === 'resource'
+          ) {
+            scopes.add(key.scope.tenantId + '/' + key.scope.resourceId);
+          }
+        }
+      } finally {
+        storage.close();
+      }
+      signal.throwIfAborted();
+
+      // Only browsers with a local vault binding can review requests. Unlinked browsers need no inbox poll.
+      const raw = await (scopes.size ? this.api.vault('/pairing-requests', undefined, signal) : []);
       const requests = exampleVaultPairingListSchema.parse(raw);
-      const bindings = await Promise.all(
-        requests.map((request) => this.vault.localBinding({ ...exampleLocalKey(request), generation: 1 })),
-      );
 
       if (!signal.aborted) {
-        this.notices.set(requests.filter((_request, index) => Boolean(bindings[index])));
+        this.notices.set(requests.filter((request) => scopes.has(request.tenantId + '/' + request.scopeId)));
       }
     } catch {
       if (!signal.aborted) {

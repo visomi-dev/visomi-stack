@@ -83,6 +83,17 @@
               />
             </app-field>
 
+            @if (pairing.existing()?.method === 'pin-argon2id') {
+              <app-field control-id="approve-pin" label="Confirm local PIN" i18n-label="@@vaultRecoveryPin">
+                <app-pin-input
+                  [digits]="6"
+                  [disabled]="pairing.busy()"
+                  [value]="pairing.pin()"
+                  (valueChange)="pairing.pin.set($event)"
+                />
+              </app-field>
+            }
+
             <button appUI type="submit" [disabled]="pairing.busy()" i18n="@@vaultDevicesApprove">
               Approve this device
             </button>
@@ -181,52 +192,110 @@
       <p appUI role="status" i18n="@@vaultPairingNeedsLinkedDevice">
         Open this review link on a device that can already unlock this vault.
       </p>
-    } @else if (pairing.capabilities.prf() === 'unavailable') {
-      <form class="space-y-3" (submit)="$event.preventDefault(); pairing.request(true)">
-        <p appUI tone="muted" i18n="@@vaultDevicesPinDescription">
-          Passkey unlock is unavailable. A PIN can unlock this vault on this device and is easier to guess if someone
-          copies the encrypted storage.
+    } @else {
+      @if (backed()) {
+        <details>
+          <summary i18n="@@vaultRestoreFile">Recover with a saved key</summary>
+
+          <p appUI i18n="@@vaultRestoreHelp">
+            Select the file you saved for this vault, then choose how to unlock it on this device.
+          </p>
+
+          <app-field control-id="recover-vault-file" label="Vault recovery key file" i18n-label="@@vaultRecoveryFile">
+            <input
+              appUI
+              id="recover-vault-file"
+              type="file"
+              accept=".json,application/json"
+              #file
+              (change)="pairing.recoveryFile.set(file.files?.item(0) ?? null)"
+            />
+          </app-field>
+        </details>
+      }
+
+      @if (pairing.capabilities.prf() === 'unavailable' || pairing.pinSelected()) {
+        <form class="space-y-3" (submit)="$event.preventDefault(); pairing.request(true)">
+          <p appUI tone="muted" i18n="@@vaultPairPinHelp">
+            A local PIN unlocks this vault on this device. Someone with a copy of its encrypted storage can try PINs
+            offline.
+          </p>
+
+          <app-field control-id="vault-pairing-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel">
+            <app-pin-input
+              required
+              [digits]="6"
+              [disabled]="pairing.busy()"
+              [value]="pairing.pin()"
+              (valueChange)="pairing.pin.set($event)"
+            />
+          </app-field>
+
+          <app-field control-id="vault-pairing-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
+            <app-pin-input
+              required
+              [digits]="6"
+              [disabled]="pairing.busy()"
+              [value]="pairing.confirmPin()"
+              (valueChange)="pairing.confirmPin.set($event)"
+            />
+          </app-field>
+
+          <button appUI type="submit" [disabled]="pairing.busy()">
+            @if (pairing.recoveryFile()) {
+              <span i18n="@@vaultRecoverPin">Recover with PIN</span>
+            } @else {
+              <span i18n="@@vaultDevicesRequestWithPin">Request pairing with PIN</span>
+            }
+          </button>
+        </form>
+      } @else {
+        <p appUI tone="muted" i18n="@@vaultPairDesktop">
+          If your passkey is on your phone, choose that option in the browser and scan the QR code. Keep Bluetooth on
+          for both devices. If passkey unlock is unavailable, you can set a PIN on this device.
         </p>
 
-        <app-field control-id="vault-pairing-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel">
-          <app-pin-input
-            required
-            [digits]="6"
-            [disabled]="pairing.busy()"
-            [value]="pairing.pin()"
-            (valueChange)="pairing.pin.set($event)"
-          />
-        </app-field>
-
-        <app-field control-id="vault-pairing-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
-          <app-pin-input
-            required
-            [digits]="6"
-            [disabled]="pairing.busy()"
-            [value]="pairing.confirmPin()"
-            (valueChange)="pairing.confirmPin.set($event)"
-          />
-        </app-field>
-
-        <button appUI type="submit" [disabled]="pairing.busy()" i18n="@@vaultDevicesRequestWithPin">
-          Request pairing with PIN
+        <button
+          appUI
+          type="button"
+          [disabled]="pairing.busy() || pairing.capabilities.prf() === 'checking'"
+          (click)="pairing.request()"
+        >
+          @if (pairing.recoveryFile()) {
+            <span i18n="@@vaultRecoverPasskey">Recover with a passkey</span>
+          } @else {
+            <span i18n="@@vaultDevicesRequestWithPasskey">Request pairing with a passkey</span>
+          }
         </button>
-      </form>
-    } @else {
-      <p appUI tone="muted" i18n="@@vaultPairDesktop">
-        If your passkey is on your phone, choose that option in the browser and scan the QR code. Keep Bluetooth on for
-        both devices. If passkey unlock is unavailable, you can set a PIN on this device.
-      </p>
 
-      <button
-        appUI
-        type="button"
-        [disabled]="pairing.busy() || pairing.capabilities.prf() === 'checking'"
-        (click)="pairing.request()"
-        i18n="@@vaultDevicesRequestWithPasskey"
-      >
-        Request pairing with a passkey
-      </button>
+        @if (backed()) {
+          <button
+            appUI
+            variant="secondary"
+            type="button"
+            [disabled]="pairing.busy()"
+            (click)="pairing.pinSelected.set(true)"
+            i18n="@@vaultAlternativePin"
+          >
+            Use a PIN instead
+          </button>
+
+          <details>
+            <summary i18n="@@vaultNewCredentialOptions">Other passkey options</summary>
+
+            <button
+              appUI
+              variant="secondary"
+              type="button"
+              [disabled]="pairing.busy()"
+              (click)="pairing.request(false, true)"
+              i18n="@@vaultCreateLocalCredential"
+            >
+              Create a new passkey for this device
+            </button>
+          </details>
+        }
+      }
     }
   }
 </section>
