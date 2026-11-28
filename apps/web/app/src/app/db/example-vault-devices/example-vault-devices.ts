@@ -1,13 +1,13 @@
 import { Component, afterNextRender, computed, effect, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { Button, Card, Field, Heading, Input, Link, PinInput, Text, Textarea } from '../../ui';
+import { Button, Card, Field, Heading, Input, Label, Link, PinInput, Text, Textarea } from '../../ui';
 import { type ExampleTarget } from '../example-contracts';
 import { ExampleVaultPairing } from '../example-vault-pairing';
 
 @Component({
   selector: 'app-example-vault-devices',
-  imports: [Button, Card, Field, Heading, Input, Link, PinInput, Text, Textarea, RouterLink],
+  imports: [Button, Card, Field, Heading, Input, Label, Link, PinInput, Text, Textarea, RouterLink],
   providers: [ExampleVaultPairing],
   templateUrl: './example-vault-devices.html',
 })
@@ -23,10 +23,26 @@ export class ExampleVaultDevices {
   });
   protected readonly resourceParams = computed(() => (this.backed() ? this.target() : null));
 
+  protected readonly codeLabel = $localize`:@@vaultPairingCodeLabel:Pairing code`;
+  protected readonly fingerprintLabel = $localize`:@@vaultDevicesRecipientFingerprint:New device fingerprint`;
+
   protected manualProof = '';
 
   readonly review = input<string>();
   readonly rpId = input.required<string>();
+
+  protected approve(event: Event, credential: HTMLInputElement): void {
+    event.preventDefault();
+
+    if (this.backed()) {
+      const code = credential.value;
+
+      credential.value = '';
+      void this.pairing.approveReview(code);
+    } else {
+      void this.pairing.approve(this.manualProof, credential.value);
+    }
+  }
 
   private readonly initialize = afterNextRender(
     () => void this.pairing.initialize(this.target(), this.rpId(), this.backed()),
@@ -35,7 +51,7 @@ export class ExampleVaultDevices {
   private readonly loadReview = effect((cleanup) => {
     const requestId = this.review();
 
-    if (!this.pairing.approverFingerprint()) {
+    if (!this.backed() || !this.pairing.ready() || !this.pairing.approverReady()) {
       return;
     }
 

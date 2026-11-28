@@ -50,6 +50,25 @@ export function registerVaultRoutes(
       },
     },
     {
+      contract: contracts.readPairingCode,
+      handler: async (req, res, value) => {
+        const exchange = await devices.readPairingCode(actor(req), target(value.params), value.params.id);
+
+        return res.json(exchange);
+      },
+    },
+    {
+      contract: contracts.writePairingCode,
+      handler: async (req, res, value) => {
+        const session = actor(req);
+        const result = await devices.writePairingCode(session, target(value.params), value.params.id, value.body);
+
+        notifyPairing(session.principal.id);
+
+        return res.json(result);
+      },
+    },
+    {
       contract: contracts.request,
       handler: async (req, res, value) => {
         const result = await devices.request(

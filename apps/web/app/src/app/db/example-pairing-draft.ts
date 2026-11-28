@@ -5,6 +5,8 @@ import {
   deviceProofMessage,
   keyDomainId,
   VaultError,
+  protocolIdSchema,
+  signingPinSchema,
   wrappingContextSchema,
   type WrappingContext,
   type DeviceProof,
@@ -26,7 +28,15 @@ import { AuthHttp } from '../auth/shared/http';
 import type { DatabaseHttp } from '../shared/db/http';
 
 import { registeredVaultMethod } from './example-vault-enrollment';
-import { examplePrivatePath, type rosterSchema, type ExampleTarget } from './example-contracts';
+import { examplePrivatePath, type ExampleTarget } from './example-contracts';
+
+const verifiedPairingSchema = z.strictObject({
+  requestId: protocolIdSchema,
+  signer: signingPinSchema,
+  verified: z.literal(true),
+});
+
+type VerifiedPairing = z.infer<typeof verifiedPairingSchema>;
 
 export class ExamplePairingDraft {
   readonly dedicated = signal(false);
@@ -64,6 +74,7 @@ export class ExamplePairingDraft {
         dedicated: z.literal(true).optional(),
         published: z.boolean().optional(),
         recovering: z.boolean().optional(),
+        verifiedPairing: verifiedPairingSchema.optional(),
       })
       .safeParse(value);
 
@@ -71,12 +82,13 @@ export class ExamplePairingDraft {
       return;
     }
 
-    const { context, proof } = draft.data;
+    const { context, proof, verifiedPairing } = draft.data;
 
     if (
       context.ownerId !== ownerId ||
       context.origin !== this.view.location.origin ||
       keyDomainId(ownerId, context.key) !== keyDomainId(ownerId, key) ||
+      (verifiedPairing && verifiedPairing.requestId !== proof?.requestId) ||
       (proof &&
         (proof.deviceId !== context.deviceId ||
           proof.ownerId !== ownerId ||
@@ -90,7 +102,13 @@ export class ExamplePairingDraft {
 
   save(
     context: WrappingContext,
-    state: { proof?: DeviceProof; published?: boolean; recovering?: boolean; dedicated?: boolean } = {},
+    state: {
+      proof?: DeviceProof;
+      published?: boolean;
+      recovering?: boolean;
+      dedicated?: boolean;
+      verifiedPairing?: VerifiedPairing;
+    } = {},
   ) {
     const previous = this.readDraft(context.ownerId, context.key);
     const dedicated = state.dedicated || (previous?.context.deviceId === context.deviceId && previous.dedicated);
@@ -109,26 +127,12 @@ export class ExamplePairingDraft {
     );
   }
 
-  async resume(ownerId: string, registry: ReturnType<typeof rosterSchema.parse>, signal: AbortSignal) {
-    const draft = this.readDraft(ownerId, registry.key);
+  async resume(ownerId: string, key: KeyDomain, signal: AbortSignal) {
+    const draft = this.readDraft(ownerId, key);
 
     this.dedicated.set(draft?.dedicated === true);
 
     if (draft?.proof && !draft.recovering) {
-      if (
-        !draft.published &&
-        Date.parse(draft.proof.expiresAt) > Date.now() &&
-        !registry.devices.some((device) => device.id === draft.context.deviceId)
-      ) {
-        try {
-          await this.publish(draft.context, draft.proof, signal);
-        } catch (error) {
-          if (!this.retired(error)) {
-            throw error;
-          }
-        }
-      }
-
       const fingerprint = await new WebCryptoDevices(this.view.crypto).fingerprint(draft.proof);
 
       signal.throwIfAborted();
@@ -139,28 +143,11 @@ export class ExamplePairingDraft {
         fingerprint,
         token: JSON.stringify(draft.proof),
         reviewLink: this.reviewLink(draft.proof),
+        authenticatedSigner: draft.verifiedPairing?.signer,
       };
     }
 
     return null;
-  }
-
-  async available(proof: DeviceProof, signal: AbortSignal) {
-    if (Date.parse(proof.expiresAt) <= Date.now()) {
-      return false;
-    }
-
-    try {
-      await this.api.vault(examplePrivatePath(this.target) + '/devices/pairing/' + proof.requestId, undefined, signal);
-
-      return true;
-    } catch (error) {
-      if (this.retired(error)) {
-        return false;
-      }
-
-      throw error;
-    }
   }
 
   reviewLink(proof: DeviceProof) {

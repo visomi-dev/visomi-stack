@@ -2828,11 +2828,29 @@
       <trans-unit id="vaultPairingWaitingHere" datatype="html">
         <source>Requests from your other devices will appear in the app.</source>
       </trans-unit>
-      <trans-unit id="vaultPairingConfirmInstructions" datatype="html">
-        <source>Enter the fingerprint shown on the new device to confirm you are linking the right one.</source>
+      <trans-unit id="vaultPairingCodeInstructions" datatype="html">
+        <source>Enter the 8-digit code shown on the new device.</source>
       </trans-unit>
-      <trans-unit id="vaultPairingExpired" datatype="html">
-        <source>This request is no longer available.</source>
+      <trans-unit id="vaultPairingCodeExpired" datatype="html">
+        <source>This pairing attempt ended. Start again to get a new code.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCodeLabel" datatype="html">
+        <source>Pairing code</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCheckingCode" datatype="html">
+        <source>Waiting for the new device to verify the code.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCancel" datatype="html">
+        <source>Cancel pairing</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingInstalling" datatype="html">
+        <source>Finishing pairing on this device.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingUnlockToFinish" datatype="html">
+        <source>Unlock to finish linking</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCodeApproved" datatype="html">
+        <source>Device approved. The new device can finish linking.</source>
       </trans-unit>
       <trans-unit id="vaultPairingStartAgain" datatype="html">
         <source>Start again</source>
@@ -2851,9 +2869,6 @@
       </trans-unit>
       <trans-unit id="vaultPairingOpenLink" datatype="html">
         <source>Open review link</source>
-      </trans-unit>
-      <trans-unit id="vaultPairingApproved" datatype="html">
-        <source>Approved. Finish linking this device.</source>
       </trans-unit>
       <trans-unit id="vaultPairingLinkCopied" datatype="html">
         <source>Review link copied.</source>

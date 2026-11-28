@@ -37,15 +37,26 @@ approvals hash `{proof, delivery}` or, for an explicit historical grant,
 in that field order. Epoch/generation mismatches reject replay; membership is read
 again under the same tenant lock as the mutation.
 
-Recipient fingerprints cover the full enrollment message, not a friendly device
-label. A trustworthy client must pin/compare the existing device's public key using
-its established enrollment/approval channel; a cloud-supplied roster alone is not
-protection against a malicious server substituting a recipient. The delivery endpoint retains a signed enrollment/rotation witness.
-`WebCryptoDevices.accept` and `DeviceCustody.open` require an independently trusted
-signing pin, verify that witness before OAEP decryption and reject server-created
-replacement keys. The initial example bootstraps a new local authority; it does not
-provide a complete remote-recipient approval UI. Human verification of pins and
-first-use trust remain part of the independent threat review.
+Recipient fingerprints cover the full enrollment message. Backed Vault Example
+review links use a single 8-digit code and OPAQUE. The recipient is the OPAQUE
+client and the approving device generates the OPAQUE server setup and
+registration record in memory for this attempt. Both peers derive the OPAQUE
+identifiers from the account, key scope, generation and request. The recipient
+identifier also binds its device ID, enrollment fingerprint and proof signature.
+The approver identifier binds its device ID and signing key. The approver wraps the data key
+only after authenticating the recipient. The recipient pins the approver's key
+only after successful client authentication.
+
+The HTTP relay stores three public messages in order, once per pending challenge.
+Socket notifications prompt a fresh HTTP read. The code and private login state
+are held in memory. A reload before the final message requires a fresh request
+and code. The recipient can resume after that message using its locally recorded
+public signer pin. The manual flow in the hybrid harness still compares both
+fingerprints.
+
+The delivery endpoint retains a signed enrollment or rotation witness.
+`WebCryptoDevices.accept` and `DeviceCustody.open` require an independently
+trusted signing pin and verify the witness before OAEP decryption.
 
 ### Enrollment after rotation
 

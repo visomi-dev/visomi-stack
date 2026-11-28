@@ -83,7 +83,7 @@ export class ExampleVaultPairingNotices {
     }
 
     const controller = new AbortController();
-    const stop = watchVaultPairing(
+    const { stop } = watchVaultPairing(
       this.view,
       () => this.load(controller.signal),
       () => !!this.realtime?.connected(),

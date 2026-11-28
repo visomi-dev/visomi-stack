@@ -10,13 +10,15 @@ import {
   deviceActionSchema,
   deviceActionMessage,
   deviceDeliveryLabel,
+  keyDomainId,
   protocolIdSchema,
+  type PairingCodeMessage,
   type DeviceAction,
   type DeviceDelivery,
   type DeviceProof,
 } from '@visomi-stack/shared-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
-import { and, eq, gt, isNull } from 'drizzle-orm';
+import { and, eq, gt, isNotNull, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { input, type Access, type ScopeAccess, type SessionActor } from '../access/service';
@@ -62,7 +64,10 @@ export class KeyDevices {
     verifyDeviceProof(proof);
 
     return this.withExamplePairing(actor, target, proof.requestId, async (context, condition, challenge) => {
-      if (deviceProofMessage(challenge.value) !== deviceProofMessage(proof)) {
+      if (
+        deviceProofMessage(challenge.value) !== deviceProofMessage(proof) ||
+        ('proof' in challenge.value && challenge.value.proof !== proof.proof)
+      ) {
         throw new HttpError(400, 'device_challenge_invalid');
       }
 
@@ -81,6 +86,48 @@ export class KeyDevices {
       }
 
       return proof.data;
+    });
+  }
+
+  async readPairingCode(actor: SessionActor, target: unknown, id: string) {
+    return this.withExamplePairing(actor, target, id, async (_context, _condition, challenge) => {
+      if (!deviceProofSchema.safeParse(challenge.value).success) {
+        throw new HttpError(404, 'device_challenge_invalid');
+      }
+
+      return { r1: challenge.pairingR1, a1: challenge.pairingA1, r2: challenge.pairingR2 };
+    });
+  }
+
+  async writePairingCode(actor: SessionActor, target: unknown, id: string, message: PairingCodeMessage) {
+    return this.withExamplePairing(actor, target, id, async (context, condition, challenge) => {
+      if (!deviceProofSchema.safeParse(challenge.value).success) {
+        throw new HttpError(404, 'device_challenge_invalid');
+      }
+
+      const slot = {
+        r1: keyChallenges.pairingR1,
+        a1: keyChallenges.pairingA1,
+        r2: keyChallenges.pairingR2,
+      }[message.step];
+      const previous = { r1: undefined, a1: keyChallenges.pairingR1, r2: keyChallenges.pairingA1 }[message.step];
+      const values =
+        message.step === 'r1'
+          ? { pairingR1: message.r1 }
+          : message.step === 'a1'
+            ? { pairingA1: message.a1 }
+            : { pairingR2: message.r2 };
+      const [accepted] = await context.tx
+        .update(keyChallenges)
+        .set(values)
+        .where(and(condition, isNull(slot), previous && isNotNull(previous)))
+        .returning({ id: keyChallenges.id });
+
+      if (!accepted) {
+        throw new HttpError(409, 'device_state_conflict');
+      }
+
+      return { accepted: true as const };
     });
   }
 
@@ -449,11 +496,11 @@ export class KeyDevices {
         eq(keyChallenges.id, id),
         eq(keyChallenges.ownerId, actor.principal.id),
         isNull(keyChallenges.consumedAt),
-        gt(keyChallenges.expiresAt, new Date()),
+        gt(keyChallenges.expiresAt, sql`clock_timestamp()`),
       );
       const [challenge] = await context.tx.select().from(keyChallenges).where(condition);
 
-      if (!challenge || challenge.value.key.generation !== key.generation) {
+      if (!challenge || keyDomainId(actor.principal.id, challenge.value.key) !== keyDomainId(actor.principal.id, key)) {
         throw new HttpError(404, 'device_challenge_invalid');
       }
 

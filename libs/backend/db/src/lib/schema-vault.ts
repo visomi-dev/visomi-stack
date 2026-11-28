@@ -12,7 +12,13 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import type { DataEnvelope, DeviceChallenge, DeviceProof, ApprovedDelivery } from '@visomi-stack/shared-db';
+import type {
+  DataEnvelope,
+  DeviceChallenge,
+  DeviceProof,
+  ApprovedDelivery,
+  PairingCodeExchange,
+} from '@visomi-stack/shared-db';
 
 import { memberships, scopes } from './schema-persistence';
 
@@ -104,6 +110,9 @@ export const keyChallenges = pgTable(
     id: uuid('id').notNull(),
     ownerId: uuid('owner_id').notNull(),
     value: jsonb('value').$type<DeviceChallenge | DeviceProof>().notNull(),
+    pairingR1: text('pairing_r1'),
+    pairingA1: jsonb('pairing_a1').$type<NonNullable<PairingCodeExchange['a1']>>(),
+    pairingR2: text('pairing_r2'),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     consumedAt: timestamp('consumed_at', { withTimezone: true }),
   },

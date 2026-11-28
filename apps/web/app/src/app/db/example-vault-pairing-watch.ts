@@ -1,5 +1,5 @@
 /** The socket only invalidates. Bounded HTTP checks recover missed messages and suspended tabs. */
-export function watchVaultPairing(view: Window, refresh: () => Promise<void>, connected: () => boolean): () => void {
+export function watchVaultPairing(view: Window, refresh: () => Promise<void>, connected: () => boolean) {
   let timer: number | undefined;
   let stopped = false;
   let checking = false;
@@ -30,10 +30,12 @@ export function watchVaultPairing(view: Window, refresh: () => Promise<void>, co
   view.addEventListener('pageshow', wake);
   wake();
 
-  return () => {
+  const stop = () => {
     stopped = true;
     view.clearTimeout(timer);
     view.document.removeEventListener('visibilitychange', wake);
     view.removeEventListener('pageshow', wake);
   };
+
+  return { wake, stop };
 }

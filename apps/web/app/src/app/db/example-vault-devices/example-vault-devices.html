@@ -1,4 +1,9 @@
-<section appUI="card" class="space-y-3" aria-labelledby="vault-devices-title" [attr.aria-busy]="pairing.busy()">
+<section
+  appUI="card"
+  class="space-y-3"
+  aria-labelledby="vault-devices-title"
+  [attr.aria-busy]="backed() ? null : pairing.busy()"
+>
   <header class="space-y-2">
     <h2 appUI uiSize="sm" id="vault-devices-title" i18n="@@vaultDevicesTitle">Vault devices</h2>
 
@@ -20,10 +25,12 @@
         Open vault note
       </a>
     } @else if (pairing.existing()) {
-      @if (pairing.approverFingerprint()) {
-        <p appUI i18n="@@vaultDevicesApproverFingerprint">Approving device fingerprint</p>
+      @if (backed() ? pairing.approverReady() : pairing.approverFingerprint()) {
+        @if (!backed()) {
+          <p appUI i18n="@@vaultDevicesApproverFingerprint">Approving device fingerprint</p>
 
-        <code class="block break-all" data-vault-approver>{{ pairing.approverFingerprint() }}</code>
+          <code class="block break-all" data-vault-approver>{{ pairing.approverFingerprint() }}</code>
+        }
 
         @if (pairing.reviewUnavailable()) {
           <p appUI role="status" i18n="@@vaultPairingUnavailable">
@@ -32,18 +39,10 @@
         } @else if (backed() && !pairing.reviewProof()) {
           <p appUI i18n="@@vaultPairingWaitingHere">Requests from your other devices will appear in the app.</p>
         } @else {
-          <form
-            class="space-y-3"
-            (submit)="
-              $event.preventDefault();
-              backed()
-                ? pairing.approveReview(recipientFingerprint.value)
-                : pairing.approve(manualProof, recipientFingerprint.value)
-            "
-          >
+          <form class="space-y-3" (submit)="approve($event, credential)">
             @if (backed()) {
-              <p appUI tone="muted" i18n="@@vaultPairingConfirmInstructions">
-                Enter the fingerprint shown on the new device to confirm you are linking the right one.
+              <p appUI tone="muted" i18n="@@vaultPairingCodeInstructions">
+                Enter the 8-digit code shown on the new device.
               </p>
             } @else {
               <p appUI tone="muted" i18n="@@vaultDevicesApproveInstructions">
@@ -68,17 +67,19 @@
             }
 
             <app-field
-              control-id="vault-recipient-fingerprint"
-              label="New device fingerprint"
-              i18n-label="@@vaultDevicesRecipientFingerprint"
+              [control-id]="backed() ? 'vault-pairing-code' : 'vault-recipient-fingerprint'"
+              [label]="backed() ? codeLabel : fingerprintLabel"
             >
               <input
                 appUI
-                id="vault-recipient-fingerprint"
-                #recipientFingerprint
-                maxlength="48"
+                [id]="backed() ? 'vault-pairing-code' : 'vault-recipient-fingerprint'"
+                #credential
+                [attr.inputmode]="backed() ? 'numeric' : null"
+                [attr.pattern]="backed() ? '(?: *[0-9]){8} *' : null"
+                [attr.maxlength]="backed() ? 24 : 48"
+                [attr.autocomplete]="backed() ? 'one-time-code' : 'off'"
+                [disabled]="backed() && pairing.busy()"
                 required
-                autocomplete="off"
                 spellcheck="false"
               />
             </app-field>
@@ -98,6 +99,10 @@
               Approve this device
             </button>
           </form>
+
+          @if (backed() && pairing.busy()) {
+            <p appUI role="status" i18n="@@vaultPairingCheckingCode">Waiting for the new device to verify the code.</p>
+          }
         }
       } @else {
         <p appUI i18n="@@vaultDevicesUnlockFirst">Unlock the note on this device before approving another one.</p>
@@ -109,7 +114,9 @@
     } @else if (pairing.pending(); as request) {
       @if (request.reviewLink; as link) {
         @if (pairing.approval() === 'expired') {
-          <p appUI role="status" i18n="@@vaultPairingExpired">This request is no longer available.</p>
+          <p appUI role="status" i18n="@@vaultPairingCodeExpired">
+            This pairing attempt ended. Start again to get a new code.
+          </p>
 
           <button appUI type="button" (click)="pairing.resetExpired()" i18n="@@vaultPairingStartAgain">
             Start again
@@ -117,24 +124,63 @@
         } @else if (pairing.approval() === 'waiting') {
           <p appUI role="status" i18n="@@vaultPairingWaiting">Waiting for approval on your other device.</p>
 
-          <p appUI tone="muted" i18n="@@vaultPairingLinkInstructions">
-            Review the request in Stack on a device that can already open this vault. If the notice doesn’t appear, open
-            this link there.
-          </p>
+          @if (pairing.code(); as code) {
+            <div class="space-y-1">
+              <label appUI for="vault-displayed-pairing-code">{{ codeLabel }}</label>
 
-          <button
-            appUI
-            variant="secondary"
-            type="button"
-            (click)="pairing.copyReviewLink(link)"
-            i18n="@@vaultPairingCopyLink"
-          >
-            Copy review link
-          </button>
+              <output
+                id="vault-displayed-pairing-code"
+                class="block font-mono text-xl tracking-wide"
+                [textContent]="code"
+              ></output>
+            </div>
 
-          <a appUI [href]="link" target="_blank" rel="noopener" i18n="@@vaultPairingOpenLink">Open review link</a>
+            <p appUI tone="muted" i18n="@@vaultPairingLinkInstructions">
+              Review the request in Stack on a device that can already open this vault. If the notice doesn’t appear,
+              open this link there.
+            </p>
+
+            <button
+              appUI
+              variant="secondary"
+              type="button"
+              (click)="pairing.copyReviewLink(link)"
+              i18n="@@vaultPairingCopyLink"
+            >
+              Copy review link
+            </button>
+
+            <a appUI [href]="link" target="_blank" rel="noopener" i18n="@@vaultPairingOpenLink">Open review link</a>
+
+            <button
+              appUI
+              variant="secondary"
+              type="button"
+              (click)="pairing.cancelRequest()"
+              i18n="@@vaultPairingCancel"
+            >
+              Cancel pairing
+            </button>
+          }
         } @else {
-          <p appUI role="status" i18n="@@vaultPairingApproved">Approved. Finish linking this device.</p>
+          @if (pairing.busy()) {
+            <p appUI role="status" i18n="@@vaultPairingInstalling">Finishing pairing on this device.</p>
+          } @else {
+            <form class="space-y-3" (submit)="$event.preventDefault(); pairing.finishBacked()">
+              @if (request.context.method === 'pin-argon2id') {
+                <app-field control-id="vault-pairing-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel">
+                  <app-pin-input
+                    required
+                    [digits]="6"
+                    [value]="pairing.pin()"
+                    (valueChange)="pairing.pin.set($event)"
+                  />
+                </app-field>
+              }
+
+              <button appUI type="submit" i18n="@@vaultPairingUnlockToFinish">Unlock to finish linking</button>
+            </form>
+          }
         }
       } @else {
         <app-field control-id="vault-pairing-request" label="Pairing request" i18n-label="@@vaultDevicesRequest">
@@ -142,7 +188,7 @@
         </app-field>
       }
 
-      @if (pairing.approval() !== 'expired') {
+      @if (!request.reviewLink) {
         <p appUI i18n="@@vaultDevicesRecipientFingerprint">New device fingerprint</p>
 
         <code class="block break-all" data-vault-recipient>{{ request.fingerprint }}</code>
@@ -155,7 +201,7 @@
         </p>
       }
 
-      @if (!request.reviewLink || pairing.approval() === 'approved') {
+      @if (!request.reviewLink) {
         <form class="space-y-3" (submit)="$event.preventDefault(); pairing.finish(approver.value)">
           <app-field
             control-id="vault-approver-fingerprint"

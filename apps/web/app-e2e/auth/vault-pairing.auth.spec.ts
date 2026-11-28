@@ -117,8 +117,14 @@ test('opens the backed note on an approved desktop with its own PIN and no passk
     await expect(reviewLink).toBeVisible();
 
     const href = await reviewLink.getAttribute('href');
-    const fingerprint = await peer.locator('[data-vault-recipient]').innerText();
     const relative = new URL(href!);
+    const displayedCode = peer.getByLabel('Pairing code', { exact: true });
+    const reviewNotice = (url: URL) =>
+      page
+        .getByRole('link', { name: 'Review request', exact: true })
+        .and(page.locator(`[href="${url.pathname}${url.search}"]`));
+    const codeInput = page.getByLabel('Pairing code', { exact: true });
+    const approveDevice = page.getByRole('button', { name: 'Approve this device' });
 
     const resumed = await page.context().newPage();
 
@@ -130,32 +136,62 @@ test('opens the backed note on an approved desktop with its own PIN and no passk
       resumed.getByText('Unlock the note on this device before approving another one.', { exact: true }),
     ).toBeVisible();
 
-    await page.getByRole('link', { name: 'Review request', exact: true }).click();
+    await reviewNotice(relative).click();
 
-    await expect(page).toHaveURL(relative.href);
+    await expect(displayedCode).toHaveText(/^[0-9]{4} [0-9]{4}$/);
 
-    await page.getByLabel('New device fingerprint').fill(fingerprint);
+    const pairingCode = await displayedCode.innerText();
+    const wrongCode = String((Number(pairingCode[0]) + 1) % 10) + pairingCode.slice(1);
+
+    await codeInput.fill(wrongCode);
+
+    await approveDevice.click();
+
+    await expect(restart).toBeVisible({ timeout: 25_000 });
+
+    await expect(displayedCode).toHaveCount(0);
+
+    await expect(peer.getByRole('link', { name: 'Open vault note' })).toHaveCount(0);
+
+    await restart.click();
+
+    await pin.fill('208146');
+
+    await peer.getByLabel('Confirm your new PIN').fill('208146');
+
+    const [retry] = await Promise.all([publication(), request.click()]);
+
+    expect(retry.request().postDataJSON().requestId).not.toBe(resumedRequest.requestId);
+
+    await expect(reviewLink).toBeVisible();
+
+    const retryHref = await reviewLink.getAttribute('href');
+    const retryUrl = new URL(retryHref!);
+
+    await reviewNotice(retryUrl).click();
+
+    await expect(page).toHaveURL(retryUrl.href);
+
+    await expect(displayedCode).toHaveText(/^[0-9]{4} [0-9]{4}$/);
+
+    const correctCode = await displayedCode.innerText();
+
+    await codeInput.fill(correctCode);
 
     const [approval] = await Promise.all([
-      page.waitForResponse((response) => response.url().endsWith('/devices/approve'), { timeout: 10_000 }),
-      page.getByRole('button', { name: 'Approve this device' }).click(),
+      page.waitForResponse((response) => response.url().endsWith('/devices/approve'), { timeout: 45_000 }),
+      approveDevice.click(),
     ]);
 
     expect(approval.status()).toBe(200);
 
     await expect(page.getByRole('status').filter({ hasText: 'Device approved.' })).toBeVisible();
 
-    const approver = await page.locator('[data-vault-approver]').innerText();
+    await expect(peer.getByRole('link', { name: 'Open vault note' })).toBeVisible({ timeout: 25_000 });
 
-    const trust = peer.getByLabel('Approving device fingerprint', { exact: true });
+    await expect(peer.getByLabel('Approving device fingerprint', { exact: true })).toHaveCount(0);
 
-    await expect(trust).toBeVisible({ timeout: 15_000 });
-
-    await trust.fill(approver);
-
-    await pin.fill('208146');
-
-    await peer.getByRole('button', { name: 'Finish pairing' }).click();
+    await expect(pin).toHaveCount(0);
 
     await peer.getByRole('link', { name: 'Open vault note' }).click();
 

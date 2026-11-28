@@ -1370,13 +1370,37 @@
         <source>Requests from your other devices will appear in the app.</source>
         <target>Las solicitudes de tus otros dispositivos aparecerán en la app.</target>
       </trans-unit>
-      <trans-unit id="vaultPairingConfirmInstructions" datatype="html">
-        <source>Enter the fingerprint shown on the new device to confirm you are linking the right one.</source>
-        <target>Ingresa la huella que aparece en el dispositivo nuevo para confirmar que es el correcto.</target>
+      <trans-unit id="vaultPairingCodeInstructions" datatype="html">
+        <source>Enter the 8-digit code shown on the new device.</source>
+        <target>Ingresa el código de 8 dígitos que aparece en el dispositivo nuevo.</target>
       </trans-unit>
-      <trans-unit id="vaultPairingExpired" datatype="html">
-        <source>This request is no longer available.</source>
-        <target>Esta solicitud ya no está disponible.</target>
+      <trans-unit id="vaultPairingCodeExpired" datatype="html">
+        <source>This pairing attempt ended. Start again to get a new code.</source>
+        <target>Este intento de vinculación terminó. Vuelve a empezar para obtener un código nuevo.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingCodeLabel" datatype="html">
+        <source>Pairing code</source>
+        <target>Código de vinculación</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingCheckingCode" datatype="html">
+        <source>Waiting for the new device to verify the code.</source>
+        <target>Esperando a que el dispositivo nuevo verifique el código.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingCancel" datatype="html">
+        <source>Cancel pairing</source>
+        <target>Cancelar vinculación</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingInstalling" datatype="html">
+        <source>Finishing pairing on this device.</source>
+        <target>Terminando la vinculación en este dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingUnlockToFinish" datatype="html">
+        <source>Unlock to finish linking</source>
+        <target>Desbloquear para terminar la vinculación</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingCodeApproved" datatype="html">
+        <source>Device approved. The new device can finish linking.</source>
+        <target>Dispositivo aprobado. El dispositivo nuevo puede terminar de vincularse.</target>
       </trans-unit>
       <trans-unit id="vaultPairingStartAgain" datatype="html">
         <source>Start again</source>
@@ -1401,10 +1425,6 @@
       <trans-unit id="vaultPairingOpenLink" datatype="html">
         <source>Open review link</source>
         <target>Abrir enlace de revisión</target>
-      </trans-unit>
-      <trans-unit id="vaultPairingApproved" datatype="html">
-        <source>Approved. Finish linking this device.</source>
-        <target>Solicitud aprobada. Termina de vincular este dispositivo.</target>
       </trans-unit>
       <trans-unit id="vaultPairingLinkCopied" datatype="html">
         <source>Review link copied.</source>

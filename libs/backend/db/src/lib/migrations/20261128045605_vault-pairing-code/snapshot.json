@@ -1,0 +1,89 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "d567c9ce-6029-4586-a4fd-9de99836c41f",
+  "prevIds": ["497501e1-bb2a-4dd1-abec-8c7c902bd6cd"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "vault_key_challenges", "pairing_r1"],
+      "writes": [
+        "s|col|public.vault_key_challenges.pairing_r1",
+        "n|col|public.vault_key_challenges.pairing_r1",
+        "e|col|public.vault_key_challenges.pairing_r1"
+      ],
+      "reads": ["n|tbl|public.vault_key_challenges", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "vault_key_challenges", "pairing_a1"],
+      "writes": [
+        "s|col|public.vault_key_challenges.pairing_a1",
+        "n|col|public.vault_key_challenges.pairing_a1",
+        "e|col|public.vault_key_challenges.pairing_a1"
+      ],
+      "reads": ["n|tbl|public.vault_key_challenges", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "vault_key_challenges", "pairing_r2"],
+      "writes": [
+        "s|col|public.vault_key_challenges.pairing_r2",
+        "n|col|public.vault_key_challenges.pairing_r2",
+        "e|col|public.vault_key_challenges.pairing_r2"
+      ],
+      "reads": ["n|tbl|public.vault_key_challenges", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "pairing_r1",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "pairing_a1",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "vault_key_challenges",
+        "name": "pairing_r2",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}
