@@ -99,6 +99,46 @@ describe('user-held recovery text', () => {
     expect(opened).toEqual(dataKey);
   });
 
+  it('accepts changed help text, a note above the recovery data, and trailing empty lines', async () => {
+    const { text, approval } = fixture;
+    const heading = '## Recovery data';
+
+    for (const valid of [
+      'Updated recovery instructions.\n' + text.slice(text.indexOf(heading)),
+      text.replace(heading, 'Synthetic note about the ## Recovery data section.\n' + heading),
+      text + '\n\n',
+    ]) {
+      const restored = await importFile(valid);
+
+      expect(restored.recipient).toEqual(approval.delivery.binding);
+    }
+  });
+
+  it.each(['', 'application/octet-stream', 'text/plain; charset=utf-8'])(
+    'accepts a .txt file with MIME type "%s"',
+    async (type) => {
+      const restored = await importFile(fixture.text, 'synthetic.txt', type);
+
+      expect(restored.recipient).toEqual(fixture.approval.delivery.binding);
+    },
+  );
+
+  it('requires a single recovery heading and the exact ordered data lines', async () => {
+    const { text } = fixture;
+
+    for (const invalid of [
+      text.replace('## Recovery data\n', ''),
+      '## Recovery data\n' + text,
+      text.replace('Domain: notes', 'Domain: other'),
+      text.replace('Product: synthetic\nDomain: notes', 'Domain: notes\nProduct: synthetic'),
+      text.replace('Recipient device:', 'Unexpected line\nRecipient device:'),
+      text.replace('Signing key:', '\nSigning key:'),
+      text + ' \n',
+    ]) {
+      await expect(importFile(invalid)).rejects.toMatchObject({ code: 'recovery-required' });
+    }
+  });
+
   it('rejects a complete legacy JSON document even with the text filename and MIME type', async () => {
     const { approval, signer, text } = fixture;
     const legacy = JSON.stringify({
