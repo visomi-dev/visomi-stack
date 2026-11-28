@@ -330,6 +330,8 @@
             <p appUI tone="muted" i18n="@@vaultDraftPending">Saving on this device…</p>
           } @else if (workspace.privateResource.pending()) {
             <p appUI tone="muted" i18n="@@vaultBackupPending">Saved on this device. Waiting for backup.</p>
+          } @else if (workspace.editorReadOnly() && !workspace.notice()) {
+            <p appUI tone="muted" i18n="@@vaultLoading">Loading the vault…</p>
           }
         </div>
 

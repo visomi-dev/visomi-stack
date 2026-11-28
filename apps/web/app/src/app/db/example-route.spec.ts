@@ -315,7 +315,7 @@ it('coalesces Vault hints, preserves the outbox, and checks for missed updates a
   expect(f.privateResource.synchronize).toHaveBeenLastCalledWith(a, false);
 });
 
-it('protects an empty edit from a remote hint and cancels a scheduled save on lock', async () => {
+it('waits for the opening Vault check, protects an empty edit from a remote hint, and cancels pending saves on lock', async () => {
   const f = fixture(undefined, () => true, 'available', true);
   const harness = await RouterTestingHarness.create();
 
@@ -325,13 +325,21 @@ it('protects an empty edit from a remote hint and cancels a scheduled save on lo
 
   const page = (harness.routeDebugElement!.query(By.directive(DatabaseExample)).componentInstance as DatabaseExample)
     .workspace;
+  const openingPull = deferred<undefined>();
+
+  f.privateResource.synchronize.mockImplementationOnce(() => openingPull.promise);
 
   await page.unlock();
 
   f.privateResource.synchronized.set(true);
   f.privateResource.verifiedCursor.set(1);
+  expect(page.editorReadOnly()).toBe(true);
 
   await harness.fixture.whenStable();
+
+  openingPull.resolve(undefined);
+
+  await vi.waitFor(() => expect(page.editorReadOnly()).toBe(false));
 
   page.editPrivateText('');
   f.privateResource.synchronize.mockClear();
