@@ -64,12 +64,12 @@ export class ExamplePairingExchange {
     this.wakeApprover?.();
   }
 
-  watchRecipient(
+  watchRecipient<Approval>(
     proof: DeviceProof,
     signal: AbortSignal,
     checkpoint: (signer?: SigningPin) => void,
-    isApproved: () => Promise<boolean>,
-    onApproved: (auto: boolean) => void,
+    readApproval: () => Promise<Approval | false>,
+    onApproved: (auto: boolean, approval: Approval) => void,
   ): () => void {
     let retired = false;
     const watch = watchVaultPairing(
@@ -89,7 +89,7 @@ export class ExamplePairingExchange {
             retired = false;
 
             if (Boolean(exchange.r2) !== Boolean(this.authenticatedSigner)) {
-              this.expireRecipient();
+              expire();
             } else if (!this.authenticatedSigner && exchange.a1) {
               await this.acceptApprover(proof, exchange.a1, signal, checkpoint);
             }
@@ -98,45 +98,62 @@ export class ExamplePairingExchange {
           }
 
           if (!this.authenticatedSigner) {
-            this.expireRecipient();
+            expire();
 
             return;
           }
 
-          const approved = await isApproved().catch(() => undefined);
+          const approval = await readApproval().catch(() => undefined);
 
           signal.throwIfAborted();
 
-          if (approved === undefined) {
+          if (approval === undefined) {
             return;
           }
 
-          if (approved) {
+          if (approval !== false) {
             const auto = !this.wasCancelled;
 
+            stop();
             this.approval.set('approved');
-            onApproved(auto);
+            onApproved(auto, approval);
           } else if (retired || expired) {
-            this.expireRecipient();
+            expire();
           } else {
             // A concurrent approval may be between challenge consumption and committing its delivery.
             retired = true;
           }
         } catch {
           if (!signal.aborted) {
-            this.expireRecipient();
+            expire();
           }
         }
       },
       this.connected,
     );
 
+    const stop = () => {
+      if (this.wakeRecipient === watch.wake) {
+        this.wakeRecipient = undefined;
+      }
+
+      watch.stop();
+      signal.removeEventListener('abort', stop);
+    };
+    const expire = () => {
+      stop();
+      this.expireRecipient();
+    };
+
     this.wakeRecipient = watch.wake;
 
-    return () => {
-      this.wakeRecipient = undefined;
-      watch.stop();
-    };
+    if (signal.aborted) {
+      stop();
+    } else {
+      signal.addEventListener('abort', stop, { once: true });
+    }
+
+    return stop;
   }
 
   async startRecipient(proof: DeviceProof, signal: AbortSignal, pin?: Uint8Array): Promise<void> {
@@ -267,6 +284,7 @@ export class ExamplePairingExchange {
           }
         },
         this.connected,
+        { delayFirstCheck: true },
       );
       const stop = () => {
         this.wakeApprover = undefined;

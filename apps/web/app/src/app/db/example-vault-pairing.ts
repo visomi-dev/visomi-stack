@@ -25,7 +25,7 @@ import { ExamplePairingDraft, openPairingDevice } from './example-pairing-draft'
 import { ApproverPairingCode } from './example-pairing-code';
 import { ExamplePairingExchange } from './example-pairing-exchange';
 import { readRecovery } from './example-vault-recovery';
-import { examplePrivatePath, type ExampleTarget } from './example-contracts';
+import { examplePrivatePath, type ExampleTarget, type rosterSchema } from './example-contracts';
 
 type PendingPairing = {
   context: WrappingContext;
@@ -413,7 +413,7 @@ export class ExampleVaultPairing {
     }
   }
 
-  async finishBacked(): Promise<void> {
+  async finishBacked(registry?: ReturnType<typeof rosterSchema.parse>): Promise<void> {
     const pending = this.pending();
     const signer = this.exchange.authenticatedSigner;
 
@@ -439,6 +439,7 @@ export class ExampleVaultPairing {
           await this.enrollment.install(pending.context, pending.proof, pending.fingerprint, signer, signal, {
             pin,
             verifyPin: !provisionedPin,
+            registry,
           });
 
           this.completed(ownerId);
@@ -598,11 +599,11 @@ export class ExampleVaultPairing {
       async () => {
         const roster = await this.enrollment.roster(proof.ownerId, signal);
 
-        return roster.devices.some(({ id, revokedAt }) => id === context.deviceId && !revokedAt);
+        return roster.devices.some(({ id, revokedAt }) => id === context.deviceId && !revokedAt) ? roster : false;
       },
-      (auto) => {
+      (auto, registry) => {
         if (auto && (context.method !== 'pin-argon2id' || this.exchange.hasPin())) {
-          void this.finishBacked();
+          void this.finishBacked(registry);
         }
       },
     );

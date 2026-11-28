@@ -205,13 +205,14 @@ it('resumes with the authenticated signer after a committed R2 loses its reply',
   );
   const approved = vi.fn();
   const controller = new AbortController();
+  const approval = { epoch: 2 };
 
   resumed.resume(checkpoint.mock.calls[0][0]);
 
-  const stopResumed = resumed.watchRecipient(proof, controller.signal, vi.fn(), async () => true, approved);
+  const stopResumed = resumed.watchRecipient(proof, controller.signal, vi.fn(), async () => approval, approved);
 
   try {
-    await vi.waitFor(() => expect(approved).toHaveBeenCalledExactlyOnceWith(true));
+    await vi.waitFor(() => expect(approved).toHaveBeenCalledExactlyOnceWith(true, approval));
 
     expect(resumed.authenticatedSigner).toEqual(signer);
   } finally {

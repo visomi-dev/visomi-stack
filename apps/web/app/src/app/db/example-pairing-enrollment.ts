@@ -112,10 +112,15 @@ export class ExamplePairingEnrollment {
     fingerprint: string,
     signer: SigningPin,
     signal: AbortSignal,
-    options: { pin?: Uint8Array; approved?: ReturnType<typeof approvedDeliverySchema.parse>; verifyPin?: boolean },
+    options: {
+      pin?: Uint8Array;
+      approved?: ReturnType<typeof approvedDeliverySchema.parse>;
+      verifyPin?: boolean;
+      registry?: ReturnType<typeof rosterSchema.parse>;
+    },
   ) {
     const { database, vault, rpId, backed } = this.options;
-    const { pin, approved, verifyPin } = options;
+    const { pin, approved, verifyPin, registry } = options;
     const delivery = await (approved ?? this.readDelivery(context.deviceId, signal));
 
     if (delivery.witness.kind !== 'enrollment' || delivery.witness.history) {
@@ -134,7 +139,7 @@ export class ExamplePairingEnrollment {
         context,
         signal,
         backed,
-        roster: () => this.roster(context.ownerId, signal),
+        roster: async () => registry ?? this.roster(context.ownerId, signal),
         install: () => {
           if (!custody.ready) {
             throw new VaultError('locked');

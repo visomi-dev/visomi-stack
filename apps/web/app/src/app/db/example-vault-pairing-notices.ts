@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { Service, afterNextRender, effect, inject, signal } from '@angular/core';
+import { Service, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
+import { PRIMARY_OUTLET, Router } from '@angular/router';
 import { exampleVaultPairingListSchema, syntheticHybridPolicy } from '@visomi-stack/shared-db';
 import type { z } from 'zod';
 
@@ -20,12 +21,33 @@ export class ExampleVaultPairingNotices {
   private readonly database = inject(ClientDatabase);
   private readonly examples = inject(ExampleAvailability);
   private readonly realtime = inject(BrowserRealtimeSession, { optional: true });
+  private readonly router = inject(Router);
   private readonly view = inject(DOCUMENT).defaultView;
 
   private readonly rendered = signal(false);
   private readonly notices = signal<Request[]>([]);
 
-  readonly pending = this.notices.asReadonly();
+  private readonly reviewRequest = computed(() => {
+    const url = this.router.lastSuccessfulNavigation()?.finalUrl;
+
+    if (
+      url?.root.children[PRIMARY_OUTLET]?.segments[0]?.path === 'security' &&
+      url.queryParamMap.get('sample') === 'vault-backup'
+    ) {
+      return url.queryParamMap.get('requestId');
+    }
+
+    return null;
+  });
+  private readonly reviewing = computed(() => !!this.reviewRequest());
+
+  private wakeNotices?: () => void;
+
+  readonly pending = computed(() => {
+    const review = this.reviewRequest();
+
+    return this.notices().filter(({ requestId }) => requestId !== review);
+  });
 
   private async load(signal: AbortSignal): Promise<void> {
     try {
@@ -72,8 +94,6 @@ export class ExampleVaultPairingNotices {
   private readonly activate = afterNextRender(() => this.rendered.set(true));
 
   private readonly watch = effect((cleanup) => {
-    this.realtime?.vaultPairingChanges();
-    this.realtime?.connected();
     this.session.operationVersion();
 
     if (!this.rendered() || !this.examples.enabled() || !this.view) {
@@ -83,15 +103,29 @@ export class ExampleVaultPairingNotices {
     }
 
     const controller = new AbortController();
-    const { stop } = watchVaultPairing(
+    const { wake, stop } = watchVaultPairing(
       this.view,
       () => this.load(controller.signal),
-      () => !!this.realtime?.connected(),
+      () => !this.reviewing() && !!this.realtime?.connected(),
     );
 
+    this.wakeNotices = wake;
+
     cleanup(() => {
+      this.wakeNotices = undefined;
       stop();
       controller.abort();
     });
+  });
+
+  private readonly pairingHints = effect(() => {
+    this.realtime?.connected();
+
+    // The active review handles exchange hints. Poll for other requests, including a fresh attempt.
+    if (!this.reviewing()) {
+      this.realtime?.vaultPairingChanges();
+    }
+
+    untracked(() => this.wakeNotices?.());
   });
 }
