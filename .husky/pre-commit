@@ -1,6 +1,6 @@
 set -eu
 
-export PATH="$HOME/.local/share/fnm/node-versions/v24.15.0/installation/bin:$HOME/.local/share/pnpm:$PATH"
+. "$(dirname "$0")/node.sh"
 
 # Format and lint staged files; tests run before pushing.
-pnpm exec lint-staged
+run_hook lint-staged

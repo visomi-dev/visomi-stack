@@ -1,7 +1,7 @@
 set -eu
 
 export NX_DAEMON=false
-export PATH="$HOME/.local/share/fnm/node-versions/v24.15.0/installation/bin:$HOME/.local/share/pnpm:$PATH"
+. "$(dirname "$0")/node.sh"
 
 zero=0000000000000000000000000000000000000000
 
@@ -17,6 +17,6 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   fi
 
   # Keep Git's ref list on stdin available for subsequent ref updates.
-  pnpm exec nx affected -t test --base="$base" --head="$local_sha" --nxBail </dev/null
-  pnpm exec nx affected -t e2e --base="$base" --head="$local_sha" --nxBail </dev/null
+  run_hook nx affected -t test --base="$base" --head="$local_sha" --nxBail </dev/null
+  run_hook nx affected -t e2e --base="$base" --head="$local_sha" --nxBail </dev/null
 done

@@ -97,7 +97,7 @@
     "@types/express": "^5.0.0",
     "@types/express-session": "1.19.0",
     "@types/mjml": "5.4.1",
-    "@types/node": "^22.0.0",
+    "@types/node": "^24.19.4",
     "@types/nodemailer": "8.0.2",
     "@types/passport": "1.0.17",
     "@types/pg": "8.23.1",
