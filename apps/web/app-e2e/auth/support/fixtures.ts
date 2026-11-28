@@ -77,9 +77,11 @@ export async function expireAuthentication(email: string): Promise<void> {
 export async function saveRecoveryKey(page: Page) {
   const download = page.waitForEvent('download');
 
-  await page.getByRole('link', { name: 'Download recovery key', exact: true }).click();
+  await page.getByRole('link', { name: 'Download recovery key (.txt)', exact: true }).click();
 
   const file = await download;
+
+  expect(file.suggestedFilename()).toMatch(/^vault-recovery-[a-f0-9-]+\.txt$/);
 
   await page.getByRole('button', { name: 'I saved my recovery key', exact: true }).click();
 

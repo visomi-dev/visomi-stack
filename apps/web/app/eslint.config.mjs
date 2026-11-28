@@ -90,6 +90,7 @@ export default [
             'end-label',
             'manual-error',
             'accept-formatted-paste',
+            'accept-spaces',
             'content-id',
             'skip-label',
             'navigation-id',

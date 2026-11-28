@@ -223,9 +223,8 @@ test('Cloud updates permitted readers in realtime and clears notes after revocat
 
     await expect(reader.getByRole('button', { name: 'Actualizar notas', exact: true })).toHaveCount(0);
 
-    await page.getByText('People with access', { exact: true }).click();
-
     await page
+      .getByRole('region', { name: 'People with access', exact: true })
       .getByRole('listitem')
       .filter({ hasText: readerEmail })
       .getByRole('button', { name: 'Remove access', exact: true })

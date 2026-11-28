@@ -6,6 +6,7 @@ import {
   LOCALE_ID,
   afterNextRender,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -43,8 +44,14 @@ export class ConsentNotice {
   protected readonly copy = browserPrivacyCopy[this.locale];
   protected readonly privacyUrl = '/' + this.locale + '/privacy/';
 
+  readonly placement = input<'floating' | 'inline'>('floating');
+
   protected choose(accepted: boolean): void {
     this.notice?.choose(accepted);
+  }
+
+  protected close(): void {
+    this.notice?.dismiss();
   }
 
   private readonly initialize = afterNextRender(() => {

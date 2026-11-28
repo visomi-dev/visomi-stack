@@ -1,0 +1,212 @@
+<section appUI="card" padding="sm" layout="plain" class="min-w-0 space-y-4" aria-labelledby="example-batches">
+  <h3 appUI uiSize="sm" id="example-batches" i18n="@@exampleCheckBatches">Sample check batches</h3>
+
+  <fieldset appUI>
+    <legend appUI i18n="@@exampleCheckFilters">Filters</legend>
+
+    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 xl:items-end">
+      <app-field control-id="example-check-type" label="Check type" i18n-label="@@exampleCheckType">
+        <select appUI id="example-check-type" uiSize="sm" #typeFilter (change)="type.set(typeFilter.value)">
+          <option value="all" i18n="@@exampleAllCheckTypes">All types</option>
+
+          @for (checkType of checkTypes; track checkType) {
+            <option [value]="checkType">{{ typeLabels[checkType] }}</option>
+          }
+        </select>
+      </app-field>
+
+      <app-field control-id="example-batch-search" label="Search batch IDs" i18n-label="@@exampleBatchSearch">
+        <div appUI="input-group">
+          <span data-slot="prefix" aria-hidden="true">
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="10.5" cy="10.5" r="6.5" />
+
+              <path d="m16 16 5 5" />
+            </svg>
+          </span>
+
+          <input
+            appUI
+            id="example-batch-search"
+            type="search"
+            uiSize="sm"
+            autocomplete="off"
+            placeholder="DEMO-042"
+            #batchSearch
+            (input)="query.set(batchSearch.value)"
+          />
+        </div>
+      </app-field>
+
+      <label appUI inline>
+        <input appUI="switch" type="checkbox" #failuresFilter (change)="onlyFailures.set(failuresFilter.checked)" />
+
+        <span i18n="@@exampleOnlyFailures">Only batches with failures</span>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset appUI>
+    <legend appUI i18n="@@exampleCheckSort">Sort by date</legend>
+
+    <div class="grid gap-2 sm:grid-cols-2">
+      <label appUI="radio-card">
+        <input
+          appUI
+          type="radio"
+          name="example-check-sort"
+          value="newest"
+          [checked]="newestFirst()"
+          (change)="newestFirst.set(true)"
+        />
+
+        <span i18n="@@exampleNewestFirst">Newest first</span>
+      </label>
+
+      <label appUI="radio-card">
+        <input
+          appUI
+          type="radio"
+          name="example-check-sort"
+          value="oldest"
+          [checked]="!newestFirst()"
+          (change)="newestFirst.set(false)"
+        />
+
+        <span i18n="@@exampleOldestFirst">Oldest first</span>
+      </label>
+    </div>
+  </fieldset>
+
+  <div role="status">
+    @if (filteredBatches().length === 0) {
+      <p appUI tone="muted" i18n="@@exampleChecksEmpty">
+        No sample batches match these filters. Widen the date range or change a filter.
+      </p>
+    } @else {
+      <p appUI tone="muted" uiSize="sm" i18n="@@exampleCheckPage">
+        Page {{ page() | number }} of {{ pageCount() | number }} · {{ filteredBatches().length | number }} total
+      </p>
+    }
+  </div>
+
+  @if (visibleBatches().length > 0) {
+    <table appUI density="compact" mobileCards role="table" aria-labelledby="example-batches">
+      <thead role="rowgroup">
+        <tr role="row">
+          <th role="columnheader" scope="col" id="example-batch-column" i18n="@@exampleBatch">Batch</th>
+
+          <th role="columnheader" scope="col" id="example-batch-date" i18n="@@exampleDate">Date</th>
+
+          <th role="columnheader" scope="col" id="example-batch-status" i18n="@@exampleCheckStatus">Status</th>
+
+          <th role="columnheader" scope="col" id="example-batch-action" i18n="@@exampleBatchDetails">Details</th>
+        </tr>
+      </thead>
+
+      <tbody role="rowgroup">
+        @for (batch of visibleBatches(); track batch.id) {
+          @let expanded = selectedBatchId() === batch.id;
+          @let detailId = 'example-detail-' + batch.id;
+          <tr role="row">
+            <th role="rowheader" scope="row" [id]="batch.id" headers="example-batch-column">
+              {{ batch.id }}
+              <span appUI="text" tone="muted" uiSize="sm" class="block">{{ typeLabels[batch.type] }}</span>
+            </th>
+
+            <td role="cell" [attr.headers]="'example-batch-date ' + batch.id">
+              <span data-slot="label" aria-hidden="true" i18n="@@exampleDate">Date</span>
+              {{ batch.day | date: 'mediumDate' : 'UTC' }}
+            </td>
+
+            <td role="cell" [attr.headers]="'example-batch-status ' + batch.id">
+              <span data-slot="label" aria-hidden="true" i18n="@@exampleCheckStatus">Status</span>
+
+              @if (batch.failed > 0) {
+                <span appUI="badge" tone="warning" i18n="@@exampleBatchHasFailures">Has failures</span>
+              } @else {
+                <span appUI="badge" tone="success" i18n="@@exampleBatchPassed">All passed</span>
+              }
+            </td>
+
+            <td role="cell" [attr.headers]="'example-batch-action ' + batch.id">
+              <button
+                appUI
+                type="button"
+                size="sm"
+                variant="secondary"
+                [attr.aria-expanded]="expanded"
+                [attr.aria-controls]="expanded ? detailId : null"
+                (click)="selectedBatchId.set(expanded ? null : batch.id)"
+              >
+                <span i18n="@@exampleBatchDetails">Details</span>
+
+                <span class="sr-only">{{ batch.id }}</span>
+              </button>
+            </td>
+          </tr>
+
+          @if (expanded) {
+            <tr role="row">
+              <td role="cell" colspan="4" [attr.headers]="'example-batch-action ' + batch.id" class="sm:col-span-2">
+                <dl appUI [id]="detailId">
+                  <div class="grid gap-y-1 sm:col-span-2 sm:grid-cols-subgrid">
+                    <dt i18n="@@exampleChecksPassed">Passed</dt>
+
+                    <dd>{{ batch.passed | number }}</dd>
+                  </div>
+
+                  <div class="grid gap-y-1 sm:col-span-2 sm:grid-cols-subgrid">
+                    <dt i18n="@@exampleChecksFailed">Failed</dt>
+
+                    <dd>{{ batch.failed | number }}</dd>
+                  </div>
+
+                  <div class="grid items-center gap-y-1 sm:col-span-2 sm:grid-cols-subgrid">
+                    <dt i18n="@@exampleBatchRunner">Sample runner</dt>
+
+                    <dd class="flex items-center gap-2">
+                      <span appUI="avatar" uiSize="sm" aria-hidden="true">DB</span>
+
+                      <span i18n="@@exampleBatchDemoBot">Demo Bot</span>
+                    </dd>
+                  </div>
+                </dl>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+
+    @if (pageCount() > 1) {
+      <nav appUI="pagination" aria-label="Sample batch pages" i18n-aria-label="@@exampleCheckPagination">
+        <button
+          appUI
+          type="button"
+          size="sm"
+          variant="secondary"
+          class="aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+          [attr.aria-disabled]="page() === 1"
+          (click)="changePage(-1)"
+          i18n="@@exampleCheckPrevious"
+        >
+          Previous page
+        </button>
+
+        <button
+          appUI
+          type="button"
+          size="sm"
+          variant="secondary"
+          class="aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+          [attr.aria-disabled]="page() === pageCount()"
+          (click)="changePage(1)"
+          i18n="@@exampleCheckNext"
+        >
+          Next page
+        </button>
+      </nav>
+    }
+  }
+</section>

@@ -612,32 +612,32 @@
         <source>Home</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">2,4</context>
+          <context context-type="linenumber">4,6</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authWelcomeDescription" datatype="html">
         <source> Open Account to update your email or Security to change how you sign in. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">5,8</context>
+          <context context-type="linenumber">7,11</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authManageAccount" datatype="html">
         <source> Manage account </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
-          <context context-type="linenumber">114,116</context>
+          <context context-type="linenumber">128,130</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">9,11</context>
+          <context context-type="linenumber">13,16</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReviewSecurity" datatype="html">
-        <source>Review security</source>
+        <source> Review security </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">9,12</context>
+          <context context-type="linenumber">17,20</context>
         </context-group>
       </trans-unit>
       <trans-unit id="language" datatype="html">
@@ -2657,88 +2657,308 @@
         </context-group>
       </trans-unit>
       <trans-unit id="exampleDashboard" datatype="html">
-        <source>Example dashboard</source>
+        <source> Example dashboard </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">22,23</context>
+          <context context-type="linenumber">25,28</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleDashboardDescription" datatype="html">
         <source> These sample checks use fixed, synthetic data. They don’t reflect your account or site activity. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">24,28</context>
+          <context context-type="linenumber">29,32</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleChecksRun" datatype="html">
         <source>Checks run</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">30,31</context>
+          <context context-type="linenumber">62,64</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleChecksPassed" datatype="html">
         <source>Passed</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">34,35</context>
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">154,156</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">122,123</context>
+          <context context-type="linenumber">68,70</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">147,149</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleChecksFailed" datatype="html">
         <source>Failed</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">40,41</context>
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">160,162</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">123,125</context>
+          <context context-type="linenumber">74,76</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">149,151</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleChecksByDay" datatype="html">
         <source>Checks by day</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">48,49</context>
+          <context context-type="linenumber">89,91</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleDateRange" datatype="html">
         <source>Example date range</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">57,58</context>
+          <context context-type="linenumber">99,100</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleSevenDays" datatype="html">
         <source> 7 days </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">70,71</context>
+          <context context-type="linenumber">111,112</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleFourteenDays" datatype="html">
         <source> 14 days </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">82,84</context>
+          <context context-type="linenumber">123,124</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleDailyTotals" datatype="html">
         <source>Daily totals</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">117,118</context>
+          <context context-type="linenumber">140,142</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleDate" datatype="html">
         <source>Date</source>
         <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">99,101</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">118,119</context>
+        </context-group>
+        <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">121,122</context>
+          <context context-type="linenumber">145,147</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckBatches" datatype="html">
+        <source>Sample check batches</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">2,5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckFilters" datatype="html">
+        <source>Filters</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">5,7</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckType" datatype="html">
+        <source>Check type</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleAllCheckTypes" datatype="html">
+        <source>All types</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">10,12</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchSearch" datatype="html">
+        <source>Search batch IDs</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleOnlyFailures" datatype="html">
+        <source>Only batches with failures</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">44,47</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckSort" datatype="html">
+        <source>Sort by date</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">50,52</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleNewestFirst" datatype="html">
+        <source>Newest first</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">63,66</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleOldestFirst" datatype="html">
+        <source>Oldest first</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">76,78</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleChecksEmpty" datatype="html">
+        <source> No sample batches match these filters. Widen the date range or change a filter. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">84,87</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckPage" datatype="html">
+        <source> Page <x id="INTERPOLATION" equiv-text="{{ page() | number }}"/> of <x id="INTERPOLATION_1" equiv-text="{{ pageCount() | number }}"/> · <x id="INTERPOLATION_2" equiv-text="{{ filteredBatches().length | number }}"/> total </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">88,91</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatch" datatype="html">
+        <source>Batch</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">97,99</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckStatus" datatype="html">
+        <source>Status</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">101,103</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">123,125</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchDetails" datatype="html">
+        <source>Details</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">103,105</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">142,144</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchHasFailures" datatype="html">
+        <source>Has failures</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">126,128</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchPassed" datatype="html">
+        <source>All passed</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">128,130</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchRunner" datatype="html">
+        <source>Sample runner</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">166,168</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchDemoBot" datatype="html">
+        <source>Demo Bot</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">171,173</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckPagination" datatype="html">
+        <source>Sample batch pages</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">183</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckPrevious" datatype="html">
+        <source> Previous page </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">194,197</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckNext" datatype="html">
+        <source> Next page </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">207,209</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckAvailability" datatype="html">
+        <source>Availability</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.ts</context>
+          <context context-type="linenumber">91</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckResponseTime" datatype="html">
+        <source>Response time</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.ts</context>
+          <context context-type="linenumber">92</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckCertificate" datatype="html">
+        <source>Certificate</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.ts</context>
+          <context context-type="linenumber">93</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleChecksLoading" datatype="html">
+        <source>Loading sample checks…</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">37,40</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleChecksLoadError" datatype="html">
+        <source>The sample checks couldn’t be loaded.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">45,48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleChecksRetry" datatype="html">
+        <source> Retry loading sample checks </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">56,58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleChecksFailureSummary" datatype="html">
+        <source> The selected date range contains <x id="INTERPOLATION" equiv-text="{{ failed() | number }}"/> failed sample checks. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">82,84</context>
         </context-group>
       </trans-unit>
       <trans-unit id="shellWorkspace" datatype="html">
@@ -2789,7 +3009,7 @@
         <source> <x id="INTERPOLATION" equiv-text="{{ total() | number }}"/> checks over <x id="INTERPOLATION_1" equiv-text="{{ period() }}"/> days. The busiest day had <x id="INTERPOLATION_2" equiv-text="{{ peak() }}"/> checks. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">50,52</context>
+          <context context-type="linenumber">92,94</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDevicesTitle" datatype="html">
@@ -2826,13 +3046,52 @@
         <source>This request is no longer available. Start a new request on the other device.</source>
       </trans-unit>
       <trans-unit id="vaultPairingWaitingHere" datatype="html">
-        <source>Requests from your other devices will appear in the app.</source>
+        <source>Waiting for a link request…</source>
       </trans-unit>
-      <trans-unit id="vaultPairingConfirmInstructions" datatype="html">
-        <source>Enter the fingerprint shown on the new device to confirm you are linking the right one.</source>
+      <trans-unit id="vaultPairingStartOnNewDevice" datatype="html">
+        <source>On the new device, select this vault in Vault example, choose “Link a device,” and request pairing.</source>
       </trans-unit>
-      <trans-unit id="vaultPairingExpired" datatype="html">
-        <source>This request is no longer available.</source>
+      <trans-unit id="vaultPairingEnterCodeHere" datatype="html">
+        <source>When the pairing notice appears on this page, choose “Review request.” Enter the 8-digit code from the new device here.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingRequestReady" datatype="html">
+        <source>Request ready to review</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingLoadingReview" datatype="html">
+        <source>Loading pairing request…</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCodeInstructions" datatype="html">
+        <source>Enter the 8-digit code shown on the new device.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingReviewEnded" datatype="html">
+        <source>The code wasn’t confirmed or the request was cancelled. Start again on the new device.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCodeUnconfirmed" datatype="html">
+        <source>The code couldn’t be confirmed. Start again and enter the new code on the device approving the request.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingRequestCancelled" datatype="html">
+        <source>You cancelled this pairing request. Start again if you still want to link this device.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCodeExpired" datatype="html">
+        <source>This pairing request expired. Start again to get a new code.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCodeLabel" datatype="html">
+        <source>Pairing code</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCheckingCode" datatype="html">
+        <source>Waiting for the new device to verify the code.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCancel" datatype="html">
+        <source>Cancel pairing</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingInstalling" datatype="html">
+        <source>Finishing pairing on this device.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingUnlockToFinish" datatype="html">
+        <source>Unlock to finish linking</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingCodeApproved" datatype="html">
+        <source>Device approved. The new device can finish linking.</source>
       </trans-unit>
       <trans-unit id="vaultPairingStartAgain" datatype="html">
         <source>Start again</source>
@@ -2841,7 +3100,7 @@
         <source>Waiting for approval on your other device.</source>
       </trans-unit>
       <trans-unit id="vaultPairingLinkInstructions" datatype="html">
-        <source>Review the request in Stack on a device that can already open this vault. If the notice doesn’t appear, open this link there.</source>
+        <source>On a device that can already open this vault, choose “Review request” and enter this code.</source>
       </trans-unit>
       <trans-unit id="vaultPairingCopyLink" datatype="html">
         <source>Copy review link</source>
@@ -2849,11 +3108,23 @@
       <trans-unit id="vaultPairingNeedsLinkedDevice" datatype="html">
         <source>Open this review link on a device that can already unlock this vault.</source>
       </trans-unit>
-      <trans-unit id="vaultPairingOpenLink" datatype="html">
-        <source>Open review link</source>
+      <trans-unit id="vaultPairingReviewFallback" datatype="html">
+        <source>If the notice doesn’t appear, copy the review link and open it on that other device.</source>
       </trans-unit>
-      <trans-unit id="vaultPairingApproved" datatype="html">
-        <source>Approved. Finish linking this device.</source>
+      <trans-unit id="vaultPairingSpokenCode" datatype="html">
+        <source>Pairing code, <x id="digits" equiv-text="digits"/></source>
+      </trans-unit>
+      <trans-unit id="vaultPairingBack" datatype="html">
+        <source>Back to vault workspace</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingPhoneHelp" datatype="html">
+        <source>To use your phone’s passkey, follow the browser’s QR prompts and keep Bluetooth on for both devices.</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingUseDevice" datatype="html">
+        <source>Use device pairing instead</source>
+      </trans-unit>
+      <trans-unit id="vaultPairingOpenLink" datatype="html">
+        <source>Review link for the other device</source>
       </trans-unit>
       <trans-unit id="vaultPairingLinkCopied" datatype="html">
         <source>Review link copied.</source>
@@ -2955,6 +3226,34 @@
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
           <context context-type="linenumber">34,37</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudNotes" datatype="html">
+        <source>Notes</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">151,153</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudNotesLoading" datatype="html">
+        <source>Loading notes…</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">311,314</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudNotesEmptyOwnerHelp" datatype="html">
+        <source> Use the editor to write your first note and choose who can read it. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">211,213</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudNotesEmptyReaderHelp" datatype="html">
+        <source>Notes the owner shares will appear here.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">214,217</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cloudExampleScopeAudience" datatype="html">
@@ -3111,6 +3410,15 @@
           <context context-type="sourcefile">apps/web/app/src/app/shared/vault/vault-sync-indicator/vault-sync-indicator.ts</context>
           <context context-type="linenumber">23</context>
         </context-group>
+      </trans-unit>
+      <trans-unit id="vaultSyncWaiting" datatype="html">
+        <source>Waiting for backup</source>
+      </trans-unit>
+      <trans-unit id="vaultSyncOffline" datatype="html">
+        <source>Vault offline</source>
+      </trans-unit>
+      <trans-unit id="vaultSyncLastSuccess" datatype="html">
+        <source>Last synced</source>
       </trans-unit>
       <trans-unit id="vaultSyncRetry" datatype="html">
         <source>Retry Vault sync</source>
@@ -3276,6 +3584,48 @@
           <context context-type="linenumber">278,280</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="cloudShareMethod" datatype="html">
+        <source>Sharing method</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">326,327</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareYou" datatype="html">
+        <source>You</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">474,476</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareOwner" datatype="html">
+        <source>Owner</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">476,479</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareReadersLoading" datatype="html">
+        <source> Loading reader access… </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">501,503</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareReadersHelp" datatype="html">
+        <source> Choose a sharing method to see which readers have access. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">505,506</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareNoReaders" datatype="html">
+        <source>No readers have access yet.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">509,512</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="cloudShareRemove" datatype="html">
         <source> Remove access </source>
       </trans-unit>
@@ -3384,8 +3734,23 @@
           <context context-type="linenumber">100,104</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="vaultSetupMethodTitle" datatype="html">
+        <source>Choose an unlock method</source>
+      </trans-unit>
+      <trans-unit id="vaultSetupSteps" datatype="html">
+        <source>Vault setup steps</source>
+      </trans-unit>
+      <trans-unit id="vaultSetupStepMethod" datatype="html">
+        <source>1. Choose a method</source>
+      </trans-unit>
+      <trans-unit id="vaultSetupStepRecovery" datatype="html">
+        <source>2. Save the recovery key</source>
+      </trans-unit>
+      <trans-unit id="vaultSetupStepNote" datatype="html">
+        <source>3. Write a note</source>
+      </trans-unit>
       <trans-unit id="vaultSetupConfirm" datatype="html">
-        <source>Use a passkey you’ve already registered for this account to set up the vault on this device.</source>
+        <source>Use a passkey already registered to this account.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/db/example/example.html</context>
           <context context-type="linenumber">112,115</context>
@@ -3462,6 +3827,12 @@
       <trans-unit id="vaultUnlockLinkAnotherDevice" datatype="html">
         <source>Link another device</source>
       </trans-unit>
+      <trans-unit id="vaultAccessHeading" datatype="html">
+        <source>Vault access</source>
+      </trans-unit>
+      <trans-unit id="vaultLinkDeviceHelp" datatype="html">
+        <source>Open this vault on another device.</source>
+      </trans-unit>
       <trans-unit id="vaultLinkDevice" datatype="html">
         <source>Link a device</source>
         <context-group purpose="location">
@@ -3502,6 +3873,27 @@
       <trans-unit id="cloudNoWorkspaces" datatype="html">
         <source>You don’t have any Cloud workspaces yet.</source>
       </trans-unit>
+      <trans-unit id="cloudWorkspaceCreated" datatype="html">
+        <source>Created</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">33,36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceRole" datatype="html">
+        <source>Role</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">41,43</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceEmptyHelp" datatype="html">
+        <source> Create a test workspace to try writing notes and sharing them with other Stack accounts. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">105,108</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="vaultRecoveryEnabled" datatype="html">
         <source>Your recovery key is ready to use.</source>
       </trans-unit>
@@ -3512,7 +3904,7 @@
         <source>Recover with a saved key</source>
       </trans-unit>
       <trans-unit id="vaultRestoreHelp" datatype="html">
-        <source>Select the file you saved for this vault, then choose how to unlock it on this device.</source>
+        <source>Select the .txt recovery file you saved for this vault, then choose how to unlock it on this device.</source>
       </trans-unit>
       <trans-unit id="vaultRecoveryFile" datatype="html">
         <source>Vault recovery key file</source>
@@ -3560,7 +3952,13 @@
         <source>Keep this file somewhere safe outside this device. You’ll need it to recover this vault if you lose access to your devices.</source>
       </trans-unit>
       <trans-unit id="vaultDownloadRecovery" datatype="html">
-        <source>Download recovery key</source>
+        <source>Download recovery key (.txt)</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoveryConfirmHelp" datatype="html">
+        <source>Download the file to enable confirmation.</source>
+      </trans-unit>
+      <trans-unit id="vaultRecoveryConfirmReady" datatype="html">
+        <source>Confirm once you’ve saved the file.</source>
       </trans-unit>
       <trans-unit id="vaultConfirmRecovery" datatype="html">
         <source>I saved my recovery key</source>

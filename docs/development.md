@@ -437,10 +437,9 @@ any failed step stops the hook and blocks the push. The PostgreSQL integration a
 E2E suites use dedicated disposable databases under `tmp/api-e2e`, so the local
 PostgreSQL test prerequisites described in the API guide are required.
 
-These hooks contain machine-specific Node paths: pre-commit and pre-push use
-24.15.0, while commit-msg still points to 24.14.1. They need a later portability
-review; do not describe them as verified on a fresh checkout. The API owns its
-Playwright E2E configuration and directory; no separate E2E project is needed.
+The hooks use the Node version in `.node-version` when fnm is available. Otherwise
+they use the Node and pnpm available on `PATH`. The API owns its Playwright E2E
+configuration and directory; no separate E2E project is needed.
 
 ## Configuration and data hygiene
 

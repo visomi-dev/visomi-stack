@@ -1,0 +1,13 @@
+diff --git a/dist/core/app/node.js b/dist/core/app/node.js
+index c241469f39729ca4e53ae1db24359e964e382aa6..c1fc7fab8e82f002b8489c7efea5cc40eab8b2da 100644
+--- a/dist/core/app/node.js
++++ b/dist/core/app/node.js
+@@ -208,7 +208,7 @@ export async function writeResponse(source, destination) {
+ 			reader.cancel().catch((err) => {
+ 				// The page renderer has already logged its own errors through the configured logger.
+ 				if (err?.[Symbol.for("astro.streamErrorLogged")]) return;
+-				console.error("There was an uncaught error in the middle of the stream while rendering %s.", destination.req.url, err);
++				console.error("site_response_cancel_failed");
+ 			});
+ 		});
+ 		let result = await reader.read();

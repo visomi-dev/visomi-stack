@@ -5,7 +5,6 @@ import { exampleVaultPairingLinkSchema } from '@visomi-stack/shared-db';
 
 import { ExampleVaultDevices } from '../../../db/example-vault-devices/example-vault-devices';
 import { exampleTargetSchema } from '../../../db/example-contracts';
-import { DatabaseHttp } from '../../../shared/db/http';
 import { ExampleVaultProfile } from '../../../db/example-vault-profile';
 import { NavigationHeading } from '../../../shared/navigation-heading';
 import { Heading, Text, Link, Card } from '../../../ui';
@@ -18,7 +17,7 @@ import { Session } from '../session';
 @Component({
   selector: 'app-security',
   imports: [NavigationHeading, Heading, Text, Link, Card, RouterLink, AuthFeedback, ExampleVaultDevices],
-  providers: [Action, AuthHttp, Methods, DatabaseHttp, ExampleVaultProfile],
+  providers: [Action, AuthHttp, Methods, ExampleVaultProfile],
   templateUrl: './security.html',
 })
 export class Security {

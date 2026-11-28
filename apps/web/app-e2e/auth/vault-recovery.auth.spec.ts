@@ -65,7 +65,9 @@ async function makeVault(page: Page, label: string, note: string) {
   const stream = await download.createReadStream();
   const buffer = await readStream(stream);
 
-  return { url: page.url(), file: { name: 'synthetic-recovery.json', mimeType: 'application/json', buffer } };
+  expect(buffer.toString('utf8').startsWith('# Visomi Vault recovery key\n')).toBe(true);
+
+  return { url: page.url(), file: { name: download.suggestedFilename(), mimeType: 'text/plain', buffer } };
 }
 
 test('recovers with the original profile gone and deletes only the selected vault', async ({ page, browser }, info) => {
@@ -85,6 +87,10 @@ test('recovers with the original profile gone and deletes only the selected vaul
   try {
     const peer = await fresh.newPage();
 
+    const identity = /^Identity: (.+)$/m.exec(first.file.buffer.toString('utf8'))?.[1] ?? '';
+
+    expect(identity.length).toBeGreaterThan(0);
+
     let sentPrivateMaterial = false;
 
     peer.on('request', (request) => {
@@ -92,9 +98,8 @@ test('recovers with the original profile gone and deletes only the selected vaul
 
       if (
         body &&
-        /"material"|"visomi\.vault-recovery\.v1"|"048261"|Synthetic first vault note|Synthetic independent note/.test(
-          body,
-        )
+        (body.includes(identity) ||
+          /visomi\.vault-recovery\.v2|"048261"|Synthetic first vault note|Synthetic independent note/.test(body))
       ) {
         sentPrivateMaterial = true;
       }
@@ -117,9 +122,19 @@ test('recovers with the original profile gone and deletes only the selected vaul
     const file = peer.getByLabel('Vault recovery key file', { exact: true });
     const recover = peer.getByRole('button', { name: 'Recover with PIN', exact: true });
 
-    await file.setInputFiles(other.file);
+    await file.setInputFiles({ ...first.file, buffer: Buffer.from('{"format":"visomi.vault-recovery.v1"}') });
 
     await chooseRecoveryPin(peer);
+
+    await localPin(peer).fill(pin);
+
+    await confirmPin(peer).fill(pin);
+
+    await recover.click();
+
+    await expect(peer.getByRole('status').filter({ hasText: 'This device doesn’t have a usable key' })).toBeVisible();
+
+    await file.setInputFiles(other.file);
 
     await localPin(peer).fill(pin);
 
@@ -296,7 +311,7 @@ test('enrolls recovery on an existing vault and restores it with an existing pas
 
     await peer
       .getByLabel('Vault recovery key file', { exact: true })
-      .setInputFiles({ name: 'synthetic-recovery.json', mimeType: 'application/json', buffer });
+      .setInputFiles({ name: 'synthetic-recovery.txt', mimeType: 'text/plain', buffer });
 
     await peer.getByRole('button', { name: 'Recover with a passkey', exact: true }).click();
 
@@ -381,8 +396,8 @@ test('recovers a competing setup using one deliberately created passkey after ca
     const recoveryBytes = await readStream(stream);
 
     await peer.getByLabel('Vault recovery key file', { exact: true }).setInputFiles({
-      name: 'synthetic-recovery.json',
-      mimeType: 'application/json',
+      name: 'synthetic-recovery.txt',
+      mimeType: 'text/plain',
       buffer: recoveryBytes,
     });
 

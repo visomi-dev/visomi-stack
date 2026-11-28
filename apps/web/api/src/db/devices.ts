@@ -2,47 +2,35 @@ import { randomBytes, randomUUID } from 'node:crypto';
 
 import { vaultSchema } from '@visomi-stack/backend-db';
 import {
-  devicePublicKeysSchema,
   deviceProofSchema,
   deviceProofMessage,
-  deviceDeliverySchema,
-  deviceHistorySchema,
-  deviceActionSchema,
   deviceActionMessage,
   deviceDeliveryLabel,
+  keyDomainId,
   protocolIdSchema,
+  type PairingCodeMessage,
   type DeviceAction,
   type DeviceDelivery,
   type DeviceProof,
 } from '@visomi-stack/shared-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
-import { and, eq, gt, isNull } from 'drizzle-orm';
-import { z } from 'zod';
+import { and, eq, gt, isNotNull, isNull, sql } from 'drizzle-orm';
+import type { z } from 'zod';
 
 import { input, type Access, type ScopeAccess, type SessionActor } from '../access/service';
 
 import { publicHash, verifyDeviceAction, verifyDeviceProof } from './device-proof';
 import { keyPredicate, VaultAccess } from './vault-access';
 import { requireHistory } from './device-history';
+import {
+  approvalSchema,
+  bootstrapSchema,
+  enrollmentRequestSchema,
+  revokeDeviceSchema,
+  rotateDevicesSchema,
+} from './device-schemas';
 
 const { keyScopes, keyDevices, keyChallenges } = vaultSchema;
-
-export const enrollmentRequestSchema = z.strictObject({ deviceId: protocolIdSchema, keys: devicePublicKeysSchema });
-export const approvalSchema = z.strictObject({
-  proof: deviceProofSchema,
-  delivery: deviceDeliverySchema,
-  history: deviceHistorySchema.optional(),
-  authorization: deviceActionSchema,
-});
-export const bootstrapSchema = z.union([
-  deviceProofSchema,
-  z.strictObject({ primary: deviceProofSchema, recovery: approvalSchema }),
-]);
-export const revokeDeviceSchema = z.strictObject({ deviceId: protocolIdSchema, authorization: deviceActionSchema });
-export const rotateDevicesSchema = z.strictObject({
-  deliveries: z.array(deviceDeliverySchema).min(1).max(64),
-  authorization: deviceActionSchema,
-});
 
 /** Cloud controls access and single-use challenges; only authorized clients can create deliveries. */
 export class KeyDevices {
@@ -62,7 +50,10 @@ export class KeyDevices {
     verifyDeviceProof(proof);
 
     return this.withExamplePairing(actor, target, proof.requestId, async (context, condition, challenge) => {
-      if (deviceProofMessage(challenge.value) !== deviceProofMessage(proof)) {
+      if (
+        deviceProofMessage(challenge.value) !== deviceProofMessage(proof) ||
+        ('proof' in challenge.value && challenge.value.proof !== proof.proof)
+      ) {
         throw new HttpError(400, 'device_challenge_invalid');
       }
 
@@ -81,6 +72,59 @@ export class KeyDevices {
       }
 
       return proof.data;
+    });
+  }
+
+  async cancelPairing(actor: SessionActor, target: unknown, id: string) {
+    return this.withExamplePairing(actor, target, id, async ({ tx }, condition) => {
+      await tx
+        .update(keyChallenges)
+        .set({ consumedAt: sql`clock_timestamp()` })
+        .where(condition);
+
+      return { cancelled: true as const };
+    });
+  }
+
+  async readPairingCode(actor: SessionActor, target: unknown, id: string) {
+    return this.withExamplePairing(actor, target, id, async (_context, _condition, challenge) => {
+      if (!deviceProofSchema.safeParse(challenge.value).success) {
+        throw new HttpError(404, 'device_challenge_invalid');
+      }
+
+      return { r1: challenge.pairingR1, a1: challenge.pairingA1, r2: challenge.pairingR2 };
+    });
+  }
+
+  async writePairingCode(actor: SessionActor, target: unknown, id: string, message: PairingCodeMessage) {
+    return this.withExamplePairing(actor, target, id, async (context, condition, challenge) => {
+      if (!deviceProofSchema.safeParse(challenge.value).success) {
+        throw new HttpError(404, 'device_challenge_invalid');
+      }
+
+      const slot = {
+        r1: keyChallenges.pairingR1,
+        a1: keyChallenges.pairingA1,
+        r2: keyChallenges.pairingR2,
+      }[message.step];
+      const previous = { r1: undefined, a1: keyChallenges.pairingR1, r2: keyChallenges.pairingA1 }[message.step];
+      const values =
+        message.step === 'r1'
+          ? { pairingR1: message.r1 }
+          : message.step === 'a1'
+            ? { pairingA1: message.a1 }
+            : { pairingR2: message.r2 };
+      const [accepted] = await context.tx
+        .update(keyChallenges)
+        .set(values)
+        .where(and(condition, isNull(slot), previous && isNotNull(previous)))
+        .returning({ id: keyChallenges.id });
+
+      if (!accepted) {
+        throw new HttpError(409, 'device_state_conflict');
+      }
+
+      return { accepted: true as const };
     });
   }
 
@@ -449,11 +493,11 @@ export class KeyDevices {
         eq(keyChallenges.id, id),
         eq(keyChallenges.ownerId, actor.principal.id),
         isNull(keyChallenges.consumedAt),
-        gt(keyChallenges.expiresAt, new Date()),
+        gt(keyChallenges.expiresAt, sql`clock_timestamp()`),
       );
       const [challenge] = await context.tx.select().from(keyChallenges).where(condition);
 
-      if (!challenge || challenge.value.key.generation !== key.generation) {
+      if (!challenge || keyDomainId(actor.principal.id, challenge.value.key) !== keyDomainId(actor.principal.id, key)) {
         throw new HttpError(404, 'device_challenge_invalid');
       }
 

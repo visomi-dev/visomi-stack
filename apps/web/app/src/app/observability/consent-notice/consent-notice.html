@@ -11,7 +11,9 @@
     padding="sm"
     layout="plain"
     [attr.aria-label]="copy.title"
-    class="ui-consent-card grid gap-2 text-sm"
+    [class.ui-consent-card]="placement() === 'floating'"
+    [class.max-w-80]="placement() === 'inline'"
+    class="grid gap-2 text-sm"
   >
     <p>{{ copy.invitation }}</p>
 
@@ -26,6 +28,12 @@
     <a appUI class="justify-self-start" [href]="privacyUrl">{{ copy.purposeLink }}</a>
 
     <p role="status" class="empty:hidden">{{ notice.blocked ? copy.blocked : notice.decided ? copy.off : '' }}</p>
+
+    @if (notice.decided) {
+      <button appUI variant="ghost" size="sm" type="button" class="justify-self-start" (click)="close()">
+        {{ copy.close }}
+      </button>
+    }
   </section>
 } @else if (notice.kind === 'confirmation') {
   <div
@@ -33,7 +41,9 @@
     tone="raised"
     padding="sm"
     layout="plain"
-    class="ui-consent-card grid gap-2 text-sm"
+    [class.ui-consent-card]="placement() === 'floating'"
+    [class.max-w-80]="placement() === 'inline'"
+    class="grid gap-2 text-sm"
     data-consent-confirmation
     aria-hidden="true"
   >

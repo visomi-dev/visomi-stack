@@ -19,10 +19,6 @@ import {
   vaultUnlockUrl,
 } from './support/fixtures';
 
-// The paired recipient uses Chromium's native virtual WebAuthn authenticator.
-// eslint-disable-next-line playwright/no-skipped-test
-test.skip(({ browserName }) => browserName !== 'chromium', 'Requires Chromium CDP');
-
 function persistenceRequestBody(request: Request): string {
   return request.url().includes('/api/example/vault/') ? (request.postData() ?? '') : '';
 }
@@ -154,8 +150,16 @@ test('backs up the Vault Example note to private object storage and restores it 
   page,
   context,
   browser,
+  browserName,
 }, info) => {
+  // eslint-disable-next-line playwright/no-skipped-test
+  test.skip(
+    browserName !== 'chromium',
+    'Requires Chromium CDP and a virtual WebAuthn PRF authenticator for the recipient',
+  );
   test.slow();
+
+  await context.setExtraHTTPHeaders({ 'x-forwarded-for': '198.19.127.6' });
 
   await context.addInitScript(() => {
     Object.defineProperty(window, 'PublicKeyCredential', { value: undefined, configurable: true });
@@ -207,7 +211,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
   await expect(panel.getByText('Saved on this device. Waiting for backup.')).toBeVisible();
 
-  await expect(page.getByRole('button', { name: 'Retry Vault sync' })).toBeVisible();
+  await expect(page.locator('app-vault-sync-indicator').getByRole('status')).toHaveText('Waiting for backup');
 
   const source = await replicaNote(page, objectId);
 
@@ -233,19 +237,16 @@ test('backs up the Vault Example note to private object storage and restores it 
 
   await panel.getByRole('link', { name: 'Link a device' }).click();
 
-  const approving = page.locator('[data-vault-approver]');
+  await expect(page.getByRole('status').filter({ hasText: 'Waiting for a link request…' })).toBeVisible();
 
-  await expect(approving).toHaveText(/^[A-Za-z0-9_-]{43}$/);
-
-  const approver = await approving.innerText();
   const pairingUrl = page.url();
   const recipientContext = await browser.newContext({
     baseURL: info.project.use.baseURL,
-    extraHTTPHeaders: { 'x-forwarded-for': '198.19.1.1' },
+    extraHTTPHeaders: { 'x-forwarded-for': '198.19.127.7' },
   });
   const outsiderContext = await browser.newContext({
     baseURL: info.project.use.baseURL,
-    extraHTTPHeaders: { 'x-forwarded-for': '198.19.1.2' },
+    extraHTTPHeaders: { 'x-forwarded-for': '198.19.127.8' },
   });
   const s3 = backupS3Client(object.endpoint);
 
@@ -385,24 +386,40 @@ test('backs up the Vault Example note to private object storage and restores it 
     const afterCancellation = await ids();
 
     expect(afterCancellation).toEqual(registered);
-    const [publication] = await Promise.all([
-      recipient.waitForResponse((response) => response.url().endsWith('/devices/pairing')),
-      recipient.getByRole('button', { name: 'Request pairing with a passkey' }).click(),
-    ]);
+    const publish = () =>
+      Promise.all([
+        recipient.waitForResponse((response) => response.url().endsWith('/devices/pairing')),
+        recipient.getByRole('button', { name: 'Request pairing with a passkey' }).click(),
+      ]);
+    const [publication] = await publish();
 
     expect(publication.ok()).toBe(true);
-    const published = publication.request().postDataJSON();
-    const beforeReload = await recipient.getByRole('link', { name: 'Open review link' }).getAttribute('href');
+    const original = deviceProofSchema.parse(publication.request().postDataJSON());
+    const displayedCode = recipient.getByRole('status', { name: /^Pairing code, / });
+
+    await expect(displayedCode).toHaveText(/^[0-9]{4} [0-9]{4}$/);
 
     await recipient.reload();
 
-    await expect(recipient.getByRole('link', { name: 'Open review link' })).toHaveAttribute('href', beforeReload!);
+    const restart = recipient.getByRole('button', { name: 'Start again', exact: true });
 
-    const afterResume = await ids();
+    await expect(restart).toBeVisible();
 
-    expect(afterResume).toEqual(registered);
-    const proof = deviceProofSchema.parse(published);
-    const devicePath = new URL(publication.url());
+    await expect(displayedCode).toHaveCount(0);
+
+    await restart.click();
+
+    const [retryPublication] = await publish();
+
+    expect(retryPublication.ok()).toBe(true);
+    const afterRestart = await ids();
+
+    expect(afterRestart).toEqual(registered);
+    const proof = deviceProofSchema.parse(retryPublication.request().postDataJSON());
+    const devicePath = new URL(retryPublication.url());
+
+    expect(proof.requestId).not.toBe(original.requestId);
+    expect(proof.deviceId).toBe(original.deviceId);
 
     const readPairing = await outsiderContext.request.get(`${devicePath.href}/${proof.requestId}`);
     const outsiderRequests = await outsiderContext.request.get('/api/example/vault/pairing-requests');
@@ -412,16 +429,10 @@ test('backs up the Vault Example note to private object storage and restores it 
     expect(outsiderRequests.ok()).toBe(true);
     expect(outsiderPending).toEqual([]);
 
-    const fingerprint = recipient.locator('[data-vault-recipient]');
-    const finish = recipient.getByRole('button', { name: 'Finish pairing', exact: true });
-
-    await expect(fingerprint).toHaveText(/^[A-Za-z0-9_-]{43}$/);
-
-    await expect(finish).toHaveCount(0);
+    await expect(displayedCode).toHaveText(/^[0-9]{4} [0-9]{4}$/);
 
     await expect(recipient.getByLabel('Pairing request', { exact: true })).toHaveCount(0);
 
-    const recipientId = await fingerprint.innerText();
     const deniedDelivery = await recipientContext.request.get(
       devicePath.href.replace(/\/pairing$/, `/${proof.deviceId}/delivery`),
     );
@@ -432,29 +443,22 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     await expect(replicaNote(recipient, objectId)).resolves.toEqual({});
 
-    await page.getByRole('link', { name: 'Review request', exact: true }).click();
+    await page
+      .getByRole('link', { name: 'Review request', exact: true })
+      .and(page.locator(`[href$="requestId=${proof.requestId}"]`))
+      .click();
 
-    const recipientFingerprint = page.getByLabel('New device fingerprint', { exact: true });
+    const pairingCode = await displayedCode.innerText();
 
-    await recipientFingerprint.fill('X'.repeat(43));
-
-    await page.getByRole('button', { name: 'Approve this device' }).click();
-
-    await expect(page.getByRole('status').filter({ hasText: 'The fingerprints don’t match.' })).toBeVisible();
-
-    await expect(finish).toHaveCount(0);
-
-    await recipientFingerprint.fill(recipientId);
+    await page.getByLabel('Pairing code', { exact: true }).fill(pairingCode);
 
     await page.getByLabel('Confirm local PIN', { exact: true }).fill(pin);
 
     await page.getByRole('button', { name: 'Approve this device' }).click();
 
-    await expect(page.getByRole('status').filter({ hasText: 'Device approved.' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'Device approved.' })).toBeVisible({ timeout: 45_000 });
 
-    await recipient.getByLabel('Approving device fingerprint', { exact: true }).fill(approver);
-
-    await finish.click();
+    await expect(recipient.getByRole('link', { name: 'Open vault note' })).toBeVisible({ timeout: 25_000 });
 
     const replace = async (body: string) => {
       const result = await s3('PUT', object.key, body);

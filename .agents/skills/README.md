@@ -2,6 +2,12 @@
 
 Skills are available references, not a workflow to run in full. Follow the repository working agreement in AGENTS.md (or its CLAUDE.md mirror) and the current request. Read only the material needed for the task.
 
+## Shared skill maintenance
+
+Keep all project skills in `.agents/skills`. Codex, GitHub Copilot, and OpenCode discover skills there directly. Claude Code discovers them through the `.claude/skills` symlink to `../.agents/skills`.
+
+Nx 24.0.1 can recreate `.github/skills` and `.opencode/skills` when configuring Copilot and OpenCode, respectively. To avoid generating those copies, omit `copilot` and `opencode` from the `--agents` list. If you configure either agent, review the generated skill updates, keep any intended updates in `.agents/skills`, and remove the generated copies before committing. With templates available, Nx checks can flag these missing copies for fully configured agents.
+
 ## Default approach
 
 Use kiss to keep implementation proportional without weakening domain boundaries, privacy, security, accessibility, or existing capabilities. Prefer a focused change and relevant checks over an automatic PRD, architecture rewrite, or new dependency.

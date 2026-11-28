@@ -1,5 +1,7 @@
-<section class="mx-auto grid w-full max-w-3xl gap-6 py-6" [attr.aria-busy]="workspace.busy()">
-  <header class="space-y-3">
+<section class="@container mx-auto grid w-full max-w-6xl gap-6 py-6">
+  @let readError = workspace.readError();
+
+  <header class="max-w-3xl space-y-3">
     <h1 appUI appNavigationHeading i18n="@@cloudExampleTitle">Cloud example</h1>
 
     <p appUI tone="muted" i18n="@@cloudExampleDescription">
@@ -12,42 +14,76 @@
   </header>
 
   @if (!workspace.examples.checked()) {
-    <p role="status" i18n="@@cloudExampleChecking">Checking Cloud availability…</p>
+    <p appUI role="status" i18n="@@cloudExampleChecking">Checking Cloud availability…</p>
   } @else if (!workspace.examples.enabled()) {
-    <p role="status" i18n="@@cloudExampleUnavailable">The Cloud example is unavailable right now.</p>
-  } @else {
-    @if (!workspace.hasTarget()) {
-      @if (workspace.workspaces(); as workspaces) {
-        @if (workspaces.items.length) {
-          <section class="grid gap-3" aria-labelledby="cloud-workspaces">
-            <h2 appUI id="cloud-workspaces" i18n="@@cloudExistingWorkspaces">Your Cloud workspaces</h2>
+    <p appUI role="status" i18n="@@cloudExampleUnavailable">The Cloud example is unavailable right now.</p>
+  } @else if (!workspace.hasTarget()) {
+    @if (workspace.workspaces(); as workspaces) {
+      @if (workspaces.items.length) {
+        <section class="grid max-w-3xl gap-4" aria-labelledby="cloud-workspaces">
+          <h2 appUI uiSize="md" id="cloud-workspaces" i18n="@@cloudExistingWorkspaces">Your Cloud workspaces</h2>
 
-            <ul class="grid gap-2">
-              @for (item of workspaces.items; track item.scopeId) {
-                <li>
-                  <a appUI [routerLink]="['/db-example/cloud', item.tenantId, item.scopeId]">
-                    <span i18n="@@cloudOpenWorkspace">Open workspace</span>
+          <ul class="grid gap-3">
+            @for (item of workspaces.items; track item.scopeId) {
+              <li>
+                <div appUI="card" layout="plain" class="grid items-center gap-4 @lg:grid-cols-[minmax(0,1fr)_auto]">
+                  <div class="grid gap-2">
+                    <dl appUI>
+                      <div class="grid gap-1 sm:col-span-2 sm:grid-cols-subgrid">
+                        <dt i18n="@@cloudWorkspaceCreated">Created</dt>
 
-                    <time [attr.datetime]="item.createdAt">{{ item.createdAt | date: 'medium' }}</time>
+                        <dd>
+                          <time [attr.datetime]="item.createdAt">{{ item.createdAt | date: 'medium' }}</time>
+                        </dd>
+                      </div>
 
-                    <span class="break-all" i18n="@@exampleWorkspaceReference">ID {{ item.scopeId }}</span>
+                      <div class="grid items-center gap-1 sm:col-span-2 sm:grid-cols-subgrid">
+                        <dt i18n="@@cloudWorkspaceRole">Role</dt>
 
-                    @if (item.owner) {
-                      <span i18n="@@cloudWorkspaceOwned">Owned</span>
-                    } @else {
-                      <span i18n="@@cloudWorkspaceShared">Shared with you</span>
-                    }
+                        <dd>
+                          @if (item.owner) {
+                            <span appUI="badge" i18n="@@cloudWorkspaceOwned">Owned</span>
+                          } @else {
+                            <span appUI="badge" tone="accent" i18n="@@cloudWorkspaceShared">Shared with you</span>
+                          }
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <p
+                      appUI
+                      uiSize="xs"
+                      tone="muted"
+                      class="wrap-anywhere"
+                      [id]="'cloud-workspace-id-' + item.scopeId"
+                      i18n="@@exampleWorkspaceReference"
+                    >
+                      ID {{ item.scopeId }}
+                    </p>
+                  </div>
+
+                  <a
+                    appUI="button"
+                    variant="secondary"
+                    class="justify-self-start"
+                    [routerLink]="['/db-example/cloud', item.tenantId, item.scopeId]"
+                    [attr.aria-labelledby]="'cloud-open-' + item.scopeId + ' cloud-workspace-id-' + item.scopeId"
+                  >
+                    <span [id]="'cloud-open-' + item.scopeId" i18n="@@cloudOpenWorkspace">Open workspace</span>
                   </a>
-                </li>
-              }
-            </ul>
+                </div>
+              </li>
+            }
+          </ul>
+
+          <div class="flex flex-wrap gap-3">
+            <ng-container [ngTemplateOutlet]="createWorkspace" />
 
             @if (workspaces.next; as next) {
               <button
                 appUI
                 type="button"
                 variant="secondary"
-                class="justify-self-start"
                 [disabled]="workspace.busy()"
                 (click)="workspace.loadMoreWorkspaces(next)"
                 i18n="@@exampleMoreWorkspaces"
@@ -55,314 +91,456 @@
                 Show more workspaces
               </button>
             }
-          </section>
-        } @else {
-          <p appUI tone="muted" i18n="@@cloudNoWorkspaces">You don’t have any Cloud workspaces yet.</p>
-        }
+          </div>
 
-        <button
-          appUI
-          type="button"
-          class="justify-self-start"
-          [disabled]="workspace.busy()"
-          (click)="workspace.createWorkspace()"
-          i18n="@@persistenceCreateWorkspace"
-        >
-          Create a test workspace
-        </button>
-      } @else if (workspace.error()) {
-        <button
-          appUI
-          type="button"
-          variant="secondary"
-          class="justify-self-start"
-          (click)="workspace.retryWorkspaces()"
-          i18n="@@exampleRetryWorkspaces"
-        >
-          Retry loading workspaces
-        </button>
+          <ng-container [ngTemplateOutlet]="actionFeedback" [ngTemplateOutletContext]="{ $implicit: 'workspaces' }" />
+        </section>
       } @else {
-        <p role="status" i18n="@@exampleLoadingWorkspaces">Loading workspaces…</p>
+        <section appUI="card" tone="subtle" class="max-w-3xl items-start" aria-labelledby="cloud-workspaces-empty">
+          <h2 appUI uiSize="md" id="cloud-workspaces-empty" i18n="@@cloudNoWorkspaces">
+            You don’t have any Cloud workspaces yet.
+          </h2>
+
+          <p appUI tone="muted" i18n="@@cloudWorkspaceEmptyHelp">
+            Create a test workspace to try writing notes and sharing them with other Stack accounts.
+          </p>
+
+          <ng-container [ngTemplateOutlet]="createWorkspace" />
+
+          <ng-container [ngTemplateOutlet]="actionFeedback" [ngTemplateOutletContext]="{ $implicit: 'workspaces' }" />
+        </section>
       }
-    } @else if (!workspace.target()) {
-      <p role="alert" i18n="@@cloudExampleInvalidLink">This test workspace link is invalid.</p>
+    } @else if (readError || workspace.actionError()) {
+      @if (readError) {
+        <div appUI="alert" tone="danger" role="alert">{{ readError }}</div>
+      }
+
+      <ng-container [ngTemplateOutlet]="actionFeedback" [ngTemplateOutletContext]="{ $implicit: 'workspaces' }" />
+
+      <button
+        appUI
+        type="button"
+        variant="secondary"
+        class="justify-self-start"
+        (click)="workspace.retryWorkspaces()"
+        i18n="@@exampleRetryWorkspaces"
+      >
+        Retry loading workspaces
+      </button>
     } @else {
-      @if (workspace.loaded() && !workspace.notes().length) {
-        <p appUI tone="muted" i18n="@@cloudExampleEmpty">There are no notes to show yet.</p>
+      <p appUI role="status" i18n="@@exampleLoadingWorkspaces">Loading workspaces…</p>
+    }
+  } @else if (!workspace.target()) {
+    <div appUI="alert" tone="danger" role="alert" i18n="@@cloudExampleInvalidLink">
+      This test workspace link is invalid.
+    </div>
+  } @else {
+    @if (readError) {
+      <div appUI="alert" tone="danger" role="alert">{{ readError }}</div>
+    }
+
+    @if (workspace.actionError(); as error) {
+      @if (!workspace.canWrite()) {
+        <div appUI="alert" tone="danger" role="alert">{{ error.message }}</div>
       }
+    }
 
-      @for (note of workspace.notes(); track note.id) {
-        <article appUI="card" padding="lg" class="grid gap-3">
-          <h2 appUI class="wrap-break-word">{{ note.title }}</h2>
-
-          <p class="wrap-break-word whitespace-pre-wrap">{{ note.body }}</p>
-
-          @if (note.audience === 'scope') {
-            <p appUI tone="muted" i18n="@@cloudExampleScopeAudience">Shared with permitted readers</p>
-          } @else {
-            <p appUI tone="muted" i18n="@@cloudExampleOwnerAudience">Owner only</p>
-          }
+    @if (workspace.loaded()) {
+      <div class="grid items-start gap-6" [class]="workspace.canWrite() ? '@2xl:grid-cols-2' : 'max-w-3xl'">
+        <section class="grid min-w-0 gap-4" aria-labelledby="cloud-notes">
+          <h2 appUI uiSize="md" id="cloud-notes" i18n="@@cloudNotes">Notes</h2>
 
           @if (workspace.canWrite()) {
-            <div class="flex flex-wrap gap-3">
-              <button
-                appUI
-                type="button"
-                variant="secondary"
-                [disabled]="workspace.busy()"
-                (click)="workspace.edit(note)"
-                i18n="@@cloudExampleEdit"
-              >
-                Edit note
-              </button>
-
-              <button
-                appUI
-                type="button"
-                variant="secondary"
-                [disabled]="workspace.busy()"
-                (click)="workspace.remove(note)"
-                i18n="@@cloudExampleDelete"
-              >
-                Delete note
-              </button>
-            </div>
+            <ng-container [ngTemplateOutlet]="actionFeedback" [ngTemplateOutletContext]="{ $implicit: 'notes' }" />
           }
-        </article>
-      }
 
-      @if (workspace.canWrite()) {
-        <form appUI="card" padding="lg" class="grid gap-4" (submit)="$event.preventDefault(); workspace.save()">
-          @if (workspace.selected()) {
-            <h2 appUI i18n="@@cloudExampleEditing">Edit note</h2>
+          @if (workspace.notes().length) {
+            <ul class="grid gap-3">
+              @for (note of workspace.notes(); track note.id) {
+                <li>
+                  <article appUI="card">
+                    <header class="flex flex-wrap items-start justify-between gap-2">
+                      <h3 appUI uiSize="sm" class="min-w-0 wrap-anywhere">{{ note.title }}</h3>
+
+                      @if (note.audience === 'scope') {
+                        <span appUI="badge" tone="accent" i18n="@@cloudExampleScopeAudience">
+                          Shared with permitted readers
+                        </span>
+                      } @else {
+                        <span appUI="badge" i18n="@@cloudExampleOwnerAudience">Owner only</span>
+                      }
+                    </header>
+
+                    <p appUI class="wrap-anywhere whitespace-pre-wrap">{{ note.body }}</p>
+
+                    @if (workspace.canWrite()) {
+                      <div class="flex flex-wrap gap-2">
+                        <button
+                          appUI
+                          type="button"
+                          variant="secondary"
+                          [disabled]="workspace.busy()"
+                          (click)="workspace.edit(note); focusNoteTitle()"
+                          i18n="@@cloudExampleEdit"
+                        >
+                          Edit note
+                        </button>
+
+                        <button
+                          appUI
+                          type="button"
+                          variant="ghost"
+                          [disabled]="workspace.busy()"
+                          (click)="workspace.remove(note)"
+                          i18n="@@cloudExampleDelete"
+                        >
+                          Delete note
+                        </button>
+                      </div>
+                    }
+                  </article>
+                </li>
+              }
+            </ul>
           } @else {
-            <h2 appUI i18n="@@cloudExampleNew">New note</h2>
-          }
+            <div appUI="card" tone="subtle">
+              <h3 appUI uiSize="sm" i18n="@@cloudExampleEmpty">There are no notes to show yet.</h3>
 
-          <app-field control-id="cloud-note-title" label="Note title" i18n-label="@@cloudExampleNoteTitle">
-            <input
-              appUI
-              id="cloud-note-title"
-              type="text"
-              maxlength="160"
-              required
-              #noteTitle
-              [value]="workspace.title()"
-              [disabled]="workspace.busy()"
-              (input)="workspace.title.set(noteTitle.value)"
-            />
-          </app-field>
-
-          <app-field control-id="cloud-note-body" label="Note text" i18n-label="@@cloudExampleNoteBody">
-            <textarea
-              appUI
-              id="cloud-note-body"
-              rows="3"
-              maxlength="4000"
-              #noteBody
-              [value]="workspace.body()"
-              [disabled]="workspace.busy()"
-              (input)="workspace.body.set(noteBody.value)"
-            ></textarea>
-          </app-field>
-
-          <fieldset class="grid gap-2" [disabled]="workspace.busy()">
-            <legend i18n="@@cloudExampleAudience">Who can read this note?</legend>
-
-            <label class="flex items-center gap-2">
-              <input
-                type="radio"
-                name="cloud-audience"
-                value="owner"
-                [checked]="workspace.audience() === 'owner'"
-                (change)="workspace.audience.set('owner')"
-              />
-
-              <span i18n="@@cloudExampleOwnerAudience">Owner only</span>
-            </label>
-
-            <label class="flex items-center gap-2">
-              <input
-                type="radio"
-                name="cloud-audience"
-                value="scope"
-                [checked]="workspace.audience() === 'scope'"
-                (change)="workspace.audience.set('scope')"
-              />
-
-              <span i18n="@@cloudExampleScopeAudience">Shared with permitted readers</span>
-            </label>
-          </fieldset>
-
-          <div class="flex flex-wrap gap-3">
-            <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@cloudExampleSave">Save note</button>
-
-            @if (workspace.selected()) {
-              <button
-                appUI
-                type="button"
-                variant="secondary"
-                [disabled]="workspace.busy()"
-                (click)="workspace.edit(null)"
-                i18n="@@cloudExampleCancelEdit"
-              >
-                Cancel edit
-              </button>
-            }
-          </div>
-        </form>
-
-        <section appUI="card" padding="lg" class="grid gap-4">
-          <h2 appUI i18n="@@cloudExampleShareTitle">Share workspace</h2>
-
-          <div class="grid grid-cols-2 gap-2">
-            <button
-              appUI
-              type="button"
-              [variant]="workspace.shareMode() === 'link' ? 'primary' : 'secondary'"
-              [attr.aria-pressed]="workspace.shareMode() === 'link'"
-              [disabled]="workspace.busy()"
-              (click)="workspace.openSharing('link')"
-              i18n="@@cloudShareLink"
-            >
-              Share by link
-            </button>
-
-            <button
-              appUI
-              type="button"
-              [variant]="workspace.shareMode() === 'email' ? 'primary' : 'secondary'"
-              [attr.aria-pressed]="workspace.shareMode() === 'email'"
-              [disabled]="workspace.busy()"
-              (click)="workspace.openSharing('email')"
-              i18n="@@cloudShareEmail"
-            >
-              Share by email
-            </button>
-          </div>
-
-          @if (workspace.shareMode() === 'link') {
-            <p appUI tone="muted" i18n="@@cloudShareLinkHelp">
-              Anyone with this link and a verified Stack account can read shared notes. The link expires after seven
-              days. People who have already joined keep access until you remove them.
-            </p>
-
-            @if (workspace.shareLink()) {
-              <app-field control-id="cloud-share-link" label="Sharing link" i18n-label="@@cloudShareLinkLabel">
-                <input appUI id="cloud-share-link" type="text" readonly [value]="workspace.shareLink()" #shareLink />
-              </app-field>
-
-              <button
-                appUI
-                type="button"
-                class="justify-self-start"
-                (click)="workspace.copyLink(shareLink)"
-                i18n="@@cloudShareCopy"
-              >
-                Copy link
-              </button>
-            }
-
-            <div class="flex flex-wrap gap-2">
-              <button
-                appUI
-                type="button"
-                [variant]="workspace.shareLink() ? 'secondary' : 'primary'"
-                [disabled]="workspace.busy()"
-                (click)="workspace.createLink()"
-              >
-                @if (workspace.sharing()?.linkExpiresAt) {
-                  <span i18n="@@cloudShareReplaceLink">Replace link</span>
-                } @else {
-                  <span i18n="@@cloudShareCreateLink">Create link</span>
-                }
-              </button>
-
-              @if (workspace.sharing()?.linkExpiresAt) {
-                <button
-                  appUI
-                  type="button"
-                  variant="secondary"
-                  [disabled]="workspace.busy()"
-                  (click)="workspace.disableLink()"
-                  i18n="@@cloudShareDisableLink"
-                >
-                  Disable link
-                </button>
+              @if (workspace.canWrite()) {
+                <p appUI tone="muted" i18n="@@cloudNotesEmptyOwnerHelp">
+                  Use the editor to write your first note and choose who can read it.
+                </p>
+              } @else {
+                <p appUI tone="muted" i18n="@@cloudNotesEmptyReaderHelp">Notes the owner shares will appear here.</p>
               }
             </div>
           }
+        </section>
 
-          @if (workspace.shareMode() === 'email') {
-            <form class="grid gap-3" (submit)="$event.preventDefault(); workspace.sendEmail()">
-              <app-field
-                control-id="cloud-share-email"
-                label="Email address"
-                i18n-label="@@cloudShareEmailLabel"
-                description="Use the email address of an existing verified Stack account."
-                i18n-description="@@cloudShareEmailHelp"
-              >
+        @if (workspace.canWrite()) {
+          <section appUI="card" aria-labelledby="cloud-note-editor">
+            <h2 appUI uiSize="md" id="cloud-note-editor">
+              @if (workspace.selected()) {
+                <ng-container i18n="@@cloudExampleEditing">Edit note</ng-container>
+              } @else {
+                <ng-container i18n="@@cloudExampleNew">New note</ng-container>
+              }
+            </h2>
+
+            <form #noteEditor class="grid gap-4" (submit)="$event.preventDefault(); saveNote(noteEditor)">
+              <app-field control-id="cloud-note-title" label="Note title" i18n-label="@@cloudExampleNoteTitle">
                 <input
                   appUI
-                  id="cloud-share-email"
-                  type="email"
-                  maxlength="254"
-                  autocomplete="email"
+                  id="cloud-note-title"
+                  type="text"
+                  maxlength="160"
                   required
-                  #shareEmail
-                  [value]="workspace.shareEmail()"
+                  #noteTitle
+                  [value]="workspace.title()"
                   [disabled]="workspace.busy()"
-                  (input)="workspace.shareEmail.set(shareEmail.value)"
+                  (input)="workspace.title.set(noteTitle.value)"
                 />
               </app-field>
 
+              <app-field control-id="cloud-note-body" label="Note text" i18n-label="@@cloudExampleNoteBody">
+                <textarea
+                  appUI
+                  id="cloud-note-body"
+                  rows="3"
+                  maxlength="4000"
+                  #noteBody
+                  [value]="workspace.body()"
+                  [disabled]="workspace.busy()"
+                  (input)="workspace.body.set(noteBody.value)"
+                ></textarea>
+              </app-field>
+
+              <fieldset appUI [disabled]="workspace.busy()">
+                <legend appUI i18n="@@cloudExampleAudience">Who can read this note?</legend>
+
+                <label appUI="radio-card">
+                  <input
+                    appUI
+                    type="radio"
+                    name="cloud-audience"
+                    value="owner"
+                    checked
+                    [checked]="workspace.audience() === 'owner'"
+                    (change)="workspace.audience.set('owner')"
+                  />
+
+                  <span i18n="@@cloudExampleOwnerAudience">Owner only</span>
+                </label>
+
+                <label appUI="radio-card">
+                  <input
+                    appUI
+                    type="radio"
+                    name="cloud-audience"
+                    value="scope"
+                    [checked]="workspace.audience() === 'scope'"
+                    (change)="workspace.audience.set('scope')"
+                  />
+
+                  <span i18n="@@cloudExampleScopeAudience">Shared with permitted readers</span>
+                </label>
+              </fieldset>
+
+              <div class="flex flex-wrap gap-2">
+                <button appUI type="submit" [disabled]="workspace.busy()" i18n="@@cloudExampleSave">Save note</button>
+
+                @if (workspace.selected()) {
+                  <button
+                    appUI
+                    type="button"
+                    variant="secondary"
+                    [disabled]="workspace.busy()"
+                    (click)="workspace.edit(null); focusNoteTitle()"
+                    i18n="@@cloudExampleCancelEdit"
+                  >
+                    Cancel edit
+                  </button>
+                }
+              </div>
+            </form>
+
+            <ng-container [ngTemplateOutlet]="actionFeedback" [ngTemplateOutletContext]="{ $implicit: 'editor' }" />
+          </section>
+        }
+      </div>
+    } @else if (!readError && !workspace.actionError()) {
+      <p appUI role="status" i18n="@@cloudNotesLoading">Loading notes…</p>
+    }
+
+    @if (workspace.canWrite()) {
+      <section class="grid gap-4" aria-labelledby="cloud-sharing">
+        @let mode = workspace.shareMode();
+        @let sharing = workspace.sharing();
+
+        <h2 appUI uiSize="md" id="cloud-sharing" i18n="@@cloudExampleShareTitle">Share workspace</h2>
+
+        <div class="grid items-start gap-3 @2xl:grid-cols-2">
+          <div appUI="card">
+            <div
+              class="flex flex-wrap gap-2"
+              role="group"
+              aria-label="Sharing method"
+              i18n-aria-label="@@cloudShareMethod"
+            >
               <button
                 appUI
-                type="submit"
-                class="justify-self-start"
+                type="button"
+                id="cloud-share-link-method"
+                aria-controls="cloud-share-options"
+                [variant]="workspace.shareMode() === 'link' ? 'primary' : 'secondary'"
+                [attr.aria-pressed]="workspace.shareMode() === 'link'"
                 [disabled]="workspace.busy()"
-                i18n="@@cloudShareSend"
+                (click)="workspace.openSharing('link')"
+                i18n="@@cloudShareLink"
               >
-                Send email
+                Share by link
               </button>
-            </form>
-          }
 
-          @if (workspace.sharing()?.readers?.length) {
-            <details>
-              <summary class="cursor-pointer" i18n="@@cloudShareReaders">People with access</summary>
+              <button
+                appUI
+                type="button"
+                id="cloud-share-email-method"
+                aria-controls="cloud-share-options"
+                [variant]="workspace.shareMode() === 'email' ? 'primary' : 'secondary'"
+                [attr.aria-pressed]="workspace.shareMode() === 'email'"
+                [disabled]="workspace.busy()"
+                (click)="workspace.openSharing('email')"
+                i18n="@@cloudShareEmail"
+              >
+                Share by email
+              </button>
+            </div>
 
-              <ul class="grid gap-3 pt-3">
-                @for (reader of workspace.sharing()?.readers; track reader.id) {
-                  <li class="flex flex-wrap items-center justify-between gap-2">
-                    <span class="wrap-break-word" [id]="'cloud-reader-' + reader.id">{{ reader.email }}</span>
+            <div
+              id="cloud-share-options"
+              [hidden]="!mode"
+              [attr.role]="mode ? 'group' : null"
+              [attr.aria-labelledby]="mode ? 'cloud-share-' + mode + '-method' : null"
+            >
+              @if (mode === 'link') {
+                <div class="grid gap-3">
+                  <p appUI tone="muted" uiSize="sm" i18n="@@cloudShareLinkHelp">
+                    Anyone with this link and a verified Stack account can read shared notes. The link expires after
+                    seven days. People who have already joined keep access until you remove them.
+                  </p>
+
+                  @if (workspace.shareLink()) {
+                    <app-field control-id="cloud-share-link" label="Sharing link" i18n-label="@@cloudShareLinkLabel">
+                      <input
+                        appUI
+                        id="cloud-share-link"
+                        type="text"
+                        readonly
+                        [value]="workspace.shareLink()"
+                        #shareLink
+                      />
+                    </app-field>
 
                     <button
                       appUI
                       type="button"
-                      variant="secondary"
-                      [disabled]="workspace.busy()"
-                      [attr.aria-describedby]="'cloud-reader-' + reader.id"
-                      (click)="workspace.removeReader(reader.id)"
-                      i18n="@@cloudShareRemove"
+                      class="justify-self-start"
+                      (click)="workspace.copyLink(shareLink)"
+                      i18n="@@cloudShareCopy"
                     >
-                      Remove access
+                      Copy link
                     </button>
-                  </li>
-                }
-              </ul>
-            </details>
-          }
-        </section>
-      }
+                  }
+
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      appUI
+                      type="button"
+                      [variant]="workspace.shareLink() ? 'secondary' : 'primary'"
+                      [disabled]="workspace.busy()"
+                      (click)="workspace.createLink()"
+                    >
+                      @if (sharing?.linkExpiresAt) {
+                        <span i18n="@@cloudShareReplaceLink">Replace link</span>
+                      } @else {
+                        <span i18n="@@cloudShareCreateLink">Create link</span>
+                      }
+                    </button>
+
+                    @if (sharing?.linkExpiresAt) {
+                      <button
+                        appUI
+                        type="button"
+                        variant="secondary"
+                        [disabled]="workspace.busy()"
+                        (click)="workspace.disableLink()"
+                        i18n="@@cloudShareDisableLink"
+                      >
+                        Disable link
+                      </button>
+                    }
+                  </div>
+
+                  <ng-container [ngTemplateOutlet]="actionFeedback" [ngTemplateOutletContext]="{ $implicit: 'link' }" />
+                </div>
+              } @else if (mode === 'email') {
+                <form class="grid gap-3" (submit)="$event.preventDefault(); workspace.sendEmail()">
+                  <app-field
+                    control-id="cloud-share-email"
+                    label="Email address"
+                    i18n-label="@@cloudShareEmailLabel"
+                    description="Use the email address of an existing verified Stack account."
+                    i18n-description="@@cloudShareEmailHelp"
+                    #emailField
+                  >
+                    <input
+                      appUI
+                      id="cloud-share-email"
+                      type="email"
+                      maxlength="254"
+                      autocomplete="email"
+                      required
+                      #shareEmail
+                      [attr.aria-describedby]="emailField.describedBy()"
+                      [value]="workspace.shareEmail()"
+                      [disabled]="workspace.busy()"
+                      (input)="workspace.shareEmail.set(shareEmail.value)"
+                    />
+                  </app-field>
+
+                  <button
+                    appUI
+                    type="submit"
+                    class="justify-self-start"
+                    [disabled]="workspace.busy()"
+                    i18n="@@cloudShareSend"
+                  >
+                    Send email
+                  </button>
+
+                  <ng-container
+                    [ngTemplateOutlet]="actionFeedback"
+                    [ngTemplateOutletContext]="{ $implicit: 'email' }"
+                  />
+                </form>
+              }
+            </div>
+          </div>
+
+          <section appUI="card" aria-labelledby="cloud-people">
+            <h3 appUI uiSize="sm" id="cloud-people" i18n="@@cloudShareReaders">People with access</h3>
+
+            <ul class="grid gap-3">
+              <li class="flex flex-wrap items-center justify-between gap-2">
+                <span appUI="text" i18n="@@cloudShareYou">You</span>
+
+                <span appUI="badge" i18n="@@cloudShareOwner">Owner</span>
+              </li>
+
+              @for (reader of sharing?.readers; track reader.id) {
+                <li class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="min-w-0 wrap-anywhere" [id]="'cloud-reader-' + reader.id">{{ reader.email }}</span>
+
+                  <button
+                    appUI
+                    type="button"
+                    variant="secondary"
+                    [disabled]="workspace.busy()"
+                    [attr.aria-describedby]="'cloud-reader-' + reader.id"
+                    (click)="workspace.removeReader(reader.id)"
+                    i18n="@@cloudShareRemove"
+                  >
+                    Remove access
+                  </button>
+                </li>
+              }
+            </ul>
+
+            @if (!sharing) {
+              @if (mode && workspace.busy()) {
+                <p appUI tone="muted" uiSize="sm" role="status" i18n="@@cloudShareReadersLoading">
+                  Loading reader access…
+                </p>
+              } @else {
+                <p appUI tone="muted" uiSize="sm" i18n="@@cloudShareReadersHelp">
+                  Choose a sharing method to see which readers have access.
+                </p>
+              }
+            } @else if (!sharing.readers.length) {
+              <p appUI tone="muted" uiSize="sm" i18n="@@cloudShareNoReaders">No readers have access yet.</p>
+            }
+
+            <ng-container [ngTemplateOutlet]="actionFeedback" [ngTemplateOutletContext]="{ $implicit: 'readers' }" />
+          </section>
+        </div>
+      </section>
     }
   }
-
-  @if (workspace.status()) {
-    <p role="status">{{ workspace.status() }}</p>
-  }
-
-  @if (workspace.error()) {
-    <p role="alert">{{ workspace.error() }}</p>
-  }
 </section>
+
+<ng-template #createWorkspace>
+  <button
+    appUI
+    type="button"
+    [disabled]="workspace.busy()"
+    (click)="workspace.createWorkspace()"
+    i18n="@@persistenceCreateWorkspace"
+  >
+    Create a test workspace
+  </button>
+</ng-template>
+
+<ng-template #actionFeedback let-area>
+  @let status = workspace.status();
+  @let error = workspace.actionError();
+
+  <p appUI uiSize="sm" role="status" [class.sr-only]="status?.area !== area">
+    @if (status && status.area === area) {
+      {{ status.message }}
+    }
+  </p>
+
+  @if (error && error.area === area) {
+    <div appUI="alert" tone="danger" role="alert">{{ error.message }}</div>
+  }
+</ng-template>

@@ -69,8 +69,8 @@
         popovertarget="workspace-account-popover"
         [attr.aria-expanded]="accountOpen()"
         [attr.aria-label]="accountMenu"
-        [attr.aria-describedby]="session.user()?.email ? 'workspace-account-identity' : null"
-        [attr.title]="sidebarCompact() ? accountMenu : null"
+        [attr.aria-describedby]="accountEmail() ? 'workspace-account-identity' : null"
+        [attr.title]="accountEmail() || (sidebarCompact() ? accountMenu : null)"
         [class.bg-zinc-200]="accountRouteActive()"
         [class.dark:bg-zinc-800]="accountRouteActive()"
         [class.w-full]="!sidebarCompact()"
@@ -81,10 +81,10 @@
 
         <span
           id="workspace-account-identity"
-          class="min-w-0 flex-1 truncate text-left"
+          class="min-w-0 flex-1 text-left wrap-anywhere"
           [class.sr-only]="sidebarCompact()"
         >
-          {{ session.user()?.email || accountMenu }}
+          {{ accountEmail() || accountMenu }}
         </span>
 
         @if (!sidebarCompact()) {
@@ -177,6 +177,8 @@
       </div>
     }
 
+    <app-consent-notice placement="inline" class="contents" />
+
     @if (session.full()) {
       @for (request of vaultPairings.pending(); track request.requestId) {
         <div appUI="alert" class="flex flex-wrap items-center justify-between gap-2">
@@ -210,8 +212,6 @@
       <a appUI routerLink="/auth/sign-in" i18n="@@authBackSignIn">Back to sign in</a>
     }
   </div>
-
-  <app-consent-notice class="block [--ui-consent-bottom:7rem]" />
 
   <nav appUI="navbar" aria-label="Primary navigation" i18n-aria-label="@@shellPrimary">
     @for (item of navbarItems; track item.path) {
@@ -322,13 +322,13 @@
     <details appUI appearance="subtle" class="group/account">
       <summary
         [attr.aria-label]="accountMenu"
-        [attr.aria-describedby]="session.user()?.email ? 'mobile-account-identity' : null"
+        [attr.aria-describedby]="accountEmail() ? 'mobile-account-identity' : null"
         class="flex list-none items-center gap-3 [&::-webkit-details-marker]:hidden"
       >
         <span class="flex min-w-0 flex-1 items-center gap-2">
           <ng-container [ngTemplateOutlet]="accountAvatar" />
 
-          <span id="mobile-account-identity" class="truncate">{{ session.user()?.email || accountMenu }}</span>
+          <span id="mobile-account-identity" class="min-w-0 wrap-anywhere">{{ accountEmail() || accountMenu }}</span>
         </span>
 
         <svg
@@ -369,8 +369,8 @@
 
 <ng-template #accountAvatar>
   <span appUI="avatar" uiSize="sm" shape="rounded" aria-hidden="true">
-    @if (accountGlyph()) {
-      {{ accountGlyph() }}
+    @if (accountInitials()) {
+      {{ accountInitials() }}
     } @else {
       <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M20 21v-2a7 7 0 0 0-14 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />

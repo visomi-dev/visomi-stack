@@ -83,7 +83,12 @@ export class ExampleWorkspace {
   readonly editor = new VaultNoteDraft(this.document, this.privateResource, this.syncStatus);
   readonly busy = this.busyState.asReadonly();
 
-  readonly editorReadOnly = computed(() => this.busy() || this.editor.readOnly());
+  // Keep the editor read-only between unlock and the queued backup check.
+  readonly editorReadOnly = computed(() => {
+    const checkQueued = this.watchCursor() === 0 && !this.privateResource.conflict() && this.editor.value() === null;
+
+    return this.busy() || this.editor.readOnly() || checkQueued;
+  });
   readonly available = computed(() => this.configured() && !this.navigation.active() && this.sameSession());
 
   readonly vault = this.privateResource.vault;
@@ -146,14 +151,10 @@ export class ExampleWorkspace {
   }
 
   editPrivateText(value: string): void {
-    if (this.backedSample && (!this.vaultReady() || this.editorReadOnly())) {
-      return;
-    }
-
-    if (this.backedSample) {
-      this.editor.edit(value, () => void this.saveDraft());
-    } else {
+    if (!this.backedSample) {
       this.privateDraft.set(value);
+    } else if (this.vaultReady() && !this.busy() && !this.editor.readOnly()) {
+      this.editor.edit(value, () => void this.saveDraft());
     }
   }
 
@@ -426,7 +427,7 @@ export class ExampleWorkspace {
 
     if (this.backedSample) {
       this.watchCursor.set(null);
-      this.syncStatus.show('idle');
+      this.syncStatus.reset();
     }
   }
 
@@ -474,14 +475,17 @@ export class ExampleWorkspace {
 
   private readonly clearSessionState = effect(() => {
     this.session.operationVersion();
+    const ready = this.vaultReady();
 
-    if (!this.vaultReady()) {
+    if (!ready) {
       this.editor.clear();
       this.privateDraft.set('');
 
       if (this.backedSample) {
-        this.syncStatus.show('idle');
+        this.syncStatus.reset();
       }
+    } else if (this.backedSample) {
+      this.syncStatus.setPending(this.privateResource.pending());
     }
 
     if (!this.sameSession()) {

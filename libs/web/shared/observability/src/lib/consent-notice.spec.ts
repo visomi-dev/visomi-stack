@@ -66,6 +66,22 @@ it('does not show feedback for a saved grant, cross-tab grant or blocked local a
   expect(vi.getTimerCount()).toBe(0);
 });
 
+it('closes the rejection feedback without changing the saved choice', () => {
+  const { consent, localStorage, notice, render } = fixture();
+
+  notice.dismiss();
+  expect(render).toHaveBeenLastCalledWith({ kind: 'choice', blocked: false, decided: false });
+
+  notice.choose(false);
+  expect(render).toHaveBeenLastCalledWith({ kind: 'choice', blocked: false, decided: true });
+
+  notice.dismiss();
+  expect(render).toHaveBeenLastCalledWith({ kind: 'hidden' });
+  expect(localStorage.setItem).toHaveBeenCalledExactlyOnceWith(browserConsentKey, 'reject');
+  expect(consent.permit()).toBeUndefined();
+  expect(vi.getTimerCount()).toBe(0);
+});
+
 it('uses the original grant time when the website loads the countdown after a click', () => {
   const { browser, consent, notice, render } = fixture();
 

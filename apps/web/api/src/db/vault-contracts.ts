@@ -5,6 +5,8 @@ import {
   exampleVaultPairingListSchema,
   approvedDeliverySchema,
   keyDomainSchema,
+  pairingCodeExchangeSchema,
+  pairingCodeMessageSchema,
   syncWriteSchema,
   syncReadSchema,
   syncPageSchema,
@@ -21,7 +23,7 @@ import {
   enrollmentRequestSchema,
   revokeDeviceSchema,
   rotateDevicesSchema,
-} from './devices';
+} from './device-schemas';
 
 const params = targetSchema.extend({ domain: z.string().regex(/^[a-z][a-z0-9-]{0,63}$/) });
 const path = '/tenants/:tenantId/scopes/:scopeId/domains/:domain';
@@ -71,6 +73,34 @@ export const vaultContracts = {
     summary: 'Read a currently pending Vault Example request',
     request: z.object({ params: targetSchema.extend({ id: z.uuid() }) }),
     responses: response(deviceProofSchema),
+  }),
+  cancelPairing: defineRoute({
+    ...base,
+    method: 'delete',
+    path: `${pairingPath}/:id`,
+    operationId: 'vault_pairing_cancel',
+    summary: 'Retire the current account’s active Vault Example request',
+    request: z.object({ params: targetSchema.extend({ id: z.uuid() }) }),
+    responses: response(z.strictObject({ cancelled: z.literal(true) })),
+  }),
+  readPairingCode: defineRoute({
+    ...base,
+    security: cookieSecurity,
+    method: 'get',
+    path: `${pairingPath}/:id/code`,
+    operationId: 'vault_pairing_code_read',
+    summary: 'Read the public messages for a pending pairing',
+    request: z.object({ params: targetSchema.extend({ id: z.uuid() }) }),
+    responses: response(pairingCodeExchangeSchema),
+  }),
+  writePairingCode: defineRoute({
+    ...base,
+    method: 'post',
+    path: `${pairingPath}/:id/code`,
+    operationId: 'vault_pairing_code_write',
+    summary: 'Store the next public pairing message once',
+    request: z.object({ params: targetSchema.extend({ id: z.uuid() }), body: pairingCodeMessageSchema }),
+    responses: response(z.strictObject({ accepted: z.literal(true) })),
   }),
   request: defineRoute({
     ...base,

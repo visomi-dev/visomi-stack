@@ -1,19 +1,15 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { DOCUMENT, Location } from '@angular/common';
-import { DestroyRef, Service, effect, inject, signal } from '@angular/core';
+import { DestroyRef, Service, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   VaultError,
-  approvedDeliverySchema,
   deviceChallengeSchema,
-  type SigningPin,
   deviceProofSchema,
   keyDomainId,
-  signingPinSchema,
   type DeviceProof,
   type WrappingContext,
 } from '@visomi-stack/shared-db';
-import { WebCryptoDevices, encodeBytes, isVaultPin } from '@visomi-stack/web-frontend-db';
+import { WebCryptoDevices, isVaultPin } from '@visomi-stack/web-frontend-db';
 
 import { AuthHttp } from '../auth/shared/http';
 import { Session } from '../auth/session/session';
@@ -24,11 +20,21 @@ import { UnlockCapabilities } from '../shared/vault/unlock-capabilities';
 import { VaultSession } from '../shared/vault/vault-session';
 import { vaultMessage } from '../shared/vault/vault-messages';
 
-import { installApprovedKey } from './example-vault-enrollment';
+import { ExamplePairingEnrollment } from './example-pairing-enrollment';
 import { ExamplePairingDraft, openPairingDevice } from './example-pairing-draft';
-import { approvalAction, deliveryRecipient, recoverApproval, readRecovery } from './example-vault-recovery';
-import { exampleLocalKey, rosterSchema, type ExampleTarget } from './example-contracts';
-import { watchVaultPairing } from './example-vault-pairing-watch';
+import { ApproverPairingCode } from './example-pairing-code';
+import { ExamplePairingExchange } from './example-pairing-exchange';
+import { readRecovery } from './example-vault-recovery';
+import { examplePrivatePath, type ExampleTarget, type rosterSchema } from './example-contracts';
+
+type PendingPairing = {
+  context: WrappingContext;
+  custody?: Awaited<ReturnType<VaultSession['device']>>;
+  proof: DeviceProof;
+  fingerprint: string;
+  token: string;
+  reviewLink?: string;
+};
 
 @Service({ autoProvided: false })
 export class ExampleVaultPairing {
@@ -43,18 +49,21 @@ export class ExampleVaultPairing {
   private readonly realtime = inject(BrowserRealtimeSession, { optional: true });
 
   private readonly lifetime = new AbortController();
+  private readonly exchange = new ExamplePairingExchange(
+    this.view,
+    (proof, signal, message) =>
+      this.api.vault(`${this.path()}/devices/pairing/${proof.requestId}/code`, message, signal),
+    () => !!this.realtime?.connected(),
+    (error) => this.drafts.retired(error),
+    // The authenticated layout owns this request so retiring an attempt can outlive its view.
+    (proof) => this.api.vault(`${this.path()}/devices/pairing/${proof.requestId}`, undefined, undefined, 'DELETE'),
+  );
 
-  readonly pending = signal<{
-    context: WrappingContext;
-    custody?: Awaited<ReturnType<VaultSession['device']>>;
-    proof: DeviceProof;
-    fingerprint: string;
-    token: string;
-    reviewLink?: string;
-  } | null>(null);
+  readonly pending = signal<PendingPairing | null>(null);
 
   private readonly cleanup = inject(DestroyRef).onDestroy(() => {
     this.lifetime.abort();
+    this.exchange.clearRecipient();
     const pending = this.pending();
 
     if (pending) {
@@ -62,7 +71,9 @@ export class ExampleVaultPairing {
     }
   });
 
+  private reviewSignal?: AbortSignal;
   private drafts!: ExamplePairingDraft;
+  private enrollment!: ExamplePairingEnrollment;
   private target!: ExampleTarget;
   private rpId!: string;
   private backed = false;
@@ -78,40 +89,67 @@ export class ExampleVaultPairing {
   readonly paired = signal(false);
   readonly approverFingerprint = signal('');
   readonly reviewProof = signal<DeviceProof | null>(null);
-  readonly reviewUnavailable = signal(false);
-  readonly approval = signal<'waiting' | 'approved' | 'expired'>('waiting');
+  readonly reviewFailure = signal<'unavailable' | 'ended' | null>(null);
   readonly pin = signal('');
   readonly confirmPin = signal('');
+
+  readonly approverReady = computed(() => {
+    const existing = this.existing();
+
+    return !!existing && this.vault.canResume(existing);
+  });
+  readonly approval = computed(() => this.exchange.approval());
+  readonly code = computed(() => this.exchange.code());
+
+  readonly recipientEnd = this.exchange.recipientEnd;
 
   async initialize(target: ExampleTarget, rpId: string, backed: boolean): Promise<void> {
     this.target = target;
     this.drafts = new ExamplePairingDraft(target, this.view, this.router, this.location, this.api);
     this.rpId = rpId;
     this.backed = backed;
+    this.enrollment = new ExamplePairingEnrollment({
+      api: this.api,
+      database: this.database,
+      vault: this.vault,
+      crypto: this.view.crypto,
+      rpId,
+      path: this.path(),
+      backed,
+      target,
+    });
 
     await this.run(async (signal, ownerId) => {
-      const registry = await this.roster(ownerId, signal);
-      const existing = await this.registeredBinding(registry);
+      const registry = await this.enrollment.roster(ownerId, signal);
+      const existing = await this.enrollment.registeredBinding(registry);
 
       signal.throwIfAborted();
       this.existing.set(existing ?? null);
 
       if (this.backed && !existing) {
-        const pending = await this.drafts.resume(ownerId, registry, signal);
+        const pending = await this.drafts.resume(ownerId, registry.key, signal);
 
         signal.throwIfAborted();
+
+        if (pending) {
+          this.exchange.resume(pending.authenticatedSigner, pending.proof);
+        }
+
         this.pending.set(pending);
       }
 
       this.ready.set(true);
 
-      if (!existing || !this.vault.canResume(existing)) {
+      if (backed || !existing || !this.vault.canResume(existing)) {
         return;
       }
 
       const custody = await this.vault.device(existing, this.rpId);
       const keys = await custody.publicKeys();
-      const fingerprint = await this.digest({ deviceId: existing.deviceId, signing: keys.signing });
+      const fingerprint = await this.enrollment.signerFingerprint({
+        deviceId: existing.deviceId,
+        signing: keys.signing,
+      });
 
       signal.throwIfAborted();
       this.approverFingerprint.set(fingerprint);
@@ -119,8 +157,9 @@ export class ExampleVaultPairing {
   }
 
   async loadReview(requestId: string | undefined, signal: AbortSignal): Promise<void> {
+    this.reviewSignal = signal;
     this.reviewProof.set(null);
-    this.reviewUnavailable.set(false);
+    this.reviewFailure.set(null);
 
     if (!requestId) {
       return;
@@ -129,16 +168,22 @@ export class ExampleVaultPairing {
     try {
       const raw = await this.api.vault(`${this.path()}/devices/pairing/${requestId}`, undefined, signal);
       const proof = deviceProofSchema.parse(raw);
+      const verified = await new WebCryptoDevices(this.view.crypto).verify(proof);
 
-      if (proof.requestId !== requestId) {
+      if (proof.requestId !== requestId || !verified) {
         throw new VaultError('corrupt');
       }
 
       signal.throwIfAborted();
-      this.reviewProof.set(proof);
-    } catch {
+
+      if (this.exchange.attempted(requestId) || Date.parse(proof.expiresAt) <= Date.now()) {
+        this.reviewFailure.set('ended');
+      } else {
+        this.reviewProof.set(proof);
+      }
+    } catch (error) {
       if (!signal.aborted) {
-        this.reviewUnavailable.set(true);
+        this.reviewFailure.set(this.drafts.retired(error) ? 'ended' : 'unavailable');
       }
     }
   }
@@ -156,8 +201,8 @@ export class ExampleVaultPairing {
           throw new VaultError('unavailable');
         }
 
-        const registry = await this.roster(ownerId, signal);
-        const existing = await this.registeredBinding(registry);
+        const registry = await this.enrollment.roster(ownerId, signal);
+        const existing = await this.enrollment.registeredBinding(registry);
 
         if (existing) {
           throw new VaultError('revision-conflict');
@@ -189,7 +234,7 @@ export class ExampleVaultPairing {
         );
         let proof = draft?.context.deviceId === context.deviceId ? draft.proof : undefined;
 
-        if (!proof || (!enrolled && Date.parse(proof.expiresAt) <= Date.now())) {
+        if (!proof || (this.backed && !authority) || (!enrolled && Date.parse(proof.expiresAt) <= Date.now())) {
           const raw = await this.api.vault(
             this.path() + '/devices/request',
             { deviceId: context.deviceId, keys },
@@ -197,7 +242,10 @@ export class ExampleVaultPairing {
           );
           const challenge = deviceChallengeSchema.parse(raw);
 
-          if (keyDomainId(ownerId, challenge.key) !== keyDomainId(ownerId, registry.key)) {
+          if (
+            keyDomainId(ownerId, challenge.key) !== keyDomainId(ownerId, registry.key) ||
+            (this.backed && (challenge.ownerId !== ownerId || challenge.deviceId !== context.deviceId))
+          ) {
             throw new VaultError('corrupt');
           }
 
@@ -207,49 +255,41 @@ export class ExampleVaultPairing {
         }
 
         const fingerprint = await new WebCryptoDevices(this.view.crypto).fingerprint(proof);
-        let reviewLink: string | undefined;
 
         if (authority) {
           this.drafts.save(context, { proof, recovering: true });
 
-          const signer = await recoverApproval(
-            this.api,
-            this.path(),
-            authority,
-            proof,
-            registry.epoch,
-            enrolled,
-            signal,
-          ).catch((error: unknown) => {
-            if (
-              error instanceof HttpErrorResponse &&
-              ['device_state_conflict', 'device_challenge_invalid'].includes(error.error?.error)
-            ) {
-              this.drafts.save(context);
-            }
+          const signer = await this.enrollment.recover(authority, proof, registry.epoch, enrolled, signal, () =>
+            this.drafts.save(context),
+          );
 
-            throw error;
-          });
-
-          await this.installRecipient(context, proof, fingerprint, signer, signal, supplied);
+          await this.enrollment.install(context, proof, fingerprint, signer, signal, { pin: supplied });
 
           this.completed(ownerId);
 
           return;
         }
 
+        signal.throwIfAborted();
+        this.exchange.approval.set('waiting');
+        const pending = { context, custody, proof, fingerprint, token: JSON.stringify(proof) };
+
         if (this.backed) {
-          // Persist only public request metadata; private identities stay in encrypted local custody.
           this.drafts.save(context, { proof });
 
-          await this.drafts.publish(context, proof, signal);
+          try {
+            await this.drafts.publish(context, proof, signal);
 
-          reviewLink = this.drafts.reviewLink(proof);
+            await this.exchange.startRecipient(proof, signal, supplied);
+          } catch {
+            this.exchange.endRecipient(Date.parse(proof.expiresAt) <= Date.now() ? 'expired' : 'unconfirmed');
+          }
+
+          signal.throwIfAborted();
+          this.pending.set({ ...pending, reviewLink: this.drafts.reviewLink(proof) });
+        } else {
+          this.pending.set(pending);
         }
-
-        signal.throwIfAborted();
-        this.approval.set('waiting');
-        this.pending.set({ context, custody, proof, fingerprint, token: JSON.stringify(proof), reviewLink });
       }, true);
     } finally {
       supplied?.fill(0);
@@ -260,20 +300,12 @@ export class ExampleVaultPairing {
     return this.drafts.dedicated();
   }
 
-  async copyReviewLink(link: string): Promise<void> {
-    try {
-      await this.view.navigator.clipboard.writeText(link);
-
-      this.message.set($localize`:@@vaultPairingLinkCopied:Review link copied.`);
-    } catch {
-      this.message.set($localize`:@@vaultPairingLinkCopyFailed:Select and copy the review link below.`);
-    }
-  }
-
-  resetExpired(): void {
+  restartRequest(): void {
     const pending = this.pending();
 
-    if (pending && this.approval() === 'expired') {
+    if (pending && this.recipientEnd()) {
+      this.exchange.clearRecipient();
+      this.exchange.authenticatedSigner = undefined;
       this.vault.lockContext(pending.context);
 
       if (this.backed) {
@@ -281,82 +313,64 @@ export class ExampleVaultPairing {
       }
 
       this.pending.set(null);
-      this.approval.set('waiting');
+      this.exchange.approval.set('waiting');
     }
   }
 
-  approveReview(fingerprint: string): Promise<void> {
-    const proof = this.reviewProof();
+  cancelRequest(): void {
+    this.exchange.endRecipient('cancelled');
+  }
 
-    return proof ? this.approve(JSON.stringify(proof), fingerprint) : Promise.resolve();
+  approveReview(value: string): Promise<void> {
+    const proof = this.reviewProof();
+    const reviewSignal = this.reviewSignal;
+    const code = value.replace(/ /g, '');
+
+    if (!this.backed || !proof || !reviewSignal || this.busy() || !/^[0-9]{8}$/.test(code)) {
+      return Promise.resolve();
+    }
+
+    const attempt = new ApproverPairingCode(code);
+
+    return this.run(async (signal, ownerId) => {
+      const deadline = AbortSignal.timeout(Math.min(300_000, Math.max(0, Date.parse(proof.expiresAt) - Date.now())));
+      const active = AbortSignal.any([signal, reviewSignal, deadline]);
+      const clear = () => attempt.clear();
+
+      active.addEventListener('abort', clear, { once: true });
+
+      try {
+        await this.approveProof(proof, ownerId, active, attempt);
+      } catch {
+        if (!reviewSignal.aborted) {
+          this.reviewProof.set(null);
+          this.reviewFailure.set('ended');
+        }
+      } finally {
+        active.removeEventListener('abort', clear);
+        clear();
+      }
+    });
   }
 
   approve(token: string, verifiedFingerprint: string): Promise<void> {
+    if (this.backed) {
+      return Promise.resolve();
+    }
+
     return this.run(async (signal, ownerId) => {
-      const existing = this.existing();
-
-      if (!existing || !this.vault.canResume(existing) || token.length > 4096) {
+      if (token.length > 4096) {
         throw new VaultError('locked');
       }
 
-      const registry = await this.roster(ownerId, signal);
-      const proof = deviceProofSchema.parse(JSON.parse(token));
-      const fingerprint = await new WebCryptoDevices(this.view.crypto).fingerprint(proof);
-
-      if (this.backed && Date.parse(proof.expiresAt) <= Date.now()) {
-        this.reviewProof.set(null);
-        this.reviewUnavailable.set(true);
-
-        return;
-      }
-
-      if (fingerprint !== verifiedFingerprint.trim()) {
-        this.fingerprintMismatch();
-
-        return;
-      }
-
-      if (
-        proof.ownerId !== ownerId ||
-        proof.deviceId === existing.deviceId ||
-        Date.parse(proof.expiresAt) <= Date.now() ||
-        keyDomainId(ownerId, proof.key) !== keyDomainId(ownerId, registry.key) ||
-        !this.vault.resume(existing)
-      ) {
-        throw new VaultError('corrupt');
-      }
-
-      const custody = await this.vault.device(existing, this.rpId);
-      const pin = this.takePin(existing.method === 'pin-argon2id');
-
-      if (pin && !pin.length) {
-        return;
-      }
-
-      const delivery = await this.vault
-        .deliver(existing, deliveryRecipient(proof, fingerprint), pin)
-        .finally(() => pin?.fill(0));
-      const body = { proof, delivery };
-      const action = await approvalAction(this.view.crypto, registry.key, existing.deviceId, registry.epoch, body);
-      const authorization = await custody.sign(action);
-
-      signal.throwIfAborted();
-
-      if (!this.vault.canResume(existing)) {
-        throw new VaultError('locked');
-      }
-
-      await this.api.vault(`${this.path()}/devices/approve`, { ...body, authorization }, signal);
-
-      this.reviewProof.set(null);
-      this.message.set($localize`:@@vaultDevicesApproved:Device approved. Finish on the other device.`);
+      await this.approveProof(deviceProofSchema.parse(JSON.parse(token)), ownerId, signal, verifiedFingerprint);
     });
   }
 
   async finish(verifiedFingerprint: string): Promise<void> {
     const pending = this.pending();
 
-    if (!pending || (pending.reviewLink && this.approval() !== 'approved')) {
+    if (this.backed || !pending) {
       return;
     }
 
@@ -369,20 +383,14 @@ export class ExampleVaultPairing {
 
     try {
       await this.run(async (signal, ownerId) => {
-        const registry = await this.roster(ownerId, signal);
-        const raw = await this.api.vault(
-          `${this.path()}/devices/${pending.context.deviceId}/delivery`,
-          undefined,
+        const approval = await this.enrollment.readManualApproval(
+          pending.context,
+          ownerId,
           signal,
+          verifiedFingerprint,
         );
-        const delivery = approvedDeliverySchema.parse(raw);
-        const candidate = registry.devices.find(
-          ({ id, revokedAt }) => id === delivery.authorization.deviceId && !revokedAt,
-        );
-        const signer = signingPinSchema.parse({ deviceId: candidate?.id, signing: candidate?.signing });
-        const fingerprint = await this.digest(signer);
 
-        if (fingerprint !== verifiedFingerprint.trim()) {
+        if (!approval) {
           this.fingerprintMismatch();
 
           return;
@@ -392,7 +400,10 @@ export class ExampleVaultPairing {
           pending.custody?.lock();
         }
 
-        await this.installRecipient(pending.context, pending.proof, pending.fingerprint, signer, signal, pin, delivery);
+        await this.enrollment.install(pending.context, pending.proof, pending.fingerprint, approval.signer, signal, {
+          pin,
+          approved: approval.delivery,
+        });
 
         this.completed(ownerId);
       });
@@ -401,7 +412,84 @@ export class ExampleVaultPairing {
     }
   }
 
+  async finishBacked(registry?: ReturnType<typeof rosterSchema.parse>): Promise<void> {
+    const pending = this.pending();
+    const signer = this.exchange.authenticatedSigner;
+
+    if (!pending?.reviewLink || !signer || this.approval() !== 'approved' || this.busy()) {
+      return;
+    }
+
+    const usePin = pending.context.method === 'pin-argon2id';
+    const provisionedPin = this.exchange.takePin();
+    const pin = provisionedPin ?? this.takePin(usePin);
+
+    if (usePin && !pin?.length) {
+      return;
+    }
+
+    try {
+      await this.run(async (signal, ownerId) => {
+        const clearPin = () => pin?.fill(0);
+
+        signal.addEventListener('abort', clearPin, { once: true });
+
+        try {
+          await this.enrollment.install(pending.context, pending.proof, pending.fingerprint, signer, signal, {
+            pin,
+            verifyPin: !provisionedPin,
+            registry,
+          });
+
+          this.completed(ownerId);
+        } finally {
+          signal.removeEventListener('abort', clearPin);
+        }
+      });
+    } finally {
+      pin?.fill(0);
+    }
+  }
+
+  private async approveProof(
+    proof: DeviceProof,
+    ownerId: string,
+    signal: AbortSignal,
+    verification: string | ApproverPairingCode,
+  ): Promise<void> {
+    const existing = this.existing();
+
+    if (!existing) {
+      throw new VaultError('locked');
+    }
+
+    const result = await this.enrollment.approve(
+      proof,
+      ownerId,
+      signal,
+      existing,
+      typeof verification === 'string'
+        ? verification
+        : (signer) => this.exchange.authenticateRecipient(proof, signer, verification, signal),
+      () => this.takePin(existing.method === 'pin-argon2id'),
+    );
+
+    if (result === 'mismatch') {
+      this.fingerprintMismatch();
+    } else if (result === 'approved') {
+      this.reviewProof.set(null);
+      this.message.set(
+        this.backed
+          ? $localize`:@@vaultPairingCodeApproved:Device approved. The new device can finish linking.`
+          : $localize`:@@vaultDevicesApproved:Device approved. Finish on the other device.`,
+      );
+    }
+  }
+
   private completed(ownerId: string): void {
+    this.exchange.clearRecipient();
+    this.exchange.authenticatedSigner = undefined;
+
     if (this.backed) {
       this.view.localStorage.removeItem(this.drafts.draftKey(ownerId));
     }
@@ -412,54 +500,6 @@ export class ExampleVaultPairing {
     this.message.set($localize`:@@vaultDevicesPaired:Device paired. You can open the test private resource here.`);
   }
 
-  private async installRecipient(
-    context: WrappingContext,
-    proof: DeviceProof,
-    fingerprint: string,
-    signer: SigningPin,
-    signal: AbortSignal,
-    pin?: Uint8Array,
-    approved?: ReturnType<typeof approvedDeliverySchema.parse>,
-  ) {
-    let delivery = approved;
-
-    if (!delivery) {
-      const raw = await this.api.vault(this.path() + '/devices/' + context.deviceId + '/delivery', undefined, signal);
-
-      delivery = approvedDeliverySchema.parse(raw);
-    }
-
-    if (delivery.witness.kind !== 'enrollment' || delivery.witness.history) {
-      throw new VaultError('corrupt');
-    }
-
-    const custody = await this.vault.device(context, this.rpId, false, pin);
-    const key = await custody.open(deliveryRecipient(proof, fingerprint), delivery, signer);
-
-    try {
-      signal.throwIfAborted();
-
-      await installApprovedKey({
-        database: this.database,
-        vault: this.vault,
-        context,
-        signal,
-        backed: this.backed,
-        roster: () => this.roster(context.ownerId, signal),
-        install: () => {
-          if (!custody.ready) {
-            throw new VaultError('locked');
-          }
-
-          return this.vault.install(context, this.rpId, key, pin);
-        },
-        epoch: delivery.authorization.epoch + 1,
-      });
-    } finally {
-      key.fill(0);
-    }
-  }
-
   private fingerprintMismatch(): void {
     this.message.set(
       $localize`:@@vaultDevicesFingerprintMismatch:The fingerprints don’t match. Check the fingerprint on the other device.`,
@@ -467,47 +507,7 @@ export class ExampleVaultPairing {
   }
 
   private path(): string {
-    const { tenantId, scopeId } = this.target;
-
-    return `/tenants/${tenantId}/scopes/${scopeId}/domains/private-resources`;
-  }
-
-  private async roster(ownerId: string, signal: AbortSignal) {
-    const raw = await this.api.vault(`${this.path()}/devices`, undefined, signal);
-    const registry = rosterSchema.parse(raw);
-    const expected = { ...exampleLocalKey(this.target), generation: 1 };
-
-    if (
-      Boolean(registry.objectBackup) !== this.backed ||
-      registry.phase !== 'ready' ||
-      keyDomainId(ownerId, registry.key) !== keyDomainId(ownerId, expected)
-    ) {
-      throw new VaultError('recovery-required');
-    }
-
-    return registry;
-  }
-
-  private async registeredBinding(registry: ReturnType<typeof rosterSchema.parse>) {
-    const local = await this.vault.localBinding(registry.key);
-
-    if (!local || !this.backed) {
-      return local;
-    }
-
-    const device = registry.devices.find(({ id }) => id === local.deviceId);
-
-    if (device && (device.revokedAt || device.ownerId !== local.ownerId)) {
-      throw new VaultError('recovery-required');
-    }
-
-    return device ? local : undefined;
-  }
-
-  private async digest(value: unknown): Promise<string> {
-    const bytes = await this.view.crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(value)));
-
-    return encodeBytes(new Uint8Array(bytes));
+    return examplePrivatePath(this.target);
   }
 
   private takePin(usePin: boolean, confirm = false): Uint8Array | undefined {
@@ -539,7 +539,13 @@ export class ExampleVaultPairing {
       return;
     }
 
-    const signal = AbortSignal.any([this.lifetime.signal, this.session.cancellation()]);
+    const signals = [this.lifetime.signal, this.session.cancellation()];
+
+    if (this.backed) {
+      signals.push(this.vault.cancellation());
+    }
+
+    const signal = AbortSignal.any(signals);
 
     this.busy.set(true);
     this.message.set('');
@@ -563,50 +569,42 @@ export class ExampleVaultPairing {
     }
   }
 
-  private readonly watchApproval = effect((cleanup) => {
-    const pending = this.pending();
-    const full = this.session.full();
-
+  private readonly pairingHints = effect(() => {
     this.realtime?.vaultPairingChanges();
     this.realtime?.connected();
 
-    if (!pending?.reviewLink || !full || this.approval() !== 'waiting') {
+    untracked(() => this.exchange.wake());
+  });
+
+  private readonly watchApproval = effect((cleanup) => {
+    const pending = this.pending();
+
+    if (!pending?.reviewLink || !this.session.full() || this.approval() !== 'waiting') {
       return;
     }
 
     const controller = new AbortController();
-    let unavailable = false;
-    const stop = watchVaultPairing(
-      this.view,
+    const signal = AbortSignal.any([controller.signal, this.lifetime.signal, this.session.cancellation()]);
+    const { proof, context } = pending;
+    const stop = this.exchange.watchRecipient(
+      proof,
+      signal,
+      (signer) =>
+        this.drafts.save(context, {
+          proof,
+          published: true,
+          verifiedPairing: signer && { requestId: proof.requestId, signer, verified: true },
+        }),
       async () => {
-        try {
-          const available = await this.drafts.available(pending.proof, controller.signal);
+        const roster = await this.enrollment.roster(proof.ownerId, signal);
 
-          if (available) {
-            unavailable = false;
-
-            return;
-          }
-
-          const roster = await this.roster(pending.proof.ownerId, controller.signal);
-
-          if (controller.signal.aborted) {
-            return;
-          }
-
-          if (roster.devices.some(({ id, revokedAt }) => id === pending.context.deviceId && !revokedAt)) {
-            this.approval.set('approved');
-          } else if (unavailable || Date.parse(pending.proof.expiresAt) <= Date.now()) {
-            this.approval.set('expired');
-          } else {
-            // A concurrent approval may be between challenge consumption and committing its delivery.
-            unavailable = true;
-          }
-        } catch {
-          // Retry the authenticated read on reconnect or the next poll.
+        return roster.devices.some(({ id, revokedAt }) => id === context.deviceId && !revokedAt) ? roster : false;
+      },
+      (auto, registry) => {
+        if (auto && (context.method !== 'pin-argon2id' || this.exchange.hasPin())) {
+          void this.finishBacked(registry);
         }
       },
-      () => !!this.realtime?.connected(),
     );
 
     cleanup(() => {

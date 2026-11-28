@@ -1,0 +1,134 @@
+diff --git a/dist/middleware.js b/dist/middleware.js
+index fb4ecb2f4848b34a70cc9090084f7254975f40d5..9a68a6e217c0a5329ef64b4ed1329e4d180bce51 100644
+--- a/dist/middleware.js
++++ b/dist/middleware.js
+@@ -27,8 +27,8 @@ export default function createMiddleware(app, options) {
+ 		try {
+ 			await handler(req, res, next, locals);
+ 		} catch (err) {
+-			logger.error(`Could not render ${req.url}`);
+-			console.error(err);
++			if (next) return next(err);
++			logger.error("site_request_failed");
+ 			if (!res.headersSent) {
+ 				res.writeHead(500, `Server error`);
+ 				res.end();
+diff --git a/dist/serve-app.js b/dist/serve-app.js
+index 0c1a427d14f0092ca112a02d6e69c57371f4275d..a5982940ec1f2f7c14e82eb8b8027c429603674c 100644
+--- a/dist/serve-app.js
++++ b/dist/serve-app.js
+@@ -1,4 +1,3 @@
+-import { AsyncLocalStorage } from "node:async_hooks";
+ import { createReadStream } from "node:fs";
+ import path from "node:path";
+ import { Readable } from "node:stream";
+@@ -41,20 +40,7 @@ async function readErrorPageFromDisk(client, status) {
+ */
+ export function createAppHandler(app, options) {
+ 	const logger = app.adapterLogger;
+-	const requestContext = new AsyncLocalStorage();
+ 	const abortedRequestErrors = new WeakSet();
+-	process.on("unhandledRejection", (reason) => {
+-		const requestUrl = requestContext.getStore();
+-		if (!requestUrl) {
+-			const error = reason instanceof Error ? reason.stack || reason.message : String(reason);
+-			logger.error(`Unhandled rejection outside request context\n${error}`);
+-			process.exitCode = 1;
+-			return;
+-		}
+-		if (reason instanceof Error && abortedRequestErrors.has(reason)) return;
+-		const error = reason instanceof Error ? reason.stack || reason.message : String(reason);
+-		logger.error(`Unhandled rejection while rendering ${requestUrl}\n${error}`);
+-	});
+ 	const client = resolveClientDir(options);
+ 	// Read prerendered error pages directly from disk instead of fetching over HTTP.
+ 	// This avoids SSRF risks and is more efficient.
+@@ -74,10 +60,7 @@ export function createAppHandler(app, options) {
+ 	// Use the configured body size limit. A value of 0 or Infinity disables the limit.
+ 	const effectiveBodySizeLimit = options.bodySizeLimit === 0 || options.bodySizeLimit === Number.POSITIVE_INFINITY ? undefined : options.bodySizeLimit;
+ 	return async (req, res, next, locals) => {
+-		// Tag the exact error object emitted when this request's socket dies so
+-		// the unhandledRejection listener can tell client disconnects apart from
+-		// genuine errors that happen to carry the same code (e.g. ECONNRESET
+-		// from an outbound fetch in user code).
++		// Distinguish client disconnects from unrelated errors with the same code.
+ 		req.once("error", (error) => {
+ 			if (error.code === "ECONNRESET") abortedRequestErrors.add(error);
+ 		});
+@@ -89,8 +72,8 @@ export function createAppHandler(app, options) {
+ 				port: options.port
+ 			});
+ 		} catch (err) {
+-			logger.error(`Could not render ${req.url}`);
+-			console.error(err);
++			if (next) return next(err);
++			logger.error("site_request_failed");
+ 			res.statusCode = 500;
+ 			res.end("Internal Server Error");
+ 			return;
+@@ -104,39 +87,32 @@ export function createAppHandler(app, options) {
+ 				routeData = app.match(request);
+ 			}
+ 			if (routeData) {
+-				await requestContext.run(request.url, async () => {
+-					const response = await app.render(request, {
+-						addCookieHeader: true,
+-						locals,
+-						routeData,
+-						prerenderedErrorPageFetch
+-					});
+-					await writeResponse(response, res);
++				const response = await app.render(request, {
++					addCookieHeader: true,
++					locals,
++					routeData,
++					prerenderedErrorPageFetch
+ 				});
++				await writeResponse(response, res);
+ 			} else if (next) {
+ 				// Since we're not calling `writeResponse()`, clean up the AbortController and socket listeners
+ 				const cleanup = getAbortControllerCleanup(req);
+ 				if (cleanup) cleanup();
+ 				return next();
+ 			} else {
+-				await requestContext.run(request.url, async () => {
+-					const response = await app.render(request, {
+-						addCookieHeader: true,
+-						prerenderedErrorPageFetch
+-					});
+-					await writeResponse(response, res);
++				const response = await app.render(request, {
++					addCookieHeader: true,
++					prerenderedErrorPageFetch
+ 				});
++				await writeResponse(response, res);
+ 			}
+ 		} catch (err) {
+ 			// Client disconnected mid-request: the exact error object is tagged
+ 			// in `abortedRequestErrors`, and there is nobody left to respond to.
+ 			if (err instanceof Error && abortedRequestErrors.has(err)) return;
+-			// Any other failure is a genuine request error. Log it with the
+-			// request URL, then finish the response: a 500 while the headers are
+-			// still pending, or terminate the connection once a response has
+-			// already started.
+-			const error = err instanceof Error ? err.stack || err.message : String(err);
+-			logger.error(`Could not render ${request.url}\n${error}`);
++			getAbortControllerCleanup(req)?.();
++			if (next) return next(err);
++			logger.error("site_request_failed");
+ 			if (!res.headersSent) {
+ 				res.statusCode = 500;
+ 				res.end("Internal Server Error");
+diff --git a/dist/server.js b/dist/server.js
+index f818b334fc5d679678b747bd1bc536249d0bb37a..18a2990e503487c2e92e390821f85d8f39cf9969 100644
+--- a/dist/server.js
++++ b/dist/server.js
+@@ -6,6 +6,8 @@ import { readHeadersJson } from "./shared.js";
+ import _startServer, { createStandaloneHandler } from "./standalone.js";
+ setGetEnv((key) => process.env[key]);
+ const app = createApp({ streaming: !options.experimentalDisableStreaming });
++// Resolve the configured destination before handling any requests.
++await app.getLogger();
+ const headersMap = options.staticHeaders ? readHeadersJson(app.manifest.outDir) : undefined;
+ export { options };
+ export const handler = options.mode === "middleware" ? createMiddleware(app, options) : createStandaloneHandler(app, options, headersMap);

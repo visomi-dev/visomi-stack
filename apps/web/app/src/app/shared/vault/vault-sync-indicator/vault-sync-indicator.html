@@ -1,6 +1,54 @@
-<span role="status" class="sr-only">{{ label() }}</span>
+@let phase = sync.displayPhase();
 
-@if (sync.phase() === 'retry') {
+<span role="status" [attr.aria-label]="label() || null">
+  @if (label(); as status) {
+    <span
+      appUI="badge"
+      class="max-sm:sr-only"
+      [tone]="phase === 'retry' ? 'warning' : phase === 'synced' ? 'success' : 'neutral'"
+    >
+      {{ status }}
+    </span>
+
+    @if (phase !== 'retry') {
+      <svg
+        class="size-5 sm:hidden"
+        [class.motion-safe:animate-spin]="phase === 'syncing'"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        aria-hidden="true"
+      >
+        @switch (phase) {
+          @case ('syncing') {
+            <path d="M20 7v5h-5m-11 5v-5h5m-4.5-2a8 8 0 0 1 13-4L20 12M4 12l2.5 6a8 8 0 0 0 13-4" />
+          }
+          @case ('synced') {
+            <path d="m5 12 5 5L20 7" />
+          }
+          @default {
+            <path d="M12 8v4l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          }
+        }
+      </svg>
+    }
+  }
+</span>
+
+@if (phase !== 'idle') {
+  @if (sync.lastSyncedAt(); as syncedAt) {
+    <span class="inline-flex flex-wrap items-baseline gap-x-1 text-xs text-zinc-600 max-sm:sr-only dark:text-zinc-400">
+      <span i18n="@@vaultSyncLastSuccess">Last synced</span>
+
+      <time [attr.datetime]="syncedAt | date: 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'' : 'UTC'">
+        {{ syncedAt | date: 'shortTime' }}
+      </time>
+    </span>
+  }
+}
+
+@if (phase === 'retry') {
   <button
     appUI
     type="button"
@@ -9,28 +57,10 @@
     class="size-9"
     aria-label="Retry Vault sync"
     i18n-aria-label="@@vaultSyncRetry"
-    [attr.title]="label()"
     (click)="sync.retry()"
   >
     <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
       <path d="M12 8v5m0 3h.01M12 3l10 18H2z" />
     </svg>
   </button>
-} @else if (label()) {
-  <span [attr.title]="label()" aria-hidden="true">
-    <svg
-      class="size-5"
-      [class.motion-safe:animate-spin]="sync.phase() === 'syncing'"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.5"
-    >
-      @if (sync.phase() === 'syncing') {
-        <path d="M20 7v5h-5m-11 5v-5h5m-4.5-2a8 8 0 0 1 13-4L20 12M4 12l2.5 6a8 8 0 0 0 13-4" />
-      } @else {
-        <path d="m5 12 5 5L20 7" />
-      }
-    </svg>
-  </span>
 }

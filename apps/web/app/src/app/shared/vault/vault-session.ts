@@ -108,6 +108,10 @@ export class VaultSession {
     return this.isOpen(context) && this.devices.get(custodyId(context))?.ready === true;
   }
 
+  cancellation(): AbortSignal {
+    return this.locked.signal;
+  }
+
   resume(context: WrappingContext): boolean {
     if (!this.isOpen(context)) {
       return false;

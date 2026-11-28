@@ -1,4 +1,4 @@
-<section appUI="card" class="space-y-3" aria-labelledby="vault-devices-title" [attr.aria-busy]="pairing.busy()">
+<section appUI="card" aria-labelledby="vault-devices-title" [attr.aria-busy]="backed() ? null : pairing.busy()">
   <header class="space-y-2">
     <h2 appUI uiSize="sm" id="vault-devices-title" i18n="@@vaultDevicesTitle">Vault devices</h2>
 
@@ -11,92 +11,119 @@
   </header>
 
   @if (pairing.message()) {
-    <p role="status">{{ pairing.message() }}</p>
+    <div appUI="alert" role="status">{{ pairing.message() }}</div>
   }
 
   @if (pairing.ready()) {
-    @if (pairing.paired()) {
+    @if (pairing.reviewFailure() === 'ended') {
+      <div appUI="alert" tone="warning" role="status" tabindex="-1" #reviewOutcome i18n="@@vaultPairingReviewEnded">
+        The code wasn’t confirmed or the request was cancelled. Start again on the new device.
+      </div>
+    } @else if (pairing.reviewFailure() === 'unavailable') {
+      <div appUI="alert" tone="warning" role="status" i18n="@@vaultPairingUnavailable">
+        This request is no longer available. Start a new request on the other device.
+      </div>
+    } @else if (pairing.paired()) {
       <a appUI [routerLink]="resourceLink()" [queryParams]="resourceParams()" i18n="@@vaultDevicesOpen">
         Open vault note
       </a>
     } @else if (pairing.existing()) {
-      @if (pairing.approverFingerprint()) {
-        <p appUI i18n="@@vaultDevicesApproverFingerprint">Approving device fingerprint</p>
+      @if (backed() ? pairing.approverReady() : pairing.approverFingerprint()) {
+        @if (!backed()) {
+          <p appUI i18n="@@vaultDevicesApproverFingerprint">Approving device fingerprint</p>
 
-        <code class="block break-all" data-vault-approver>{{ pairing.approverFingerprint() }}</code>
+          <code class="block break-all" data-vault-approver>{{ pairing.approverFingerprint() }}</code>
+        }
 
-        @if (pairing.reviewUnavailable()) {
-          <p appUI role="status" i18n="@@vaultPairingUnavailable">
-            This request is no longer available. Start a new request on the other device.
-          </p>
-        } @else if (backed() && !pairing.reviewProof()) {
-          <p appUI i18n="@@vaultPairingWaitingHere">Requests from your other devices will appear in the app.</p>
-        } @else {
-          <form
-            class="space-y-3"
-            (submit)="
-              $event.preventDefault();
-              backed()
-                ? pairing.approveReview(recipientFingerprint.value)
-                : pairing.approve(manualProof, recipientFingerprint.value)
-            "
-          >
-            @if (backed()) {
-              <p appUI tone="muted" i18n="@@vaultPairingConfirmInstructions">
-                Enter the fingerprint shown on the new device to confirm you are linking the right one.
-              </p>
-            } @else {
-              <p appUI tone="muted" i18n="@@vaultDevicesApproveInstructions">
-                Paste the request from the new device. Enter the fingerprint shown directly on that device.
-              </p>
-
-              <app-field
-                control-id="vault-recipient-request"
-                label="Pairing request"
-                i18n-label="@@vaultDevicesRequest"
-              >
-                <textarea
-                  appUI
-                  id="vault-recipient-request"
-                  #proof
-                  maxlength="4096"
-                  rows="3"
-                  required
-                  (input)="manualProof = proof.value"
-                ></textarea>
-              </app-field>
+        @if (backed() && !pairing.reviewProof()) {
+          @if (review()) {
+            @if (!pairing.message()) {
+              <p appUI tone="muted" role="status" i18n="@@vaultPairingLoadingReview">Loading pairing request…</p>
             }
+          } @else {
+            <ol class="list-decimal space-y-2 pl-5 text-sm">
+              <li i18n="@@vaultPairingStartOnNewDevice">
+                On the new device, select this vault in Vault example, choose “Link a device,” and request pairing.
+              </li>
 
+              <li i18n="@@vaultPairingEnterCodeHere">
+                When the pairing notice appears on this page, choose “Review request.” Enter the 8-digit code from the
+                new device here.
+              </li>
+            </ol>
+
+            <div role="status">
+              @if (hasPendingReview()) {
+                <span appUI="badge" tone="accent" i18n="@@vaultPairingRequestReady">Request ready to review</span>
+              } @else {
+                <span appUI="badge" i18n="@@vaultPairingWaitingHere">Waiting for a link request…</span>
+              }
+            </div>
+          }
+        } @else if (backed()) {
+          <form class="grid max-w-md gap-4" (submit)="approveCode($event)">
             <app-field
-              control-id="vault-recipient-fingerprint"
-              label="New device fingerprint"
-              i18n-label="@@vaultDevicesRecipientFingerprint"
+              control-id="vault-pairing-code"
+              [label]="codeLabel"
+              description="Enter the 8-digit code shown on the new device."
+              i18n-description="@@vaultPairingCodeInstructions"
             >
+              <app-pin-input
+                type="text"
+                autocomplete="one-time-code"
+                required
+                accept-spaces
+                accept-formatted-paste
+                [digits]="8"
+                [value]="reviewCode()"
+                [disabled]="pairing.busy()"
+                (valueChange)="reviewCode.set($event)"
+              />
+            </app-field>
+
+            <ng-container [ngTemplateOutlet]="approverPin" />
+
+            <ng-container [ngTemplateOutlet]="approveButton" />
+          </form>
+
+          @if (pairing.busy()) {
+            <div appUI="alert" role="status" i18n="@@vaultPairingCheckingCode">
+              Waiting for the new device to verify the code.
+            </div>
+          }
+        } @else {
+          <form class="space-y-3" (submit)="approveManually($event, credential)">
+            <p appUI tone="muted" i18n="@@vaultDevicesApproveInstructions">
+              Paste the request from the new device. Enter the fingerprint shown directly on that device.
+            </p>
+
+            <app-field control-id="vault-recipient-request" label="Pairing request" i18n-label="@@vaultDevicesRequest">
+              <textarea
+                appUI
+                id="vault-recipient-request"
+                #proof
+                maxlength="4096"
+                rows="3"
+                required
+                (input)="manualProof = proof.value"
+              ></textarea>
+            </app-field>
+
+            <app-field control-id="vault-recipient-fingerprint" [label]="fingerprintLabel">
               <input
                 appUI
                 id="vault-recipient-fingerprint"
-                #recipientFingerprint
+                #credential
                 maxlength="48"
-                required
                 autocomplete="off"
+                required
                 spellcheck="false"
               />
             </app-field>
 
-            @if (pairing.existing()?.method === 'pin-argon2id') {
-              <app-field control-id="approve-pin" label="Confirm local PIN" i18n-label="@@vaultRecoveryPin">
-                <app-pin-input
-                  [digits]="6"
-                  [disabled]="pairing.busy()"
-                  [value]="pairing.pin()"
-                  (valueChange)="pairing.pin.set($event)"
-                />
-              </app-field>
-            }
+            <ng-container [ngTemplateOutlet]="approverPin" />
 
-            <button appUI type="submit" [disabled]="pairing.busy()" i18n="@@vaultDevicesApprove">
-              Approve this device
-            </button>
+            <ng-container [ngTemplateOutlet]="approveButton" />
           </form>
         }
       } @else {
@@ -108,33 +135,121 @@
       }
     } @else if (pairing.pending(); as request) {
       @if (request.reviewLink; as link) {
-        @if (pairing.approval() === 'expired') {
-          <p appUI role="status" i18n="@@vaultPairingExpired">This request is no longer available.</p>
-
-          <button appUI type="button" (click)="pairing.resetExpired()" i18n="@@vaultPairingStartAgain">
-            Start again
-          </button>
-        } @else if (pairing.approval() === 'waiting') {
-          <p appUI role="status" i18n="@@vaultPairingWaiting">Waiting for approval on your other device.</p>
-
-          <p appUI tone="muted" i18n="@@vaultPairingLinkInstructions">
-            Review the request in Stack on a device that can already open this vault. If the notice doesn’t appear, open
-            this link there.
-          </p>
+        @if (pairing.recipientEnd(); as reason) {
+          <div appUI="alert" [tone]="reason === 'cancelled' ? 'neutral' : 'warning'" role="status">
+            @switch (reason) {
+              @case ('unconfirmed') {
+                <span i18n="@@vaultPairingCodeUnconfirmed">
+                  The code couldn’t be confirmed. Start again and enter the new code on the device approving the
+                  request.
+                </span>
+              }
+              @case ('expired') {
+                <span i18n="@@vaultPairingCodeExpired">
+                  This pairing request expired. Start again to get a new code.
+                </span>
+              }
+              @case ('cancelled') {
+                <span i18n="@@vaultPairingRequestCancelled">
+                  You cancelled this pairing request. Start again if you still want to link this device.
+                </span>
+              }
+            }
+          </div>
 
           <button
             appUI
-            variant="secondary"
             type="button"
-            (click)="pairing.copyReviewLink(link)"
-            i18n="@@vaultPairingCopyLink"
+            class="self-start"
+            (click)="pairing.restartRequest()"
+            i18n="@@vaultPairingStartAgain"
           >
-            Copy review link
+            Start again
           </button>
+        } @else if (pairing.approval() === 'waiting') {
+          @if (pairing.code(); as code) {
+            <div appUI="card" tone="subtle" class="items-center text-center">
+              <label appUI for="vault-displayed-pairing-code">{{ codeLabel }}</label>
 
-          <a appUI [href]="link" target="_blank" rel="noopener" i18n="@@vaultPairingOpenLink">Open review link</a>
+              <output
+                id="vault-displayed-pairing-code"
+                class="font-mono text-3xl leading-tight tracking-wide whitespace-pre tabular-nums sm:text-4xl"
+                [attr.aria-label]="spokenCode()"
+              >
+                <span aria-hidden="true">{{ code }}</span>
+              </output>
+
+              <p appUI tone="muted" i18n="@@vaultPairingLinkInstructions">
+                On a device that can already open this vault, choose “Review request” and enter this code.
+              </p>
+            </div>
+          }
+
+          <p appUI tone="muted" role="status" i18n="@@vaultPairingWaiting">
+            Waiting for approval on your other device.
+          </p>
+
+          @if (pairing.code()) {
+            <div class="grid gap-2">
+              <p appUI tone="muted" i18n="@@vaultPairingReviewFallback">
+                If the notice doesn’t appear, copy the review link and open it on that other device.
+              </p>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <button
+                  appUI
+                  variant="secondary"
+                  type="button"
+                  size="sm"
+                  (click)="copyReviewLink(link)"
+                  i18n="@@vaultPairingCopyLink"
+                >
+                  Copy review link
+                </button>
+
+                <a
+                  appUI
+                  class="inline-flex min-h-11 items-center"
+                  [href]="link"
+                  target="_blank"
+                  rel="noopener"
+                  i18n="@@vaultPairingOpenLink"
+                >
+                  Review link for the other device
+                </a>
+
+                <button
+                  appUI
+                  variant="ghost"
+                  type="button"
+                  size="sm"
+                  (click)="pairing.cancelRequest()"
+                  i18n="@@vaultPairingCancel"
+                >
+                  Cancel pairing
+                </button>
+              </div>
+            </div>
+          }
         } @else {
-          <p appUI role="status" i18n="@@vaultPairingApproved">Approved. Finish linking this device.</p>
+          @if (pairing.busy()) {
+            <p appUI role="status" i18n="@@vaultPairingInstalling">Finishing pairing on this device.</p>
+          } @else {
+            <form class="space-y-3" (submit)="$event.preventDefault(); pairing.finishBacked()">
+              @if (request.context.method === 'pin-argon2id') {
+                <app-field control-id="vault-pairing-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel">
+                  <app-pin-input
+                    required
+                    [digits]="6"
+                    [value]="pairing.pin()"
+                    (valueChange)="pairing.pin.set($event)"
+                  />
+                </app-field>
+              }
+
+              <button appUI type="submit" i18n="@@vaultPairingUnlockToFinish">Unlock to finish linking</button>
+            </form>
+          }
         }
       } @else {
         <app-field control-id="vault-pairing-request" label="Pairing request" i18n-label="@@vaultDevicesRequest">
@@ -142,7 +257,7 @@
         </app-field>
       }
 
-      @if (pairing.approval() !== 'expired') {
+      @if (!request.reviewLink) {
         <p appUI i18n="@@vaultDevicesRecipientFingerprint">New device fingerprint</p>
 
         <code class="block break-all" data-vault-recipient>{{ request.fingerprint }}</code>
@@ -155,7 +270,7 @@
         </p>
       }
 
-      @if (!request.reviewLink || pairing.approval() === 'approved') {
+      @if (!request.reviewLink) {
         <form class="space-y-3" (submit)="$event.preventDefault(); pairing.finish(approver.value)">
           <app-field
             control-id="vault-approver-fingerprint"
@@ -193,112 +308,163 @@
         Open this review link on a device that can already unlock this vault.
       </p>
     } @else {
-      @if (backed()) {
-        <details>
-          <summary i18n="@@vaultRestoreFile">Recover with a saved key</summary>
-
-          <p appUI i18n="@@vaultRestoreHelp">
-            Select the file you saved for this vault, then choose how to unlock it on this device.
-          </p>
-
-          <app-field control-id="recover-vault-file" label="Vault recovery key file" i18n-label="@@vaultRecoveryFile">
-            <input
-              appUI
-              id="recover-vault-file"
-              type="file"
-              accept=".json,application/json"
-              #file
-              (change)="pairing.recoveryFile.set(file.files?.item(0) ?? null)"
-            />
-          </app-field>
-        </details>
+      @if (!pairing.recoveryFile()) {
+        <ng-container [ngTemplateOutlet]="requestActions" />
       }
 
-      @if (pairing.capabilities.prf() === 'unavailable' || pairing.pinSelected()) {
-        <form class="space-y-3" (submit)="$event.preventDefault(); pairing.request(true)">
-          <p appUI tone="muted" i18n="@@vaultPairPinHelp">
-            A local PIN unlocks this vault on this device. Someone with a copy of its encrypted storage can try PINs
-            offline.
-          </p>
+      @if (backed()) {
+        <details appUI>
+          <summary i18n="@@vaultRestoreFile">Recover with a saved key</summary>
 
-          <app-field control-id="vault-pairing-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel">
-            <app-pin-input
-              required
-              [digits]="6"
-              [disabled]="pairing.busy()"
-              [value]="pairing.pin()"
-              (valueChange)="pairing.pin.set($event)"
-            />
-          </app-field>
+          <div class="grid gap-3">
+            <p appUI tone="muted" i18n="@@vaultRestoreHelp">
+              Select the .txt recovery file you saved for this vault, then choose how to unlock it on this device.
+            </p>
 
-          <app-field control-id="vault-pairing-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
-            <app-pin-input
-              required
-              [digits]="6"
-              [disabled]="pairing.busy()"
-              [value]="pairing.confirmPin()"
-              (valueChange)="pairing.confirmPin.set($event)"
-            />
-          </app-field>
+            <app-field control-id="recover-vault-file" label="Vault recovery key file" i18n-label="@@vaultRecoveryFile">
+              <input
+                appUI
+                id="recover-vault-file"
+                type="file"
+                accept=".txt,text/plain"
+                #file
+                (change)="pairing.recoveryFile.set(file.files?.item(0) ?? null)"
+              />
+            </app-field>
 
-          <button appUI type="submit" [disabled]="pairing.busy()">
             @if (pairing.recoveryFile()) {
-              <span i18n="@@vaultRecoverPin">Recover with PIN</span>
-            } @else {
-              <span i18n="@@vaultDevicesRequestWithPin">Request pairing with PIN</span>
+              <ng-container [ngTemplateOutlet]="requestActions" />
+
+              <button
+                appUI
+                variant="ghost"
+                type="button"
+                class="justify-self-start"
+                (click)="file.value = ''; pairing.recoveryFile.set(null)"
+                i18n="@@vaultPairingUseDevice"
+              >
+                Use device pairing instead
+              </button>
             }
-          </button>
-        </form>
-      } @else {
-        <p appUI tone="muted" i18n="@@vaultPairDesktop">
-          If your passkey is on your phone, choose that option in the browser and scan the QR code. Keep Bluetooth on
-          for both devices. If passkey unlock is unavailable, you can set a PIN on this device.
-        </p>
-
-        <button
-          appUI
-          type="button"
-          [disabled]="pairing.busy() || pairing.capabilities.prf() === 'checking'"
-          (click)="pairing.request()"
-        >
-          @if (pairing.recoveryFile()) {
-            <span i18n="@@vaultRecoverPasskey">Recover with a passkey</span>
-          } @else {
-            <span i18n="@@vaultDevicesRequestWithPasskey">Request pairing with a passkey</span>
-          }
-        </button>
-
-        @if (backed()) {
-          <button
-            appUI
-            variant="secondary"
-            type="button"
-            [disabled]="pairing.busy()"
-            (click)="pairing.pinSelected.set(true)"
-            i18n="@@vaultAlternativePin"
-          >
-            Use a PIN instead
-          </button>
-
-          <details>
-            <summary i18n="@@vaultNewCredentialOptions">Other passkey options</summary>
-
-            <button
-              appUI
-              variant="secondary"
-              type="button"
-              [disabled]="pairing.busy()"
-              (click)="pairing.request(false, true)"
-            >
-              @if (pairing.hasDedicatedPasskey()) {
-                <span i18n="@@vaultResumeLocalCredential">Continue with this device’s passkey</span>
-              } @else {
-                <span i18n="@@vaultCreateLocalCredential">Create a new passkey for this device</span>
-              }
-            </button>
-          </details>
-        }
+          </div>
+        </details>
       }
     }
   }
 </section>
+
+<ng-template #approverPin>
+  @if (pairing.existing()?.method === 'pin-argon2id') {
+    <app-field control-id="approve-pin" label="Confirm local PIN" i18n-label="@@vaultRecoveryPin">
+      <app-pin-input
+        [digits]="6"
+        [disabled]="pairing.busy()"
+        [value]="pairing.pin()"
+        (valueChange)="pairing.pin.set($event)"
+      />
+    </app-field>
+  }
+</ng-template>
+
+<ng-template #approveButton>
+  <button appUI type="submit" class="justify-self-start" [disabled]="pairing.busy()" i18n="@@vaultDevicesApprove">
+    Approve this device
+  </button>
+</ng-template>
+
+<ng-template #requestActions>
+  @if (pairing.capabilities.prf() === 'unavailable' || pairing.pinSelected()) {
+    <form class="space-y-3" (submit)="$event.preventDefault(); pairing.request(true)">
+      <p appUI tone="muted" i18n="@@vaultPairPinHelp">
+        A local PIN unlocks this vault on this device. Someone with a copy of its encrypted storage can try PINs
+        offline.
+      </p>
+
+      <app-field control-id="vault-pairing-pin" label="Local unlock PIN" i18n-label="@@vaultPinLabel">
+        <app-pin-input
+          required
+          [digits]="6"
+          [disabled]="pairing.busy()"
+          [value]="pairing.pin()"
+          (valueChange)="pairing.pin.set($event)"
+        />
+      </app-field>
+
+      <app-field control-id="vault-pairing-confirm" label="Confirm your new PIN" i18n-label="@@vaultPinConfirm">
+        <app-pin-input
+          required
+          [digits]="6"
+          [disabled]="pairing.busy()"
+          [value]="pairing.confirmPin()"
+          (valueChange)="pairing.confirmPin.set($event)"
+        />
+      </app-field>
+
+      <button appUI type="submit" [disabled]="pairing.busy()">
+        @if (pairing.recoveryFile()) {
+          <span i18n="@@vaultRecoverPin">Recover with PIN</span>
+        } @else {
+          <span i18n="@@vaultDevicesRequestWithPin">Request pairing with PIN</span>
+        }
+      </button>
+    </form>
+  } @else {
+    @if (!backed()) {
+      <p appUI tone="muted" i18n="@@vaultPairDesktop">
+        If your passkey is on your phone, choose that option in the browser and scan the QR code. Keep Bluetooth on for
+        both devices. If passkey unlock is unavailable, you can set a PIN on this device.
+      </p>
+    }
+
+    <button
+      appUI
+      type="button"
+      [disabled]="pairing.busy() || pairing.capabilities.prf() === 'checking'"
+      (click)="pairing.request()"
+    >
+      @if (pairing.recoveryFile()) {
+        <span i18n="@@vaultRecoverPasskey">Recover with a passkey</span>
+      } @else {
+        <span i18n="@@vaultDevicesRequestWithPasskey">Request pairing with a passkey</span>
+      }
+    </button>
+
+    @if (backed()) {
+      <button
+        appUI
+        variant="secondary"
+        type="button"
+        [disabled]="pairing.busy()"
+        (click)="pairing.pinSelected.set(true)"
+        i18n="@@vaultAlternativePin"
+      >
+        Use a PIN instead
+      </button>
+
+      <details appUI>
+        <summary i18n="@@vaultNewCredentialOptions">Other passkey options</summary>
+
+        <div class="grid gap-3">
+          <p appUI tone="muted" i18n="@@vaultPairingPhoneHelp">
+            To use your phone’s passkey, follow the browser’s QR prompts and keep Bluetooth on for both devices.
+          </p>
+
+          <button
+            appUI
+            variant="secondary"
+            class="justify-self-start"
+            type="button"
+            [disabled]="pairing.busy()"
+            (click)="pairing.request(false, true)"
+          >
+            @if (pairing.hasDedicatedPasskey()) {
+              <span i18n="@@vaultResumeLocalCredential">Continue with this device’s passkey</span>
+            } @else {
+              <span i18n="@@vaultCreateLocalCredential">Create a new passkey for this device</span>
+            }
+          </button>
+        </div>
+      </details>
+    }
+  }
+</ng-template>

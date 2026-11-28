@@ -482,7 +482,11 @@ test('a locked vault links to its device pairing instructions by keyboard', asyn
 
   await pairing.press('Enter');
 
-  await expect(page.getByRole('heading', { name: 'Seguridad', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Vincular un dispositivo', exact: true })).toBeVisible();
+
+  await expect(
+    page.getByRole('link', { name: 'Volver al espacio de trabajo de la bóveda', exact: true }),
+  ).toBeVisible();
 
   const security = new URL(page.url());
 
