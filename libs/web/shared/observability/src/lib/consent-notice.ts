@@ -49,7 +49,8 @@ export function connectConsentNotice(
   }
 
   function dismiss(): void {
-    if (confirmation) {
+    if (confirmation || (showChoice && consent.decided())) {
+      showChoice = false;
       confirmation = undefined;
       sync();
     }

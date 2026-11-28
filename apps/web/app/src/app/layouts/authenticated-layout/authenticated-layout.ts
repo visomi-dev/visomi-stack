@@ -83,7 +83,13 @@ export class AuthenticatedLayout {
 
   readonly session = inject(Session);
 
-  protected readonly accountGlyph = computed(() => this.session.user()?.email?.charAt(0).toUpperCase() ?? '');
+  protected readonly accountEmail = computed(() => this.session.user()?.email ?? '');
+  protected readonly accountInitials = computed(() => {
+    const mailbox = this.accountEmail().split(/[+@]/, 1)[0];
+    const [first = '', second] = mailbox.split(/[._-]+/).filter(Boolean);
+
+    return (first.charAt(0) + (second?.charAt(0) ?? first.charAt(1))).toUpperCase();
+  });
   protected readonly accountRouteActive = computed(() => {
     const path = this.router.lastSuccessfulNavigation()?.finalUrl?.root.children['primary']?.segments[0]?.path;
 

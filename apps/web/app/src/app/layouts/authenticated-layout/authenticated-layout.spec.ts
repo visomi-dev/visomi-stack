@@ -15,7 +15,7 @@ import { AuthenticatedLayout } from './authenticated-layout';
 it('recreates private routed content only when the account identity changes', async () => {
   const snapshot = signal<SessionSnapshot>({
     authenticated: true,
-    user: { id: 'first-user', email: 'first@example.test', emailVerified: true },
+    user: { id: 'first-user', email: 'casey.rivera@example.test', emailVerified: true },
     access: 'full',
     method: 'password',
     nextStep: null,
@@ -47,6 +47,18 @@ it('recreates private routed content only when the account identity changes', as
 
   const harness = await RouterTestingHarness.create('/security/recovery-codes');
   const original = harness.fixture.debugElement.query(By.directive(BackupCodes)).componentInstance as BackupCodes;
+  const layout = harness.routeNativeElement;
+  const identities = ['workspace-account-identity', 'mobile-account-identity'].map((id) =>
+    layout?.querySelector('#' + id),
+  );
+  const initials = () =>
+    Array.from(layout?.querySelectorAll('[appUI="avatar"]') ?? [], (avatar) => avatar.textContent?.trim());
+
+  for (const identity of identities) {
+    expect(identity?.textContent?.trim()).toBe('casey.rivera@example.test');
+  }
+  expect(initials()).toEqual(['CR', 'CR']);
+  expect(layout?.querySelector('main app-consent-notice')).not.toBeNull();
 
   original.codes.set(['synthetic-account-a-backup-code']);
 
@@ -73,6 +85,10 @@ it('recreates private routed content only when the account identity changes', as
   expect(replacement).not.toBe(original);
   expect(original.codes()).toEqual([]);
   expect(replacement.codes()).toEqual([]);
+  for (const identity of identities) {
+    expect(identity?.textContent?.trim()).toBe('second@example.test');
+  }
+  expect(initials()).toEqual(['SE', 'SE']);
   expect(harness.routeNativeElement?.textContent).not.toContain('synthetic-account-a-backup-code');
   expect(harness.routeNativeElement?.textContent).toContain('We can’t show your old backup codes again.');
 });

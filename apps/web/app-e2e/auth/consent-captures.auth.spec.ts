@@ -2,7 +2,7 @@ import type { Locator, Page, TestInfo } from '@playwright/test';
 
 import { expect, signup, test } from './support/fixtures';
 
-import { browserPrivacyCopy } from '@visomi-stack/web-shared-observability';
+import { browserConsentKey, browserPrivacyCopy } from '@visomi-stack/web-shared-observability';
 
 const desktop = { width: 1366, height: 900 };
 const mobile = { width: 390, height: 844 };
@@ -28,8 +28,8 @@ async function capture(page: Page, info: TestInfo, name: string) {
   }
 }
 
-async function verifyPlacement(card: Locator, viewport: typeof desktop) {
-  const pinned = viewport === desktop;
+async function verifyPlacement(page: Page, card: Locator, viewport: typeof desktop, inWorkspace: boolean) {
+  const pinned = viewport === desktop && !inWorkspace;
 
   await expect(card).toHaveCSS('position', pinned ? 'fixed' : 'static');
 
@@ -41,6 +41,10 @@ async function verifyPlacement(card: Locator, viewport: typeof desktop) {
     expect(box?.x).toBe(16);
     expect(box?.y).toBeGreaterThan(desktop.height * 0.7);
     expect(box?.width).toBeLessThanOrEqual(320);
+  }
+
+  if (inWorkspace) {
+    await verifyWorkspaceClearance(page, card, viewport === desktop);
   }
 }
 
@@ -54,12 +58,38 @@ async function captureAfterScroll(page: Page, card: Locator, info: TestInfo, nam
   }
 }
 
-async function verifyFooterClearance(page: Page, card: Locator, desktopWorkspace: boolean) {
-  if (desktopWorkspace) {
-    const cardBounds = await card.boundingBox();
-    const trigger = await page.locator('app-sidebar button[popovertarget]').boundingBox();
+async function verifyWorkspaceClearance(page: Page, card: Locator, desktopViewport: boolean) {
+  await expect(page.getByRole('main').locator(card)).toBeVisible();
 
-    expect(cardBounds!.y + cardBounds!.height).toBeLessThanOrEqual(trigger!.y);
+  await card.scrollIntoViewIfNeeded();
+
+  await expect(card).toBeInViewport({ ratio: 1 });
+
+  const box = await card.boundingBox();
+
+  expect(box!.width).toBeLessThanOrEqual(320);
+
+  if (desktopViewport) {
+    const sidebar = page.locator('app-sidebar');
+    const account = sidebar.getByRole('button', { name: 'Account menu', exact: true });
+
+    await expect(sidebar).toBeVisible();
+
+    await expect(account).toBeVisible();
+
+    const sidebarBox = await sidebar.boundingBox();
+    const accountBox = await account.boundingBox();
+
+    expect(box!.x).toBeGreaterThanOrEqual(sidebarBox!.x + sidebarBox!.width);
+    expect(box!.x).toBeGreaterThanOrEqual(accountBox!.x + accountBox!.width);
+  } else {
+    const navigation = page.locator('nav[appUI="navbar"]');
+
+    await expect(navigation).toBeVisible();
+
+    const navigationBox = await navigation.boundingBox();
+
+    expect(box!.y + box!.height).toBeLessThanOrEqual(navigationBox!.y);
   }
 }
 
@@ -92,9 +122,7 @@ for (const surface of surfaces) {
 
       await expect(purpose).toHaveAttribute('href', '/' + appearance.locale + '/privacy/');
 
-      await verifyPlacement(card, appearance.viewport);
-
-      await verifyFooterClearance(page, card, surface.name === 'app' && appearance.viewport === desktop);
+      await verifyPlacement(page, card, appearance.viewport, surface.name === 'app');
 
       await capture(page, info, captureName);
 
@@ -108,6 +136,69 @@ for (const surface of surfaces) {
     }
   });
 }
+
+test('closes workspace rejection feedback with the keyboard and keeps the choice', async ({ page }) => {
+  await signup(page);
+
+  await page.setViewportSize({ ...mobile, width: 375 });
+
+  await page.emulateMedia({ colorScheme: 'dark' });
+
+  await page.goto('/app/es/home');
+
+  const copy = browserPrivacyCopy.es;
+  const main = page.getByRole('main');
+  const card = page.getByRole('region', { name: copy.title });
+  const reject = card.getByRole('button', { name: copy.reject, exact: true });
+  const close = card.getByRole('button', { name: copy.close, exact: true });
+  const storedChoice = () => page.evaluate((key) => localStorage.getItem(key), browserConsentKey);
+
+  await expect(reject).toBeVisible();
+
+  await expect(close).toBeHidden();
+
+  await main.focus();
+
+  await page.keyboard.press('Tab');
+
+  await expect(reject).toBeFocused();
+
+  await page.keyboard.press('Enter');
+
+  await expect(card.getByRole('status')).toHaveText(copy.off);
+
+  const beforeClose = await storedChoice();
+
+  expect(beforeClose).toBe('reject');
+
+  await verifyWorkspaceClearance(page, card, false);
+
+  await page.keyboard.press('Tab');
+
+  await expect(card.getByRole('button', { name: copy.accept, exact: true })).toBeFocused();
+
+  await page.keyboard.press('Tab');
+
+  await expect(card.getByRole('link', { name: copy.purposeLink })).toBeFocused();
+
+  await page.keyboard.press('Tab');
+
+  await expect(close).toBeFocused();
+
+  await page.keyboard.press('Enter');
+
+  await expect(card).toBeHidden();
+
+  const afterClose = await storedChoice();
+
+  expect(afterClose).toBe(beforeClose);
+
+  await page.reload();
+
+  await expect(main.getByRole('heading', { level: 1 })).toBeVisible();
+
+  await expect(card).toBeHidden();
+});
 
 test('keeps narrow sign-in controls usable and provides a place for the card below the form', async ({
   page,
@@ -277,7 +368,7 @@ for (const surface of surfaces.slice(0, 2)) {
 
       await expect(confirmation.locator(':focus')).toHaveCount(0);
 
-      await verifyPlacement(confirmation, appearance.viewport);
+      await verifyPlacement(page, confirmation, appearance.viewport, surface.name === 'app');
 
       const name = `consent-confirmation-${surface.name}-${appearance.name}`;
 
