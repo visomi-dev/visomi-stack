@@ -411,15 +411,15 @@
         <target>Inicio</target>
       </trans-unit>
       <trans-unit id="authWelcomeDescription" datatype="html">
-        <source>Open Account to update your email or Security to change how you sign in.</source>
+        <source> Open Account to update your email or Security to change how you sign in. </source>
         <target>Ve a Cuenta para actualizar tu correo o a Seguridad para cambiar cómo inicias sesión.</target>
       </trans-unit>
       <trans-unit id="authManageAccount" datatype="html">
-        <source>Manage account</source>
+        <source> Manage account </source>
         <target>Administrar cuenta</target>
       </trans-unit>
       <trans-unit id="authReviewSecurity" datatype="html">
-        <source>Review security</source>
+        <source> Review security </source>
         <target>Revisar seguridad</target>
       </trans-unit>
       <trans-unit id="authNotFound" datatype="html">
@@ -1259,7 +1259,7 @@
         <target>Verificando el código…</target>
       </trans-unit>
       <trans-unit id="exampleDashboard" datatype="html">
-        <source>Example dashboard</source>
+        <source> Example dashboard </source>
         <target>Tablero de ejemplo</target>
       </trans-unit>
       <trans-unit id="exampleDashboardDescription" datatype="html">
@@ -1301,6 +1301,118 @@
       <trans-unit id="exampleDate" datatype="html">
         <source>Date</source>
         <target>Fecha</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckBatches" datatype="html">
+        <source>Sample check batches</source>
+        <target>Lotes de pruebas de ejemplo</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckFilters" datatype="html">
+        <source>Filters</source>
+        <target>Filtros</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckType" datatype="html">
+        <source>Check type</source>
+        <target>Tipo de prueba</target>
+      </trans-unit>
+      <trans-unit id="exampleAllCheckTypes" datatype="html">
+        <source>All types</source>
+        <target>Todos los tipos</target>
+      </trans-unit>
+      <trans-unit id="exampleBatchSearch" datatype="html">
+        <source>Search batch IDs</source>
+        <target>Buscar por ID de lote</target>
+      </trans-unit>
+      <trans-unit id="exampleOnlyFailures" datatype="html">
+        <source>Only batches with failures</source>
+        <target>Solo lotes con fallas</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckSort" datatype="html">
+        <source>Sort by date</source>
+        <target>Ordenar por fecha</target>
+      </trans-unit>
+      <trans-unit id="exampleNewestFirst" datatype="html">
+        <source>Newest first</source>
+        <target>Más recientes primero</target>
+      </trans-unit>
+      <trans-unit id="exampleOldestFirst" datatype="html">
+        <source>Oldest first</source>
+        <target>Más antiguos primero</target>
+      </trans-unit>
+      <trans-unit id="exampleChecksEmpty" datatype="html">
+        <source> No sample batches match these filters. Widen the date range or change a filter. </source>
+        <target>Ningún lote de ejemplo coincide con estos filtros. Amplía el periodo o cambia un filtro.</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckPage" datatype="html">
+        <source> Page <x id="INTERPOLATION" equiv-text="{{ page() | number }}"/> of <x id="INTERPOLATION_1" equiv-text="{{ pageCount() | number }}"/> · <x id="INTERPOLATION_2" equiv-text="{{ filteredBatches().length | number }}"/> total </source>
+        <target>Página <x id="INTERPOLATION" equiv-text="{{ page() | number }}"/> de <x id="INTERPOLATION_1" equiv-text="{{ pageCount() | number }}"/> · <x id="INTERPOLATION_2" equiv-text="{{ filteredBatches().length | number }}"/> en total</target>
+      </trans-unit>
+      <trans-unit id="exampleBatch" datatype="html">
+        <source>Batch</source>
+        <target>Lote</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckStatus" datatype="html">
+        <source>Status</source>
+        <target>Estado</target>
+      </trans-unit>
+      <trans-unit id="exampleBatchDetails" datatype="html">
+        <source>Details</source>
+        <target>Detalles</target>
+      </trans-unit>
+      <trans-unit id="exampleBatchHasFailures" datatype="html">
+        <source>Has failures</source>
+        <target>Con fallas</target>
+      </trans-unit>
+      <trans-unit id="exampleBatchPassed" datatype="html">
+        <source>All passed</source>
+        <target>Todas aprobadas</target>
+      </trans-unit>
+      <trans-unit id="exampleBatchRunner" datatype="html">
+        <source>Sample runner</source>
+        <target>Ejecutor de ejemplo</target>
+      </trans-unit>
+      <trans-unit id="exampleBatchDemoBot" datatype="html">
+        <source>Demo Bot</source>
+        <target>Demo Bot</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckPagination" datatype="html">
+        <source>Sample batch pages</source>
+        <target>Páginas de lotes de ejemplo</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckPrevious" datatype="html">
+        <source> Previous page </source>
+        <target>Página anterior</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckNext" datatype="html">
+        <source> Next page </source>
+        <target>Página siguiente</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckAvailability" datatype="html">
+        <source>Availability</source>
+        <target>Disponibilidad</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckResponseTime" datatype="html">
+        <source>Response time</source>
+        <target>Tiempo de respuesta</target>
+      </trans-unit>
+      <trans-unit id="exampleCheckCertificate" datatype="html">
+        <source>Certificate</source>
+        <target>Certificado</target>
+      </trans-unit>
+      <trans-unit id="exampleChecksLoading" datatype="html">
+        <source>Loading sample checks…</source>
+        <target>Cargando pruebas de ejemplo…</target>
+      </trans-unit>
+      <trans-unit id="exampleChecksLoadError" datatype="html">
+        <source>The sample checks couldn’t be loaded.</source>
+        <target>No se pudieron cargar las pruebas de ejemplo.</target>
+      </trans-unit>
+      <trans-unit id="exampleChecksRetry" datatype="html">
+        <source> Retry loading sample checks </source>
+        <target>Reintentar la carga de pruebas de ejemplo</target>
+      </trans-unit>
+      <trans-unit id="exampleChecksFailureSummary" datatype="html">
+        <source> The selected date range contains <x id="INTERPOLATION" equiv-text="{{ failed() | number }}"/> failed sample checks. </source>
+        <target>En el periodo seleccionado hubo <x id="INTERPOLATION" equiv-text="{{ failed() | number }}"/> pruebas de ejemplo fallidas.</target>
       </trans-unit>
       <trans-unit id="shellWorkspace" datatype="html">
         <source>Workspace</source>

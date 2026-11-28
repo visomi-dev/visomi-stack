@@ -612,32 +612,32 @@
         <source>Home</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">2,4</context>
+          <context context-type="linenumber">4,6</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authWelcomeDescription" datatype="html">
         <source> Open Account to update your email or Security to change how you sign in. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">5,8</context>
+          <context context-type="linenumber">7,11</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authManageAccount" datatype="html">
         <source> Manage account </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/auth/session/security/security.html</context>
-          <context context-type="linenumber">114,116</context>
+          <context context-type="linenumber">128,130</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">9,11</context>
+          <context context-type="linenumber">13,16</context>
         </context-group>
       </trans-unit>
       <trans-unit id="authReviewSecurity" datatype="html">
-        <source>Review security</source>
+        <source> Review security </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">9,12</context>
+          <context context-type="linenumber">17,20</context>
         </context-group>
       </trans-unit>
       <trans-unit id="language" datatype="html">
@@ -2657,88 +2657,308 @@
         </context-group>
       </trans-unit>
       <trans-unit id="exampleDashboard" datatype="html">
-        <source>Example dashboard</source>
+        <source> Example dashboard </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">22,23</context>
+          <context context-type="linenumber">25,28</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleDashboardDescription" datatype="html">
         <source> These sample checks use fixed, synthetic data. They don’t reflect your account or site activity. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">24,28</context>
+          <context context-type="linenumber">29,32</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleChecksRun" datatype="html">
         <source>Checks run</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">30,31</context>
+          <context context-type="linenumber">62,64</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleChecksPassed" datatype="html">
         <source>Passed</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">34,35</context>
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">154,156</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">122,123</context>
+          <context context-type="linenumber">68,70</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">147,149</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleChecksFailed" datatype="html">
         <source>Failed</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">40,41</context>
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">160,162</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">123,125</context>
+          <context context-type="linenumber">74,76</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">149,151</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleChecksByDay" datatype="html">
         <source>Checks by day</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">48,49</context>
+          <context context-type="linenumber">89,91</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleDateRange" datatype="html">
         <source>Example date range</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">57,58</context>
+          <context context-type="linenumber">99,100</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleSevenDays" datatype="html">
         <source> 7 days </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">70,71</context>
+          <context context-type="linenumber">111,112</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleFourteenDays" datatype="html">
         <source> 14 days </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">82,84</context>
+          <context context-type="linenumber">123,124</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleDailyTotals" datatype="html">
         <source>Daily totals</source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">117,118</context>
+          <context context-type="linenumber">140,142</context>
         </context-group>
       </trans-unit>
       <trans-unit id="exampleDate" datatype="html">
         <source>Date</source>
         <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">99,101</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">118,119</context>
+        </context-group>
+        <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">121,122</context>
+          <context context-type="linenumber">145,147</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckBatches" datatype="html">
+        <source>Sample check batches</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">2,5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckFilters" datatype="html">
+        <source>Filters</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">5,7</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckType" datatype="html">
+        <source>Check type</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleAllCheckTypes" datatype="html">
+        <source>All types</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">10,12</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchSearch" datatype="html">
+        <source>Search batch IDs</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleOnlyFailures" datatype="html">
+        <source>Only batches with failures</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">44,47</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckSort" datatype="html">
+        <source>Sort by date</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">50,52</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleNewestFirst" datatype="html">
+        <source>Newest first</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">63,66</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleOldestFirst" datatype="html">
+        <source>Oldest first</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">76,78</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleChecksEmpty" datatype="html">
+        <source> No sample batches match these filters. Widen the date range or change a filter. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">84,87</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckPage" datatype="html">
+        <source> Page <x id="INTERPOLATION" equiv-text="{{ page() | number }}"/> of <x id="INTERPOLATION_1" equiv-text="{{ pageCount() | number }}"/> · <x id="INTERPOLATION_2" equiv-text="{{ filteredBatches().length | number }}"/> total </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">88,91</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatch" datatype="html">
+        <source>Batch</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">97,99</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckStatus" datatype="html">
+        <source>Status</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">101,103</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">123,125</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchDetails" datatype="html">
+        <source>Details</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">103,105</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">142,144</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchHasFailures" datatype="html">
+        <source>Has failures</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">126,128</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchPassed" datatype="html">
+        <source>All passed</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">128,130</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchRunner" datatype="html">
+        <source>Sample runner</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">166,168</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleBatchDemoBot" datatype="html">
+        <source>Demo Bot</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">171,173</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckPagination" datatype="html">
+        <source>Sample batch pages</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">183</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckPrevious" datatype="html">
+        <source> Previous page </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">194,197</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckNext" datatype="html">
+        <source> Next page </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.html</context>
+          <context context-type="linenumber">207,209</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckAvailability" datatype="html">
+        <source>Availability</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.ts</context>
+          <context context-type="linenumber">91</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckResponseTime" datatype="html">
+        <source>Response time</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.ts</context>
+          <context context-type="linenumber">92</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleCheckCertificate" datatype="html">
+        <source>Certificate</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/check-batches/check-batches.ts</context>
+          <context context-type="linenumber">93</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleChecksLoading" datatype="html">
+        <source>Loading sample checks…</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">37,40</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleChecksLoadError" datatype="html">
+        <source>The sample checks couldn’t be loaded.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">45,48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleChecksRetry" datatype="html">
+        <source> Retry loading sample checks </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">56,58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exampleChecksFailureSummary" datatype="html">
+        <source> The selected date range contains <x id="INTERPOLATION" equiv-text="{{ failed() | number }}"/> failed sample checks. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
+          <context context-type="linenumber">82,84</context>
         </context-group>
       </trans-unit>
       <trans-unit id="shellWorkspace" datatype="html">
@@ -2789,7 +3009,7 @@
         <source> <x id="INTERPOLATION" equiv-text="{{ total() | number }}"/> checks over <x id="INTERPOLATION_1" equiv-text="{{ period() }}"/> days. The busiest day had <x id="INTERPOLATION_2" equiv-text="{{ peak() }}"/> checks. </source>
         <context-group purpose="location">
           <context context-type="sourcefile">apps/web/app/src/app/home/home.html</context>
-          <context context-type="linenumber">50,52</context>
+          <context context-type="linenumber">92,94</context>
         </context-group>
       </trans-unit>
       <trans-unit id="vaultDevicesTitle" datatype="html">
