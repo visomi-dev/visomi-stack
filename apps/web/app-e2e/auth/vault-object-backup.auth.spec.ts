@@ -19,10 +19,6 @@ import {
   vaultUnlockUrl,
 } from './support/fixtures';
 
-// The paired recipient uses Chromium's native virtual WebAuthn authenticator.
-// eslint-disable-next-line playwright/no-skipped-test
-test.skip(({ browserName }) => browserName !== 'chromium', 'Requires Chromium CDP');
-
 function persistenceRequestBody(request: Request): string {
   return request.url().includes('/api/example/vault/') ? (request.postData() ?? '') : '';
 }
@@ -154,8 +150,16 @@ test('backs up the Vault Example note to private object storage and restores it 
   page,
   context,
   browser,
+  browserName,
 }, info) => {
+  // eslint-disable-next-line playwright/no-skipped-test
+  test.skip(
+    browserName !== 'chromium',
+    'Requires Chromium CDP and a virtual WebAuthn PRF authenticator for the recipient',
+  );
   test.slow();
+
+  await context.setExtraHTTPHeaders({ 'x-forwarded-for': '198.19.127.6' });
 
   await context.addInitScript(() => {
     Object.defineProperty(window, 'PublicKeyCredential', { value: undefined, configurable: true });
@@ -238,11 +242,11 @@ test('backs up the Vault Example note to private object storage and restores it 
   const pairingUrl = page.url();
   const recipientContext = await browser.newContext({
     baseURL: info.project.use.baseURL,
-    extraHTTPHeaders: { 'x-forwarded-for': '198.19.1.1' },
+    extraHTTPHeaders: { 'x-forwarded-for': '198.19.127.7' },
   });
   const outsiderContext = await browser.newContext({
     baseURL: info.project.use.baseURL,
-    extraHTTPHeaders: { 'x-forwarded-for': '198.19.1.2' },
+    extraHTTPHeaders: { 'x-forwarded-for': '198.19.127.8' },
   });
   const s3 = backupS3Client(object.endpoint);
 
