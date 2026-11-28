@@ -1855,8 +1855,8 @@
         <target>Recuperar con una clave guardada</target>
       </trans-unit>
       <trans-unit id="vaultRestoreHelp" datatype="html">
-        <source>Select the file you saved for this vault, then choose how to unlock it on this device.</source>
-        <target>Selecciona el archivo que guardaste para esta bóveda y elige cómo abrirla en este dispositivo.</target>
+        <source>Select the .txt recovery file you saved for this vault, then choose how to unlock it on this device.</source>
+        <target>Selecciona el archivo de recuperación .txt que guardaste para esta bóveda y elige cómo abrirla en este dispositivo.</target>
       </trans-unit>
       <trans-unit id="vaultRecoveryFile" datatype="html">
         <source>Vault recovery key file</source>
@@ -1919,8 +1919,8 @@
         <target>Guarda este archivo en un lugar seguro fuera de este dispositivo. Lo necesitarás para recuperar esta bóveda si pierdes el acceso a tus dispositivos.</target>
       </trans-unit>
       <trans-unit id="vaultDownloadRecovery" datatype="html">
-        <source>Download recovery key</source>
-        <target>Descargar clave de recuperación</target>
+        <source>Download recovery key (.txt)</source>
+        <target>Descargar clave de recuperación (.txt)</target>
       </trans-unit>
       <trans-unit id="vaultConfirmRecovery" datatype="html">
         <source>I saved my recovery key</source>

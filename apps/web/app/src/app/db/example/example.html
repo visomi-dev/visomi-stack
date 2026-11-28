@@ -171,11 +171,11 @@
       <a
         appUI
         [href]="url"
-        [download]="'vault-recovery-' + workspace.target()?.scopeId + '.json'"
+        [download]="'vault-recovery-' + workspace.target()?.scopeId + '.txt'"
         (click)="workspace.privateResource.recovery.downloaded.set(true)"
         i18n="@@vaultDownloadRecovery"
       >
-        Download recovery key
+        Download recovery key (.txt)
       </a>
 
       <button

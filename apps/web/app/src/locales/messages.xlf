@@ -3512,7 +3512,7 @@
         <source>Recover with a saved key</source>
       </trans-unit>
       <trans-unit id="vaultRestoreHelp" datatype="html">
-        <source>Select the file you saved for this vault, then choose how to unlock it on this device.</source>
+        <source>Select the .txt recovery file you saved for this vault, then choose how to unlock it on this device.</source>
       </trans-unit>
       <trans-unit id="vaultRecoveryFile" datatype="html">
         <source>Vault recovery key file</source>
@@ -3560,7 +3560,7 @@
         <source>Keep this file somewhere safe outside this device. You’ll need it to recover this vault if you lose access to your devices.</source>
       </trans-unit>
       <trans-unit id="vaultDownloadRecovery" datatype="html">
-        <source>Download recovery key</source>
+        <source>Download recovery key (.txt)</source>
       </trans-unit>
       <trans-unit id="vaultConfirmRecovery" datatype="html">
         <source>I saved my recovery key</source>

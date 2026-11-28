@@ -1,10 +1,7 @@
-import { z } from 'zod';
 import {
   approvedDeliverySchema,
-  deliveryBindingSchema,
   deviceChallengeSchema,
   keyDomainId,
-  signingPinSchema,
   VaultError,
   type DeviceProof,
   type KeyDomain,
@@ -12,7 +9,6 @@ import {
 } from '@visomi-stack/shared-db';
 import {
   WebCryptoDevices,
-  decodeBytes,
   encodeBytes,
   provisionDeviceIdentity,
   restoreDeviceIdentity,
@@ -22,14 +18,7 @@ import {
 import type { DatabaseHttp } from '../shared/db/http';
 import type { VaultSession } from '../shared/vault/vault-session';
 
-const recoveryFile = z.strictObject({
-  format: z.literal('visomi.vault-recovery.v1'),
-  origin: z.string(),
-  recipient: deliveryBindingSchema,
-  signer: signingPinSchema,
-  material: z.string().max(11000),
-  length: z.number().int().positive().max(8192),
-});
+import { readRecoveryText, writeRecoveryText } from './example-recovery-text';
 
 export async function proofRecipient(devices: WebCryptoDevices, proof: DeviceProof) {
   const fingerprint = await devices.fingerprint(proof);
@@ -104,52 +93,14 @@ export async function prepareRecovery(
   const signer = { deviceId: binding.deviceId, signing: creator.signing };
 
   signal.throwIfAborted();
-  const file = new Blob(
-    [
-      JSON.stringify(
-        recoveryFile.parse({
-          format: 'visomi.vault-recovery.v1',
-          origin: binding.origin,
-          signer,
-          recipient,
-          material,
-          length,
-        }),
-      ),
-    ],
-    { type: 'application/json' },
-  );
+  const file = writeRecoveryText(binding.origin, recipient, signer, material, length);
 
   return { file, approval: { ...body, authorization } };
 }
 
 /** The saved file pins both the recipient challenge and the original approver independently of the cloud roster. */
 export async function readRecovery(file: File, key: KeyDomain, ownerId: string, origin: string) {
-  if (file.size > 20000) {
-    throw new VaultError('recovery-required');
-  }
-
-  const content = await file.text();
-  let data: unknown;
-
-  try {
-    data = JSON.parse(content);
-  } catch {
-    throw new VaultError('recovery-required');
-  }
-  const parsed = recoveryFile.safeParse(data);
-
-  if (
-    !parsed.success ||
-    parsed.data.origin !== origin ||
-    parsed.data.recipient.ownerId !== ownerId ||
-    keyDomainId(ownerId, parsed.data.recipient.key) !== keyDomainId(ownerId, key)
-  ) {
-    throw new VaultError('recovery-required');
-  }
-
-  const { material, length, recipient, signer } = parsed.data;
-  const bytes = decodeBytes(material, length);
+  const { bytes, signer, recipient } = await readRecoveryText(file, key, ownerId, origin);
 
   try {
     const identity = await restoreDeviceIdentity(crypto, bytes);

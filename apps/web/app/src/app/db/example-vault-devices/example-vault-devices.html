@@ -198,7 +198,7 @@
           <summary i18n="@@vaultRestoreFile">Recover with a saved key</summary>
 
           <p appUI i18n="@@vaultRestoreHelp">
-            Select the file you saved for this vault, then choose how to unlock it on this device.
+            Select the .txt recovery file you saved for this vault, then choose how to unlock it on this device.
           </p>
 
           <app-field control-id="recover-vault-file" label="Vault recovery key file" i18n-label="@@vaultRecoveryFile">
@@ -206,7 +206,7 @@
               appUI
               id="recover-vault-file"
               type="file"
-              accept=".json,application/json"
+              accept=".txt,text/plain"
               #file
               (change)="pairing.recoveryFile.set(file.files?.item(0) ?? null)"
             />
