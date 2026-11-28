@@ -46,6 +46,15 @@ const otherProof = { ...proof, keys: { ...proof.keys, encryption: bytes(422, 1) 
 const otherSignature = { ...proof, proof: bytes(64, 1) };
 const otherSigner = { ...signer, signing: bytes(91, 8) };
 
+function pairingWindow(): Window {
+  return Object.assign(new EventTarget(), {
+    crypto,
+    document: Object.assign(new EventTarget(), { visibilityState: 'visible' }),
+    setTimeout,
+    clearTimeout,
+  }) as unknown as Window;
+}
+
 it('uses all eight digits and rejects samples at or above the unbiased boundary', () => {
   const next = vi
     .fn<() => number>()
@@ -101,6 +110,70 @@ it('binds each identifier to its device and key material', async () => {
   }
 });
 
+it.each(['retired', 'expired'] as const)('ends the approver wait when an unconfirmed request is %s', async (end) => {
+  vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout', 'performance'] });
+  const view = pairingWindow();
+  const controller = new AbortController();
+  const pendingProof = end === 'expired' ? { ...proof, expiresAt: new Date(Date.now() + 6_000).toISOString() } : proof;
+  const retired = new HttpErrorResponse({ status: 404 });
+  let unavailable = false;
+  let markPublished!: () => void;
+  const published = new Promise<void>((resolve) => {
+    markPublished = resolve;
+  });
+
+  try {
+    const recipient = await RecipientPairingCode.start(crypto, controller.signal);
+    const relay: PairingCodeExchange = { r1: recipient.r1, a1: null, r2: null };
+    const send = vi.fn(async (_proof: DeviceProof, _signal: AbortSignal, message?: PairingCodeMessage) => {
+      if (unavailable) {
+        throw retired;
+      }
+
+      if (message?.step === 'a1') {
+        relay.a1 = message.a1;
+        markPublished();
+      }
+
+      return relay;
+    });
+    const exchange = new ExamplePairingExchange(
+      view,
+      send,
+      () => false,
+      (error) => error === retired,
+      vi.fn(),
+    );
+    const approval = exchange.authenticateRecipient(
+      pendingProof,
+      signer,
+      new ApproverPairingCode(recipient.code),
+      controller.signal,
+    );
+    const rejected = expect(approval).rejects.toMatchObject({ code: 'unavailable' });
+
+    await published;
+
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(send).toHaveBeenCalledTimes(3);
+    unavailable = end === 'retired';
+
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    await rejected;
+
+    await expect(
+      exchange.authenticateRecipient(pendingProof, signer, new ApproverPairingCode(recipient.code), controller.signal),
+    ).rejects.toMatchObject({ code: 'corrupt' });
+
+    expect(send).toHaveBeenCalledTimes(4);
+  } finally {
+    controller.abort();
+    vi.useRealTimers();
+  }
+});
+
 it('authenticates both peers once and refuses to replay either finish message', async () => {
   const recipient = await RecipientPairingCode.start(crypto, new AbortController().signal);
   const approver = new ApproverPairingCode(recipient.code);
@@ -145,12 +218,7 @@ it.each([
 });
 
 it('resumes with the authenticated signer after a committed R2 loses its reply', async () => {
-  const view = Object.assign(new EventTarget(), {
-    crypto,
-    document: Object.assign(new EventTarget(), { visibilityState: 'visible' }),
-    setTimeout,
-    clearTimeout,
-  }) as unknown as Window;
+  const view = pairingWindow();
   const signal = new AbortController();
   const relay: PairingCodeExchange = { r1: null, a1: null, r2: null };
   const retired = new HttpErrorResponse({ status: 404 });
@@ -167,11 +235,13 @@ it('resumes with the authenticated signer after a committed R2 loses its reply',
 
     return relay;
   };
+  const cancel = vi.fn();
   const recipient = new ExamplePairingExchange(
     view,
     send,
     () => false,
     () => false,
+    cancel,
   );
   const checkpoint = vi.fn<(signer?: SigningPin) => void>();
   const identifiers = await ids(proof, signer);
@@ -193,6 +263,7 @@ it('resumes with the authenticated signer after a committed R2 loses its reply',
   } finally {
     stop();
     signal.abort();
+    expect(cancel).not.toHaveBeenCalled();
   }
 
   const resumed = new ExamplePairingExchange(
@@ -202,12 +273,13 @@ it('resumes with the authenticated signer after a committed R2 loses its reply',
     },
     () => false,
     (error) => error === retired,
+    cancel,
   );
   const approved = vi.fn();
   const controller = new AbortController();
   const approval = { epoch: 2 };
 
-  resumed.resume(checkpoint.mock.calls[0][0]);
+  resumed.resume(checkpoint.mock.calls[0][0], proof);
 
   const stopResumed = resumed.watchRecipient(proof, controller.signal, vi.fn(), async () => approval, approved);
 
@@ -218,5 +290,98 @@ it('resumes with the authenticated signer after a committed R2 loses its reply',
   } finally {
     stopResumed();
     controller.abort();
+    resumed.clearRecipient();
+    expect(cancel).not.toHaveBeenCalled();
   }
+});
+
+it('asks the relay to retire the request when the recipient cannot confirm the code', async () => {
+  const controller = new AbortController();
+  const relay: PairingCodeExchange = { r1: null, a1: null, r2: null };
+  const send = vi.fn(async (_proof: DeviceProof, _signal: AbortSignal, message?: PairingCodeMessage) => {
+    if (message?.step === 'r1') {
+      relay.r1 = message.r1;
+    }
+
+    return relay;
+  });
+  const cancel = vi.fn().mockRejectedValue(new Error('Synthetic network failure'));
+  const recipient = new ExamplePairingExchange(
+    pairingWindow(),
+    send,
+    () => false,
+    () => false,
+    cancel,
+  );
+  const checkpoint = vi.fn();
+
+  await recipient.startRecipient(proof, controller.signal);
+
+  const code = recipient.code().replaceAll(' ', '');
+  const wrong = String((Number(code[0]) + 1) % 10) + code.slice(1);
+  const approver = new ApproverPairingCode(wrong);
+  const identifiers = await ids(proof, signer);
+
+  const answer = await approver.start(relay.r1!, signer, identifiers);
+
+  relay.a1 = answer;
+  const stop = recipient.watchRecipient(proof, controller.signal, checkpoint, async () => false, vi.fn());
+
+  try {
+    await vi.waitFor(() => expect(recipient.recipientEnd()).toBe('unconfirmed'));
+
+    expect(recipient.code()).toBe('');
+    expect(checkpoint).not.toHaveBeenCalled();
+    expect(send.mock.calls.some(([, , message]) => message?.step === 'r2')).toBe(false);
+    recipient.clearRecipient();
+    expect(cancel).toHaveBeenCalledExactlyOnceWith(proof);
+  } finally {
+    stop();
+    controller.abort();
+    approver.clear();
+  }
+});
+
+it.each(['cancel', 'discard'] as const)('retires a live request once on %s', async (action) => {
+  const controller = new AbortController();
+  const cancel = vi.fn().mockResolvedValue(undefined);
+  const exchange = new ExamplePairingExchange(
+    pairingWindow(),
+    vi.fn(),
+    () => false,
+    () => false,
+    cancel,
+  );
+
+  await exchange.startRecipient(proof, controller.signal);
+
+  if (action === 'cancel') {
+    exchange.endRecipient('cancelled');
+    expect(exchange.recipientEnd()).toBe('cancelled');
+  } else {
+    controller.abort();
+    expect(exchange.recipientEnd()).toBe('unconfirmed');
+  }
+
+  expect(exchange.code()).toBe('');
+  exchange.clearRecipient();
+  expect(cancel).toHaveBeenCalledExactlyOnceWith(proof);
+});
+
+it('keeps an expired draft ended when the relay already retired it', () => {
+  const cancel = vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 404 }));
+  const exchange = new ExamplePairingExchange(
+    pairingWindow(),
+    vi.fn(),
+    () => false,
+    () => false,
+    cancel,
+  );
+
+  const expired = { ...proof, expiresAt: '2000-01-01T00:00:00.000Z' };
+
+  exchange.resume(undefined, expired);
+
+  expect(exchange.recipientEnd()).toBe('expired');
+  expect(cancel).toHaveBeenCalledExactlyOnceWith(expired);
 });

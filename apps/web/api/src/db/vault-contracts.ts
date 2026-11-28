@@ -23,7 +23,7 @@ import {
   enrollmentRequestSchema,
   revokeDeviceSchema,
   rotateDevicesSchema,
-} from './devices';
+} from './device-schemas';
 
 const params = targetSchema.extend({ domain: z.string().regex(/^[a-z][a-z0-9-]{0,63}$/) });
 const path = '/tenants/:tenantId/scopes/:scopeId/domains/:domain';
@@ -73,6 +73,15 @@ export const vaultContracts = {
     summary: 'Read a currently pending Vault Example request',
     request: z.object({ params: targetSchema.extend({ id: z.uuid() }) }),
     responses: response(deviceProofSchema),
+  }),
+  cancelPairing: defineRoute({
+    ...base,
+    method: 'delete',
+    path: `${pairingPath}/:id`,
+    operationId: 'vault_pairing_cancel',
+    summary: 'Retire the current account’s active Vault Example request',
+    request: z.object({ params: targetSchema.extend({ id: z.uuid() }) }),
+    responses: response(z.strictObject({ cancelled: z.literal(true) })),
   }),
   readPairingCode: defineRoute({
     ...base,

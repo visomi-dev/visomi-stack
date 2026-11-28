@@ -426,7 +426,7 @@ export class ExampleWorkspace {
 
     if (this.backedSample) {
       this.watchCursor.set(null);
-      this.syncStatus.show('idle');
+      this.syncStatus.reset();
     }
   }
 
@@ -474,14 +474,17 @@ export class ExampleWorkspace {
 
   private readonly clearSessionState = effect(() => {
     this.session.operationVersion();
+    const ready = this.vaultReady();
 
-    if (!this.vaultReady()) {
+    if (!ready) {
       this.editor.clear();
       this.privateDraft.set('');
 
       if (this.backedSample) {
-        this.syncStatus.show('idle');
+        this.syncStatus.reset();
       }
+    } else if (this.backedSample) {
+      this.syncStatus.setPending(this.privateResource.pending());
     }
 
     if (!this.sameSession()) {

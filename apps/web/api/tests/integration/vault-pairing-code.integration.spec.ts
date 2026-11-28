@@ -3,7 +3,7 @@ import { exampleWorkspaceTargetSchema } from '@visomi-stack/shared-db';
 import { eq } from 'drizzle-orm';
 import { expect, it } from 'vitest';
 
-import { base, enableBackupObjects, fixture, resource } from './support/persistence';
+import { base, enableBackupObjects, fixture, pairingNotice, resource } from './support/persistence';
 import { authorize, boot, deliver, identity, prove, request, vaultBase } from './support/vault';
 
 enableBackupObjects((objects) => objects);
@@ -108,7 +108,7 @@ it('relays pairing code messages once and in order for an active challenge in th
   await expect(write(finish)).resolves.toMatchObject({ status: 404 });
 
   const later = await request(f.owner, target, identity());
-  const laterPath = `${devices}/pairing/${later.requestId}/code`;
+  const laterPath = `${devices}/pairing/${later.requestId}`;
 
   await expect(f.owner.call(`${devices}/pairing`, 'POST', later)).resolves.toMatchObject({ status: 200 });
 
@@ -116,7 +116,12 @@ it('relays pairing code messages once and in order for an active challenge in th
 
   await resource.db.update(vaultSchema.keyScopes).set({ generation: 2 }).where(registry);
 
-  await expect(f.owner.call(laterPath, 'POST', firstMessage)).resolves.toMatchObject({ status: 404 });
+  await expect(f.owner.call(laterPath + '/code', 'POST', firstMessage)).resolves.toMatchObject({ status: 404 });
+
+  await expect(f.owner.call(laterPath, 'DELETE')).resolves.toMatchObject({
+    status: 404,
+    body: { error: 'device_challenge_invalid' },
+  });
 
   await resource.db.update(vaultSchema.keyScopes).set({ generation: 1 }).where(registry);
 
@@ -125,5 +130,85 @@ it('relays pairing code messages once and in order for an active challenge in th
     .set({ expiresAt: new Date(0) })
     .where(eq(vaultSchema.keyChallenges.id, later.requestId));
 
-  await expect(f.owner.call(laterPath, 'POST', firstMessage)).resolves.toMatchObject({ status: 404 });
+  await expect(f.owner.call(laterPath + '/code', 'POST', firstMessage)).resolves.toMatchObject({ status: 404 });
+
+  await expect(f.owner.call(laterPath, 'DELETE')).resolves.toMatchObject({
+    status: 404,
+    body: { error: 'device_challenge_invalid' },
+  });
+
+  const [unchanged] = await resource.db
+    .select({ consumedAt: vaultSchema.keyChallenges.consumedAt })
+    .from(vaultSchema.keyChallenges)
+    .where(eq(vaultSchema.keyChallenges.id, later.requestId));
+
+  expect(unchanged.consumedAt).toBeNull();
+});
+
+it('retires an abandoned pairing only for its owner and vault, and notifies the approver once', async () => {
+  const f = await fixture();
+  const setup = await f.owner.call('/example/vault/workspaces/setup', 'POST', {});
+  const target = exampleWorkspaceTargetSchema.parse(setup.body);
+  const devices = `${vaultBase(target)}/devices`;
+  const approver = identity();
+
+  await boot({ ...f, target }, approver);
+
+  const proof = await request(f.owner, target, identity());
+  const pairing = `${devices}/pairing/${proof.requestId}`;
+  const code = pairing + '/code';
+  const r1 = Buffer.alloc(96, 1).toString('base64url');
+  const a1 = {
+    loginResponse: Buffer.alloc(320, 2).toString('base64url'),
+    signer: { deviceId: approver.id, signing: approver.keys.signing },
+  };
+
+  await expect(f.owner.call(`${devices}/pairing`, 'POST', proof)).resolves.toMatchObject({ status: 200 });
+
+  await expect(f.owner.call(code, 'POST', { step: 'r1', r1 })).resolves.toMatchObject({ status: 200 });
+
+  await expect(f.owner.call(code, 'POST', { step: 'a1', a1 })).resolves.toMatchObject({ status: 200 });
+
+  const second = await f.owner.call(`${base(f.tenant)}/children`, 'POST', { kind: 'resource', objectBackup: true });
+  const otherTarget = exampleWorkspaceTargetSchema.parse(second.body);
+
+  await boot({ ...f, target: otherTarget }, approver);
+
+  pairingNotice.mockClear();
+
+  await expect(f.outsider.call(pairing, 'DELETE')).resolves.toMatchObject({ status: 403 });
+
+  await expect(
+    f.owner.call(`${vaultBase(otherTarget)}/devices/pairing/${proof.requestId}`, 'DELETE'),
+  ).resolves.toMatchObject({ status: 404, body: { error: 'device_challenge_invalid' } });
+
+  expect(pairingNotice).not.toHaveBeenCalled();
+
+  await expect(f.owner.call(code)).resolves.toMatchObject({ status: 200, body: { r1, a1, r2: null } });
+
+  await expect(f.owner.call(pairing, 'DELETE')).resolves.toMatchObject({ status: 200, body: { cancelled: true } });
+
+  await expect(f.owner.call(pairing, 'DELETE')).resolves.toMatchObject({
+    status: 404,
+    body: { error: 'device_challenge_invalid' },
+  });
+
+  expect(pairingNotice).toHaveBeenCalledExactlyOnceWith(proof.ownerId);
+
+  await expect(f.owner.call(code)).resolves.toMatchObject({
+    status: 404,
+    body: { error: 'device_challenge_invalid' },
+  });
+
+  await expect(
+    f.owner.call(code, 'POST', { step: 'r2', r2: Buffer.alloc(64, 3).toString('base64url') }),
+  ).resolves.toMatchObject({ status: 404, body: { error: 'device_challenge_invalid' } });
+
+  const body = { proof, delivery: deliver(proof) };
+  const authorization = authorize(approver, proof.key, 1, 'approve', body);
+
+  await expect(f.owner.call(`${devices}/approve`, 'POST', { ...body, authorization })).resolves.toMatchObject({
+    status: 400,
+    body: { error: 'device_challenge_invalid' },
+  });
 });

@@ -33,6 +33,7 @@ export class PinInput {
   readonly disabled = input(false);
   readonly required = input(false, { transform: booleanAttribute });
   readonly acceptFormattedPaste = input(false, { alias: 'accept-formatted-paste', transform: booleanAttribute });
+  readonly acceptSpaces = input(false, { alias: 'accept-spaces', transform: booleanAttribute });
   readonly type = input<'password' | 'text'>('password');
   readonly autocomplete = input<'off' | 'one-time-code'>('off');
   readonly name = input<string>();
@@ -45,9 +46,19 @@ export class PinInput {
     this.control().nativeElement.focus(options);
   }
 
-  protected changeValue(value: string): void {
+  protected changeValue(control: HTMLInputElement): void {
     if (this.disabled()) {
       return;
+    }
+
+    const raw = control.value;
+    const value = this.acceptSpaces() ? raw.replaceAll(' ', '').slice(0, this.digits()) : raw;
+
+    if (raw !== value) {
+      const caret = raw.slice(0, control.selectionStart ?? raw.length).replaceAll(' ', '').length;
+
+      control.value = value;
+      control.setSelectionRange(caret, caret);
     }
 
     this.valueChange.emit(value);
@@ -78,7 +89,7 @@ export class PinInput {
 
     if (available > 0) {
       control.setRangeText(digits.slice(0, available), start, end, 'end');
-      this.changeValue(control.value);
+      this.changeValue(control);
     }
   }
 

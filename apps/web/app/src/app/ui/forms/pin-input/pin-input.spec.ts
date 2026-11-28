@@ -7,13 +7,21 @@ import { Field, PinInput } from '../../index';
   imports: [Field, PinInput],
   template: `
     <app-field control-id="approval-pin" label="Approval PIN" [manual-error]="error()">
-      <app-pin-input required [digits]="5" [value]="code()" (valueChange)="changeCode($event)" />
+      <app-pin-input
+        required
+        [digits]="grouped() ? 8 : 5"
+        [accept-spaces]="grouped()"
+        [accept-formatted-paste]="grouped()"
+        [value]="code()"
+        (valueChange)="changeCode($event)"
+      />
     </app-field>
   `,
 })
 class ApprovalForm {
   readonly code = signal('');
   readonly error = signal('');
+  readonly grouped = signal(false);
 
   protected changeCode(value: string): void {
     this.code.set(value);
@@ -70,4 +78,26 @@ it('emits a native edit once and restores the supplied value when the owner decl
   expect(handleEdit).toHaveBeenCalledExactlyOnceWith('00124');
   expect(owner.code()).toBe('00123');
   expect(control.value).toBe('00123');
+});
+
+it('accepts an eight-digit code with a space, including on paste', () => {
+  const view = TestBed.createComponent(ApprovalForm);
+
+  view.componentInstance.grouped.set(true);
+  view.detectChanges();
+  const control = (view.nativeElement as HTMLElement).querySelector('input')!;
+
+  expect(control.maxLength).toBe(9);
+  control.value = '0123 4567';
+  control.dispatchEvent(new Event('input'));
+  expect(control.checkValidity()).toBe(true);
+  expect(control.value).toBe('01234567');
+  expect(view.componentInstance.code()).toBe('01234567');
+  control.select();
+  const paste = new Event('paste', { cancelable: true });
+
+  Object.defineProperty(paste, 'clipboardData', { value: { getData: () => '8765 4321' } });
+  control.dispatchEvent(paste);
+  expect(paste.defaultPrevented).toBe(true);
+  expect(view.componentInstance.code()).toBe('87654321');
 });

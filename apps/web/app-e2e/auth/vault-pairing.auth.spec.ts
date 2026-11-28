@@ -120,8 +120,8 @@ test('pairs two PIN-only devices with a new 8-digit code after a wrong attempt',
     await selectPairingPin(peer);
 
     const localPin = peer.getByLabel('Local unlock PIN', { exact: true });
-    const displayedCode = peer.getByLabel('Pairing code', { exact: true });
-    const reviewLink = peer.getByRole('link', { name: 'Open review link', exact: true });
+    const displayedCode = peer.getByRole('status', { name: /^Pairing code, / });
+    const reviewLink = peer.getByRole('link', { name: 'Review link for the other device', exact: true });
     const openNote = peer.getByRole('link', { name: 'Open vault note', exact: true });
     const requestPairing = async () => {
       await localPin.fill(recipientPin);
@@ -298,13 +298,13 @@ test('opens the backed note on an approved desktop with its own PIN and no passk
     expect(resumedRequest.deviceId).toBe(previous.deviceId);
     expect(resumedRequest.keys).toEqual(previous.keys);
 
-    const reviewLink = peer.getByRole('link', { name: 'Open review link', exact: true });
+    const reviewLink = peer.getByRole('link', { name: 'Review link for the other device', exact: true });
 
     await expect(reviewLink).toBeVisible();
 
     const href = await reviewLink.getAttribute('href');
     const relative = new URL(href!);
-    const displayedCode = peer.getByLabel('Pairing code', { exact: true });
+    const displayedCode = peer.getByRole('status', { name: /^Pairing code, / });
     const codeInput = page.getByLabel('Pairing code', { exact: true });
     const approveDevice = page.getByRole('button', { name: 'Approve this device' });
 

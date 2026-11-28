@@ -211,7 +211,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
   await expect(panel.getByText('Saved on this device. Waiting for backup.')).toBeVisible();
 
-  await expect(page.getByRole('button', { name: 'Retry Vault sync' })).toBeVisible();
+  await expect(page.locator('app-vault-sync-indicator').getByRole('status')).toHaveText('Waiting for backup');
 
   const source = await replicaNote(page, objectId);
 
@@ -237,7 +237,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
   await panel.getByRole('link', { name: 'Link a device' }).click();
 
-  await expect(page.getByText('Requests from your other devices will appear in the app.')).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Waiting for a link request…' })).toBeVisible();
 
   const pairingUrl = page.url();
   const recipientContext = await browser.newContext({
@@ -395,7 +395,7 @@ test('backs up the Vault Example note to private object storage and restores it 
 
     expect(publication.ok()).toBe(true);
     const original = deviceProofSchema.parse(publication.request().postDataJSON());
-    const displayedCode = recipient.getByLabel('Pairing code', { exact: true });
+    const displayedCode = recipient.getByRole('status', { name: /^Pairing code, / });
 
     await expect(displayedCode).toHaveText(/^[0-9]{4} [0-9]{4}$/);
 

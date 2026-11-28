@@ -50,6 +50,17 @@ export function registerVaultRoutes(
       },
     },
     {
+      contract: contracts.cancelPairing,
+      handler: async (req, res, value) => {
+        const session = actor(req);
+        const result = await devices.cancelPairing(session, target(value.params), value.params.id);
+
+        notifyPairing(session.principal.id);
+
+        return res.json(result);
+      },
+    },
+    {
       contract: contracts.readPairingCode,
       handler: async (req, res, value) => {
         const exchange = await devices.readPairingCode(actor(req), target(value.params), value.params.id);

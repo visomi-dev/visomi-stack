@@ -2,12 +2,8 @@ import { randomBytes, randomUUID } from 'node:crypto';
 
 import { vaultSchema } from '@visomi-stack/backend-db';
 import {
-  devicePublicKeysSchema,
   deviceProofSchema,
   deviceProofMessage,
-  deviceDeliverySchema,
-  deviceHistorySchema,
-  deviceActionSchema,
   deviceActionMessage,
   deviceDeliveryLabel,
   keyDomainId,
@@ -19,32 +15,22 @@ import {
 } from '@visomi-stack/shared-db';
 import { HttpError } from '@visomi-stack/web-backend-shared';
 import { and, eq, gt, isNotNull, isNull, sql } from 'drizzle-orm';
-import { z } from 'zod';
+import type { z } from 'zod';
 
 import { input, type Access, type ScopeAccess, type SessionActor } from '../access/service';
 
 import { publicHash, verifyDeviceAction, verifyDeviceProof } from './device-proof';
 import { keyPredicate, VaultAccess } from './vault-access';
 import { requireHistory } from './device-history';
+import {
+  approvalSchema,
+  bootstrapSchema,
+  enrollmentRequestSchema,
+  revokeDeviceSchema,
+  rotateDevicesSchema,
+} from './device-schemas';
 
 const { keyScopes, keyDevices, keyChallenges } = vaultSchema;
-
-export const enrollmentRequestSchema = z.strictObject({ deviceId: protocolIdSchema, keys: devicePublicKeysSchema });
-export const approvalSchema = z.strictObject({
-  proof: deviceProofSchema,
-  delivery: deviceDeliverySchema,
-  history: deviceHistorySchema.optional(),
-  authorization: deviceActionSchema,
-});
-export const bootstrapSchema = z.union([
-  deviceProofSchema,
-  z.strictObject({ primary: deviceProofSchema, recovery: approvalSchema }),
-]);
-export const revokeDeviceSchema = z.strictObject({ deviceId: protocolIdSchema, authorization: deviceActionSchema });
-export const rotateDevicesSchema = z.strictObject({
-  deliveries: z.array(deviceDeliverySchema).min(1).max(64),
-  authorization: deviceActionSchema,
-});
 
 /** Cloud controls access and single-use challenges; only authorized clients can create deliveries. */
 export class KeyDevices {
@@ -86,6 +72,17 @@ export class KeyDevices {
       }
 
       return proof.data;
+    });
+  }
+
+  async cancelPairing(actor: SessionActor, target: unknown, id: string) {
+    return this.withExamplePairing(actor, target, id, async ({ tx }, condition) => {
+      await tx
+        .update(keyChallenges)
+        .set({ consumedAt: sql`clock_timestamp()` })
+        .where(condition);
+
+      return { cancelled: true as const };
     });
   }
 

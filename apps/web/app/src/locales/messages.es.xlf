@@ -1367,16 +1367,44 @@
         <target>Esta solicitud ya no está disponible. Inicia una nueva en el otro dispositivo.</target>
       </trans-unit>
       <trans-unit id="vaultPairingWaitingHere" datatype="html">
-        <source>Requests from your other devices will appear in the app.</source>
-        <target>Las solicitudes de tus otros dispositivos aparecerán en la app.</target>
+        <source>Waiting for a link request…</source>
+        <target>Esperando una solicitud de vinculación…</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingStartOnNewDevice" datatype="html">
+        <source>On the new device, select this vault in Vault example, choose “Link a device,” and request pairing.</source>
+        <target>En el dispositivo nuevo, selecciona esta bóveda en Ejemplo de bóveda, elige “Vincular un dispositivo” y solicita la vinculación.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingEnterCodeHere" datatype="html">
+        <source>When the pairing notice appears on this page, choose “Review request.” Enter the 8-digit code from the new device here.</source>
+        <target>Cuando aparezca el aviso de vinculación en esta página, elige “Revisar solicitud”. Ingresa aquí el código de 8 dígitos del dispositivo nuevo.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingRequestReady" datatype="html">
+        <source>Request ready to review</source>
+        <target>Solicitud lista para revisar</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingLoadingReview" datatype="html">
+        <source>Loading pairing request…</source>
+        <target>Cargando la solicitud de vinculación…</target>
       </trans-unit>
       <trans-unit id="vaultPairingCodeInstructions" datatype="html">
         <source>Enter the 8-digit code shown on the new device.</source>
         <target>Ingresa el código de 8 dígitos que aparece en el dispositivo nuevo.</target>
       </trans-unit>
+      <trans-unit id="vaultPairingReviewEnded" datatype="html">
+        <source>The code wasn’t confirmed or the request was cancelled. Start again on the new device.</source>
+        <target>No se confirmó el código o se canceló la solicitud. Vuelve a empezar en el dispositivo nuevo.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingCodeUnconfirmed" datatype="html">
+        <source>The code couldn’t be confirmed. Start again and enter the new code on the device approving the request.</source>
+        <target>No se pudo confirmar el código. Vuelve a empezar e ingresa el código nuevo en el dispositivo que aprueba la solicitud.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingRequestCancelled" datatype="html">
+        <source>You cancelled this pairing request. Start again if you still want to link this device.</source>
+        <target>Cancelaste esta solicitud. Vuelve a empezar si todavía quieres vincular este dispositivo.</target>
+      </trans-unit>
       <trans-unit id="vaultPairingCodeExpired" datatype="html">
-        <source>This pairing attempt ended. Start again to get a new code.</source>
-        <target>Este intento de vinculación terminó. Vuelve a empezar para obtener un código nuevo.</target>
+        <source>This pairing request expired. Start again to get a new code.</source>
+        <target>Esta solicitud de vinculación venció. Vuelve a empezar para obtener un código nuevo.</target>
       </trans-unit>
       <trans-unit id="vaultPairingCodeLabel" datatype="html">
         <source>Pairing code</source>
@@ -1411,8 +1439,8 @@
         <target>Esperando aprobación en tu otro dispositivo.</target>
       </trans-unit>
       <trans-unit id="vaultPairingLinkInstructions" datatype="html">
-        <source>Review the request in Stack on a device that can already open this vault. If the notice doesn’t appear, open this link there.</source>
-        <target>Revisa la solicitud en Stack desde un dispositivo que ya pueda abrir esta bóveda. Si no aparece el aviso, abre este enlace ahí.</target>
+        <source>On a device that can already open this vault, choose “Review request” and enter this code.</source>
+        <target>En un dispositivo que ya pueda abrir esta bóveda, elige “Revisar solicitud” e ingresa este código.</target>
       </trans-unit>
       <trans-unit id="vaultPairingCopyLink" datatype="html">
         <source>Copy review link</source>
@@ -1422,9 +1450,29 @@
         <source>Open this review link on a device that can already unlock this vault.</source>
         <target>Abre este enlace en un dispositivo que ya pueda abrir esta bóveda.</target>
       </trans-unit>
+      <trans-unit id="vaultPairingReviewFallback" datatype="html">
+        <source>If the notice doesn’t appear, copy the review link and open it on that other device.</source>
+        <target>Si no aparece el aviso, copia el enlace de revisión y ábrelo en el otro dispositivo.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingSpokenCode" datatype="html">
+        <source>Pairing code, <x id="digits" equiv-text="digits"/></source>
+        <target>Código de vinculación, <x id="digits" equiv-text="digits"/></target>
+      </trans-unit>
+      <trans-unit id="vaultPairingBack" datatype="html">
+        <source>Back to vault workspace</source>
+        <target>Volver al espacio de trabajo de la bóveda</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingPhoneHelp" datatype="html">
+        <source>To use your phone’s passkey, follow the browser’s QR prompts and keep Bluetooth on for both devices.</source>
+        <target>Para usar la clave de acceso de tu teléfono, sigue las instrucciones del código QR en el navegador y activa Bluetooth en ambos dispositivos.</target>
+      </trans-unit>
+      <trans-unit id="vaultPairingUseDevice" datatype="html">
+        <source>Use device pairing instead</source>
+        <target>Vincular el dispositivo en su lugar</target>
+      </trans-unit>
       <trans-unit id="vaultPairingOpenLink" datatype="html">
-        <source>Open review link</source>
-        <target>Abrir enlace de revisión</target>
+        <source>Review link for the other device</source>
+        <target>Enlace de revisión para el otro dispositivo</target>
       </trans-unit>
       <trans-unit id="vaultPairingLinkCopied" datatype="html">
         <source>Review link copied.</source>
@@ -1614,6 +1662,18 @@
         <source>Vault sync failed</source>
         <target>No se pudo sincronizar la bóveda</target>
       </trans-unit>
+      <trans-unit id="vaultSyncWaiting" datatype="html">
+        <source>Waiting for backup</source>
+        <target>En espera del respaldo</target>
+      </trans-unit>
+      <trans-unit id="vaultSyncOffline" datatype="html">
+        <source>Vault offline</source>
+        <target>Bóveda sin conexión</target>
+      </trans-unit>
+      <trans-unit id="vaultSyncLastSuccess" datatype="html">
+        <source>Last synced</source>
+        <target>Última sincronización</target>
+      </trans-unit>
       <trans-unit id="vaultSyncRetry" datatype="html">
         <source>Retry Vault sync</source>
         <target>Reintentar sincronización de la bóveda</target>
@@ -1798,9 +1858,29 @@
         <source> Keep access to a linked device. If you lose access to every device, resetting your password won’t recover your note. </source>
         <target>Conserva al menos un dispositivo vinculado. Si pierdes el acceso a todos, cambiar tu contraseña no te permitirá recuperar la nota.</target>
       </trans-unit>
+      <trans-unit id="vaultSetupMethodTitle" datatype="html">
+        <source>Choose an unlock method</source>
+        <target>Elige un método de desbloqueo</target>
+      </trans-unit>
+      <trans-unit id="vaultSetupSteps" datatype="html">
+        <source>Vault setup steps</source>
+        <target>Pasos para configurar la bóveda</target>
+      </trans-unit>
+      <trans-unit id="vaultSetupStepMethod" datatype="html">
+        <source>1. Choose a method</source>
+        <target>1. Elige un método</target>
+      </trans-unit>
+      <trans-unit id="vaultSetupStepRecovery" datatype="html">
+        <source>2. Save the recovery key</source>
+        <target>2. Guarda la clave de recuperación</target>
+      </trans-unit>
+      <trans-unit id="vaultSetupStepNote" datatype="html">
+        <source>3. Write a note</source>
+        <target>3. Escribe una nota</target>
+      </trans-unit>
       <trans-unit id="vaultSetupConfirm" datatype="html">
-        <source>Use a passkey you’ve already registered for this account to set up the vault on this device.</source>
-        <target>Usa una clave de acceso que ya registraste en esta cuenta para configurar la bóveda en este dispositivo.</target>
+        <source>Use a passkey already registered to this account.</source>
+        <target>Usa una clave de acceso que ya esté registrada en esta cuenta.</target>
       </trans-unit>
       <trans-unit id="vaultPasskeyNotRegistered" datatype="html">
         <source>Use a passkey registered to this account. You can manage your passkeys in Security.</source>
@@ -1853,6 +1933,14 @@
       <trans-unit id="vaultUnlockLinkAnotherDevice" datatype="html">
         <source>Link another device</source>
         <target>Vincular otro dispositivo</target>
+      </trans-unit>
+      <trans-unit id="vaultAccessHeading" datatype="html">
+        <source>Vault access</source>
+        <target>Acceso a la bóveda</target>
+      </trans-unit>
+      <trans-unit id="vaultLinkDeviceHelp" datatype="html">
+        <source>Open this vault on another device.</source>
+        <target>Abre esta bóveda en otro dispositivo.</target>
       </trans-unit>
       <trans-unit id="vaultLinkDevice" datatype="html">
         <source>Link a device</source>
@@ -1993,6 +2081,14 @@
       <trans-unit id="vaultDownloadRecovery" datatype="html">
         <source>Download recovery key (.txt)</source>
         <target>Descargar clave de recuperación (.txt)</target>
+      </trans-unit>
+      <trans-unit id="vaultRecoveryConfirmHelp" datatype="html">
+        <source>Download the file to enable confirmation.</source>
+        <target>Descarga el archivo para habilitar la confirmación.</target>
+      </trans-unit>
+      <trans-unit id="vaultRecoveryConfirmReady" datatype="html">
+        <source>Confirm once you’ve saved the file.</source>
+        <target>Confirma después de guardar el archivo.</target>
       </trans-unit>
       <trans-unit id="vaultConfirmRecovery" datatype="html">
         <source>I saved my recovery key</source>

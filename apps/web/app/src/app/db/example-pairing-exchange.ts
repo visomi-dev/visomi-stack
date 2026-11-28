@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import {
   VaultError,
   pairingCodeExchangeSchema,
@@ -12,9 +12,12 @@ import {
 import { ApproverPairingCode, RecipientPairingCode, pairingCodeIdentifiers } from './example-pairing-code';
 import { watchVaultPairing } from './example-vault-pairing-watch';
 
+type RecipientEnd = 'unconfirmed' | 'expired' | 'cancelled';
+
 export class ExamplePairingExchange {
   private readonly attemptedReviews = new Set<string>();
 
+  private recipientRequest?: DeviceProof;
   private recipientAttempt?: RecipientPairingCode;
   private recipientPin?: Uint8Array;
   private recipientCancellation?: AbortController;
@@ -24,7 +27,13 @@ export class ExamplePairingExchange {
   private wasCancelled = false;
 
   readonly code = signal('');
-  readonly approval = signal<'waiting' | 'approved' | 'expired'>('waiting');
+  readonly approval = signal<'waiting' | 'approved' | RecipientEnd>('waiting');
+
+  readonly recipientEnd = computed(() => {
+    const approval = this.approval();
+
+    return approval === 'waiting' || approval === 'approved' ? null : approval;
+  });
 
   authenticatedSigner?: SigningPin;
 
@@ -33,13 +42,15 @@ export class ExamplePairingExchange {
     private readonly send: (proof: DeviceProof, signal: AbortSignal, message?: PairingCodeMessage) => Promise<unknown>,
     private readonly connected: () => boolean,
     private readonly retired: (error: unknown) => boolean,
+    private readonly cancelRequest: (proof: DeviceProof) => Promise<unknown>,
   ) {}
 
-  resume(signer: SigningPin | undefined): void {
+  resume(signer: SigningPin | undefined, proof: DeviceProof): void {
     this.authenticatedSigner = signer;
+    this.recipientRequest = proof;
 
     if (!signer) {
-      this.approval.set('expired');
+      this.endRecipient(Date.parse(proof.expiresAt) <= Date.now() ? 'expired' : 'unconfirmed');
     }
   }
 
@@ -89,7 +100,7 @@ export class ExamplePairingExchange {
             retired = false;
 
             if (Boolean(exchange.r2) !== Boolean(this.authenticatedSigner)) {
-              expire();
+              end();
             } else if (!this.authenticatedSigner && exchange.a1) {
               await this.acceptApprover(proof, exchange.a1, signal, checkpoint);
             }
@@ -98,7 +109,7 @@ export class ExamplePairingExchange {
           }
 
           if (!this.authenticatedSigner) {
-            expire();
+            end();
 
             return;
           }
@@ -118,14 +129,14 @@ export class ExamplePairingExchange {
             this.approval.set('approved');
             onApproved(auto, approval);
           } else if (retired || expired) {
-            expire();
+            end();
           } else {
             // A concurrent approval may be between challenge consumption and committing its delivery.
             retired = true;
           }
         } catch {
           if (!signal.aborted) {
-            expire();
+            end();
           }
         }
       },
@@ -140,9 +151,12 @@ export class ExamplePairingExchange {
       watch.stop();
       signal.removeEventListener('abort', stop);
     };
-    const expire = () => {
+    const end = () => {
       stop();
-      this.expireRecipient();
+
+      if (this.approval() === 'waiting') {
+        this.endRecipient(Date.parse(proof.expiresAt) <= Date.now() ? 'expired' : 'unconfirmed');
+      }
     };
 
     this.wakeRecipient = watch.wake;
@@ -164,14 +178,14 @@ export class ExamplePairingExchange {
       this.wasCancelled = true;
 
       if (!this.authenticatedSigner) {
-        this.expireRecipient();
+        this.endRecipient();
       } else {
         this.clearRecipient();
       }
     };
     const expire = () => {
       if (!this.authenticatedSigner) {
-        this.expireRecipient();
+        this.endRecipient('expired');
       } else {
         this.recipientPin?.fill(0);
         this.recipientPin = undefined;
@@ -179,6 +193,7 @@ export class ExamplePairingExchange {
     };
 
     this.wasCancelled = false;
+    this.recipientRequest = proof;
     this.recipientCancellation = cancellation;
     this.stopRecipientCancellation = () => {
       active.removeEventListener('abort', cancel);
@@ -202,7 +217,9 @@ export class ExamplePairingExchange {
 
       this.code.set(`${code.slice(0, 4)} ${code.slice(4)}`);
     } catch {
-      this.expireRecipient();
+      if (this.approval() === 'waiting') {
+        this.endRecipient();
+      }
     }
   }
 
@@ -242,13 +259,16 @@ export class ExamplePairingExchange {
     attempt.finish(r2);
   }
 
-  expireRecipient(): void {
-    this.clearRecipient();
+  endRecipient(reason: RecipientEnd = 'unconfirmed'): void {
     this.authenticatedSigner = undefined;
-    this.approval.set('expired');
+    this.clearRecipient();
+    this.approval.set(reason);
   }
 
   clearRecipient(): void {
+    const request = this.recipientRequest;
+
+    this.recipientRequest = undefined;
     this.stopRecipientCancellation?.();
     this.stopRecipientCancellation = undefined;
     this.recipientCancellation?.abort();
@@ -258,6 +278,10 @@ export class ExamplePairingExchange {
     this.code.set('');
     this.recipientPin?.fill(0);
     this.recipientPin = undefined;
+
+    if (request && !this.authenticatedSigner) {
+      void this.cancelRequest(request).catch(() => undefined);
+    }
   }
 
   private waitForRecipient(proof: DeviceProof, signal: AbortSignal): Promise<string> {
@@ -270,7 +294,9 @@ export class ExamplePairingExchange {
           try {
             const exchange = await this.readPairingCode(proof, signal);
 
-            if (exchange === null) {
+            signal.throwIfAborted();
+
+            if (exchange === null || (exchange && !exchange.a1) || Date.parse(proof.expiresAt) <= Date.now()) {
               throw new VaultError('corrupt');
             }
 

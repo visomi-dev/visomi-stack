@@ -55,6 +55,8 @@ export class ExampleVaultPairing {
       this.api.vault(`${this.path()}/devices/pairing/${proof.requestId}/code`, message, signal),
     () => !!this.realtime?.connected(),
     (error) => this.drafts.retired(error),
+    // The authenticated layout owns this request so retiring an attempt can outlive its view.
+    (proof) => this.api.vault(`${this.path()}/devices/pairing/${proof.requestId}`, undefined, undefined, 'DELETE'),
   );
 
   readonly pending = signal<PendingPairing | null>(null);
@@ -87,7 +89,7 @@ export class ExampleVaultPairing {
   readonly paired = signal(false);
   readonly approverFingerprint = signal('');
   readonly reviewProof = signal<DeviceProof | null>(null);
-  readonly reviewUnavailable = signal(false);
+  readonly reviewFailure = signal<'unavailable' | 'ended' | null>(null);
   readonly pin = signal('');
   readonly confirmPin = signal('');
 
@@ -98,6 +100,8 @@ export class ExampleVaultPairing {
   });
   readonly approval = computed(() => this.exchange.approval());
   readonly code = computed(() => this.exchange.code());
+
+  readonly recipientEnd = this.exchange.recipientEnd;
 
   async initialize(target: ExampleTarget, rpId: string, backed: boolean): Promise<void> {
     this.target = target;
@@ -128,7 +132,7 @@ export class ExampleVaultPairing {
         signal.throwIfAborted();
 
         if (pending) {
-          this.exchange.resume(pending.authenticatedSigner);
+          this.exchange.resume(pending.authenticatedSigner, pending.proof);
         }
 
         this.pending.set(pending);
@@ -155,7 +159,7 @@ export class ExampleVaultPairing {
   async loadReview(requestId: string | undefined, signal: AbortSignal): Promise<void> {
     this.reviewSignal = signal;
     this.reviewProof.set(null);
-    this.reviewUnavailable.set(false);
+    this.reviewFailure.set(null);
 
     if (!requestId) {
       return;
@@ -166,15 +170,20 @@ export class ExampleVaultPairing {
       const proof = deviceProofSchema.parse(raw);
       const verified = await new WebCryptoDevices(this.view.crypto).verify(proof);
 
-      if (proof.requestId !== requestId || this.exchange.attempted(requestId) || !verified) {
+      if (proof.requestId !== requestId || !verified) {
         throw new VaultError('corrupt');
       }
 
       signal.throwIfAborted();
-      this.reviewProof.set(proof);
-    } catch {
+
+      if (this.exchange.attempted(requestId) || Date.parse(proof.expiresAt) <= Date.now()) {
+        this.reviewFailure.set('ended');
+      } else {
+        this.reviewProof.set(proof);
+      }
+    } catch (error) {
       if (!signal.aborted) {
-        this.reviewUnavailable.set(true);
+        this.reviewFailure.set(this.drafts.retired(error) ? 'ended' : 'unavailable');
       }
     }
   }
@@ -273,7 +282,7 @@ export class ExampleVaultPairing {
 
             await this.exchange.startRecipient(proof, signal, supplied);
           } catch {
-            this.exchange.expireRecipient();
+            this.exchange.endRecipient(Date.parse(proof.expiresAt) <= Date.now() ? 'expired' : 'unconfirmed');
           }
 
           signal.throwIfAborted();
@@ -291,20 +300,10 @@ export class ExampleVaultPairing {
     return this.drafts.dedicated();
   }
 
-  async copyReviewLink(link: string): Promise<void> {
-    try {
-      await this.view.navigator.clipboard.writeText(link);
-
-      this.message.set($localize`:@@vaultPairingLinkCopied:Review link copied.`);
-    } catch {
-      this.message.set($localize`:@@vaultPairingLinkCopyFailed:Select and copy the review link below.`);
-    }
-  }
-
-  resetExpired(): void {
+  restartRequest(): void {
     const pending = this.pending();
 
-    if (pending && this.approval() === 'expired') {
+    if (pending && this.recipientEnd()) {
       this.exchange.clearRecipient();
       this.exchange.authenticatedSigner = undefined;
       this.vault.lockContext(pending.context);
@@ -319,7 +318,7 @@ export class ExampleVaultPairing {
   }
 
   cancelRequest(): void {
-    this.exchange.expireRecipient();
+    this.exchange.endRecipient('cancelled');
   }
 
   approveReview(value: string): Promise<void> {
@@ -343,9 +342,9 @@ export class ExampleVaultPairing {
       try {
         await this.approveProof(proof, ownerId, active, attempt);
       } catch {
-        if (!signal.aborted && !reviewSignal.aborted) {
+        if (!reviewSignal.aborted) {
           this.reviewProof.set(null);
-          this.reviewUnavailable.set(true);
+          this.reviewFailure.set('ended');
         }
       } finally {
         active.removeEventListener('abort', clear);

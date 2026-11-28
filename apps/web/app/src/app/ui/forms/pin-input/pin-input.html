@@ -17,7 +17,7 @@
     autocapitalize="off"
     [spellcheck]="false"
     [minLength]="minDigits()"
-    [maxLength]="digits()"
+    [maxLength]="digits() + (acceptSpaces() ? 1 : 0)"
     [pattern]="pattern()"
     data-slot="control"
     class="absolute inset-y-0 start-0 rounded-lg bg-transparent font-mono outline-hidden disabled:cursor-not-allowed"
@@ -26,7 +26,7 @@
     [attr.aria-invalid]="field.invalid() || !!field.manualError()?.trim() || null"
     [required]="required()"
     [disabled]="disabled()"
-    (input)="changeValue(control.value)"
+    (input)="changeValue(control)"
     (paste)="paste($event)"
     (blur)="markTouched()"
   />
