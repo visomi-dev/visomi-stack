@@ -28,6 +28,8 @@ const deliverySchema = z.strictObject({ sent: z.boolean() });
 
 type Workspace = z.infer<typeof exampleWorkspaceTargetSchema>;
 type Note = z.infer<typeof noteSchema>;
+type ActionArea = 'workspaces' | 'editor' | 'notes' | 'link' | 'email' | 'readers';
+type Feedback = { area: ActionArea; message: string };
 
 const prefix = '/tenants';
 const scopePath = ({ tenantId, scopeId }: Workspace) => `${prefix}/${tenantId}/scopes/${scopeId}`;
@@ -45,8 +47,6 @@ export class CloudWorkspace {
   private readonly realtime = inject(BrowserRealtimeSession, { optional: true });
 
   private readonly params = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
-  private readonly readError = signal('');
-  private readonly actionError = signal('');
 
   private readonly page = signal<z.infer<typeof pageSchema> | null>(null);
 
@@ -59,7 +59,9 @@ export class CloudWorkspace {
 
   readonly busy = signal(false);
   readonly workspaces = signal<ExampleWorkspacePage | null>(null);
-  readonly status = signal('');
+  readonly readError = signal('');
+  readonly actionError = signal<Feedback | null>(null);
+  readonly status = signal<Feedback | null>(null);
   readonly selected = signal<Note | null>(null);
   readonly title = signal('');
   readonly body = signal('');
@@ -81,7 +83,6 @@ export class CloudWorkspace {
   readonly notes = computed(() => this.page()?.items ?? []);
   readonly canWrite = computed(() => this.page()?.canWrite === true);
   readonly loaded = computed(() => this.page() !== null);
-  readonly error = computed(() => this.readError() || this.actionError());
 
   readonly sharing = signal<z.infer<typeof sharingSchema> | null>(null);
 
@@ -92,11 +93,11 @@ export class CloudWorkspace {
   }
 
   async loadMoreWorkspaces(after: string): Promise<void> {
-    await this.run((signal) => this.loadWorkspaces(signal, after));
+    await this.run('workspaces', (signal) => this.loadWorkspaces(signal, after));
   }
 
   async createWorkspace(): Promise<void> {
-    await this.run(async (signal) => {
+    await this.run('workspaces', async (signal) => {
       const rawRoot = await this.api.cloud(prefix, {}, signal);
       const root = exampleWorkspaceTargetSchema.parse(rawRoot);
       const rawWorkspace = await this.api.cloud(`${scopePath(root)}/children`, { kind: 'resource' }, signal);
@@ -115,14 +116,14 @@ export class CloudWorkspace {
     this.audience.set(note?.audience ?? 'owner');
   }
 
-  async save(): Promise<void> {
+  async save(): Promise<boolean> {
     const target = this.target();
 
     if (!target || !this.canWrite()) {
-      return;
+      return false;
     }
 
-    await this.run(async (signal) => {
+    return this.run('editor', async (signal) => {
       const current = this.selected();
       const payload = {
         operationId: createOperationId(this.document.defaultView!.crypto),
@@ -142,7 +143,7 @@ export class CloudWorkspace {
       await this.load(target, signal);
 
       this.edit(null);
-      this.status.set($localize`:@@cloudExampleSaved:Note saved.`);
+      this.status.set({ area: 'editor', message: $localize`:@@cloudExampleSaved:Note saved.` });
     });
   }
 
@@ -153,7 +154,7 @@ export class CloudWorkspace {
       return;
     }
 
-    await this.run(async (signal) => {
+    await this.run('notes', async (signal) => {
       await this.api.cloud(
         notesPath(target),
         {
@@ -171,7 +172,7 @@ export class CloudWorkspace {
         this.edit(null);
       }
 
-      this.status.set($localize`:@@cloudExampleDeleted:Note deleted.`);
+      this.status.set({ area: 'notes', message: $localize`:@@cloudExampleDeleted:Note deleted.` });
     });
   }
 
@@ -184,7 +185,7 @@ export class CloudWorkspace {
 
     this.shareMode.set(mode);
 
-    await this.run((signal) => this.loadSharing(target, signal), true);
+    await this.run(mode, (signal) => this.loadSharing(target, signal), true);
   }
 
   async createLink(): Promise<void> {
@@ -194,7 +195,7 @@ export class CloudWorkspace {
       return;
     }
 
-    await this.run(async (signal) => {
+    await this.run('link', async (signal) => {
       const raw = await this.api.cloud(`${sharingPath(target)}/link`, {}, signal);
       const link = linkSchema.parse(raw);
       const url = new URL(this.location.prepareExternalUrl('/db-example/cloud/join'), this.document.location.origin);
@@ -207,14 +208,16 @@ export class CloudWorkspace {
   }
 
   async copyLink(input: HTMLInputElement): Promise<void> {
+    this.status.set(null);
+
     try {
       await this.document.defaultView!.navigator.clipboard.writeText(input.value);
 
-      this.status.set($localize`:@@cloudLinkCopied:Link copied.`);
+      this.status.set({ area: 'link', message: $localize`:@@cloudLinkCopied:Link copied.` });
     } catch {
       input.focus();
       input.select();
-      this.status.set($localize`:@@cloudLinkCopyManually:Copy the selected link.`);
+      this.status.set({ area: 'link', message: $localize`:@@cloudLinkCopyManually:Copy the selected link.` });
     }
   }
 
@@ -225,14 +228,14 @@ export class CloudWorkspace {
       return;
     }
 
-    await this.run(async (signal) => {
+    await this.run('link', async (signal) => {
       await this.api.cloud(`${sharingPath(target)}/link`, undefined, signal, 'DELETE');
 
       this.shareLink.set('');
 
       await this.loadSharing(target, signal);
 
-      this.status.set($localize`:@@cloudLinkDisabled:Link disabled.`);
+      this.status.set({ area: 'link', message: $localize`:@@cloudLinkDisabled:Link disabled.` });
     });
   }
 
@@ -243,7 +246,7 @@ export class CloudWorkspace {
       return;
     }
 
-    await this.run(async (signal) => {
+    await this.run('email', async (signal) => {
       const raw = await this.api.cloud(
         `${sharingPath(target)}/email`,
         { email: this.shareEmail().trim(), locale: this.locale.startsWith('es') ? 'es' : 'en' },
@@ -255,11 +258,12 @@ export class CloudWorkspace {
 
       if (sent) {
         this.shareEmail.set('');
-        this.status.set($localize`:@@cloudShareSent:Email sent.`);
+        this.status.set({ area: 'email', message: $localize`:@@cloudShareSent:Email sent.` });
       } else {
-        this.actionError.set(
-          $localize`:@@cloudShareNotSent:Access was granted, but the email couldn’t be sent. Try sending it again.`,
-        );
+        this.actionError.set({
+          area: 'email',
+          message: $localize`:@@cloudShareNotSent:Access was granted, but the email couldn’t be sent. Try sending it again.`,
+        });
       }
     });
   }
@@ -271,12 +275,12 @@ export class CloudWorkspace {
       return;
     }
 
-    await this.run(async (signal) => {
+    await this.run('readers', async (signal) => {
       await this.api.cloud(`${sharingPath(target)}/readers/${userId}`, undefined, signal, 'DELETE');
 
       await this.loadSharing(target, signal);
 
-      this.status.set($localize`:@@cloudExampleRevoked:Access removed.`);
+      this.status.set({ area: 'readers', message: $localize`:@@cloudExampleRevoked:Access removed.` });
     });
   }
 
@@ -355,11 +359,15 @@ export class CloudWorkspace {
     this.readError.set('');
   }
 
-  private async run(work: (signal: AbortSignal) => Promise<void>, background = false): Promise<void> {
+  private async run(
+    area: ActionArea,
+    work: (signal: AbortSignal) => Promise<void>,
+    background = false,
+  ): Promise<boolean> {
     const signal = this.controller?.signal;
 
     if (!this.examples.enabled() || !signal || signal.aborted || this.busy()) {
-      return;
+      return false;
     }
 
     this.busy.set(true);
@@ -371,17 +379,21 @@ export class CloudWorkspace {
     }
 
     if (!background) {
-      this.status.set('');
+      this.status.set(null);
     }
 
-    this.actionError.set('');
+    this.actionError.set(null);
 
     try {
       await work(signal);
+
+      return !signal.aborted;
     } catch (error) {
       if (!signal.aborted) {
-        this.actionError.set(this.message(error));
+        this.actionError.set({ area, message: this.message(error) });
       }
+
+      return false;
     } finally {
       if (!signal.aborted) {
         this.busy.set(false);
@@ -432,9 +444,9 @@ export class CloudWorkspace {
       this.page.set(null);
       this.workspaces.set(null);
       this.edit(null);
-      this.status.set('');
+      this.status.set(null);
       this.readError.set('');
-      this.actionError.set('');
+      this.actionError.set(null);
       this.shareMode.set(null);
       this.sharing.set(null);
       this.shareLink.set('');

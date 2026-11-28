@@ -2972,6 +2972,34 @@
           <context context-type="linenumber">34,37</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="cloudNotes" datatype="html">
+        <source>Notes</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">151,153</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudNotesLoading" datatype="html">
+        <source>Loading notes…</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">311,314</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudNotesEmptyOwnerHelp" datatype="html">
+        <source> Use the editor to write your first note and choose who can read it. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">211,213</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudNotesEmptyReaderHelp" datatype="html">
+        <source>Notes the owner shares will appear here.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">214,217</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="cloudExampleScopeAudience" datatype="html">
         <source>Shared with permitted readers</source>
         <context-group purpose="location">
@@ -3291,6 +3319,48 @@
           <context context-type="linenumber">278,280</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="cloudShareMethod" datatype="html">
+        <source>Sharing method</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">326,327</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareYou" datatype="html">
+        <source>You</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">474,476</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareOwner" datatype="html">
+        <source>Owner</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">476,479</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareReadersLoading" datatype="html">
+        <source> Loading reader access… </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">501,503</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareReadersHelp" datatype="html">
+        <source> Choose a sharing method to see which readers have access. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">505,506</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudShareNoReaders" datatype="html">
+        <source>No readers have access yet.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">509,512</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="cloudShareRemove" datatype="html">
         <source> Remove access </source>
       </trans-unit>
@@ -3516,6 +3586,27 @@
       </trans-unit>
       <trans-unit id="cloudNoWorkspaces" datatype="html">
         <source>You don’t have any Cloud workspaces yet.</source>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceCreated" datatype="html">
+        <source>Created</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">33,36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceRole" datatype="html">
+        <source>Role</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">41,43</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceEmptyHelp" datatype="html">
+        <source> Create a test workspace to try writing notes and sharing them with other Stack accounts. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">apps/web/app/src/app/db/example/cloud/cloud-example.html</context>
+          <context context-type="linenumber">105,108</context>
+        </context-group>
       </trans-unit>
       <trans-unit id="vaultRecoveryEnabled" datatype="html">
         <source>Your recovery key is ready to use.</source>

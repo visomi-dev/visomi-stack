@@ -1514,6 +1514,22 @@
         <source>There are no notes to show yet.</source>
         <target>Aún no hay notas para mostrar.</target>
       </trans-unit>
+      <trans-unit id="cloudNotes" datatype="html">
+        <source>Notes</source>
+        <target>Notas</target>
+      </trans-unit>
+      <trans-unit id="cloudNotesLoading" datatype="html">
+        <source>Loading notes…</source>
+        <target>Cargando notas…</target>
+      </trans-unit>
+      <trans-unit id="cloudNotesEmptyOwnerHelp" datatype="html">
+        <source> Use the editor to write your first note and choose who can read it. </source>
+        <target>Usa el editor para escribir tu primera nota y elige quién puede leerla.</target>
+      </trans-unit>
+      <trans-unit id="cloudNotesEmptyReaderHelp" datatype="html">
+        <source>Notes the owner shares will appear here.</source>
+        <target>Aquí aparecerán las notas que comparta el propietario.</target>
+      </trans-unit>
       <trans-unit id="cloudExampleScopeAudience" datatype="html">
         <source>Shared with permitted readers</source>
         <target>Compartida con quienes tienen acceso</target>
@@ -1694,6 +1710,30 @@
         <source>People with access</source>
         <target>Personas con acceso</target>
       </trans-unit>
+      <trans-unit id="cloudShareMethod" datatype="html">
+        <source>Sharing method</source>
+        <target>Método para compartir</target>
+      </trans-unit>
+      <trans-unit id="cloudShareYou" datatype="html">
+        <source>You</source>
+        <target>Tú</target>
+      </trans-unit>
+      <trans-unit id="cloudShareOwner" datatype="html">
+        <source>Owner</source>
+        <target>Propietario</target>
+      </trans-unit>
+      <trans-unit id="cloudShareReadersLoading" datatype="html">
+        <source> Loading reader access… </source>
+        <target>Cargando la lista de lectores con acceso…</target>
+      </trans-unit>
+      <trans-unit id="cloudShareReadersHelp" datatype="html">
+        <source> Choose a sharing method to see which readers have access. </source>
+        <target>Elige un método para compartir y ver qué lectores tienen acceso.</target>
+      </trans-unit>
+      <trans-unit id="cloudShareNoReaders" datatype="html">
+        <source>No readers have access yet.</source>
+        <target>Aún no hay lectores con acceso.</target>
+      </trans-unit>
       <trans-unit id="cloudShareRemove" datatype="html">
         <source> Remove access </source>
         <target>Quitar acceso</target>
@@ -1861,6 +1901,18 @@
       <trans-unit id="cloudNoWorkspaces" datatype="html">
         <source>You don’t have any Cloud workspaces yet.</source>
         <target>Aún no tienes espacios de trabajo en la nube.</target>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceCreated" datatype="html">
+        <source>Created</source>
+        <target>Fecha de creación</target>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceRole" datatype="html">
+        <source>Role</source>
+        <target>Rol</target>
+      </trans-unit>
+      <trans-unit id="cloudWorkspaceEmptyHelp" datatype="html">
+        <source> Create a test workspace to try writing notes and sharing them with other Stack accounts. </source>
+        <target>Crea un espacio de trabajo de prueba para escribir notas y compartirlas con otras cuentas de Stack.</target>
       </trans-unit>
       <trans-unit id="vaultRecoveryEnabled" datatype="html">
         <source>Your recovery key is ready to use.</source>

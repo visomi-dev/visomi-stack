@@ -3,7 +3,9 @@
 
   @if (ready()) {
     @if (!token()) {
-      <p role="alert" i18n="@@cloudJoinMissing">Open the original sharing link to continue.</p>
+      <div appUI="alert" tone="danger" role="alert" i18n="@@cloudJoinMissing">
+        Open the original sharing link to continue.
+      </div>
     } @else if (session.full()) {
       <button appUI type="button" [disabled]="busy()" (click)="join()" i18n="@@cloudJoinOpen">Open workspace</button>
     } @else {
@@ -14,6 +16,6 @@
   }
 
   @if (error()) {
-    <p role="alert">{{ error() }}</p>
+    <div appUI="alert" tone="danger" role="alert">{{ error() }}</div>
   }
 </main>

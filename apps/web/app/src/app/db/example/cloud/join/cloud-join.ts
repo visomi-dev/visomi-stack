@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Session } from '../../../../auth/session/session';
 import { DatabaseHttp } from '../../../../shared/db/http';
 import { NavigationHeading } from '../../../../shared/navigation-heading';
-import { Button, Heading, Text } from '../../../../ui';
+import { Alert, Button, Heading, Text } from '../../../../ui';
 
 import { CloudJoinRequest } from './cloud-join-request';
 
@@ -14,7 +14,7 @@ const pendingLink = 'visomi-cloud-share-link';
 
 @Component({
   selector: 'app-cloud-join',
-  imports: [Button, Heading, NavigationHeading, Text],
+  imports: [Alert, Button, Heading, NavigationHeading, Text],
   providers: [DatabaseHttp, CloudJoinRequest],
   templateUrl: './cloud-join.html',
 })
